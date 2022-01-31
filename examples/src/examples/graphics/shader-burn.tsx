@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 attribute vec3 aPosition;
@@ -42,7 +42,7 @@ void main(void)
 }
 `;
 
-class ShaderBurnExample extends Example {
+class ShaderBurnExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Burn';
 
@@ -111,8 +111,9 @@ class ShaderBurnExample extends Example {
             const meshInstances = render.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
                 const meshInstance = meshInstances[i];
-                // @ts-ignore
-                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                if (!originalTexture) {
+                    originalTexture = meshInstance.material.diffuseMap;
+                }
                 meshInstance.material = material;
             }
         });

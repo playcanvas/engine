@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class HardwareInstancingExample extends Example {
+
+class HardwareInstancingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hardware Instancing';
 
@@ -21,8 +21,11 @@ class HardwareInstancingExample extends Example {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 0.7;
+        app.scene.exposure = 0.3;
         app.scene.setSkybox(assets['helipad.dds'].resources);
+
+        // set up some general scene rendering properties
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);

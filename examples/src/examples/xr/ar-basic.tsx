@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class ARBasicExample extends Example {
+
+class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';
 
@@ -122,4 +122,4 @@ class ARBasicExample extends Example {
     }
 }
 
-export default ARBasicExample;
+export default ArBasicExample;

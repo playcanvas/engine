@@ -286,7 +286,7 @@ const packSamplesTex = (device, name, samples) => {
 
     const w = Math.min(numSamples, 512);
     const h = Math.ceil(numSamples / w);
-    const data = new Uint8ClampedArray(w * h * 4);
+    const data = new Uint8Array(w * h * 4);
 
     // normalize float data and pack into rgba8
     let off = 0;
@@ -436,9 +436,13 @@ function reprojectTexture(source, target, options = {}) {
             `#define NUM_SAMPLES ${numSamples}\n` +
             (device.extTextureLod ? `#define SUPPORTS_TEXLOD\n` : '');
 
-        const extensions =
-            device.webgl2 ?
-                null : `#extension GL_OES_standard_derivatives: enable\n${device.extTextureLod ? "#extension GL_EXT_shader_texture_lod: enable\n" : ""}`;
+        let extensions = '';
+        if (!device.webgl2) {
+            extensions = '#extension GL_OES_standard_derivatives: enable\n';
+            if (device.extTextureLod) {
+                extensions += '#extension GL_EXT_shader_texture_lod: enable\n\n';
+            }
+        }
 
         shader = createShaderFromCode(
             device,

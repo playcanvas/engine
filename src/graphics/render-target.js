@@ -156,6 +156,11 @@ class RenderTarget {
         }
     }
 
+    /**
+     * Free WebGL resources associated with this render target.
+     *
+     * @ignore
+     */
     destroyFrameBuffers() {
 
         const device = this._device;
@@ -188,6 +193,11 @@ class RenderTarget {
         }
     }
 
+    /**
+     * Free textures associated with this render target.
+     *
+     * @ignore
+     */
     destroyTextureBuffers() {
 
         if (this._depthBuffer) {
@@ -201,7 +211,11 @@ class RenderTarget {
         }
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
         this._glFrameBuffer = undefined;
         this._glDepthBuffer = undefined;

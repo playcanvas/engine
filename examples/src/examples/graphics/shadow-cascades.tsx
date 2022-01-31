@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -15,7 +15,7 @@ import SelectInput from '@playcanvas/pcui/SelectInput/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class ShadowCascadesExample extends Example {
+class ShadowCascadesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shadow Cascades';
 
@@ -82,7 +82,6 @@ class ShadowCascadesExample extends Example {
         app.scene.skyboxMip = 3;
         app.scene.setSkybox(assets.helipad.resources);
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // instantiate the terrain

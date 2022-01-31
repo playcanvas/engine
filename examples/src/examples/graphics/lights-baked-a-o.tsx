@@ -1,6 +1,6 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -17,7 +17,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class LightsBakedAOExample extends Example {
+class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
 
@@ -104,7 +104,7 @@ class LightsBakedAOExample extends Example {
 
         // setup skydome - this is the main source of ambient light
         app.scene.skyboxMip = 3;
-        app.scene.skyboxIntensity = 1.5;
+        app.scene.skyboxIntensity = 0.6;
         app.scene.setSkybox(assets.cubemap.resources);
 
         // if skydome cubemap is disabled using HUD, a constant ambient color is used instead
@@ -136,7 +136,7 @@ class LightsBakedAOExample extends Example {
             shadowResolution: 2048,
             shadowType: pc.SHADOW_PCF3,
             color: new pc.Color(0.7, 0.7, 0.5),
-            intensity: 1.2
+            intensity: 1.6
         });
         app.root.addChild(lightDirectional);
         lightDirectional.setLocalEulerAngles(-55, 0, -30);
@@ -151,12 +151,12 @@ class LightsBakedAOExample extends Example {
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 50,
+            shadowDistance: 25,
             shadowResolution: 512,
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.YELLOW,
-            range: 10,
-            intensity: 0.7
+            range: 25,
+            intensity: 0.9
         });
         lightOmni.setLocalPosition(-4, 10, 5);
         app.root.addChild(lightOmni);
@@ -176,7 +176,7 @@ class LightsBakedAOExample extends Example {
             shadowType: pc.SHADOW_PCF3,
             color: pc.Color.RED,
             range: 10,
-            intensity: 2
+            intensity: 2.5
         });
         lightSpot.setLocalPosition(-5, 10, -7.5);
         app.root.addChild(lightSpot);
@@ -264,8 +264,8 @@ class LightsBakedAOExample extends Example {
                 cubemap: true,
                 hemisphere: true,
                 ambientBakeNumSamples: 20,
-                ambientBakeOcclusionContrast: 0,
-                ambientBakeOcclusionBrightness: 0.4
+                ambientBakeOcclusionContrast: -0.6,
+                ambientBakeOcclusionBrightness: -0.5
             },
             directional: {
                 enabled: true,

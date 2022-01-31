@@ -6,7 +6,7 @@ import Container from '@playcanvas/pcui/Container/component';
 import Button from '@playcanvas/pcui/Button/component';
 
 interface MenuProps {
-    useTypescript: boolean,
+    useTypeScript: boolean,
     setShowMiniStats: (value: boolean) => void
 }
 const Menu = (props: MenuProps) => {
@@ -55,7 +55,7 @@ const Menu = (props: MenuProps) => {
                 const tweetText = encodeURI(`Check out this @playcanvas engine example! ${location.href.replace('#/', '')}`);
                 window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
             }}/>
-            <Button icon='E149' id='showMiniStatsButton' text='' onClick={() => {
+            <Button icon='E149' id='showMiniStatsButton' class='selected' text='' onClick={() => {
                 document.getElementById('showMiniStatsButton').classList.toggle('selected');
                 props.setShowMiniStats(document.getElementById('showMiniStatsButton').classList.contains('selected'));
             }}/>

@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class HierarchyExample extends Example {
+
+class HierarchyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';
 
@@ -98,7 +98,6 @@ class HierarchyExample extends Example {
 
         // update each frame
         let time = 0;
-        const switchTime = 0;
         app.on("update", function (dt) {
             time += dt;
 

@@ -6,8 +6,10 @@ import Panel from '@playcanvas/pcui/Panel/component';
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
-import { playcanvasTypeDefs } from './helpers/raw-file-loading';
+// @ts-ignore: library file import
+import playcanvasTypeDefs from '../../dist/build/playcanvas.d.ts';
 import { File } from './helpers/types';
+import formatters from './helpers/formatters.mjs';
 
 const FILE_TYPE_LANGUAGES: any = {
     'json': 'json',
@@ -23,8 +25,7 @@ interface CodeEditorProps {
     files: Array<File>,
     setFiles: (value: Array<File>) => void,
     setLintErrors: (value: boolean) => void,
-    useTypescript: boolean,
-    hasEditedFiles: boolean,
+    useTypeScript: boolean,
     lintErrors: boolean,
     languageButtonRef: React.RefObject<unknown>,
     playButtonRef: React.RefObject<unknown>
@@ -48,13 +49,19 @@ const CodeEditor = (props: CodeEditorProps) => {
     const onChange = (value: string) => {
         files[selectedFile].text = value;
         props.setFiles(files);
-        props.setLintErrors(false);
+
+        let exampleFunction;
+        if (props.useTypeScript) {
+            exampleFunction = files[1].text;
+        } else {
+            exampleFunction = files[0].text;
+        }
+        window.localStorage.setItem(window.location.hash.replace('#', ''), formatters.getInnerFunctionText(exampleFunction));
     };
 
     const onValidate = (markers: Array<any>) => {
         // filter out markers which are warnings
         if (markers.filter(m => m.severity > 1).length === 0) {
-            props.setFiles(files);
             props.setLintErrors(false);
         } else {
             props.setLintErrors(true);
@@ -76,10 +83,10 @@ const CodeEditor = (props: CodeEditorProps) => {
     useEffect(() => {
         const codePane = document.getElementById('codePane');
         codePane.classList.add('multiple-files');
-        if (!files[selectedFile]) setSelectedFile(props.useTypescript ? 1 : 0);
-        if (props.useTypescript && selectedFile === 0) {
+        if (!files[selectedFile]) setSelectedFile(props.useTypeScript ? 1 : 0);
+        if (props.useTypeScript && selectedFile === 0) {
             selectFile(1);
-        } else if (!props.useTypescript && selectedFile === 1) {
+        } else if (!props.useTypeScript && selectedFile === 1) {
             selectFile(0);
         }
         // @ts-ignore
@@ -104,8 +111,8 @@ const CodeEditor = (props: CodeEditorProps) => {
         <div className='panel-toggle' id='codePane-panel-toggle'/>
         <Container class='tabs-wrapper'>
             <Container class='code-editor-menu-container'>
-                <Button id='play-button' enabled={!props.lintErrors && props.hasEditedFiles} icon='E304' text='' ref={props.playButtonRef} />
-                <Button id='language-button' text={props.useTypescript ? 'JS' : 'TS'} ref={props.languageButtonRef} />
+                <Button id='play-button' enabled={!props.lintErrors} icon='E304' text='' ref={props.playButtonRef} />
+                <Button id='language-button' text={props.useTypeScript ? 'JS' : 'TS'} ref={props.languageButtonRef} />
                 <Button icon='E259' text='' onClick={() => {
                     const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
                     window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.tsx`);
@@ -113,7 +120,7 @@ const CodeEditor = (props: CodeEditorProps) => {
             </Container>
             <Container class='tabs-container'>
                 {props.files.map((file: File, index: number) => {
-                    const hidden = (props.useTypescript && index === 0 || !props.useTypescript && index === 1);
+                    const hidden = (props.useTypeScript && index === 0 || !props.useTypeScript && index === 1);
                     return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
                 })}
             </Container>

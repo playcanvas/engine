@@ -65,15 +65,6 @@ class RigidBodyComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        // Lazily create shared variable
-        if (typeof Ammo !== 'undefined' && !ammoTransform) {
-            ammoTransform = new Ammo.btTransform();
-            ammoVec1 = new Ammo.btVector3();
-            ammoVec2 = new Ammo.btVector3();
-            ammoQuat = new Ammo.btQuaternion();
-            ammoOrigin = new Ammo.btVector3(0, 0, 0);
-        }
-
         this._angularDamping = 0;
         this._angularFactor = new Vec3(1, 1, 1);
         this._angularVelocity = new Vec3();
@@ -89,6 +80,18 @@ class RigidBodyComponent extends Component {
         this._rollingFriction = 0;
         this._simulationEnabled = false;
         this._type = BODYTYPE_STATIC;
+    }
+
+    static onLibraryLoaded() {
+
+        // Lazily create shared variable
+        if (typeof Ammo !== 'undefined' && !ammoTransform) {
+            ammoTransform = new Ammo.btTransform();
+            ammoVec1 = new Ammo.btVector3();
+            ammoVec2 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
+            ammoOrigin = new Ammo.btVector3(0, 0, 0);
+        }
     }
 
     /**

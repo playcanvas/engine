@@ -28,7 +28,6 @@ class ScopeSpace {
      * @returns {ScopeId} The variable instance.
      */
     resolve(name) {
-
         // add new ScopeId if it does not exist yet
         if (!this.variables.has(name)) {
             this.variables.set(name, new ScopeId(name));
@@ -38,7 +37,12 @@ class ScopeSpace {
         return this.variables.get(name);
     }
 
-    // clears value for any uniform with matching value (used to remove deleted textures)
+    /**
+     * Clears value for any uniform with matching value (used to remove deleted textures).
+     *
+     * @param {*} value - The value to clear.
+     * @ignore
+     */
     removeValue(value) {
         for (const uniformName in this.variables) {
             const uniform = this.variables[uniformName];

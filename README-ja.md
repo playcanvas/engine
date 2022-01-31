@@ -16,9 +16,9 @@ HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテ�
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
-[English](https://github.com/playcanvas/engine/blob/master/README.md)
-[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
+[English](https://github.com/playcanvas/engine/blob/dev/README.md)
+[中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/dev/README-ja.md)
 
 ## ショーケース
 
@@ -128,7 +128,7 @@ Node.jsがインストールされていることを確認します。
 
 また、ビルド済みのエンジンも利用できます。
 
-最新版のビルド(masterブランチのHEADリビジョン)
+最新版のビルド(devブランチのHEADリビジョン)
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
@@ -156,7 +156,7 @@ Node.jsがインストールされていることを確認します。
 
 PlayCanvas エンジンは、HTML5 アプリやゲームを作成するためのオープンソースのエンジンです。エンジンに加えて、[PlayCanvasエディター](https://playcanvas.com/)があります。
 
-[![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
+[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。
 

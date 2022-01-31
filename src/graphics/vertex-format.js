@@ -180,8 +180,18 @@ class VertexFormat {
         this.update();
     }
 
+    /**
+     * @type {VertexFormat}
+     * @private
+     */
     static _defaultInstancingFormat = null;
 
+    /**
+     * Initialize a default format use for instanced rendering.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to create the format.
+     * @ignore
+     */
     static init(graphicsDevice) {
         const formatDesc = [
             { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
@@ -209,7 +219,11 @@ class VertexFormat {
         this._evaluateHash();
     }
 
-    // evaluates hash values for the format allowing fast compare of batching / rendering compatibility
+    /**
+     * Evaluates hash values for the format allowing fast compare of batching / rendering compatibility.
+     *
+     * @private
+     */
     _evaluateHash() {
         let stringElementBatch;
         const stringElementsBatch = [];

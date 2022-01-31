@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -13,7 +13,7 @@ import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class AreaLightsExample extends Example {
+class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Area Lights';
 
@@ -57,7 +57,6 @@ class AreaLightsExample extends Example {
         });
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // enabled clustered lighting. This is a temporary API and will change in the future
@@ -192,7 +191,6 @@ class AreaLightsExample extends Example {
         app.setAreaLightLuts(assets.luts);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // create ground plane

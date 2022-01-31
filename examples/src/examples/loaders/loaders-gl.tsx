@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader, ScriptLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 // custom point cloud rendering vertex shader
 const vshader = `
@@ -37,7 +37,7 @@ const fshader = `
     }
 `;
 
-class LoadersGlExample extends Example {
+class LoadersGlExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Loaders.gl';
 

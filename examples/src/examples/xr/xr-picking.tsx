@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class XRPickingExample extends Example {
+
+class XrPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
@@ -155,10 +155,10 @@ class XRPickingExample extends Example {
             app.on('update', function () {
                 for (let i = 0; i < app.xr.input.inputSources.length; i++) {
                     const inputSource = app.xr.input.inputSources[i];
+                    const direction = inputSource.getDirection();
+                    const origin = inputSource.getOrigin();
 
-                    tmpVec.copy(inputSource.getDirection());
-                    // @ts-ignore engine-tsd
-                    tmpVec.scale(100).add(inputSource.getOrigin());
+                    tmpVec.copy(direction).mulScalar(100).add(origin);
 
                     app.drawLine(inputSource.getOrigin(), tmpVec, lineColor);
                 }
@@ -169,4 +169,4 @@ class XRPickingExample extends Example {
     }
 }
 
-export default XRPickingExample;
+export default XrPickingExample;

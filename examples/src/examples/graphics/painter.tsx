@@ -1,8 +1,7 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class PainterExample extends Example {
+
+class PainterExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Painter';
 

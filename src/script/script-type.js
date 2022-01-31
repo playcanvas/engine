@@ -216,39 +216,58 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @function
-     * @name ScriptType#[initialize]
-     * @description Called when script is about to run for the first time.
+     * @callback scriptTypeInitializeCallback
      */
 
     /**
-     * @function
-     * @name ScriptType#[postInitialize]
-     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
-     */
-
-    /**
-     * @function
-     * @name ScriptType#[update]
-     * @description Called for enabled (running state) scripts on each tick.
+     * @callback scriptTypeUpdateCallback
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
-     * @function
-     * @name ScriptType#[postUpdate]
-     * @description Called for enabled (running state) scripts on each tick, after update.
-     * @param {number} dt - The delta time in seconds since the last frame.
+     * @callback scriptTypeSwapCallback
+     * @param {ScriptType} old - The delta time in seconds since the last frame.
      */
 
     /**
-     * @function
-     * @name ScriptType#[swap]
-     * @description Called when a ScriptType that already exists in the registry
-     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
-     * then it will be executed to perform hot-reload at runtime.
-     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
+     * Called when script is about to run for the first time.
+     *
+     * @type {scriptTypeInitializeCallback}
      */
+    initialize;
+
+    /**
+     * Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     *
+     * @type {scriptTypeInitializeCallback}
+     */
+    postInitialize;
+
+    /**
+     * Called for enabled (running state) scripts on each tick. It is passed the delta time in
+     * seconds since the last frame.
+     *
+     * @type {scriptTypeUpdateCallback}
+     */
+    update;
+
+    /**
+     * Called for enabled (running state) scripts on each tick, after update. It is passed the
+     * delta time in seconds since the last frame.
+     *
+     * @type {scriptTypeUpdateCallback}
+     */
+    postUpdate;
+
+    /**
+     * Called when a ScriptType that already exists in the registry gets redefined. If the new
+     * ScriptType has a `swap` method in its prototype, then it will be executed to perform
+     * hot-reload at runtime. It is passed the old instance of the scriptType to copy data to the
+     * new instance.
+     *
+     * @type {scriptTypeSwapCallback}
+     */
+    swap;
 
     /**
      * @event

@@ -26,6 +26,14 @@ const attrib2Semantic = {
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT
 };
 
+/* eslint-disable jsdoc/check-types */
+/**
+ * Extract the attributes specified in a vertex shader.
+ *
+ * @param {string} vsCode - The vertex shader code.
+ * @returns {Object.<string, string>} The attribute name to semantic map.
+ * @ignore
+ */
 function collectAttribs(vsCode) {
     const attribs = {};
     let attrs = 0;
@@ -49,8 +57,18 @@ function collectAttribs(vsCode) {
     }
     return attribs;
 }
+/* eslint-enable jsdoc/check-types */
 
-function createShader(device, vsName, psName, useTransformFeedback) {
+/**
+ * Create a shader from named shader chunks.
+ *
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {string} vsName - The vertex shader chunk name.
+ * @param {string} psName - The fragment shader chunk name.
+ * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @returns {Shader} The newly created shader.
+ */
+function createShader(device, vsName, psName, useTransformFeedback = false) {
     let vsCode = shaderChunks[vsName];
     let psCode = precisionCode(device) + "\n" + shaderChunks[psName];
     const attribs = collectAttribs(vsCode);
@@ -68,7 +86,19 @@ function createShader(device, vsName, psName, useTransformFeedback) {
     });
 }
 
-function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedback, psPreamble) {
+/**
+ * Create a shader from the supplied source code.
+ *
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {string} vsCode - The vertex shader code.
+ * @param {string} psCode - The fragment shader code.
+ * @param {string} uName - Unique name for the shader.
+ * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {string} [psPreamble] - An optional 'preamble' string for the fragment shader. Defaults
+ * to ''.
+ * @returns {Shader} The newly created shader.
+ */
+function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedback = false, psPreamble = "") {
     const shaderCache = device.programLib._cache;
     const cached = shaderCache[uName];
     if (cached !== undefined) return cached;
@@ -84,7 +114,7 @@ function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedbac
     shaderCache[uName] = new Shader(device, {
         attributes: attribs,
         vshader: vsCode,
-        fshader: (psPreamble ? psPreamble : "") + psCode,
+        fshader: psPreamble + psCode,
         useTransformFeedback: useTransformFeedback
     });
     return shaderCache[uName];

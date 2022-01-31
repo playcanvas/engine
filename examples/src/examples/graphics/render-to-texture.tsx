@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RenderToTextureExample extends Example {
+class RenderToTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render to Texture';
 
@@ -69,7 +69,6 @@ class RenderToTextureExample extends Example {
         const renderTarget = new pc.RenderTarget({
             colorBuffer: texture,
             depth: true,
-            // @ts-ignore
             flipY: true,
             samples: 2
         });
@@ -135,15 +134,14 @@ class RenderToTextureExample extends Example {
         tv.setLocalEulerAngles(90, 0, 0);
         tv.render.castShadows = false;
         tv.render.receiveShadows = false;
-        // @ts-ignore engine-tsd
-        tv.render.material.emissiveMap = texture;     // assign the rendered texture as an emissive texture
-        tv.render.material.update();
+        const material = tv.render.material as pc.StandardMaterial;
+        material.emissiveMap = texture;     // assign the rendered texture as an emissive texture
+        material.update();
 
         // setup skydome, use top mipmap level of cubemap (full resolution)
         app.scene.skyboxMip = 0;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // update things each frame

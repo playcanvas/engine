@@ -17,18 +17,15 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 import { Link } from "react-router-dom";
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
-
-interface SideBarProps {
-    categories: any
-}
+import examples from './helpers/example-data.mjs';
 
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
     sideBar.classList.toggle('collapsed');
 };
 
-const SideBar = (props: SideBarProps) => {
-    const defaultCategories = props.categories;
+const SideBar = () => {
+    const defaultCategories: any = examples.categories;
     const [filteredCategories, setFilteredCategories] = useState(null);
     const [hash, setHash] = useState(location.hash);
     const observer = new Observer({ largeThumbnails: false });
@@ -122,7 +119,8 @@ const SideBar = (props: SideBarProps) => {
                                                 sideBar.ui.collapsed = true;
                                             }}>
                                                 <div className={className} id={`link-${category}-${example}`}>
-                                                    <img src={`./thumbnails/${category}_${example}.png`} />
+                                                    <img className='small-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_small.png`} />
+                                                    <img className='large-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_large.png`} />
                                                     <div className='nav-item-text'>{categories[category].examples[example].constructor.NAME.toUpperCase()}</div>
                                                 </div>
                                             </Link>;

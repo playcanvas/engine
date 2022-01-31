@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ModelOutlineExample extends Example {
+
+class ModelOutlineExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Outline';
 
@@ -65,7 +65,6 @@ class ModelOutlineExample extends Example {
         app.scene.layers.insert(outlineLayer, 0);
 
         // set up layer to render to the render target
-        // @ts-ignore engine-tsd
         outlineLayer.renderTarget = renderTarget;
 
         // get world layer
@@ -136,7 +135,6 @@ class ModelOutlineExample extends Example {
                 colorBuffer: texture,
                 depth: true
             });
-            // @ts-ignore engine-tsd
             outlineLayer.renderTarget = renderTarget;
 
             app.scene.layers.insert(outlineLayer, 0);

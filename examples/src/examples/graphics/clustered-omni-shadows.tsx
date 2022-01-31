@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -17,7 +17,7 @@ import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
 import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 
-class ClusteredShadowsOmniExample extends Example {
+class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
 
@@ -62,6 +62,9 @@ class ClusteredShadowsOmniExample extends Example {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
+
+        // set up some general scene rendering properties
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
         data.set('settings', {
             shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
@@ -178,7 +181,7 @@ class ClusteredShadowsOmniExample extends Example {
             lightOmni.addComponent("light", {
                 type: "omni",
                 color: pc.Color.WHITE,
-                intensity: 13 / numLights,
+                intensity: 10 / numLights,
                 range: 350,
                 castShadows: true,
                 shadowBias: 0.2,
@@ -257,4 +260,4 @@ class ClusteredShadowsOmniExample extends Example {
     }
 }
 
-export default ClusteredShadowsOmniExample;
+export default ClusteredOmniShadowsExample;

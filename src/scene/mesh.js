@@ -164,27 +164,6 @@ class GeometryVertexStream {
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
- *
- * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data
- * in the mesh should be interpreted by the graphics device.
- * @property {number} primitive[].type The type of primitive to render. Can be:
- *
- * - {@link PRIMITIVE_POINTS}
- * - {@link PRIMITIVE_LINES}
- * - {@link PRIMITIVE_LINELOOP}
- * - {@link PRIMITIVE_LINESTRIP}
- * - {@link PRIMITIVE_TRIANGLES}
- * - {@link PRIMITIVE_TRISTRIP}
- * - {@link PRIMITIVE_TRIFAN}
- *
- * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the
- * draw call.
- * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw
- * call.
- * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby
- * using the currently set index buffer and false otherwise.
- * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer
- * property.
  */
 class Mesh extends RefCountedObject {
     /**
@@ -214,6 +193,28 @@ class Mesh extends RefCountedObject {
          * @type {IndexBuffer[]}
          */
         this.indexBuffer = [null];
+
+        /**
+         * Array of primitive objects defining how vertex (and index) data in the mesh should be
+         * interpreted by the graphics device.
+         *
+         * - `type` is the type of primitive to render. Can be:
+         *
+         *   - {@link PRIMITIVE_POINTS}
+         *   - {@link PRIMITIVE_LINES}
+         *   - {@link PRIMITIVE_LINELOOP}
+         *   - {@link PRIMITIVE_LINESTRIP}
+         *   - {@link PRIMITIVE_TRIANGLES}
+         *   - {@link PRIMITIVE_TRISTRIP}
+         *   - {@link PRIMITIVE_TRIFAN}
+         *
+         * - `base` is the offset of the first index or vertex to dispatch in the draw call.
+         * - `count` is the number of indices or vertices to dispatch in the draw call.
+         * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
+         * currently set index buffer.
+         *
+         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         */
         this.primitive = [{
             type: 0,
             base: 0,

@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -18,7 +18,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class LayerMasksExample extends Example {
+class LayerMasksExample {
     static CATEGORY = 'Animation';
     static NAME = 'Layer Masks';
 
@@ -194,9 +194,7 @@ class LayerMasksExample extends Example {
             entity.children.forEach((c: pc.Entity) => {
                 const target = modelEntity.anim._targets[entity.path + '/graph/localPosition'];
                 if (target) {
-                    // @ts-ignore defaultLayerWorld doesn't exist in type pc
-                    const layer = pc.defaultLayerWorld;
-                    app.drawLine(entity.getPosition(), c.getPosition(), new pc.Color(target.getWeight(0), 0, target.getWeight(1), 1), false, layer);
+                    app.drawLine(entity.getPosition(), c.getPosition(), new pc.Color(target.getWeight(0), 0, target.getWeight(1), 1), false);
                 }
                 drawSkeleton(c, color);
             });

@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class MeshMorphExample extends Example {
+
+class MeshMorphExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph';
 
@@ -49,7 +49,6 @@ class MeshMorphExample extends Example {
                 dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
                 // modify distance to displacement amount - displace nearby points more than distant points
-                displacement = pc.math.clamp(dist, 0, limit);
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
 
@@ -79,7 +78,6 @@ class MeshMorphExample extends Example {
 
         const createMorphInstance = function (x: number | pc.Vec3, y: number, z: number) {
             // create the base mesh - a sphere, with higher amount of vertices / triangles
-            // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
             // obtain base mesh vertex / index data
@@ -103,7 +101,6 @@ class MeshMorphExample extends Example {
 
             // add morph instance - this is where currently set weights are stored
             const morphInstance = new pc.MorphInstance(mesh.morph);
-            // @ts-ignore engine-tsd
             meshInstance.morphInstance = morphInstance;
 
             // Create Entity and add it to the scene
