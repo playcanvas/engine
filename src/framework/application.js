@@ -50,7 +50,7 @@ import { ScriptComponentSystem } from './components/script/system.js';
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
  *
- * @augments Application
+ * @augments ApplicationLite
  */
 class Application extends ApplicationLite {
     /**
