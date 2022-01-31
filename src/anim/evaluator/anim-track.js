@@ -4,7 +4,7 @@ import { AnimEvents } from './anim-events.js';
 /** @typedef {import('./anim-data.js').AnimData} AnimData */
 
 /**
- * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
+ * An AnimTrack stores the curve data necessary to animate a set of target nodes. It can be linked to the nodes it should animate using the {@link AnimComponent#assignAnimation} method.
  */
 class AnimTrack {
     /**
@@ -16,6 +16,7 @@ class AnimTrack {
      * @param {AnimData[]} outputs - List of curve value data.
      * @param {AnimCurve[]} curves - The list of curves.
      * @param {AnimEvents} animEvents - A sequence of animation events.
+     * @hideconstructor
      */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
@@ -38,7 +39,7 @@ class AnimTrack {
     /**
      * Gets the duration of the AnimTrack.
      *
-     * @type {string}
+     * @type {number}
      */
     get duration() {
         return this._duration;
