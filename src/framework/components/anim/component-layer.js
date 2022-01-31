@@ -222,20 +222,21 @@ class AnimComponentLayer {
     /**
      * @name AnimComponentLayer#activeStateCurrentTime
      * @type {number}
-     * @description The active states time in seconds.
+     * @description The active state's time in seconds.
      */
-    get activeStateCurrentTime() {
-        return this._controller.activeStateCurrentTime;
+    set activeStateCurrentTime(time) {
+        const controller = this._controller;
+        const layerPlaying = controller.playing;
+        controller.playing = true;
+        controller.activeStateCurrentTime = time;
+        if (!layerPlaying) {
+            controller.update(0);
+        }
+        controller.playing = layerPlaying;
     }
 
-    set activeStateCurrentTime(time) {
-        const layerPlaying = this._controller.playing;
-        this._controller.playing = true;
-        this._controller.activeStateCurrentTime = time;
-        if (!layerPlaying) {
-            this._controller.update(0);
-        }
-        this._controller.playing = layerPlaying;
+    get activeStateCurrentTime() {
+        return this._controller.activeStateCurrentTime;
     }
 
     /**
