@@ -225,7 +225,7 @@ class ApplicationLite extends EventHandler {
 
         /**
          * Set to true to render the scene on the next iteration of the main loop. This only has an
-         * effect if {@link Application#autoRender} is set to false. The value of renderNextFrame
+         * effect if {@link ApplicationLite#autoRender} is set to false. The value of renderNextFrame
          * is set back to false again as soon as the scene has been rendered.
          *
          * @type {boolean}
@@ -592,7 +592,7 @@ class ApplicationLite extends EventHandler {
      * @private
      * @static
      * @name app
-     * @type {Application|undefined}
+     * @type {ApplicationLite|undefined}
      * @description Gets the current application, if any.
      */
 
@@ -606,7 +606,7 @@ class ApplicationLite extends EventHandler {
      *
      * @param {string} [id] - If defined, the returned application should use the canvas which has
      * this id. Otherwise current application will be returned.
-     * @returns {Application|undefined} The running application, if any.
+     * @returns {ApplicationLite|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
      */
