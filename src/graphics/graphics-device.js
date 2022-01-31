@@ -224,7 +224,7 @@ class GraphicsDevice extends EventHandler {
     canvas;
 
     /**
-     * The WebGL context managed by this graphics device. The type could also technically be
+     * The WebGL context managed by the graphics device. The type could also technically be
      * `WebGLRenderingContext` if WebGL 2.0 is not available. But in order for IntelliSense to be
      * able to function for all WebGL calls in the codebase, we specify `WebGL2RenderingContext`
      * here instead.
