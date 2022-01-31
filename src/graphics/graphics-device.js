@@ -227,6 +227,7 @@ class GraphicsDevice extends EventHandler {
      * The WebGL context managed by this graphics device.
      *
      * @type {WebGLRenderingContext}
+     * @ignore
      */
     gl;
 
