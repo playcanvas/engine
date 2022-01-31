@@ -13,6 +13,7 @@ import { LayoutChildComponentSystem } from './components/layout-child/system.js'
 import { LayoutGroupComponentSystem } from './components/layout-group/system.js';
 import { ModelComponentSystem } from './components/model/system.js';
 import { ParticleSystemComponentSystem } from './components/particle-system/system.js';
+import { RenderComponentSystem } from './components/render/system.js';
 import { RigidBodyComponentSystem } from './components/rigid-body/system.js';
 import { ScreenComponentSystem } from './components/screen/system.js';
 import { ScriptLegacyComponentSystem } from './components/script-legacy/system.js';
@@ -21,6 +22,9 @@ import { ScrollbarComponentSystem } from './components/scrollbar/system.js';
 import { SoundComponentSystem } from './components/sound/system.js';
 import { SpriteComponentSystem } from './components/sprite/system.js';
 import { ZoneComponentSystem } from './components/zone/system.js';
+import { CameraComponentSystem } from './components/camera/system.js';
+import { LightComponentSystem } from './components/light/system.js';
+import { ScriptComponentSystem } from './components/script/system.js';
 
 /**
  * An Application represents and manages your PlayCanvas application. If you are developing using
@@ -83,6 +87,8 @@ class Application extends ApplicationLite {
 
         if (script.legacy) {
             this.systems.add(new ScriptLegacyComponentSystem(this));
+        } else {
+            this.systems.add(new ScriptComponentSystem(this));
         }
 
         this.systems.add(new AudioSourceComponentSystem(this, this._soundManager));
@@ -98,6 +104,9 @@ class Application extends ApplicationLite {
         this.systems.add(new LayoutGroupComponentSystem(this));
         this.systems.add(new LayoutChildComponentSystem(this));
         this.systems.add(new ZoneComponentSystem(this));
+        this.systems.add(new RenderComponentSystem(this));
+        this.systems.add(new CameraComponentSystem(this));
+        this.systems.add(new LightComponentSystem(this));
     }
 }
 

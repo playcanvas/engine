@@ -80,11 +80,7 @@ import { I18n } from '../i18n/i18n.js';
 import { VrManager } from '../vr/vr-manager.js';
 import { XrManager } from '../xr/xr-manager.js';
 
-import { CameraComponentSystem } from './components/camera/system.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { LightComponentSystem } from './components/light/system.js';
-import { RenderComponentSystem } from './components/render/system.js';
-import { ScriptComponentSystem } from './components/script/system.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
@@ -566,12 +562,6 @@ class ApplicationLite extends EventHandler {
          * this.app.systems.sound.volume = 0.5;
          */
         this.systems = new ComponentSystemRegistry();
-        this.systems.add(new RenderComponentSystem(this));
-        this.systems.add(new CameraComponentSystem(this));
-        this.systems.add(new LightComponentSystem(this));
-        if (!script.legacy) {
-            this.systems.add(new ScriptComponentSystem(this));
-        }
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
