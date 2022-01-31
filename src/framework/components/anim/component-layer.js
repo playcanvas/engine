@@ -301,7 +301,7 @@ class AnimComponentLayer {
      * Returns the asset that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @returns {pc.Asset} - the asset associated with the given state.
+     * @returns {pc.Asset} - The asset associated with the given state.
      */
     getAnimationAsset(stateName) {
         return this._component.animationAssets[`${this.name}:${stateName}`];
