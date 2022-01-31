@@ -43,7 +43,6 @@ class RenderCubemapExample {
             app.root.addChild(entity);
 
             // create hight resolution sphere
-            // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
             // Add a render component with the mesh
@@ -203,7 +202,6 @@ class RenderCubemapExample {
             for (let e = 0; e < entities.length; e++) {
                 const scale = (e + 1) / entities.length;
                 const offset = time + e * 200;
-                // @ts-ignore engine-tsd
                 entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
                 entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
             }

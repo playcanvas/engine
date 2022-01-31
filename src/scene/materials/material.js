@@ -12,6 +12,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
+import { Debug } from "../../core/debug.js";
 import { DefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -468,9 +469,13 @@ class Material {
             }
             meshInstance._material = null;
 
-            const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
-            if (this !== defaultMaterial) {
-                meshInstance.material = defaultMaterial;
+            if (meshInstance.mesh) {
+                const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
+                if (this !== defaultMaterial) {
+                    meshInstance.material = defaultMaterial;
+                }
+            } else {
+                Debug.warn('pc.Material: MeshInstance mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
     }

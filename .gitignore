@@ -10,3 +10,4 @@ node_modules
 npm-debug.log
 scripts/parsers/vox-parser.js
 types
+stats.html

@@ -94,7 +94,6 @@ class LayersExample {
                 blueBox.rotate(0, -10 * dt, 0);
             }
 
-            // @ts-ignore engine-tsd
             blueBox.model.meshInstances[0].layer = 10;
         });
     }

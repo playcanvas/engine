@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 // @ts-ignore: library file import
-import { Observer } from '@playcanvas/observer';
-// @ts-ignore: library file import
 import Container from '@playcanvas/pcui/Container/component';
 // @ts-ignore: library file import
 import Spinner from '@playcanvas/pcui/Spinner/component';

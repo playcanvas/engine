@@ -14,9 +14,9 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
-[English](https://github.com/playcanvas/engine/blob/master/README.md)
-[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
+[English](https://github.com/playcanvas/engine/blob/dev/README.md)
+[中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/dev/README-ja.md)
 
 ## 项目展示
 
@@ -161,7 +161,7 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 PlayCanvas 引擎是一款可以基于浏览器的用于制作游戏以及 3D 可视化的开源引擎。除此之外，我们还开发了[PlayCanvas 开发平台](https://playcanvas.com/)， 为我们的用户提供了可视化编辑器，资源管理，代码编辑，代码托管以及发布等服务。
 
-[![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
+[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 ## License
 

@@ -1,4 +1,3 @@
-import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
 
@@ -405,7 +404,6 @@ class GraphNode extends EventHandler {
      * Clone a graph node.
      *
      * @returns {GraphNode} A clone of the specified graph node.
-     * @ignore
      */
     clone() {
         const clone = new GraphNode();
@@ -1297,7 +1295,6 @@ class GraphNode extends EventHandler {
     removeChild(child) {
         const index = this._children.indexOf(child);
         if (index === -1) {
-            Debug.warn(`GraphNode#removeChild: '${child.name}' is not a child of '${this.name}'`);
             return;
         }
 

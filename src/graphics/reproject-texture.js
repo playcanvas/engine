@@ -484,9 +484,13 @@ function reprojectTexture(source, target, options = {}) {
             `#define NUM_SAMPLES ${numSamples}\n` +
             (device.extTextureLod ? `#define SUPPORTS_TEXLOD\n` : '');
 
-        const extensions =
-            device.webgl2 ?
-                null : `#extension GL_OES_standard_derivatives: enable\n${device.extTextureLod ? "#extension GL_EXT_shader_texture_lod: enable\n" : ""}`;
+        let extensions = '';
+        if (!device.webgl2) {
+            extensions = '#extension GL_OES_standard_derivatives: enable\n';
+            if (device.extTextureLod) {
+                extensions += '#extension GL_EXT_shader_texture_lod: enable\n\n';
+            }
+        }
 
         shader = createShaderFromCode(
             device,

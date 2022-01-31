@@ -30,7 +30,6 @@ class FallingShapesExample {
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
             // Set the gravity for our rigid bodies
-            // @ts-ignore engine-tsd
             app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
             function createMaterial(color: pc.Color) {

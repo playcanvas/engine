@@ -12,7 +12,6 @@ import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
-import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
 class LocomotionExample {
     static CATEGORY = 'Animation';
@@ -291,12 +290,9 @@ class LocomotionExample {
             Locomotion.prototype.onMouseDown = function (event: any) {
                 if (event.button !== 0) return;
                 // Set the character target position to a position on the plane that the user has clicked
-                const cameraEntity = app.root.findByName('Camera');
-                // @ts-ignore engine-tsd
+                const cameraEntity = app.root.findByName('Camera') as pc.Entity;
                 const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
-                // @ts-ignore engine-tsd
                 const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
-                // @ts-ignore engine-tsd
                 const result = app.systems.rigidbody.raycastFirst(far, near);
                 if (result) {
                     targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
@@ -334,13 +330,11 @@ class LocomotionExample {
                     const distance = targetPosition.clone().sub(currentPosition);
                     const direction = distance.clone().normalize();
                     characterDirection = new pc.Vec3().sub(direction);
-                    // @ts-ignore engine-tsd
-                    const movement = direction.clone().scale(dt * moveSpeed);
+                    const movement = direction.clone().mulScalar(dt * moveSpeed);
                     if (movement.length() < distance.length()) {
                         currentPosition.add(movement);
                         characterEntity.setPosition(currentPosition);
-                        // @ts-ignore engine-tsd
-                        characterEntity.lookAt(characterEntity.position.clone().add(characterDirection));
+                        characterEntity.lookAt(characterEntity.getPosition().clone().add(characterDirection));
                     } else {
                         currentPosition.copy(targetPosition);
                         characterEntity.setPosition(currentPosition);

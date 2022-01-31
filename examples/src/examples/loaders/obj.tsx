@@ -38,7 +38,6 @@ class ObjExample {
                 const mis = entity.model.model.meshInstances;
                 for (let i = 0; i < mis.length; i++) {
                     mis[i].material = new pc.StandardMaterial();
-                    // @ts-ignore engine-tsd
                     mis[i].material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
                     mis[i].material.update();
                 }

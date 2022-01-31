@@ -2,7 +2,22 @@ import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2, UNIFORMTYP
     UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY } from './constants.js';
 import { Version } from './version.js';
 
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
+/**
+ * Representation of a shader uniform.
+ *
+ * @ignore
+ */
 class ShaderInput {
+    /**
+     * Create a new ShaderInput instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader input.
+     * @param {string} name - The name of the shader input.
+     * @param {number} type - The type of the shader input.
+     * @param {number} locationId - The location id of the shader input.
+     */
     constructor(graphicsDevice, name, type, locationId) {
         // Set the shader attribute location
         this.locationId = locationId;

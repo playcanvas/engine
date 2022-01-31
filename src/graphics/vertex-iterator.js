@@ -299,8 +299,15 @@ class VertexIterator {
         this.vertexBuffer.unlock();
     }
 
-    // Copies data for specified semantic into vertex buffer.
-    // Works with both interleaved (slower) and non-interleaved (fast) vertex buffer
+    /**
+     * Copies data for specified semantic into vertex buffer. Works with both interleaved (slower)
+     * and non-interleaved (fast) vertex buffers.
+     *
+     * @param {string} semantic - The semantic of the vertex element to set.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The data to set.
+     * @param {number} numVertices - The number of vertices to write.
+     * @ignore
+     */
     writeData(semantic, data, numVertices) {
         const element = this.element[semantic];
         if (element) {
@@ -344,11 +351,17 @@ class VertexIterator {
         }
     }
 
-    // Function to extract elements of a specified semantic from vertex buffer into flat array
-    // (data). Works with both interleaved (slower) and non-interleaved (fast) vertex buffer
-    // returns number of vertices.
-    // Note: when data is typed array and is smaller than needed, only part of data gets copied out
-    // (typed arrays ignore read/write out of range).
+    /**
+     * Function to extract elements of a specified semantic from vertex buffer into flat array
+     * (data). Works with both interleaved (slower) and non-interleaved (fast) vertex buffers.
+     * Returns number of vertices. Note: when data is a typed array and is smaller than needed,
+     * only part of the data gets copied out (typed arrays ignore read/write out of range).
+     *
+     * @param {string} semantic - The semantic of the vertex element to read.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The aray to recieve the data.
+     * @returns {number} The number of vertices read.
+     * @ignore
+     */
     readData(semantic, data) {
         const element = this.element[semantic];
         let count = 0;

@@ -4,6 +4,7 @@ import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
+/** @typedef {import('../../../asset/asset.js').Asset} Asset */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -102,7 +103,14 @@ class AnimComponentLayer {
      * @type {number}
      */
     set activeStateCurrentTime(time) {
-        this._controller.activeStateCurrentTime = time;
+        const controller = this._controller;
+        const layerPlaying = controller.playing;
+        controller.playing = true;
+        controller.activeStateCurrentTime = time;
+        if (!layerPlaying) {
+            controller.update(0);
+        }
+        controller.playing = layerPlaying;
     }
 
     get activeStateCurrentTime() {
@@ -167,7 +175,6 @@ class AnimComponentLayer {
     }
 
     /**
-     *
      * A mask of bones which should be animated or ignored by this layer.
      *
      * @type {object}
@@ -299,10 +306,10 @@ class AnimComponentLayer {
     }
 
     /**
-     *  Returns the asset that is associated with the given state.
+     * Returns the asset that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @type {pc.Asset}
+     * @returns {Asset} The asset associated with the given state.
      */
     getAnimationAsset(stateName) {
         return this._component.animationAssets[`${this.name}:${stateName}`];

@@ -2,9 +2,6 @@ import React, { useEffect } from 'react';
 import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
 
-// @ts-ignore: library file import
-import { Observer } from '@playcanvas/observer';
-
 class BlendTrees2DDirectionalExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Directional';
@@ -77,8 +74,7 @@ class BlendTrees2DDirectionalExample {
             drawPosition(ctx);
             const mouseEvent = (e: any) => {
                 if (e.buttons) {
-                    // @ts-ignore engine-tsd
-                    position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                    position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                     position.y *= -1.0;
                     modelEntity.anim.setFloat('posX', position.x);
                     modelEntity.anim.setFloat('posY', position.y);
