@@ -48,7 +48,6 @@ import { Entity } from '../../framework/entity.js';
 import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
 import { AnimData } from '../../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { AnimBinder } from '../../anim/binder/anim-binder.js';
 
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
@@ -1356,6 +1355,15 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         'weights': 'weights'
     };
 
+    const constructNodePath = (node) => {
+        const path = [];
+        while (node) {
+            path.unshift(node.name);
+            node = node.parent;
+        }
+        return path;
+    };
+
     // convert anim channels
     for (i = 0; i < gltfAnimation.channels.length; ++i) {
         const channel = gltfAnimation.channels[i];
@@ -1363,7 +1371,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const curve = curves[channel.sampler];
 
         const node = nodes[target.node];
-        const entityPath = [nodes[0].name, ...AnimBinder.splitPath(node.path, '/')];
+        const entityPath = constructNodePath(node);
         curve._paths.push({
             entityPath: entityPath,
             component: 'graph',
@@ -1632,10 +1640,16 @@ const createNodes = function (gltf, options) {
     for (let i = 0; i < gltf.nodes.length; ++i) {
         const gltfNode = gltf.nodes[i];
         if (gltfNode.hasOwnProperty('children')) {
+            const parent = nodes[i];
+            const uniqueNames = { };
             for (let j = 0; j < gltfNode.children.length; ++j) {
-                const parent = nodes[i];
                 const child = nodes[gltfNode.children[j]];
                 if (!child.parent) {
+                    if (uniqueNames.hasOwnProperty(child.name)) {
+                        child.name += uniqueNames[child.name]++;
+                    } else {
+                        uniqueNames[child.name] = 1;
+                    }
                     parent.addChild(child);
                 }
             }
@@ -1870,6 +1884,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         'image/jpeg': 'jpg',
         'image/basis': 'basis',
         'image/ktx': 'ktx',
+        'image/ktx2': 'ktx2',
         'image/vnd-ms.dds': 'dds'
     };
 
@@ -1881,7 +1896,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             url: url || name
         };
         if (bufferView) {
-            file.contents = bufferView;
+            file.contents = bufferView.slice(0).buffer;
         }
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];

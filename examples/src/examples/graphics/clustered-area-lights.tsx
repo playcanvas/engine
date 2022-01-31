@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -13,7 +13,7 @@ import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class AreaLightsExample extends Example {
+class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Area Lights';
 
@@ -57,24 +57,29 @@ class AreaLightsExample extends Example {
         });
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
-        pc.LayerComposition.clusteredLightingEnabled = true;
+        app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
+        // @ts-ignore
+        const lighting = app.scene.lighting;
+
         // 1) subdivide space with lights into this many cells:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingCells = new pc.Vec3(30, 2, 30);
+        lighting.cells = new pc.Vec3(30, 2, 30);
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingMaxLights = 20;
+        lighting.maxLightsPerCell = 20;
 
         // @ts-ignore engine-tsd
-        app.scene.layers.clusteredLightingAreaLightsEnabled = true;
+        lighting.areaLightsEnabled = true;
+
+        // @ts-ignore engine-tsd
+        lighting.shadowsEnabled = false;
 
 
         // pure black material - used on back side of light objects
@@ -186,7 +191,6 @@ class AreaLightsExample extends Example {
         app.setAreaLightLuts(assets.luts);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // create ground plane
@@ -207,7 +211,8 @@ class AreaLightsExample extends Example {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: ground,
-                distanceMax: 24
+                distanceMax: 60,
+                frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");
@@ -215,7 +220,6 @@ class AreaLightsExample extends Example {
         app.root.addChild(camera);
 
         // add bloom postprocessing
-        camera.addComponent("script");
         camera.script.create("bloom", {
             attributes: {
                 bloomIntensity: 1.5,

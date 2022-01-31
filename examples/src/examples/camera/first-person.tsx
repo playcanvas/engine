@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class FirstPersonExample extends Example {
+
+class FirstPersonExample {
     static CATEGORY = 'Camera';
     static NAME = 'First Person';
 
@@ -112,7 +112,7 @@ class FirstPersonExample extends Example {
             characterController.script.create("touchInput");
             characterController.setLocalPosition(0, 1, 10);
 
-            // Add the character controll and camera to the hierarchy
+            // Add the character controller and camera to the hierarchy
             app.root.addChild(characterController);
             characterController.addChild(camera);
 

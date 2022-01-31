@@ -1,6 +1,6 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -15,7 +15,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class LightsExample extends Example {
+class LightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights';
 
@@ -88,7 +88,7 @@ class LightsExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // create an entity with the statue
         const entity = assets.statue.resource.instantiateRenderEntity();
@@ -124,17 +124,17 @@ class LightsExample extends Example {
         data.set('lights', {
             spot: {
                 enabled: true,
-                intensity: 0.6,
+                intensity: 0.8,
                 cookieIntensity: 1
             },
             omni: {
                 enabled: true,
-                intensity: 0.6,
+                intensity: 0.8,
                 cookieIntensity: 1
             },
             directional: {
                 enabled: true,
-                intensity: 0.6
+                intensity: 0.8
             }
         });
 

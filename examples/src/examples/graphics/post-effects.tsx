@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -15,7 +15,7 @@ import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class PostEffectsExample extends Example {
+class PostEffectsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Post Effects';
 
@@ -112,7 +112,7 @@ class PostEffectsExample extends Example {
         // setup skydome
         app.scene.setSkybox(assets['helipad.dds'].resources);
         app.scene.skyboxMip = 3;
-        app.scene.exposure = 1.6;
+        app.scene.exposure = 1;
 
         // helper function to create a 3d primitive including its material
         function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, brightness: number, allowEmissive = true) {
@@ -165,7 +165,7 @@ class PostEffectsExample extends Example {
         }
 
         // create a sphere which represents the point of focus for the bokeh filter
-        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 2.8, false);
+        const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 1.5, false);
 
         // add an omni light as a child of this sphere
         const light = new pc.Entity();
@@ -292,7 +292,7 @@ class PostEffectsExample extends Example {
             // - it's a negative distance between the camera and the focus sphere
             camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-            // display the depth textur if bokeh is enabled
+            // display the depth texture if bokeh is enabled
             if (camera.script.bokeh.enabled) {
                 // @ts-ignore engine-tsd
                 app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);

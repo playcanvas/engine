@@ -1,21 +1,34 @@
 import { AnimTargetValue } from './anim-target-value.js';
 
+/** @typedef {import('../binder/anim-binder.js').AnimBinder} AnimBinder */
+/** @typedef {import('./anim-clip.js').AnimClip} AnimClip */
+
 /**
- * @private
- * @class
- * @name AnimEvaluator
- * @classdesc AnimEvaluator blends multiple sets of animation clips together.
- * @description Create a new animation evaluator.
- * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
- * @property {AnimClip[]} clips - the list of animation clips
+ * AnimEvaluator blends multiple sets of animation clips together.
+ *
+ * @ignore
  */
 class AnimEvaluator {
+    /**
+     * Create a new animation evaluator.
+     *
+     * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+     */
     constructor(binder) {
         this._binder = binder;
         this._clips = [];
         this._inputs = [];
         this._outputs = [];
         this._targets = {};
+    }
+
+    /**
+     * The list of animation clips.
+     *
+     * @type {AnimClip[]}
+     */
+    get clips() {
+        return this._clips;
     }
 
     static _dot(a, b) {
@@ -104,20 +117,8 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @name AnimEvaluator#clips
-     * @type {AnimClip[]}
-     * @description The number of clips.
-     */
-    get clips() {
-        return this._clips;
-    }
-
-    /**
-     * @private
-     * @function
-     * @name AnimEvaluator#addClip
-     * @description Add a clip to the evaluator.
+     * Add a clip to the evaluator.
+     *
      * @param {AnimClip} clip - The clip to add to the evaluator.
      */
     addClip(clip) {
@@ -184,10 +185,8 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#removeClip
-     * @description Remove a clip from the evaluator.
+     * Remove a clip from the evaluator.
+     *
      * @param {number} index - Index of the clip to remove.
      */
     removeClip(index) {
@@ -225,10 +224,7 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#removeClips
-     * @description Remove all clips from the evaluator.
+     * Remove all clips from the evaluator.
      */
     removeClips() {
         while (this._clips.length > 0) {
@@ -237,10 +233,8 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#findClip
-     * @description Returns the first clip which matches the given name, or null if no such clip was found.
+     * Returns the first clip which matches the given name, or null if no such clip was found.
+     *
      * @param {string} name - Name of the clip to find.
      * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
      */
@@ -270,12 +264,11 @@ class AnimEvaluator {
     }
 
     /**
-     * @private
-     * @function
-     * @name AnimEvaluator#update
-     * @description Evaluator frame update function. All the attached {@link AnimClip}s are evaluated,
-     * blended and the results set on the {@link AnimTarget}.
-     * @param {number} deltaTime - The amount of time that has passed since the last update, in seconds.
+     * Evaluator frame update function. All the attached {@link AnimClip}s are evaluated, blended
+     * and the results set on the {@link AnimTarget}.
+     *
+     * @param {number} deltaTime - The amount of time that has passed since the last update, in
+     * seconds.
      */
     update(deltaTime) {
         // copy clips

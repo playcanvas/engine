@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class LightsBakedExample extends Example {
+
+class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
 

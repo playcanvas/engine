@@ -11,12 +11,13 @@ import {
     TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 /**
- * @private
- * @class
- * @name DdsParser
+ * Legacy texture parser for dds files.
+ *
  * @implements {TextureParser}
- * @classdesc Legacy texture parser for dds files.
+ * @ignore
  */
 class DdsParser {
     constructor(registry) {

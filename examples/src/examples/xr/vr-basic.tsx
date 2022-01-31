@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class VRBasicExample extends Example {
+
+class VrBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Basic';
 
@@ -82,13 +82,13 @@ class VRBasicExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -118,7 +118,7 @@ class VRBasicExample extends Example {
                 message("Immersive VR is " + (available ? 'available' : 'unavailable'));
             });
 
-            if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
+            if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
                 message("Immersive VR is not available");
             }
         } else {
@@ -127,4 +127,4 @@ class VRBasicExample extends Example {
     }
 }
 
-export default VRBasicExample;
+export default VrBasicExample;

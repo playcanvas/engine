@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class MeshDeformationExample extends Example {
+class MeshDeformationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Deformation';
 
@@ -25,7 +25,7 @@ class MeshDeformationExample extends Example {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 2;
+        app.scene.exposure = 1;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Create an Entity with a camera component

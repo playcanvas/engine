@@ -18,15 +18,9 @@ class ImmediateBatches {
         return batch;
     }
 
-    onPreRender() {
+    onPreRender(visibleList, transparent) {
         this.map.forEach((batch) => {
-            batch.onPreRender();
-        });
-    }
-
-    onPostRender() {
-        this.map.forEach((batch) => {
-            batch.onPostRender();
+            batch.onPreRender(visibleList, transparent);
         });
     }
 }

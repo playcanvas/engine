@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
 // @ts-ignore: library file import
@@ -12,9 +12,8 @@ import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
-import { wasmSupported, loadWasmModuleAsync } from '../../wasm-loader';
 
-class LocomotionExample extends Example {
+class LocomotionExample {
     static CATEGORY = 'Animation';
     static NAME = 'Locomotion';
 
@@ -56,7 +55,6 @@ class LocomotionExample extends Example {
             app.scene.skyboxMip = 2;
             app.scene.skyboxIntensity = 0.7;
             app.scene.setSkybox(assets.cubemap.resources);
-            app.scene.gammaCorrection = pc.GAMMA_SRGB;
             app.scene.toneMapping = pc.TONEMAP_ACES;
 
             // Create an Entity with a camera component
@@ -94,8 +92,9 @@ class LocomotionExample extends Example {
                 castShadows: true
             });
 
-            // assign the renderEntity as the child of character entity. All transforms of the renderEntity and it's children are driven by the anim component.
-            // The charaterEntity transform will be controlled by the Locomotion script.
+            // assign the renderEntity as the child of character entity. All transforms of the
+            // renderEntity and its children are driven by the anim component.
+            // The characterEntity transform will be controlled by the Locomotion script.
             characterEntity.addChild(renderEntity);
 
             // add an anim component to the entity
@@ -274,7 +273,7 @@ class LocomotionExample extends Example {
                 }
             });
 
-            // create a Locomotion script and inilialise some variables
+            // create a Locomotion script and initialize some variables
             const Locomotion = pc.createScript('Locomotion');
 
             let characterDirection;
@@ -291,12 +290,9 @@ class LocomotionExample extends Example {
             Locomotion.prototype.onMouseDown = function (event: any) {
                 if (event.button !== 0) return;
                 // Set the character target position to a position on the plane that the user has clicked
-                const cameraEntity = app.root.findByName('Camera');
-                // @ts-ignore engine-tsd
+                const cameraEntity = app.root.findByName('Camera') as pc.Entity;
                 const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
-                // @ts-ignore engine-tsd
                 const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
-                // @ts-ignore engine-tsd
                 const result = app.systems.rigidbody.raycastFirst(far, near);
                 if (result) {
                     targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
@@ -304,7 +300,7 @@ class LocomotionExample extends Example {
                 }
             };
 
-            // defines how many units the character should move per second given it's current animation state
+            // defines how many units the character should move per second given its current animation state
             function speedForState(state: any) {
                 switch (state) {
                     case 'Walk':
@@ -334,13 +330,11 @@ class LocomotionExample extends Example {
                     const distance = targetPosition.clone().sub(currentPosition);
                     const direction = distance.clone().normalize();
                     characterDirection = new pc.Vec3().sub(direction);
-                    // @ts-ignore engine-tsd
-                    const movement = direction.clone().scale(dt * moveSpeed);
+                    const movement = direction.clone().mulScalar(dt * moveSpeed);
                     if (movement.length() < distance.length()) {
                         currentPosition.add(movement);
                         characterEntity.setPosition(currentPosition);
-                        // @ts-ignore engine-tsd
-                        characterEntity.lookAt(characterEntity.position.clone().add(characterDirection));
+                        characterEntity.lookAt(characterEntity.getPosition().clone().add(characterDirection));
                     } else {
                         currentPosition.copy(targetPosition);
                         characterEntity.setPosition(currentPosition);

@@ -12,34 +12,60 @@ const tmpSphere = new BoundingSphere();
 const tmpMat4 = new Mat4();
 
 /**
- * @class
- * @name OrientedBox
- * @description Create a new oriented box.
- * @classdesc Oriented Box.
- * @property {Mat4} [worldTransform] The world transform of the OBB.
- * @param {Mat4} [worldTransform] - Transform that has the orientation and position of the box. Scale is assumed to be one.
- * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
+ * Oriented Box.
  */
 class OrientedBox {
+    /**
+     * Create a new OrientedBox instance.
+     *
+     * @param {Mat4} [worldTransform] - Transform that has the orientation and position of the box.
+     * Scale is assumed to be one.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. The
+     * constructor takes a reference of this parameter.
+     */
     constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
-
         Debug.assert(!Object.isFrozen(worldTransform), `The constructor of 'OrientedBox' does not accept a constant (frozen) object as a 'worldTransform' parameter`);
         Debug.assert(!Object.isFrozen(halfExtents), `The constructor of 'OrientedBox' does not accept a constant (frozen) object as a 'halfExtents' parameter`);
 
         this.halfExtents = halfExtents;
 
+        /**
+         * @type {Mat4}
+         * @private
+         */
         this._modelTransform = worldTransform.clone().invert();
-
+        /**
+         * @type {Mat4}
+         * @private
+         */
         this._worldTransform = worldTransform.clone();
+        /**
+         * @type {BoundingBox}
+         * @private
+         */
         this._aabb = new BoundingBox(new Vec3(), this.halfExtents);
     }
 
     /**
-     * @function
-     * @name OrientedBox#intersectsRay
-     * @description Test if a ray intersects with the OBB.
+     * The world transform of the OBB.
+     *
+     * @type {Mat4}
+     */
+    set worldTransform(value) {
+        this._worldTransform.copy(value);
+        this._modelTransform.copy(value).invert();
+    }
+
+    get worldTransform() {
+        return this._worldTransform;
+    }
+
+    /**
+     * Test if a ray intersects with the OBB.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -56,9 +82,8 @@ class OrientedBox {
     }
 
     /**
-     * @function
-     * @name OrientedBox#containsPoint
-     * @description Test if a point is inside a OBB.
+     * Test if a point is inside a OBB.
+     *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the OBB and false otherwise.
      */
@@ -68,11 +93,11 @@ class OrientedBox {
     }
 
     /**
-     * @function
-     * @name OrientedBox#intersectsBoundingSphere
-     * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
+     * Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
+     *
      * @param {BoundingSphere} sphere - Bounding Sphere to test.
-     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
+     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB
+     * and false otherwise.
      */
     intersectsBoundingSphere(sphere) {
         this._modelTransform.transformPoint(sphere.center, tmpSphere.center);
@@ -83,15 +108,6 @@ class OrientedBox {
         }
 
         return false;
-    }
-
-    get worldTransform() {
-        return this._worldTransform;
-    }
-
-    set worldTransform(value) {
-        this._worldTransform.copy(value);
-        this._modelTransform.copy(value).invert();
     }
 }
 

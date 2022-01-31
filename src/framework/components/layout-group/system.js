@@ -7,19 +7,23 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 const MAX_ITERATIONS = 100;
 
 /**
- * @class
- * @name LayoutGroupComponentSystem
+ * Manages creation of {@link LayoutGroupComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutGroupComponentSystem.
- * @classdesc Manages creation of {@link LayoutGroupComponent}s.
- * @param {Application} app - The application.
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutGroupComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 
@@ -44,40 +48,13 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         if (data.reverseX !== undefined) component.reverseX = data.reverseX;
         if (data.reverseY !== undefined) component.reverseY = data.reverseY;
         if (data.alignment !== undefined) {
-            if (data.alignment instanceof Vec2) {
-                component.alignment.copy(data.alignment);
-            } else {
-                component.alignment.set(data.alignment[0], data.alignment[1]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.alignment = component.alignment;
-            /* eslint-enable no-self-assign */
+            component.alignment = Array.isArray(data.alignment) ? new Vec2(data.alignment) : data.alignment;
         }
         if (data.padding !== undefined) {
-            if (data.padding instanceof Vec4) {
-                component.padding.copy(data.padding);
-            } else {
-                component.padding.set(data.padding[0], data.padding[1], data.padding[2], data.padding[3]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.padding = component.padding;
-            /* eslint-enable no-self-assign */
+            component.padding = Array.isArray(data.padding) ? new Vec4(data.padding) : data.padding;
         }
         if (data.spacing !== undefined) {
-            if (data.spacing instanceof Vec2) {
-                component.spacing.copy(data.spacing);
-            } else {
-                component.spacing.set(data.spacing[0], data.spacing[1]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.spacing = component.spacing;
-            /* eslint-enable no-self-assign */
+            component.spacing = Array.isArray(data.spacing) ? new Vec2(data.spacing) : data.spacing;
         }
         if (data.widthFitting !== undefined) component.widthFitting = data.widthFitting;
         if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;

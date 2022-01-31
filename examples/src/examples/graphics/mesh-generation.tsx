@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class MeshGenerationExample extends Example {
+class MeshGenerationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Generation';
 
@@ -56,8 +56,8 @@ class MeshGenerationExample extends Example {
 
         // create 4 lights that will move in the scene and deform the mesh as well
         const lights = [
-            { radius: 7, speed: 1,    scale: 2.5, light: createLight(new pc.Color(0.3, 0.9, 0.6), 1.0) },
-            { radius: 3, speed: 1.2,  scale: 3.0, light: createLight(new pc.Color(0.7, 0.2, 0.3), 1.3) },
+            { radius: 7, speed: 1.0, scale: 2.5, light: createLight(new pc.Color(0.3, 0.9, 0.6), 1.0) },
+            { radius: 3, speed: 1.2, scale: 3.0, light: createLight(new pc.Color(0.7, 0.2, 0.3), 1.3) },
             { radius: 5, speed: -0.8, scale: 4.0, light: createLight(new pc.Color(0.2, 0.2, 0.9), 1.5) },
             { radius: 4, speed: -0.3, scale: 5.5, light: createLight(new pc.Color(0.8, 0.9, 0.4), 1.7) }
         ];
@@ -80,7 +80,7 @@ class MeshGenerationExample extends Example {
         const extent = 20;
         const scale = extent / resolution;
 
-        // Generate positions and uv coordinates for verticies, store them in Float32Arrays
+        // Generate positions and uv coordinates for vertices, store them in Float32Arrays
         const positions = new Float32Array(3 * resolution * resolution);
         const uvs =  new Float32Array(2 * resolution * resolution);
         let index = 0;
@@ -95,7 +95,7 @@ class MeshGenerationExample extends Example {
             }
         }
 
-        // Generate array of indicies to form triangle list - two triangles per grid square
+        // Generate array of indices to form triangle list - two triangles per grid square
         const indexArray: any = [];
         for (let x = 0; x < resolution - 1; x++) {
             for (let y = 0; y < resolution - 1; y++) {

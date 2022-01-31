@@ -1,8 +1,7 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class PortalExample extends Example {
+
+class PortalExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Portal';
 
@@ -20,9 +19,9 @@ class PortalExample extends Example {
 
         app.start();
 
-        ///////////////////////////////
-        // Scipt to rotate the scene //
-        ///////////////////////////////
+        ////////////////////////////////
+        // Script to rotate the scene //
+        ////////////////////////////////
         const Rotator = pc.createScript('rotator');
 
         let t = 0;

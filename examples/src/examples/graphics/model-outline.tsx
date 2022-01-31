@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ModelOutlineExample extends Example {
+
+class ModelOutlineExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Outline';
 
@@ -23,7 +23,7 @@ class ModelOutlineExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // helper function to createa a primitive with shape type, position, scale, color and layer
+        // helper function to create a primitive with shape type, position, scale, color and layer
         function createPrimitive(primitiveType: string, position: number | pc.Vec3, scale: number | pc.Vec3, color: pc.Color, layer: number[]) {
             // create material of specified color
             const material = new pc.StandardMaterial();
@@ -64,8 +64,7 @@ class ModelOutlineExample extends Example {
         const outlineLayer = new pc.Layer({ name: "OutlineLayer" });
         app.scene.layers.insert(outlineLayer, 0);
 
-        // set up layer to render to the render targer
-        // @ts-ignore engine-tsd
+        // set up layer to render to the render target
         outlineLayer.renderTarget = renderTarget;
 
         // get world layer
@@ -136,7 +135,6 @@ class ModelOutlineExample extends Example {
                 colorBuffer: texture,
                 depth: true
             });
-            // @ts-ignore engine-tsd
             outlineLayer.renderTarget = renderTarget;
 
             app.scene.layers.insert(outlineLayer, 0);

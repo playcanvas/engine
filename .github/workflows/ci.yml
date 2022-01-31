@@ -14,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.5.0
+      uses: actions/setup-node@v2.5.1
       with:
         node-version: 12.x
     - name: Install dependencies
@@ -29,7 +29,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.5.0
+      uses: actions/setup-node@v2.5.1
       with:
         node-version: 12.x
     - name: Install dependencies
@@ -37,29 +37,46 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
-  typescript-definitions:
-    name: Typescript Definitions
+  typescript-declarations:
+    name: TypeScript Declarations
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.5.0
+      uses: actions/setup-node@v2.5.1
       with:
         node-version: 12.x
     - name: Install dependencies
       run: npm ci
-    - name: Build Typescript definitions
-      run: npm run test:tsd
+    - name: Build TypeScript declarations
+      run: npm run build:types
+    - name: Compile TypeScript declarations
+      run: npm run test:types
 
-  unit-test:
-    name: Unit Test
+  unit-test-node:
+    name: Unit Test (Node)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Node.js 16.x
+      uses: actions/setup-node@v2.5.0
+      with:
+        node-version: 16.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Run unit tests
+      run: npm test
+
+  unit-test-karma:
+    name: Unit Test (Karma)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.5.0
+      uses: actions/setup-node@v2.5.1
       with:
         node-version: 12.x
     - name: Install dependencies
@@ -69,4 +86,26 @@ jobs:
     - name: Install X virtual framebuffer
       run: sudo apt-get install xvfb
     - name: Run unit tests
-      run: xvfb-run --auto-servernum npm run test
+      run: xvfb-run --auto-servernum npm run test:karma
+
+  build-examples:
+    name: Build Examples Browser
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Node.js 12.x
+      uses: actions/setup-node@v2.5.1
+      with:
+        node-version: 12.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Build PlayCanvas (ES6-only)
+      run: npm run build:es6
+    - name: Build TypeScript declarations
+      run: npm run build:types
+    - name: Build Examples Browser
+      working-directory: ./examples
+      run: |
+        npm ci
+        npm run build

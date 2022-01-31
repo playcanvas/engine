@@ -4,45 +4,45 @@ import {
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
 } from './constants.js';
 
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 /**
- * @class
- * @name IndexBuffer
- * @classdesc An index buffer stores index values into a {@link VertexBuffer}.
- * Indexed graphical primitives can normally utilize less memory that unindexed
- * primitives (if vertices are shared).
+ * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives
+ * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
- * @description Creates a new index buffer.
- * @example
- * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
- * // static, hinting that the buffer will never be modified.
- * var indices = new UInt16Array([0, 1, 2]);
- * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
- *                                      pc.INDEXFORMAT_UINT16,
- *                                      3,
- *                                      pc.BUFFER_STATIC,
- *                                      indices);
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to
- * manage this index buffer.
- * @param {number} format - The type of each index to be stored in the index
- * buffer. Can be:
- *
- * - {@link INDEXFORMAT_UINT8}
- * - {@link INDEXFORMAT_UINT16}
- * - {@link INDEXFORMAT_UINT32}
- * @param {number} numIndices - The number of indices to be stored in the index
- * buffer.
- * @param {number} [usage] - The usage type of the vertex buffer. Can be:
- *
- * - {@link BUFFER_DYNAMIC}
- * - {@link BUFFER_STATIC}
- * - {@link BUFFER_STREAM}
- *
- * Defaults to {@link BUFFER_STATIC}.
- * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the
- * index buffer will be initialized to zeros.
  */
 class IndexBuffer {
+    /**
+     * Create a new IndexBuffer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index
+     * buffer.
+     * @param {number} format - The type of each index to be stored in the index buffer. Can be:
+     *
+     * - {@link INDEXFORMAT_UINT8}
+     * - {@link INDEXFORMAT_UINT16}
+     * - {@link INDEXFORMAT_UINT32}
+     * @param {number} numIndices - The number of indices to be stored in the index buffer.
+     * @param {number} [usage] - The usage type of the vertex buffer. Can be:
+     *
+     * - {@link BUFFER_DYNAMIC}
+     * - {@link BUFFER_STATIC}
+     * - {@link BUFFER_STREAM}
+     *
+     * Defaults to {@link BUFFER_STATIC}.
+     * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
+     * will be initialized to zeros.
+     * @example
+     * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
+     * // static, hinting that the buffer will never be modified.
+     * var indices = new UInt16Array([0, 1, 2]);
+     * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
+     *                                      pc.INDEXFORMAT_UINT16,
+     *                                      3,
+     *                                      pc.BUFFER_STATIC,
+     *                                      indices);
+     */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
@@ -80,9 +80,7 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#destroy
-     * @description Frees resources associated with this index buffer.
+     * Frees resources associated with this index buffer.
      */
     destroy() {
         const device = this.device;
@@ -103,15 +101,18 @@ class IndexBuffer {
         }
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the WebGL context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
         this.bufferId = undefined;
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getFormat
-     * @description Returns the data format of the specified index buffer.
+     * Returns the data format of the specified index buffer.
+     *
      * @returns {number} The data format of the specified index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}
@@ -123,9 +124,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#getNumIndices
-     * @description Returns the number of indices stored in the specified index buffer.
+     * Returns the number of indices stored in the specified index buffer.
+     *
      * @returns {number} The number of indices stored in the specified index buffer.
      */
     getNumIndices() {
@@ -133,9 +133,8 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#lock
-     * @description Gives access to the block of memory that stores the buffer's indices.
+     * Gives access to the block of memory that stores the buffer's indices.
+     *
      * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
      */
     lock() {
@@ -143,11 +142,9 @@ class IndexBuffer {
     }
 
     /**
-     * @function
-     * @name IndexBuffer#unlock
-     * @description Signals that the block of memory returned by a call to the lock function is
-     * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
-     * currently active device.
+     * Signals that the block of memory returned by a call to the lock function is ready to be
+     * given to the graphics hardware. Only unlocked index buffers can be set on the currently
+     * active device.
      */
     unlock() {
         // Upload the new index data
@@ -181,9 +178,16 @@ class IndexBuffer {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
     }
 
+    /**
+     * Set preallocated data on the index buffer.
+     *
+     * @param {ArrayBuffer} data - The index data to set.
+     * @returns {boolean} True if the data was set successfully, false otherwise.
+     * @ignore
+     */
     setData(data) {
         if (data.byteLength !== this.numBytes) {
-            Debug.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+            Debug.error(`IndexBuffer: wrong initial data size: expected ${this.numBytes}, got ${data.byteLength}`);
             return false;
         }
 
@@ -192,6 +196,12 @@ class IndexBuffer {
         return true;
     }
 
+    /**
+     * Get the appropriate typed array from an index buffer.
+     *
+     * @returns {Uint8Array|Uint16Array|Uint32Array} The typed array containing the index data.
+     * @private
+     */
     _lockTypedArray() {
         const lock = this.lock();
         const indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
@@ -199,8 +209,14 @@ class IndexBuffer {
         return indices;
     }
 
-    // Copies count elements from data into index buffer.
-    // optimized for performance from both typed array as well as array
+    /**
+     * Copies the specified number of elements from data into index buffer. Optimized for
+     * performance from both typed array as well as array.
+     *
+     * @param {Uint8Array|Uint16Array|Uint32Array|number[]} data - The data to write.
+     * @param {number} count - The number of indices to write.
+     * @ignore
+     */
     writeData(data, count) {
         const indices = this._lockTypedArray();
 
@@ -224,7 +240,13 @@ class IndexBuffer {
         this.unlock();
     }
 
-    // copies index data from index buffer into provided data array
+    /**
+     * Copies index data from index buffer into provided data array.
+     *
+     * @param {Uint8Array|Uint16Array|Uint32Array|number[]} data - The data array to write to.
+     * @returns {number} The number of indices read.
+     * @ignore
+     */
     readData(data) {
         // note: there is no need to unlock this buffer, as we are only reading from it
         const indices = this._lockTypedArray();

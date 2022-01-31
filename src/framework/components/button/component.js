@@ -8,7 +8,12 @@ import { EntityReference } from '../../utils/entity-reference.js';
 import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
-import { ELEMENTTYPE_GROUP } from "../element/constants";
+import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+
+/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').ButtonComponentSystem} ButtonComponentSystem */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -36,14 +41,9 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
 /**
- * @component
- * @class
- * @name ButtonComponent
- * @augments Component
- * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
- * @description Create a new ButtonComponent.
- * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * A ButtonComponent enables a group of entities to behave like a button, with different visual
+ * states for hover and press interactions.
+ *
  * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
  * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
  * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
@@ -58,8 +58,15 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
  * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
+ * @augments Component
  */
 class ButtonComponent extends Component {
+    /**
+     * Create a new ButtonComponent instance.
+     *
+     * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
@@ -425,8 +432,15 @@ class ButtonComponent extends Component {
 
         if (this._imageReference.hasComponent('element')) {
             this._isApplyingSprite = true;
-            this._imageReference.entity.element.spriteAsset = spriteAsset;
-            this._imageReference.entity.element.spriteFrame = spriteFrame;
+
+            if (this._imageReference.entity.element.spriteAsset !== spriteAsset) {
+                this._imageReference.entity.element.spriteAsset = spriteAsset;
+            }
+
+            if (this._imageReference.entity.element.spriteFrame !== spriteFrame) {
+                this._imageReference.entity.element.spriteFrame = spriteFrame;
+            }
+
             this._isApplyingSprite = false;
         }
     }
@@ -442,26 +456,39 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            this._isApplyingTint = true;
-            this._imageReference.entity.element.color = toColor3(tintColor);
+        if (!tintColor || !this._imageReference.hasComponent('element'))
+            return;
+
+        const color3 = toColor3(tintColor);
+
+        this._isApplyingTint = true;
+
+        if (!color3.equals(this._imageReference.entity.element.color))
+            this._imageReference.entity.element.color = color3;
+
+        if (this._imageReference.entity.element.opacity != tintColor.a)
             this._imageReference.entity.element.opacity = tintColor.a;
-            this._isApplyingTint = false;
-        }
+
+        this._isApplyingTint = false;
     }
 
     _applyTintWithTween(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            const color = this._imageReference.entity.element.color;
-            const opacity = this._imageReference.entity.element.opacity;
+        if (!tintColor || !this._imageReference.hasComponent('element'))
+            return;
 
-            this._tweenInfo = {
-                startTime: now(),
-                from: new Color(color.r, color.g, color.b, opacity),
-                to: tintColor.clone(),
-                lerpColor: new Color()
-            };
-        }
+        const color3 = toColor3(tintColor);
+        const color = this._imageReference.entity.element.color;
+        const opacity = this._imageReference.entity.element.opacity;
+
+        if (color3.equals(color) && tintColor.a == opacity)
+            return;
+
+        this._tweenInfo = {
+            startTime: now(),
+            from: new Color(color.r, color.g, color.b, opacity),
+            to: tintColor.clone(),
+            lerpColor: new Color()
+        };
     }
 
     _updateTintTween() {

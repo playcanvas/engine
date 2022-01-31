@@ -6,27 +6,45 @@ import { Vec3 } from '../math/vec3.js';
 
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
+/** @typedef {import('../framework/application.js').Application} Application */
+
 /**
- * @private
- * @deprecated
- * @class
- * @name VrDisplay
- * @augments EventHandler
- * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
- * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
- * from the WebVR API.
- * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
- * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
- * from the WebVR API.
- * @param {Application} app - The application outputting to this VR display.
- * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
+ * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
+ *
+ * @callback vrDisplayCallback
+ * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
+ * @ignore
+ */
+
+/**
+ * Callback used by {@link VrDisplay#requestAnimationFrame}.
+ *
+ * @callback vrFrameCallback
+ * @ignore
+ */
+
+/**
+ * Represents a single Display for VR content. This could be a Head Mounted display that can
+ * present content on a separate screen or a phone which can display content full screen on the
+ * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
+ *
  * @property {number} id An identifier for this distinct VRDisplay.
- * @property {VRDisplay} display The native VRDisplay object from the WebVR API.
+ * @property {*} display The native VRDisplay object from the WebVR API.
  * @property {boolean} presenting True if this display is currently presenting VR content.
- * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
- * This can be used to determine what features are available on this display.
+ * @property {VRDisplayCapabilities} capabilities Returns the
+ * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
+ * from the VRDisplay. This can be used to determine what features are available on this display.
+ * @augments EventHandler
+ * @deprecated
+ * @ignore
  */
 class VrDisplay extends EventHandler {
+    /**
+     * Create a new VrDisplay instance.
+     *
+     * @param {Application} app - The application outputting to this VR display.
+     * @param {*} display - The native VRDisplay object from the WebVR API.
+     */
     constructor(app, display) {
         super();
 
@@ -110,11 +128,9 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Destroy this display object.
+     *
      * @deprecated
-     * @function
-     * @name VrDisplay#destroy
-     * @description Destroy this display object.
      */
     destroy() {
         window.removeEventListener('vrdisplaypresentchange', this._presentChange);
@@ -124,11 +140,9 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Called once per frame to update the current status from the display. Usually called by {@link VrManager}.
+     *
      * @deprecated
-     * @function
-     * @name VrDisplay#poll
-     * @description Called once per frame to update the current status from the display. Usually called by {@link VrManager}.
      */
     poll() {
         if (this.display) {
@@ -222,13 +236,12 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Try to present full screen VR content on this display.
+     *
+     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * single argument (err) that is the error message return if presenting fails, or null if the
+     * call succeeds. Usually called by {@link CameraComponent#enterVr}.
      * @deprecated
-     * @function
-     * @name VrDisplay#requestPresent
-     * @description Try to present full screen VR content on this display.
-     * @param {callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
-     * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#enterVr}.
      */
     requestPresent(callback) {
         if (!this.display) {
@@ -249,13 +262,12 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Try to stop presenting VR content on this display.
+     *
+     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * single argument (err) that is the error message return if presenting fails, or null if the
+     * call succeeds. Usually called by {@link CameraComponent#exitVr}.
      * @deprecated
-     * @function
-     * @name VrDisplay#exitPresent
-     * @description Try to stop presenting VR content on this display.
-     * @param {callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
-     * if presenting fails, or null if the call succeeds. Usually called by {@link CameraComponent#exitVr}.
      */
     exitPresent(callback) {
         if (!this.display) {
@@ -275,48 +287,43 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Used in the main application loop instead of the regular `window.requestAnimationFrame`.
+     * Usually only called from inside {@link Application}.
+     *
+     * @param {vrFrameCallback} fn - Function called when it is time to update the frame.
      * @deprecated
-     * @function
-     * @name VrDisplay#requestAnimationFrame
-     * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link Application}.
-     * @param {callbacks.VrFrame} fn - Function called when it is time to update the frame.
      */
     requestAnimationFrame(fn) {
         if (this.display) this.display.requestAnimationFrame(fn);
     }
 
     /**
-     * @private
+     * Called when animation update is complete and the frame is ready to be sent to the display.
+     * Usually only called from inside {@link Application}.
+     *
      * @deprecated
-     * @function
-     * @name VrDisplay#submitFrame
-     * @description Called when animation update is complete and the frame is ready to be sent to the display. Usually only called from inside {@link Application}.
      */
     submitFrame() {
         if (this.display) this.display.submitFrame();
     }
 
     /**
-     * @private
+     * Called to reset the pose of the {@link VrDisplay}. Treating its current pose as the
+     * origin/zero. This should only be called in 'sitting' experiences.
+     *
      * @deprecated
-     * @function
-     * @name VrDisplay#reset
-     * @description Called to reset the pose of the {@link VrDisplay}. Treating its current pose as the origin/zero. This should only be called in 'sitting' experiences.
      */
     reset() {
         if (this.display) this.display.resetPose();
     }
 
     /**
-     * @private
-     * @deprecated
-     * @function
-     * @name VrDisplay#setClipPlanes
-     * @description Set the near and far depth plans of the display. This enables mapping of values in the
+     * Set the near and far depth plans of the display. This enables mapping of values in the
      * render target depth attachment to scene coordinates.
+     *
      * @param {number} n - The near depth distance.
      * @param {number} f - The far depth distance.
+     * @deprecated
      */
     setClipPlanes(n, f) {
         if (this.display) {
@@ -326,12 +333,10 @@ class VrDisplay extends EventHandler {
     }
 
     /**
-     * @private
+     * Return the current frame data that is updated during polling.
+     *
+     * @returns {*} The frame data object.
      * @deprecated
-     * @function
-     * @name VrDisplay#getFrameData
-     * @description Return the current frame data that is updated during polling.
-     * @returns {VRFrameData} The frame data object.
      */
     getFrameData() {
         if (this.display) return this._frameData;

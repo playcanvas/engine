@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class FallingShapesExample extends Example {
+class FallingShapesExample {
     static CATEGORY = 'Physics';
     static NAME = 'Falling Shapes';
 
@@ -30,7 +30,6 @@ class FallingShapesExample extends Example {
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
             // Set the gravity for our rigid bodies
-            // @ts-ignore engine-tsd
             app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
             function createMaterial(color: pc.Color) {
@@ -180,7 +179,7 @@ class FallingShapesExample extends Example {
 
             // ***********    Update Function   *******************
 
-            // initialize constiables for our update function
+            // initialize variables for our update function
             let timer = 0;
             let count = 40;
 

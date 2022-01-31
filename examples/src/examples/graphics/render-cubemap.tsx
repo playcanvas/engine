@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RenderCubemapExample extends Example {
+class RenderCubemapExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render Cubemap';
 
@@ -27,7 +27,6 @@ class RenderCubemapExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // setup skydome
@@ -38,29 +37,20 @@ class RenderCubemapExample extends Example {
 
         // helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
         const createHighQualitySphere = function (material: pc.Material, layer: number[]) {
-            // create hight resolution sphere
-            // @ts-ignore engine-tsd
-            const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
-
-            // Create the mesh instance
-            const node = new pc.GraphNode();
-            this.meshInstance = new pc.MeshInstance(mesh, material, node);
-
-            // Create a model and add the mesh instance to it
-            const model = new pc.Model();
-            model.graph = node;
-            model.meshInstances = [this.meshInstance];
 
             // Create Entity and add it to the scene
             const entity = new pc.Entity("ShinyBall");
             app.root.addChild(entity);
 
-            // Add a model compoonent
-            entity.addComponent('model', {
+            // create hight resolution sphere
+            const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
+
+            // Add a render component with the mesh
+            entity.addComponent('render', {
                 type: 'asset',
-                layers: layer
+                layers: layer,
+                meshInstances: [new pc.MeshInstance(mesh, material)]
             });
-            entity.model.model = model;
 
             return entity;
         };
@@ -77,11 +67,11 @@ class RenderCubemapExample extends Example {
 
             // create primitive
             const primitive = new pc.Entity();
-            primitive.addComponent('model', {
+            primitive.addComponent('render', {
                 type: primitiveType,
-                layers: layer
+                layers: layer,
+                material: material
             });
-            primitive.model.material = material;
 
             // set position and scale and add it to scene
             primitive.setLocalPosition(position);
@@ -205,7 +195,6 @@ class RenderCubemapExample extends Example {
 
         // update things each frame
         let time = 0;
-        const device = app.graphicsDevice;
         app.on("update", function (dt) {
             time += dt;
 
@@ -213,7 +202,6 @@ class RenderCubemapExample extends Example {
             for (let e = 0; e < entities.length; e++) {
                 const scale = (e + 1) / entities.length;
                 const offset = time + e * 200;
-                // @ts-ignore engine-tsd
                 entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
                 entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
             }

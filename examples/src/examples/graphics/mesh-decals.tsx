@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class MeshDecalsExample extends Example {
+class MeshDecalsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Decals';
 
@@ -76,7 +76,7 @@ class MeshDecalsExample extends Example {
         });
         app.root.addChild(ball);
 
-        // Allocate space for decals. Each decal is a quad with 4 verticies
+        // Allocate space for decals. Each decal is a quad with 4 vertices
         const numDecals = 500;
         const numDecalVertices = 4 * numDecals;
 
@@ -89,10 +89,13 @@ class MeshDecalsExample extends Example {
         // Allocate storage for uvs, each vertex stores u and v. And fill them up to display whole texture
         const uvs: any = [];
         for (let i = 0; i < numDecals; i++)
-            uvs.push(0, 0,      0, 1,       1, 1,       1, 0);
+            uvs.push(0, 0, 0, 1, 1, 1, 1, 0);
 
         // Allocate and generate indices. Each quad is representing using 2 triangles, and uses 4 vertices
-        const quadTriangles = [0, 1, 2,       2, 3, 0];
+        const quadTriangles = [
+            0, 1, 2,
+            2, 3, 0
+        ];
         const indices = new Uint16Array(6 * numDecals);
         for (let i = 0; i < numDecals; i++) {
             indices[6 * i + 0] = 4 * i + quadTriangles[0];
@@ -123,10 +126,21 @@ class MeshDecalsExample extends Example {
             }
 
             // vertex positions to form a square quad with random rotation and size
-            positions[12 * i + 0] = pos.x + size * Math.sin(angle);      positions[12 * i + 1] = 0;     positions[12 * i + 2] = pos.z + size * Math.cos(angle);      angle += Math.PI * 0.5;
-            positions[12 * i + 3] = pos.x + size * Math.sin(angle);      positions[12 * i + 4] = 0;     positions[12 * i + 5] = pos.z + size * Math.cos(angle);      angle += Math.PI * 0.5;
-            positions[12 * i + 6] = pos.x + size * Math.sin(angle);      positions[12 * i + 7] = 0;     positions[12 * i + 8] = pos.z + size * Math.cos(angle);      angle += Math.PI * 0.5;
-            positions[12 * i + 9] = pos.x + size * Math.sin(angle);      positions[12 * i + 10] = 0;    positions[12 * i + 11] = pos.z + size * Math.cos(angle);     angle += Math.PI * 0.5;
+            positions[12 * i + 0] = pos.x + size * Math.sin(angle);
+            positions[12 * i + 1] = 0;
+            positions[12 * i + 2] = pos.z + size * Math.cos(angle); angle += Math.PI * 0.5;
+
+            positions[12 * i + 3] = pos.x + size * Math.sin(angle);
+            positions[12 * i + 4] = 0;
+            positions[12 * i + 5] = pos.z + size * Math.cos(angle); angle += Math.PI * 0.5;
+
+            positions[12 * i + 6] = pos.x + size * Math.sin(angle);
+            positions[12 * i + 7] = 0;
+            positions[12 * i + 8] = pos.z + size * Math.cos(angle); angle += Math.PI * 0.5;
+
+            positions[12 * i + 9] = pos.x + size * Math.sin(angle);
+            positions[12 * i + 10] = 0;
+            positions[12 * i + 11] = pos.z + size * Math.cos(angle); angle += Math.PI * 0.5;
         }
 
         // helper function to update required vertex streams

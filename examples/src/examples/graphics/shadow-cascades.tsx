@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -15,7 +15,7 @@ import SelectInput from '@playcanvas/pcui/SelectInput/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class ShadowCascadesExample extends Example {
+class ShadowCascadesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shadow Cascades';
 
@@ -32,11 +32,11 @@ class ShadowCascadesExample extends Example {
             <Panel headerText='Shadow Cascade Settings'>
                 {<LabelGroup text='Filtering'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowType' }} type="number" options={[
-                        { v: 0, t: 'PCF3' },
-                        { v: 1, t: 'VSM8' },
-                        { v: 2, t: 'VSM16' },
-                        { v: 3, t: 'VSM32' },
-                        { v: 4, t: 'PCF5' }
+                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                        { v: pc.SHADOW_PCF5, t: 'PCF5' },
+                        { v: pc.SHADOW_VSM8, t: 'VSM8' },
+                        { v: pc.SHADOW_VSM16, t: 'VSM16' },
+                        { v: pc.SHADOW_VSM32, t: 'VSM32' }
                     ]} />
                 </LabelGroup>}
                 <LabelGroup text='Count'>
@@ -55,7 +55,7 @@ class ShadowCascadesExample extends Example {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: any, data:any): void {
+    example(canvas: HTMLCanvasElement, assets: any, data: any): void {
 
         const app = new pc.Application(canvas, {});
         app.start();
@@ -82,7 +82,6 @@ class ShadowCascadesExample extends Example {
         app.scene.skyboxMip = 3;
         app.scene.setSkybox(assets.helipad.resources);
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // instantiate the terrain

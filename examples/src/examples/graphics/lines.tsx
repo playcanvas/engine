@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class LinesExample extends Example {
+
+class LinesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lines';
 
@@ -21,7 +21,7 @@ class LinesExample extends Example {
 
         // setup skydome
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 1.0;
+        app.scene.exposure = 0.2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
         app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 30, 0);
 
@@ -84,10 +84,6 @@ class LinesExample extends Example {
         function groundColor(color: pc.Color, point: pc.Vec3) {
             color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));
         }
-
-        // access to two layers used to render lines
-        const worldLayer = app.scene.layers.getLayerByName("World");
-        const immediateLayer = app.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
 
         // Set an update function on the app's update event
         let time = 0;
@@ -152,12 +148,6 @@ class LinesExample extends Example {
                     5 + 2 * Math.sin(time + 3 * i / numMeshes),
                     30 + 20 * Math.cos(time * 0.2 + offset)
                 );
-
-                // half of them uses depth testing, the others do not, and so lines show through the mesh
-                const depthTest = i < 0.5 * numMeshes;
-
-                // half of them are rendered in immediate layer, the other half in world layer
-                const layer = i < 0.5 * numMeshes ? immediateLayer : worldLayer;
 
                 // rotate the meshes
                 entity.rotate((i + 1) * dt, 4 * (i + 1) * dt, 6 * (i + 1) * dt);

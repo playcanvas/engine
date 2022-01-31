@@ -1,11 +1,11 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Button from '@playcanvas/pcui/Button/component';
 
-class ComponentPropertiesExample extends Example {
+class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
     static NAME = 'Component Properties';
 
@@ -117,7 +117,7 @@ class ComponentPropertiesExample extends Example {
                         1.0, 0.0, 0.0, 1.0
                     ]
                 },
-                //  keyframe outputs for a quaterion rotation
+                //  keyframe outputs for a quaternion rotation
                 {
                     "components": 4,
                     "data": [
@@ -126,7 +126,7 @@ class ComponentPropertiesExample extends Example {
                         4.0, 0.0, 0.0, 0.0
                     ]
                 },
-                //  keyframe outputs for a quaterion rotation
+                //  keyframe outputs for a quaternion rotation
                 {
                     "components": 4,
                     "data": [
@@ -166,7 +166,6 @@ class ComponentPropertiesExample extends Example {
             ]
         };
 
-        // @ts-ignore
         const animClipHandler = new pc.AnimClipHandler();
         const animClipStaticLight = animClipHandler.open(undefined, animClipStaticLightData);
         const animClipFlashingLight = animClipHandler.open(undefined, animClipFlashingLightData);

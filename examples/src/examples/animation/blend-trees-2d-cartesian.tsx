@@ -1,11 +1,8 @@
-import React, { useEffect, createRef } from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import React, { useEffect } from 'react';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
-// @ts-ignore: library file import
-import { Observer } from '@playcanvas/observer';
 
-class BlendTrees2DCartesianExample extends Example {
+class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
 
@@ -21,14 +18,13 @@ class BlendTrees2DCartesianExample extends Example {
         </>;
     }
 
-    controls(data: Observer) {
-        const canvasRef = createRef();
+    controls() {
         useEffect(() => {
-            if (!(window as any).pc.app) return;
-            if (!(window as any).controlPanel) return;
-            const canvas: any = canvasRef.current;
             // @ts-ignore engine-tsd
-            const modelEntity: pc.Entity = (window as any).pc.app.root.findByName('model');
+            if (!document.getElementById('exampleIframe').contentWindow.pc) return;
+            const canvas : any = document.getElementById('2d-blend-control');
+            // @ts-ignore engine-tsd
+            const modelEntity: pc.Entity = document.getElementById('exampleIframe').contentWindow.pc.app.root.findByName('model');
             const width = (window as any).controlPanel.offsetWidth;
             const height = width;
             const halfWidth = Math.floor(width / 2);
@@ -71,7 +67,7 @@ class BlendTrees2DCartesianExample extends Example {
                 });
                 ctx.fillStyle = '#F60';
                 ctx.beginPath();
-                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * - 1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
+                ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * -1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.fillStyle = '#283538';
                 ctx.stroke();
@@ -80,12 +76,10 @@ class BlendTrees2DCartesianExample extends Example {
             const mouseEvent = (e: any) => {
                 if (e.targetTouches) {
                     const offset = canvas.getBoundingClientRect();
-                    // @ts-ignore engine-tsd
-                    position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                    position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                 } else {
                     if (e.buttons) {
-                        // @ts-ignore engine-tsd
-                        position = new pc.Vec2(e.offsetX, e.offsetY).scale(1 / (width / 2)).sub(new pc.Vec2(1.0, 1.0));
+                        position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                     } else {
                         return;
                     }
@@ -101,7 +95,7 @@ class BlendTrees2DCartesianExample extends Example {
             canvas.addEventListener('touchstart', mouseEvent);
         });
         return <>
-            <canvas id='2d-blend-control' ref={canvasRef as React.RefObject<HTMLCanvasElement>} />
+            <canvas id='2d-blend-control' />
         </>;
     }
 

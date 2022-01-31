@@ -1,279 +1,14 @@
-import { Vec3 } from '../math/vec3.js';
 import { Debug } from '../core/debug.js';
+import { Vec3 } from '../math/vec3.js';
 
 import {
-    ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
-
-function syncToCpu(device, targ, face) {
-    const tex = targ._colorBuffer;
-    if (tex.format !== PIXELFORMAT_R8_G8_B8_A8) return;
-    const pixels = new Uint8Array(tex.width * tex.height * 4);
-    const gl = device.gl;
-    device.setFramebuffer(targ._glFrameBuffer);
-    gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    if (!tex._levels) tex._levels = [];
-    if (!tex._levels[0]) tex._levels[0] = [];
-    tex._levels[0][face] = pixels;
-}
-
-/**
- * @static
- * @function
- * @name prefilterCubemap
- * @description Prefilter a cubemap for use by a {@link StandardMaterial} as an environment map. Should only be used for cubemaps that can't be prefiltered ahead of time (in the editor).
- * @param {object} options - The options for how the cubemap is prefiltered.
- */
-function prefilterCubemap(options) {
-    const device = options.device;
-    let sourceCubemap = options.sourceCubemap;
-    const method = options.method;
-    const samples = options.samples;
-    const cpuSync = options.cpuSync;
-
-    // TODO: remove this function entirely along with its shader chunks.
-    Debug.deprecated('pc.prefilterCubemap is deprecated. Please use the pc.Prefilter functions instead.');
-
-    if (cpuSync && !sourceCubemap._levels[0]) {
-        // #if _DEBUG
-        console.error("ERROR: prefilter: cubemap must have _levels");
-        // #endif
-        return;
-    }
-
-    const sourceType = sourceCubemap.type;
-    const rgbmSource = sourceType === TEXTURETYPE_RGBM;
-    const shader = createShaderFromCode(device,
-                                        shaderChunks.fullscreenQuadVS,
-                                        shaderChunks.rgbmPS + shaderChunks.prefilterCubemapPS
-                                            .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
-                                            .replace(/\$NUMSAMPLES/g, samples)
-                                            .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
-                                        "prefilter" + method + "" + samples + "" + rgbmSource);
-    const shader2 = createShaderFromCode(device,
-                                         shaderChunks.fullscreenQuadVS,
-                                         shaderChunks.outputCubemapPS,
-                                         "outputCubemap");
-    const constantTexSource = device.scope.resolve("source");
-    const constantParams = device.scope.resolve("params");
-    const params = new Float32Array(4);
-    let size = sourceCubemap.width;
-    let format = sourceCubemap.format;
-
-    const cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
-    const gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25, 0.15, 0.1] : [512, 128, 32, 8, 2, 1, 1]; // TODO: calc more correct values depending on mip
-    const mipSize = [64, 32, 16, 8, 4, 2, 1]; // TODO: make non-static?
-    const numMips = 7;                        // generate all mips down to 1x1
-
-    const rgbFormat = format === PIXELFORMAT_R8_G8_B8;
-    let isImg = false;
-    let nextCubemap;
-    if (cpuSync) {
-        isImg = sourceCubemap._levels[0][0] instanceof HTMLImageElement;
-    }
-    if ((rgbFormat || isImg) && cpuSync) {
-        // WebGL can't read non-RGBA pixels
-        format = PIXELFORMAT_R8_G8_B8_A8;
-        nextCubemap = new Texture(device, {
-            cubemap: true,
-            type: sourceType,
-            format: format,
-            width: size,
-            height: size,
-            mipmaps: false
-        });
-        nextCubemap.name = 'prefiltered-cube';
-        for (let face = 0; face < 6; face++) {
-            const targ = new RenderTarget({
-                colorBuffer: nextCubemap,
-                face: face,
-                depth: false
-            });
-            params[0] = face;
-            params[1] = 0;
-            constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params);
-
-            drawQuadWithShader(device, targ, shader2);
-            syncToCpu(device, targ, face);
-        }
-        sourceCubemap = nextCubemap;
-    }
-
-    if (size > 128) {
-        // Downsample to 128 first
-        const log128 = Math.round(Math.log2(128));
-        const logSize = Math.round(Math.log2(size));
-        const steps = logSize - log128;
-        for (let i = 0; i < steps; i++) {
-            size = sourceCubemap.width * 0.5;
-            const sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
-            nextCubemap = new Texture(device, {
-                cubemap: true,
-                type: sourceType,
-                format: format,
-                width: size,
-                height: size,
-                mipmaps: false
-            });
-            nextCubemap.name = 'prefiltered-cube';
-            for (let face = 0; face < 6; face++) {
-                const targ = new RenderTarget({
-                    colorBuffer: nextCubemap,
-                    face: face,
-                    depth: false
-                });
-                params[0] = face;
-                params[1] = sampleGloss;
-                params[2] = size;
-                params[3] = rgbmSource ? 3 : 0;
-                constantTexSource.setValue(sourceCubemap);
-                constantParams.setValue(params);
-
-                drawQuadWithShader(device, targ, shader2);
-                if (i === steps - 1 && cpuSync) {
-                    syncToCpu(device, targ, face);
-                }
-            }
-            sourceCubemap = nextCubemap;
-        }
-    }
-    options.sourceCubemap = sourceCubemap;
-
-    let sourceCubemapRgbm = null;
-    if (!rgbmSource && options.filteredFixedRgbm) {
-        nextCubemap = new Texture(device, {
-            cubemap: true,
-            type: TEXTURETYPE_RGBM,
-            format: PIXELFORMAT_R8_G8_B8_A8,
-            width: size,
-            height: size,
-            mipmaps: false
-        });
-        nextCubemap.name = 'prefiltered-cube';
-        for (let face = 0; face < 6; face++) {
-            const targ = new RenderTarget({
-                colorBuffer: nextCubemap,
-                face: face,
-                depth: false
-            });
-            params[0] = face;
-            params[3] = 2;
-            constantTexSource.setValue(sourceCubemap);
-            constantParams.setValue(params);
-
-            drawQuadWithShader(device, targ, shader2);
-            syncToCpu(device, targ, face);
-        }
-        sourceCubemapRgbm = nextCubemap;
-    }
-
-    const unblurredGloss = method === 0 ? 1 : 2048;
-    const startPass = method === 0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
-    cmapsList[startPass] = [];
-
-    // Initialize textures
-    for (let i = 0; i < numMips; i++) {
-        for (let pass = startPass; pass < cmapsList.length; pass++) {
-            if (cmapsList[pass] != null) {
-                cmapsList[pass][i] = new Texture(device, {
-                    cubemap: true,
-                    type: pass < 2 ? sourceType : TEXTURETYPE_RGBM,
-                    format: pass < 2 ? format : PIXELFORMAT_R8_G8_B8_A8,
-                    fixCubemapSeams: pass === 1 || pass === 3,
-                    width: mipSize[i],
-                    height: mipSize[i],
-                    mipmaps: false
-                });
-                cmapsList[pass][i].name = 'prefiltered-cube';
-            }
-        }
-    }
-
-    // Filter
-    // [Prepass]: just downsample
-    // Pass 0: just filter
-    // Pass 1: filter + edge fixup
-    // Pass 2: filter + encode to RGBM
-    // Pass 3: filter + edge fixup + encode to RGBM
-    for (let pass = startPass; pass < cmapsList.length; pass++) {
-        if (cmapsList[pass] != null) {
-            if (pass > 1 && rgbmSource) {
-                // already RGBM
-                cmapsList[pass] = cmapsList[pass - 2];
-                continue;
-            }
-            for (let i = 0; i < numMips; i++) {
-                for (let face = 0; face < 6; face++) {
-                    const targ = new RenderTarget({ // TODO: less excessive allocations
-                        colorBuffer: cmapsList[pass][i],
-                        face: face,
-                        depth: false
-                    });
-                    params[0] = face;
-                    params[1] = pass < 0 ? unblurredGloss : gloss[i];
-                    params[2] = mipSize[i];
-                    params[3] = rgbmSource ? 3 : pass;
-                    constantTexSource.setValue(i === 0 ? sourceCubemap :
-                        method === 0 ? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
-                    constantParams.setValue(params);
-
-                    drawQuadWithShader(device, targ, shader);
-                    if (cpuSync) syncToCpu(device, targ, face);
-                }
-            }
-        }
-    }
-
-    options.filtered = cmapsList[0];
-
-    if (cpuSync && options.singleFilteredFixed) {
-        const mips = [sourceCubemap].concat(options.filteredFixed);
-        const cubemap = new Texture(device, {
-            cubemap: true,
-            type: sourceType,
-            fixCubemapSeams: true,
-            format: format,
-            width: 128,
-            height: 128,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-        cubemap.name = 'prefiltered-cube';
-        for (let i = 0; i < mips.length; i++)
-            cubemap._levels[i] = mips[i]._levels[0];
-
-        cubemap.upload();
-        options.singleFilteredFixed = cubemap;
-    }
-
-    if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
-        const mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
-        const cubemap = new Texture(device, {
-            cubemap: true,
-            type: TEXTURETYPE_RGBM,
-            fixCubemapSeams: true,
-            format: PIXELFORMAT_R8_G8_B8_A8,
-            width: 128,
-            height: 128,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-        cubemap.name = 'prefiltered-cube';
-        for (let i = 0; i < mips.length; i++) {
-            cubemap._levels[i] = mips[i]._levels[0];
-        }
-        cubemap.upload();
-        options.singleFilteredFixedRgbm = cubemap;
-    }
-}
 
 // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
 function areaElement(x, y) {
@@ -311,15 +46,11 @@ function texelCoordSolidAngle(u, v, size) {
 
 function shFromCubemap(device, source, dontFlipX) {
     if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
-        // #if _DEBUG
-        console.error("ERROR: SH: cubemap must be RGBA8");
-        // #endif
+        Debug.error("ERROR: SH: cubemap must be RGBA8");
         return null;
     }
     if (!source._levels[0] || !source._levels[0][0]) {
-        // #if _DEBUG
-        console.error("ERROR: SH: cubemap must be synced to CPU");
-        // #endif
+        Debug.error("ERROR: SH: cubemap must be synced to CPU");
         return null;
     }
 
@@ -375,9 +106,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            // #if _DEBUG
-            console.error("ERROR: SH: cubemap must be composed of arrays or images");
-            // #endif
+            Debug.error("ERROR: SH: cubemap must be composed of arrays or images");
             return null;
         }
     }
@@ -492,4 +221,4 @@ function shFromCubemap(device, source, dontFlipX) {
     return sh;
 }
 
-export { prefilterCubemap, shFromCubemap };
+export { shFromCubemap };

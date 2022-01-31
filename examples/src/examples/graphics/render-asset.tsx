@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RenderAssetExample extends Example {
+class RenderAssetExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render Asset';
 
@@ -35,7 +35,7 @@ class RenderAssetExample extends Example {
         app.root.addChild(cubeEntities[0]);
 
         // clone another copy of it and add it to scene
-        cubeEntities[1] = cubeEntities[0].clone();
+        cubeEntities[1] = cubeEntities[0].clone() as pc.Entity;
         cubeEntities[1].setLocalPosition(-7, 12, 0);
         cubeEntities[1].setLocalScale(3, 3, 3);
         app.root.addChild(cubeEntities[1]);
@@ -56,7 +56,6 @@ class RenderAssetExample extends Example {
 
         // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
         app.scene.setSkybox(assets["helipad.dds"].resources);
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;
 

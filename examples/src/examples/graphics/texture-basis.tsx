@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class TextureBasisExample extends Example {
+
+class TextureBasisExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Texture Basis';
 
@@ -25,7 +25,6 @@ class TextureBasisExample extends Example {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        // @ts-ignore engine-tsd
         pc.basisInitialize({
             glueUrl: 'static/lib/basis/basis.wasm.js',
             wasmUrl: 'static/lib/basis/basis.wasm.wasm',
@@ -39,7 +38,6 @@ class TextureBasisExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // Set skybox
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;
         app.scene.skyboxIntensity = 0.7;

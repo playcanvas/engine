@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class ARHitTestExample extends Example {
+
+class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';
 
@@ -71,13 +71,13 @@ class ARHitTestExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -100,7 +100,7 @@ class ARHitTestExample extends Example {
             app.xr.on('start', function () {
                 message("Immersive AR session has started");
 
-                if (! app.xr.hitTest.supported)
+                if (!app.xr.hitTest.supported)
                     return;
 
                 app.xr.hitTest.start({
@@ -133,9 +133,9 @@ class ARHitTestExample extends Example {
                 }
             });
 
-            if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
+            if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
                 message("Immersive AR is not available");
-            } else if (! app.xr.hitTest.supported) {
+            } else if (!app.xr.hitTest.supported) {
                 message("AR Hit Test is not supported");
             } else {
                 message("Touch screen to start AR session and look at the floor or walls");
@@ -146,4 +146,4 @@ class ARHitTestExample extends Example {
     }
 }
 
-export default ARHitTestExample;
+export default ArHitTestExample;

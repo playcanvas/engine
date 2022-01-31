@@ -1,6 +1,6 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
 const vshader = `
@@ -47,7 +47,7 @@ const fshader = `
  */
 
 // The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured
-// on a per-device basis before loading the Shader. Please check the accompaning TypeScript code and look for 'app.graphicsDevice.precision'.
+// on a per-device basis before loading the Shader. Please check the accompanying TypeScript code and look for 'app.graphicsDevice.precision'.
 
 // precision mediump float;
 
@@ -66,7 +66,7 @@ void main(void)
 }
 `;
 
-class UserInterfaceCustomShaderExample extends Example {
+class CustomShaderExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Custom Shader';
 
@@ -155,4 +155,4 @@ class UserInterfaceCustomShaderExample extends Example {
     }
 }
 
-export default UserInterfaceCustomShaderExample;
+export default CustomShaderExample;

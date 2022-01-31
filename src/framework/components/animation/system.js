@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = [
     'enabled',
     'assets',
@@ -23,14 +25,16 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name AnimationComponentSystem
+ * The AnimationComponentSystem manages creating and deleting AnimationComponents.
+ *
  * @augments ComponentSystem
- * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents.
- * @description Create an AnimationComponentSystem.
- * @param {Application} app - The application managing this system.
  */
 class AnimationComponentSystem extends ComponentSystem {
+    /**
+     * Create an AnimationComponentSystem instance.
+     *
+     * @param {Application} app - The application managing this system.
+     */
     constructor(app) {
         super(app);
 

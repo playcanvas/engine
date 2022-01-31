@@ -9,14 +9,8 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/**
- * @class
- * @name LightComponentSystem
- * @augments ComponentSystem
- * @classdesc A Light Component is used to dynamically light the scene.
- * @description Create a new LightComponentSystem.
- * @param {Application} app - The application.
- */
+/** @typedef {import('../../application.js').Application} Application */
+
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
     'omni': LIGHTTYPE_OMNI,
@@ -24,7 +18,17 @@ const lightTypes = {
     'spot': LIGHTTYPE_SPOT
 };
 
+/**
+ * A Light Component is used to dynamically light the scene.
+ *
+ * @augments ComponentSystem
+ */
 class LightComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LightComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

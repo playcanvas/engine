@@ -3,13 +3,14 @@ import { math } from '../../math/math.js';
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../constants.js';
 
 /**
- * @private
- * @class
- * @name AnimCache
- * @classdesc Internal cache data for the evaluation of a single curve timeline.
- * @description Create a new animation cache.
+ * Internal cache data for the evaluation of a single curve timeline.
+ *
+ * @ignore
  */
 class AnimCache {
+    /**
+     * Create a new AnimCache instance.
+     */
     constructor() {
         // these members are calculated per-segment
         this._left = Infinity;      // time of left knot

@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class TextTypewriterExample extends Example {
+class TextTypewriterExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Text Typewriter';
 

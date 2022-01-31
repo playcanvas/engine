@@ -1,15 +1,13 @@
 import { Vec2 } from '../../math/vec2.js';
-import { math } from '../../math/math';
+import { math } from '../../math/math.js';
 
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
- * @private
- * @class
- * @name AnimBlendTreeDirectional2D
- * @classdesc An AnimBlendTree that calculates its weights using a 2D directional algorithm
- * based on the thesis http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
- * @description Create a new BlendTree1D.
+ * An AnimBlendTree that calculates its weights using a 2D directional algorithm based on the thesis
+ * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ *
+ * @ignore
  */
 class AnimBlendTreeDirectional2D extends AnimBlendTree {
     static _p = new Vec2();

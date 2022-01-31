@@ -1,19 +1,24 @@
 import { AnimEvents } from './anim-events.js';
 
+/** @typedef {import('./anim-curve.js').AnimCurve} AnimCurve */
+/** @typedef {import('./anim-data.js').AnimData} AnimData */
+
 /**
- * @private
- * @class
- * @name AnimTrack
- * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
- * @description Create a new animation track.
- * @param {string} name - The track name.
- * @param {number} duration - The duration of the track in seconds.
- * @param {AnimData[]} inputs - List of curve key data.
- * @param {AnimData[]} outputs - List of curve value data.
- * @param {AnimCurve[]} curves - The list of curves.
- * @param {AnimEvents} animEvents - A sequence of animation events.
+ * AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
+ *
+ * @ignore
  */
 class AnimTrack {
+    /**
+     * Create a new AnimTrack instance.
+     *
+     * @param {string} name - The track name.
+     * @param {number} duration - The duration of the track in seconds.
+     * @param {AnimData[]} inputs - List of curve key data.
+     * @param {AnimData[]} outputs - List of curve value data.
+     * @param {AnimCurve[]} curves - The list of curves.
+     * @param {AnimEvents} animEvents - A sequence of animation events.
+     */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;
         this._duration = duration;
@@ -43,12 +48,12 @@ class AnimTrack {
         return this._curves;
     }
 
-    get events() {
-        return this._animEvents.events;
-    }
-
     set events(animEvents) {
         this._animEvents = animEvents;
+    }
+
+    get events() {
+        return this._animEvents.events;
     }
 
     // evaluate all track curves at the specified time and store results
@@ -67,7 +72,7 @@ class AnimTrack {
             cache[i].update(time, inputs[i]._data);
         }
 
-        // evalute outputs
+        // evaluate outputs
         for (let i = 0; i < curves.length; ++i) {
             const curve = curves[i];
             const output = outputs[curve._output];

@@ -409,6 +409,32 @@ Object.defineProperty(shaderChunks, "transformSkinnedVS", {
     }
 });
 
+const deprecatedChunks = {
+    'ambientPrefilteredCube.frag': 'ambientEnv.frag',
+    'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
+    'dpAtlasQuad.frag': null,
+    'genParaboloid.frag': null,
+    'prefilterCubemap.frag': null,
+    'reflectionDpAtlas.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCube.frag': 'reflectionEnv.frag',
+    'reflectionPrefilteredCubeLod.frag': 'reflectionEnv.frag'
+};
+
+Object.keys(deprecatedChunks).forEach((chunkName) => {
+    const replacement = deprecatedChunks[chunkName];
+    const useInstead = replacement ? ` Use pc.shaderChunks['${replacement}'] instead.` : ``;
+    const msg = `pc.shaderChunks['${chunkName}'] is deprecated.${useInstead}}`;
+    Object.defineProperty(shaderChunks, chunkName, {
+        get: function () {
+            Debug.error(msg);
+            return null;
+        },
+        set: function () {
+            Debug.error(msg);
+        }
+    });
+});
+
 Object.defineProperties(Texture.prototype, {
     rgbm: {
         get: function () {
@@ -478,12 +504,31 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+// scene.skyboxPrefiltered**** are deprecated
+['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
+    Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
+        get: function () {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            return this._prefilteredCubemaps[index];
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.Scene#skyboxPrefiltered${size} is deprecated. Use pc.Scene#prefilteredCubemaps instead.`);
+            this._prefilteredCubemaps[index] = value;
+            this.updateShaders = true;
+        }
+    });
+});
+
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#mesInstance to access batched mesh instead.');
+        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
         return null;
     }
 });
+
+MeshInstance.prototype.syncAabb = function () {
+    Debug.deprecated('pc.MeshInstance#syncAabb is deprecated.');
+};
 
 Morph.prototype.getTarget = function (index) {
     Debug.deprecated('pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
@@ -592,6 +637,31 @@ Material.prototype.setShader = function (shader) {
     Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
     this.shader = shader;
 };
+
+function _defineAlias(newName, oldName) {
+    Object.defineProperty(StandardMaterial.prototype, oldName, {
+        get: function () {
+            Debug.deprecated(`pc.StandardMaterial#${oldName} is deprecated. Use pc.StandardMaterial#${newName} instead.`);
+            return this[newName];
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.StandardMaterial#${oldName} is deprecated. Use pc.StandardMaterial#${newName} instead.`);
+            this[newName] = value;
+        }
+    });
+}
+
+_defineAlias("diffuseTint", "diffuseMapTint");
+_defineAlias("specularTint", "specularMapTint");
+_defineAlias("emissiveTint", "emissiveMapTint");
+_defineAlias("aoVertexColor", "aoMapVertexColor");
+_defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
+_defineAlias("specularVertexColor", "specularMapVertexColor");
+_defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
+_defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
+_defineAlias("glossVertexColor", "glossMapVertexColor");
+_defineAlias("opacityVertexColor", "opacityMapVertexColor");
+_defineAlias("lightVertexColor", "lightMapVertexColor");
 
 // ANIMATION
 
@@ -867,21 +937,21 @@ Application.prototype.loadSceneSettings = function (url, callback) {
 
 Application.prototype.renderMeshInstance = function (meshInstance, options) {
     Debug.deprecated("pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(null, null, null, meshInstance, layer);
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
+    this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
 Application.prototype.renderMesh = function (mesh, material, matrix, options) {
     Debug.deprecated("pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.");
-    const layer = options?.layer ? options.layer : this._getDefaultDrawLayer();
-    this._immediate.drawMesh(material, matrix, mesh, null, layer);
+    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
+    this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 
 Application.prototype._addLines = function (positions, colors, options) {
     const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
-    const batch = this._immediate.getBatch(layer, depthTest);
+    const batch = this.scene.immediate.getBatch(layer, depthTest);
     batch.addLines(positions, colors);
 };
 
@@ -1056,6 +1126,10 @@ export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
         fallbackUrl: fallbackUrl,
         lazyInit: true
     });
+}
+
+export function prefilterCubemap(options) {
+    Debug.deprecated('pc.prefilterCubemap is deprecated. Use pc.envLighting instead.');
 }
 
 export class AssetListLoader extends EventHandler {

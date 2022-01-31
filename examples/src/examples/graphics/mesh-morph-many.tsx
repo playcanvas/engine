@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class MeshMorphManyExample extends Example {
+
+class MeshMorphManyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph Many';
 
@@ -21,6 +21,7 @@ class MeshMorphManyExample extends Example {
 
         // setup skydome
         app.scene.skyboxMip = 2;
+        app.scene.exposure = 0.6;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -71,8 +72,7 @@ class MeshMorphManyExample extends Example {
                 // distance of the point to the specified plane
                 dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz, offset);
 
-                // modify distance to displacement amoint - displace nearby points more than distant points
-                displacement = pc.math.clamp(dist, 0, limit);
+                // modify distance to displacement amount - displace nearby points more than distant points
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
                 displacement *= range;
@@ -136,7 +136,6 @@ class MeshMorphManyExample extends Example {
 
         // add morph instance - this is where currently set weights are stored
         const morphInstance = new pc.MorphInstance(mesh.morph);
-        // @ts-ignore engine-tsd
         meshInstance.morphInstance = morphInstance;
 
         // Create Entity and add it to the scene
