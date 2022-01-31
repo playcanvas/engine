@@ -14,9 +14,9 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
-[English](https://github.com/playcanvas/engine/blob/master/README.md)
-[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
+[English](https://github.com/playcanvas/engine/blob/dev/README.md)
+[中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/dev/README-ja.md)
 
 ## Project Showcase
 
@@ -24,7 +24,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 ) have been published using the PlayCanvas engine. Here is a small selection:
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![dev Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
 [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](http://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )  
 
 
@@ -131,7 +131,7 @@ Now you can run various build options:
 
 Pre-built versions of the engine are also available.
 
-Latest development release (head revision of master branch):
+Latest development release (head revision of dev branch):
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
@@ -160,7 +160,7 @@ Note: The preprocessor is ignored when generating the source map as it breaks th
 
 The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):
 
-[![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
+[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 For Editor related bugs and issues, please refer to the [Editor's repo](https://github.com/playcanvas/editor).
 

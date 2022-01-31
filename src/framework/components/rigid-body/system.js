@@ -217,6 +217,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
+            RigidBodyComponent.onLibraryLoaded();
 
             this.contactPointPool = new ObjectPool(ContactPoint, 1);
             this.contactResultPool = new ObjectPool(ContactResult, 1);

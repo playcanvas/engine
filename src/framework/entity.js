@@ -542,7 +542,7 @@ class Entity extends GraphNode {
      * Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components
      * and all descendants. Note, this Entity is not in the hierarchy and must be added manually.
      *
-     * @returns {Entity} A new Entity which is a deep copy of the original.
+     * @returns {GraphNode} A new Entity which is a deep copy of the original.
      * @example
      * var e = this.entity.clone();
      *

@@ -19,6 +19,11 @@ import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './consta
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
+/** @typedef {import('../../../math/color.js').Color} Color */
+/** @typedef {import('../../../font/font.js').Font} Font */
+/** @typedef {import('../../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../../scene/materials/material.js').Material} Material */
+/** @typedef {import('../../../scene/sprite.js').Sprite} Sprite */
 /** @typedef {import('./system.js').ElementComponentSystem} ElementComponentSystem */
 
 // #if _DEBUG
