@@ -1283,7 +1283,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Checks the completeness status of the currnently bound WebGLFramebuffer object.
+     * Checks the completeness status of the currently bound WebGLFramebuffer object.
      *
      * @private
      */
