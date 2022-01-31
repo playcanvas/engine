@@ -346,12 +346,18 @@ class DeviceCache {
         this.cache = new SimpleCache();
     }
 
+    // get the cache entry for the given device and key
+    // if entry doesn't exist, missFunc will be invoked to create it
     get(device, key, missFunc) {
         return this.cache.get(device, () => {
+            const cache = new SimpleCache();
             device.on('destroy', () => {
-                this.cache.delete(device);
+                cache.map.forEach((value, key) => {
+                    value.destroy();
+                });
+                this.cache.map.delete(device);
             });
-            return new SimpleCache();
+            return cache;
         }).get(key, () => {
             return missFunc();
         });
