@@ -224,12 +224,22 @@ class GraphicsDevice extends EventHandler {
     canvas;
 
     /**
-     * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
-     * 'lowp'.
+     * The WebGL context managed by the graphics device. The type could also technically be
+     * `WebGLRenderingContext` if WebGL 2.0 is not available. But in order for IntelliSense to be
+     * able to function for all WebGL calls in the codebase, we specify `WebGL2RenderingContext`
+     * here instead.
      *
-     * @type {string}
+     * @type {WebGL2RenderingContext}
+     * @ignore
      */
-    precision;
+    gl;
+
+    /**
+     * The maximum supported texture anisotropy setting.
+     *
+     * @type {number}
+     */
+    maxAnisotropy;
 
     /**
      * The maximum supported dimension of a cube map.
@@ -253,11 +263,12 @@ class GraphicsDevice extends EventHandler {
     maxVolumeSize;
 
     /**
-     * The maximum supported texture anisotropy setting.
+     * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
+     * 'lowp'.
      *
-     * @type {number}
+     * @type {string}
      */
-    maxAnisotropy;
+    precision;
 
     /**
      * The scope namespace for shader attributes and variables.
@@ -286,6 +297,15 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     textureHalfFloatRenderable;
+
+    /**
+     * True if the WebGL context of this device is using the WebGL 2.0 API. If false, WebGL 1.0 is
+     * being used.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    webgl2;
 
     /**
      * Creates a new GraphicsDevice instance.
@@ -759,7 +779,8 @@ class GraphicsDevice extends EventHandler {
         VertexFormat.init(this);
 
         // #if _DEBUG
-        this._destroyedTextures = new Set();    // list of textures that have already been reported as destroyed
+        // list of textures that have already been reported as destroyed
+        this._destroyedTextures = new Set();
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
@@ -866,18 +887,19 @@ class GraphicsDevice extends EventHandler {
         return precision;
     }
 
+    /**
+     * Initialize the extensions provided by the WebGL context.
+     *
+     * @ignore
+     */
     initializeExtensions() {
         const gl = this.gl;
-        let ext;
 
-        const supportedExtensions = {};
-        gl.getSupportedExtensions().forEach((e) => {
-            supportedExtensions[e] = true;
-        });
+        const supportedExtensions = gl.getSupportedExtensions();
 
         const getExtension = function () {
             for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.hasOwnProperty(arguments[i])) {
+                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
                     return gl.getExtension(arguments[i]);
                 }
             }
@@ -904,7 +926,7 @@ class GraphicsDevice extends EventHandler {
             this.extInstancing = getExtension("ANGLE_instanced_arrays");
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
-                ext = this.extInstancing;
+                const ext = this.extInstancing;
                 gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
                 gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
                 gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
@@ -918,7 +940,7 @@ class GraphicsDevice extends EventHandler {
             this.extVertexArrayObject = getExtension("OES_vertex_array_object");
             if (this.extVertexArrayObject) {
                 // Install the WebGL 2 VAO API for WebGL 1.0
-                ext = this.extVertexArrayObject;
+                const ext = this.extVertexArrayObject;
                 gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
                 gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
                 gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
@@ -947,6 +969,11 @@ class GraphicsDevice extends EventHandler {
         this.supportsInstancing = !!this.extInstancing;
     }
 
+    /**
+     * Query the capabilities of the WebGL context.
+     *
+     * @ignore
+     */
     initializeCapabilities() {
         const gl = this.gl;
         let ext;
@@ -996,6 +1023,11 @@ class GraphicsDevice extends EventHandler {
         }
     }
 
+    /**
+     * Set the initial render state on the WebGL context.
+     *
+     * @ignore
+     */
     initializeRenderState() {
         const gl = this.gl;
 
@@ -1097,7 +1129,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeContextCaches() {
-
         // Shader code to WebGL shader cache
         this.vertexShaderCache = {};
         this.fragmentShaderCache = {};
@@ -1242,15 +1273,26 @@ class GraphicsDevice extends EventHandler {
         this.programLib = programLib;
     }
 
+    /**
+     * Binds the specified framebuffer object.
+     *
+     * @param {WebGLFramebuffer} fb - The framebuffer to bind.
+     * @ignore
+     */
     setFramebuffer(fb) {
         if (this.activeFramebuffer !== fb) {
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
+            const gl = this.gl;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
             this.activeFramebuffer = fb;
         }
     }
 
+    /**
+     * Checks the completeness status of the currently bound WebGLFramebuffer object.
+     *
+     * @private
+     */
     _checkFbo() {
-        // Ensure all is well
         const gl = this.gl;
         const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
         switch (status) {
@@ -1341,7 +1383,6 @@ class GraphicsDevice extends EventHandler {
 
         return true;
     }
-
 
     /**
      * Initialize render target before it can be used.
