@@ -83,7 +83,7 @@ class Http {
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
-     * @param {object} [options.cache] - If false, then add a timestamp to the request to prevent caching.
+     * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
      * @param {string} [options.responseType] - Override the response type.
      * @param {Document|object} [options.postdata] - Data to send in the body of the request.
@@ -141,7 +141,7 @@ class Http {
      * @param {object} options - Additional options.
      * @param {object} [options.headers] - HTTP headers to add to the request.
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
-     * @param {object} [options.cache] - If false, then add a timestamp to the request to prevent caching.
+     * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
      * @param {string} [options.responseType] - Override the response type.
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
