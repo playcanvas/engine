@@ -26,6 +26,12 @@ import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
 
+/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+
 /**
  * An Application represents and manages your PlayCanvas application. If you are developing using
  * the PlayCanvas Editor, the Application is created for you. You can access your Application
