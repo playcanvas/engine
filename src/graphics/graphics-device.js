@@ -798,6 +798,10 @@ class GraphicsDevice extends EventHandler {
     destroy() {
         const gl = this.gl;
 
+        // fire the destroy event.
+        // textures and other device resources may destroy themselves in response.
+        this.fire('destroy');
+
         this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {

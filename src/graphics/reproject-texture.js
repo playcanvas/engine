@@ -78,6 +78,31 @@ const packFloat32ToRGBA8 = (value, array, offset) => {
     }
 };
 
+// pack samples into texture-ready format
+const packSamples = (samples) => {
+    const numSamples = samples.length;
+
+    const w = Math.min(numSamples, 512);
+    const h = Math.ceil(numSamples / w);
+    const data = new Uint8Array(w * h * 4);
+
+    // normalize float data and pack into rgba8
+    let off = 0;
+    for (let i = 0; i < numSamples; ++i) {
+        packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);
+        packFloat32ToRGBA8(samples[i * 4 + 1] * 0.5 + 0.5, data, off + 4);
+        packFloat32ToRGBA8(samples[i * 4 + 2] * 0.5 + 0.5, data, off + 8);
+        packFloat32ToRGBA8(samples[i * 4 + 3] / 8, data, off + 12);
+        off += 16;
+    }
+
+    return {
+        width: w,
+        height: h,
+        data: data
+    };
+};
+
 // generate a vector on the hemisphere with constant distribution.
 // function kept because it's useful for debugging
 // vec3 hemisphereSampleUniform(vec2 uv) {
@@ -281,74 +306,99 @@ const generateGGXSamples = (numSamples, specularPower, sourceTotalPixels) => {
 };
 
 // pack float samples data into an rgba8 texture
-const packSamplesTex = (device, name, samples) => {
-    const numSamples = samples.length;
-
-    const w = Math.min(numSamples, 512);
-    const h = Math.ceil(numSamples / w);
-    const data = new Uint8Array(w * h * 4);
-
-    // normalize float data and pack into rgba8
-    let off = 0;
-    for (let i = 0; i < numSamples; ++i) {
-        packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);
-        packFloat32ToRGBA8(samples[i * 4 + 1] * 0.5 + 0.5, data, off + 4);
-        packFloat32ToRGBA8(samples[i * 4 + 2] * 0.5 + 0.5, data, off + 8);
-        packFloat32ToRGBA8(samples[i * 4 + 3] / 8, data, off + 12);
-        off += 16;
-    }
-
+const createSamplesTex = (device, name, samples) => {
+    const packedSamples = packSamples(samples);
     return new Texture(device, {
         name: name,
-        width: w,
-        height: h,
+        width: packedSamples.width,
+        height: packedSamples.height,
         mipmaps: false,
         minFilter: FILTER_NEAREST,
         magFilter: FILTER_NEAREST,
-        levels: [data]
+        levels: [packedSamples.data]
     });
 };
 
-// cache of float sample data packed into rgba8 textures
-const samplesTexCache = { };
+// simple cache storing key->value
+// missFunc is called if the key is not present
+class SimpleCache {
+    map = new Map();
+
+    get(key, missFunc) {
+        if (!this.map.has(key)) {
+            const result = missFunc();
+            this.map.set(key, result);
+            return result;
+        }
+        return this.map.get(key);
+    }
+
+    clear() {
+        this.map.clear();
+    }
+}
+
+// per-device cache
+class DeviceCache {
+    constructor() {
+        this.cache = new SimpleCache();
+    }
+
+    // get the cache entry for the given device and key
+    // if entry doesn't exist, missFunc will be invoked to create it
+    get(device, key, missFunc) {
+        return this.cache.get(device, () => {
+            const cache = new SimpleCache();
+            device.on('destroy', () => {
+                cache.map.forEach((value, key) => {
+                    value.destroy();
+                });
+                this.cache.map.delete(device);
+            });
+            return cache;
+        }).get(key, missFunc);
+    }
+
+    clear() {
+        this.cache.clear();
+    }
+}
+
+// cache of samples. we store these seperately from textures since multiple devices can use the same
+// set of samples.
+const samplesCache = new SimpleCache();
+
+// cache of float sample data packed into rgba8 textures. stored per device.
+const samplesTexCache = new DeviceCache();
 
 const generateLambertSamplesTex = (device, numSamples, sourceTotalPixels) => {
     const key = `lambert-samples-${numSamples}-${sourceTotalPixels}`;
 
-    if (samplesTexCache.hasOwnProperty(key)) {
-        return samplesTexCache[key];
-    }
-
-    const samples = generateLambertSamples(numSamples, sourceTotalPixels);
-    const samplesTex = packSamplesTex(device, key, samples);
-    samplesTexCache[key] = samplesTex;
-    return samplesTex;
+    return samplesTexCache.get(device, key, () => {
+        return createSamplesTex(device, key, samplesCache.get(key, () => {
+            return generateLambertSamples(numSamples, sourceTotalPixels);
+        }));
+    });
 };
 
 const generatePhongSamplesTex = (device, numSamples, specularPower) => {
     const key = `phong-samples-${numSamples}-${specularPower}`;
 
-    if (samplesTexCache.hasOwnProperty(key)) {
-        return samplesTexCache[key];
-    }
-
-    const samples = generatePhongSamples(numSamples, specularPower);
-    const samplesTex = packSamplesTex(device, key, samples);
-    samplesTexCache[key] = samplesTex;
-    return samplesTex;
+    return samplesTexCache.get(device, key, () => {
+        return createSamplesTex(device, key, samplesCache.get(key, () => {
+            return generatePhongSamples(numSamples, specularPower);
+        }));
+    });
 };
 
 const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPixels) => {
     const key = `ggx-samples-${numSamples}-${specularPower}-${sourceTotalPixels}`;
 
-    if (samplesTexCache.hasOwnProperty(key)) {
-        return samplesTexCache[key];
-    }
-
-    const samples = generateGGXSamples(numSamples, specularPower, sourceTotalPixels);
-    const samplesTex = packSamplesTex(device, key, samples);
-    samplesTexCache[key] = samplesTex;
-    return samplesTex;
+    return samplesTexCache.get(device, key, () => {
+        return createSamplesTex(device, key, samplesCache.get(key, () => {
+            return generateGGXSamples(numSamples, specularPower, sourceTotalPixels);
+        }));
+    });
 };
 
 const vsCode = `
