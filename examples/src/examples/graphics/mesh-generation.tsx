@@ -9,7 +9,7 @@ class MeshGenerationExample {
 
     load() {
         return <>
-            <AssetLoader name='playcanvasGrey' type='texture' url='static/assets/textures/playcanvas-grey.png' />
+            <AssetLoader name='playcanvasGrey' type='texture' url='/static/assets/textures/playcanvas-grey.png' />
         </>;
     }
 

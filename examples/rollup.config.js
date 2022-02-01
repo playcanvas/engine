@@ -21,8 +21,7 @@ export default {
                 { src: 'src/static/*', dest: 'dist/' },
                 { src: './assets/*', dest: 'dist/static/assets/' },
                 { src: './src/lib/*', dest: 'dist/static/lib/' },
-                { src: '../scripts/*', dest: 'dist/static/scripts/' },
-                { src: './src/wasm-loader.js', dest: 'dist/static/' }
+                { src: '../scripts/*', dest: 'dist/static/scripts/' }
             ]
         }),
         commonjs(),

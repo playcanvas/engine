@@ -19,13 +19,13 @@ class LocomotionExample {
 
     load() {
         return <>
-            <AssetLoader name='playcanvasGreyTexture' type='texture' url='static/assets/textures/playcanvas-grey.png' />
-            <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
-            <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
-            <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
-            <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
-            <AssetLoader name='jumpAnim' type='container' url='static/assets/animations/bitmoji/jump-flip.glb' />
-            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='playcanvasGreyTexture' type='texture' url='/static/assets/textures/playcanvas-grey.png' />
+            <AssetLoader name='model' type='container' url='/static/assets/models/bitmoji.glb' />
+            <AssetLoader name='idleAnim' type='container' url='/static/assets/animations/bitmoji/idle.glb' />
+            <AssetLoader name='walkAnim' type='container' url='/static/assets/animations/bitmoji/walk.glb' />
+            <AssetLoader name='jogAnim' type='container' url='/static/assets/animations/bitmoji/run.glb' />
+            <AssetLoader name='jumpAnim' type='container' url='/static/assets/animations/bitmoji/jump-flip.glb' />
+            <AssetLoader name='cubemap' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -41,9 +41,9 @@ class LocomotionExample {
     example(canvas: HTMLCanvasElement, assets: any, data: any, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', run);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', run);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', run);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', run);
         }
 
         function run() {

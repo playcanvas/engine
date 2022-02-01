@@ -9,8 +9,8 @@ class TweenExample {
     load() {
         return <>
             <ScriptLoader name='TWEEN' url='https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js' />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
-            <AssetLoader name='script' type='script' url='static/scripts/animation/tween.js' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
+            <AssetLoader name='script' type='script' url='/static/scripts/animation/tween.js' />
         </>;
     }
 

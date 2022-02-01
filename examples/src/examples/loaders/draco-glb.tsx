@@ -12,16 +12,16 @@ class DracoGlbExample {
 
         // load the draco decoder
         if (wasmSupported()) {
-            loadWasmModuleAsync('DracoDecoderModule', 'static/lib/draco/draco.wasm.js', 'static/lib/draco/draco.wasm.wasm', demo);
+            loadWasmModuleAsync('DracoDecoderModule', '/static/lib/draco/draco.wasm.js', '/static/lib/draco/draco.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('DracoDecoderModule', 'static/lib/draco/draco.js', '', demo);
+            loadWasmModuleAsync('DracoDecoderModule', '/static/lib/draco/draco.js', '', demo);
         }
 
         function demo() {
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
             // Load a glb file as a container
-            const url = "static/assets/models/heart_draco.glb";
+            const url = "/static/assets/models/heart_draco.glb";
             app.assets.loadFromUrl(url, "container", function (err, asset) {
                 app.start();
 

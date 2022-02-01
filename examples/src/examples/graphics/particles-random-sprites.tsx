@@ -9,8 +9,8 @@ class ParticlesRandomSpritesExample {
 
     load() {
         return <>
-            <AssetLoader name='particlesCoinsTexture' type='texture' url='static/assets/textures/particles-coins.png' />
-            <AssetLoader name='particlesBonusTexture' type='texture' url='static/assets/textures/particles-bonus.png' />
+            <AssetLoader name='particlesCoinsTexture' type='texture' url='/static/assets/textures/particles-coins.png' />
+            <AssetLoader name='particlesBonusTexture' type='texture' url='/static/assets/textures/particles-bonus.png' />
         </>;
     }
 

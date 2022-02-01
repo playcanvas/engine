@@ -7,9 +7,9 @@ class CompoundCollisionExample {
 
     example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
         }
 
         function demo() {

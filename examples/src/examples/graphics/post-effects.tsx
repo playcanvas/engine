@@ -21,13 +21,13 @@ class PostEffectsExample {
 
     load() {
         return <>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
-            <AssetLoader name='bokeh' type='script' url='static/scripts/posteffects/posteffect-bokeh.js' />
-            <AssetLoader name='sepia' type='script' url='static/scripts/posteffects/posteffect-sepia.js' />
-            <AssetLoader name='vignette' type='script' url='static/scripts/posteffects/posteffect-vignette.js' />
-            <AssetLoader name='ssao' type='script' url='static/scripts/posteffects/posteffect-ssao.js' />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='bokeh' type='script' url='/static/scripts/posteffects/posteffect-bokeh.js' />
+            <AssetLoader name='sepia' type='script' url='/static/scripts/posteffects/posteffect-sepia.js' />
+            <AssetLoader name='vignette' type='script' url='/static/scripts/posteffects/posteffect-vignette.js' />
+            <AssetLoader name='ssao' type='script' url='/static/scripts/posteffects/posteffect-ssao.js' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

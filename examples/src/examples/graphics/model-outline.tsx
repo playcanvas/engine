@@ -9,7 +9,7 @@ class ModelOutlineExample {
 
     load() {
         return <>
-            <AssetLoader name='outline' type='script' url='static/scripts/posteffects/posteffect-outline.js' />
+            <AssetLoader name='outline' type='script' url='/static/scripts/posteffects/posteffect-outline.js' />
         </>;
     }
 

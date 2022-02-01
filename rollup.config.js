@@ -300,6 +300,7 @@ const target_types = {
     input: "types/index.d.ts",
     output: [{
         file: "build/playcanvas.d.ts",
+        footer: "export as namespace pc;",
         format: "es"
     }],
     plugins: [

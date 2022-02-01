@@ -9,8 +9,8 @@ class OrbitExample {
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
         </>;
     }
 

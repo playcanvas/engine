@@ -97,7 +97,7 @@ class TransformFeedbackExample {
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
             <AssetLoader name='vshaderFeedback' type='shader' data={vshaderFeedback} />
             <AssetLoader name='vshaderCloud' type='shader' data={vshaderCloud} />
             <AssetLoader name='fshaderCloud' type='shader' data={fshaderCloud} />

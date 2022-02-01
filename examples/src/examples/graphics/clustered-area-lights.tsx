@@ -19,12 +19,12 @@ class AreaLightsExample {
 
     load() {
         return <>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.jpg' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.jpg' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.jpg' />
-            <AssetLoader name='luts' type='binary' url='static/assets/binary/area-light-luts.bin' />
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.jpg' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.jpg' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.jpg' />
+            <AssetLoader name='luts' type='binary' url='/static/assets/binary/area-light-luts.bin' />
         </>;
     }
 

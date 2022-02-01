@@ -9,7 +9,7 @@ class TextEmojisExample {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
         </>;
     }
 

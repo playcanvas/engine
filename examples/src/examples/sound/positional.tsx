@@ -9,9 +9,9 @@ class PositionalExample {
 
     load() {
         return <>
-            <AssetLoader name='model' type='model' url='static/assets/models/playbot/playbot.json' />
-            <AssetLoader name='runAnim' type='animation' url='static/assets/animations/playbot/playbot-run.json' />
-            <AssetLoader name='gravel' type='audio' url='static/assets/sounds/footsteps.mp3' />
+            <AssetLoader name='model' type='model' url='/static/assets/models/playbot/playbot.json' />
+            <AssetLoader name='runAnim' type='animation' url='/static/assets/animations/playbot/playbot-run.json' />
+            <AssetLoader name='gravel' type='audio' url='/static/assets/sounds/footsteps.mp3' />
         </>;
     }
 

@@ -72,7 +72,7 @@ class CustomShaderExample {
 
     load() {
         return <>
-            <AssetLoader name="playcanvas" type="texture" url="static/assets/textures/playcanvas.png" />
+            <AssetLoader name="playcanvas" type="texture" url="/static/assets/textures/playcanvas.png" />
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
         </>;

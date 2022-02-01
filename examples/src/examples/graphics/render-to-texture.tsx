@@ -9,7 +9,7 @@ class RenderToTextureExample {
 
     load() {
         return <>
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

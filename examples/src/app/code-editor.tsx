@@ -40,6 +40,10 @@ const CodeEditor = (props: CodeEditorProps) => {
             playcanvasTypeDefs,
             '@playcanvas/playcanvas.d.ts'
         );
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            playcanvasTypeDefs,
+            '@playcanvas/playcanvas.d.ts'
+        );
     };
 
     const editorDidMount = (editor: any) => {

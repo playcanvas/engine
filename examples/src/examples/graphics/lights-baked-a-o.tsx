@@ -23,9 +23,9 @@ class LightsBakedAOExample {
 
     load() {
         return <>
-            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='house' type='container' url='static/assets/models/house.glb' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='cubemap' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='house' type='container' url='/static/assets/models/house.glb' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
         </>;
     }
 

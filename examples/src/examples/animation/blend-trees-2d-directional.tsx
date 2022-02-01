@@ -8,12 +8,12 @@ class BlendTrees2DDirectionalExample {
 
     load() {
         return <>
-            <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
-            <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
-            <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
-            <AssetLoader name='jogAnim' type='container' url='static/assets/animations/bitmoji/run.glb' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='model' type='container' url='/static/assets/models/bitmoji.glb' />
+            <AssetLoader name='idleAnim' type='container' url='/static/assets/animations/bitmoji/idle.glb' />
+            <AssetLoader name='walkAnim' type='container' url='/static/assets/animations/bitmoji/walk.glb' />
+            <AssetLoader name='jogAnim' type='container' url='/static/assets/animations/bitmoji/run.glb' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
         </>;
     }
 

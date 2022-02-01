@@ -12,8 +12,8 @@ class ObjExample {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        const objurl = "static/assets/models/monkey.obj";
-        const scripturl = "static/scripts/parsers/obj-model.js";
+        const objurl = "/static/assets/models/monkey.obj";
+        const scripturl = "/static/scripts/parsers/obj-model.js";
 
         let entity: pc.Entity;
         app.assets.loadFromUrl(scripturl, "script", function () {

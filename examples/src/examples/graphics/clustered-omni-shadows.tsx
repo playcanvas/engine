@@ -23,14 +23,14 @@ class ClusteredOmniShadowsExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
-            <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
-            <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
-            <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
-            <AssetLoader name="xmas_posx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posx.png" />
-            <AssetLoader name="xmas_posy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posy.png" />
-            <AssetLoader name="xmas_posz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posz.png" />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
+            <AssetLoader name="xmas_negx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negx.png" />
+            <AssetLoader name="xmas_negy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negy.png" />
+            <AssetLoader name="xmas_negz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negz.png" />
+            <AssetLoader name="xmas_posx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posx.png" />
+            <AssetLoader name="xmas_posy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posy.png" />
+            <AssetLoader name="xmas_posz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posz.png" />
         </>;
     }
 

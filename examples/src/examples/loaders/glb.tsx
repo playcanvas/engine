@@ -17,7 +17,7 @@ class GlbExample {
         let camerasComponents: Array<pc.CameraComponent> = null;
 
         // Load a glb file as a container
-        const url = "static/assets/models/geometry-camera-light.glb";
+        const url = "/static/assets/models/geometry-camera-light.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 

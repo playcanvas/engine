@@ -11,8 +11,8 @@ class ClusteredLightingExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
         </>;
     }
 

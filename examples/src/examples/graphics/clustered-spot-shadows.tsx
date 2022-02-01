@@ -29,11 +29,11 @@ class ClusteredSpotShadowsExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name="channels" type="texture" url="static/assets/textures/channels.png" />
-            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
-            <AssetLoader name='cubemap' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name="channels" type="texture" url="/static/assets/textures/channels.png" />
+            <AssetLoader name="heart" type="texture" url="/static/assets/textures/heart.png" />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
+            <AssetLoader name='cubemap' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

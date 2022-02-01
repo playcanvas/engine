@@ -9,16 +9,16 @@ class RaycastExample {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
         }
 
         function demo() {

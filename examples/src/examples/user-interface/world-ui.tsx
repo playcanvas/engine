@@ -9,9 +9,9 @@ class WorldUiExample {
 
     load() {
         return <>
-            <AssetLoader name="checkboard" type="texture" url="static/assets/textures/checkboard.png" />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name="checkboard" type="texture" url="/static/assets/textures/checkboard.png" />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
         </>;
     }
 

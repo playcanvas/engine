@@ -9,7 +9,7 @@ class VideoTextureExample {
 
     load() {
         return <>
-            <AssetLoader name='tv' type='container' url='static/assets/models/tv.glb' />
+            <AssetLoader name='tv' type='container' url='/static/assets/models/tv.glb' />
         </>;
     }
 
@@ -72,7 +72,7 @@ class VideoTextureExample {
         // load on some browsers, especially mobile
         video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
 
-        video.src = 'static/assets/video/SampleVideo_1280x720_1mb.mp4';
+        video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
         document.body.append(video);
 
         video.addEventListener('canplaythrough', function () {

@@ -11,11 +11,10 @@ class ComponentPropertiesExample {
 
     load() {
         return <>
-            <AssetLoader name='playcanvasGreyTexture' type='texture' url='static/assets/textures/playcanvas-grey.png' />
+            <AssetLoader name='playcanvasGreyTexture' type='texture' url='/static/assets/textures/playcanvas-grey.png' />
         </>;
     }
 
-    // @ts-ignore: abstract class function
     controls(data: any) {
         return <>
             <Button text='Flash' onClick={() => {
@@ -25,7 +24,6 @@ class ComponentPropertiesExample {
     }
 
 
-    // @ts-ignore: abstract class function
     example(canvas: HTMLCanvasElement, assets: { playcanvasGreyTexture: pc.Asset }, data: any): void {
 
         const app = new pc.Application(canvas, {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 // @ts-ignore: library file import
-import playcanvasTypeDefs from '../../dist/build/playcanvas.d.ts';
 import MonacoEditor from "@monaco-editor/react";
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
@@ -15,12 +14,6 @@ const ControlPanel = (props: any) => {
         showCode: true,
         collapsed: window.top.innerWidth < 601
     });
-    const beforeMount = (monaco: any) => {
-        monaco.languages.typescript.typescriptDefaults.addExtraLib(
-            playcanvasTypeDefs,
-            '@playcanvas/playcanvas.d.ts'
-        );
-    };
     const onClickParametersTab = () => {
         if (document.getElementById('paramButton').classList.contains('selected')) {
             return;
@@ -77,7 +70,6 @@ const ControlPanel = (props: any) => {
                 readOnly: true
             }}
             defaultLanguage="typescript"
-            beforeMount={beforeMount}
             value={props.files ? props.files[0].text : ''}
         />
         }

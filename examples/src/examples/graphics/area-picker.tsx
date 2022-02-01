@@ -9,8 +9,8 @@ class AreaPickerExample {
 
     load() {
         return <>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

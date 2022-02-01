@@ -119,7 +119,7 @@ class LoadersGlExample {
         app.root.addChild(camera);
 
         // load the draco model, and then start the application
-        loadModel("static/assets/models/park_points.drc").then(() => {
+        loadModel("/static/assets/models/park_points.drc").then(() => {
             app.start();
         });
 
