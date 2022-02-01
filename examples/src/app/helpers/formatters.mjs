@@ -34,9 +34,13 @@ const getTypeScriptFunctionFromText = (text) => {
 };
 
 const getInnerFunctionText = (text) => {
-    if (text.includes(': void {')) {
-        text = text.substring(text.indexOf(": void {") + 8);
+    const functionReturnType = ': void {';
+    // if the text contains a function return type then we need to extract the functions inner text from after
+    // that point as the function signature may contain complex parameter types including parantheses
+    if (text.includes(functionReturnType)) {
+        text = text.substring(text.indexOf(functionReturnType) + functionReturnType.length);
     } else {
+        // otherwise we're dealing with a JS function so we can just extract the inner text from after the first paranthesis
         text = text.substring(text.indexOf("{") + 1);
     }
     text = text.substring(0, text.lastIndexOf("}"));
