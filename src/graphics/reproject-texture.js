@@ -322,9 +322,7 @@ const createSamplesTex = (device, name, samples) => {
 // simple cache storing key->value
 // missFunc is called if the key is not present
 class SimpleCache {
-    constructor() {
-        this.map = new Map();
-    }
+    map = new Map();
 
     get(key, missFunc) {
         if (!this.map.has(key)) {
