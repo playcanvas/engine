@@ -81,7 +81,7 @@
     "eslint": "^8.8.0",
     "jsdoc": "^3.6.10",
     "jsdoc-tsimport-plugin": "^1.0.5",
-    "karma": "^6.3.12",
+    "karma": "^6.3.13",
     "karma-chrome-launcher": "3.1.0",
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.33",
