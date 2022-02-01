@@ -356,9 +356,7 @@ class DeviceCache {
                 this.cache.map.delete(device);
             });
             return cache;
-        }).get(key, () => {
-            return missFunc();
-        });
+        }).get(key, missFunc);
     }
 
     clear() {
