@@ -9,7 +9,7 @@ class FlyExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/fly-camera.js' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/fly-camera.js' />
         </>;
     }
 

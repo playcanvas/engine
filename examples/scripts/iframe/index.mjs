@@ -55,19 +55,24 @@ function buildExample(category, filename) {
     fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}/${filename.replace(".tsx", "")}.html`, loadHtmlTemplate({
         exampleClass: exampleClass,
         exampleConstValues: JSON.stringify(exampleConstValues),
-        enginePath: process.env.ENGINE_PATH || '../../build/playcanvas.dbg.js'
+        enginePath: process.env.ENGINE_PATH || '../../build/playcanvas.js'
     }));
 }
 
 if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
 }
-const categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
-categories.forEach((category) => {
-    if (category.includes('index.mjs')) return;
-    const examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
-    examples.forEach((example) => {
-        if (example.includes('index.mjs')) return;
-        buildExample(category, example);
+
+if (process.env.EXAMPLE && process.env.CATEGORY) {
+    buildExample(process.env.CATEGORY, `${process.env.EXAMPLE}.tsx`);
+} else {
+    const categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
+    categories.forEach((category) => {
+        if (category.includes('index.mjs')) return;
+        const exampleFilenames = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
+        exampleFilenames.forEach((exampleFilename) => {
+            if (exampleFilename.includes('index.mjs')) return;
+            buildExample(category, exampleFilename);
+        });
     });
-});
+}

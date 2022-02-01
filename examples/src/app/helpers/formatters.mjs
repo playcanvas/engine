@@ -34,7 +34,11 @@ const getTypeScriptFunctionFromText = (text) => {
 };
 
 const getInnerFunctionText = (text) => {
-    text = text.substring(text.indexOf("{") + 1);
+    if (text.includes(': void {')) {
+        text = text.substring(text.indexOf(": void {") + 8);
+    } else {
+        text = text.substring(text.indexOf("{") + 1);
+    }
     text = text.substring(0, text.lastIndexOf("}"));
     // strip the PlayCanvas app initialization
     const indexOfAppCallStart = text.indexOf('const app');

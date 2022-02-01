@@ -9,8 +9,8 @@ class ButtonSpriteExample {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
-            <AssetLoader name='red_button_atlas' type='texture' url='static/assets/button/red_button_atlas.png' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='red_button_atlas' type='texture' url='/static/assets/button/red_button_atlas.png' />
         </>;
     }
 

@@ -9,7 +9,7 @@ class ParticlesSnowExample {
 
     load() {
         return <>
-            <AssetLoader name='snowflake' type='texture' url='static/assets/textures/snowflake.png' />
+            <AssetLoader name='snowflake' type='texture' url='/static/assets/textures/snowflake.png' />
         </>;
     }
 
@@ -70,7 +70,7 @@ class ParticlesSnowExample {
         entity.setLocalPosition(0, 3, 0);
 
         // load snowflake texture
-        app.assets.loadFromUrl('../assets/textures/snowflake.png', 'texture', function (err, asset) {
+        app.assets.loadFromUrl('/static/assets/textures/snowflake.png', 'texture', function (err, asset) {
             // when texture is loaded add particlesystem component to entity
             entity.addComponent("particlesystem", {
                 numParticles: 100,

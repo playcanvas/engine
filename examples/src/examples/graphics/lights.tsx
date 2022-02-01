@@ -21,14 +21,14 @@ class LightsExample {
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
-            <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
-            <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
-            <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
-            <AssetLoader name="xmas_posx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posx.png" />
-            <AssetLoader name="xmas_posy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posy.png" />
-            <AssetLoader name="xmas_posz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posz.png" />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name="heart" type="texture" url="/static/assets/textures/heart.png" />
+            <AssetLoader name="xmas_negx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negx.png" />
+            <AssetLoader name="xmas_negy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negy.png" />
+            <AssetLoader name="xmas_negz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negz.png" />
+            <AssetLoader name="xmas_posx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posx.png" />
+            <AssetLoader name="xmas_posy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posy.png" />
+            <AssetLoader name="xmas_posz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posz.png" />
         </>;
     }
 

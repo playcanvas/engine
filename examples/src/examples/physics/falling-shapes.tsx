@@ -9,7 +9,7 @@ class FallingShapesExample {
 
     load() {
         return <>
-            <AssetLoader name='torus' type='container' url='static/assets/models/torus.glb' />
+            <AssetLoader name='torus' type='container' url='/static/assets/models/torus.glb' />
         </>;
     }
 
@@ -19,9 +19,9 @@ class FallingShapesExample {
         const app = new pc.Application(canvas, {});
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
         }
 
         function demo() {

@@ -58,7 +58,7 @@ class PointCloudExample {
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
         </>;

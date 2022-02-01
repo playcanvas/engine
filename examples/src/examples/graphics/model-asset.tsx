@@ -9,7 +9,7 @@ class ModelAssetExample {
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
         </>;
     }
 

@@ -9,8 +9,8 @@ class ParticleSystemExample {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
-            <AssetLoader name='spark' type='texture' url='static/assets/textures/spark.png' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='spark' type='texture' url='/static/assets/textures/spark.png' />
         </>;
     }
 

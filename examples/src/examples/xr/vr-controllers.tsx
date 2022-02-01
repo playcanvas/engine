@@ -9,7 +9,7 @@ class VrControllersExample {
 
     load() {
         return <>
-            <AssetLoader name='glb' type='container' url='static/assets/models/vr-controller.glb' />
+            <AssetLoader name='glb' type='container' url='/static/assets/models/vr-controller.glb' />
         </>;
     }
 

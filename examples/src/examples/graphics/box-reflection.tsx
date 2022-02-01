@@ -21,9 +21,9 @@ class BoxReflectionExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='script' type='script' url='static/scripts/utils/cubemap-renderer.js' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='script' type='script' url='/static/scripts/utils/cubemap-renderer.js' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
         </>;
     }
 
@@ -150,7 +150,7 @@ class BoxReflectionExample {
         video.playsInline = true;
         video.crossOrigin = "anonymous";
         video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
-        video.src = 'static/assets/video/SampleVideo_1280x720_1mb.mp4';
+        video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
         document.body.append(video);
         video.addEventListener('canplaythrough', function () {
             videoTexture.setSource(video);

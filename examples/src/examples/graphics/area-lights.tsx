@@ -9,12 +9,12 @@ class AreaLightsExample {
 
     load() {
         return <>
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.jpg' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.jpg' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.jpg' />
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='luts' type='binary' url='static/assets/binary/area-light-luts.bin' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.jpg' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.jpg' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.jpg' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='luts' type='binary' url='/static/assets/binary/area-light-luts.bin' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

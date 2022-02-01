@@ -21,9 +21,9 @@ class ShadowCascadesExample {
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='terrain' type='container' url='static/assets/models/terrain.glb' />
-            <AssetLoader name='helipad' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='terrain' type='container' url='/static/assets/models/terrain.glb' />
+            <AssetLoader name='helipad' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 

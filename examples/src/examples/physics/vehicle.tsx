@@ -9,19 +9,19 @@ class VehicleExample {
 
     load() {
         return <>
-            <AssetLoader name='script1' type='script' url='static/scripts/camera/tracking-camera.js' />
-            <AssetLoader name='script2' type='script' url='static/scripts/physics/render-physics.js' />
-            <AssetLoader name='script3' type='script' url='static/scripts/physics/action-physics-reset.js' />
-            <AssetLoader name='script4' type='script' url='static/scripts/physics/vehicle.js' />
+            <AssetLoader name='script1' type='script' url='/static/scripts/camera/tracking-camera.js' />
+            <AssetLoader name='script2' type='script' url='/static/scripts/physics/render-physics.js' />
+            <AssetLoader name='script3' type='script' url='/static/scripts/physics/action-physics-reset.js' />
+            <AssetLoader name='script4' type='script' url='/static/scripts/physics/vehicle.js' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { script1: pc.Asset, script2: pc.Asset, script3: pc.Asset, script4: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
         }
 
         function demo() {

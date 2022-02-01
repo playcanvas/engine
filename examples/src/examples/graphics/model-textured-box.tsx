@@ -9,7 +9,7 @@ class ModelTexturedBoxExample {
 
     load() {
         return <>
-            <AssetLoader name='clouds' type='texture' url='static/assets/textures/clouds.jpg' />
+            <AssetLoader name='clouds' type='texture' url='/static/assets/textures/clouds.jpg' />
         </>;
     }
 

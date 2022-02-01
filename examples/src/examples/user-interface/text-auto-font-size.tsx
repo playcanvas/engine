@@ -9,7 +9,7 @@ class TextAutoFontSizeExample {
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
         </>;
     }
 

@@ -11,7 +11,7 @@ class ComponentPropertiesExample {
 
     load() {
         return <>
-            <AssetLoader name='playcanvasGreyTexture' type='texture' url='static/assets/textures/playcanvas-grey.png' />
+            <AssetLoader name='playcanvasGreyTexture' type='texture' url='/static/assets/textures/playcanvas-grey.png' />
         </>;
     }
 

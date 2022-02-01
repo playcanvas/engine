@@ -13,10 +13,10 @@ class TextureBasisExample {
     //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
     load() {
         return <>
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.basis' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.basis' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.basis' data={{ type: pc.TEXTURETYPE_SWIZZLEGGGR }} />
-            <AssetLoader name='helipad' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.basis' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.basis' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.basis' data={{ type: pc.TEXTURETYPE_SWIZZLEGGGR }} />
+            <AssetLoader name='helipad' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -26,9 +26,9 @@ class TextureBasisExample {
         const app = new pc.Application(canvas, {});
 
         pc.basisInitialize({
-            glueUrl: 'static/lib/basis/basis.wasm.js',
-            wasmUrl: 'static/lib/basis/basis.wasm.wasm',
-            fallbackUrl: 'static/lib/basis/basis.js'
+            glueUrl: '/static/lib/basis/basis.wasm.js',
+            wasmUrl: '/static/lib/basis/basis.wasm.wasm',
+            fallbackUrl: '/static/lib/basis/basis.js'
         });
 
         app.start();

@@ -9,7 +9,7 @@ class ParticlesAnimIndexExample {
 
     load() {
         return <>
-            <AssetLoader name='particlesNumbers' type='texture' url='static/assets/textures/particles-numbers.png' />
+            <AssetLoader name='particlesNumbers' type='texture' url='/static/assets/textures/particles-numbers.png' />
         </>;
     }
 

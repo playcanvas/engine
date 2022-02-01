@@ -9,7 +9,7 @@ class ParticlesSparkExample {
 
     load() {
         return <>
-            <AssetLoader name='spark' type='texture' url='static/assets/textures/spark.png' />
+            <AssetLoader name='spark' type='texture' url='/static/assets/textures/spark.png' />
         </>;
     }
 

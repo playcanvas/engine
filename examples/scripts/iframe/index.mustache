@@ -37,6 +37,8 @@
             window.top.observerData = data;
             window.top.pc = pc;
 
+            var canvas = document.getElementById('application-canvas');
+
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(document.body),
                 touch: new pc.TouchDevice(document.body),
@@ -59,6 +61,23 @@
             app.on('update', function () {
                 if (window.top._showMiniStats !== undefined) miniStats.enabled = window.top._showMiniStats;
             });
+
+            var canvasContainerElement = canvas.parentElement;
+            canvas.setAttribute('width', window.innerWidth + 'px');
+            canvas.setAttribute('height', window.innerHeight + 'px');
+            var resizeTimeout = null;
+            pc.app.setCanvasResolution(pc.RESOLUTION_AUTO);
+            if (ResizeObserver) {
+                new ResizeObserver(function() {
+                    if (resizeTimeout) {
+                        window.clearTimeout(resizeTimeout);
+                    }
+                    resizeTimeout = setTimeout(function () {
+                        canvas.width = canvasContainerElement.clientWidth;
+                        canvas.height = canvasContainerElement.clientHeight;
+                    });
+                }).observe(canvasContainerElement);
+            }
 
             var assets;
             if (!loadFunction) {
@@ -85,7 +104,11 @@
                     manifest[key] = asset;
                 }
                 if (count <= 0) {
-                    exampleFunction(app, canvas, manifest, data);
+                    if (location.pathname.includes('misc/mini-stats')) {
+                        exampleFunction(app, canvas, pcx);
+                    } else {
+                        exampleFunction(app, canvas, manifest, data);
+                    }
                     var event = new CustomEvent("exampleLoad");
                     window.top.dispatchEvent(event);
                 }
@@ -135,23 +158,6 @@
             });
         }
 
-        var canvas = document.getElementById('application-canvas');
-        var canvasContainerElement = canvas.parentElement;
-        canvas.setAttribute('width', window.innerWidth + 'px');
-        canvas.setAttribute('height', window.innerHeight + 'px');
-        var resizeTimeout = null;
-        if (ResizeObserver) {
-            new ResizeObserver(function() {
-                if (resizeTimeout) {
-                    window.clearTimeout(resizeTimeout);
-                }
-                resizeTimeout = setTimeout(function () {
-                    pc.app.resizeCanvas(canvasContainerElement.offsetWidth, canvasContainerElement.offsetHeight);
-                    canvas.width = canvasContainerElement.clientWidth;
-                });
-            }).observe(canvasContainerElement);
-        }
-
         {{{ exampleClass }}}
 
         pc.basisInitialize({
@@ -163,10 +169,19 @@
 
         var e = new Example();
 
+        var useTypeScript = window.top.localStorage.getItem('useTypeScript') === 'true';
+
         var exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
         if (!exampleFunction) {
             exampleFunction = e.example
         } else {
+            if (useTypeScript) {
+                exampleFunction = window.top.Babel.transform(exampleFunction, {
+                    retainLines: true,
+                    filename: `transformedScript.tsx`,
+                    presets: ["react", "typescript", "env"]
+                }).code;
+            }
             exampleFunction = new Function('app', 'canvas', 'assets', 'data', exampleFunction);
         }
         loadExample.bind(this)(exampleFunction, e.load, e.controls);

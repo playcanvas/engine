@@ -37,7 +37,11 @@ const CodeEditor = (props: CodeEditorProps) => {
 
     const beforeMount = (monaco: any) => {
         monaco.languages.typescript.typescriptDefaults.addExtraLib(
-            playcanvasTypeDefs,
+            playcanvasTypeDefs + ' export as namespace pc;',
+            '@playcanvas/playcanvas.d.ts'
+        );
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            playcanvasTypeDefs + ' export as namespace pc;',
             '@playcanvas/playcanvas.d.ts'
         );
     };

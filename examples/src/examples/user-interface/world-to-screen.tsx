@@ -9,8 +9,8 @@ class WorldToScreenExample {
 
     load() {
         return <>
-            <AssetLoader name="checkboard" type="texture" url="static/assets/textures/checkboard.png" />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
+            <AssetLoader name="checkboard" type="texture" url="/static/assets/textures/checkboard.png" />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
         </>;
     }
 
