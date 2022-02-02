@@ -64,10 +64,8 @@
         // get url parameters
         var queryString = window.location.search;
         var urlParams = new URLSearchParams(queryString);
-
     </script>
     <script>
-
         function loadEngine(callback) {
             const enginePath = urlParams.get('use_local_engine') || "{{{enginePath}}}";
 
@@ -200,24 +198,24 @@
         }
     </script>
     <script>
-            // create the example observer 
-            var data = new observer.Observer({});
-            window.top.observerData = data;
+        // create the example observer 
+        var data = new observer.Observer({});
+        window.top.observerData = data;
 
-            // load the engine, create the application, load the resources if necessary, then call the example
-            loadEngine(function() {
-                var canvas = document.getElementById('application-canvas');
+        // load the engine, create the application, load the resources if necessary, then call the example
+        loadEngine(function() {
+            var canvas = document.getElementById('application-canvas');
 
-                const app = createApplication(canvas);
+            const app = createApplication(canvas);
 
-                if (!window.loadFunction) {
-                    callExample(app, canvas, {}, data);
-                } else {
-                    loadResources(app, function(assetManifest) {
-                        callExample(app, canvas, assetManifest, data);
-                    });
-                }
-            });
+            if (!window.loadFunction) {
+                callExample(app, canvas, {}, data);
+            } else {
+                loadResources(app, function(assetManifest) {
+                    callExample(app, canvas, assetManifest, data);
+                });
+            }
+        });
     </script>
 </body>
 </html>
