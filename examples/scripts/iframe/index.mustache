@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.13.9/runtime.min.js"> </script>
-    <script src="{{{enginePath}}}"></script>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../../build/playcanvas-observer.js"></script>
     <script src="../../build/wasm-loader.js"></script>
+    <script src="../../build/urlSearchParamsPolyfill.js"></script>
+    <script src="../../build/promisePolyfill.js"></script>
+    <script src="../../build/fetchPolyfill.js"></script>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -20,7 +19,6 @@
         }
     </style>
 </head>
-
 <body>
     <div id="app">
         <div id="appInner">
@@ -28,17 +26,63 @@
         </div>
     </div>
     <script>
-        {{{ exampleConstValues }}}.forEach(function(s) {
-            window[s.k] = s.v;
-        });
+        // polyfill slice on UInt8Array
+        if (!Uint8Array.prototype.slice) {
+            Object.defineProperty(Uint8Array.prototype, 'slice', {
+                value: function (begin, end) {
+                    return new Uint8Array(Array.prototype.slice.call(this, begin, end));
+                }
+            });
+        }
 
-        function loadExample(exampleFunction, loadFunction, controlsFunction) {
-            var data = new observer.Observer({});
-            window.top.observerData = data;
-            window.top.pc = pc;
+        // include any constants necessary for the example
+        var constValues = {{{ exampleConstValues }}};
+        for (var i = 0; i < constValues.length; i++) {
+            windows[constValues.k] = constValues.v;
+        }
 
-            var canvas = document.getElementById('application-canvas');
+        // include the example class which contains the example function to execute and any assets to load
+        {{{ exampleClass }}}
+        var example = new Example();
 
+        var useTypeScript = window.top.localStorage.getItem('useTypeScript') === 'true';
+        window.exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
+        if (!window.exampleFunction) {
+            window.exampleFunction = example.example
+        } else {
+            if (useTypeScript) {
+                window.exampleFunction = window.top.Babel.transform(exampleFunction, {
+                    retainLines: true,
+                    filename: 'transformedScript.tsx',
+                    presets: ["react", "typescript", "env"]
+                }).code;
+            }
+            window.exampleFunction = new Function('app', 'canvas', 'assets', 'data', exampleFunction);
+        }
+        window.loadFunction = example.load;
+
+        // get url parameters
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+    </script>
+    <script>
+        function loadEngine(callback) {
+            const enginePath = urlParams.get('use_local_engine') || "{{{enginePath}}}";
+
+            fetch(enginePath)
+                .then(function(response) { return response.text() })
+                .then(function(data) {
+                    var module = {
+                        exports: {}
+                    };
+                    window.pc = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
+                    window.top.pc = window.pc;
+                    callback();
+                });
+        }
+
+        function createApplication(canvas) {
+            // create the app
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(document.body),
                 touch: new pc.TouchDevice(document.body),
@@ -50,142 +94,128 @@
                 }
             });
 
+            // set up miniStats
             var miniStats = new pcx.MiniStats(app);
-
-            var queryString = window.location.search;
-            var urlParams = new URLSearchParams(queryString);
             if (urlParams.get('miniStats') === 'false') {
                 miniStats.enabled = false;
             }
-
             app.on('update', function () {
                 if (window.top._showMiniStats !== undefined) miniStats.enabled = window.top._showMiniStats;
             });
 
+            // handle resizing
             var canvasContainerElement = canvas.parentElement;
             canvas.setAttribute('width', window.innerWidth + 'px');
             canvas.setAttribute('height', window.innerHeight + 'px');
             var resizeTimeout = null;
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
-            if (ResizeObserver) {
+            if (window.ResizeObserver) {
                 new ResizeObserver(function() {
-                    if (resizeTimeout) {
-                        window.clearTimeout(resizeTimeout);
-                    }
-                    resizeTimeout = setTimeout(function () {
-                        canvas.width = canvasContainerElement.clientWidth;
-                        canvas.height = canvasContainerElement.clientHeight;
-                    });
+                    canvas.width = canvasContainerElement.clientWidth;
+                    canvas.height = canvasContainerElement.clientHeight;
                 }).observe(canvasContainerElement);
             }
 
-            var assets;
-            if (!loadFunction) {
-                assets = [];
-            } else {
-                assets = loadFunction().props.children;
-                if (!Array.isArray(assets)) {
-                    assets = [assets];
-                }
+            return app;
+        }
+
+        function loadResource(app, resource, callback) {
+            if (!resource.type) {
+                fetch(resource.url)
+                    .then(function(response) { return response.text() })
+                    .then(function(data) {
+                        var module = {
+                            exports: {}
+                        };
+                        window[resource.name] = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
+                        callback({});
+                    });
+                return;
             }
+            if (resource.data) {
+                var asset = new pc.Asset(
+                    resource.name,
+                    resource.type,
+                    resource.type === "cubemap" ? {
+                        url: resource.url
+                    } : null,
+                    resource.data
+                );
+                asset.on("load", function (asset) {
+                    callback(asset);
+                });
+                app.assets.add(asset);
+                app.assets.load(asset);
+            } else {
+                app.assets.loadFromUrl(resource.url, resource.type, function (
+                    err,
+                    asset
+                ) {
+                    if (!err && asset) {
+                        callback(asset);
+                    }
+                });
+            }
+        }
 
-            assets = assets.map(function (c) {
-                return c.props;
-            });
+        function loadResources(app, callback) {
+            var assets = [];
+            var assetManifest = {};
 
-            var manifest = {};
+            // stub out react
+            window.React = { createElement: function(type, props) { if (type === 'div') assets.push(props); } };
+            // call the stubbed load function
+            window.loadFunction();
 
-            // count of assets to load
             var count = assets.length;
-
             function onLoadedResource(key, asset) {
                 count--;
                 if (key) {
-                    manifest[key] = asset;
+                    assetManifest[key] = asset;
                 }
                 if (count <= 0) {
-                    if (location.pathname.includes('misc/mini-stats')) {
-                        exampleFunction(app, canvas, pcx);
-                    } else {
-                        exampleFunction(app, canvas, manifest, data);
-                    }
-                    var event = new CustomEvent("exampleLoad");
-                    window.top.dispatchEvent(event);
+                    callback(assetManifest);
                 }
-            }
-
-            if (assets.length === 0) {
-                onLoadedResource();
             }
 
             assets.forEach(function (resource) {
-                if (!resource.type) {
-                    fetch(resource.url)
-                        .then(function(response) { return response.text() })
-                        .then(function(data) {
-                            var module = {
-                                exports: {}
-                            };
-                            window[resource.name] = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
-                            onLoadedResource();
-                        });
-                    return;
-                }
-                if (resource.data) {
-                    var asset = new pc.Asset(
-                        resource.name,
-                        resource.type,
-                        resource.type === "cubemap" ? {
-                            url: resource.url
-                        } : null,
-                        resource.data
-                    );
-                    asset.on("load", function (asset) {
-                        onLoadedResource(resource.name, asset);
-                    });
-                    app.assets.add(asset);
-                    app.assets.load(asset);
-                } else {
-                    app.assets.loadFromUrl(resource.url, resource.type, function (
-                        err,
-                        asset
-                    ) {
-                        if (!err && asset) {
-                            onLoadedResource(resource.name, asset);
-                        }
-                    });
-                }
+                loadResource(app, resource, function(asset) {
+                    onLoadedResource(resource.name, asset);
+                });
             });
         }
 
-        {{{ exampleClass }}}
-
-        pc.basisInitialize({
-            glueUrl: '../../static/lib/basis/basis.wasm.js',
-            wasmUrl: '../../static/lib/basis/basis.wasm.wasm',
-            fallbackUrl: '../../static/lib/basis/basis.js'
-        });
-
-
-        var e = new Example();
-
-        var useTypeScript = window.top.localStorage.getItem('useTypeScript') === 'true';
-
-        var exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
-        if (!exampleFunction) {
-            exampleFunction = e.example
-        } else {
-            if (useTypeScript) {
-                exampleFunction = window.top.Babel.transform(exampleFunction, {
-                    retainLines: true,
-                    filename: `transformedScript.tsx`,
-                    presets: ["react", "typescript", "env"]
-                }).code;
+        function callExample(app, canvas, assetManifest, data) {
+            if (location.pathname.indexOf('misc/mini-stats') !== -1) {
+                window.exampleFunction(app, canvas, pcx);
+            } else {
+                window.exampleFunction(app, canvas, assetManifest, data, wasmSupported, loadWasmModuleAsync);
             }
-            exampleFunction = new Function('app', 'canvas', 'assets', 'data', exampleFunction);
+            if (window.top.location.pathname.indexOf('iframe') === -1) {
+                var event = new CustomEvent("exampleLoad");
+                window.top.dispatchEvent(event);
+            }
         }
-        loadExample.bind(this)(exampleFunction, e.load, e.controls);
+    </script>
+    <script>
+        // create the example observer 
+        var data = new observer.Observer({});
+        window.top.observerData = data;
+
+        // load the engine, create the application, load the resources if necessary, then call the example
+        loadEngine(function() {
+            var canvas = document.getElementById('application-canvas');
+
+            const app = createApplication(canvas);
+
+            if (!window.loadFunction) {
+                callExample(app, canvas, {}, data);
+            } else {
+                loadResources(app, function(assetManifest) {
+                    callExample(app, canvas, assetManifest, data);
+                });
+            }
+        });
     </script>
 </body>
-
 </html>
