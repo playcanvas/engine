@@ -57,6 +57,7 @@
     "build/playcanvas.mjs",
     "build/playcanvas.dbg.js",
     "build/playcanvas.prf.js",
+    "build/playcanvas.d.ts",
     "build/playcanvas-extras.js",
     "scripts",
     "LICENSE",
