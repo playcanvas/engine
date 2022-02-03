@@ -15,6 +15,9 @@ const MAIN_DIR = `${__dirname}/../../`;
 fse.copySync(`${MAIN_DIR}/../build/`, `${MAIN_DIR}/dist/build/`);
 fs.copyFileSync(`${MAIN_DIR}/lib/wasm-loader.js`, `${MAIN_DIR}/dist/build/wasm-loader.js`);
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/@playcanvas/observer/dist/index.js`, `${MAIN_DIR}/dist/build/playcanvas-observer.js`);
+fs.copyFileSync(`${MAIN_DIR}/./node_modules/url-search-params-polyfill/index.js`, `${MAIN_DIR}/dist/build/urlSearchParamsPolyfill.js`);
+fs.copyFileSync(`${MAIN_DIR}/./node_modules/promise-polyfill/dist/polyfill.min.js`, `${MAIN_DIR}/dist/build/promisePolyfill.js`);
+fs.copyFileSync(`${MAIN_DIR}/./node_modules/whatwg-fetch/dist/fetch.umd.js`, `${MAIN_DIR}/dist/build/fetchPolyfill.js`);
 
 const EXAMPLE_CONSTS = [
     "vshader",
