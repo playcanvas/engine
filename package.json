@@ -59,7 +59,6 @@
     "build/playcanvas.prf.js",
     "build/playcanvas-extras.js",
     "scripts",
-    "types",
     "LICENSE",
     "package.json",
     "README.md",
