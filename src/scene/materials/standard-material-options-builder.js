@@ -180,7 +180,6 @@ class StandardMaterialOptionsBuilder {
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
         options.useRgbm = (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
         options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
-        options.skyboxIntensity = (scene.skyboxIntensity !== 1);
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 
@@ -221,6 +220,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
+        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1);
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
