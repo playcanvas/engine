@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 
 const findClosingBracketMatchIndex = (str, pos) => {
     if (str[pos] != '{') throw new Error("No '{' at index " + pos);
@@ -79,8 +80,18 @@ const getExampleClassFromTextFile = (Babel, text) => {
     return text;
 };
 
+const getEngineTypeFromClass = (text) => {
+    if (text.indexOf(`_defineProperty(Example, "ENGINE", 'DEBUG');` !== -1)) {
+        return 'DEBUG';
+    } else if (text.indexOf(`_defineProperty(Example, "ENGINE", 'PERFORMANCE');` !== -1)) {
+        return 'PERFORMANCE';
+    }
+    return null;
+};
+
 export default {
     getTypeScriptFunctionFromText: getTypeScriptFunctionFromText,
     getInnerFunctionText: getInnerFunctionText,
-    getExampleClassFromTextFile: getExampleClassFromTextFile
+    getExampleClassFromTextFile: getExampleClassFromTextFile,
+    getEngineTypeFromClass: getEngineTypeFromClass
 };
