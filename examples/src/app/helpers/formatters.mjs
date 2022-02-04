@@ -1,5 +1,3 @@
-import { useCallback } from "react";
-
 const findClosingBracketMatchIndex = (str, pos) => {
     if (str[pos] != '{') throw new Error("No '{' at index " + pos);
     let depth = 1;
