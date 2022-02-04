@@ -1,65 +1,30 @@
-import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from '../constants.js';
+import { WebglBuffer } from "./webgl-buffer.js";
 
 /**
  * A WebGl implementation of the VertexBuffer.
  */
-class WebglVertexBuffer {
+class WebglVertexBuffer extends WebglBuffer {
     // vertex array object
     vao = null;
 
-    bufferId = null;
-
     destroy(device) {
 
-        if (this.bufferId) {
+        super.destroy(device);
 
-            // clear up bound vertex buffers
-            const gl = device.gl;
-            device.boundVao = null;
-            gl.bindVertexArray(null);
-
-            // delete buffer
-            gl.deleteBuffer(this.bufferId);
-            this.bufferId = null;
-        }
+        // clear up bound vertex buffers
+        device.boundVao = null;
+        device.gl.bindVertexArray(null);
     }
 
     loseContext() {
-        this.bufferId = null;
+        super.loseContext();
         this.vao = null;
     }
 
     unlock(vertexBuffer) {
 
-        // Upload the new vertex data
-        const gl = vertexBuffer.device.gl;
-
-        if (!this.bufferId) {
-            this.bufferId = gl.createBuffer();
-        }
-
-        let glUsage;
-        switch (vertexBuffer.usage) {
-            case BUFFER_STATIC:
-                glUsage = gl.STATIC_DRAW;
-                break;
-            case BUFFER_DYNAMIC:
-                glUsage = gl.DYNAMIC_DRAW;
-                break;
-            case BUFFER_STREAM:
-                glUsage = gl.STREAM_DRAW;
-                break;
-            case BUFFER_GPUDYNAMIC:
-                if (vertexBuffer.device.webgl2) {
-                    glUsage = gl.DYNAMIC_COPY;
-                } else {
-                    glUsage = gl.STATIC_DRAW;
-                }
-                break;
-        }
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, vertexBuffer.storage, glUsage);
+        const device = vertexBuffer.device;
+        super.unlock(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage);
     }
 }
 
