@@ -1,7 +1,6 @@
 import { Debug } from '../core/debug.js';
 import {
-    BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM,
-    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32
+    BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -50,22 +49,11 @@ class IndexBuffer {
         this.numIndices = numIndices;
         this.usage = usage;
 
-        const gl = this.device.gl;
+        this.impl = graphicsDevice.implementIndexBuffer(this);
 
         // Allocate the storage
-        let bytesPerIndex;
-        if (format === INDEXFORMAT_UINT8) {
-            bytesPerIndex = 1;
-            this.glFormat = gl.UNSIGNED_BYTE;
-        } else if (format === INDEXFORMAT_UINT16) {
-            bytesPerIndex = 2;
-            this.glFormat = gl.UNSIGNED_SHORT;
-        } else if (format === INDEXFORMAT_UINT32) {
-            bytesPerIndex = 4;
-            this.glFormat = gl.UNSIGNED_INT;
-        }
+        const bytesPerIndex = typedArrayIndexFormatsByteSize[format];
         this.bytesPerIndex = bytesPerIndex;
-
         this.numBytes = this.numIndices * bytesPerIndex;
 
         if (initialData) {
@@ -89,25 +77,21 @@ class IndexBuffer {
             device.buffers.splice(idx, 1);
         }
 
-        if (this.bufferId) {
-            const gl = this.device.gl;
-            gl.deleteBuffer(this.bufferId);
-            this.device._vram.ib -= this.storage.byteLength;
-            this.bufferId = null;
-
-            if (this.device.indexBuffer === this) {
-                this.device.indexBuffer = null;
-            }
+        if (this.device.indexBuffer === this) {
+            this.device.indexBuffer = null;
         }
+
+        this.impl.destroy(device);
+        this.device._vram.ib -= this.storage.byteLength;
     }
 
     /**
-     * Called when the WebGL context was lost. It releases all context related resources.
+     * Called when the rendering context was lost. It releases all context related resources.
      *
      * @ignore
      */
     loseContext() {
-        this.bufferId = undefined;
+        this.impl.loseContext();
     }
 
     /**
@@ -147,35 +131,9 @@ class IndexBuffer {
      * active device.
      */
     unlock() {
+
         // Upload the new index data
-        const gl = this.device.gl;
-
-        if (!this.bufferId) {
-            this.bufferId = gl.createBuffer();
-        }
-
-        let glUsage;
-        switch (this.usage) {
-            case BUFFER_STATIC:
-                glUsage = gl.STATIC_DRAW;
-                break;
-            case BUFFER_DYNAMIC:
-                glUsage = gl.DYNAMIC_DRAW;
-                break;
-            case BUFFER_STREAM:
-                glUsage = gl.STREAM_DRAW;
-                break;
-            case BUFFER_GPUDYNAMIC:
-                if (this.device.webgl2) {
-                    glUsage = gl.DYNAMIC_COPY;
-                } else {
-                    glUsage = gl.STATIC_DRAW;
-                }
-                break;
-        }
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
+        this.impl.unlock(this);
     }
 
     /**

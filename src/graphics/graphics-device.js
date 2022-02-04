@@ -3,6 +3,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 import { platform } from '../core/platform.js';
+import { WebglVertexBuffer } from './webgl/webgl-vertex-buffer.js';
+import { WebglIndexBuffer } from './webgl/webgl-index-buffer.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -820,6 +822,16 @@ class GraphicsDevice extends EventHandler {
         this.scope = null;
         this.canvas = null;
         this.gl = null;
+    }
+
+    // provide webgl implementation for the vertex buffer
+    implementVertexBuffer(vertexBuffer) {
+        return new WebglVertexBuffer(vertexBuffer);
+    }
+
+    // provide webgl implementation for the index buffer
+    implementIndexBuffer(indexBuffer) {
+        return new WebglIndexBuffer(indexBuffer);
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -2350,7 +2362,7 @@ class GraphicsDevice extends EventHandler {
 
                 // bind buffer
                 const vertexBuffer = vertexBuffers[i];
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
 
                 // for each attribute
                 const elements = vertexBuffer.format.elements;
@@ -2400,10 +2412,10 @@ class GraphicsDevice extends EventHandler {
             // single VB keeps its VAO
             const vertexBuffer = this.vertexBuffers[0];
             Debug.assert(vertexBuffer.device === this, "The VertexBuffer was not created using current GraphicsDevice");
-            if (!vertexBuffer._vao) {
-                vertexBuffer._vao = this.createVertexArray(this.vertexBuffers);
+            if (!vertexBuffer.impl.vao) {
+                vertexBuffer.impl.vao = this.createVertexArray(this.vertexBuffers);
             }
-            vao = vertexBuffer._vao;
+            vao = vertexBuffer.impl.vao;
         } else {
             // obtain temporary VAO for multiple vertex buffers
             vao = this.createVertexArray(this.vertexBuffers);
@@ -2421,7 +2433,7 @@ class GraphicsDevice extends EventHandler {
         // Set the active index buffer object
         // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
         // and so we don't know what VAO sets it to.
-        const bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+        const bufferId = this.indexBuffer ? this.indexBuffer.impl.bufferId : null;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
     }
 
@@ -2542,7 +2554,7 @@ class GraphicsDevice extends EventHandler {
 
         if (this.webgl2 && this.transformFeedbackBuffer) {
             // Enable TF, start writing to out buffer
-            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
+            gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
             gl.beginTransformFeedback(gl.POINTS);
         }
 
@@ -2553,7 +2565,7 @@ class GraphicsDevice extends EventHandler {
             const indexBuffer = this.indexBuffer;
             Debug.assert(indexBuffer.device === this, "The IndexBuffer was not created using current GraphicsDevice");
 
-            const format = indexBuffer.glFormat;
+            const format = indexBuffer.impl.glFormat;
             const offset = primitive.base * indexBuffer.bytesPerIndex;
 
             if (numInstances > 0) {
