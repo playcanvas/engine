@@ -30,7 +30,7 @@ class VertexBuffer {
 
         this.id = id++;
 
-        this.impl = graphicsDevice.implementVertexBuffer(this);
+        this.impl = graphicsDevice.createVertexBufferImpl(this);
 
         // marks vertex buffer as instancing data
         this.instancing = false;

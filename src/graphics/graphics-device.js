@@ -825,12 +825,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     // provide webgl implementation for the vertex buffer
-    implementVertexBuffer(vertexBuffer) {
+    createVertexBufferImpl(vertexBuffer) {
         return new WebglVertexBuffer(vertexBuffer);
     }
 
     // provide webgl implementation for the index buffer
-    implementIndexBuffer(indexBuffer) {
+    createIndexBufferImpl(indexBuffer) {
         return new WebglIndexBuffer(indexBuffer);
     }
 

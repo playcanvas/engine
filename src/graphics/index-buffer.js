@@ -49,7 +49,7 @@ class IndexBuffer {
         this.numIndices = numIndices;
         this.usage = usage;
 
-        this.impl = graphicsDevice.implementIndexBuffer(this);
+        this.impl = graphicsDevice.createIndexBufferImpl(this);
 
         // Allocate the storage
         const bytesPerIndex = typedArrayIndexFormatsByteSize[format];
