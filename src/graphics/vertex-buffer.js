@@ -65,15 +65,6 @@ class VertexBuffer {
         device._vram.vb -= this.storage.byteLength;
     }
 
-    set bufferId(value) {
-        console.error("Unsupported");
-    }
-
-    get bufferId() {
-        console.error("Unsupported");
-        return 0;
-    }
-
     /**
      * Called when the rendering context was lost. It releases all context related resources.
      *
