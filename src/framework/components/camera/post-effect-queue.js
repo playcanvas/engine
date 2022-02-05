@@ -90,7 +90,7 @@ class PostEffectQueue {
      *
      * @param {number} format - The format of the color buffer.
      * @param {string} name - The name of the color buffer.
-     * @returns {Texture}
+     * @returns {Texture} The color buffer texture.
      * @private
      */
     _allocateColorBuffer(format, name) {
