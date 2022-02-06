@@ -155,7 +155,7 @@ class Vec2 {
      * var v1 = new pc.Vec2(5, 10);
      * var v2 = new pc.Vec2(10, 20);
      * var d = v1.distance(v2);
-     * console.log("The between v1 and v2 is: " + d);
+     * console.log("The distance between v1 and v2 is: " + d);
      */
     distance(rhs) {
         const x = this.x - rhs.x;
