@@ -1,4 +1,4 @@
-import { WebglGraphicsDevice } from '../../src/graphics/webgl/graphics-device.js';
+import { WebglGraphicsDevice } from '../../src/graphics/webgl/webgl-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
