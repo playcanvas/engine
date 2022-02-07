@@ -83,7 +83,7 @@ function shaderChunks(removeComments) {
             });
 
             return {
-                code,
+                code: code,
                 map: null
             };
         }
