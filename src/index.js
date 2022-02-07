@@ -73,6 +73,9 @@ export { VertexBuffer } from './graphics/vertex-buffer.js';
 export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
+// GRAPHICS / webgl
+export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
