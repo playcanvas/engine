@@ -733,7 +733,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             materialShaders: 0,
             compileTime: 0
         };
-9
+
         this.constantTexSource = this.scope.resolve("source");
 
         if (this.extTextureFloat) {
