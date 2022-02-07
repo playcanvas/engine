@@ -126,6 +126,7 @@ import {
 /** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
 /** @typedef {import('../input/mouse.js').Mouse} Mouse */
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
