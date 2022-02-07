@@ -2,7 +2,7 @@
  * Animation curve links an input data set to an output data set and defines the interpolation
  * method to use.
  *
- * @private
+ * @ignore
  */
 class AnimCurve {
     /**
@@ -17,7 +17,6 @@ class AnimCurve {
      * - {@link INTERPOLATION_STEP}
      * - {@link INTERPOLATION_LINEAR}
      * - {@link INTERPOLATION_CUBIC}
-     * @private
      */
     constructor(paths, input, output, interpolation) {
         this._paths = paths;
@@ -26,18 +25,38 @@ class AnimCurve {
         this._interpolation = interpolation;
     }
 
+    /**
+     * The list of paths which identify targets of this curve.
+     *
+     * @type {string[]}
+     */
     get paths() {
         return this._paths;
     }
 
+    /**
+     * The index of the AnimTrack input which contains the key data for this curve.
+     *
+     * @type {number}
+     */
     get input() {
         return this._input;
     }
 
+    /**
+     * The index of the AnimTrack input which contains the key data for this curve.
+     *
+     * @type {number}
+     */
     get output() {
         return this._output;
     }
 
+    /**
+     * The interpolation method used by this curve.
+     *
+     * @type {number}
+     */
     get interpolation() {
         return this._interpolation;
     }

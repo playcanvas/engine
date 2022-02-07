@@ -1,24 +1,24 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RaycastExample extends Example {
+class RaycastExample {
     static CATEGORY = 'Physics';
     static NAME = 'Raycast';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
         }
 
         function demo() {
@@ -117,14 +117,12 @@ class RaycastExample extends Example {
                 // Render the ray used in the raycast
                 app.drawLine(start, end, white);
 
-                // @ts-ignore engine-tsd
                 const result = app.systems.rigidbody.raycastFirst(start, end);
                 if (result) {
                     result.entity.render.material = red;
 
                     // Render the normal on the surface from the hit point
-                    // @ts-ignore engine-tsd
-                    temp.copy(result.normal).scale(0.3).add(result.point);
+                    temp.copy(result.normal).mulScalar(0.3).add(result.point);
                     app.drawLine(result.point, temp, blue);
                 }
 
@@ -135,14 +133,12 @@ class RaycastExample extends Example {
                 // Render the ray used in the raycast
                 app.drawLine(start, end, white);
 
-                // @ts-ignore engine-tsd
                 const results = app.systems.rigidbody.raycastAll(start, end);
-                results.forEach(function (result: { entity: pc.Entity, point: pc.Vec3 }) {
+                results.forEach(function (result: pc.RaycastResult) {
                     result.entity.render.material = red;
 
                     // Render the normal on the surface from the hit point
-                    // @ts-ignore engine-tsd
-                    temp.copy(result.normal).scale(0.3).add(result.point);
+                    temp.copy(result.normal).mulScalar(0.3).add(result.point);
                     app.drawLine(result.point, temp, blue);
                 }, this);
             });

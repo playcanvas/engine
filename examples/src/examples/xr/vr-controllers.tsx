@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class VRTemplateExample extends Example {
+
+class VrControllersExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Controllers';
 
     load() {
         return <>
-            <AssetLoader name='glb' type='container' url='static/assets/models/vr-controller.glb' />
+            <AssetLoader name='glb' type='container' url='/static/assets/models/vr-controller.glb' />
         </>;
     }
 
@@ -112,13 +112,13 @@ class VRTemplateExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -167,4 +167,4 @@ class VRTemplateExample extends Example {
     }
 }
 
-export default VRTemplateExample;
+export default VrControllersExample;

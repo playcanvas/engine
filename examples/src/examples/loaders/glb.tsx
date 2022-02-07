@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class GLBExample extends Example {
+
+class GlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
@@ -17,7 +17,7 @@ class GLBExample extends Example {
         let camerasComponents: Array<pc.CameraComponent> = null;
 
         // Load a glb file as a container
-        const url = "static/assets/models/geometry-camera-light.glb";
+        const url = "/static/assets/models/geometry-camera-light.glb";
         app.assets.loadFromUrl(url, "container", function (err, asset) {
             app.start();
 
@@ -43,7 +43,7 @@ class GLBExample extends Example {
             app.on("update", function (dt) {
                 time -= dt;
 
-                // change the camera every few seconds 
+                // change the camera every few seconds
                 if (time <= 0) {
                     time = 2;
 
@@ -59,4 +59,4 @@ class GLBExample extends Example {
     }
 }
 
-export default GLBExample;
+export default GlbExample;

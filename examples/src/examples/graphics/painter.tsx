@@ -1,8 +1,7 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class PainterExample extends Example {
+
+class PainterExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Painter';
 
@@ -143,7 +142,7 @@ class PainterExample extends Example {
                 brushes.push(brush);
             }
 
-            // step along the brish line multiple times each frame to make the line smooth
+            // step along the brush line multiple times each frame to make the line smooth
             const stepCount = 30;
             const stepProgress = 0.005;
 

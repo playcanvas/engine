@@ -1,16 +1,17 @@
 /**
- * @private
- * @callback AnimSetter
- * @description Callback function that the {@link AnimEvaluator} uses to set final animation values.
- * These callbacks are stored in {@link AnimTarget} instances which are constructed by an
+ * Callback function that the {@link AnimEvaluator} uses to set final animation values. These
+ * callbacks are stored in {@link AnimTarget} instances which are constructed by an
  * {@link AnimBinder}.
+ *
+ * @callback AnimSetter
  * @param {number[]} value - Updated animation value.
+ * @ignore
  */
 
 /**
  * Stores the information required by {@link AnimEvaluator} for updating a target value.
  *
- * @private
+ * @ignore
  */
 class AnimTarget {
     /**
@@ -22,7 +23,6 @@ class AnimTarget {
      * @param {number} components - The number of components on this target (this should ideally
      * match the number of components found on all attached animation curves).
      * @param {string} targetPath - The path to the target value.
-     * @private
      */
     constructor(func, type, components, targetPath) {
         this._func = func;

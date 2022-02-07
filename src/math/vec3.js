@@ -5,10 +5,10 @@ class Vec3 {
     /**
      * Creates a new Vec3 object.
      *
-     * @param {number|number[]} [x] - The x value. If x is an array of length 3, the array will be
-     * used to populate all components.
-     * @param {number} [y] - The y value.
-     * @param {number} [z] - The z value.
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 3, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
+     * @param {number} [z] - The z value. Defaults to 0.
      * @example
      * var v = new pc.Vec3(1, 2, 3);
      */
@@ -178,7 +178,7 @@ class Vec3 {
      * var v1 = new pc.Vec3(5, 10, 20);
      * var v2 = new pc.Vec3(10, 20, 40);
      * var d = v1.distance(v2);
-     * console.log("The between v1 and v2 is: " + d);
+     * console.log("The distance between v1 and v2 is: " + d);
      */
     distance(rhs) {
         const x = this.x - rhs.x;

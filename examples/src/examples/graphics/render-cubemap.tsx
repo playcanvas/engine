@@ -1,16 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class RenderCubemapExample extends Example {
+class RenderCubemapExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render Cubemap';
 
     load() {
         return <>
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='script' type='script' url='static/scripts/utils/cubemap-renderer.js' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='script' type='script' url='/static/scripts/utils/cubemap-renderer.js' />
         </>;
     }
 
@@ -27,7 +27,6 @@ class RenderCubemapExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // setup skydome
@@ -44,10 +43,9 @@ class RenderCubemapExample extends Example {
             app.root.addChild(entity);
 
             // create hight resolution sphere
-            // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
-            // Add a render compoonent with the mesh
+            // Add a render component with the mesh
             entity.addComponent('render', {
                 type: 'asset',
                 layers: layer,
@@ -204,7 +202,6 @@ class RenderCubemapExample extends Example {
             for (let e = 0; e < entities.length; e++) {
                 const scale = (e + 1) / entities.length;
                 const offset = time + e * 200;
-                // @ts-ignore engine-tsd
                 entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
                 entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
             }

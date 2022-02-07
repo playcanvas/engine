@@ -1,11 +1,22 @@
 import { Debug } from "../core/debug.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8 } from "./constants.js";
+import { DebugGraphics } from "./debug-graphics.js";
 import { RenderTarget } from "./render-target.js";
 import { Texture } from "./texture.js";
 
-// A class used by WebGl device to handle the capture of the current framebuffer into a texture
-// to be used by following draw calls to implement refraction
+/**
+ * A class used by the graphics device to handle the capture of the current framebuffer into a
+ * texture to be used by following draw calls to implement refraction.
+ *
+ * @ignore
+ */
 class GrabPass {
+    /**
+     * Create a new GrabPass instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this grab pass.
+     * @param {boolean} useAlpha - Whether the grab pass should have an alpha channel.
+     */
     constructor(device, useAlpha) {
         this.device = device;
         this.useAlpha = useAlpha;
@@ -19,6 +30,9 @@ class GrabPass {
         this.textureId = null;
     }
 
+    /**
+     * Release the grab pass resources.
+     */
     destroy() {
         this.textureId = null;
 
@@ -33,11 +47,14 @@ class GrabPass {
         }
     }
 
+    /**
+     * Create the texture and render target used by the grab pass.
+     */
     create() {
-
         if (!this.texture) {
 
             const texture = new Texture(this.device, {
+                name: 'texture_grabPass',
                 format: this.useAlpha ? PIXELFORMAT_R8_G8_B8_A8 : PIXELFORMAT_R8_G8_B8,
                 minFilter: this.useMipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,
@@ -46,7 +63,6 @@ class GrabPass {
                 mipmaps: this.useMipmaps
             });
 
-            texture.name = 'texture_grabPass';
             this.texture = texture;
 
             this.renderTarget = new RenderTarget({
@@ -59,6 +75,11 @@ class GrabPass {
         }
     }
 
+    /**
+     * Resolve/copy the backbuffer into the grab pass render target.
+     *
+     * @returns {boolean} - Whether the grab pass was successfully resolved or not.
+     */
     update() {
         const device = this.device;
         const gl = device.gl;
@@ -77,7 +98,7 @@ class GrabPass {
         const width = device.width;
         const height = device.height;
 
-        Debug.pushGpuMarker(device, "grabPass");
+        DebugGraphics.pushGpuMarker(device, "grabPass");
 
         if (device.webgl2 && !device._tempMacChromeBlitFramebufferWorkaround && width === texture._width && height === texture._height) {
             if (resolveRenderTarget) {
@@ -103,7 +124,6 @@ class GrabPass {
             gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
-
         } else {
             if (resolveRenderTarget) {
                 renderTarget.resolve(true);
@@ -121,24 +141,29 @@ class GrabPass {
             }
         }
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         return true;
     }
 
+    /**
+     * Generate mipmaps for the grab pass texture.
+     */
     generateMipmaps() {
-
-        // TODO: implement support for webgl1, which requires the texture to be a power of two, by first downscaling
-        // the captured framebuffer texture to smaller power of 2 texture, and then generate mipmaps and use it
-        // for rendering
+        // TODO: implement support for WebGL 1, which requires the texture to be a power of two, by
+        // first downscaling the captured framebuffer texture to smaller power of 2 texture, and
+        // then generate mipmaps and use it for rendering
         if (this.useMipmaps) {
             this.device.gl.generateMipmap(this.texture._glTarget);
         }
     }
 
-    // function to grab a copy of framebuffer to a texture
+    /**
+     * Grab a copy of the frame buffer to a texture and generate mipmaps for it.
+     *
+     * @returns {boolean} - Whether the grab pass was successfully updated or not.
+     */
     prepareTexture() {
-
         // capture the framebuffer
         const updated = this.update();
         if (updated) {

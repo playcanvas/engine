@@ -1,16 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class UserInterfaceParticleSystemExample extends Example {
+class ParticleSystemExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Particle System';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
-            <AssetLoader name='spark' type='texture' url='static/assets/textures/spark.png' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='spark' type='texture' url='/static/assets/textures/spark.png' />
         </>;
     }
 
@@ -147,4 +147,4 @@ class UserInterfaceParticleSystemExample extends Example {
     }
 }
 
-export default UserInterfaceParticleSystemExample;
+export default ParticleSystemExample;

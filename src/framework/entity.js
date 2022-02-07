@@ -44,142 +44,162 @@ import { Application } from './application.js';
  */
 class Entity extends GraphNode {
     /**
-     * Gets the {@link AnimComponent} attached to this entity. [read only]
+     * Gets the {@link AnimComponent} attached to this entity.
      *
      * @type {AnimComponent}
+     * @readonly
      */
     anim;
 
     /**
-     * Gets the {@link AnimationComponent} attached to this entity. [read only]
+     * Gets the {@link AnimationComponent} attached to this entity.
      *
      * @type {AnimationComponent}
+     * @readonly
      */
     animation;
 
     /**
-     * Gets the {@link AudioListenerComponent} attached to this entity. [read only]
+     * Gets the {@link AudioListenerComponent} attached to this entity.
      *
      * @type {AudioListenerComponent}
+     * @readonly
      */
-    audioListener;
+    audiolistener;
 
     /**
-     * Gets the {@link ButtonComponent} attached to this entity. [read only]
+     * Gets the {@link ButtonComponent} attached to this entity.
      *
      * @type {ButtonComponent}
+     * @readonly
      */
     button;
 
     /**
-     * Gets the {@link CameraComponent} attached to this entity. [read only]
+     * Gets the {@link CameraComponent} attached to this entity.
      *
      * @type {CameraComponent}
+     * @readonly
      */
     camera;
 
     /**
-     * Gets the {@link CollisionComponent} attached to this entity. [read only]
+     * Gets the {@link CollisionComponent} attached to this entity.
      *
      * @type {CollisionComponent}
+     * @readonly
      */
     collision;
 
     /**
-     * Gets the {@link ElementComponent} attached to this entity. [read only]
+     * Gets the {@link ElementComponent} attached to this entity.
      *
      * @type {ElementComponent}
+     * @readonly
      */
     element;
 
     /**
-     * Gets the {@link LayoutChildComponent} attached to this entity. [read only]
+     * Gets the {@link LayoutChildComponent} attached to this entity.
      *
      * @type {LayoutChildComponent}
+     * @readonly
      */
     layoutchild;
 
     /**
-     * Gets the {@link LayoutGroupComponent} attached to this entity. [read only]
+     * Gets the {@link LayoutGroupComponent} attached to this entity.
      *
      * @type {LayoutGroupComponent}
+     * @readonly
      */
     layoutgroup;
 
     /**
-     * Gets the {@link LightComponent} attached to this entity. [read only]
+     * Gets the {@link LightComponent} attached to this entity.
      *
      * @type {LightComponent}
+     * @readonly
      */
     light;
 
     /**
-     * Gets the {@link ModelComponent} attached to this entity. [read only]
+     * Gets the {@link ModelComponent} attached to this entity.
      *
      * @type {ModelComponent}
+     * @readonly
      */
     model;
 
     /**
-     * Gets the {@link ParticleSystemComponent} attached to this entity. [read only]
+     * Gets the {@link ParticleSystemComponent} attached to this entity.
      *
      * @type {ParticleSystemComponent}
+     * @readonly
      */
     particlesystem;
 
     /**
-     * Gets the {@link RenderComponent} attached to this entity. [read only]
+     * Gets the {@link RenderComponent} attached to this entity.
      *
      * @type {RenderComponent}
+     * @readonly
      */
     render;
 
     /**
-     * Gets the {@link RigidBodyComponent} attached to this entity. [read only]
+     * Gets the {@link RigidBodyComponent} attached to this entity.
      *
      * @type {RigidBodyComponent}
+     * @readonly
      */
     rigidbody;
 
     /**
-     * Gets the {@link ScreenComponent} attached to this entity. [read only]
+     * Gets the {@link ScreenComponent} attached to this entity.
      *
      * @type {ScreenComponent}
+     * @readonly
      */
     screen;
 
     /**
-     * Gets the {@link ScriptComponent} attached to this entity. [read only]
+     * Gets the {@link ScriptComponent} attached to this entity.
      *
      * @type {ScriptComponent}
+     * @readonly
      */
     script;
 
     /**
-     * Gets the {@link ScrollbarComponent} attached to this entity. [read only]
+     * Gets the {@link ScrollbarComponent} attached to this entity.
      *
      * @type {ScrollbarComponent}
+     * @readonly
      */
     scrollbar;
 
     /**
-     * Gets the {@link ScrollViewComponent} attached to this entity. [read only]
+     * Gets the {@link ScrollViewComponent} attached to this entity.
      *
      * @type {ScrollViewComponent}
+     * @readonly
      */
     scrollview;
 
     /**
-     * Gets the {@link SoundComponent} attached to this entity. [read only]
+     * Gets the {@link SoundComponent} attached to this entity.
      *
      * @type {SoundComponent}
+     * @readonly
      */
     sound;
 
     /**
-     * Gets the {@link SpriteComponent} attached to this entity. [read only]
+     * Gets the {@link SpriteComponent} attached to this entity.
      *
      * @type {SpriteComponent}
+     * @readonly
      */
     sprite;
 
@@ -269,7 +289,7 @@ class Entity extends GraphNode {
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to
      * each specific component's API reference page for details on valid values for this parameter.
-     * @returns {Component} The new Component that was attached to the entity or null if there
+     * @returns {Component|null} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
      * var entity = new pc.Entity();
@@ -359,7 +379,7 @@ class Entity extends GraphNode {
      * Get the GUID value for this Entity.
      *
      * @returns {string} The GUID of the Entity.
-     * @private
+     * @ignore
      */
     getGuid() {
         // if the guid hasn't been set yet then set it now before returning it
@@ -375,7 +395,7 @@ class Entity extends GraphNode {
      * the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
      *
      * @param {string} guid - The GUID to assign to the Entity.
-     * @private
+     * @ignore
      */
     setGuid(guid) {
         // remove current guid from entityIndex
@@ -448,10 +468,10 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Find a descendant of this Entity with the GUID.
+     * Find a descendant of this entity with the GUID.
      *
      * @param {string} guid - The GUID to search for.
-     * @returns {Entity} The Entity with the GUID or null.
+     * @returns {Entity|null} The entity with the matching GUID or null if no entity is found.
      */
     findByGuid(guid) {
         if (this._guid === guid) return this;
@@ -522,7 +542,7 @@ class Entity extends GraphNode {
      * Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components
      * and all descendants. Note, this Entity is not in the hierarchy and must be added manually.
      *
-     * @returns {Entity} A new Entity which is a deep copy of the original.
+     * @returns {GraphNode} A new Entity which is a deep copy of the original.
      * @example
      * var e = this.entity.clone();
      *

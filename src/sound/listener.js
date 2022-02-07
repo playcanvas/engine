@@ -6,14 +6,13 @@ import { Mat4 } from '../math/mat4.js';
 /**
  * Represents an audio listener - used internally.
  *
- * @private
+ * @ignore
  */
 class Listener {
     /**
      * Create a new listener instance.
      *
      * @param {SoundManager} manager - The sound manager.
-     * @private
      */
     constructor(manager) {
         this._manager = manager;

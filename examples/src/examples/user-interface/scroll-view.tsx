@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ScrollViewExample extends Example {
+class ScrollViewExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Scroll View';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
         </>;
     }
 
@@ -42,7 +42,7 @@ class ScrollViewExample extends Example {
             scaleBlend: 0.5
         });
 
-        function createScollbar(horizontal: boolean) {
+        function createScrollbar(horizontal: boolean) {
             const handle = new pc.Entity('Handle');
             const handleOptions = {
                 type: pc.ELEMENTTYPE_IMAGE,
@@ -166,8 +166,8 @@ class ScrollViewExample extends Example {
             useInput: false
         });
 
-        const horizontalScrollbar = createScollbar(true);
-        const verticalScrollbar = createScollbar(false);
+        const horizontalScrollbar = createScrollbar(true);
+        const verticalScrollbar = createScrollbar(false);
 
         // Create a scroll view
         const scrollview = new pc.Entity('ScrollView');

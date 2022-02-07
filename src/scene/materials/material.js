@@ -12,6 +12,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
+import { Debug } from "../../core/debug.js";
 import { DefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -287,49 +288,61 @@ class Material {
         return BLEND_NORMAL;
     }
 
-    _cloneInternal(clone) {
-        clone.name = this.name;
-        clone.shader = this.shader;
+    /**
+     * Copy a material.
+     *
+     * @param {Material} source - The material to copy.
+     * @returns {Material} The destination material.
+     */
+    copy(source) {
+        this.name = source.name;
+        this.shader = source.shader;
 
         // Render states
-        clone.alphaTest = this.alphaTest;
-        clone.alphaToCoverage = this.alphaToCoverage;
+        this.alphaTest = source.alphaTest;
+        this.alphaToCoverage = source.alphaToCoverage;
 
-        clone.blend = this.blend;
-        clone.blendSrc = this.blendSrc;
-        clone.blendDst = this.blendDst;
-        clone.blendEquation = this.blendEquation;
+        this.blend = source.blend;
+        this.blendSrc = source.blendSrc;
+        this.blendDst = source.blendDst;
+        this.blendEquation = source.blendEquation;
 
-        clone.separateAlphaBlend = this.separateAlphaBlend;
-        clone.blendSrcAlpha = this.blendSrcAlpha;
-        clone.blendDstAlpha = this.blendDstAlpha;
-        clone.blendAlphaEquation = this.blendAlphaEquation;
+        this.separateAlphaBlend = source.separateAlphaBlend;
+        this.blendSrcAlpha = source.blendSrcAlpha;
+        this.blendDstAlpha = source.blendDstAlpha;
+        this.blendAlphaEquation = source.blendAlphaEquation;
 
-        clone.cull = this.cull;
+        this.cull = source.cull;
 
-        clone.depthTest = this.depthTest;
-        clone.depthWrite = this.depthWrite;
-        clone.depthBias = this.depthBias;
-        clone.slopeDepthBias = this.slopeDepthBias;
-        if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
-        if (this.stencilBack) {
-            if (this.stencilFront === this.stencilBack) {
-                clone.stencilBack = clone.stencilFront;
+        this.depthTest = source.depthTest;
+        this.depthWrite = source.depthWrite;
+        this.depthBias = source.depthBias;
+        this.slopeDepthBias = source.slopeDepthBias;
+        if (source.stencilFront) this.stencilFront = source.stencilFront.clone();
+        if (source.stencilBack) {
+            if (source.stencilFront === source.stencilBack) {
+                this.stencilBack = this.stencilFront;
             } else {
-                clone.stencilBack = this.stencilBack.clone();
+                this.stencilBack = source.stencilBack.clone();
             }
         }
 
-        clone.redWrite = this.redWrite;
-        clone.greenWrite = this.greenWrite;
-        clone.blueWrite = this.blueWrite;
-        clone.alphaWrite = this.alphaWrite;
+        this.redWrite = source.redWrite;
+        this.greenWrite = source.greenWrite;
+        this.blueWrite = source.blueWrite;
+        this.alphaWrite = source.alphaWrite;
+
+        return this;
     }
 
+    /**
+     * Clone a material.
+     *
+     * @returns {Material} A newly cloned material.
+     */
     clone() {
-        const clone = new Material();
-        this._cloneInternal(clone);
-        return clone;
+        const clone = new this.constructor();
+        return clone.copy(this);
     }
 
     _updateMeshInstanceKeys() {
@@ -456,9 +469,13 @@ class Material {
             }
             meshInstance._material = null;
 
-            const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
-            if (this !== defaultMaterial) {
-                meshInstance.material = defaultMaterial;
+            if (meshInstance.mesh) {
+                const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
+                if (this !== defaultMaterial) {
+                    meshInstance.material = defaultMaterial;
+                }
+            } else {
+                Debug.warn('pc.Material: MeshInstance mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
     }

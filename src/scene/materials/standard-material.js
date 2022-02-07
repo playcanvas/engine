@@ -19,6 +19,11 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
+/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../math/color.js').Color} Color */
+/** @typedef {import('../../math/vec2.js').Vec2} Vec2 */
+/** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
+
 // properties that get created on a standard material
 const _props = {};
 
@@ -32,10 +37,10 @@ let _params = new Set();
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
  * @callback updateShaderCallback
- * @param {object} options - An object with shader generator settings (based on current material
- * and scene properties), that you can change and then return. Properties of the object passed into
+ * @param {*} options - An object with shader generator settings (based on current material and
+ * scene properties), that you can change and then return. Properties of the object passed into
  * this function are documented in {@link StandardMaterial#onUpdateShader}.
- * @returns {object} Returned settings will be used by the shader.
+ * @returns {*} Returned settings will be used by the shader.
  */
 
 /**
@@ -331,8 +336,8 @@ let _params = new Set();
  * specular.
  *
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
- * @property {number} occludeDirect Tells if AO should darken directional lighting.
- *
+ * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
+ * false.
  * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with
  * specular.
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
@@ -357,11 +362,10 @@ let _params = new Set();
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
  * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in
  * scene settings).
- * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for
+ * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {object} chunks Object containing custom shader chunks that will replace default ones.
  * @property {updateShaderCallback} onUpdateShader A custom function that will be called after all
  * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
@@ -483,7 +487,6 @@ class StandardMaterial extends Material {
 
         // storage for texture and cubemap asset references
         this._assetReferences = {};
-        this._validator = null;
 
         this._activeParams = new Set();
         this._activeLightingParams = new Set();
@@ -493,39 +496,58 @@ class StandardMaterial extends Material {
         this.reset();
     }
 
+    /* eslint-disable jsdoc/check-types */
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
             this[`_${name}`] = _props[name].value();
         });
 
+        /**
+         * @type {Object.<string, string>}
+         * @private
+         */
         this._chunks = { };
         this._uniformCache = { };
     }
 
     /**
-     * Duplicates a Standard material. All properties are duplicated except textures where only the
-     * references are copied.
+     * Object containing custom shader chunks that will replace default ones.
      *
-     * @returns {StandardMaterial} A cloned Standard material.
+     * @type {Object.<string, string>}
      */
-    clone() {
-        const clone = new StandardMaterial();
+    set chunks(value) {
+        this._dirtyShader = true;
+        this._chunks = value;
+    }
 
-        this._cloneInternal(clone);
+    get chunks() {
+        this._dirtyShader = true;
+        return this._chunks;
+    }
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * Copy a `StandardMaterial`.
+     *
+     * @param {StandardMaterial} source - The material to copy from.
+     * @returns {StandardMaterial} The destination material.
+     */
+    copy(source) {
+        super.copy(source);
 
         // set properties
         Object.keys(_props).forEach((k) => {
-            clone[k] = this[k];
+            this[k] = source[k];
         });
 
         // clone chunks
-        for (const p in this._chunks) {
-            if (this._chunks.hasOwnProperty(p))
-                clone._chunks[p] = this._chunks[p];
+        for (const p in source._chunks) {
+            if (source._chunks.hasOwnProperty(p))
+                this._chunks[p] = source._chunks[p];
         }
 
-        return clone;
+        return this;
     }
 
     _setParameter(name, value) {
@@ -728,7 +750,6 @@ class StandardMaterial extends Material {
             this._assetReferences[asset]._unbind();
         }
         this._assetReferences = null;
-        this._validator = null;
 
         super.destroy();
     }
@@ -956,30 +977,6 @@ function _defineObject(name, getUniformFunc) {
     defineUniform(name, getUniformFunc);
 }
 
-function _defineAlias(newName, oldName) {
-    Object.defineProperty(StandardMaterial.prototype, oldName, {
-        get: function () {
-            return this[newName];
-        },
-        set: function (value) {
-            this[newName] = value;
-        }
-    });
-}
-
-function _defineChunks() {
-    Object.defineProperty(StandardMaterial.prototype, "chunks", {
-        get: function () {
-            this._dirtyShader = true;
-            return this._chunks;
-        },
-        set: function (value) {
-            this._dirtyShader = true;
-            this._chunks = value;
-        }
-    });
-}
-
 function _defineFlag(name, defaultValue) {
     defineProp({
         name: name,
@@ -1048,8 +1045,6 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineChunks();
-
     _defineFlag("ambientTint", false);
     _defineFlag("diffuseTint", false);
     _defineFlag("specularTint", false);
@@ -1097,18 +1092,6 @@ function _defineMaterialProps() {
     _defineObject("cubeMap");
     _defineObject("sphereMap");
     _defineObject("envAtlas");
-
-    _defineAlias("diffuseTint", "diffuseMapTint");
-    _defineAlias("specularTint", "specularMapTint");
-    _defineAlias("emissiveTint", "emissiveMapTint");
-    _defineAlias("aoVertexColor", "aoMapVertexColor");
-    _defineAlias("diffuseVertexColor", "diffuseMapVertexColor");
-    _defineAlias("specularVertexColor", "specularMapVertexColor");
-    _defineAlias("emissiveVertexColor", "emissiveMapVertexColor");
-    _defineAlias("metalnessVertexColor", "metalnessMapVertexColor");
-    _defineAlias("glossVertexColor", "glossMapVertexColor");
-    _defineAlias("opacityVertexColor", "opacityMapVertexColor");
-    _defineAlias("lightVertexColor", "lightMapVertexColor");
 
     // prefiltered cubemap getter
     const getterFunc = function () {

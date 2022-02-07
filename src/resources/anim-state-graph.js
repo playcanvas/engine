@@ -7,7 +7,7 @@ import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
  * Resource handler used for loading {@link AnimStateGraph} resources.
  *
  * @implements {ResourceHandler}
- * @private
+ * @ignore
  */
 class AnimStateGraphHandler {
     constructor() {

@@ -142,6 +142,11 @@ class Tags extends EventHandler {
         return this._has(this._processArguments(arguments));
     }
 
+    /**
+     * @param {string[]|string[][]} tags - Array of tags.
+     * @returns {boolean} True if the supplied tags are present.
+     * @private
+     */
     _has(tags) {
         if (!this._list.length || !tags.length)
             return false;
@@ -180,6 +185,12 @@ class Tags extends EventHandler {
         return this._list.slice(0);
     }
 
+    /**
+     * @param {IArguments} args - Arguments to process.
+     * @param {boolean} [flat] - If true, will flatten array of tags. Defaults to false.
+     * @returns {string[]|string[][]} Array of tags.
+     * @private
+     */
     _processArguments(args, flat) {
         const tags = [];
         let tmp = [];

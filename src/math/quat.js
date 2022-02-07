@@ -10,11 +10,11 @@ class Quat {
     /**
      * Create a new Quat instance.
      *
-     * @param {number|number[]} [x] - The quaternion's x component. Default value 0. If x is an
-     * array of length 4, the array will be used to populate all components.
-     * @param {number} [y] - The quaternion's y component. Default value 0.
-     * @param {number} [z] - The quaternion's z component. Default value 0.
-     * @param {number} [w] - The quaternion's w component. Default value 1.
+     * @param {number|number[]} [x] - The quaternion's x component. Defaults to 0. If x is an array
+     * of length 4, the array will be used to populate all components.
+     * @param {number} [y] - The quaternion's y component. Defaults to 0.
+     * @param {number} [z] - The quaternion's z component. Defaults to 0.
+     * @param {number} [w] - The quaternion's w component. Defaults to 1.
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {

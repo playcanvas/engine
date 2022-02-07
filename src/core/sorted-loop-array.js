@@ -3,7 +3,7 @@
  * while we loop through it. The class assumes that it holds objects that need to be sorted based
  * on one of their fields.
  *
- * @private
+ * @ignore
  */
 class SortedLoopArray {
     /**
@@ -21,7 +21,6 @@ class SortedLoopArray {
      *   // do things with array elements
      *   // safe to remove and add elements into the array while looping
      * }
-     * @private
      */
     constructor(args) {
         /**
@@ -86,7 +85,6 @@ class SortedLoopArray {
      * passed into the constructor. This also adjusts the loopIndex accordingly.
      *
      * @param {object} item - The item to insert.
-     * @private
      */
     insert(item) {
         const index = this._binarySearch(item);
@@ -102,7 +100,6 @@ class SortedLoopArray {
      * binary search for the right index. This also adjusts the loopIndex accordingly.
      *
      * @param {object} item - The item to append.
-     * @private
      */
     append(item) {
         this.items.push(item);
@@ -113,7 +110,6 @@ class SortedLoopArray {
      * Removes the specified item from the array.
      *
      * @param {object} item - The item to remove.
-     * @private
      */
     remove(item) {
         const idx = this.items.indexOf(item);
@@ -133,8 +129,6 @@ class SortedLoopArray {
      * WARNING: Be careful if you are sorting while iterating because if after sorting the array
      * element that you are currently processing is moved behind other elements then you might end
      * up iterating over elements more than once!
-     *
-     * @private
      */
     sort() {
         // get current item pointed to by loopIndex

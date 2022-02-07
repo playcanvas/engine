@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -13,18 +13,18 @@ import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class AreaLightsExample extends Example {
+class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Area Lights';
 
     load() {
         return <>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.jpg' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.jpg' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.jpg' />
-            <AssetLoader name='luts' type='binary' url='static/assets/binary/area-light-luts.bin' />
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.jpg' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.jpg' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.jpg' />
+            <AssetLoader name='luts' type='binary' url='/static/assets/binary/area-light-luts.bin' />
         </>;
     }
 
@@ -57,14 +57,13 @@ class AreaLightsExample extends Example {
         });
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // enabled clustered lighting. This is a temporary API and will change in the future
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
         // @ts-ignore
         const lighting = app.scene.lighting;
 
@@ -192,7 +191,6 @@ class AreaLightsExample extends Example {
         app.setAreaLightLuts(assets.luts);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // create ground plane
@@ -213,7 +211,8 @@ class AreaLightsExample extends Example {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: ground,
-                distanceMax: 24
+                distanceMax: 60,
+                frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");

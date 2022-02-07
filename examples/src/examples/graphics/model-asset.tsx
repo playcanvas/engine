@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ModelAssetExample extends Example {
+
+class ModelAssetExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Asset';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
         </>;
     }
 

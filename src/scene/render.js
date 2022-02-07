@@ -16,7 +16,7 @@ import { EventHandler } from '../core/event-handler.js';
  * resource of a Render Asset.
  *
  * @augments EventHandler
- * @private
+ * @ignore
  */
 class Render extends EventHandler {
     /**
@@ -40,7 +40,6 @@ class Render extends EventHandler {
      * The meshes that the render contains.
      *
      * @type {Mesh[]}
-     * @private
      */
     set meshes(value) {
         // decrement references on the existing meshes
@@ -69,7 +68,7 @@ class Render extends EventHandler {
                 const mesh = this._meshes[i];
                 if (mesh) {
                     mesh.decRefCount();
-                    if (mesh.getRefCount() < 1) {
+                    if (mesh.refCount < 1) {
                         mesh.destroy();
                         this._meshes[i] = null;
                     }

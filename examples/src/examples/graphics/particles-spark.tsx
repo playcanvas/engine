@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ParticlesSparkExample extends Example {
+
+class ParticlesSparkExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Particles: Spark';
 
     load() {
         return <>
-            <AssetLoader name='spark' type='texture' url='static/assets/textures/spark.png' />
+            <AssetLoader name='spark' type='texture' url='/static/assets/textures/spark.png' />
         </>;
     }
 

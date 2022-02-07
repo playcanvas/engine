@@ -13,7 +13,7 @@ import {
  * while the state is active. An AnimState will stay active and play as long as there is no
  * AnimTransition with its conditions met that has that AnimState as its source state.
  *
- * @private
+ * @ignore
  */
 class AnimState {
     /**
@@ -27,7 +27,6 @@ class AnimState {
      * @param {boolean} loop - Determines whether animations in this state should loop.
      * @param {object|null} blendTree - If supplied, the AnimState will recursively build a
      * {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
-     * @private
      */
     constructor(controller, name, speed, loop, blendTree) {
         this._controller = controller;

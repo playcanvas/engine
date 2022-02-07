@@ -36,7 +36,6 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
         const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
@@ -68,7 +67,7 @@ class AnimComponentSystem extends ComponentSystem {
                     Object.keys(maskData).forEach((maskKey) => {
                         mask[decodeURI(maskKey)] = maskData[maskKey];
                     });
-                    component.layers[key].assignMask(mask);
+                    component.layers[key].mask = mask;
                 }
             });
         }

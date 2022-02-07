@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from './constants.js';
+import { BUFFER_STATIC } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
@@ -18,7 +18,7 @@ class VertexBuffer {
      * buffer.
      * @param {VertexFormat} format - The vertex format of this vertex buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
-     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer} [initialData] - Initial data.
      */
     constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
@@ -30,8 +30,7 @@ class VertexBuffer {
 
         this.id = id++;
 
-        // vertex array object
-        this._vao = null;
+        this.impl = graphicsDevice.createVertexBufferImpl(this);
 
         // marks vertex buffer as instancing data
         this.instancing = false;
@@ -60,24 +59,19 @@ class VertexBuffer {
             device.buffers.splice(idx, 1);
         }
 
-        if (this.bufferId) {
+        this.impl.destroy(device);
 
-            // clear up bound vertex buffers
-            const gl = device.gl;
-            device.boundVao = null;
-            gl.bindVertexArray(null);
-
-            // delete buffer
-            gl.deleteBuffer(this.bufferId);
-            device._vram.vb -= this.storage.byteLength;
-            this.bufferId = null;
-        }
+        // TODO: double check this works correctly
+        device._vram.vb -= this.storage.byteLength;
     }
 
-    // called when context was lost, function releases all context related resources
+    /**
+     * Called when the rendering context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
     loseContext() {
-        this.bufferId = undefined;
-        this._vao = null;
+        this.impl.loseContext();
     }
 
     /**
@@ -124,35 +118,9 @@ class VertexBuffer {
      * returned to the control of the graphics driver.
      */
     unlock() {
+
         // Upload the new vertex data
-        const gl = this.device.gl;
-
-        if (!this.bufferId) {
-            this.bufferId = gl.createBuffer();
-        }
-
-        let glUsage;
-        switch (this.usage) {
-            case BUFFER_STATIC:
-                glUsage = gl.STATIC_DRAW;
-                break;
-            case BUFFER_DYNAMIC:
-                glUsage = gl.DYNAMIC_DRAW;
-                break;
-            case BUFFER_STREAM:
-                glUsage = gl.STREAM_DRAW;
-                break;
-            case BUFFER_GPUDYNAMIC:
-                if (this.device.webgl2) {
-                    glUsage = gl.DYNAMIC_COPY;
-                } else {
-                    glUsage = gl.STATIC_DRAW;
-                }
-                break;
-        }
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, this.storage, glUsage);
+        this.impl.unlock(this);
     }
 
     /**

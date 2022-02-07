@@ -51,21 +51,19 @@ class BasicMaterial extends Material {
     }
 
     /**
-     * Duplicates a Basic material. All properties are duplicated except textures where only the
-     * references are copied.
+     * Copy a `BasicMaterial`.
      *
-     * @returns {BasicMaterial} A cloned Basic material.
+     * @param {BasicMaterial} source - The material to copy from.
+     * @returns {BasicMaterial} The destination material.
      */
-    clone() {
-        const clone = new BasicMaterial();
+    copy(source) {
+        super.copy(source);
 
-        Material.prototype._cloneInternal.call(this, clone);
+        this.color.copy(source.color);
+        this.colorMap = source.colorMap;
+        this.vertexColors = source.vertexColors;
 
-        clone.color.copy(this.color);
-        clone.colorMap = this.colorMap;
-        clone.vertexColors = this.vertexColors;
-
-        return clone;
+        return this;
     }
 
     updateUniforms(device, scene) {

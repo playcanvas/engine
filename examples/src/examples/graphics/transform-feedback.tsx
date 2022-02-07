@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshaderFeedback = `
 // vertex shader used to move particles during transform-feedback simulation step
@@ -91,13 +91,13 @@ void main(void)
 }
 `;
 
-class TransformFeedbackExample extends Example {
+class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Transform Feedback';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
             <AssetLoader name='vshaderFeedback' type='shader' data={vshaderFeedback} />
             <AssetLoader name='vshaderCloud' type='shader' data={vshaderCloud} />
             <AssetLoader name='fshaderCloud' type='shader' data={fshaderCloud} />
@@ -116,7 +116,7 @@ class TransformFeedbackExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // create small 2D texture representing movement direcion (wind)
+        // create small 2D texture representing movement direction (wind)
         const textureResolution = 10;
         const textureData = new Uint8ClampedArray(textureResolution * textureResolution * 4);
 

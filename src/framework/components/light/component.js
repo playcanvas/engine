@@ -7,7 +7,7 @@ import {
     LAYERID_WORLD,
     LIGHTSHAPE_PUNCTUAL,
     LIGHTFALLOFF_LINEAR,
-    MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
+    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOW_PCF3,
     SHADOWUPDATE_REALTIME
 } from '../../../scene/constants.js';
@@ -16,6 +16,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../math/color.js').Color} Color */
+/** @typedef {import('../../../math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').LightComponentSystem} LightComponentSystem */
 
@@ -486,28 +488,28 @@ function _defineProps() {
     });
     _defineProperty("affectDynamic", true, function (newValue, oldValue) {
         if (newValue) {
-            this.light.mask |= MASK_DYNAMIC;
+            this.light.mask |= MASK_AFFECT_DYNAMIC;
         } else {
-            this.light.mask &= ~MASK_DYNAMIC;
+            this.light.mask &= ~MASK_AFFECT_DYNAMIC;
         }
         this.light.layersDirty();
     });
     _defineProperty("affectLightmapped", false, function (newValue, oldValue) {
         if (newValue) {
-            this.light.mask |= MASK_BAKED;
-            if (this.bake) this.light.mask &= ~MASK_LIGHTMAP;
+            this.light.mask |= MASK_AFFECT_LIGHTMAPPED;
+            if (this.bake) this.light.mask &= ~MASK_BAKE;
         } else {
-            this.light.mask &= ~MASK_BAKED;
-            if (this.bake) this.light.mask |= MASK_LIGHTMAP;
+            this.light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
+            if (this.bake) this.light.mask |= MASK_BAKE;
         }
     });
     _defineProperty("bake", false, function (newValue, oldValue) {
         if (newValue) {
-            this.light.mask |= MASK_LIGHTMAP;
-            if (this.affectLightmapped) this.light.mask &= ~MASK_BAKED;
+            this.light.mask |= MASK_BAKE;
+            if (this.affectLightmapped) this.light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
         } else {
-            this.light.mask &= ~MASK_LIGHTMAP;
-            if (this.affectLightmapped) this.light.mask |= MASK_BAKED;
+            this.light.mask &= ~MASK_BAKE;
+            if (this.affectLightmapped) this.light.mask |= MASK_AFFECT_LIGHTMAPPED;
         }
         this.light.layersDirty();
     });

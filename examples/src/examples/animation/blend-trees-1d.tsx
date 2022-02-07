@@ -1,27 +1,26 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import SliderInput from '@playcanvas/pcui/SliderInput/component';
 // @ts-ignore: library file import
 import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
 // @ts-ignore: library file import
 import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 
-class BlendTrees1DExample extends Example {
+class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
 
     load() {
         return <>
-            <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
-            <AssetLoader name='idleAnim' type='container' url='static/assets/animations/bitmoji/idle.glb' />
-            <AssetLoader name='danceAnim' type='container' url='static/assets/animations/bitmoji/win-dance.glb' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='model' type='container' url='/static/assets/models/bitmoji.glb' />
+            <AssetLoader name='idleAnim' type='container' url='/static/assets/animations/bitmoji/idle.glb' />
+            <AssetLoader name='danceAnim' type='container' url='/static/assets/animations/bitmoji/win-dance.glb' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
         </>;
     }
 

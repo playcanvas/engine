@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class MeshMorphExample extends Example {
+
+class MeshMorphExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph';
 
@@ -48,8 +48,7 @@ class MeshMorphExample extends Example {
                 // distance of the point to the specified plane
                 dist = shortestDistance(positions[i], positions[i + 1], positions[i + 2], nx, ny, nz);
 
-                // modify distance to displacement amoint - displace nearby points more than distant points
-                displacement = pc.math.clamp(dist, 0, limit);
+                // modify distance to displacement amount - displace nearby points more than distant points
                 displacement = pc.math.smoothstep(0, limit, dist);
                 displacement = 1 - displacement;
 
@@ -79,7 +78,6 @@ class MeshMorphExample extends Example {
 
         const createMorphInstance = function (x: number | pc.Vec3, y: number, z: number) {
             // create the base mesh - a sphere, with higher amount of vertices / triangles
-            // @ts-ignore engine-tsd
             const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
             // obtain base mesh vertex / index data
@@ -103,7 +101,6 @@ class MeshMorphExample extends Example {
 
             // add morph instance - this is where currently set weights are stored
             const morphInstance = new pc.MorphInstance(mesh.morph);
-            // @ts-ignore engine-tsd
             meshInstance.morphInstance = morphInstance;
 
             // Create Entity and add it to the scene
@@ -111,7 +108,7 @@ class MeshMorphExample extends Example {
             entity.setLocalPosition(x, y, z);
             app.root.addChild(entity);
 
-            // Add a render compoonent with meshInstance
+            // Add a render component with meshInstance
             entity.addComponent('render', {
                 material: material,
                 meshInstances: [meshInstance]
@@ -132,7 +129,7 @@ class MeshMorphExample extends Example {
             time += dt;
 
             for (let m = 0; m < morphInstances.length; m++) {
-            // modify weights of all 3 morph targets along some sin curve with different frequency
+                // modify weights of all 3 morph targets along some sin curve with different frequency
                 morphInstances[m].setWeight(0, Math.abs(Math.sin(time + m)));
                 morphInstances[m].setWeight(1, Math.abs(Math.sin(time * 0.3 + m)));
                 morphInstances[m].setWeight(2, Math.abs(Math.sin(time * 0.7 + m)));

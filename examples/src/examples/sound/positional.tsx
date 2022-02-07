@@ -1,17 +1,17 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class PositionalExample extends Example {
+
+class PositionalExample {
     static CATEGORY = 'Sound';
     static NAME = 'Positional';
 
     load() {
         return <>
-            <AssetLoader name='model' type='model' url='static/assets/models/playbot/playbot.json' />
-            <AssetLoader name='runAnim' type='animation' url='static/assets/animations/playbot/playbot-run.json' />
-            <AssetLoader name='gravel' type='audio' url='static/assets/sounds/footsteps.mp3' />
+            <AssetLoader name='model' type='model' url='/static/assets/models/playbot/playbot.json' />
+            <AssetLoader name='runAnim' type='animation' url='/static/assets/animations/playbot/playbot-run.json' />
+            <AssetLoader name='gravel' type='audio' url='/static/assets/sounds/footsteps.mp3' />
         </>;
     }
 

@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class ParticlesSnowExample extends Example {
+
+class ParticlesSnowExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Particles: Snow';
 
     load() {
         return <>
-            <AssetLoader name='snowflake' type='texture' url='static/assets/textures/snowflake.png' />
+            <AssetLoader name='snowflake' type='texture' url='/static/assets/textures/snowflake.png' />
         </>;
     }
 
@@ -70,7 +70,7 @@ class ParticlesSnowExample extends Example {
         entity.setLocalPosition(0, 3, 0);
 
         // load snowflake texture
-        app.assets.loadFromUrl('../assets/textures/snowflake.png', 'texture', function (err, asset) {
+        app.assets.loadFromUrl('/static/assets/textures/snowflake.png', 'texture', function (err, asset) {
             // when texture is loaded add particlesystem component to entity
             entity.addComponent("particlesystem", {
                 numParticles: 100,

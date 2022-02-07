@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 // @ts-ignore: library file import
 import Panel from '@playcanvas/pcui/Panel/component';
 // @ts-ignore: library file import
@@ -17,20 +17,20 @@ import { Observer } from '@playcanvas/observer';
 // @ts-ignore: library file import
 import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
 
-class ClusteredShadowsOmniExample extends Example {
+class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
-            <AssetLoader name="xmas_negx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negx.png" />
-            <AssetLoader name="xmas_negy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negy.png" />
-            <AssetLoader name="xmas_negz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_negz.png" />
-            <AssetLoader name="xmas_posx" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posx.png" />
-            <AssetLoader name="xmas_posy" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posy.png" />
-            <AssetLoader name="xmas_posz" type="texture" url="static/assets/cubemaps/xmas_faces/xmas_posz.png" />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
+            <AssetLoader name="xmas_negx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negx.png" />
+            <AssetLoader name="xmas_negy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negy.png" />
+            <AssetLoader name="xmas_negz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_negz.png" />
+            <AssetLoader name="xmas_posx" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posx.png" />
+            <AssetLoader name="xmas_posy" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posy.png" />
+            <AssetLoader name="xmas_posz" type="texture" url="/static/assets/cubemaps/xmas_faces/xmas_posz.png" />
         </>;
     }
 
@@ -63,6 +63,9 @@ class ClusteredShadowsOmniExample extends Example {
         const app = new pc.Application(canvas, {});
         app.start();
 
+        // set up some general scene rendering properties
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
         data.set('settings', {
             shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
             shadowType: pc.SHADOW_PCF3,      // shadow filter type
@@ -78,7 +81,7 @@ class ClusteredShadowsOmniExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // adjust default clustered lighting parameters to handle many lights:
         // @ts-ignore
         const lighting = app.scene.lighting;
 
@@ -88,7 +91,7 @@ class ClusteredShadowsOmniExample extends Example {
 
         // 2) and allow this many lights per cell:
         // @ts-ignore engine-tsd
-        lighting.maxLightsPerCell = 16;
+        lighting.maxLightsPerCell = 12;
 
         // enable clustered shadows (it's enabled by default as well)
         // @ts-ignore engine-tsd
@@ -178,7 +181,7 @@ class ClusteredShadowsOmniExample extends Example {
             lightOmni.addComponent("light", {
                 type: "omni",
                 color: pc.Color.WHITE,
-                intensity: 13 / numLights,
+                intensity: 10 / numLights,
                 range: 350,
                 castShadows: true,
                 shadowBias: 0.2,
@@ -210,7 +213,7 @@ class ClusteredShadowsOmniExample extends Example {
         const camera = new pc.Entity();
         camera.addComponent("camera", {
             fov: 80,
-            clearColor: new pc.Color(0.9, 0.9, 0.9),
+            clearColor: new pc.Color(0.1, 0.1, 0.1),
             farClip: 1500
         });
 
@@ -223,7 +226,8 @@ class ClusteredShadowsOmniExample extends Example {
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: app.root,
-                distanceMax: 400
+                distanceMax: 1200,
+                frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");
@@ -256,4 +260,4 @@ class ClusteredShadowsOmniExample extends Example {
     }
 }
 
-export default ClusteredShadowsOmniExample;
+export default ClusteredOmniShadowsExample;

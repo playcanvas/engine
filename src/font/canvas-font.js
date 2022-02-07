@@ -19,7 +19,7 @@ const DEFAULT_TEXTURE_SIZE = 512;
  * Represents the resource of a canvas font asset.
  *
  * @augments EventHandler
- * @private
+ * @ignore
  */
 class CanvasFont extends EventHandler {
     /**
@@ -27,14 +27,16 @@ class CanvasFont extends EventHandler {
      *
      * @param {Application} app - The application.
      * @param {object} options - The font options.
-     * @param {string} [options.fontName] - The name of the font, use in the same manner as a CSS font.
-     * @param {string} [options.fontWeight] - The weight of the font, e.g. 'normal', 'bold', defaults to "normal".
-     * @param {number} [options.fontSize] - The size the font will be rendered into to the texture atlas at, defaults to 32.
-     * @param {Color} [options.color] - The color the font will be rendered into the texture atlas as, defaults to white.
-     * @param {number} [options.width] - The width of each texture atlas, defaults to 512.
-     * @param {number} [options.height] - The height of each texture atlas, defaults to 512.
-     * @param {number} [options.padding] - Amount of glyph padding added to each glyph in the atlas.
-     * @private
+     * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
+     * Defaults to 'Arial'.
+     * @param {string} [options.fontWeight] - The weight of the font, e.g. 'normal', 'bold'.
+     * Defaults to 'normal'.
+     * @param {number} [options.fontSize] - The font size in pixels. Defaults to 32.
+     * @param {Color} [options.color] - The font color.Defaults to white.
+     * @param {number} [options.width] - The width of each texture atlas. Defaults to 512.
+     * @param {number} [options.height] - The height of each texture atlas. Defaults to 512.
+     * @param {number} [options.padding] - Amount of glyph padding in pixels that is added to each
+     * glyph in the atlas. Defaults to 0.
      */
     constructor(app, options = {}) {
         super();
@@ -61,16 +63,16 @@ class CanvasFont extends EventHandler {
         canvas.width = w;
 
         const texture = new Texture(this.app.graphicsDevice, {
+            name: 'font',
             format: PIXELFORMAT_R8_G8_B8_A8,
+            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
+            magFilter: FILTER_LINEAR,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
             mipmaps: true
         });
 
-        texture.name = 'font';
         texture.setSource(canvas);
-        texture.minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
-        texture.magFilter = FILTER_LINEAR;
-        texture.addressU = ADDRESS_CLAMP_TO_EDGE;
-        texture.addressV = ADDRESS_CLAMP_TO_EDGE;
 
         this.textures = [texture];
 
@@ -82,7 +84,6 @@ class CanvasFont extends EventHandler {
      * Render the necessary textures for all characters in a string to be used for the canvas font.
      *
      * @param {string} text - The list of characters to render into the texture atlas.
-     * @private
      */
     createTextures(text) {
         const _chars = this._normalizeCharsSet(text);
@@ -107,7 +108,6 @@ class CanvasFont extends EventHandler {
      * re-render the texture atlas to include all the characters that have been supplied so far.
      *
      * @param {string} text - The list of characters to add to the texture atlas.
-     * @private
      */
     updateTextures(text) {
         const _chars = this._normalizeCharsSet(text);
@@ -126,9 +126,7 @@ class CanvasFont extends EventHandler {
     }
 
     /**
-     * Tears down all resources used by the font.
-     *
-     * @private
+     * Destroys the font. This also destroys the textures owned by the font.
      */
     destroy() {
         // call texture.destroy on any created textures
@@ -148,6 +146,12 @@ class CanvasFont extends EventHandler {
         this.fontWeight = null;
     }
 
+    /**
+     * @param {HTMLCanvasElement} canvas - The canvas used to render the font.
+     * @param {string} clearColor - The color to clear the canvas with.
+     * @returns {CanvasRenderingContext2D} - A 2D rendering contxt.
+     * @private
+     */
     _getAndClearContext(canvas, clearColor) {
         const w = canvas.width;
         const h = canvas.height;
@@ -163,6 +167,12 @@ class CanvasFont extends EventHandler {
         return ctx;
     }
 
+    /**
+     * @param {Color} color - The color to covert.
+     * @param {boolean} alpha - Whether to include the alpha channel.
+     * @returns {string} The hex string for the color.
+     * @private
+     */
     _colorToRgbString(color, alpha) {
         let str;
         const r = Math.round(255 * color.r);
@@ -178,11 +188,25 @@ class CanvasFont extends EventHandler {
         return str;
     }
 
+    /**
+     * @param {CanvasRenderingContext2D} context - The canvas 2D context.
+     * @param {string} char - The character to render.
+     * @param {number} x - The x position to render the character at.
+     * @param {number} y - The y position to render the character at.
+     * @param {number} color - The color to render the character in.
+     * @ignore
+     */
     renderCharacter(context, char, x, y, color) {
         context.fillStyle = color;
         context.fillText(char, x, y);
     }
 
+    /**
+     * Renders an array of characters into one or more textures atlases.
+     *
+     * @param {string[]} charsArray - The list of characters to render.
+     * @private
+     */
     _renderAtlas(charsArray) {
         this.chars = charsArray;
 
@@ -313,6 +337,14 @@ class CanvasFont extends EventHandler {
         this.fire("render");
     }
 
+    /**
+     * @param {string[]} chars - A list of characters.
+     * @param {string} fontName - The font name.
+     * @param {number} width - The width of the texture atlas.
+     * @param {number} height - The height of the texture atlas.
+     * @returns {object} The font JSON object.
+     * @private
+     */
     _createJson(chars, fontName, width, height) {
         const base = {
             "version": 3,
@@ -332,6 +364,22 @@ class CanvasFont extends EventHandler {
         return base;
     }
 
+    /**
+     * @param {object} json - Font data.
+     * @param {string} char - The character to add.
+     * @param {number} charCode - The code point number of the character to add.
+     * @param {number} x - The x position of the character.
+     * @param {number} y - The y position of the character.
+     * @param {number} w - The width of the character.
+     * @param {number} h - The height of the character.
+     * @param {number} xoffset - The x offset of the character.
+     * @param {number} yoffset - The y offset of the character.
+     * @param {number} xadvance - The x advance of the character.
+     * @param {number} mapNum - The map number of the character.
+     * @param {number} mapW - The width of the map.
+     * @param {number} mapH - The height of the map.
+     * @private
+     */
     _addChar(json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
         if (json.info.maps.length < mapNum + 1) {
             json.info.maps.push({ "width": mapW, "height": mapH });
@@ -356,10 +404,14 @@ class CanvasFont extends EventHandler {
         };
     }
 
-
-    // take a unicode string and produce
-    // the set of characters used to create that string
-    // e.g. "abcabcabc" -> ['a', 'b', 'c']
+    /**
+     * Take a unicode string and produce the set of characters used to create that string.
+     * e.g. "abcabcabc" -> ['a', 'b', 'c']
+     *
+     * @param {string} text - The unicode string to process.
+     * @returns {string[]} The set of characters used to create the string.
+     * @private
+     */
     _normalizeCharsSet(text) {
         // normalize unicode if needed
         const unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
@@ -379,8 +431,14 @@ class CanvasFont extends EventHandler {
         return chars.sort();
     }
 
-    // Calculate some metrics that aren't available via the
-    // browser API, notably character height and descent size
+    /**
+     * Calculate some metrics that aren't available via the browser API, notably character height
+     * and descent size.
+     *
+     * @param {string} text - The text to measure.
+     * @returns {{ascent: number, descent: number, height: number}} The metrics of the text.
+     * @private
+     */
     _getTextMetrics(text) {
         const textSpan = document.createElement('span');
         textSpan.id = 'content-span';

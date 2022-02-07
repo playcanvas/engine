@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class FlyExample extends Example {
+
+class FlyExample {
     static CATEGORY = 'Camera';
     static NAME = 'Fly';
 
     load() {
         return <>
-            <AssetLoader name='script' type='script' url='static/scripts/camera/fly-camera.js' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/fly-camera.js' />
         </>;
     }
 

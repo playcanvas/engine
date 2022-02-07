@@ -6,7 +6,7 @@ import { AnimNode } from './anim-node.js';
  * an argument which defines which function should be used to determine the weights of each of its
  * children, based on the current parameter value.
  *
- * @private
+ * @ignore
  */
 class AnimBlendTree extends AnimNode {
     /**
@@ -27,7 +27,6 @@ class AnimBlendTree extends AnimNode {
      * synchronized.
      * @param {Function} createTree - Used to create child blend trees of varying types.
      * @param {Function} findParameter - Used at runtime to get the current parameter values.
-     * @private
      */
     constructor(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
         super(state, parent, name, point);

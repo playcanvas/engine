@@ -8,7 +8,7 @@ import { Vec4 } from '../math/vec4.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_LIGHTMAP, MASK_DYNAMIC,
+    MASK_BAKE, MASK_AFFECT_DYNAMIC,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
@@ -32,6 +32,8 @@ const directionalCascades = [
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5)],
     [new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0.5, 0.5, 0.5), new Vec4(0.5, 0, 0.5, 0.5), new Vec4(0.5, 0.5, 0.5, 0.5)]
 ];
+
+let id = 0;
 
 // Class storing shadow rendering related private information
 class LightRenderData {
@@ -87,11 +89,12 @@ class LightRenderData {
 /**
  * A light.
  *
- * @private
+ * @ignore
  */
 class Light {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        this.id = id++;
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
@@ -99,7 +102,7 @@ class Light {
         this._intensity = 1;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_DYNAMIC;
+        this.mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -167,6 +170,10 @@ class Light {
 
         // viewport of the cookie texture / shadow in the atlas
         this._atlasViewport = null;
+        this.atlasViewportAllocated = false;    // if true, atlas slot is allocated for the current frame
+        this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
+        this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
+        this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
         this._scene = null;
         this._node = null;
@@ -176,6 +183,15 @@ class Light {
 
         // true if the light is visible by any camera within a frame
         this.visibleThisFrame = false;
+
+        // maximum size of the light bounding sphere on the screen by any camera within a frame
+        // (used to estimate shadow resolution), range [0..1]
+        this.maxScreenSize = 0;
+    }
+
+    destroy() {
+        this._destroyShadowMap();
+        this._renderData = null;
     }
 
     set numCascades(value) {
@@ -301,7 +317,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this.mask !== MASK_LIGHTMAP && this.mask !== 0;
+        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
     }
 
     set shadowResolution(value) {
@@ -488,9 +504,12 @@ class Light {
         return this._cookieOffset;
     }
 
-    destroy() {
-        this._destroyShadowMap();
-        this._renderData = null;
+    // prepares light for the frame rendering
+    beginFrame() {
+        this.visibleThisFrame = this._type === LIGHTTYPE_DIRECTIONAL && this._enabled;
+        this.maxScreenSize = 0;
+        this.atlasViewportAllocated = false;
+        this.atlasSlotUpdated = false;
     }
 
     // destroys shadow map related resources, called when shadow properties change and resources
@@ -534,7 +553,6 @@ class Light {
      * Duplicates a light node but does not 'deep copy' the hierarchy.
      *
      * @returns {Light} A cloned Light.
-     * @private
      */
     clone() {
         const clone = new Light(this.device);
@@ -664,7 +682,7 @@ class Light {
             box.center.set(0, -range * 0.5, 0);
             box.halfExtents.set(scl, range * 0.5, scl);
 
-            box.setFromTransformedAabb(box, node.getWorldTransform());
+            box.setFromTransformedAabb(box, node.getWorldTransform(), true);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());

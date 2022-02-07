@@ -17,7 +17,7 @@ import {
  * Legacy texture parser for dds files.
  *
  * @implements {TextureParser}
- * @private
+ * @ignore
  */
 class DdsParser {
     constructor(registry) {

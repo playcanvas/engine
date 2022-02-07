@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class OBJExample extends Example {
+
+class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
@@ -12,8 +12,8 @@ class OBJExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        const objurl = "static/assets/models/monkey.obj";
-        const scripturl = "static/scripts/parsers/obj-model.js";
+        const objurl = "/static/assets/models/monkey.obj";
+        const scripturl = "/static/scripts/parsers/obj-model.js";
 
         let entity: pc.Entity;
         app.assets.loadFromUrl(scripturl, "script", function () {
@@ -38,7 +38,6 @@ class OBJExample extends Example {
                 const mis = entity.model.model.meshInstances;
                 for (let i = 0; i < mis.length; i++) {
                     mis[i].material = new pc.StandardMaterial();
-                    // @ts-ignore engine-tsd
                     mis[i].material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
                     mis[i].material.update();
                 }
@@ -71,4 +70,4 @@ class OBJExample extends Example {
     }
 }
 
-export default OBJExample;
+export default ObjExample;

@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class ShapesExample extends Example {
+
+class ShapesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shapes';
 
@@ -15,6 +15,8 @@ class ShapesExample extends Example {
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // All render component primitive shape types
         const shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];

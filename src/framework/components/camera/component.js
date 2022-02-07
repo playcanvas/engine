@@ -6,6 +6,7 @@ import { Component } from '../component.js';
 import { PostEffectQueue } from './post-effect-queue.js';
 
 /** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../../math/color.js').Color} Color */
 /** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
@@ -365,8 +366,10 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 2D screen space to 3D world space.
      *
-     * @param {number} screenx - X coordinate on PlayCanvas' canvas element.
-     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
+     * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
+     * 0 to `canvas.offsetWidth` of the application's canvas element.
+     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
+     * 0 to `canvas.offsetHeight` of the application's canvas element.
      * @param {number} cameraz - The distance from the camera in world space to create the new
      * point.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.

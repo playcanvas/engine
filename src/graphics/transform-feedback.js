@@ -2,6 +2,7 @@ import { Debug } from '../core/debug.js';
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./shader.js').Shader} Shader */
@@ -95,7 +96,7 @@ class TransformFeedback {
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
             // have to recreate input buffer with other usage
-            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
+            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
@@ -133,7 +134,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        Debug.pushGpuMarker(device, "TransformFeedback");
+        DebugGraphics.pushGpuMarker(device, "TransformFeedback");
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
@@ -153,18 +154,18 @@ class TransformFeedback {
         device.updateEnd();
         device.setRenderTarget(oldRt);
 
-        Debug.popGpuMarker(device);
+        DebugGraphics.popGpuMarker(device);
 
         // swap buffers
         if (swap) {
-            let tmp = this._inputBuffer.bufferId;
-            this._inputBuffer.bufferId = this._outputBuffer.bufferId;
-            this._outputBuffer.bufferId = tmp;
+            let tmp = this._inputBuffer.impl.bufferId;
+            this._inputBuffer.impl.bufferId = this._outputBuffer.impl.bufferId;
+            this._outputBuffer.impl.bufferId = tmp;
 
             // swap VAO
-            tmp = this._inputBuffer._vao;
-            this._inputBuffer._vao = this._outputBuffer._vao;
-            this._outputBuffer._vao = tmp;
+            tmp = this._inputBuffer.impl.vao;
+            this._inputBuffer.impl.vao = this._outputBuffer.impl.vao;
+            this._outputBuffer.impl.vao = tmp;
         }
     }
 

@@ -95,7 +95,8 @@ class SceneRegistry {
      * Find a Scene by name and return the {@link SceneRegistryItem}.
      *
      * @param {string} name - The name of the scene.
-     * @returns {SceneRegistryItem} The stored data about a scene.
+     * @returns {SceneRegistryItem|null} The stored data about a scene or null if no scene with
+     * that name exists.
      */
     find(name) {
         if (this._index.hasOwnProperty(name)) {
@@ -109,12 +110,14 @@ class SceneRegistry {
      * Find a scene by the URL and return the {@link SceneRegistryItem}.
      *
      * @param {string} url - The URL to search by.
-     * @returns {SceneRegistryItem} The stored data about a scene.
+     * @returns {SceneRegistryItem|null} The stored data about a scene or null if no scene with
+     * that URL exists.
      */
     findByUrl(url) {
         if (this._urlIndex.hasOwnProperty(url)) {
             return this._list[this._urlIndex[url]];
         }
+
         return null;
     }
 

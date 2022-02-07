@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class VRMovementExample extends Example {
+
+class VrMovementExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
@@ -106,13 +106,13 @@ class VRMovementExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -160,7 +160,7 @@ class VRMovementExample extends Example {
                     inputSource = controllers[i].inputSource;
 
                     // should have gamepad
-                    if (! inputSource.gamepad)
+                    if (!inputSource.gamepad)
                         continue;
 
                     // left controller - for movement
@@ -185,8 +185,7 @@ class VRMovementExample extends Example {
                             tmpVec2A.x = t;
 
                             // set movement speed
-                            // @ts-ignore engine-tsd
-                            tmpVec2A.scale(movementSpeed * dt);
+                            tmpVec2A.mulScalar(movementSpeed * dt);
                             // move camera parent based on calculated movement vector
                             cameraParent.translate(tmpVec2A.x, 0, tmpVec2A.y);
                         }
@@ -213,8 +212,7 @@ class VRMovementExample extends Example {
                             tmpVec3A.copy(c.getLocalPosition());
                             cameraParent.translateLocal(tmpVec3A);
                             cameraParent.rotateLocal(0, Math.sign(rotate) * rotateSpeed, 0);
-                            // @ts-ignore engine-tsd
-                            cameraParent.translateLocal(tmpVec3A.scale(-1));
+                            cameraParent.translateLocal(tmpVec3A.mulScalar(-1));
                         }
                     }
                 }
@@ -227,8 +225,7 @@ class VRMovementExample extends Example {
                     // render controller ray
                     tmpVec3A.copy(inputSource.getOrigin());
                     tmpVec3B.copy(inputSource.getDirection());
-                    // @ts-ignore engine-tsd
-                    tmpVec3B.scale(100).add(tmpVec3A);
+                    tmpVec3B.mulScalar(100).add(tmpVec3A);
                     app.drawLine(tmpVec3A, tmpVec3B, lineColor);
 
                     // render controller
@@ -249,4 +246,4 @@ class VRMovementExample extends Example {
     }
 }
 
-export default VRMovementExample;
+export default VrMovementExample;

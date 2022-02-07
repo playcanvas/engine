@@ -1,18 +1,18 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class EventsExample extends Example {
+
+class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
 
     load() {
         return <>
-            <AssetLoader name='model' type='container' url='static/assets/models/bitmoji.glb' />
-            <AssetLoader name='walkAnim' type='container' url='static/assets/animations/bitmoji/walk.glb' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='model' type='container' url='/static/assets/models/bitmoji.glb' />
+            <AssetLoader name='walkAnim' type='container' url='/static/assets/animations/bitmoji/walk.glb' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
         </>;
     }
 
@@ -28,7 +28,7 @@ class EventsExample extends Example {
         // setup skydome
         app.scene.skyboxMip = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
-
+        app.scene.skyboxIntensity = 0.4;    // make it darker
 
         // Create an Entity with a camera component
         const cameraEntity = new pc.Entity();
@@ -56,8 +56,8 @@ class EventsExample extends Example {
             for (let j = -5; j <= 5; j++) {
                 const box = new pc.Entity();
                 boxes[`${i}${j}`] = box;
-                box.addComponent('model', {type: 'box'});
-                box.setPosition(i,-0.5,j);
+                box.addComponent('model', { type: 'box' });
+                box.setPosition(i, -0.5, j);
                 box.setLocalScale(0.95, 1, 0.95);
                 const material = new pc.StandardMaterial();
                 material.diffuse = new pc.Color(0.7, 0.7, 0.7);
@@ -72,12 +72,11 @@ class EventsExample extends Example {
         }
 
         // light up a box at the given position with a random color using the emissive material property
-        let highlightBox = (pos: pc.Vec3) => {
+        const highlightBox = (pos: pc.Vec3) => {
             const i = Math.floor(pos.x + 0.5);
             const j = Math.floor(pos.z + 0.5);
             const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
             colorVec.mulScalar(1 / colorVec.length());
-            // @ts-ignore engine-tsd
             boxes[`${i}${j}`].model.material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
             highlightedBoxes.push(boxes[`${i}${j}`]);
         };
@@ -97,14 +96,14 @@ class EventsExample extends Example {
         modelEntityParent.addChild(modelEntity);
 
         app.root.addChild(modelEntityParent);
-        
+
         // rotate the model in a circle around the center of the scene
         app.on('update', (dt) => {
             modelEntityParent.rotate(0, 13.8 * dt, 0);
-        })
+        });
 
         const walkTrack = assets.walkAnim.resource.animations[0].resource;
-        // @ts-ignore engine-tsd
+
         // Add two anim events to the walk animation, one for each foot step. These events should occur just as each foot touches the ground
         walkTrack.events = new pc.AnimEvents([
             {
@@ -128,9 +127,8 @@ class EventsExample extends Example {
         });
 
         app.on('update', (dt) => {
-            // on update, iterate over any currently highlighted boxes and reduce their emmisive property
+            // on update, iterate over any currently highlighted boxes and reduce their emissive property
             highlightedBoxes.forEach((box: pc.Entity) => {
-                // @ts-ignore engine-tsd
                 const emissive = box.model.material.emissive;
                 emissive.lerp(emissive, pc.Color.BLACK, 0.08);
                 box.model.material.update();
@@ -140,7 +138,7 @@ class EventsExample extends Example {
                 highlightedBoxes.shift();
             }
 
-            // set the camera to folow the model
+            // set the camera to follow the model
             const modelPosition = modelEntity.getPosition().clone();
             modelPosition.y = 0.5;
             cameraEntity.lookAt(modelPosition);

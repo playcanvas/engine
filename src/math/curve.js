@@ -6,19 +6,6 @@ import { CurveEvaluator } from './curve-evaluator.js';
 /**
  * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
  * type that specifies an interpolation scheme for the keys.
- *
- * @property {number} length The number of keys in the curve. [read only].
- * @property {number} type The curve interpolation scheme. Can be:
- *
- * - {@link CURVE_LINEAR}
- * - {@link CURVE_SMOOTHSTEP}
- * - {@link CURVE_SPLINE}
- * - {@link CURVE_STEP}
- *
- * Defaults to {@link CURVE_SMOOTHSTEP}.
- * @property {number} tension Controls how {@link CURVE_SPLINE} tangents are calculated. Valid
- * range is between 0 and 1 where 0 results in a non-smooth curve (equivalent to linear
- * interpolation) and 1 results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
  */
 class Curve {
     /**
@@ -36,8 +23,34 @@ class Curve {
      */
     constructor(data) {
         this.keys = [];
+
+        /**
+         * The curve interpolation scheme. Can be:
+         *
+         * - {@link CURVE_LINEAR}
+         * - {@link CURVE_SMOOTHSTEP}
+         * - {@link CURVE_SPLINE}
+         * - {@link CURVE_STEP}
+         *
+         * Defaults to {@link CURVE_SMOOTHSTEP}.
+         *
+         * @type {number}
+         */
         this.type = CURVE_SMOOTHSTEP;
-        this.tension = 0.5;                     // used for CURVE_SPLINE
+
+        /**
+         * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and
+         * 1 where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1
+         * results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
+         *
+         * @type {number}
+         */
+        this.tension = 0.5;
+
+        /**
+         * @type {CurveEvaluator}
+         * @private
+         */
         this._eval = new CurveEvaluator(this);
 
         if (data) {
@@ -47,6 +60,15 @@ class Curve {
         }
 
         this.sort();
+    }
+
+    /**
+     * Get the number of keys in the curve.
+     *
+     * @type {number}
+     */
+    get length() {
+        return this.keys.length;
     }
 
     /**
@@ -98,7 +120,7 @@ class Curve {
      * @returns {number} The interpolated value.
      */
     value(time) {
-        // we for the evaluation because keys may have changed since the last evaluate
+        // we force reset the evaluation because keys may have changed since the last evaluate
         // (we can't know)
         return this._eval.evaluate(time, true);
     }
@@ -140,7 +162,7 @@ class Curve {
      *
      * @param {number} precision - The number of samples to return.
      * @returns {Float32Array} The set of quantized values.
-     * @private
+     * @ignore
      */
     quantize(precision) {
         precision = Math.max(precision, 2);
@@ -165,7 +187,7 @@ class Curve {
      * @param {number} min - The minimum output value.
      * @param {number} max - The maximum output value.
      * @returns {Float32Array} The set of quantized values.
-     * @private
+     * @ignore
      */
     quantizeClamped(precision, min, max) {
         const result = this.quantize(precision);
@@ -173,10 +195,6 @@ class Curve {
             result[i] = Math.min(max, Math.max(min, result[i]));
         }
         return result;
-    }
-
-    get length() {
-        return this.keys.length;
     }
 }
 

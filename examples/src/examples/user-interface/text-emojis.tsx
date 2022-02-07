@@ -1,15 +1,15 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class TextEmojisExample extends Example {
+class TextEmojisExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Text Emojis';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
         </>;
     }
 

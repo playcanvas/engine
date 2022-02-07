@@ -5,9 +5,9 @@ class Vec2 {
     /**
      * Create a new Vec2 instance.
      *
-     * @param {number|number[]} [x] - The x value. If x is an array of length 2, the array will be
-     * used to populate all components.
-     * @param {number} [y] - The y value.
+     * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
+     * array will be used to populate all components.
+     * @param {number} [y] - The y value. Defaults to 0.
      * @example
      * var v = new pc.Vec2(1, 2);
      */
@@ -155,7 +155,7 @@ class Vec2 {
      * var v1 = new pc.Vec2(5, 10);
      * var v2 = new pc.Vec2(10, 20);
      * var d = v1.distance(v2);
-     * console.log("The between v1 and v2 is: " + d);
+     * console.log("The distance between v1 and v2 is: " + d);
      */
     distance(rhs) {
         const x = this.x - rhs.x;
@@ -558,7 +558,7 @@ class Vec2 {
      * @param {Vec2} lhs - The first vector operand for the calculation.
      * @param {Vec2} rhs - The second vector operand for the calculation.
      * @returns {number} The calculated angle in radians.
-     * @private
+     * @ignore
      */
     static angleRad(lhs, rhs) {
         return Math.atan2(lhs.x * rhs.y - lhs.y * rhs.x, lhs.x * rhs.x + lhs.y * rhs.y);

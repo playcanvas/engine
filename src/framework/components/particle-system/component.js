@@ -1,6 +1,5 @@
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { Model } from '../../../scene/model.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 
 import { Asset } from '../../../asset/asset.js';
@@ -302,42 +301,42 @@ class ParticleSystemComponent extends Component {
         return this._drawOrder;
     }
 
-    addModelToLayers() {
-        if (!this.data.model) return;
+    addMeshInstanceToLayers() {
+        if (!this.emitter) return;
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
-            layer.addMeshInstances(this.data.model.meshInstances);
+            layer.addMeshInstances([this.emitter.meshInstance]);
             this.emitter._layer = layer;
         }
     }
 
-    removeModelFromLayers(model) {
-        if (!this.data.model) return;
+    removeMeshInstanceFromLayers() {
+        if (!this.emitter) return;
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (!layer) continue;
-            layer.removeMeshInstances(this.data.model.meshInstances);
+            layer.removeMeshInstances([this.emitter.meshInstance]);
         }
     }
 
     onSetLayers(name, oldValue, newValue) {
-        if (!this.data.model) return;
+        if (!this.emitter) return;
         for (let i = 0; i < oldValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
-            layer.removeMeshInstances(this.data.model.meshInstances);
+            layer.removeMeshInstances([this.emitter.meshInstance]);
         }
         if (!this.enabled || !this.entity.enabled) return;
         for (let i = 0; i < newValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
-            layer.addMeshInstances(this.data.model.meshInstances);
+            layer.addMeshInstances([this.emitter.meshInstance]);
         }
     }
 
     onLayersChanged(oldComp, newComp) {
-        this.addModelToLayers();
+        this.addMeshInstanceToLayers();
         oldComp.off("add", this.onLayerAdded, this);
         oldComp.off("remove", this.onLayerRemoved, this);
         newComp.on("add", this.onLayerAdded, this);
@@ -345,17 +344,17 @@ class ParticleSystemComponent extends Component {
     }
 
     onLayerAdded(layer) {
-        if (!this.data.model) return;
+        if (!this.emitter) return;
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
-        layer.addMeshInstances(this.data.model.meshInstances);
+        layer.addMeshInstances([this.emitter.meshInstance]);
     }
 
     onLayerRemoved(layer) {
-        if (!this.data.model) return;
+        if (!this.emitter) return;
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
-        layer.removeMeshInstances(this.data.model.meshInstances);
+        layer.removeMeshInstances([this.emitter.meshInstance]);
     }
 
     _bindColorMapAsset(asset) {
@@ -840,21 +839,14 @@ class ParticleSystemComponent extends Component {
             this.emitter.meshInstance.node = this.entity;
             this.emitter.drawOrder = this.drawOrder;
 
-            this.psys = new Model();
-            this.psys.graph = this.entity;
-            this.psys.emitter = this.emitter;
-            this.psys.meshInstances = [this.emitter.meshInstance];
-            data.model = this.psys;
-            this.emitter.psys = this.psys;
-
             if (!data.autoPlay) {
                 this.pause();
                 this.emitter.meshInstance.visible = false;
             }
         }
 
-        if (data.model && this.emitter.colorMap) {
-            this.addModelToLayers();
+        if (this.emitter.colorMap) {
+            this.addMeshInstanceToLayers();
         }
 
         this.system.app.scene.on("set:layers", this.onLayersChanged, this);
@@ -875,12 +867,10 @@ class ParticleSystemComponent extends Component {
             this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
         }
 
-        if (this.data.model) {
-            this.removeModelFromLayers();
-            if (this.data.depthSoftening) this._releaseDepth();
-        }
-
         if (this.emitter) {
+            this.removeMeshInstanceFromLayers();
+            if (this.data.depthSoftening) this._releaseDepth();
+
             // clear camera as it isn't updated while disabled and we don't want to hold
             // onto old reference
             this.emitter.camera = null;
@@ -892,13 +882,6 @@ class ParticleSystemComponent extends Component {
             this.enabled = false;
         }
 
-        const data = this.data;
-        if (data.model) {
-            this.entity.removeChild(data.model.getGraph());
-            data.model.destroy();
-            data.model = null;
-        }
-
         if (this.emitter) {
             this.emitter.destroy();
             this.emitter = null;
@@ -908,7 +891,7 @@ class ParticleSystemComponent extends Component {
         for (let i = 0; i < ASSET_PROPERTIES.length; i++) {
             const prop = ASSET_PROPERTIES[i];
 
-            if (data[prop]) {
+            if (this.data[prop]) {
                 this[prop] = null;
             }
         }
@@ -991,7 +974,6 @@ class ParticleSystemComponent extends Component {
         if (this.emitter) {
             this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
             this.emitter.meshInstance.node = this.entity;
-            this.data.model.meshInstances = [this.emitter.meshInstance];
         }
         this.enabled = enabled;
     }

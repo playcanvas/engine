@@ -1,16 +1,18 @@
 import React from 'react';
 // @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.prf.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ClusteredLightingExample extends Example {
+class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Lighting';
+    static ENGINE = 'PERFORMANCE';
 
     load() {
         return <>
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
         </>;
     }
 
@@ -29,7 +31,7 @@ class ClusteredLightingExample extends Example {
         // @ts-ignore engine-tsd
         app.scene.clusteredLightingEnabled = true;
 
-        // adjust default clusterered lighting parameters to handle many lights:
+        // @ts-ignore adjust default clustered lighting parameters to handle many lights:
         const lighting = app.scene.lighting;
 
         // 1) subdivide space with lights into this many cells:
@@ -87,15 +89,15 @@ class ClusteredLightingExample extends Example {
 
         // create many omni lights that do not cast shadows
         let count = 30;
-        const intensity = 1.6;
         for (let i = 0; i < count; i++) {
-            const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
             const lightPoint = new pc.Entity();
             lightPoint.addComponent("light", {
                 type: "omni",
                 color: color,
                 range: 12,
-                castShadows: false
+                castShadows: false,
+                falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
             });
 
             // attach a render component with a small sphere to each light
@@ -118,7 +120,7 @@ class ClusteredLightingExample extends Example {
         // create many spot lights
         count = 16;
         for (let i = 0; i < count; i++) {
-            const color = new pc.Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+            const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
             const lightSpot = new pc.Entity();
             lightSpot.addComponent("light", {
                 type: "spot",
@@ -151,9 +153,9 @@ class ClusteredLightingExample extends Example {
         dirLight.addComponent("light", {
             type: "directional",
             color: pc.Color.WHITE,
-            intensity: 0.2,
+            intensity: 0.15,
             range: 300,
-            shadowDistance: 300,
+            shadowDistance: 600,
             castShadows: true,
             shadowBias: 0.2,
             normalOffsetBias: 0.05
@@ -163,12 +165,25 @@ class ClusteredLightingExample extends Example {
         // Create an entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2),
+            clearColor: new pc.Color(0.05, 0.05, 0.05),
             farClip: 500,
             nearClip: 0.1
         });
-        camera.setLocalPosition(120, 120, 120);
+        camera.setLocalPosition(140, 140, 140);
         camera.lookAt(new pc.Vec3(0, 40, 0));
+
+        // add orbit camera script with mouse and touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+                focusEntity: app.root,
+                distanceMax: 400,
+                frameOnStart: false
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
         // Set an update function on the app's update event
@@ -191,7 +206,7 @@ class ClusteredLightingExample extends Example {
                 spotlight.rotateLocal(90, 0, 0);
             });
 
-            // rotate direcional light
+            // rotate directional light
             if (dirLight) {
                 dirLight.setLocalEulerAngles(25, -30 * time, 0);
             }

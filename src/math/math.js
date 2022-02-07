@@ -112,11 +112,12 @@ const math = {
             g = r[1];
             r = r[0];
         }
-        // Why ((r << 24)>>>32)?
+
+        // Why ((r << 24)>>>0)?
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
-        // >>> used unsigned so >>>32 converts back to an unsigned.
+        // >>> used unsigned so >>>0 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
-        return ((r << 24) | (g << 16) | (b << 8) | a) >>> 32;
+        return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
     },
 
     /**
@@ -259,7 +260,7 @@ const math = {
      * @param {number} b - The second upper or lower threshold to check between.
      * @param {boolean} inclusive - If true, a num param which is equal to a or b will return true.
      * @returns {boolean} true if between or false otherwise.
-     * @private
+     * @ignore
      */
     between: function (num, a, b, inclusive) {
         const min = Math.min(a, b);

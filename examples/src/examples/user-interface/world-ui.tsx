@@ -1,17 +1,17 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class WorldScreenExample extends Example {
+
+class WorldUiExample {
     static CATEGORY = 'User Interface';
     static NAME = 'World UI';
 
     load() {
         return <>
-            <AssetLoader name="checkboard" type="texture" url="static/assets/textures/checkboard.png" />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name="checkboard" type="texture" url="/static/assets/textures/checkboard.png" />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
         </>;
     }
 
@@ -141,4 +141,4 @@ class WorldScreenExample extends Example {
     }
 }
 
-export default WorldScreenExample;
+export default WorldUiExample;

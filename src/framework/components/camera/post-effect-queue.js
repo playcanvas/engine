@@ -1,7 +1,7 @@
-import { Debug } from '../../../core/debug.js';
 import { now } from '../../../core/time.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
+import { DebugGraphics } from '../../../graphics/debug-graphics.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -35,22 +35,47 @@ class PostEffectQueue {
         this.app = app;
         this.camera = camera;
 
-        // render target where the postprocessed image needs to be rendered to
-        // defaults to null which is main framebuffer
+        /**
+         * Render target where the postprocessed image needs to be rendered to. Defaults to null
+         * which is main framebuffer.
+         *
+         * @type {RenderTarget}
+         * @ignore
+         */
         this.destinationRenderTarget = null;
 
-        // stores all of the post effects of type PostEffect
+        /**
+         * All of the post effects in the queue.
+         *
+         * @type {PostEffect[]}
+         * @ignore
+         */
         this.effects = [];
 
-        // if the queue is enabled it will render all of its effects
-        // otherwise it will not render anything
+        /**
+         * If the queue is enabled it will render all of its effects, otherwise it will not render
+         * anything.
+         *
+         * @type {boolean}
+         * @ignore
+         */
         this.enabled = false;
 
         // legacy
         this.depthTarget = null;
 
         this.renderTargetScale = 1;
+        /**
+         * @type {number|null}
+         * @private
+         */
         this.resizeTimeout = null;
+        /**
+         * The time in milliseconds since the last resize.
+         *
+         * @type {number}
+         * @private
+         */
         this.resizeLast = 0;
 
         this._resizeTimeoutCallback = () => {
@@ -60,12 +85,21 @@ class PostEffectQueue {
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
+    /**
+     * Allocate a color buffer texture.
+     *
+     * @param {number} format - The format of the color buffer.
+     * @param {string} name - The name of the color buffer.
+     * @returns {Texture} The color buffer texture.
+     * @private
+     */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
         const width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
         const height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
         const colorBuffer = new Texture(this.app.graphicsDevice, {
+            name: name,
             format: format,
             width: width,
             height: height,
@@ -75,7 +109,6 @@ class PostEffectQueue {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-        colorBuffer.name = name;
 
         return colorBuffer;
     }
@@ -283,7 +316,7 @@ class PostEffectQueue {
                     const len = this.effects.length;
                     if (len) {
 
-                        Debug.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
+                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
 
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
@@ -300,12 +333,12 @@ class PostEffectQueue {
                                 }
                             }
 
-                            Debug.pushGpuMarker(this.app.graphicsDevice, fx.name);
+                            DebugGraphics.pushGpuMarker(this.app.graphicsDevice, fx.name);
                             fx.effect.render(fx.inputTarget, destTarget, rect);
-                            Debug.popGpuMarker(this.app.graphicsDevice);
+                            DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                         }
 
-                        Debug.popGpuMarker(this.app.graphicsDevice);
+                        DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                     }
                 }
             };
@@ -330,6 +363,13 @@ class PostEffectQueue {
         }
     }
 
+    /**
+     * Handler called when the application's canvas element is resized.
+     *
+     * @param {number} width - The new width of the canvas.
+     * @param {number} height - The new height of the canvas.
+     * @private
+     */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
         const device = this.app.graphicsDevice;

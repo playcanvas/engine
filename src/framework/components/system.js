@@ -1,4 +1,3 @@
-import { events } from '../../core/events.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { Color } from '../../math/color.js';
@@ -7,6 +6,8 @@ import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
 /** @typedef {import('../application.js').Application} Application */
+/** @typedef {import('./component.js').Component} Component */
+/** @typedef {import('../entity.js').Entity} Entity */
 
 /**
  * Component Systems contain the logic and functionality to update all Components of a particular
@@ -25,12 +26,11 @@ class ComponentSystem extends EventHandler {
 
         this.app = app;
 
-        // The store where all pc.ComponentData objects are kept
+        // The store where all ComponentData objects are kept
         this.store = {};
         this.schema = [];
     }
 
-    // Instance methods
     /**
      * Create new {@link Component} and component data instances and attach them to the entity.
      *
@@ -41,7 +41,7 @@ class ComponentSystem extends EventHandler {
      * var entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
      * // entity.model is now set to a pc.ModelComponent
-     * @private
+     * @ignore
      */
     addComponent(entity, data = {}) {
         const component = new this.ComponentType(this, entity);
@@ -69,7 +69,7 @@ class ComponentSystem extends EventHandler {
      * @example
      * app.systems.model.removeComponent(entity);
      * // entity.model === undefined
-     * @private
+     * @ignore
      */
     removeComponent(entity) {
         const record = this.store[entity.getGuid()];
@@ -91,7 +91,7 @@ class ComponentSystem extends EventHandler {
      * @param {Entity} entity - The entity to clone the component from.
      * @param {Entity} clone - The entity to clone the component into.
      * @returns {Component} The newly cloned component.
-     * @private
+     * @ignore
      */
     cloneComponent(entity, clone) {
         // default clone is just to add a new component with existing data
@@ -108,7 +108,7 @@ class ComponentSystem extends EventHandler {
      * @param {object} data - The data block used to initialize the component.
      * @param {string[]|object[]} properties - The array of property descriptors for the component.
      * A descriptor can be either a plain property name, or an object specifying the name and type.
-     * @private
+     * @ignore
      */
     initializeComponentData(component, data = {}, properties) {
         // initialize
@@ -152,7 +152,7 @@ class ComponentSystem extends EventHandler {
      *
      * @param {string} type - The type to search for.
      * @returns {string[]|object[]} An array of property descriptors matching the specified type.
-     * @private
+     * @ignore
      */
     getPropertiesOfType(type) {
         const matchingProperties = [];
@@ -213,8 +213,5 @@ function convertValue(value, type) {
             throw new Error('Could not convert unhandled type: ' + type);
     }
 }
-
-// Add event support
-events.attach(ComponentSystem);
 
 export { ComponentSystem };

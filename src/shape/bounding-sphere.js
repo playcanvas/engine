@@ -8,9 +8,6 @@ const tmpVecB = new Vec3();
 
 /**
  * A bounding sphere is a volume for facilitating fast intersection testing.
- *
- * @property {Vec3} center Center of sphere.
- * @property {number} radius The radius of the bounding sphere.
  */
 class BoundingSphere {
     /**
@@ -24,10 +21,19 @@ class BoundingSphere {
      * var sphere = new pc.BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
-
         Debug.assert(!Object.isFrozen(center), `The constructor of 'BoundingSphere' does not accept a constant (frozen) object as a 'center' parameter`);
 
+        /**
+         * Center of sphere.
+         *
+         * @type {Vec3}
+         */
         this.center = center;
+        /**
+         * The radius of the bounding sphere.
+         *
+         * @type {number}
+         */
         this.radius = radius;
     }
 
@@ -52,7 +58,7 @@ class BoundingSphere {
 
         // exit if ray's origin outside of sphere (c > 0) and ray pointing away from s (b > 0)
         if (c > 0 && b > 0)
-            return null;
+            return false;
 
         const discr = b * b - c;
         // a negative discriminant corresponds to ray missing sphere

@@ -1,17 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader, ScriptLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class TweenExample extends Example {
+class TweenExample {
     static CATEGORY = 'Animation';
     static NAME = 'Tween';
 
     load() {
         return <>
             <ScriptLoader name='TWEEN' url='https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js' />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
-            <AssetLoader name='script' type='script' url='static/scripts/animation/tween.js' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
+            <AssetLoader name='script' type='script' url='/static/scripts/animation/tween.js' />
         </>;
     }
 
@@ -67,12 +66,10 @@ class TweenExample extends Example {
             sphere.addComponent("render", {
                 type: "sphere"
             });
-            // @ts-ignore engine-tsd
-            sphere.render.material.diffuse.set(1, 0, 0);
-            // @ts-ignore engine-tsd
-            sphere.render.material.specular.set(0.6, 0.6, 0.6);
-            // @ts-ignore engine-tsd
-            sphere.render.material.shininess = 20;
+            const material = sphere.render.material as pc.StandardMaterial;
+            material.diffuse.set(1, 0, 0);
+            material.specular.set(0.6, 0.6, 0.6);
+            material.shininess = 20;
 
             sphere.addComponent("script");
             sphere.script.create("tween", {

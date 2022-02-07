@@ -19,7 +19,7 @@ import {
  * current time, parameters and available states / transitions. It also ensures the AnimEvaluator
  * is supplied with the correct animations, based on the currently active state.
  *
- * @private
+ * @ignore
  */
 class AnimController {
     /**
@@ -38,7 +38,6 @@ class AnimController {
      * events.
      * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
      * have been consumed by a transition.
-     * @private
      */
     constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
         this._animEvaluator = animEvaluator;
@@ -231,34 +230,32 @@ class AnimController {
     }
 
     _transitionHasConditionsMet(transition) {
-        let conditionsMet = true;
-        for (let i = 0; i < transition.conditions.length; i++) {
-            const condition = transition.conditions[i];
+        const conditions = transition.conditions;
+        for (let i = 0; i < conditions.length; i++) {
+            const condition = conditions[i];
             const parameter = this.findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
-                    conditionsMet = conditionsMet && parameter.value > condition.value;
+                    if (!(parameter.value > condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN:
-                    conditionsMet = conditionsMet && parameter.value < condition.value;
+                    if (!(parameter.value < condition.value)) return false;
                     break;
                 case ANIM_GREATER_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value >= condition.value;
+                    if (!(parameter.value >= condition.value)) return false;
                     break;
                 case ANIM_LESS_THAN_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value <= condition.value;
+                    if (!(parameter.value <= condition.value)) return false;
                     break;
                 case ANIM_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value === condition.value;
+                    if (!(parameter.value === condition.value)) return false;
                     break;
                 case ANIM_NOT_EQUAL_TO:
-                    conditionsMet = conditionsMet && parameter.value !== condition.value;
+                    if (!(parameter.value !== condition.value)) return false;
                     break;
             }
-            if (!conditionsMet)
-                return conditionsMet;
         }
-        return conditionsMet;
+        return true;
     }
 
     _findTransition(from, to) {
@@ -266,7 +263,7 @@ class AnimController {
 
         // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
-            transitions.concat(this._findTransitionsBetweenStates(from, to));
+            transitions = transitions.concat(this._findTransitionsBetweenStates(from, to));
         } else {
             // If no transition is active, look for transitions from the active & any states.
             if (!this._isTransitioning) {
@@ -367,7 +364,7 @@ class AnimController {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            const interpolatedTime = Math.min(this._currTransitionTime / this._totalTransitionTime, 1.0);
+            const interpolatedTime = Math.min(this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1, 1.0);
             for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
@@ -535,7 +532,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime = this._totalTransitionTime === 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
+                const interpolatedTime = this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);

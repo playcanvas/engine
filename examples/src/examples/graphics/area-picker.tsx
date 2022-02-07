@@ -1,16 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class AreaPickerExample extends Example {
+
+class AreaPickerExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Area Picker';
 
     load() {
         return <>
-            <AssetLoader name='bloom' type='script' url='static/scripts/posteffects/posteffect-bloom.js' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='bloom' type='script' url='/static/scripts/posteffects/posteffect-bloom.js' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -22,6 +22,7 @@ class AreaPickerExample extends Example {
         // setup skydome
         app.scene.skyboxMip = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
+        app.scene.skyboxIntensity = 0.1;
 
         // use a quarter resolution for picker render target (faster but less precise - can miss small objects)
         const pickerScale = 0.25;
@@ -107,14 +108,13 @@ class AreaPickerExample extends Example {
         }
 
         // sets material emissive color to specified color
-        function highlightMaterial(material: pc.Material, color: pc.Color) {
-            // @ts-ignore engine-tsd
+        function highlightMaterial(material: pc.StandardMaterial, color: pc.Color) {
             material.emissive = color;
             material.update();
         }
 
         // array of highlighted materials
-        const highlights: any = [];
+        const highlights: pc.StandardMaterial[] = [];
 
         // update each frame
         let time = 0;
@@ -178,7 +178,7 @@ class AreaPickerExample extends Example {
                 drawRectangle(areaPos.x, areaPos.y, areaSize.x, areaSize.y);
 
                 // get list of meshInstances inside the area from the picker
-                // this scans the pixels inside the render target and maps the id value stored there into meshInstalces
+                // this scans the pixels inside the render target and maps the id value stored there into meshInstances
                 const selection = picker.getSelection(areaPos.x * pickerScale, areaPos.y * pickerScale, areaSize.x * pickerScale, areaSize.y * pickerScale);
 
                 // process all meshInstances it found - highlight them to appropriate color for the area

@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 attribute vec3 aPosition;
@@ -36,13 +36,13 @@ void main(void)
 }
 `;
 
-class ShaderWobbleExample extends Example {
+class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Wobble';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
         </>;
@@ -101,14 +101,15 @@ class ShaderWobbleExample extends Example {
         app.root.addChild(entity);
 
         // Set the new material on all meshes in the model, and use original texture from the model on the new material
-        let originalTexture:pc.Texture = null;
+        let originalTexture: pc.Texture = null;
         const renders: Array<pc.RenderComponent> = entity.findComponents("render");
         renders.forEach((render) => {
             const meshInstances = render.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
                 const meshInstance = meshInstances[i];
-                // @ts-ignore
-                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                if (!originalTexture) {
+                    originalTexture = meshInstance.material.diffuseMap;
+                }
                 meshInstance.material = material;
             }
         });

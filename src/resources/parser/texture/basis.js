@@ -9,7 +9,7 @@ import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../g
  * Parser for basis files.
  *
  * @implements {TextureParser}
- * @private
+ * @ignore
  */
 class BasisParser {
     constructor(registry, device) {

@@ -146,44 +146,24 @@ class GeometryVertexStream {
  * mesh.update();
  * ```
  *
- * This example demonstrated that vertex attributes such as position and normals, and also indices
+ * This example demonstrates that vertex attributes such as position and normals, and also indices
  * can be provided using Arrays ([]) and also Typed Arrays (Float32Array and similar). Note that
  * typed arrays have higher performance, and are generally recommended for per-frame operations or
  * larger meshes, but their construction using new operator is costly operation. If you only need
- * to operate on small number of vertices or indices, consider using the Arrays instead to avoid
- * Type Array allocation overhead.
+ * to operate on a small number of vertices or indices, consider using Arrays to avoid the overhead
+ * associated with allocating Typed Arrays.
  *
  * Follow these links for more complex examples showing the functionality.
+ *
  * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
  * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
  * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
  *
- * ### Update Vertex and Index buffers.
+ * ### Update Vertex and Index buffers
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
- *
- * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data
- * in the mesh should be interpreted by the graphics device.
- * @property {number} primitive[].type The type of primitive to render. Can be:
- *
- * - {@link PRIMITIVE_POINTS}
- * - {@link PRIMITIVE_LINES}
- * - {@link PRIMITIVE_LINELOOP}
- * - {@link PRIMITIVE_LINESTRIP}
- * - {@link PRIMITIVE_TRIANGLES}
- * - {@link PRIMITIVE_TRISTRIP}
- * - {@link PRIMITIVE_TRIFAN}
- *
- * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the
- * draw call.
- * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw
- * call.
- * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby
- * using the currently set index buffer and false otherwise.
- * {@link GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer
- * property.
  */
 class Mesh extends RefCountedObject {
     /**
@@ -213,6 +193,28 @@ class Mesh extends RefCountedObject {
          * @type {IndexBuffer[]}
          */
         this.indexBuffer = [null];
+
+        /**
+         * Array of primitive objects defining how vertex (and index) data in the mesh should be
+         * interpreted by the graphics device.
+         *
+         * - `type` is the type of primitive to render. Can be:
+         *
+         *   - {@link PRIMITIVE_POINTS}
+         *   - {@link PRIMITIVE_LINES}
+         *   - {@link PRIMITIVE_LINELOOP}
+         *   - {@link PRIMITIVE_LINESTRIP}
+         *   - {@link PRIMITIVE_TRIANGLES}
+         *   - {@link PRIMITIVE_TRISTRIP}
+         *   - {@link PRIMITIVE_TRIFAN}
+         *
+         * - `base` is the offset of the first index or vertex to dispatch in the draw call.
+         * - `count` is the number of indices or vertices to dispatch in the draw call.
+         * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
+         * currently set index buffer.
+         *
+         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         */
         this.primitive = [{
             type: 0,
             base: 0,
@@ -226,12 +228,7 @@ class Mesh extends RefCountedObject {
          */
         this.skin = null;
 
-        /**
-         * The morph data (if any) that drives morph target animations for this mesh.
-         *
-         * @type {Morph|null}
-         */
-        this.morph = null;
+        this._morph = null;
         this._geometryData = null;
 
         // AABB for object space mesh vertices
@@ -239,6 +236,30 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+    }
+
+    /**
+     * The morph data (if any) that drives morph target animations for this mesh.
+     *
+     * @type {Morph|null}
+     */
+    set morph(morph) {
+
+        if (morph !== this._morph) {
+            if (this._morph) {
+                this._morph.decRefCount();
+            }
+
+            this._morph = morph;
+
+            if (morph) {
+                morph.incRefCount();
+            }
+        }
+    }
+
+    get morph() {
+        return this._morph;
     }
 
     /**
@@ -259,6 +280,19 @@ class Mesh extends RefCountedObject {
      * normally called by {@link Model#destroy} and does not need to be called manually.
      */
     destroy() {
+
+        const morph = this.morph;
+        if (morph) {
+
+            // this decreases ref count on the morph
+            this.morph = null;
+
+            // destroy morph
+            if (morph.refCount < 1) {
+                morph.destroy();
+            }
+        }
+
         if (this.vertexBuffer) {
             this.vertexBuffer.destroy();
             this.vertexBuffer = null;

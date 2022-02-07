@@ -1,7 +1,7 @@
-import { Debug } from '../core/debug.js';
 import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -34,7 +34,7 @@ const _postEffectQuadDraw = {
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
 
-    Debug.pushGpuMarker(device, "drawQuadWithShader");
+    DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
     if (_postEffectQuadVB === null) {
         const vertexFormat = new VertexFormat(device, [{
@@ -119,7 +119,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     device.setViewport(oldVx, oldVy, oldVw, oldVh);
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
 
-    Debug.popGpuMarker(device);
+    DebugGraphics.popGpuMarker(device);
 }
 
 function destroyPostEffectQuad() {

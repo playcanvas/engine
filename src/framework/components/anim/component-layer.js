@@ -4,6 +4,7 @@ import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
+/** @typedef {import('../../../asset/asset.js').Asset} Asset */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -104,7 +105,14 @@ class AnimComponentLayer {
      * @type {number}
      */
     set activeStateCurrentTime(time) {
-        this._controller.activeStateCurrentTime = time;
+        const controller = this._controller;
+        const layerPlaying = controller.playing;
+        controller.playing = true;
+        controller.activeStateCurrentTime = time;
+        if (!layerPlaying) {
+            controller.update(0);
+        }
+        controller.playing = layerPlaying;
     }
 
     get activeStateCurrentTime() {
@@ -124,7 +132,7 @@ class AnimComponentLayer {
      * If the anim component layer is currently transitioning between states, returns the progress.
      * Otherwise returns null.
      *
-     * @type {number}
+     * @type {number|null}
      */
     get transitionProgress() {
         if (this.transitioning) {
@@ -168,16 +176,42 @@ class AnimComponentLayer {
         return this._blendType;
     }
 
-    get normalizedWeight() {
-        return this._normalizedWeight;
-    }
-
-    set normalizedWeight(value) {
-        this._normalizedWeight = value;
+    /**
+     * A mask of bones which should be animated or ignored by this layer.
+     *
+     * @type {object}
+     * @example
+     * entity.anim.baseLayer.mask = {
+     *     // include the spine of the current model and all of its children
+     *     "path/to/spine": {
+     *         children: true
+     *     },
+     *     // include the hip of the current model but not all of its children
+     *     "path/to/hip": true
+     * };
+     */
+    set mask(value) {
+        if (this._controller.assignMask(value)) {
+            this._component.rebind();
+        }
+        this._mask = value;
     }
 
     get mask() {
         return this._mask;
+    }
+
+    /**
+     * Whether this layers weight should be normalized by the total weight of all layers or calculated separately.
+     *
+     * @type {boolean}
+     */
+    set normalizedWeight(value) {
+        this._normalizedWeight = value;
+    }
+
+    get normalizedWeight() {
+        return this._normalizedWeight;
     }
 
     /**
@@ -231,8 +265,10 @@ class AnimComponentLayer {
      *     // include the hip of the current model but not all of its children
      *     "path/to/hip": true
      * });
+     * @ignore
      */
     assignMask(mask) {
+        Debug.deprecated('The pc.AnimComponentLayer#assignMask function is now deprecated. Assign masks to the pc.AnimComponentLayer#mask property instead.');
         if (this._controller.assignMask(mask)) {
             this._component.rebind();
         }
@@ -282,6 +318,16 @@ class AnimComponentLayer {
         if (this._controller.removeNodeAnimations(nodeName)) {
             this._component.playing = false;
         }
+    }
+
+    /**
+     * Returns the asset that is associated with the given state.
+     *
+     * @param {string} stateName - The name of the state to get the asset for.
+     * @returns {Asset} The asset associated with the given state.
+     */
+    getAnimationAsset(stateName) {
+        return this._component.animationAssets[`${this.name}:${stateName}`];
     }
 
     /**

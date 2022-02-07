@@ -80,8 +80,12 @@ const standard = {
         }
 
         if (options.lights) {
+            const isClustered = options.clusteredLightingEnabled;
             for (let i = 0; i < options.lights.length; i++) {
-                key += options.lights[i].key;
+                const light = options.lights[i];
+                if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                    key += light.key;
+                }
             }
         }
 
@@ -449,7 +453,7 @@ const standard = {
             lighting = true;
         }
 
-        if (options.clusteredLightingEnabled && options.useLighting) {
+        if (options.clusteredLightingEnabled) {
             lighting = true;
         }
 
@@ -922,8 +926,6 @@ const standard = {
             code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
         }
 
-        let lightShape = LIGHTSHAPE_PUNCTUAL;
-
         for (let i = 0; i < options.lights.length; i++) {
             const light = options.lights[i];
             const lightType = light._type;
@@ -932,11 +934,7 @@ const standard = {
             if (options.clusteredLightingEnabled && lightType !== LIGHTTYPE_DIRECTIONAL)
                 continue;
 
-            if (hasAreaLights && light._shape) {
-                lightShape = light._shape;
-            } else {
-                lightShape = LIGHTSHAPE_PUNCTUAL;
-            }
+            const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
 
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1299,6 +1297,9 @@ const standard = {
 
             code += chunks.floatUnpackingPS;
 
+            if (options.lightMaskDynamic)
+                code += "\n#define CLUSTER_MESH_DYNAMIC_LIGHTS";
+
             if (options.clusteredLightingCookiesEnabled)
                 code += "\n#define CLUSTER_COOKIES";
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
@@ -1454,9 +1455,6 @@ const standard = {
                 code += "   calcLTCLightValues();\n";
             }
 
-            // light source shape support
-            let shapeString = '';
-
             for (let i = 0; i < options.lights.length; i++) {
                 const light = options.lights[i];
                 const lightType = light._type;
@@ -1476,13 +1474,8 @@ const standard = {
 
                 usesCookieNow = false;
 
-                if (hasAreaLights && light._shape) {
-                    lightShape = light._shape;
-                    shapeString = this._getLightSourceShapeString(lightShape);
-                } else {
-                    lightShape = LIGHTSHAPE_PUNCTUAL;
-                    shapeString = '';
-                }
+                const lightShape = (hasAreaLights && light._shape) ? light.shape : LIGHTSHAPE_PUNCTUAL;
+                const shapeString = (hasAreaLights && light._shape) ? this._getLightSourceShapeString(lightShape) : '';
 
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     code += "   calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
