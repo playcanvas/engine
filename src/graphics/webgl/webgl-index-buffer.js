@@ -2,7 +2,9 @@ import { INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32 } from '../co
 import { WebglBuffer } from "./webgl-buffer.js";
 
 /**
- * A WebGl implementation of the IndexBuffer.
+ * A WebGL implementation of the IndexBuffer.
+ *
+ * @ignore
  */
 class WebglIndexBuffer extends WebglBuffer {
     constructor(indexBuffer) {
