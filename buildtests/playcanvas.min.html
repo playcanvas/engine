@@ -24,7 +24,7 @@
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // ensure canvas is resized when window changes size
-        window.addEventListener('resize', () => app.resizeCanvas());
+        window.addEventListener('resize', function() { app.resizeCanvas() });
 
         // create box entity
         const box = new pc.Entity('cube');
@@ -48,7 +48,7 @@
         light.setEulerAngles(45, 0, 0);
 
         // rotate the box according to the delta time since the last frame
-        app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+        app.on('update', function(dt) { box.rotate(10 * dt, 20 * dt, 30 * dt) });
         app.start();
 
         console.log("source map test> app.root.addChild", app.root.addChild);
