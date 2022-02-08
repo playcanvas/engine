@@ -105,6 +105,7 @@
     "build:treemap": "npm run build:es5 -- --environment treemap",
     "build:types": "tsc && node types.mjs && rollup -c --environment target:types",
     "build:sourcemaps": "npm run build -- -m",
+    "build:publish": "npm run build && npm run build:types",
     "watch:debug": "npm run build:debug -- -w",
     "watch:es5": "npm run build:es5 -- -w",
     "watch:es6": "npm run build:es6 -- -w",
