@@ -8,7 +8,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
 import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
-import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE } from '../element/constants.js';
 
 /** @typedef {import('../../../asset/asset.js').Asset} Asset */
 /** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
