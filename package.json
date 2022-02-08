@@ -98,6 +98,7 @@
     "build:es6": "rollup -c --environment target:es6",
     "build:debug": "rollup -c --environment target:debug",
     "build:profiler": "rollup -c --environment target:profiler",
+    "build:publish": "npm run build && npm run tsd",
     "watch:es5": "rollup -c -w --environment target:es5",
     "watch:es5min": "rollup -c -w --environment target:es5min",
     "watch:es6": "rollup -c -w --environment target:es6",
