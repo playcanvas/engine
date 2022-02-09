@@ -24,6 +24,106 @@ import { Component } from '../component.js';
  */
 class ModelComponent extends Component {
     /**
+     * @type {string}
+     * @private
+     */
+    _type = 'asset';
+
+    /**
+     * @type {Asset|number|null}
+     * @private
+     */
+    _asset = null;
+
+    /**
+     * @type {Model|null}
+     * @private
+     */
+    _model = null;
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, number>}
+     * @private
+     */
+    _mapping = {};
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _castShadows = true;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _receiveShadows = true;
+
+    /**
+     * @type {Asset|number|null}
+     * @private
+     */
+    _materialAsset = null;
+    /**
+     * @type {Material}
+     * @private
+     */
+    _material;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _castShadowsLightmap = true;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _lightmapped = false;
+    /**
+     * @type {number}
+     * @private
+     */
+    _lightmapSizeMultiplier = 1;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _isStatic = false;
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _layers = [LAYERID_WORLD]; // assign to the default world layer
+    /**
+     * @type {number}
+     * @private
+     */
+    _batchGroupId = -1;
+
+    /**
+     * @type {BoundingBox|null}
+     * @private
+     */
+    _customAabb = null;
+
+    _area = null;
+
+    _materialEvents = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _clonedModel = false;
+
+    // #if _DEBUG
+    _batchGroup = null;
+    // #endif
+ 
+    /**
      * Create a new ModelComponent instance.
      *
      * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
@@ -32,57 +132,7 @@ class ModelComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._type = 'asset';
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._asset = null;
-        /**
-         * @type {Model}
-         * @private
-         */
-        this._model = null;
-
-        this._mapping = {};
-
-        this._castShadows = true;
-        this._receiveShadows = true;
-
-        /**
-         * @type {Asset}
-         * @private
-         */
-        this._materialAsset = null;
         this._material = system.defaultMaterial;
-
-        this._castShadowsLightmap = true;
-        this._lightmapped = false;
-        this._lightmapSizeMultiplier = 1;
-        this._isStatic = false;
-
-        this._layers = [LAYERID_WORLD]; // assign to the default world layer
-        this._batchGroupId = -1;
-
-        /**
-         * @type {BoundingBox}
-         * @private
-         */
-        this._customAabb = null;
-
-        this._area = null;
-
-        this._assetOld = 0;
-        this._materialEvents = null;
-        this._dirtyModelAsset = false;
-        this._dirtyMaterialAsset = false;
-
-        this._clonedModel = false;
-
-        // #if _DEBUG
-        this._batchGroup = null;
-        // #endif
 
         // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
@@ -117,7 +167,7 @@ class ModelComponent extends Component {
      * specified for skinned characters in order to avoid per frame bounding box computations based
      * on bone positions.
      *
-     * @type {BoundingBox}
+     * @type {BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -188,7 +238,7 @@ class ModelComponent extends Component {
     /**
      * The asset for the model (only applies to models of type 'asset') can also be an asset id.
      *
-     * @type {Asset|number}
+     * @type {Asset|number|null}
      */
     set asset(value) {
         const assets = this.system.app.assets;
@@ -515,7 +565,7 @@ class ModelComponent extends Component {
      * The material {@link Asset} that will be used to render the model (not used on models of type
      * 'asset').
      *
-     * @type {Asset|number}
+     * @type {Asset|number|null}
      */
     set materialAsset(value) {
         let _id = value;
@@ -573,12 +623,13 @@ class ModelComponent extends Component {
         return this._material;
     }
 
+    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that holds material overrides for each mesh instance. Only applies to model
      * components of type 'asset'. The mapping contains pairs of mesh instance index - material
      * asset id.
      *
-     * @type {object}
+     * @type {Object.<string, number>}
      */
     set mapping(value) {
         if (this._type !== 'asset')
@@ -629,6 +680,7 @@ class ModelComponent extends Component {
     get mapping() {
         return this._mapping;
     }
+    /* eslint-enable jsdoc/check-types */
 
     addModelToLayers() {
         const layers = this.system.app.scene.layers;
