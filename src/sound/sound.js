@@ -1,13 +1,21 @@
 /**
  * Represents the resource of an audio asset.
- *
- * @property {AudioBuffer} buffer If the Web Audio API is supported this contains the audio data.
- * @property {HTMLAudioElement} audio If the Web Audio API is not supported this contains the
- * audio data.
- * @property {number} duration Returns the duration of the sound. If the sound is not loaded it
- * returns 0.
  */
 class Sound {
+    /**
+     * If the Web Audio API is not supported this contains the audio data.
+     *
+     * @type {HTMLAudioElement}
+     */
+    audio;
+
+     /**
+      * If the Web Audio API is supported this contains the audio data.
+      *
+      * @type {AudioBuffer}
+      */
+    buffer;
+
     /**
      * Create a new Sound instance.
      *
@@ -22,6 +30,11 @@ class Sound {
         }
     }
 
+    /**
+     * Gets the duration of the sound. If the sound is not loaded it returns 0.
+     *
+     * @type {number}
+     */
     get duration() {
         let duration = 0;
         if (this.buffer) {

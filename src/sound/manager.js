@@ -26,7 +26,15 @@ class SoundManager extends EventHandler {
     constructor(options) {
         super();
 
+        /**
+         * @type {AudioContext}
+         * @private
+         */
         this._context = null;
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._forceWebAudioApi = options.forceWebAudioApi;
 
         this._resumeContext = null;
@@ -93,6 +101,12 @@ class SoundManager extends EventHandler {
         return this._volume;
     }
 
+    /**
+     * Get the Web Audio API context.
+     *
+     * @type {AudioContext}
+     * @ignore
+     */
     get context() {
         // lazy create the AudioContext if possible
         if (!this._context) {
