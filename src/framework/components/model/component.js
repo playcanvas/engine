@@ -12,6 +12,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../scene/composition/layer-composition.js').LayerComposition} LayerComposition */
+/** @typedef {import('../../../scene/materials/material.js').Material} Material */
 /** @typedef {import('../../../shape/bounding-box.js').BoundingBox} BoundingBox */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ModelComponentSystem} ModelComponentSystem */
@@ -54,6 +56,7 @@ class ModelComponent extends Component {
      * @private
      */
     _castShadows = true;
+
     /**
      * @type {boolean}
      * @private
@@ -65,6 +68,7 @@ class ModelComponent extends Component {
      * @private
      */
     _materialAsset = null;
+
     /**
      * @type {Material}
      * @private
@@ -76,16 +80,19 @@ class ModelComponent extends Component {
      * @private
      */
     _castShadowsLightmap = true;
+
     /**
      * @type {boolean}
      * @private
      */
     _lightmapped = false;
+
     /**
      * @type {number}
      * @private
      */
     _lightmapSizeMultiplier = 1;
+
     /**
      * @type {boolean}
      * @private
@@ -97,6 +104,7 @@ class ModelComponent extends Component {
      * @private
      */
     _layers = [LAYERID_WORLD]; // assign to the default world layer
+
     /**
      * @type {number}
      * @private
@@ -122,7 +130,7 @@ class ModelComponent extends Component {
     // #if _DEBUG
     _batchGroup = null;
     // #endif
- 
+
     /**
      * Create a new ModelComponent instance.
      *
@@ -721,6 +729,11 @@ class ModelComponent extends Component {
         this.entity.off('insert', this.onInsertChild, this);
     }
 
+    /**
+     * @param {LayerComposition} oldComp - The old layer composition.
+     * @param {LayerComposition} newComp - The new layer composition.
+     * @private
+     */
     onLayersChanged(oldComp, newComp) {
         this.addModelToLayers();
         oldComp.off("add", this.onLayerAdded, this);
@@ -729,18 +742,33 @@ class ModelComponent extends Component {
         newComp.on("remove", this.onLayerRemoved, this);
     }
 
+    /**
+     * @param {Layer} layer - The layer that was added.
+     * @private
+     */
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addMeshInstances(this.meshInstances);
     }
 
+    /**
+     * @param {Layer} layer - The layer that was removed.
+     * @private
+     */
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeMeshInstances(this.meshInstances);
     }
 
+    /**
+     * @param {number} index - The index of the mesh instance.
+     * @param {string} event - The event name.
+     * @param {number} id - The asset id.
+     * @param {*} handler - The handler function to be bound to the specified event.
+     * @private
+     */
     _setMaterialEvent(index, event, id, handler) {
         const evt = event + ':' + id;
         this.system.app.assets.on(evt, handler, this);
@@ -757,6 +785,7 @@ class ModelComponent extends Component {
         };
     }
 
+    /** @private */
     _unsetMaterialEvents() {
         const assets = this.system.app.assets;
         const events = this._materialEvents;
@@ -774,6 +803,11 @@ class ModelComponent extends Component {
         this._materialEvents = null;
     }
 
+    /**
+     * @param {string} idOrPath - The asset id or path.
+     * @returns {Asset|null} The asset.
+     * @private
+     */
     _getAssetByIdOrPath(idOrPath) {
         let asset = null;
         const isPath = isNaN(parseInt(idOrPath, 10));
@@ -790,6 +824,11 @@ class ModelComponent extends Component {
         return asset;
     }
 
+    /**
+     * @param {string} path - The path of the model asset.
+     * @returns {string|null} The model asset URL or null if the asset is not in the registry.
+     * @private
+     */
     _getMaterialAssetUrl(path) {
         if (!this.asset) return null;
 
@@ -798,6 +837,12 @@ class ModelComponent extends Component {
         return modelAsset ? modelAsset.getAbsoluteUrl(path) : null;
     }
 
+    /**
+     * @param {Asset} materialAsset -The material asset to load.
+     * @param {MeshInstance} meshInstance - The mesh instance to assign the material to.
+     * @param {number} index - The index of the mesh instance.
+     * @private
+     */
     _loadAndSetMeshInstanceMaterial(materialAsset, meshInstance, index) {
         const assets = this.system.app.assets;
 
@@ -939,6 +984,10 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The material asset to bind events to.
+     * @private
+     */
     _bindMaterialAsset(asset) {
         asset.on('load', this._onMaterialAssetLoad, this);
         asset.on('unload', this._onMaterialAssetUnload, this);
@@ -954,6 +1003,10 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The material asset to unbind events from.
+     * @private
+     */
     _unbindMaterialAsset(asset) {
         asset.off('load', this._onMaterialAssetLoad, this);
         asset.off('unload', this._onMaterialAssetUnload, this);
@@ -961,6 +1014,10 @@ class ModelComponent extends Component {
         asset.off('change', this._onMaterialAssetChange, this);
     }
 
+    /**
+     * @param {Asset} asset - The material asset on which an asset add event has been fired.
+     * @private
+     */
     _onMaterialAssetAdd(asset) {
         this.system.app.assets.off('add:' + asset.id, this._onMaterialAssetAdd, this);
         if (this._materialAsset === asset.id) {
@@ -968,21 +1025,41 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The material asset on which an asset load event has been fired.
+     * @private
+     */
     _onMaterialAssetLoad(asset) {
         this._setMaterial(asset.resource);
     }
 
+    /**
+     * @param {Asset} asset - The material asset on which an asset unload event has been fired.
+     * @private
+     */
     _onMaterialAssetUnload(asset) {
         this._setMaterial(this.system.defaultMaterial);
     }
 
+    /**
+     * @param {Asset} asset - The material asset on which an asset remove event has been fired.
+     * @private
+     */
     _onMaterialAssetRemove(asset) {
         this._onMaterialAssetUnload(asset);
     }
 
+    /**
+     * @param {Asset} asset - The material asset on which an asset change event has been fired.
+     * @private
+     */
     _onMaterialAssetChange(asset) {
     }
 
+    /**
+     * @param {Asset} asset - The model asset to bind events to.
+     * @private
+     */
     _bindModelAsset(asset) {
         this._unbindModelAsset(asset);
 
@@ -1001,6 +1078,10 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The model asset to unbind events from.
+     * @private
+     */
     _unbindModelAsset(asset) {
         asset.off('load', this._onModelAssetLoad, this);
         asset.off('unload', this._onModelAssetUnload, this);
@@ -1008,6 +1089,10 @@ class ModelComponent extends Component {
         asset.off('remove', this._onModelAssetRemove, this);
     }
 
+    /**
+     * @param {Asset} asset - The model asset on which an asset add event has been fired.
+     * @private
+     */
     _onModelAssetAdded(asset) {
         this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdded, this);
         if (asset.id === this._asset) {
@@ -1015,25 +1100,48 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The model asset on which an asset load event has been fired.
+     * @private
+     */
     _onModelAssetLoad(asset) {
         this.model = asset.resource.clone();
         this._clonedModel = true;
     }
 
+    /**
+     * @param {Asset} asset - The model asset on which an asset unload event has been fired.
+     * @private
+     */
     _onModelAssetUnload(asset) {
         this.model = null;
     }
 
+    /**
+     * @param {Asset} asset - The model asset on which an asset change event has been fired.
+     * @param {string} attr - The attribute that was changed.
+     * @param {*} _new - The new value of the attribute.
+     * @param {*} _old - The old value of the attribute.
+     * @private
+     */
     _onModelAssetChange(asset, attr, _new, _old) {
         if (attr === 'data') {
             this.mapping = this._mapping;
         }
     }
 
+    /**
+     * @param {Asset} asset - The model asset on which an asset remove event has been fired.
+     * @private
+     */
     _onModelAssetRemove(asset) {
         this.model = null;
     }
 
+    /**
+     * @param {Material} material - The material to be set.
+     * @private
+     */
     _setMaterial(material) {
         if (this._material === material)
             return;
