@@ -3690,10 +3690,11 @@ class GraphicsDevice extends EventHandler {
      */
     setShader(shader) {
         if (shader !== this.shader) {
-            if (!shader.ready) {
-                if (!this.postLink(shader)) {
-                    return false;
-                }
+            if (shader.failed) {
+                return false;
+            } else if (!shader.ready && !this.postLink(shader)) {
+                shader.failed = true;
+                return false;
             }
 
             this.shader = shader;
