@@ -91,6 +91,7 @@ class RenderComponentSystem extends ComponentSystem {
         for (let i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+        data.enabled = entity.render.enabled;
 
         // mesh instances cannot be used this way, remove them and manually clone them later
         delete data.meshInstances;
