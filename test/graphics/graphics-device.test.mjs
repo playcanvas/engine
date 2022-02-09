@@ -1,4 +1,4 @@
-import { GraphicsDevice } from '../../src/graphics/graphics-device.js';
+import { WebglGraphicsDevice } from '../../src/graphics/webgl/webgl-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -10,7 +10,7 @@ describe('GraphicsDevice', function () {
 
         it('no options', function () {
             const canvas = new HTMLCanvasElement(500, 500);
-            const gd = new GraphicsDevice(canvas);
+            const gd = new WebglGraphicsDevice(canvas);
             expect(gd.canvas).to.equal(canvas);
 //            expect(gd.fullscreen).to.be.false;
             expect(gd.height).to.equal(500);

@@ -20,7 +20,7 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
-import { GraphicsDevice } from '../graphics/graphics-device.js';
+import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -126,6 +126,7 @@ import {
 /** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
 /** @typedef {import('../input/mouse.js').Mouse} Mouse */
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -306,7 +307,7 @@ class Application extends EventHandler {
          *
          * @type {GraphicsDevice}
          */
-        this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
+        this.graphicsDevice = new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
         this._soundManager = new SoundManager(options);
