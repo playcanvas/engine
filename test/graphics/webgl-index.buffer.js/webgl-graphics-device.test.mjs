@@ -4,7 +4,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('GraphicsDevice', function () {
+describe('WebglGraphicsDevice', function () {
 
     describe('#constructor', function () {
 
