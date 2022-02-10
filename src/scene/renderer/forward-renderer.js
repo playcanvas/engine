@@ -39,7 +39,7 @@ import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
-/** @typedef {import('../../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();

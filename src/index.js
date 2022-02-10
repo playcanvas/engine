@@ -58,7 +58,7 @@ export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-export { GraphicsDevice } from './graphics/webgl/graphics-device.js';
+export { GraphicsDevice } from './graphics/graphics-device.js';
 export { EnvLighting } from './graphics/env-lighting.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
@@ -72,6 +72,9 @@ export { TransformFeedback } from './graphics/transform-feedback.js';
 export { VertexBuffer } from './graphics/vertex-buffer.js';
 export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
+
+// GRAPHICS / webgl
+export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
 
 // SCENE
 export * from './scene/constants.js';

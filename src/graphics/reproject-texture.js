@@ -11,7 +11,7 @@ import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
-import { GraphicsDevice } from './webgl/graphics-device.js';
+import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
 

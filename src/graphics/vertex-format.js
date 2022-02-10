@@ -8,7 +8,7 @@ import {
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
 } from './constants.js';
 
-/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
