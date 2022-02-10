@@ -1014,7 +1014,8 @@ class Application extends EventHandler {
 
     /**
      * @param {string[]} urls - List of URLs to load.
-     * @param {*} callback - Callback function.
+     * @param {Function} callback - Callback function.
+     * @private
      */
     _loadLibraries(urls, callback) {
         const len = urls.length;
@@ -1047,7 +1048,12 @@ class Application extends EventHandler {
         }
     }
 
-    // insert scene name/urls into the registry
+    /**
+     * Insert scene name/urls into the registry.
+     *
+     * @param {*} scenes - Scenes to add to the scene registry.
+     * @private
+     */
     _parseScenes(scenes) {
         if (!scenes) return;
 
@@ -1056,7 +1062,12 @@ class Application extends EventHandler {
         }
     }
 
-    // insert assets into registry
+    /**
+     * Insert assets into registry.
+     *
+     * @param {*} assets - Assets to insert.
+     * @private
+     */
     _parseAssets(assets) {
         const list = [];
 
@@ -1135,6 +1146,7 @@ class Application extends EventHandler {
     /**
      * @param {Scene} scene - The scene.
      * @returns {Array} - The list of scripts that are referenced by the scene.
+     * @private
      */
     _getScriptReferences(scene) {
         let priorityScripts = [];
