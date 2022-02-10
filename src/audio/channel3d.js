@@ -54,7 +54,9 @@ class Channel3d extends Channel {
 
     setPosition(position) {
         this.position.copy(position);
-        this.panner.setPosition(position.x, position.y, position.z);
+        this.panner.positionX.value = position.x;
+        this.panner.positionY.value = position.y;
+        this.panner.positionZ.value = position.z;
     }
 
     setVelocity(velocity) {
