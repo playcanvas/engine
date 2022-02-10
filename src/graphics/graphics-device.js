@@ -148,9 +148,6 @@ class GraphicsDevice extends EventHandler {
         this.programLib = new ProgramLibrary(this);
         for (const generator in programlib)
             this.programLib.register(generator, programlib[generator]);
-
-
-        console.log("end of GfxDevice, canvas: ", this.canvas);
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
