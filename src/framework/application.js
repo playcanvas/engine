@@ -121,7 +121,7 @@ import {
     setApplication
 } from './globals.js';
 
-/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
