@@ -1,4 +1,4 @@
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's

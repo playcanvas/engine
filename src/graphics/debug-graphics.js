@@ -1,4 +1,4 @@
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * Internal graphics debug system - gpu markers and similar. Note that the functions only execute in the

@@ -12,7 +12,7 @@ import { RenderAction } from './render-action.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../layer.js').Layer} Layer */
 
 const tempSet = new Set();

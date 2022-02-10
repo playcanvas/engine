@@ -1,4 +1,4 @@
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../math/mat4.js').Mat4} Mat4 */
 
 /**

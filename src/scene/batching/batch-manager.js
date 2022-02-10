@@ -24,7 +24,7 @@ import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../scene.js').Scene} Scene */
 
 function paramsIdentical(a, b) {

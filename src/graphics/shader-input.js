@@ -2,7 +2,7 @@ import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2, UNIFORMTYP
     UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY } from './constants.js';
 import { Version } from './version.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * Representation of a shader uniform.

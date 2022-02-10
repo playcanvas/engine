@@ -1,6 +1,6 @@
 import { getApplication } from './globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * Records performance-related statistics related to the application.
