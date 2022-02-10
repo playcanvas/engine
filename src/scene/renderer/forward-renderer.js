@@ -122,8 +122,7 @@ class ForwardRenderer {
 
         // Shaders
         const device = this.device;
-        const library = device.getProgramLibrary();
-        this.library = library;
+        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
