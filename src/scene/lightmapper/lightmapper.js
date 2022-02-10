@@ -29,7 +29,7 @@ import { WorldClusters } from '../lighting/world-clusters.js';
 /** @typedef {import('../../asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
 /** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../scene.js').Scene} Scene */
 
 import {

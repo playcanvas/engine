@@ -4,7 +4,7 @@ import { createShaderFromCode } from './program-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./shader.js').Shader} Shader */
 
 /**

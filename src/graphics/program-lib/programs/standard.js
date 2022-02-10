@@ -25,7 +25,7 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
-/** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const _matTex2D = [];
 

@@ -21,7 +21,7 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 import { getApplication } from '../framework/globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
 /** @typedef {import('./skin.js').Skin} Skin */
 

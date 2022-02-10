@@ -1,10 +1,10 @@
-import { setupVertexArrayObject } from '../polyfill/OESVertexArrayObject.js';
-import { EventHandler } from '../core/event-handler.js';
-import { now } from '../core/time.js';
-import { Debug } from '../core/debug.js';
-import { platform } from '../core/platform.js';
-import { WebglVertexBuffer } from './webgl/webgl-vertex-buffer.js';
-import { WebglIndexBuffer } from './webgl/webgl-index-buffer.js';
+import { setupVertexArrayObject } from '../../polyfill/OESVertexArrayObject.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
+import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
+import { WebglIndexBuffer } from './webgl-index-buffer.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -32,23 +32,23 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation
-} from './constants.js';
+} from '../constants.js';
 
-import { createShaderFromCode } from './program-lib/utils.js';
-import { drawQuadWithShader } from './simple-post-effect.js';
-import { programlib } from './program-lib/program-lib.js';
-import { shaderChunks } from './program-lib/chunks/chunks.js';
-import { RenderTarget } from './render-target.js';
-import { ProgramLibrary } from './program-library.js';
-import { ScopeSpace } from './scope-space.js';
-import { ShaderInput } from './shader-input.js';
-import { Texture } from './texture.js';
-import { VertexFormat } from './vertex-format.js';
-import { GrabPass } from './grab-pass.js';
+import { createShaderFromCode } from '../program-lib/utils.js';
+import { drawQuadWithShader } from '../simple-post-effect.js';
+import { programlib } from '../program-lib/program-lib.js';
+import { shaderChunks } from '../program-lib/chunks/chunks.js';
+import { RenderTarget } from '../render-target.js';
+import { ProgramLibrary } from '../program-library.js';
+import { ScopeSpace } from '../scope-space.js';
+import { ShaderInput } from '../shader-input.js';
+import { Texture } from '../texture.js';
+import { VertexFormat } from '../vertex-format.js';
+import { GrabPass } from '../grab-pass.js';
 
-/** @typedef {import('./index-buffer.js').IndexBuffer} IndexBuffer */
-/** @typedef {import('./shader.js').Shader} Shader */
-/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
+/** @typedef {import('../shader.js').Shader} Shader */
+/** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
 
 const EVENT_RESIZE = 'resizecanvas';
 

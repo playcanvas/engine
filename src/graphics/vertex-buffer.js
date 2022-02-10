@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { BUFFER_STATIC } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
 
 let id = 0;
