@@ -121,11 +121,15 @@ import {
     setApplication
 } from './globals.js';
 
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
 /** @typedef {import('../input/mouse.js').Mouse} Mouse */
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
+/** @typedef {import('../scene/mesh.js').Mesh} Mesh */
+/** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -221,9 +225,12 @@ class Application extends EventHandler {
 
         app = this;
 
+        /** @private */
         this._destroyRequested = false;
+        /** @private */
         this._inFrameUpdate = false;
 
+        /** @private */
         this._time = 0;
 
         /**
@@ -248,7 +255,13 @@ class Application extends EventHandler {
          */
         this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
 
-        this.frame = 0; // the total number of frames the application has updated since start() was called
+        /**
+         * The total number of frames the application has updated since start() was called.
+         *
+         * @type {number}
+         * @ignore
+         */
+        this.frame = 0;
 
         /**
          * When true, the application's render function is called every frame. Setting autoRender
@@ -280,8 +293,13 @@ class Application extends EventHandler {
          */
         this.renderNextFrame = false;
 
-        // enable if you want entity type script attributes
-        // to not be re-mapped when an entity is cloned
+        /**
+         * Enable if you want entity type script attributes to not be re-mapped when an entity is
+         * cloned.
+         *
+         * @type {boolean}
+         * @ignore
+         */
         this.useLegacyScriptAttributeCloning = script.legacy;
 
         this._librariesLoaded = false;
@@ -289,7 +307,13 @@ class Application extends EventHandler {
         this._resolutionMode = RESOLUTION_FIXED;
         this._allowResize = true;
 
-        // for compatibility
+        /**
+         * For backwards compatibility with scripts 1.0.
+         *
+         * @type {Application}
+         * @deprecated
+         * @ignore
+         */
         this.context = this;
 
         if (!options.graphicsDeviceOptions)
@@ -309,6 +333,11 @@ class Application extends EventHandler {
         this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
+
+        /**
+         * @type {SoundManager}
+         * @private
+         */
         this._soundManager = new SoundManager(options);
 
         /**
@@ -319,9 +348,15 @@ class Application extends EventHandler {
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
 
-        // stores all entities that have been created
-        // for this app by guid
+        /* eslint-disable jsdoc/check-types */
+        /**
+         * Stores all entities that have been created for this app by guid.
+         *
+         * @type {Object.<string, Entity>}
+         * @ignore
+         */
         this._entityIndex = {};
+        /* eslint-enable jsdoc/check-types */
 
         /**
          * The scene managed by the application.
@@ -344,8 +379,12 @@ class Application extends EventHandler {
          */
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
+
+        /**
+         * @type {GraphNode[]}
+         * @ignore
+         */
         this._enableList = [];
-        this._enableList.size = 0;
 
         /**
          * The asset registry managed by the application.
@@ -357,11 +396,22 @@ class Application extends EventHandler {
          */
         this.assets = new AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
+
+        /**
+         * @type {BundleRegistry}
+         * @ignore
+         */
         this.bundles = new BundleRegistry(this.assets);
-        // set this to false if you want to run without using bundles
-        // We set it to true only if TextDecoder is available because we currently
-        // rely on it for untarring.
+
+        /**
+         * Set this to false if you want to run without using bundles. We set it to true only if
+         * TextDecoder is available because we currently rely on it for untarring.
+         *
+         * @type {boolean}
+         * @ignore
+         */
         this.enableBundles = (typeof TextDecoder !== 'undefined');
+
         this.scriptsOrder = options.scriptsOrder || [];
 
         /**
@@ -430,8 +480,6 @@ class Application extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
-
-        this._immediateLayer = this.defaultLayerImmediate;
 
         // Default layers patch
         this.scene.on('set:layers', function (oldComp, newComp) {
@@ -519,6 +567,11 @@ class Application extends EventHandler {
         if (this.elementInput)
             this.elementInput.app = this;
 
+        /**
+         * @type {VrManager|null}
+         * @deprecated
+         * @ignore
+         */
         this.vr = null;
 
         /**
@@ -536,10 +589,22 @@ class Application extends EventHandler {
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
 
+        /**
+         * @type {boolean}
+         * @ignore
+         */
         this._inTools = false;
 
+        /**
+         * @type {Asset|null}
+         * @private
+         */
         this._skyboxAsset = null;
 
+        /**
+         * @type {string}
+         * @ignore
+         */
         this._scriptPrefix = options.scriptPrefix || '';
 
         if (this.enableBundles) {
@@ -633,6 +698,7 @@ class Application extends EventHandler {
         this.systems.add(new LayoutChildComponentSystem(this));
         this.systems.add(new ZoneComponentSystem(this));
 
+        /** @private */
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
         // Depending on browser add the correct visibilitychange event and store the name of the
@@ -684,6 +750,7 @@ class Application extends EventHandler {
         return id ? Application._applications[id] : getApplication();
     }
 
+    /** @private */
     _initDefaultMaterial() {
         const material = new StandardMaterial();
         material.name = "Default Material";
@@ -945,6 +1012,10 @@ class Application extends EventHandler {
         this._loadLibraries(props.libraries, callback);
     }
 
+    /**
+     * @param {string[]} urls - List of URLs to load.
+     * @param {*} callback - Callback function.
+     */
     _loadLibraries(urls, callback) {
         const len = urls.length;
         let count = len;
@@ -1061,6 +1132,10 @@ class Application extends EventHandler {
         }
     }
 
+    /**
+     * @param {Scene} scene - The scene.
+     * @returns {Array} - The list of scripts that are referenced by the scene.
+     */
     _getScriptReferences(scene) {
         let priorityScripts = [];
         if (scene.settings.priority_scripts) {
@@ -1217,6 +1292,13 @@ class Application extends EventHandler {
         // #endif
     }
 
+    /**
+     * @param {number} now - The timestamp passed to the requestAnimationFrame callback.
+     * @param {number} dt - The time delta in seconds since the last frame. This is subject to the
+     * application's time scale and max delta values.
+     * @param {number} ms - The time in milliseconds since the last frame.
+     * @private
+     */
     _fillFrameStatsBasic(now, dt, ms) {
         // Timing stats
         const stats = this.stats.frame;
@@ -1235,6 +1317,7 @@ class Application extends EventHandler {
         this.graphicsDevice._drawCallsPerFrame = 0;
     }
 
+    /** @private */
     _fillFrameStats() {
         let stats = this.stats.frame;
 
@@ -1627,7 +1710,7 @@ class Application extends EventHandler {
     /**
      * Create and assign a {@link VrManager} object to allow this application render in VR.
      *
-     * @private
+     * @ignore
      * @deprecated
      */
     enableVr() {
@@ -1639,7 +1722,7 @@ class Application extends EventHandler {
     /**
      * Destroy the {@link VrManager}.
      *
-     * @private
+     * @ignore
      * @deprecated
      */
     disableVr() {
@@ -1649,14 +1732,23 @@ class Application extends EventHandler {
         }
     }
 
+    /** @private */
     _firstBake() {
         this.lightmapper.bake(null, this.scene.lightmapMode);
     }
 
+    /** @private */
     _firstBatch() {
         this.batcher.generate();
     }
 
+    /**
+     * Provide an opportunity to modify the timestamp supplied by requestAnimationFrame.
+     *
+     * @param {number} timestamp - The timestamp supplied by requestAnimationFrame.
+     * @returns {number} The modified timestamp.
+     * @ignore
+     */
     _processTimestamp(timestamp) {
         return timestamp;
     }
@@ -1786,7 +1878,7 @@ class Application extends EventHandler {
      * // Render a red wire sphere with radius of 1
      * var center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
-     * @private
+     * @ignore
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
@@ -1806,29 +1898,66 @@ class Application extends EventHandler {
      * var min = new pc.Vec3(-1, -1, -1);
      * var max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
-     * @private
+     * @ignore
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
     }
 
-    // Draw meshInstance at this frame
+    /**
+     * Draw meshInstance at this frame
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance to draw.
+     * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
+     * {@link LAYERID_IMMEDIATE}.
+     * @ignore
+     */
     drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
     }
 
-    // Draw mesh at this frame
+    /**
+     * Draw mesh at this frame.
+     *
+     * @param {Mesh} mesh - The mesh to draw.
+     * @param {Material} material - The material to use to render the mesh.
+     * @param {Mat4} matrix - The matrix to use to render the mesh.
+     * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @ignore
+     */
     drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
     }
 
-    // Draw quad of size [-0.5, 0.5] at this frame
+    /**
+     * Draw quad of size [-0.5, 0.5] at this frame.
+     *
+     * @param {Mat4} matrix - The matrix to use to render the quad.
+     * @param {Material} material - The material to use to render the quad.
+     * @param {Layer} [layer] - The layer to render the quad into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @ignore
+     */
     drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
     }
 
-    // draws a texture on [x,y] position on screen, with size [width, height].
-    // Coordinates / sizes are in projected space (-1 .. 1)
+    /**
+     * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
+     * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
+     *
+     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * Should be in the range [-1, 1].
+     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * Should be in the range [-1, 1].
+     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
+     * range [0, 2].
+     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
+     * the range [0, 2].
+     * @param {Texture} texture - The texture to render.
+     * @param {Material} material - The material used when rendering the texture.
+     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @ignore
+     */
     drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
@@ -1845,8 +1974,21 @@ class Application extends EventHandler {
         this.drawQuad(matrix, material, layer);
     }
 
-    // draws a depth texture on [x,y] position on screen, with size [width, height].
-    // Coordinates / sizes are in projected space (-1 .. 1)
+    /**
+     * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
+     * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
+     *
+     * @param {number} x - The x coordinate on the screen of the top left corner of the texture.
+     * Should be in the range [-1, 1].
+     * @param {number} y - The y coordinate on the screen of the top left corner of the texture.
+     * Should be in the range [-1, 1].
+     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
+     * range [0, 2].
+     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
+     * the range [0, 2].
+     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @ignore
+     */
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
         material.shader = this.scene.immediate.getDepthTextureShader();
@@ -2013,12 +2155,16 @@ class Application extends EventHandler {
      *
      * @param {string} guid - The GUID to search for.
      * @returns {Entity} The Entity with the GUID or null.
-     * @private
+     * @ignore
      */
     getEntityFromIndex(guid) {
         return this._entityIndex[guid];
     }
 
+    /**
+     * @param {Scene} scene - The scene.
+     * @private
+     */
     _registerSceneImmediate(scene) {
         this.on('postrender', scene.immediate.onPostRender, scene.immediate);
     }
@@ -2027,7 +2173,13 @@ class Application extends EventHandler {
 // static data
 const _frameEndData = {};
 
-// create tick function to be wrapped in closure
+/**
+ * Create tick function to be wrapped in closure.
+ *
+ * @param {Application} _app - The application.
+ * @returns {Function} The tick function.
+ * @private
+ */
 const makeTick = function (_app) {
     const application = _app;
     let frameRequest;
