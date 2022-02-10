@@ -22,7 +22,7 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */
-/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('./composition/layer-composition.js').LayerComposition} LayerComposition */
 /** @typedef {import('./layer.js').Layer} Layer */

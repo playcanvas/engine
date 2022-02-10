@@ -1,10 +1,7 @@
 import { setupVertexArrayObject } from '../../polyfill/OESVertexArrayObject.js';
-import { EventHandler } from '../../core/event-handler.js';
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
-import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
-import { WebglIndexBuffer } from './webgl-index-buffer.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -34,6 +31,7 @@ import {
     semanticToLocation
 } from '../constants.js';
 
+import { GraphicsDevice } from '../graphics-device.js';
 import { createShaderFromCode } from '../program-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
 import { programlib } from '../program-lib/program-lib.js';
@@ -45,6 +43,9 @@ import { ShaderInput } from '../shader-input.js';
 import { Texture } from '../texture.js';
 import { VertexFormat } from '../vertex-format.js';
 import { GrabPass } from '../grab-pass.js';
+
+import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
+import { WebglIndexBuffer } from './webgl-index-buffer.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -215,9 +216,9 @@ function testTextureFloatHighPrecision(device) {
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments EventHandler
+ * @augments GraphicsDevice
  */
-class GraphicsDevice extends EventHandler {
+class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
@@ -310,7 +311,7 @@ class GraphicsDevice extends EventHandler {
     webgl2;
 
     /**
-     * Creates a new GraphicsDevice instance.
+     * Creates a new WebglGraphicsDevice instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
      * @param {object} [options] - Options passed when creating the WebGL context.
@@ -832,11 +833,6 @@ class GraphicsDevice extends EventHandler {
     // provide webgl implementation for the index buffer
     createIndexBufferImpl(indexBuffer) {
         return new WebglIndexBuffer(indexBuffer);
-    }
-
-    // don't stringify GraphicsDevice to JSON by JSON.stringify
-    toJSON(key) {
-        return undefined;
     }
 
     // #if _DEBUG
@@ -3932,4 +3928,4 @@ class GraphicsDevice extends EventHandler {
     }
 }
 
-export { GraphicsDevice };
+export { WebglGraphicsDevice };

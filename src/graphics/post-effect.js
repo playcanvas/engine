@@ -4,7 +4,7 @@ import { VertexFormat } from './vertex-format.js';
 import { VertexIterator } from './vertex-iterator.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
-/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./shader.js').Shader} Shader */
 

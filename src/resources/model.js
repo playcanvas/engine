@@ -8,7 +8,7 @@ import { JsonModelParser } from './parser/json-model.js';
 
 import { DefaultMaterial } from '../scene/materials/default-material.js';
 
-/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
