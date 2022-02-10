@@ -12,6 +12,8 @@ import { Debug } from '../core/debug.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
+/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
+
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
