@@ -3,7 +3,7 @@ import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
-/** @typedef {import('./webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives

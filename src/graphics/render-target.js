@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 
-import { GraphicsDevice } from './webgl/graphics-device.js';
+import { GraphicsDevice } from './graphics-device.js';
 
 /** @typedef {import('./texture.js').Texture} Texture */
 

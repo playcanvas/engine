@@ -9,7 +9,7 @@ import { getApplication } from '../framework/globals.js';
 
 import { BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F } from '../graphics/constants.js';
 
-/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph-target.js').MorphTarget} MorphTarget */
 
 // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally

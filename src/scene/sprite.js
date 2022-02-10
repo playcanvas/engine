@@ -5,7 +5,7 @@ import { Vec2 } from '../math/vec2.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { createMesh } from './procedural.js';
 
-/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 /** @typedef {import('./texture-atlas.js').TextureAtlas} TextureAtlas */
 

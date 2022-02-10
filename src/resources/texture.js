@@ -17,7 +17,7 @@ import { HdrParser } from './parser/texture/hdr.js';
 
 /** @typedef {import('../asset/asset.js').Asset} Asset */
 /** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../graphics/webgl/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('./handler.js').resourceHandlerCallback} resourceHandlerCallback */
 /** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */

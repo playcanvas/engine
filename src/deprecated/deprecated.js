@@ -37,7 +37,7 @@ import {
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { programlib } from '../graphics/program-lib/program-lib.js';
 import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
-import { GraphicsDevice } from '../graphics/webgl/graphics-device.js';
+import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';

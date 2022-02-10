@@ -20,7 +20,7 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
-import { GraphicsDevice } from '../graphics/webgl/graphics-device.js';
+import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -121,6 +121,7 @@ import {
     setApplication
 } from './globals.js';
 
+/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
@@ -330,7 +331,7 @@ class Application extends EventHandler {
          *
          * @type {GraphicsDevice}
          */
-        this.graphicsDevice = new GraphicsDevice(canvas, options.graphicsDeviceOptions);
+        this.graphicsDevice = new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(this.graphicsDevice);
 
