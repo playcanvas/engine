@@ -4,6 +4,9 @@ import { now } from '../../core/time.js';
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
+/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../shader.js').Shader} Shader */
+
 /**
  * A WebGL implementation of the Shader.
  *
