@@ -19,7 +19,6 @@ import {
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
-    SHADERTAG_MATERIAL,
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
@@ -35,12 +34,12 @@ import { createShaderFromCode } from '../program-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
 import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
-import { ShaderInput } from '../shader-input.js';
 import { Texture } from '../texture.js';
 import { GrabPass } from '../grab-pass.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
+import { WebglShader } from './webgl-shader.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -708,6 +707,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglIndexBuffer(indexBuffer);
     }
 
+    createShaderImpl(shader) {
+        return new WebglShader(shader);
+    }
+
     // #if _DEBUG
     updateMarker() {
         this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
@@ -1082,7 +1085,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Recompile all shaders (they'll be linked when they're next actually used)
         for (const shader of this.shaders) {
-            this.compileAndLinkShader(shader);
+            shader.restoreContext();
         }
 
         // Recreate buffer objects and reupload buffer data to the GPU
@@ -3240,261 +3243,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Compile and link a shader program.
-     *
-     * @param {Shader} shader - The shader to compile.
-     * @ignore
-     */
-    compileAndLinkShader(shader) {
-        const definition = shader.definition;
-        Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
-        Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
-
-        const glVertexShader = this.compileShaderSource(definition.vshader, true);
-        const glFragmentShader = this.compileShaderSource(definition.fshader, false);
-
-        const gl = this.gl;
-        const glProgram = gl.createProgram();
-
-        gl.attachShader(glProgram, glVertexShader);
-        gl.attachShader(glProgram, glFragmentShader);
-
-        const attrs = definition.attributes;
-        if (this.webgl2 && definition.useTransformFeedback) {
-            // Collect all "out_" attributes and use them for output
-            const outNames = [];
-            for (const attr in attrs) {
-                if (attrs.hasOwnProperty(attr)) {
-                    outNames.push("out_" + attr);
-                }
-            }
-            gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
-        }
-
-        // map all vertex input attributes to fixed locations
-        const locations = {};
-        for (const attr in attrs) {
-            if (attrs.hasOwnProperty(attr)) {
-                const semantic = attrs[attr];
-                const loc = semanticToLocation[semantic];
-                Debug.assert(!locations.hasOwnProperty(loc), `WARNING: Two attribues are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
-
-                locations[loc] = attr;
-                gl.bindAttribLocation(glProgram, loc, attr);
-            }
-        }
-
-        gl.linkProgram(glProgram);
-
-        // Cache the WebGL objects on the shader
-        shader._glVertexShader = glVertexShader;
-        shader._glFragmentShader = glFragmentShader;
-        shader._glProgram = glProgram;
-
-        // #if _PROFILER
-        this._shaderStats.linked++;
-        if (definition.tag === SHADERTAG_MATERIAL) {
-            this._shaderStats.materialShaders++;
-        }
-        // #endif
-    }
-
-    /**
-     * Compile and link a shader program and add it to a shader array managed by this device.
-     *
-     * @param {Shader} shader - The shader to compile and link.
-     * @ignore
-     */
-    createShader(shader) {
-        this.compileAndLinkShader(shader);
-
-        this.shaders.push(shader);
-    }
-
-    /**
-     * Free the WebGL resources associated with a shader.
-     *
-     * @param {Shader} shader - The shader to free.
-     * @ignore
-     */
-    destroyShader(shader) {
-        const idx = this.shaders.indexOf(shader);
-        if (idx !== -1) {
-            this.shaders.splice(idx, 1);
-        }
-
-        if (shader._glProgram) {
-            this.gl.deleteProgram(shader._glProgram);
-            shader._glProgram = null;
-            this.removeShaderFromCache(shader);
-        }
-    }
-
-    /**
-     * Truncate the WebGL shader compilation log to just include the error line plus the 5 lines
-     * before and after it.
-     *
-     * @param {string} src - The shader source code.
-     * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
-     * @returns {Array} An array where the first element is the 10 lines of code around the first
-     * detected error, and the second element an object storing the error messsage, line number and
-     * complete shader source.
-     * @private
-     */
-    _processError(src, infoLog) {
-        if (!src)
-            return "";
-
-        const lines = src.split('\n');
-        const error = { };
-        let code = '';
-        let from = 0;
-        let to = lines.length;
-
-        // if error is in the code, only show nearby lines instead of whole shader code
-        if (infoLog && infoLog.startsWith('ERROR:')) {
-            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
-            if (match) {
-                error.message = match[3];
-                error.line = parseInt(match[2], 10);
-
-                from = Math.max(0, error.line - 6);
-                to = Math.min(lines.length, error.line + 5);
-            }
-        }
-
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = from; i < to; i++) {
-            code += (i + 1) + ":\t" + lines[i] + '\n';
-        }
-
-        error.source = src;
-
-        return [code, error];
-    }
-
-    /**
-     * Check the compilation status of a shader.
-     *
-     * @param {Shader} shader - The shader to query.
-     * @param {WebGLShader} glShader - The WebGL shader.
-     * @param {string} source - The shader source code.
-     * @param {string} shaderType - The shader type. Can be 'vertex' or 'fragment'.
-     * @returns {boolean} True if the shader compiled successfully, false otherwise.
-     * @private
-     */
-    _isShaderCompiled(shader, glShader, source, shaderType) {
-        const gl = this.gl;
-
-        if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
-            const infoLog = gl.getShaderInfoLog(glShader);
-            const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
-            // #if _DEBUG
-            error.shader = shader;
-            console.error(message, error);
-            // #else
-            console.error(message);
-            // #endif
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Extract attribute and uniform information from a successfully linked shader.
-     *
-     * @param {Shader} shader - The shader to query.
-     * @returns {boolean} True if the shader was successfully queried and false otherwise.
-     * @ignore
-     */
-    postLink(shader) {
-        const gl = this.gl;
-
-        const glProgram = shader._glProgram;
-
-        const definition = shader.definition;
-
-        // #if _PROFILER
-        const startTime = now();
-        this.fire('shader:link:start', {
-            timestamp: startTime,
-            target: this
-        });
-        // #endif
-
-        // Check for compilation errors
-        if (!this._isShaderCompiled(shader, shader._glVertexShader, definition.vshader, "vertex"))
-            return false;
-
-        if (!this._isShaderCompiled(shader, shader._glFragmentShader, definition.fshader, "fragment"))
-            return false;
-
-        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
-
-            const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
-
-            // #if _DEBUG
-            console.error(message, definition);
-            // #else
-            console.error(message);
-            // #endif
-
-            return false;
-        }
-
-        let i, info, location, shaderInput;
-
-        // Query the program for each vertex buffer input (GLSL 'attribute')
-        i = 0;
-        const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
-        while (i < numAttributes) {
-            info = gl.getActiveAttrib(glProgram, i++);
-            location = gl.getAttribLocation(glProgram, info.name);
-
-            // Check attributes are correctly linked up
-            if (definition.attributes[info.name] === undefined) {
-                console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
-            }
-
-            shaderInput = new ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location);
-
-            shader.attributes.push(shaderInput);
-        }
-
-        // Query the program for each shader state (GLSL 'uniform')
-        i = 0;
-        const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
-        while (i < numUniforms) {
-            info = gl.getActiveUniform(glProgram, i++);
-            location = gl.getUniformLocation(glProgram, info.name);
-
-            shaderInput = new ShaderInput(this, info.name, this.pcUniformType[info.type], location);
-
-            if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
-                (this.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
-            ) {
-                shader.samplers.push(shaderInput);
-            } else {
-                shader.uniforms.push(shaderInput);
-            }
-        }
-
-        shader.ready = true;
-
-        // #if _PROFILER
-        const endTime = now();
-        this.fire('shader:link:end', {
-            timestamp: endTime,
-            target: this
-        });
-        this._shaderStats.compileTime += endTime - startTime;
-        // #endif
-
-        return true;
-    }
-
-    /**
      * Sets the active shader to be used during subsequent draw calls.
      *
      * @param {Shader} shader - The shader to set to assign to the device.
@@ -3504,7 +3252,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             if (shader.failed) {
                 return false;
-            } else if (!shader.ready && !this.postLink(shader)) {
+            } else if (!shader.ready && !shader.impl.postLink(this, shader)) {
                 shader.failed = true;
                 return false;
             }
@@ -3512,7 +3260,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.shader = shader;
 
             // Set the active shader
-            this.gl.useProgram(shader._glProgram);
+            this.gl.useProgram(shader.impl.glProgram);
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;

@@ -54,7 +54,7 @@ class Shader {
 
         this.init();
 
-        this.device.createShader(this);
+        this.impl = graphicsDevice.createShaderImpl(this);
     }
     /* eslint-enable jsdoc/check-types */
 
@@ -76,7 +76,7 @@ class Shader {
      * Frees resources associated with this shader.
      */
     destroy() {
-        this.device.destroyShader(this);
+        this.impl.destroy(this);
     }
 
     /**
@@ -86,6 +86,10 @@ class Shader {
      */
     loseContext() {
         this.init();
+    }
+
+    restoreContext() {
+        this.impl.restoreContext(this.device, this);
     }
 }
 
