@@ -19,7 +19,6 @@ import {
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN,
     SHADERTAG_MATERIAL,
     STENCILOP_KEEP,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
@@ -34,14 +33,10 @@ import {
 import { GraphicsDevice } from '../graphics-device.js';
 import { createShaderFromCode } from '../program-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
-import { programlib } from '../program-lib/program-lib.js';
 import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
-import { ProgramLibrary } from '../program-library.js';
-import { ScopeSpace } from '../scope-space.js';
 import { ShaderInput } from '../shader-input.js';
 import { Texture } from '../texture.js';
-import { VertexFormat } from '../vertex-format.js';
 import { GrabPass } from '../grab-pass.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
@@ -50,8 +45,6 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
 /** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
-
-const EVENT_RESIZE = 'resizecanvas';
 
 /**
  * Checks that an image's width and height do not exceed the max texture size. If they do, it will
@@ -220,13 +213,6 @@ function testTextureFloatHighPrecision(device) {
  */
 class WebglGraphicsDevice extends GraphicsDevice {
     /**
-     * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
-     *
-     * @type {HTMLCanvasElement}
-     */
-    canvas;
-
-    /**
      * The WebGL context managed by the graphics device. The type could also technically be
      * `WebGLRenderingContext` if WebGL 2.0 is not available. But in order for IntelliSense to be
      * able to function for all WebGL calls in the codebase, we specify `WebGL2RenderingContext`
@@ -236,70 +222,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     gl;
-
-    /**
-     * The maximum supported texture anisotropy setting.
-     *
-     * @type {number}
-     */
-    maxAnisotropy;
-
-    /**
-     * The maximum supported dimension of a cube map.
-     *
-     * @type {number}
-     */
-    maxCubeMapSize;
-
-    /**
-     * The maximum supported dimension of a texture.
-     *
-     * @type {number}
-     */
-    maxTextureSize;
-
-    /**
-     * The maximum supported dimension of a 3D texture (any axis).
-     *
-     * @type {number}
-     */
-    maxVolumeSize;
-
-    /**
-     * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
-     * 'lowp'.
-     *
-     * @type {string}
-     */
-    precision;
-
-    /**
-     * The scope namespace for shader attributes and variables.
-     *
-     * @type {ScopeSpace}
-     */
-    scope;
-
-    /**
-     * True if hardware instancing is supported.
-     *
-     * @type {boolean}
-     */
-    supportsInstancing;
-
-    /**
-     * True if 32-bit floating-point textures can be used as a frame buffer.
-     *
-     * @type {boolean}
-     */
-    textureFloatRenderable;
-
-    /**
-     * True if 16-bit floating-point textures can be used as a frame buffer.
-     *
-     * @type {boolean}
-     */
-    textureHalfFloatRenderable;
 
     /**
      * True if the WebGL context of this device is using the WebGL 2.0 API. If false, WebGL 1.0 is
@@ -343,25 +265,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      */
     constructor(canvas, options = {}) {
-        super();
+        super(canvas);
 
-        this.canvas = canvas;
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.defaultFramebuffer = null;
-        this._maxPixelRatio = 1;
-
-        // local width/height without pixelRatio applied
-        this._width = 0;
-        this._height = 0;
 
         this.updateClientRect();
-
-        // Array of WebGL objects that need to be re-initialized after a context restore event
-        this.shaders = [];
-        this.buffers = [];
-        this.textures = [];
-        this.targets = [];
 
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
@@ -676,13 +586,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.uniform4fv(uniform.locationId, value);
         };
 
-        // Create the ScopeNamespace for shader attributes and variables
-        this.scope = new ScopeSpace("Device");
-
-        this.programLib = new ProgramLibrary(this);
-        for (const generator in programlib)
-            this.programLib.register(generator, programlib[generator]);
-
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
         // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
@@ -705,34 +608,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.unmaskedRenderer === 'Mali-450 MP') {
             this.boneLimit = 34;
         }
-
-        // Profiler stats
-        this._drawCallsPerFrame = 0;
-        this._shaderSwitchesPerFrame = 0;
-        this._primsPerFrame = [];
-        for (let i = PRIMITIVE_POINTS; i <= PRIMITIVE_TRIFAN; i++) {
-            this._primsPerFrame[i] = 0;
-        }
-        this._renderTargetCreationTime = 0;
-
-        this._vram = {
-            // #if _PROFILER
-            texShadow: 0,
-            texAsset: 0,
-            texLightmap: 0,
-            // #endif
-            tex: 0,
-            vb: 0,
-            ib: 0
-        };
-
-        this._shaderStats = {
-            vsCompiled: 0,
-            fsCompiled: 0,
-            linked: 0,
-            materialShaders: 0,
-            compileTime: 0
-        };
 
         this.constantTexSource = this.scope.resolve("source");
 
@@ -779,8 +654,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.grabPass = new GrabPass(this, options.alpha);
         this.grabPass.create();
 
-        VertexFormat.init(this);
-
         // #if _DEBUG
         // list of textures that have already been reported as destroyed
         this._destroyedTextures = new Set();
@@ -826,8 +699,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // provide webgl implementation for the vertex buffer
-    createVertexBufferImpl(vertexBuffer) {
-        return new WebglVertexBuffer(vertexBuffer);
+    createVertexBufferImpl(vertexBuffer, format) {
+        return new WebglVertexBuffer();
     }
 
     // provide webgl implementation for the index buffer
@@ -1141,6 +1014,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     initializeContextCaches() {
+        super.initializeContextCaches();
+
         // Shader code to WebGL shader cache
         this.vertexShaderCache = {};
         this.fragmentShaderCache = {};
@@ -1149,10 +1024,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._vaoMap = new Map();
 
         this.boundVao = null;
-        this.indexBuffer = null;
-        this.vertexBuffers = [];
-        this.shader = null;
-        this.renderTarget = null;
         this.activeFramebuffer = null;
         this.feedback = null;
         this.transformFeedbackBuffer = null;
@@ -1222,10 +1093,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.grabPass.create();
     }
 
-    updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
-    }
-
     /**
      * Set the active rectangle for rendering on the specified device.
      *
@@ -1260,29 +1127,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.sw = w;
             this.sh = h;
         }
-    }
-
-    /**
-     * Retrieves the program library assigned to the specified graphics device.
-     *
-     * @returns {ProgramLibrary} The program library assigned to the device.
-     * @ignore
-     */
-    getProgramLibrary() {
-        return this.programLib;
-    }
-
-    /**
-     * Assigns a program library to the specified device. By default, a graphics device is created
-     * with a program library that manages all of the programs that are used to render any
-     * graphical primitives. However, this function allows the user to replace the existing program
-     * library with a new one.
-     *
-     * @param {ProgramLibrary} programLib - The program library to assign to the device.
-     * @ignore
-     */
-    setProgramLibrary(programLib) {
-        this.programLib = programLib;
     }
 
     /**
@@ -2729,34 +2573,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Sets the specified render target on the device. If null is passed as a parameter, the back
-     * buffer becomes the current target for all rendering operations.
-     *
-     * @param {RenderTarget} renderTarget - The render target to activate.
-     * @example
-     * // Set a render target to receive all rendering output
-     * device.setRenderTarget(renderTarget);
-     *
-     * // Set the back buffer to receive all rendering output
-     * device.setRenderTarget(null);
-     */
-    setRenderTarget(renderTarget) {
-        this.renderTarget = renderTarget;
-    }
-
-    /**
-     * Queries the currently set render target on the device.
-     *
-     * @returns {RenderTarget} The current render target.
-     * @example
-     * // Get the current render target
-     * var renderTarget = device.getRenderTarget();
-     */
-    getRenderTarget() {
-        return this.renderTarget;
-    }
-
-    /**
      * Queries whether depth testing is enabled.
      *
      * @returns {boolean} True if depth testing is enabled and false otherwise.
@@ -3752,47 +3568,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * specified width and height values will be multiplied by the value of
-     * {@link GraphicsDevice#maxPixelRatio} to give the final resultant width and height for the
-     * canvas.
-     *
-     * @param {number} width - The new width of the canvas.
-     * @param {number} height - The new height of the canvas.
-     * @ignore
-     */
-    resizeCanvas(width, height) {
-        this._width = width;
-        this._height = height;
-
-        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(EVENT_RESIZE, width, height);
-        }
-    }
-
-    /**
-     * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
-     * value of {@link GraphicsDevice#maxPixelRatio} is ignored.
-     *
-     * @param {number} width - The new width of the canvas.
-     * @param {number} height - The new height of the canvas.
-     * @ignore
-     */
-    setResolution(width, height) {
-        this._width = width;
-        this._height = height;
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.fire(EVENT_RESIZE, width, height);
-    }
-
-    /**
      * Frees memory from all shaders ever allocated with this device.
      *
      * @ignore
@@ -3883,20 +3658,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     get enableAutoInstancing() {
         return this._enableAutoInstancing;
-    }
-
-    /**
-     * Maximum pixel ratio.
-     *
-     * @type {number}
-     */
-    set maxPixelRatio(ratio) {
-        this._maxPixelRatio = ratio;
-        this.resizeCanvas(this._width, this._height);
-    }
-
-    get maxPixelRatio() {
-        return this._maxPixelRatio;
     }
 
     /**
