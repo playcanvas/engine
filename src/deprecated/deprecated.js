@@ -435,6 +435,10 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
     });
 });
 
+VertexFormat.prototype.update = function () {
+    Debug.deprecated('pc.VertexFormat.update is deprecated, and VertexFormat cannot be changed after it has been created.');
+};
+
 Object.defineProperties(Texture.prototype, {
     rgbm: {
         get: function () {
