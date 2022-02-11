@@ -5,7 +5,7 @@ import * as pc from '../../../../';
 class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
-    static ENGINE = 'DEBUG';
+    static ENGINE = 'PERFORMANCE';
 
     example(canvas: HTMLCanvasElement, pcx: any): void {
         // Create the application and start the update loop

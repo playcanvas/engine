@@ -66,8 +66,8 @@ class WebglShader {
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
-        const glVertexShader = device.compileShaderSource(definition.vshader, true);
-        const glFragmentShader = device.compileShaderSource(definition.fshader, false);
+        const glVertexShader = this.compileShaderSource(device, definition.vshader, true);
+        const glFragmentShader = this.compileShaderSource(device, definition.fshader, false);
 
         const gl = device.gl;
         const glProgram = gl.createProgram();
@@ -113,6 +113,55 @@ class WebglShader {
             device._shaderStats.materialShaders++;
         }
         // #endif
+    }
+
+    /**
+     * Compiles an individual shader.
+     *
+     * @param {string} src - The shader source code.
+     * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
+     * fragment shader.
+     * @returns {WebGLShader} The compiled shader.
+     * @private
+     */
+    compileShaderSource(device, src, isVertexShader) {
+        const gl = device.gl;
+        const shaderCache = isVertexShader ? device.vertexShaderCache : device.fragmentShaderCache;
+        let glShader = shaderCache[src];
+
+        if (!glShader) {
+            // #if _PROFILER
+            const startTime = now();
+            device.fire('shader:compile:start', {
+                timestamp: startTime,
+                target: device
+            });
+            // #endif
+
+            glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+
+            gl.shaderSource(glShader, src);
+            gl.compileShader(glShader);
+
+            shaderCache[src] = glShader;
+
+            // #if _PROFILER
+            const endTime = now();
+            device.fire('shader:compile:end', {
+                timestamp: endTime,
+                target: device
+            });
+            device._shaderStats.compileTime += endTime - startTime;
+
+            if (isVertexShader) {
+                device._shaderStats.vsCompiled++;
+            } else {
+                device._shaderStats.fsCompiled++;
+            }
+            // #endif
+        }
+
+        return glShader;
     }
 
     /**
