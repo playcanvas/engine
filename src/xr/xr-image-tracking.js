@@ -17,11 +17,11 @@ class XrImageTracking extends EventHandler {
      */
     _manager;
 
-     /**
-      * @type {boolean}
-      * @private
-      */
-    _supported;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!window.XRImageTrackingResult;
 
      /**
       * @type {boolean}
@@ -46,7 +46,6 @@ class XrImageTracking extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = platform.browser && !!window.XRImageTrackingResult;
 
         if (this._supported) {
             this._manager.on('start', this._onSessionStart, this);

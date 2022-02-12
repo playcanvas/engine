@@ -34,6 +34,165 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  */
 class XrManager extends EventHandler {
     /**
+     * @type {Application}
+     * @ignore
+     */
+    app;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!navigator.xr;
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, boolean>}
+     * @private
+     */
+    _available = {};
+    /* eslint-enable jsdoc/check-types */
+ 
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _type = null;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _spaceType = null;
+
+    /**
+     * @type {XRSession|null}
+     * @private
+     */
+    _session = null;
+
+    /**
+     * @type {XRWebGLLayer|null}
+     * @private
+     */
+    _baseLayer = null;
+
+    /**
+     * @type {XRReferenceSpace|null}
+     * @private
+     */
+    _referenceSpace = null;
+ 
+    /**
+     * Provides access to depth sensing capabilities.
+     *
+     * @type {XrDepthSensing}
+     * @ignore
+     */
+    depthSensing;
+
+    /**
+     * Provides access to DOM overlay capabilities.
+     *
+     * @type {XrDomOverlay}
+     * @ignore
+     */
+    domOverlay;
+
+    /**
+     * Provides the ability to perform hit tests on the representation of real world geometry
+     * of the underlying AR system.
+     *
+     * @type {XrHitTest}
+     */
+    hitTest;
+
+    /**
+     * Provides access to image tracking capabilities.
+     *
+     * @type {XrImageTracking}
+     * @ignore
+     */
+    imageTracking;
+
+    /**
+     * Provides access to plane detection capabilities.
+     *
+     * @type {XrPlaneDetection}
+     * @ignore
+     */
+    planeDetection;
+
+    /**
+     * Provides access to Input Sources.
+     *
+     * @type {XrInput}
+     */
+    input;
+
+    /**
+     * Provides access to light estimation capabilities.
+     *
+     * @type {XrLightEstimation}
+     * @ignore
+     */
+    lightEstimation;
+ 
+    /**
+     * @type {CameraComponent}
+     * @private
+     */
+    _camera = null;
+
+    /**
+     * @type {Array<*>}
+     * @ignore
+     */
+    views = [];
+
+    /**
+     * @type {Array<*>}
+     * @ignore
+     */
+    viewsPool = [];
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _localRotation = new Quat();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _depthNear = 0.1;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _depthFar = 1000;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _width = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _height = 0;
+     
+    /**
      * Create a new XrManager instance.
      *
      * @param {Application} app - The main application.
@@ -42,161 +201,20 @@ class XrManager extends EventHandler {
     constructor(app) {
         super();
 
-        /**
-         * @type {Application}
-         * @ignore
-         */
         this.app = app;
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._supported = platform.browser && !!navigator.xr;
-
-        /* eslint-disable jsdoc/check-types */
-        /**
-         * @type {Object.<string, boolean>}
-         * @private
-         */
-        this._available = { };
-        /* eslint-enable jsdoc/check-types */
 
         // Add all the supported session types
         this._available[XRTYPE_INLINE] = false;
         this._available[XRTYPE_VR] = false;
         this._available[XRTYPE_AR] = false;
 
-        /**
-         * @type {string|null}
-         * @private
-         */
-        this._type = null;
-        /**
-         * @type {string|null}
-         * @private
-         */
-        this._spaceType = null;
-        /**
-         * @type {XRSession|null}
-         * @private
-         */
-        this._session = null;
-        /**
-         * @type {XRWebGLLayer|null}
-         * @private
-         */
-        this._baseLayer = null;
-        /**
-         * @type {XRReferenceSpace|null}
-         * @private
-         */
-        this._referenceSpace = null;
-
-        /**
-         * Provides access to depth sensing capabilities.
-         *
-         * @type {XrDepthSensing}
-         * @ignore
-         */
         this.depthSensing = new XrDepthSensing(this);
-
-        /**
-         * Provides access to DOM overlay capabilities.
-         *
-         * @type {XrDomOverlay}
-         * @ignore
-         */
         this.domOverlay = new XrDomOverlay(this);
-
-        /**
-         * Provides the ability to perform hit tests on the representation of real world geometry
-         * of the underlying AR system.
-         *
-         * @type {XrHitTest}
-         */
         this.hitTest = new XrHitTest(this);
-
-        /**
-         * Provides access to image tracking capabilities.
-         *
-         * @type {XrImageTracking}
-         * @ignore
-         */
         this.imageTracking = new XrImageTracking(this);
-
-        /**
-         * Provides access to plane detection capabilities.
-         *
-         * @type {XrPlaneDetection}
-         * @ignore
-         */
         this.planeDetection = new XrPlaneDetection(this);
-
-        /**
-         * Provides access to Input Sources.
-         *
-         * @type {XrInput}
-         */
         this.input = new XrInput(this);
-
-        /**
-         * Provides access to light estimation capabilities.
-         *
-         * @type {XrLightEstimation}
-         * @ignore
-         */
         this.lightEstimation = new XrLightEstimation(this);
-
-        /**
-         * @type {CameraComponent}
-         * @private
-         */
-        this._camera = null;
-
-        /**
-         * @type {Array<*>}
-         * @ignore
-         */
-        this.views = [];
-        /**
-         * @type {Array<*>}
-         * @ignore
-         */
-        this.viewsPool = [];
-
-         /**
-          * @type {Vec3}
-          * @private
-          */
-        this._localPosition = new Vec3();
-        /**
-         * @type {Quat}
-         * @private
-         */
-        this._localRotation = new Quat();
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._depthNear = 0.1;
-        /**
-         * @type {number}
-         * @private
-         */
-        this._depthFar = 1000;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._width = 0;
-        /**
-         * @type {number}
-         * @private
-         */
-        this._height = 0;
 
         // TODO
         // 1. HMD class with its params

@@ -33,7 +33,7 @@ class XrHitTest extends EventHandler {
      * @type {boolean}
      * @private
      */
-    _supported;
+    _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
     /**
      * @type {XRSession}
@@ -58,7 +58,6 @@ class XrHitTest extends EventHandler {
         super();
 
         this.manager = manager;
-        this._supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
         if (this._supported) {
             this.manager.on('start', this._onSessionStart, this);

@@ -32,7 +32,7 @@ class XrPlaneDetection extends EventHandler {
      * @type {boolean}
      * @private
      */
-    _supported;
+    _supported = platform.browser && !!window.XRPlane;
 
     /**
      * @type {boolean}
@@ -62,8 +62,6 @@ class XrPlaneDetection extends EventHandler {
         super();
 
         this._manager = manager;
-
-        this._supported = platform.browser && !!window.XRPlane;
 
         if (this._supported) {
             this._manager.on('end', this._onSessionEnd, this);

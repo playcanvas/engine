@@ -34,7 +34,7 @@ class XrDomOverlay {
      * @type {boolean}
      * @private
      */
-    _supported;
+    _supported = platform.browser && !!window.XRDOMOverlayState;
 
     /**
      * @type {Element|null}
@@ -54,7 +54,6 @@ class XrDomOverlay {
      */
     constructor(manager) {
         this._manager = manager;
-        this._supported = platform.browser && !!window.XRDOMOverlayState;
     }
 
     /**
