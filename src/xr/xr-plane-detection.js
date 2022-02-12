@@ -23,6 +23,36 @@ import { XrPlane } from './xr-plane.js';
  */
 class XrPlaneDetection extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!window.XRPlane;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _available = false;
+
+    /**
+     * @type {Map<XRPlane, XrPlane>}
+     * @private
+     */
+    _planesIndex = new Map();
+
+    /**
+     * @type {XrPlane[]|null}
+     * @private
+     */
+    _planes = null;
+
+    /**
      * Create a new XrPlaneDetection instance.
      *
      * @param {XrManager} manager - WebXR Manager.
@@ -32,14 +62,6 @@ class XrPlaneDetection extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = platform.browser && !!window.XRPlane;
-        this._available = false;
-
-        // key - XRPlane (native plane does not have ID's)
-        // value - XrPlane
-        this._planesIndex = new Map();
-
-        this._planes = null;
 
         if (this._supported) {
             this._manager.on('end', this._onSessionEnd, this);
@@ -80,6 +102,7 @@ class XrPlaneDetection extends EventHandler {
      * });
      */
 
+    /** @private */
     _onSessionEnd() {
         if (this._planes) {
             for (let i = 0; i < this._planes.length; i++) {
@@ -96,6 +119,10 @@ class XrPlaneDetection extends EventHandler {
         }
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         let detectedPlanes;
 

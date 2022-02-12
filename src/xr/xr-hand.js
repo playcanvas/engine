@@ -9,7 +9,12 @@ import { XrJoint } from './xr-joint.js';
 import { Vec3 } from '../math/vec3.js';
 
 /** @typedef {import('./xr-input-source.js').XrInputSource} XrInputSource */
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
+/**
+ * @type {string[][]}
+ * @ignore
+ */
 let fingerJointIds = [];
 
 const vecA = new Vec3();
@@ -33,6 +38,56 @@ if (platform.browser && window.XRHand) {
  */
 class XrHand extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {XrInputSource}
+     * @private
+     */
+    _inputSource;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _tracking = false;
+
+    /**
+     * @type {XrFinger[]}
+     * @private
+     */
+    _fingers = [];
+
+    /**
+     * @type {XrJoint[]}
+     * @private
+     */
+    _joints = [];
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, XrJoint>}
+     * @private
+     */
+    _jointsById = {};
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * @type {XrJoint[]}
+     * @private
+     */
+    _tips = [];
+
+    /**
+     * @type {XrJoint|null}
+     * @private
+     */
+    _wrist = null;
+
+    /**
      * Represents a hand with fingers and joints.
      *
      * @param {XrInputSource} inputSource - Input Source that hand is related to.
@@ -45,15 +100,6 @@ class XrHand extends EventHandler {
 
         this._manager = inputSource._manager;
         this._inputSource = inputSource;
-
-        this._tracking = false;
-
-        this._fingers = [];
-        this._joints = [];
-        this._jointsById = {};
-        this._tips = [];
-
-        this._wrist = null;
 
         if (xrHand.get('wrist')) {
             const joint = new XrJoint(0, 'wrist', this, null);
@@ -95,6 +141,10 @@ class XrHand extends EventHandler {
      * @description Fired when tracking is lost.
      */
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         const xrInputSource = this._inputSource._xrInputSource;
 
@@ -188,6 +238,11 @@ class XrHand extends EventHandler {
         }
     }
 
+    /**
+     * @param {number} index - Finger index.
+     * @returns {boolean} True if finger is closed and false otherwise.
+     * @private
+     */
     _fingerIsClosed(index) {
         const finger = this._fingers[index];
         vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();
