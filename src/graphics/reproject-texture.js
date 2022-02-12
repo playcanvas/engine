@@ -364,7 +364,7 @@ class DeviceCache {
     }
 }
 
-// cache of samples. we store these seperately from textures since multiple devices can use the same
+// cache of samples. we store these separately from textures since multiple devices can use the same
 // set of samples.
 const samplesCache = new SimpleCache();
 

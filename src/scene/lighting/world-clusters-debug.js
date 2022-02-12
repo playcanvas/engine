@@ -103,7 +103,7 @@ class WorldClustersDebug {
 
                     if (count > 0) {
 
-                        // cube corneres
+                        // cube corners
                         min.x = boundsMin.x + step.x * x;
                         min.y = boundsMin.y + step.y * y;
                         min.z = boundsMin.z + step.z * z;
