@@ -89,7 +89,7 @@ class Channel3d extends Channel {
     }
 
     getDistanceModel() {
-        return this.pannel.distanceModel;
+        return this.panner.distanceModel;
     }
 
     setDistanceModel(distanceModel) {

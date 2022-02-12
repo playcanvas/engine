@@ -50,7 +50,7 @@ void main(void) {
     vec4 pixelRgbm = texture2D(source, vUv0);
 
     // lightmap specific optimization - skip pixels that were not baked
-    // this also allows dilate filter that work on the output of this to work correctly, as it depeonds on .a being zero
+    // this also allows dilate filter that work on the output of this to work correctly, as it depends on .a being zero
     // to dilate, which the following blur filter would otherwise modify
     if (pixelRgbm.a <= 0.0) {
         gl_FragColor = pixelRgbm;

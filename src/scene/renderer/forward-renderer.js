@@ -562,7 +562,7 @@ class ForwardRenderer {
         this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
     }
 
-    setLTCDirectionallLight(wtm, cnt, dir, campos, far) {
+    setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
         this.lightPos[cnt][0] = campos.x - dir.x * far;
         this.lightPos[cnt][1] = campos.y - dir.y * far;
         this.lightPos[cnt][2] = campos.z - dir.z * far;
@@ -598,7 +598,7 @@ class ForwardRenderer {
 
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
-            // Directionals shine down the negative Y axis
+            // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
@@ -608,7 +608,7 @@ class ForwardRenderer {
 
             if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
                 // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
-                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
+                this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
             }
 
             if (directional.castShadows) {

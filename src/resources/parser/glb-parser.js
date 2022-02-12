@@ -1052,7 +1052,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     const material = new StandardMaterial();
 
-    // glTF dooesn't define how to occlude specular
+    // glTF doesn't define how to occlude specular
     material.occludeSpecular = true;
 
     material.diffuseTint = true;

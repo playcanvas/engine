@@ -274,7 +274,7 @@ vec4 reproject() {
         vec2 sphu = dFdx(sph);
         vec2 sphv = dFdy(sph);
 
-        // TODO: check this declartion works on old old devices.
+        // TODO: check this declaration works on old devices.
         // might need to be placed globally or be made a #define
         const float NUM_SAMPLES_SQRT = sqrt(float(NUM_SAMPLES));
 

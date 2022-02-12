@@ -372,7 +372,7 @@ class RenderComponent extends Component {
         let layer;
 
         if (this._meshInstances) {
-            // remove all meshinstances from old layers
+            // remove all mesh instances from old layers
             for (let i = 0; i < this._layers.length; i++) {
                 layer = layers.getLayerById(this._layers[i]);
                 if (layer) {

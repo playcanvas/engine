@@ -231,7 +231,7 @@ const standard = {
     },
 
     // handles directional map shadow coordinate generation, including cascaded shadows
-    _directionalShadowMapProjection: function (light, shadowCoordArgs, shadowParamArg, lightIndex, coordsFunctioName) {
+    _directionalShadowMapProjection: function (light, shadowCoordArgs, shadowParamArg, lightIndex, coordsFunctionName) {
 
         // for shadow cascades
         let code = "";
@@ -242,7 +242,7 @@ const standard = {
         }
 
         // shadow coordinate generation
-        code += coordsFunctioName + shadowCoordArgs;
+        code += coordsFunctionName + shadowCoordArgs;
 
         // stop shadow at the far distance
         code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
@@ -428,7 +428,7 @@ const standard = {
                 code += "   gl_FragColor = packFloat(depth);\n";
             }
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
-            code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
+            code += "   gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
             if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.webgl2) {
