@@ -1,4 +1,4 @@
-import { defineProtoFunc } from "./defineProtoFunc";
+import { defineProtoFunc } from "./defineProtoFunc.js";
 
 const typedArrays = [
     Int8Array,

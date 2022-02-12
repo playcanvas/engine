@@ -1,4 +1,4 @@
-import { defineProtoFunc } from "./defineProtoFunc";
+import { defineProtoFunc } from "./defineProtoFunc.js";
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith#Polyfill
 defineProtoFunc(String, 'endsWith', function(search, this_len) {

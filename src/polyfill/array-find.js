@@ -1,4 +1,4 @@
-import { defineProtoFunc } from "./defineProtoFunc";
+import { defineProtoFunc } from "./defineProtoFunc.js";
 
 // https://tc39.github.io/ecma262/#sec-array.prototype.find
 defineProtoFunc(Array, 'find', function(predicate) {
