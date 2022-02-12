@@ -25,6 +25,90 @@ for (let i = 0; i < tipJointIds.length; i++) {
  */
 class XrJoint {
     /**
+     * @type {number}
+     * @private
+     */
+    _index;
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _id;
+
+    /**
+     * @type {XrHand}
+     * @private
+     */
+    _hand;
+
+    /**
+     * @type {XrFinger}
+     * @private
+     */
+    _finger;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _wrist;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _tip;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _radius = null;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _localTransform = new Mat4();
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _worldTransform = new Mat4();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _localRotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = true;
+
+    /**
      * Create an XrJoint instance.
      *
      * @param {number} index - Index of a joint within a finger.
@@ -37,26 +121,16 @@ class XrJoint {
     constructor(index, id, hand, finger = null) {
         this._index = index;
         this._id = id;
-
         this._hand = hand;
         this._finger = finger;
         this._wrist = id === 'wrist';
         this._tip = this._finger && !!tipJointIdsIndex[id];
-
-        this._radius = null;
-
-        this._localTransform = new Mat4();
-        this._worldTransform = new Mat4();
-
-        this._localPosition = new Vec3();
-        this._localRotation = new Quat();
-
-        this._position = new Vec3();
-        this._rotation = new Quat();
-
-        this._dirtyLocal = true;
     }
 
+    /**
+     * @param {*} pose - XRJointPose of this joint.
+     * @ignore
+     */
     update(pose) {
         this._dirtyLocal = true;
         this._radius = pose.radius;
@@ -64,6 +138,7 @@ class XrJoint {
         this._localRotation.copy(pose.transform.orientation);
     }
 
+    /** @private */
     _updateTransforms() {
         if (this._dirtyLocal) {
             this._dirtyLocal = false;

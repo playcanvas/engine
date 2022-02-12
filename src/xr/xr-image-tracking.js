@@ -12,6 +12,30 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  */
 class XrImageTracking extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+     /**
+      * @type {boolean}
+      * @private
+      */
+    _supported;
+
+     /**
+      * @type {boolean}
+      * @private
+      */
+    _available = false;
+
+    /**
+     * @type {XrTrackedImage[]}
+     * @private
+     */
+    _images = [];
+
+    /**
      * Image Tracking provides the ability to track real world images by provided image samples and
      * their estimate sizes.
      *
@@ -23,9 +47,6 @@ class XrImageTracking extends EventHandler {
 
         this._manager = manager;
         this._supported = platform.browser && !!window.XRImageTrackingResult;
-        this._available = false;
-
-        this._images = [];
 
         if (this._supported) {
             this._manager.on('start', this._onSessionStart, this);
@@ -78,6 +99,7 @@ class XrImageTracking extends EventHandler {
         }
     }
 
+    /** @private */
     _onSessionStart() {
         this._manager.session.getTrackedImageScores().then((images) => {
             this._available = true;
@@ -91,20 +113,27 @@ class XrImageTracking extends EventHandler {
         });
     }
 
+    /** @private */
     _onSessionEnd() {
         this._available = false;
 
         for (let i = 0; i < this._images.length; i++) {
-            this._images[i]._pose = null;
-            this._images[i]._measuredWidth = 0;
+            const image = this._images[i];
+            image._pose = null;
+            image._measuredWidth = 0;
 
-            if (this._images[i]._tracking) {
-                this._images[i]._tracking = false;
-                this._images[i].fire('untracked');
+            if (image._tracking) {
+                image._tracking = false;
+                image.fire('untracked');
             }
         }
     }
 
+    /**
+     * @param {Function} callback - Function to call when all images have been prepared as image
+     * bitmaps.
+     * @ignore
+     */
     prepareImages(callback) {
         if (this._images.length) {
             Promise.all(this._images.map(function (trackedImage) {
@@ -119,6 +148,10 @@ class XrImageTracking extends EventHandler {
         }
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (!this._available) return;
 
@@ -131,7 +164,6 @@ class XrImageTracking extends EventHandler {
             const trackedImage = this._images[results[i].index];
             trackedImage._emulated = results[i].trackingState === 'emulated';
             trackedImage._measuredWidth = results[i].measuredWidthInMeters;
-            trackedImage._dirtyTransform = true;
             trackedImage._pose = frame.getPose(results[i].imageSpace, this._manager._referenceSpace);
         }
 

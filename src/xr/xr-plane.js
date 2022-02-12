@@ -2,6 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 /** @typedef {import('./xr-plane-detection.js').XrPlaneDetection} XrPlaneDetection */
 
 let ids = 0;
@@ -12,26 +13,69 @@ let ids = 0;
  */
 class XrPlane extends EventHandler {
     /**
+     * @type {number}
+     * @private
+     */
+    _id;
+
+    /**
+     * @type {XrPlaneDetection}
+     * @private
+     */
+    _planeDetection;
+
+    /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {XRPlane}
+     * @private
+     */
+    _xrPlane;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastChangedTime;
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _orientation;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
      * Create a new XrPlane instance.
      *
      * @param {XrPlaneDetection} planeDetection - Plane detection system.
-     * @param {object} xrPlane - XRPlane that is instantiated by WebXR system.
+     * @param {*} xrPlane - XRPlane that is instantiated by WebXR system.
      * @hideconstructor
      */
     constructor(planeDetection, xrPlane) {
         super();
 
         this._id = ++ids;
-
         this._planeDetection = planeDetection;
         this._manager = this._planeDetection._manager;
-
         this._xrPlane = xrPlane;
-        this._lastChangedTime = this._xrPlane.lastChangedTime;
-        this._orientation = this._xrPlane.orientation;
-
-        this._position = new Vec3();
-        this._rotation = new Quat();
+        this._lastChangedTime = xrPlane.lastChangedTime;
+        this._orientation = xrPlane.orientation;
     }
 
     /**
@@ -54,10 +98,15 @@ class XrPlane extends EventHandler {
      * });
      */
 
+    /** @ignore */
     destroy() {
         this.fire('remove');
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         const pose = frame.getPose(this._xrPlane.planeSpace, this._manager._referenceSpace);
         if (pose) {

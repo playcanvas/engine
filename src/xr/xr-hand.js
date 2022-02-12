@@ -95,6 +95,10 @@ class XrHand extends EventHandler {
      * @description Fired when tracking is lost.
      */
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         const xrInputSource = this._inputSource._xrInputSource;
 
@@ -188,6 +192,11 @@ class XrHand extends EventHandler {
         }
     }
 
+    /**
+     * @param {number} index - Finger index.
+     * @returns {boolean} True if finger is closed and false otherwise.
+     * @private
+     */
     _fingerIsClosed(index) {
         const finger = this._fingers[index];
         vecA.sub2(finger.joints[0]._localPosition, finger.joints[1]._localPosition).normalize();

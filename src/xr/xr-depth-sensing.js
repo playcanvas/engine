@@ -66,6 +66,72 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  */
 class XrDepthSensing extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+     /**
+      * @type {boolean}
+      * @private
+      */
+    _available = false;
+
+    /**
+     * @type {XRCPUDepthInformation|null}
+     * @private
+     */
+    _depthInfoCpu = null;
+
+    /**
+     * @type {XRCPUDepthInformation|null}
+     * @private
+     */
+    _depthInfoGpu = null;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _usage = null;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _dataFormat = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _matrixDirty = false;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _matrix = new Mat4();
+
+    /**
+     * @type {Uint8Array}
+     * @private
+     */
+    _emptyBuffer = new Uint8Array(32);
+
+    /**
+     * @type {Uint8Array|null}
+     * @private
+     */
+    _depthBuffer = null;
+
+    /**
+     * @type {Texture}
+     * @private
+     */
+    _texture;
+
+    /**
      * Create a new XrDepthSensing instance.
      *
      * @param {XrManager} manager - WebXR Manager.
@@ -75,21 +141,8 @@ class XrDepthSensing extends EventHandler {
         super();
 
         this._manager = manager;
-        this._available = false;
 
-        this._depthInfoCpu = null;
-        this._depthInfoGpu = null;
-
-        this._usage = null;
-        this._dataFormat = null;
-
-        this._matrixDirty = false;
-        this._matrix = new Mat4();
-        this._emptyBuffer = new Uint8Array(32);
-        this._depthBuffer = null;
-
-        // TODO
-        // data format can be different
+        // TODO: data format can be different
         this._texture = new Texture(this._manager.app.graphicsDevice, {
             format: PIXELFORMAT_L8_A8,
             mipmaps: false,
@@ -129,6 +182,7 @@ class XrDepthSensing extends EventHandler {
      * });
      */
 
+    /** @private */
     _onSessionStart() {
         const session = this._manager.session;
 
@@ -144,6 +198,7 @@ class XrDepthSensing extends EventHandler {
         }
     }
 
+    /** @private */
     _onSessionEnd() {
         this._depthInfoCpu = null;
         this._depthInfoGpu = null;
@@ -163,6 +218,7 @@ class XrDepthSensing extends EventHandler {
         this._texture.upload();
     }
 
+    /** @private */
     _updateTexture() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
 
@@ -198,6 +254,11 @@ class XrDepthSensing extends EventHandler {
         }
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {*} view - First XRView of viewer XRPose.
+     * @ignore
+     */
     update(frame, view) {
         if (!this._usage)
             return;
@@ -287,10 +348,22 @@ class XrDepthSensing extends EventHandler {
         return this._available;
     }
 
+    /**
+     * Whether the usage is CPU or GPU.
+     *
+     * @type {string}
+     * @ignore
+     */
     get usage() {
         return this._usage;
     }
 
+    /**
+     * The depth sensing data format.
+     *
+     * @type {string}
+     * @ignore
+     */
     get dataFormat() {
         return this._dataFormat;
     }
