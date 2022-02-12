@@ -52,7 +52,7 @@ class XrManager extends EventHandler {
      */
     _available = {};
     /* eslint-enable jsdoc/check-types */
- 
+
     /**
      * @type {string|null}
      * @private
@@ -82,7 +82,7 @@ class XrManager extends EventHandler {
      * @private
      */
     _referenceSpace = null;
- 
+
     /**
      * Provides access to depth sensing capabilities.
      *
@@ -137,7 +137,7 @@ class XrManager extends EventHandler {
      * @ignore
      */
     lightEstimation;
- 
+
     /**
      * @type {CameraComponent}
      * @private
@@ -191,7 +191,7 @@ class XrManager extends EventHandler {
      * @private
      */
     _height = 0;
-     
+
     /**
      * Create a new XrManager instance.
      *

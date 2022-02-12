@@ -2,7 +2,6 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 /** @typedef {import('./xr-plane-detection.js').XrPlaneDetection} XrPlaneDetection */
 
 let ids = 0;
@@ -23,12 +22,6 @@ class XrPlane extends EventHandler {
      * @private
      */
     _planeDetection;
-
-    /**
-     * @type {XrManager}
-     * @private
-     */
-    _manager;
 
     /**
      * @type {XRPlane}
@@ -72,7 +65,6 @@ class XrPlane extends EventHandler {
 
         this._id = ++ids;
         this._planeDetection = planeDetection;
-        this._manager = this._planeDetection._manager;
         this._xrPlane = xrPlane;
         this._lastChangedTime = xrPlane.lastChangedTime;
         this._orientation = xrPlane.orientation;
@@ -108,7 +100,8 @@ class XrPlane extends EventHandler {
      * @ignore
      */
     update(frame) {
-        const pose = frame.getPose(this._xrPlane.planeSpace, this._manager._referenceSpace);
+        const manager = this._planeDetection._manager;
+        const pose = frame.getPose(this._xrPlane.planeSpace, manager._referenceSpace);
         if (pose) {
             this._position.copy(pose.transform.position);
             this._rotation.copy(pose.transform.orientation);
