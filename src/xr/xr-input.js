@@ -23,6 +23,12 @@ class XrInput extends EventHandler {
     _inputSources = [];
 
     /**
+     * @type {Function}
+     * @private
+     */
+    _onInputSourcesChangeEvt;
+
+    /**
      * Create a new XrInput instance.
      *
      * @param {XrManager} manager - WebXR Manager.
