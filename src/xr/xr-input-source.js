@@ -8,6 +8,7 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
+/** @typedef {import('../framework/entity.js').Entity} Entity */
 /** @typedef {import('./xr-hit-test.js').xrHitTestStartCallback} xrHitTestStartCallback */
 /** @typedef {import('./xr-hit-test-source.js').XrHitTestSource} XrHitTestSource */
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
@@ -107,6 +108,12 @@ class XrInputSource extends EventHandler {
      * @private
      */
     _dirtyLocal = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyRay = false;
 
     /**
      * @type {boolean}
