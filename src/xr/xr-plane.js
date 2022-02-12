@@ -140,7 +140,7 @@ class XrPlane extends EventHandler {
      * @type {number}
      */
     get id() {
-        return this.id;
+        return this._id;
     }
 
     /**
