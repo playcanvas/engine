@@ -266,24 +266,26 @@ class Texture {
      */
     destroy() {
 
-        // stop tracking the texture
-        const device = this.device;
-        const idx = device.textures.indexOf(this);
-        if (idx !== -1) {
-            device.textures.splice(idx, 1);
+        if (this.device) {
+            // stop tracking the texture
+            const device = this.device;
+            const idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
+            // Remove texture from any uniforms
+            device.scope.removeValue(this);
+
+            // destroy implementation
+            this.impl.destroy(device);
+
+            // Update texture stats
+            this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+
+            this._levels = null;
+            this.device = null;
         }
-
-        // Remove texture from any uniforms
-        device.scope.removeValue(this);
-
-        // destroy implementation
-        this.impl.destroy(device);
-
-        // Update texture stats
-        this.adjustVramSizeTracking(device._vram, -this._gpuSize);
-
-        this._levels = null;
-        this.device = null;
     }
 
     /**
