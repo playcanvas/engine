@@ -159,6 +159,18 @@ class GraphicsDevice extends EventHandler {
             this.programLib.register(generator, programlib[generator]);
     }
 
+    destroy() {
+        // fire the destroy event.
+        // textures and other device resources may destroy themselves in response.
+        this.fire('destroy');
+    }
+
+    // executes after the extended classes have executed their destroy function
+    postDestroy() {
+        this.scope = null;
+        this.canvas = null;
+    }
+
     // don't stringify GraphicsDevice to JSON by JSON.stringify
     toJSON(key) {
         return undefined;

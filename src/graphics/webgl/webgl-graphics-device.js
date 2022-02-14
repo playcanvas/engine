@@ -627,11 +627,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Destroy the graphics device.
      */
     destroy() {
+        super.destroy();
         const gl = this.gl;
-
-        // fire the destroy event.
-        // textures and other device resources may destroy themselves in response.
-        this.fire('destroy');
 
         this.grabPass.destroy();
 
@@ -648,9 +645,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._contextLostHandler = null;
         this._contextRestoredHandler = null;
 
-        this.scope = null;
-        this.canvas = null;
         this.gl = null;
+
+        super.postDestroy();
     }
 
     // provide webgl implementation for the vertex buffer
