@@ -37,6 +37,18 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * @augments EventHandler
  */
 class ScriptType extends EventHandler {
+    /** @private */
+    _enabled;
+
+    /** @private */
+    _enabledOld;
+
+    /** @private */
+    _initialized;
+
+    /** @private */
+    _postInitialized;
+
     /**
      * Create a new ScriptType instance.
      *
@@ -94,6 +106,7 @@ class ScriptType extends EventHandler {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }
 
+    /** @private */
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
         Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
@@ -112,16 +125,26 @@ class ScriptType extends EventHandler {
          */
         this.entity = args.entity;
 
+        /** @private */
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
+        /** @private */
         this._enabledOld = this.enabled;
+        /** @private */
         this.__destroyed = false;
+        /** @private */
         this.__attributes = { };
+        /** @private */
         this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
+        /** @private */
         this.__scriptType = script;
 
-        // the order in the script component that the
-        // methods of this script instance will run relative to
-        // other script instances in the component
+        /**
+         * The order in the script component that the methods of this script instance will run
+         * relative to other script instances in the component.
+         *
+         * @type {number}
+         * @private
+         */
         this.__executionOrder = -1;
     }
 
@@ -133,6 +156,7 @@ class ScriptType extends EventHandler {
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
 
+    /** @private */
     static __getScriptName(constructorFn) {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
@@ -169,7 +193,7 @@ class ScriptType extends EventHandler {
         return this.__attributes;
     }
 
-    // initialize attributes
+    /** @private */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw)
             return;
@@ -216,58 +240,39 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @callback scriptTypeInitializeCallback
+     * @function
+     * @name ScriptType#[initialize]
+     * @description Called when script is about to run for the first time.
      */
 
     /**
-     * @callback scriptTypeUpdateCallback
+     * @function
+     * @name ScriptType#[postInitialize]
+     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
+
+    /**
+     * @function
+     * @name ScriptType#[update]
+     * @description Called for enabled (running state) scripts on each tick.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
-     * @callback scriptTypeSwapCallback
-     * @param {ScriptType} old - The delta time in seconds since the last frame.
+     * @function
+     * @name ScriptType#[postUpdate]
+     * @description Called for enabled (running state) scripts on each tick, after update.
+     * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
-     * Called when script is about to run for the first time.
-     *
-     * @type {scriptTypeInitializeCallback}
+     * @function
+     * @name ScriptType#[swap]
+     * @description Called when a ScriptType that already exists in the registry
+     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+     * then it will be executed to perform hot-reload at runtime.
+     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
      */
-    initialize;
-
-    /**
-     * Called after all initialize methods are executed in the same tick or enabling chain of actions.
-     *
-     * @type {scriptTypeInitializeCallback}
-     */
-    postInitialize;
-
-    /**
-     * Called for enabled (running state) scripts on each tick. It is passed the delta time in
-     * seconds since the last frame.
-     *
-     * @type {scriptTypeUpdateCallback}
-     */
-    update;
-
-    /**
-     * Called for enabled (running state) scripts on each tick, after update. It is passed the
-     * delta time in seconds since the last frame.
-     *
-     * @type {scriptTypeUpdateCallback}
-     */
-    postUpdate;
-
-    /**
-     * Called when a ScriptType that already exists in the registry gets redefined. If the new
-     * ScriptType has a `swap` method in its prototype, then it will be executed to perform
-     * hot-reload at runtime. It is passed the old instance of the scriptType to copy data to the
-     * new instance.
-     *
-     * @type {scriptTypeSwapCallback}
-     */
-    swap;
 
     /**
      * @event
