@@ -7,16 +7,32 @@ import { VrDisplay } from './vr-display.js';
 /**
  * Manage and update {@link VrDisplay}s that are attached to this device.
  *
- * @property {VrDisplay[]} displays The list of {@link VrDisplay}s that are attached to this
- * device.
- * @property {VrDisplay} display The default {@link VrDisplay} to be used. Usually the first in the
- * `displays` list.
- * @property {boolean} isSupported Reports whether this device supports the WebVR API.
  * @augments EventHandler
  * @deprecated
  * @ignore
  */
 class VrManager extends EventHandler {
+    /**
+     * displays The list of {@link VrDisplay}s that are attached to this device.
+     *
+     * @type {VrDisplay[]}
+     */
+    displays = [];
+
+    /**
+     * The default {@link VrDisplay} to be used. Usually the first in the `displays` list.
+     *
+     * @type {VrDisplay}
+     */
+    display = null;
+
+    /**
+     * Reports whether this device supports the WebVR API.
+     *
+     * @type {boolean}
+     */
+    isSupported;
+
     /**
      * Create a new VrManager instance.
      *
@@ -25,13 +41,11 @@ class VrManager extends EventHandler {
     constructor(app) {
         super();
 
-        this.isSupported = VrManager.isSupported;
-
         this._index = {};
-        this.displays = [];
-        this.display = null; // primary display (usually the first in list)
 
         this._app = app;
+
+        this.isSupported = VrManager.isSupported;
 
         // bind functions for event callbacks
         this._onDisplayConnect = this._onDisplayConnect.bind(this);

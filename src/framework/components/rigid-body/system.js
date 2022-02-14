@@ -155,12 +155,53 @@ const _schema = ['enabled'];
  * valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
  *
- * @property {Vec3} gravity The world space vector representing global gravity in the physics
- * simulation. Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on
- * Earth.
  * @augments ComponentSystem
  */
 class RigidBodyComponentSystem extends ComponentSystem {
+    /**
+     * @type {number}
+     * @ignore
+     */
+    maxSubSteps = 10;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    fixedTimeStep = 1 / 60;
+
+    /**
+     * The world space vector representing global gravity in the physics simulation. Defaults to
+     * [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
+     *
+     * @type {Vec3}
+     */
+    gravity = new Vec3(0, -9.81, 0);
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _dynamic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _kinematic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _triggers = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _compounds = [];
+
     /**
      * Create a new RigidBodyComponentSystem.
      *
@@ -180,16 +221,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool = null;
 
         this.schema = _schema;
-
-        this.maxSubSteps = 10;
-        this.fixedTimeStep = 1 / 60;
-        this.gravity = new Vec3(0, -9.81, 0);
-
-        // Arrays of pc.RigidBodyComponents filtered on body type
-        this._dynamic = [];
-        this._kinematic = [];
-        this._triggers = [];
-        this._compounds = [];
 
         this.collisions = {};
         this.frameCollisions = {};

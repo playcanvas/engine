@@ -15,10 +15,16 @@ const _schema = ['enabled'];
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
  * active cameras.
  *
- * @property {CameraComponent[]} cameras Holds all the active camera components.
  * @augments ComponentSystem
  */
 class CameraComponentSystem extends ComponentSystem {
+    /**
+     * Holds all the active camera components.
+     *
+     * @type {CameraComponent[]}
+     */
+    cameras = [];
+
     /**
      * Create a new CameraComponentSystem instance.
      *
@@ -33,9 +39,6 @@ class CameraComponentSystem extends ComponentSystem {
         this.DataType = CameraComponentData;
 
         this.schema = _schema;
-
-        // holds all the active camera components
-        this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
