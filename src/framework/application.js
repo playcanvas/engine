@@ -1,4 +1,4 @@
-import { ApplicationLite } from "./application-lite.js";
+import { ApplicationLite } from "./app-base.js";
 import { script } from './script.js';
 
 import { AnimationComponentSystem } from './components/animation/system.js';

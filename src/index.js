@@ -209,7 +209,7 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js'
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
 export { Application } from './framework/application.js';
-export { app } from './framework/application-lite.js';
+export { app } from './framework/app-base.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './anim/controller/constants.js';

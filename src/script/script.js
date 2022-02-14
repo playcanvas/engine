@@ -4,7 +4,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { ScriptHandler } from '../resources/script.js';
 
 import { script } from '../framework/script.js';
-import { ApplicationLite } from '../framework/application-lite.js';
+import { ApplicationLite } from '../framework/app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
