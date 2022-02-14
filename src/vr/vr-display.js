@@ -28,17 +28,32 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
  * present content on a separate screen or a phone which can display content full screen on the
  * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
  *
- * @property {number} id An identifier for this distinct VRDisplay.
- * @property {*} display The native VRDisplay object from the WebVR API.
- * @property {boolean} presenting True if this display is currently presenting VR content.
- * @property {VRDisplayCapabilities} capabilities Returns the
- * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
- * from the VRDisplay. This can be used to determine what features are available on this display.
  * @augments EventHandler
  * @deprecated
  * @ignore
  */
 class VrDisplay extends EventHandler {
+    /**
+     * An identifier for this distinct VRDisplay.
+     *
+     * @type {number}
+     */
+    id;
+
+    /**
+     * The native VRDisplay object from the WebVR API.
+     *
+     * @type {*}
+     */
+    display;
+
+    /**
+     * True if this display is currently presenting VR content.
+     *
+     * @type {boolean}
+     */
+    presenting = false;
+
     /**
      * Create a new VrDisplay instance.
      *
@@ -79,8 +94,6 @@ class VrDisplay extends EventHandler {
         this.combinedViewInv = new Mat4();
         this.combinedFov = 0;
         this.combinedAspect = 0;
-
-        this.presenting = false;
 
         this._presentChange = (event) => {
             let display;
@@ -342,6 +355,13 @@ class VrDisplay extends EventHandler {
         if (this.display) return this._frameData;
     }
 
+    /**
+     * Returns the [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities)
+     * object from the VRDisplay. This can be used to determine what features are available on this
+     * display.
+     *
+     * @type {*}
+     */
     get capabilities() {
         if (this.display) return this.display.capabilities;
         return {};

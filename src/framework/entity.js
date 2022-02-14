@@ -203,6 +203,45 @@ class Entity extends GraphNode {
      */
     sprite;
 
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * Component storage.
+     *
+     * @type {Object.<string, Component>}
+     * @ignore
+     */
+    c = {};
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * @type {Application}
+     * @private
+     */
+    _app;
+
+    /**
+     * Used by component systems to speed up destruction.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _destroying = false;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _guid = null;
+
+    /**
+     * Used to differentiate between the entities of a template root instance, which have it set to
+     * true, and the cloned instance entities (set to false).
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _template = false;
+
     /**
      * Create a new Entity.
      *
@@ -239,25 +278,15 @@ class Entity extends GraphNode {
         super(name);
 
         if (name instanceof Application) app = name;
-        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
-        this.c = {}; // Component storage
 
-        this._app = app; // store app
         if (!app) {
-            this._app = Application.getApplication(); // get the current application
-            if (!this._app) {
+            app = Application.getApplication(); // get the current application
+            if (!app) {
                 throw new Error("Couldn't find current application");
             }
         }
 
-        this._guid = null;
-
-        // used by component systems to speed up destruction
-        this._destroying = false;
-
-        // used to differentiate between the entities of a template root instance,
-        // which have it set to true, and the cloned instance entities (set to false)
-        this._template = false;
+        this._app = app;
     }
 
     /**
@@ -409,6 +438,11 @@ class Entity extends GraphNode {
         index[this._guid] = this;
     }
 
+    /**
+     * @param {GraphNode} node - The node to update.
+     * @param {boolean} enabled - Enable or disable the node.
+     * @private
+     */
     _notifyHierarchyStateChanged(node, enabled) {
         let enableFirst = false;
         if (node === this && this._app._enableList.length === 0)
@@ -439,6 +473,10 @@ class Entity extends GraphNode {
         }
     }
 
+    /**
+     * @param {boolean} enabled - Enable or disable the node.
+     * @private
+     */
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);
 
@@ -458,6 +496,7 @@ class Entity extends GraphNode {
         }
     }
 
+    /** @private */
     _onHierarchyStatePostChanged() {
         // post enable all the components
         const components = this.c;
@@ -559,6 +598,13 @@ class Entity extends GraphNode {
         return clone;
     }
 
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @param {Object.<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
+     * entities.
+     * @returns {Entity} A new Entity which is a deep copy of the original.
+     * @private
+     */
     _cloneRecursively(duplicatedIdsMap) {
         const clone = new Entity(this._app);
         super._cloneInternal(clone);
@@ -579,6 +625,7 @@ class Entity extends GraphNode {
 
         return clone;
     }
+    /* eslint-enable jsdoc/check-types */
 }
 
 // When an entity that has properties that contain references to other

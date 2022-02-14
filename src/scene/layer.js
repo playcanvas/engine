@@ -13,6 +13,7 @@ import { Material } from './materials/material.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
+/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 
 let keyA, keyB, sortPos, sortDir;
@@ -99,9 +100,6 @@ class InstanceList {
  * lights and cameras, their render settings and also defines custom callbacks before, after or
  * during rendering. Layers are organized inside {@link LayerComposition} in a desired order.
  *
- * @property {boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
- * @property {string} name Name of the layer. Can be used in
- * {@link LayerComposition#getLayerByName}.
  * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-
  * transparent) mesh instances before rendering. Can be:
  *
@@ -133,12 +131,6 @@ class InstanceList {
  * Defaults to {@link SHADER_FORWARD}.
  * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch
  * of mesh instances without lighting, skinning and morphing (faster).
- * @property {boolean} clearColorBuffer If true, the camera will clear the color buffer when it
- * renders this layer.
- * @property {boolean} clearDepthBuffer If true, the camera will clear the depth buffer when it
- * renders this layer.
- * @property {boolean} clearStencilBuffer If true, the camera will clear the stencil buffer when it
- * renders this layer.
  * @property {Layer} layerReference Make this layer render the same mesh instances that another
  * layer does instead of having its own mesh instance list. Both layers must share cameras. Frustum
  * culling is only performed for one layer. Useful for rendering multiple passes using different
@@ -204,6 +196,13 @@ class InstanceList {
  * {@link LayerComposition#getLayerById}.
  */
 class Layer {
+    /**
+     * Name of the layer. Can be used in {@link LayerComposition#getLayerByName}.
+     *
+     * @type {string}
+     */
+    name;
+
     /**
      * Create a new Layer instance.
      *
@@ -313,6 +312,11 @@ class Layer {
         return this._renderTarget;
     }
 
+    /**
+     * Enable the layer. Disabled layers are skipped. Defaults to true.
+     *
+     * @type {boolean}
+     */
     set enabled(val) {
         if (val !== this._enabled) {
             this._enabled = val;
@@ -338,6 +342,11 @@ class Layer {
         return this._clearColor;
     }
 
+    /**
+     * If true, the camera will clear the color buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     set clearColorBuffer(val) {
         this._clearColorBuffer = val;
         this._dirtyCameras = true;
@@ -347,6 +356,11 @@ class Layer {
         return this._clearColorBuffer;
     }
 
+    /**
+     * If true, the camera will clear the depth buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     set clearDepthBuffer(val) {
         this._clearDepthBuffer = val;
         this._dirtyCameras = true;
@@ -356,6 +370,11 @@ class Layer {
         return this._clearDepthBuffer;
     }
 
+    /**
+     * If true, the camera will clear the stencil buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
         this._dirtyCameras = true;
@@ -438,9 +457,14 @@ class Layer {
         if (!this.passThrough) this._dirty = true;
     }
 
-    // internal function to remove meshInstance from an array
+    /**
+     * Internal function to remove a mesh instance from an array.
+     *
+     * @param {MeshInstance} m - Mesh instance to remove.
+     * @param {MeshInstance[]} arr - Array of mesh instances to remove from.
+     * @private
+     */
     removeMeshInstanceFromArray(m, arr) {
-
         let spliceOffset = -1;
         let spliceCount = 0;
         const len = arr.length;
@@ -604,6 +628,7 @@ class Layer {
         this._dirtyLights = true;
     }
 
+    /** @private */
     _generateLightHash() {
         // generate hash to check if layers have the same set of static lights
         // order of lights shouldn't matter
@@ -673,6 +698,13 @@ class Layer {
         this._dirtyCameras = true;
     }
 
+    /**
+     * @param {MeshInstance[]} drawCalls - Array of mesh instances.
+     * @param {number} drawCallsCount - Number of mesh instances.
+     * @param {Vec3} camPos - Camera position.
+     * @param {Vec3} camFwd - Camera forward vector.
+     * @private
+     */
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
         for (let i = 0; i < drawCallsCount; i++) {
             const drawCall = drawCalls[i];
@@ -690,6 +722,12 @@ class Layer {
         }
     }
 
+    /**
+     * @param {boolean} transparent - True if transparent sorting should be used.
+     * @param {GraphNode} cameraNode - Graph node that the camera is attached to.
+     * @param {number} cameraPass - Camera pass.
+     * @ignore
+     */
     _sortVisible(transparent, cameraNode, cameraPass) {
         const objects = this.instances;
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
