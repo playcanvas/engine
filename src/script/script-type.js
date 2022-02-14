@@ -37,6 +37,20 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * @augments EventHandler
  */
 class ScriptType extends EventHandler {
+    /**
+     * The {@link Application} that the instance of this type belongs to.
+     *
+     * @type {Application}
+     */
+    app;
+
+    /**
+     * The {@link Entity} that the instance of this type belongs to.
+     *
+     * @type {Entity}
+     */
+    entity;
+
     /** @private */
     _enabled;
 
@@ -48,6 +62,27 @@ class ScriptType extends EventHandler {
 
     /** @private */
     _postInitialized;
+
+    /** @private */
+    __destroyed;
+
+    /** @private */
+    __attributes;
+
+    /** @private */
+    __attributesRaw;
+
+    /** @private */
+    __scriptType;
+
+    /**
+     * The order in the script component that the methods of this script instance will run
+     * relative to other script instances in the component.
+     *
+     * @type {number}
+     * @private
+     */
+    __executionOrder;
 
     /**
      * Create a new ScriptType instance.
@@ -106,45 +141,24 @@ class ScriptType extends EventHandler {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }
 
-    /** @private */
+    /**
+     * @param {{entity: Entity, app: Application}} args - The entity and app.
+     * @private
+     */
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
         Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
-        /**
-         * The {@link Application} that the instance of this type belongs to.
-         *
-         * @type {Application}
-         */
         this.app = args.app;
-
-        /**
-         * The {@link Entity} that the instance of this type belongs to.
-         *
-         * @type {Entity}
-         */
         this.entity = args.entity;
 
-        /** @private */
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
-        /** @private */
         this._enabledOld = this.enabled;
-        /** @private */
-        this.__destroyed = false;
-        /** @private */
-        this.__attributes = { };
-        /** @private */
-        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
-        /** @private */
-        this.__scriptType = script;
 
-        /**
-         * The order in the script component that the methods of this script instance will run
-         * relative to other script instances in the component.
-         *
-         * @type {number}
-         * @private
-         */
+        this.__destroyed = false;
+        this.__attributes = { };
+        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
+        this.__scriptType = script;
         this.__executionOrder = -1;
     }
 
@@ -156,7 +170,11 @@ class ScriptType extends EventHandler {
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
 
-    /** @private */
+    /**
+     * @param {*} constructorFn - The constructor function of the script type.
+     * @returns {string} The script name.
+     * @private
+     */
     static __getScriptName(constructorFn) {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
@@ -193,7 +211,10 @@ class ScriptType extends EventHandler {
         return this.__attributes;
     }
 
-    /** @private */
+    /**
+     * @param {boolean} force - Set to true to force initialization of the attributes.
+     * @private
+     */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw)
             return;
