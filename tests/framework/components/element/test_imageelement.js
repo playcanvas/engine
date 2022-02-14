@@ -1035,7 +1035,7 @@ describe('pc.ImageElement', function () {
             textureAsset: assets.texture.id
         });
 
-        var texture = new pc.Texture();
+        var texture = new pc.Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
@@ -1053,7 +1053,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.spriteAsset).to.be.not.null;
         // expect(e.element.sprite).to.be.not.null;
 
-        var texture = new pc.Texture();
+        var texture = new pc.Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
@@ -1069,7 +1069,7 @@ describe('pc.ImageElement', function () {
             textureAsset: assets.texture.id
         });
 
-        var texture = new pc.Texture();
+        var texture = new pc.Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
