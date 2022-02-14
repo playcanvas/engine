@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { ApplicationLite } from './app-base.js';
+import { AppBase } from './app-base.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
 /** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
@@ -207,7 +207,7 @@ class Entity extends GraphNode {
      * Create a new Entity.
      *
      * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
-     * @param {ApplicationLite} [app] - The application the entity belongs to, default is the current application.
+     * @param {AppBase} [app] - The application the entity belongs to, default is the current application.
      * @example
      * var entity = new pc.Entity();
      *
@@ -238,13 +238,13 @@ class Entity extends GraphNode {
     constructor(name, app) {
         super(name);
 
-        if (name instanceof ApplicationLite) app = name;
+        if (name instanceof AppBase) app = name;
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
 
         this._app = app; // store app
         if (!app) {
-            this._app = ApplicationLite.getApplication(); // get the current application
+            this._app = AppBase.getApplication(); // get the current application
             if (!this._app) {
                 throw new Error("Couldn't find current application");
             }

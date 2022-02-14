@@ -136,15 +136,15 @@ class Progress {
 let app = null;
 
 /**
- * An ApplicationLite is a version of the application without many systems imported and initialized,
- * and this needs to be done manually by the developed after the instance of the ApplicationLite has
+ * An AppBase is a version of the application without many systems imported and initialized,
+ * and this needs to be done manually by the developed after the instance of the AppBase has
  * been created.
  *
  * @augments EventHandler
  */
-class ApplicationLite extends EventHandler {
+class AppBase extends EventHandler {
     /**
-     * Create a new ApplicationLite instance.
+     * Create a new AppBase instance.
      *
      * @param {Element} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
@@ -160,7 +160,7 @@ class ApplicationLite extends EventHandler {
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
-     * var app = new pc.ApplicationLite(canvas, options);
+     * var app = new pc.AppBase(canvas, options);
      *
      * // Start the application's main loop
      * app.start();
@@ -173,7 +173,7 @@ class ApplicationLite extends EventHandler {
         // #endif
 
         // Store application instance
-        ApplicationLite._applications[canvas.id] = this;
+        AppBase._applications[canvas.id] = this;
         setApplication(this);
 
         app = this;
@@ -225,7 +225,7 @@ class ApplicationLite extends EventHandler {
 
         /**
          * Set to true to render the scene on the next iteration of the main loop. This only has an
-         * effect if {@link ApplicationLite#autoRender} is set to false. The value of renderNextFrame
+         * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame
          * is set back to false again as soon as the scene has been rendered.
          *
          * @type {boolean}
@@ -592,7 +592,7 @@ class ApplicationLite extends EventHandler {
      * @private
      * @static
      * @name app
-     * @type {ApplicationLite|undefined}
+     * @type {AppBase|undefined}
      * @description Gets the current application, if any.
      */
 
@@ -606,12 +606,12 @@ class ApplicationLite extends EventHandler {
      *
      * @param {string} [id] - If defined, the returned application should use the canvas which has
      * this id. Otherwise current application will be returned.
-     * @returns {ApplicationLite|undefined} The running application, if any.
+     * @returns {AppBase|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
      */
     static getApplication(id) {
-        return id ? ApplicationLite._applications[id] : getApplication();
+        return id ? AppBase._applications[id] : getApplication();
     }
 
     _initDefaultMaterial() {
@@ -1932,7 +1932,7 @@ class ApplicationLite extends EventHandler {
 
         script.app = null;
 
-        ApplicationLite._applications[canvasId] = null;
+        AppBase._applications[canvasId] = null;
 
         if (getApplication() === this) {
             setApplication(null);
@@ -2042,4 +2042,4 @@ const makeTick = function (_app) {
     };
 };
 
-export { app, ApplicationLite };
+export { app, AppBase };

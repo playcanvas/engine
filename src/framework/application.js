@@ -1,4 +1,4 @@
-import { ApplicationLite } from "./app-base.js";
+import { AppBase } from "./app-base.js";
 import { script } from './script.js';
 
 import { AnimationComponentSystem } from './components/animation/system.js';
@@ -56,9 +56,9 @@ import { ScriptComponentSystem } from './components/script/system.js';
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
  *
- * @augments ApplicationLite
+ * @augments AppBase
  */
-class Application extends ApplicationLite {
+class Application extends AppBase {
     /**
      * Create a new Application instance.
      *
