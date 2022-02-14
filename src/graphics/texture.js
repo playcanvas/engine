@@ -140,6 +140,7 @@ class Texture {
      */
     constructor(graphicsDevice, options) {
         this.device = graphicsDevice;
+        Debug.assert(this.device, "Texture contructor requires a graphicsDevice to be valid");
 
         /**
          * The name of the texture. Defaults to null.
