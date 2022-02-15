@@ -49,7 +49,7 @@ class SceneParser {
     }
 
     _createEntity(data, compressed) {
-        const entity = new Entity();
+        const entity = new Entity(this._app);
 
         entity.name = data.name;
         entity.setGuid(data.resource_id);
