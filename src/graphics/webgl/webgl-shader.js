@@ -64,7 +64,7 @@ class WebglShader {
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
         const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
-        const glFragmentShader = this.compileShaderSource(device, definition.fshader, false);
+        const glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
 
         const gl = device.gl;
         const glProgram = gl.createProgram();
