@@ -13,9 +13,8 @@ import { Debug } from '../core/debug.js';
 const EVENT_RESIZE = 'resizecanvas';
 
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('./texture.js').Texture} Texture */
-/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./shader.js').Shader} Shader */
+/** @typedef {import('./texture.js').Texture} Texture */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -108,7 +107,7 @@ class GraphicsDevice extends EventHandler {
 
         this._maxPixelRatio = 1;
 
-        // Array of WebGL objects that need to be re-initialized after a context restore event
+        // Array of objects that need to be re-initialized after a context restore event
         /** @type {Shader[]} */
         this.shaders = [];
 
