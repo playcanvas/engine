@@ -63,7 +63,7 @@ class WebglShader {
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
-        const glVertexShader = this.compileShaderSource(device, definition.vshader, true);
+        const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
         const glFragmentShader = this.compileShaderSource(device, definition.fshader, false);
 
         const gl = device.gl;
@@ -121,7 +121,7 @@ class WebglShader {
      * @returns {WebGLShader} The compiled shader.
      * @private
      */
-    compileShaderSource(device, src, isVertexShader) {
+    _compileShaderSource(device, src, isVertexShader) {
         const gl = device.gl;
         const shaderCache = isVertexShader ? device.vertexShaderCache : device.fragmentShaderCache;
         let glShader = shaderCache[src];
@@ -183,10 +183,10 @@ class WebglShader {
         // #endif
 
         // Check for compilation errors
-        if (!this.isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
+        if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
             return false;
 
-        if (!this.isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
+        if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
             return false;
 
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
@@ -264,12 +264,12 @@ class WebglShader {
      * @returns {boolean} True if the shader compiled successfully, false otherwise.
      * @private
      */
-    isCompiled(device, shader, glShader, source, shaderType) {
+    _isCompiled(device, shader, glShader, source, shaderType) {
         const gl = device.gl;
 
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
-            const [code, error] = this.processError(source, infoLog);
+            const [code, error] = this._processError(source, infoLog);
             const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
             // #if _DEBUG
             error.shader = shader;
@@ -293,7 +293,7 @@ class WebglShader {
      * complete shader source.
      * @private
      */
-    processError(src, infoLog) {
+    _processError(src, infoLog) {
         if (!src)
             return "";
 
