@@ -163,14 +163,6 @@ class ProgramLibrary {
                 }
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
-            // Uncomment to force finish linking after preload
-            // let device = this._device;
-            // let forceLink = function () {
-            //     for (let i = 0; i < shaders.length; i++) {
-            //         device.postLink(shaders[i]);
-            //     }
-            // };
-            // pc.Application.getApplication().on("preload:end", forceLink);
         }
         this._precached = true;
     }

@@ -71,6 +71,8 @@ class IndexBuffer {
      * Frees resources associated with this index buffer.
      */
     destroy() {
+
+        // stop tracking the index buffer
         const device = this.device;
         const idx = device.buffers.indexOf(this);
         if (idx !== -1) {

@@ -13,6 +13,8 @@ import { Debug } from '../core/debug.js';
 const EVENT_RESIZE = 'resizecanvas';
 
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('./shader.js').Shader} Shader */
+/** @typedef {import('./texture.js').Texture} Texture */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -105,10 +107,16 @@ class GraphicsDevice extends EventHandler {
 
         this._maxPixelRatio = 1;
 
-        // Array of WebGL objects that need to be re-initialized after a context restore event
+        // Array of objects that need to be re-initialized after a context restore event
+        /** @type {Shader[]} */
         this.shaders = [];
+
         this.buffers = [];
+
+        /** @type {Texture[]} */
         this.textures = [];
+
+        /** @type {RenderTarget[]} */
         this.targets = [];
 
         this._vram = {
@@ -148,6 +156,18 @@ class GraphicsDevice extends EventHandler {
         this.programLib = new ProgramLibrary(this);
         for (const generator in programlib)
             this.programLib.register(generator, programlib[generator]);
+    }
+
+    destroy() {
+        // fire the destroy event.
+        // textures and other device resources may destroy themselves in response.
+        this.fire('destroy');
+    }
+
+    // executes after the extended classes have executed their destroy function
+    postDestroy() {
+        this.scope = null;
+        this.canvas = null;
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -211,6 +231,21 @@ class GraphicsDevice extends EventHandler {
      */
     getRenderTarget() {
         return this.renderTarget;
+    }
+
+    /**
+     * Reports whether a texture source is a canvas, image, video or ImageBitmap.
+     *
+     * @param {*} texture - Texture source data.
+     * @returns {boolean} True if the texture is a canvas, image, video or ImageBitmap and false
+     * otherwise.
+     * @ignore
+     */
+    _isBrowserInterface(texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
+                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
+                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
+                (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
     }
 
     /**

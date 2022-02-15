@@ -53,6 +53,8 @@ class VertexBuffer {
      * Frees resources associated with this vertex buffer.
      */
     destroy() {
+
+        // stop tracking the vertex buffer
         const device = this.device;
         const idx = device.buffers.indexOf(this);
         if (idx !== -1) {

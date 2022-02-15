@@ -12,6 +12,7 @@ import {
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
+    TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
@@ -139,6 +140,7 @@ class Texture {
      */
     constructor(graphicsDevice, options) {
         this.device = graphicsDevice;
+        Debug.assert(this.device, "Texture contructor requires a graphicsDevice to be valid");
 
         /**
          * The name of the texture. Defaults to null.
@@ -253,6 +255,67 @@ class Texture {
         this.dirtyAll();
 
         this._gpuSize = 0;
+
+        this.impl = graphicsDevice.createTextureImpl(this);
+
+        // track the texture
+        graphicsDevice.textures.push(this);
+    }
+
+    /**
+     * Frees resources associated with this texture.
+     */
+    destroy() {
+
+        if (this.device) {
+            // stop tracking the texture
+            const device = this.device;
+            const idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
+            // Remove texture from any uniforms
+            device.scope.removeValue(this);
+
+            // destroy implementation
+            this.impl.destroy(device);
+
+            // Update texture stats
+            this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+
+            this._levels = null;
+            this.device = null;
+        }
+    }
+
+    /**
+     * Called when the rendering context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
+    loseContext() {
+        this.impl.loseContext();
+        this.dirtyAll();
+    }
+
+    /**
+     * Updates vram size tracking for the texture, size can be positive to add or negative to subtract
+     *
+     * @ignore
+     */
+    adjustVramSizeTracking(vram, size) {
+        vram.tex += size;
+
+        // #if _PROFILER
+        if (this.profilerHint === TEXHINT_SHADOWMAP) {
+            vram.texShadow += size;
+        } else if (this.profilerHint === TEXHINT_ASSET) {
+            vram.texAsset += size;
+        } else if (this.profilerHint === TEXHINT_LIGHTMAP) {
+            vram.texLightmap += size;
+        }
+        // #endif
     }
 
     /**
@@ -674,18 +737,6 @@ class Texture {
         }
 
         return result * (cubemap ? 6 : 1);
-    }
-
-    // Public methods
-    /**
-     * Forcibly free up the underlying WebGL resource owned by the texture.
-     */
-    destroy() {
-        if (this.device) {
-            this.device.destroyTexture(this);
-        }
-        this.device = null;
-        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
     }
 
     // Force a full resubmission of the texture to WebGL (used on a context restore event)
