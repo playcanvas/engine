@@ -27,7 +27,6 @@ class WebglShader {
      * Free the WebGL resources associated with a shader.
      *
      * @param {Shader} shader - The shader to free.
-     * @ignore
      */
     destroy(shader) {
         const device = shader.device;
@@ -48,7 +47,6 @@ class WebglShader {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to restore.
-     * @ignore
      */
     restoreContext(device, shader) {
         this.compileAndLink(device, shader);
@@ -59,7 +57,6 @@ class WebglShader {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to compile.
-     * @ignore
      */
     compileAndLink(device, shader) {
         const definition = shader.definition;
@@ -170,7 +167,6 @@ class WebglShader {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
-     * @ignore
      */
     postLink(device, shader) {
         const gl = device.gl;
