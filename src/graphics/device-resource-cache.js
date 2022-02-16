@@ -31,6 +31,8 @@ class DeviceResourceCache {
      */
     postEffectQuadVB;
 
+    reprojectTextureCache;
+
     static _cache = new Map();
 
     /** Delete resources, called when the device is destroyed */
@@ -47,6 +49,11 @@ class DeviceResourceCache {
         if (this.postEffectQuadVB) {
             this.postEffectQuadVB.destroy();
             this.postEffectQuadVB = null;
+        }
+
+        if (this.reprojectTextureCache) {
+            this.reprojectTextureCache.destroy();
+            this.reprojectTextureCache = null;
         }
     }
 

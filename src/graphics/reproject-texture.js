@@ -14,6 +14,7 @@ import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { DeviceResourceCache } from './device-resource-cache.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 
@@ -324,6 +325,12 @@ const createSamplesTex = (device, name, samples) => {
 class SimpleCache {
     map = new Map();
 
+    destroy() {
+        this.map.forEach((value, key) => {
+            value.destroy();
+        });
+    }
+
     get(key, missFunc) {
         if (!this.map.has(key)) {
             const result = missFunc();
@@ -332,72 +339,46 @@ class SimpleCache {
         }
         return this.map.get(key);
     }
-
-    clear() {
-        this.map.clear();
-    }
 }
 
-// per-device cache
-class DeviceCache {
-    constructor() {
-        this.cache = new SimpleCache();
-    }
-
-    // get the cache entry for the given device and key
-    // if entry doesn't exist, missFunc will be invoked to create it
-    get(device, key, missFunc) {
-        return this.cache.get(device, () => {
-            const cache = new SimpleCache();
-            device.on('destroy', () => {
-                cache.map.forEach((value, key) => {
-                    value.destroy();
-                });
-                this.cache.map.delete(device);
-            });
-            return cache;
-        }).get(key, missFunc);
-    }
-
-    clear() {
-        this.cache.clear();
-    }
-}
-
-// cache of samples. we store these separately from textures since multiple devices can use the same
-// set of samples.
+// cache, used to store:
+// - samples. we store these separately from textures since multiple devices can use the same
+//   set of samples.
+// - texures inside DeviceResourceCache.reprojectTextureCache - those are per device
 const samplesCache = new SimpleCache();
 
-// cache of float sample data packed into rgba8 textures. stored per device.
-const samplesTexCache = new DeviceCache();
+const getCachedTexture = (device, key, getSamplesFnc) => {
+    const cache = DeviceResourceCache.get(device);
+    if (!cache.reprojectTextureCache) {
+        cache.reprojectTextureCache = new SimpleCache();
+    }
+    if (!cache.reprojectTextureCache.map.get(key)) {
+        const texture = createSamplesTex(device, key, samplesCache.get(key, () => {
+            return getSamplesFnc();
+        }));
+        cache.reprojectTextureCache.map.set(key, texture);
+    }
+    return cache.reprojectTextureCache.map.get(key);
+};
 
 const generateLambertSamplesTex = (device, numSamples, sourceTotalPixels) => {
     const key = `lambert-samples-${numSamples}-${sourceTotalPixels}`;
-
-    return samplesTexCache.get(device, key, () => {
-        return createSamplesTex(device, key, samplesCache.get(key, () => {
-            return generateLambertSamples(numSamples, sourceTotalPixels);
-        }));
+    return getCachedTexture(device, key, () => {
+        return generateLambertSamples(numSamples, sourceTotalPixels);
     });
 };
 
 const generatePhongSamplesTex = (device, numSamples, specularPower) => {
     const key = `phong-samples-${numSamples}-${specularPower}`;
-
-    return samplesTexCache.get(device, key, () => {
-        return createSamplesTex(device, key, samplesCache.get(key, () => {
-            return generatePhongSamples(numSamples, specularPower);
-        }));
+    return getCachedTexture(device, key, () => {
+        return generatePhongSamples(numSamples, specularPower);
     });
 };
 
 const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPixels) => {
     const key = `ggx-samples-${numSamples}-${specularPower}-${sourceTotalPixels}`;
-
-    return samplesTexCache.get(device, key, () => {
-        return createSamplesTex(device, key, samplesCache.get(key, () => {
-            return generateGGXSamples(numSamples, specularPower, sourceTotalPixels);
-        }));
+    return getCachedTexture(device, key, () => {
+        return generateGGXSamples(numSamples, specularPower, sourceTotalPixels);
     });
 };
 
