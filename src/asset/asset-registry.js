@@ -674,7 +674,7 @@ class AssetRegistry extends EventHandler {
      *
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.
-     * @returns {Asset} A single Asset or null if no Asset is found.
+     * @returns {Asset|null} A single Asset or null if no Asset is found.
      * @example
      * var asset = app.assets.find("myTextureAsset", "texture");
      */
