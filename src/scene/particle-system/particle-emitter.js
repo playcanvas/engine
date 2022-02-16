@@ -40,6 +40,7 @@ import {
 import { Material } from '../../scene/materials/material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
+import { DeviceResourceCache } from '../../scene/device-resource-cache.js'
 
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
@@ -222,8 +223,6 @@ class ParticleEmitter {
 
         this._addTimeTime = 0;
 
-        ParticleEmitter.staticInit(gd);
-
         // Global system parameters
         setPropertyTarget = this;
         setPropertyOptions = options;
@@ -247,7 +246,7 @@ class ParticleEmitter {
         setProperty("localSpace", false);
         setProperty("screenSpace", false);
         setProperty("wrapBounds", null);
-        setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
+        setProperty("colorMap", this.defaultParamTexture);
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
@@ -382,12 +381,11 @@ class ParticleEmitter {
         this.rebuild();
     }
 
-    static DEFAULT_PARAM_TEXTURE = null;
+    get defaultParamTexture() {
+        Debug.assert(this.graphicsDevice);
+        const deviceResoruceCache = DeviceResourceCache.get(this.graphicsDevice);
+        if (!deviceResoruceCache.particleEmitterDefaultParamTexture) {
 
-    static staticInit(device) {
-
-        // White radial gradient
-        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
             const resolution = 16;
             const centerPoint = resolution * 0.5 + 0.5;
             const dtex = new Float32Array(resolution * resolution * 4);
@@ -403,18 +401,13 @@ class ParticleEmitter {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(device, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = FILTER_LINEAR;
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = FILTER_LINEAR;
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            texture.minFilter = FILTER_LINEAR;
+            texture.magFilter = FILTER_LINEAR;
+            deviceResoruceCache.particleEmitterDefaultParamTexture = texture;
         }
-    }
 
-    static staticDestroy() {
-
-        if (ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.destroy();
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
-        }
+        return deviceResoruceCache.particleEmitterDefaultParamTexture;
     }
 
     onChangeCamera() {
@@ -577,7 +570,7 @@ class ParticleEmitter {
     rebuild() {
         const gd = this.graphicsDevice;
 
-        if (this.colorMap === null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
+        if (this.colorMap === null) this.colorMap = this.defaultParamTexture;
 
         this.spawnBounds = this.emitterShape === EMITTERSHAPE_BOX ? this.emitterExtents : this.emitterRadius;
 
@@ -739,7 +732,7 @@ class ParticleEmitter {
     _isAnimated() {
         return this.animNumFrames >= 1 &&
                (this.animTilesX > 1 || this.animTilesY > 1) &&
-               (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
+               (this.colorMap && this.colorMap !== this.defaultParamTexture || this.normalMap);
     }
 
     rebuildGraphs() {

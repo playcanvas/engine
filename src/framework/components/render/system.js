@@ -2,7 +2,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+import { DeviceResourceCache } from '../../../scene/device-resource-cache.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -56,7 +56,7 @@ class RenderComponentSystem extends ComponentSystem {
         this.DataType = RenderComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
+        this.defaultMaterial = DeviceResourceCache.get(app.graphicsDevice).defaultMaterial;
 
         this.on('beforeremove', this.onRemove, this);
     }

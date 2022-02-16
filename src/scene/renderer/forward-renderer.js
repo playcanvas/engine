@@ -31,7 +31,7 @@ import {
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
-import { DefaultMaterial } from '../materials/default-material.js';
+import { DeviceResourceCache } from '../device-resource-cache.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
@@ -1277,7 +1277,7 @@ class ForwardRenderer {
                 // #endif
 
                 if (!drawCall.material)
-                    drawCall.material = DefaultMaterial.get(device);
+                    drawCall.material = DeviceResourceCache.get(device).defaultMaterial;
 
                 const material = drawCall.material;
 

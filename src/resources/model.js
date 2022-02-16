@@ -6,7 +6,7 @@ import { http, Http } from '../net/http.js';
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';
 
-import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { DeviceResourceCache } from '../scene/device-resource-cache.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -35,7 +35,7 @@ class ModelHandler {
     constructor(device) {
         this._device = device;
         this._parsers = [];
-        this._defaultMaterial = DefaultMaterial.get(device);
+        this._defaultMaterial = DeviceResourceCache.get(device).defaultMaterial;
         this.maxRetries = 0;
 
         this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {

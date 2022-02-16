@@ -1,0 +1,66 @@
+/** @typedef {import('./material.js').Material} Material */
+/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+
+/**
+ * A cache storing shared resources associated with a device. The resoruces are removed
+ * from the cache when the device is destroyed.
+ *
+ * @ignore
+ */
+class DeviceResourceCache {
+    /**
+     * An instance of a material which is used when a material is missing.
+     *
+     * @type {Material}
+     */
+    defaultMaterial;
+
+    /**
+     * An instance of a default parameter texture used by the particle emitter.
+     *
+     * @type {Texture}
+     */
+    particleEmitterDefaultParamTexture;
+
+    static _cache = new Map();
+
+    /** Delete resources, called when the device is destroyed */
+    destroy() {
+        if (this.defaultMaterial) {
+            this.defaultMaterial.destroy();
+            this.defaultMaterial = null;
+        }
+
+        if (this.particleEmitterDefaultParamTexture) {
+            this.particleEmitterDefaultParamTexture.destroy();
+            this.particleEmitterDefaultParamTexture = null;
+        }
+    }
+
+    /**
+     * Returns instance of a class containing resources for supplied device.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {DeviceResourceCache} The resources for the device.
+     */
+    static get(device) {
+        let entry = this._cache.get(device);
+
+        // if no entry for the device, create it
+        if (!entry) {
+            entry = new DeviceResourceCache();
+            this._cache.set(device, entry);
+
+            // when the device is destroyed, destroy and remove its entry
+            device.on('destroy', () => {
+                entry.destroy();
+                this._cache.delete(device);
+            });
+        }
+
+        return entry;
+    }
+}
+
+export { DeviceResourceCache };

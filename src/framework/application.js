@@ -32,11 +32,10 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
-import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
-import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { DeviceResourceCache } from '../scene/device-resource-cache.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 import { SoundManager } from '../sound/manager.js';
@@ -756,7 +755,7 @@ class Application extends EventHandler {
         const material = new StandardMaterial();
         material.name = "Default Material";
         material.shadingModel = SPECULAR_BLINN;
-        DefaultMaterial.add(this.graphicsDevice, material);
+        DeviceResourceCache.get(this.graphicsDevice).defaultMaterial = material;
     }
 
     /**
@@ -2135,12 +2134,8 @@ class Application extends EventHandler {
         }
         this.xr.end();
 
-        ParticleEmitter.staticDestroy();
-
         this.renderer.destroy();
         this.renderer = null;
-
-        DefaultMaterial.remove(this.graphicsDevice);
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;
