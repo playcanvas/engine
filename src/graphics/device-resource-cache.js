@@ -31,8 +31,10 @@ class DeviceResourceCache {
      */
     postEffectQuadVB;
 
+    /** Textures created by reproject-texture module */
     reprojectTextureCache;
 
+    /** @type {Map<GraphicsDevice, DeviceResourceCache} */
     static _cache = new Map();
 
     /** Delete resources, called when the device is destroyed */
