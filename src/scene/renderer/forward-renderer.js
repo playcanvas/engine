@@ -31,7 +31,7 @@ import {
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
-import { DeviceResourceCache } from '../device-resource-cache.js';
+import { DeviceResourceCache } from '../../graphics/device-resource-cache.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';

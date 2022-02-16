@@ -13,7 +13,7 @@ import {
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
 import { Debug } from "../../core/debug.js";
-import { DeviceResourceCache } from "../device-resource-cache.js";
+import { DeviceResourceCache } from "../../graphics/device-resource-cache.js";
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 

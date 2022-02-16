@@ -70,7 +70,7 @@ import { Skin } from '../scene/skin.js';
 import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
-import { DeviceResourceCache } from '../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../graphics/device-resource-cache.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
 import { Skeleton } from '../animation/skeleton.js';

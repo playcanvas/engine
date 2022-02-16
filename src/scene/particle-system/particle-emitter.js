@@ -40,7 +40,7 @@ import {
 import { Material } from '../../scene/materials/material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
-import { DeviceResourceCache } from '../../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../../graphics/device-resource-cache.js';
 
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';

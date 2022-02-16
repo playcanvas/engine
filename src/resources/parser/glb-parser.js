@@ -41,7 +41,7 @@ import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { Render } from '../../scene/render.js';
-import { DeviceResourceCache } from '../../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../../graphics/device-resource-cache.js';
 
 import { Entity } from '../../framework/entity.js';
 

@@ -35,7 +35,7 @@ import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
-import { DeviceResourceCache } from '../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../graphics/device-resource-cache.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 import { SoundManager } from '../sound/manager.js';

@@ -2,7 +2,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { DeviceResourceCache } from '../../../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../../../graphics/device-resource-cache.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

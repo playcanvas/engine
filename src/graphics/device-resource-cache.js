@@ -1,6 +1,6 @@
-/** @typedef {import('./material.js').Material} Material */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../scene/materials/material.js').Material} Material */
+/** @typedef {import('./texture.js').Texture} Texture */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A cache storing shared resources associated with a device. The resoruces are removed

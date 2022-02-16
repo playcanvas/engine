@@ -6,7 +6,7 @@ import { http, Http } from '../net/http.js';
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';
 
-import { DeviceResourceCache } from '../scene/device-resource-cache.js';
+import { DeviceResourceCache } from '../graphics/device-resource-cache.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
