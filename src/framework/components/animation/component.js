@@ -188,7 +188,7 @@ class AnimationComponent extends Component {
      * Set the model driven by this animation component.
      *
      * @param {Model} model - The model to set.
-     * @private
+     * @ignore
      */
     setModel(model) {
         const data = this.data;
