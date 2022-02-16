@@ -1,5 +1,6 @@
 /** @typedef {import('../scene/materials/material.js').Material} Material */
 /** @typedef {import('./texture.js').Texture} Texture */
+/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
@@ -23,6 +24,13 @@ class DeviceResourceCache {
      */
     particleEmitterDefaultParamTexture;
 
+    /**
+     * Vertex buffer containing a quad mesh used by post-effects.
+     *
+     * @type {VertexBuffer}
+     */
+    postEffectQuadVB;
+
     static _cache = new Map();
 
     /** Delete resources, called when the device is destroyed */
@@ -31,10 +39,14 @@ class DeviceResourceCache {
             this.defaultMaterial.destroy();
             this.defaultMaterial = null;
         }
-
         if (this.particleEmitterDefaultParamTexture) {
             this.particleEmitterDefaultParamTexture.destroy();
             this.particleEmitterDefaultParamTexture = null;
+        }
+
+        if (this.postEffectQuadVB) {
+            this.postEffectQuadVB.destroy();
+            this.postEffectQuadVB = null;
         }
     }
 

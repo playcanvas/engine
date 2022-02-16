@@ -19,7 +19,6 @@ import { http } from '../net/http.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
-import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
 import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
 import {
@@ -2125,8 +2124,6 @@ class Application extends EventHandler {
         this.defaultLayerDepth.onEnable = null;
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
-
-        destroyPostEffectQuad();
 
         if (this.vr) {
             this.vr.destroy();
