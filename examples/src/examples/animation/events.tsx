@@ -98,7 +98,7 @@ class EventsExample {
         app.root.addChild(modelEntityParent);
 
         // rotate the model in a circle around the center of the scene
-        app.on('update', (dt) => {
+        app.on('update', (dt: number) => {
             modelEntityParent.rotate(0, 13.8 * dt, 0);
         });
 
@@ -126,12 +126,13 @@ class EventsExample {
             highlightBox(modelEntity.findByName(event.bone).getPosition());
         });
 
-        app.on('update', (dt) => {
+        app.on('update', (dt: number) => {
             // on update, iterate over any currently highlighted boxes and reduce their emissive property
             highlightedBoxes.forEach((box: pc.Entity) => {
-                const emissive = box.model.material.emissive;
+                const material = box.model.material as pc.StandardMaterial;
+                const emissive = material.emissive;
                 emissive.lerp(emissive, pc.Color.BLACK, 0.08);
-                box.model.material.update();
+                material.update();
             });
             // remove old highlighted boxes from the update loop
             while (highlightedBoxes.length > 5) {

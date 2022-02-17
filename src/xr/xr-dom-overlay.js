@@ -25,6 +25,24 @@ import { platform } from '../core/platform.js';
  */
 class XrDomOverlay {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!window.XRDOMOverlayState;
+
+    /**
+     * @type {Element|null}
+     * @private
+     */
+    _root = null;
+
+    /**
      * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
      * requires that the root DOM element is provided for session start. That way, input source
      * select events are first tested against DOM Elements and then propagated down to the XR
@@ -36,8 +54,6 @@ class XrDomOverlay {
      */
     constructor(manager) {
         this._manager = manager;
-        this._supported = platform.browser && !!window.XRDOMOverlayState;
-        this._root = null;
     }
 
     /**
@@ -84,7 +100,7 @@ class XrDomOverlay {
      * The DOM element to be used as the root for DOM Overlay. Can be changed only outside of an
      * active WebXR session.
      *
-     * @type {object|null}
+     * @type {Element|null}
      * @example
      * app.xr.domOverlay.root = element;
      * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);

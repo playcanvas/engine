@@ -124,7 +124,7 @@ class RenderTarget {
         this._glMsaaColorBuffer = null;
         this._glMsaaDepthBuffer = null;
 
-        // use specified name, othewise get one from color or depth buffer
+        // use specified name, otherwise get one from color or depth buffer
         this.name = options.name;
         if (!this.name) {
             this.name = this._colorBuffer?.name;

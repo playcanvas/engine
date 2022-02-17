@@ -129,7 +129,7 @@ class ModelComponentSystem extends ComponentSystem {
         if (!data.materialAsset)
             component.material = material;
 
-        // TODO: we should copy all relevant meshinstance properties here
+        // TODO: we should copy all relevant mesh instance properties here
         if (entity.model.model) {
             const meshInstances = entity.model.model.meshInstances;
             const meshInstancesClone = component.model.meshInstances;

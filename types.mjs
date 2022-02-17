@@ -22,6 +22,8 @@ let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
 
+const regexConstructor = /constructor\(([^)]+)\);/g;
+
 // Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
     let declarations = '';
@@ -42,7 +44,20 @@ const componentProps = [
 
 path = './types/framework/components/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('get data(): any;', 'get data(): any;\n' + getDeclarations(componentProps));
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
+fs.writeFileSync(path, dts);
+
+const animationComponentProps = [
+    ['activate', 'boolean'],
+    ['assets', 'any[]'],
+    ['loop', 'boolean'],
+    ['skeleton', 'any'],
+    ['speed', 'number']
+];
+
+path = './types/framework/components/animation/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(animationComponentProps));
 fs.writeFileSync(path, dts);
 
 const buttonComponentProps = [
@@ -64,7 +79,7 @@ const buttonComponentProps = [
    
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('constructor(system: ButtonComponentSystem, entity: Entity);', 'constructor(system: ButtonComponentSystem, entity: Entity);\n' + getDeclarations(buttonComponentProps));
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
 fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
@@ -86,7 +101,21 @@ const cameraComponentProps = [
 
 path = './types/framework/components/camera/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('_postEffects: PostEffectQueue;', '_postEffects: PostEffectQueue;\n' + getDeclarations(cameraComponentProps));
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
+fs.writeFileSync(path, dts);
+
+const collisionComponentProps = [
+    ['axis', 'number'],
+    ['halfExtents', 'any'],
+    ['height', 'number'],
+    ['model', 'any'],
+    ['radius', 'number'],
+    ['type', 'string']
+];
+
+path = './types/framework/components/collision/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
 fs.writeFileSync(path, dts);
 
 const elementComponentProps = [
@@ -131,7 +160,7 @@ const elementComponentProps = [
 
 path = './types/framework/components/element/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('_maskedBy: any;', '_maskedBy: any;\n' + getDeclarations(elementComponentProps));
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
 fs.writeFileSync(path, dts);
 
 const lightComponentProps = [
@@ -173,17 +202,109 @@ const lightComponentProps = [
 
 path = './types/framework/components/light/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('entity: Entity);', 'entity: Entity);\n' + getDeclarations(lightComponentProps));
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
 fs.writeFileSync(path, dts);
 
-// TypeScript compiler is defining enabled in ParticleSystemComponent because it doesn't
-// know about the declaration in the Component base class, so remove it.
+const particleSystemComponentProps = [
+    ['alignToMotion', 'boolean'],
+    ['alphaGraph', 'Curve'],
+    ['alphaGraph2', 'Curve'],
+    ['animIndex', 'number'],
+    ['animLoop', 'boolean'],
+    ['animNumAnimations', 'number'],
+    ['animNumFrames', 'number'],
+    ['animSpeed', 'number'],
+    ['animStartFrame', 'number'],
+    ['animTilesX', 'number'],
+    ['animTilesY', 'number'],
+    ['autoPlay', 'boolean'],
+    ['blend', 'number'],
+    ['colorGraph', 'CurveSet'],
+    ['colorMapAsset', 'Asset'],
+    ['depthSoftening', 'number'],
+    ['depthWrite', 'boolean'],
+    ['emitterExtents', 'Vec3'],
+    ['emitterExtentsInner', 'Vec3'],
+    ['emitterRadius', 'number'],
+    ['emitterRadiusInner', 'number'],
+    ['emitterShape', 'number'],
+    ['halfLambert', 'boolean'],
+    ['initialVelocity', 'number'],
+    ['intensity', 'number'],
+    ['layers', 'number[]'],
+    ['lifetime', 'number'],
+    ['lighting', 'boolean'],
+    ['localSpace', 'boolean'],
+    ['localVelocityGraph', 'CurveSet'],
+    ['localVelocityGraph2', 'CurveSet'],
+    ['loop', 'boolean'],
+    ['noFog', 'boolean'],
+    ['normalMapAsset', 'Asset'],
+    ['numParticles', 'number'],
+    ['orientation', 'number'],
+    ['particleNormal', 'Vec3'],
+    ['preWarm', 'boolean'],
+    ['radialSpeedGraph', 'Curve'],
+    ['radialSpeedGraph2', 'Curve'],
+    ['randomizeAnimIndex', 'number'],
+    ['rate', 'number'],
+    ['rate2', 'number'],
+    ['renderAsset', 'Asset'],
+    ['rotationSpeedGraph', 'Curve'],
+    ['rotationSpeedGraph2', 'Curve'],
+    ['scaleGraph', 'Curve'],
+    ['scaleGraph2', 'Curve'],
+    ['screenSpace', 'boolean'],
+    ['sort', 'number'],
+    ['startAngle', 'number'],
+    ['startAngle2', 'number'],
+    ['stretch', 'number'],
+    ['velocityGraph', 'CurveSet'],
+    ['velocityGraph2', 'CurveSet'],
+    ['wrapBounds', 'Vec3']
+];
+
 path = './types/framework/components/particle-system/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
+// TypeScript compiler is defining enabled in ParticleSystemComponent because it doesn't
+// know about the declaration in the Component base class, so remove it.
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemComponentProps));
 dts = dts.replace('enabled: any;', '');
 fs.writeFileSync(path, dts);
 
-const standarMaterialProps = [
+const scrollbarComponentProps = [
+    ['handleEntity', 'Entity'],
+    ['handleSize', 'number'],
+    ['orientation', 'number']
+];
+
+path = './types/framework/components/scrollbar/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
+fs.writeFileSync(path, dts);
+
+const scrollViewComponentProps = [
+    ['bounceAmount', 'number'],
+    ['contentEntity', 'Entity'],
+    ['friction', 'number'],
+    ['horizontal', 'boolean'],
+    ['horizontalScrollbarEntity', 'Entity'],
+    ['horizontalScrollbarVisibility', 'number'],
+    ['mouseWheelSensitivity', 'Vec2'],
+    ['scrollMode', 'number'],
+    ['useMouseWheel', 'boolean'],
+    ['vertical', 'boolean'],
+    ['verticalScrollbarEntity', 'Entity'],
+    ['verticalScrollbarVisibility', 'number'],
+    ['viewportEntity', 'Entity']
+];
+
+path = './types/framework/components/scroll-view/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
+fs.writeFileSync(path, dts);
+
+const standardMaterialProps = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['ambientTint', 'boolean'],
@@ -340,5 +461,36 @@ const standarMaterialProps = [
 
 path = './types/scene/materials/standard-material.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standarMaterialProps));
+dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
+fs.writeFileSync(path, dts);
+
+path = './types/script/script-type.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
+    /**
+     * Called when script is about to run for the first time.
+     */
+    initialize?(): void;
+    /**
+     * Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
+    postInitialize?(): void;
+    /**
+     * Called for enabled (running state) scripts on each tick.
+     * @param dt - The delta time in seconds since the last frame.
+     */
+    update?(dt: number): void;
+    /**
+     * Called for enabled (running state) scripts on each tick, after update.
+     * @param dt - The delta time in seconds since the last frame.
+     */
+    postUpdate?(dt: number): void;
+    /**
+     * Called when a ScriptType that already exists in the registry gets redefined. If the new
+     * ScriptType has a \`swap\` method in its prototype, then it will be executed to perform
+     * hot-reload at runtime.
+     * @param old - Old instance of the scriptType to copy data to the new instance.
+     */
+    swap?(old: ScriptType): void;
+`);
 fs.writeFileSync(path, dts);

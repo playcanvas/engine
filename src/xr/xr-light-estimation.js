@@ -25,6 +25,60 @@ const mat4B = new Mat4();
  */
 class XrLightEstimation extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _available = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _lightProbeRequested = false;
+
+    /**
+     * @type {XRLightProbe|null}
+     * @private
+     */
+    _lightProbe = null;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _intensity = 0;
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * @type {Color}
+     * @private
+     */
+    _color = new Color();
+
+    /**
+     * @type {Float32Array}
+     * @private
+     */
+    _sphericalHarmonics = new Float32Array(27);
+
+    /**
      * Create a new XrLightEstimation instance.
      *
      * @param {XrManager} manager - WebXR Manager.
@@ -34,18 +88,6 @@ class XrLightEstimation extends EventHandler {
         super();
 
         this._manager = manager;
-
-        this._supported = false;
-        this._available = false;
-
-        this._lightProbeRequested = false;
-        this._lightProbe = null;
-
-        this._intensity = 0;
-        this._rotation = new Quat();
-        this._color = new Color();
-
-        this._sphericalHarmonics = new Float32Array(27);
 
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
@@ -68,12 +110,14 @@ class XrLightEstimation extends EventHandler {
      * });
      */
 
+    /** @private */
     _onSessionStart() {
         const supported = !!this._manager.session.requestLightProbe;
         if (!supported) return;
         this._supported = true;
     }
 
+    /** @private */
     _onSessionEnd() {
         this._supported = false;
         this._available = false;
@@ -143,6 +187,10 @@ class XrLightEstimation extends EventHandler {
         this._available = false;
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (!this._lightProbe) return;
 
@@ -227,6 +275,13 @@ class XrLightEstimation extends EventHandler {
         return this._available ? this._rotation : null;
     }
 
+    /**
+     * Spherical harmonics coefficients of what is estimated to be the most prominent directional
+     * light. Or null if data is not available.
+     *
+     * @type {Float32Array|null}
+     * @ignore
+     */
     get sphericalHarmonics() {
         return this._available ? this._sphericalHarmonics : null;
     }

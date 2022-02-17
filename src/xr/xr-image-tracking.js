@@ -12,6 +12,30 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  */
 class XrImageTracking extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!window.XRImageTrackingResult;
+
+     /**
+      * @type {boolean}
+      * @private
+      */
+    _available = false;
+
+    /**
+     * @type {XrTrackedImage[]}
+     * @private
+     */
+    _images = [];
+
+    /**
      * Image Tracking provides the ability to track real world images by provided image samples and
      * their estimate sizes.
      *
@@ -22,10 +46,6 @@ class XrImageTracking extends EventHandler {
         super();
 
         this._manager = manager;
-        this._supported = platform.browser && !!window.XRImageTrackingResult;
-        this._available = false;
-
-        this._images = [];
 
         if (this._supported) {
             this._manager.on('start', this._onSessionStart, this);
@@ -37,7 +57,8 @@ class XrImageTracking extends EventHandler {
      * @event
      * @name XrImageTracking#error
      * @param {Error} error - Error object related to a failure of image tracking.
-     * @description Fired when the XR session is started, but image tracking failed to process the provided images.
+     * @description Fired when the XR session is started, but image tracking failed to process the
+     * provided images.
      */
 
     /**
@@ -45,7 +66,11 @@ class XrImageTracking extends EventHandler {
      * estimate the appropriate transformation. Modifying the tracked images list is only possible
      * before an AR session is started.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image that is matching real world image as close as possible. Resolution of images should be at least 300x300. High resolution does NOT improve tracking performance. Color of image is irrelevant, so greyscale images can be used. Images with too many geometric features or repeating patterns will reduce tracking stability.
+     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image
+     * that is matching real world image as close as possible. Resolution of images should be at
+     * least 300x300. High resolution does NOT improve tracking performance. Color of image is
+     * irrelevant, so grayscale images can be used. Images with too many geometric features or
+     * repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in the real world. Providing this value
      * as close to the real value will improve tracking quality.
      * @returns {XrTrackedImage|null} Tracked image object that will contain tracking information.
@@ -78,6 +103,7 @@ class XrImageTracking extends EventHandler {
         }
     }
 
+    /** @private */
     _onSessionStart() {
         this._manager.session.getTrackedImageScores().then((images) => {
             this._available = true;
@@ -91,20 +117,27 @@ class XrImageTracking extends EventHandler {
         });
     }
 
+    /** @private */
     _onSessionEnd() {
         this._available = false;
 
         for (let i = 0; i < this._images.length; i++) {
-            this._images[i]._pose = null;
-            this._images[i]._measuredWidth = 0;
+            const image = this._images[i];
+            image._pose = null;
+            image._measuredWidth = 0;
 
-            if (this._images[i]._tracking) {
-                this._images[i]._tracking = false;
-                this._images[i].fire('untracked');
+            if (image._tracking) {
+                image._tracking = false;
+                image.fire('untracked');
             }
         }
     }
 
+    /**
+     * @param {Function} callback - Function to call when all images have been prepared as image
+     * bitmaps.
+     * @ignore
+     */
     prepareImages(callback) {
         if (this._images.length) {
             Promise.all(this._images.map(function (trackedImage) {
@@ -119,6 +152,10 @@ class XrImageTracking extends EventHandler {
         }
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (!this._available) return;
 
@@ -131,7 +168,6 @@ class XrImageTracking extends EventHandler {
             const trackedImage = this._images[results[i].index];
             trackedImage._emulated = results[i].trackingState === 'emulated';
             trackedImage._measuredWidth = results[i].measuredWidthInMeters;
-            trackedImage._dirtyTransform = true;
             trackedImage._pose = frame.getPose(results[i].imageSpace, this._manager._referenceSpace);
         }
 

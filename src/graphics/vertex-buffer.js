@@ -30,7 +30,7 @@ class VertexBuffer {
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createVertexBufferImpl(this);
+        this.impl = graphicsDevice.createVertexBufferImpl(this, format);
 
         // marks vertex buffer as instancing data
         this.instancing = false;
@@ -53,6 +53,8 @@ class VertexBuffer {
      * Frees resources associated with this vertex buffer.
      */
     destroy() {
+
+        // stop tracking the vertex buffer
         const device = this.device;
         const idx = device.buffers.indexOf(this);
         if (idx !== -1) {
