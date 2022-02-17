@@ -69,17 +69,17 @@ class AnimEvaluator {
         }
     }
 
-    static _blendVec(a, b, t) {
-        const it = 1.0 - t;
+    static _blendVec(a, b, t, additive) {
+        const it = additive ? 1.0 : 1.0 - t;
         const len = a.length;
         for (let i = 0; i < len; ++i) {
             a[i] = a[i] * it + b[i] * t;
         }
     }
 
-    static _blendQuat(a, b, t) {
+    static _blendQuat(a, b, t, additive) {
         const len = a.length;
-        const it = 1.0 - t;
+        const it = additive ? 1.0 : 1.0 - t;
 
         // negate b if a and b don't lie in the same winding (due to
         // double cover). if we don't do this then often rotations from
@@ -92,14 +92,16 @@ class AnimEvaluator {
             a[i] = a[i] * it + b[i] * t;
         }
 
-        AnimEvaluator._normalize(a);
+        if (!additive) {
+            AnimEvaluator._normalize(a);
+        }
     }
 
-    static _blend(a, b, t, type) {
+    static _blend(a, b, t, type, additive) {
         if (type === 'quaternion') {
-            AnimEvaluator._blendQuat(a, b, t);
+            AnimEvaluator._blendQuat(a, b, t, additive);
         } else {
-            AnimEvaluator._blendVec(a, b, t);
+            AnimEvaluator._blendVec(a, b, t, additive);
         }
     }
 
@@ -337,16 +339,17 @@ class AnimEvaluator {
                     if (animTarget.counter === animTarget.layerCounter) {
                         animTarget.counter = 0;
                     }
-
-                    animTarget.path = path;
+                    if (!animTarget.path) {
+                        animTarget.path = path;
+                        animTarget.baseValue = target.target.get();
+                        animTarget.setter = target.target.set;
+                    }
                     // Add this layer's value onto the target value
                     animTarget.updateValue(binder.layerIndex, target.value);
 
-                    // update the target property using this new value
-                    target.target.func(animTarget.value);
                     animTarget.counter++;
                 } else {
-                    target.target.func(target.value);
+                    target.target.set(target.value);
                 }
                 target.blendCounter = 0;
             }

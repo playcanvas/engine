@@ -25,7 +25,12 @@ class AnimTarget {
      * @param {string} targetPath - The path to the target value.
      */
     constructor(func, type, components, targetPath) {
-        this._func = func;
+        if (func.set) {
+            this._set = func.set;
+            this._get = func.get;
+        } else {
+            this._set = func;
+        }
         this._type = type;
         this._components = components;
         this._targetPath = targetPath;
@@ -34,8 +39,12 @@ class AnimTarget {
         (this._targetPath.substring(this._targetPath.length - 10) === 'localScale');
     }
 
-    get func() {
-        return this._func;
+    get set() {
+        return this._set;
+    }
+
+    get get() {
+        return this._get;
     }
 
     get type() {

@@ -431,6 +431,11 @@ class AnimComponent extends Component {
         this._layerIndices = {};
         this._parameters = {};
         this._playing = false;
+        Object.keys(this._targets).forEach((targetKey) => {
+            this._targets[targetKey].unbind();
+        });
+        // clear all targets from previous binding
+        this._targets = {};
     }
 
     resetStateGraph() {

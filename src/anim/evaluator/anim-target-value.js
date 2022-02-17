@@ -1,6 +1,7 @@
-import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
+import { Vec3 } from '../../index.js';
+import { Quat } from '../../math/quat.js';
+import { ANIM_LAYER_ADDITIVE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
-import { AnimClip } from '../evaluator/anim-clip.js';
 
 /**
  * Used to store and update the value of an animation target. This combines the values of multiple
@@ -12,6 +13,16 @@ class AnimTargetValue {
     static TYPE_QUAT = 'quaternion';
 
     static TYPE_VEC3 = 'vector3';
+
+    static q1 = new Quat();
+
+    static q2 = new Quat();
+
+    static q3 = new Quat();
+
+    static v1 = new Vec3();
+
+    static v2 = new Vec3();
 
     /**
      * Create a new AnimTargetValue instance.
@@ -29,6 +40,8 @@ class AnimTargetValue {
         this.valueType = type;
         this.dirty = true;
         this.value = [0, 0, 0, 1];
+        this.baseValue = null;
+        this.setter = null;
     }
 
     getWeight(index) {
@@ -53,9 +66,6 @@ class AnimTargetValue {
 
     setMask(index, value) {
         this.mask[index] = value;
-        if (this._layerblendType(index) === ANIM_LAYER_OVERWRITE) {
-            this.mask = this.mask.fill(0, 0, index);
-        }
         this.dirty = true;
     }
 
@@ -71,17 +81,32 @@ class AnimTargetValue {
     updateValue(index, value) {
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            this.value[0] = 0;
-            this.value[1] = 0;
-            this.value[2] = 0;
-            this.value[3] = 1;
+            AnimEvaluator._set(this.value, this.baseValue, this.valueType);
         }
         if (!this.mask[index]) return;
-        if (this.counter === 0) {
-            AnimEvaluator._set(this.value, value, this.valueType);
+        if (this._layerblendType(index) === ANIM_LAYER_ADDITIVE) {
+            if (this.valueType === AnimTargetValue.TYPE_QUAT) {
+                // current value
+                const v = AnimTargetValue.q1.set(...this.value);
+                // additive value
+                const aV = AnimTargetValue.q2.set(...this.baseValue).invert().mul(AnimTargetValue.q3.set(...value));
+                // scale additive value by it's weight
+                aV.slerp(Quat.IDENTITY, aV, this.getWeight(index));
+                // add the additive value onto the current value then set it to the targets value
+                v.mul(aV);
+                AnimEvaluator._set(this.value, [v.x, v.y, v.z, v.w], this.valueType);
+            } else {
+                const addValue = AnimTargetValue.v1.set(...value).sub(AnimTargetValue.v2.set(...this.baseValue));
+                AnimEvaluator._blend(this.value, [addValue.x, addValue.y, addValue.z], this.getWeight(index), this.valueType, true);
+            }
         } else {
             AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
         }
+        this.setter(this.value);
+    }
+
+    unbind() {
+        this.setter(this.baseValue);
     }
 }
 
