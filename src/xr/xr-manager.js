@@ -603,7 +603,11 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
-        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl);
+        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
+            alpha: true,
+            depth: true,
+            stencil: true
+        });
 
         session.updateRenderState({
             baseLayer: this._baseLayer,
