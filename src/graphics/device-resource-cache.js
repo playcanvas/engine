@@ -39,17 +39,17 @@ class DeviceResourceCache {
 
     /** Delete resources, called when the device is destroyed */
     destroy() {
-            this.defaultMaterial?.destroy();
-            this.defaultMaterial = null;
-            
-            this.particleEmitterDefaultParamTexture?.destroy();
-            this.particleEmitterDefaultParamTexture = null;
-            
-            this.postEffectQuadVB?.destroy();
-            this.postEffectQuadVB = null;
-            
-            this.reprojectTextureCache?.destroy();
-            this.reprojectTextureCache = null;
+        this.defaultMaterial?.destroy();
+        this.defaultMaterial = null;
+
+        this.particleEmitterDefaultParamTexture?.destroy();
+        this.particleEmitterDefaultParamTexture = null;
+
+        this.postEffectQuadVB?.destroy();
+        this.postEffectQuadVB = null;
+
+        this.reprojectTextureCache?.destroy();
+        this.reprojectTextureCache = null;
     }
 
     /**
