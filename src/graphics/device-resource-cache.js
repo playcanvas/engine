@@ -4,7 +4,7 @@
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
- * A cache storing shared resources associated with a device. The resoruces are removed
+ * A cache storing shared resources associated with a device. The resources are removed
  * from the cache when the device is destroyed.
  *
  * @ignore
