@@ -353,9 +353,7 @@ const getCachedTexture = (device, key, getSamplesFnc) => {
         cache.reprojectTextureCache = new SimpleCache();
     }
     return cache.reprojectTextureCache.get(key, () => {
-        return createSamplesTex(device, key, samplesCache.get(key, () => {
-            return getSamplesFnc();
-        }));
+        return createSamplesTex(device, key, samplesCache.get(key, getSamplesFnc));
     });
 };
 
