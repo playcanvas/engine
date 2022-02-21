@@ -352,13 +352,11 @@ const getCachedTexture = (device, key, getSamplesFnc) => {
     if (!cache.reprojectTextureCache) {
         cache.reprojectTextureCache = new SimpleCache();
     }
-    if (!cache.reprojectTextureCache.map.get(key)) {
-        const texture = createSamplesTex(device, key, samplesCache.get(key, () => {
+    return cache.reprojectTextureCache.get(key, () => {
+        return createSamplesTex(device, key, samplesCache.get(key, () => {
             return getSamplesFnc();
         }));
-        cache.reprojectTextureCache.map.set(key, texture);
-    }
-    return cache.reprojectTextureCache.map.get(key);
+    });
 };
 
 const generateLambertSamplesTex = (device, numSamples, sourceTotalPixels) => {
