@@ -383,8 +383,8 @@ class ParticleEmitter {
 
     get defaultParamTexture() {
         Debug.assert(this.graphicsDevice);
-        const deviceResoruceCache = DeviceResourceCache.get(this.graphicsDevice);
-        if (!deviceResoruceCache.particleEmitterDefaultParamTexture) {
+        const deviceResourceCache = DeviceResourceCache.get(this.graphicsDevice);
+        if (!deviceResourceCache.particleEmitterDefaultParamTexture) {
 
             const resolution = 16;
             const centerPoint = resolution * 0.5 + 0.5;
@@ -404,10 +404,10 @@ class ParticleEmitter {
             const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
             texture.minFilter = FILTER_LINEAR;
             texture.magFilter = FILTER_LINEAR;
-            deviceResoruceCache.particleEmitterDefaultParamTexture = texture;
+            deviceResourceCache.particleEmitterDefaultParamTexture = texture;
         }
 
-        return deviceResoruceCache.particleEmitterDefaultParamTexture;
+        return deviceResourceCache.particleEmitterDefaultParamTexture;
     }
 
     onChangeCamera() {
