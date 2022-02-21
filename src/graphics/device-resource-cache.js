@@ -39,24 +39,17 @@ class DeviceResourceCache {
 
     /** Delete resources, called when the device is destroyed */
     destroy() {
-        if (this.defaultMaterial) {
-            this.defaultMaterial.destroy();
+            this.defaultMaterial?.destroy();
             this.defaultMaterial = null;
-        }
-        if (this.particleEmitterDefaultParamTexture) {
-            this.particleEmitterDefaultParamTexture.destroy();
+            
+            this.particleEmitterDefaultParamTexture?.destroy();
             this.particleEmitterDefaultParamTexture = null;
-        }
-
-        if (this.postEffectQuadVB) {
-            this.postEffectQuadVB.destroy();
+            
+            this.postEffectQuadVB?.destroy();
             this.postEffectQuadVB = null;
-        }
-
-        if (this.reprojectTextureCache) {
-            this.reprojectTextureCache.destroy();
+            
+            this.reprojectTextureCache?.destroy();
             this.reprojectTextureCache = null;
-        }
     }
 
     /**
