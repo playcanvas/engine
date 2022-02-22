@@ -16,13 +16,12 @@ import { EventHandler } from '../core/event-handler.js';
  * resource of a Render Asset.
  *
  * @augments EventHandler
+ * @ignore
  */
 class Render extends EventHandler {
     /**
      * Create a new Render instance. These are usually created by the GLB loader and not created
      * by hand.
-     *
-     * @hideconstructor
      */
     constructor() {
         super();
