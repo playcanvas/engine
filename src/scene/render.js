@@ -21,6 +21,8 @@ class Render extends EventHandler {
     /**
      * Create a new Render instance. These are usually created by the GLB loader and not created
      * by hand.
+     *
+     * @hideconstructor
      */
     constructor() {
         super();
