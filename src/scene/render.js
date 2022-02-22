@@ -16,7 +16,6 @@ import { EventHandler } from '../core/event-handler.js';
  * resource of a Render Asset.
  *
  * @augments EventHandler
- * @ignore
  */
 class Render extends EventHandler {
     /**

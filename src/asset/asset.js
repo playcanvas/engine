@@ -95,10 +95,10 @@ class Asset extends EventHandler {
 
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
-         * "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
+         * "css", "font", "json", "html", "material", "model", "render", "script", "shader", "sprite",
          * "template", "text", "texture"]
          *
-         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
+         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
          */
         this.type = type;
 
