@@ -7,6 +7,7 @@ import { Entity } from '../../entity.js';
 
 /* eslint-disable-next-line no-unused-vars */
 import { ScriptType } from '../../../script/script-type.js';
+import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
 
@@ -688,14 +689,14 @@ class ScriptComponent extends Component {
                 return scriptInstance;
             }
 
-            console.warn(`script '${scriptName}' is already added to entity '${this.entity.name}'`);
+            Debug.warn(`script '${scriptName}' is already added to entity '${this.entity.name}'`);
         } else {
             this._scriptsIndex[scriptName] = {
                 awaiting: true,
                 ind: this._scripts.length
             };
 
-            console.warn(`script '${scriptName}' is not found, awaiting it to be added to registry`);
+            Debug.warn(`script '${scriptName}' is not found, awaiting it to be added to registry`);
         }
 
         return null;
