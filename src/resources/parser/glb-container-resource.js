@@ -157,10 +157,12 @@ class GlbContainerResource {
             if (attachedMi) {
                 entity.addComponent("render", Object.assign({
                     type: "asset",
-                    asset: renderAsset,
                     meshInstances: attachedMi,
                     rootBone: root
                 }, options));
+
+                // assign asset id without recreating mesh instances which are already set up with materials
+                entity.render.assignAsset(renderAsset);
             }
 
             // recursively clone children
