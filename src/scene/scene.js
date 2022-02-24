@@ -623,7 +623,7 @@ class Scene extends EventHandler {
         const apply = (name) => {
             if (render.hasOwnProperty(name)) {
                 this[name] = render[name];
-            };
+            }
         };
 
         // bake

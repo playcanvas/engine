@@ -1615,7 +1615,7 @@ class Application extends EventHandler {
      * @param {number} settings.render.ambientBakeSpherePart - Which part of the sphere to bake.
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
-     * 
+     *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
