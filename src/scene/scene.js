@@ -616,6 +616,10 @@ class Scene extends EventHandler {
         this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
         this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
 
+        if (render.skyboxRotation) {
+            this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
+        }
+
         const apply = (name) => {
             if (render.hasOwnProperty(name)) {
                 this[name] = render[name];
@@ -628,10 +632,6 @@ class Scene extends EventHandler {
         apply('ambientBakeSpherePart');
         apply('ambientBakeOcclusionBrightness');
         apply('ambientBakeOcclusionContrast');
-
-        if (render.skyboxRotation) {
-            this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
-        }
 
         this._resetSkyboxModel();
     }
