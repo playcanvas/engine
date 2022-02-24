@@ -27,6 +27,9 @@ import { Application } from './application.js';
 /** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
 /** @typedef {import('./components/sprite/component.js').SpriteComponent} SpriteComponent */
 
+/** @type {GraphNode[]} */
+const _enableList = [];
+
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
  * will consist of an {@link Entity}, and a set of {@link Component}s which are managed by their
@@ -445,7 +448,7 @@ class Entity extends GraphNode {
      */
     _notifyHierarchyStateChanged(node, enabled) {
         let enableFirst = false;
-        if (node === this && this._app._enableList.length === 0)
+        if (node === this && _enableList.length === 0)
             enableFirst = true;
 
         node._beingEnabled = true;
@@ -453,7 +456,7 @@ class Entity extends GraphNode {
         node._onHierarchyStateChanged(enabled);
 
         if (node._onHierarchyStatePostChanged)
-            this._app._enableList.push(node);
+            _enableList.push(node);
 
         const c = node._children;
         for (let i = 0, len = c.length; i < len; i++) {
@@ -465,11 +468,11 @@ class Entity extends GraphNode {
 
         if (enableFirst) {
             // do not cache the length here, as enableList may be added to during loop
-            for (let i = 0; i < this._app._enableList.length; i++) {
-                this._app._enableList[i]._onHierarchyStatePostChanged();
+            for (let i = 0; i < _enableList.length; i++) {
+                _enableList[i]._onHierarchyStatePostChanged();
             }
 
-            this._app._enableList.length = 0;
+            _enableList.length = 0;
         }
     }
 

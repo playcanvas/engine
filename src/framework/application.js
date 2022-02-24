@@ -382,12 +382,6 @@ class Application extends EventHandler {
         this.root._enabledInHierarchy = true;
 
         /**
-         * @type {GraphNode[]}
-         * @ignore
-         */
-        this._enableList = [];
-
-        /**
          * The asset registry managed by the application.
          *
          * @type {AssetRegistry}
