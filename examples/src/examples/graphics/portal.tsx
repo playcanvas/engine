@@ -135,7 +135,7 @@ class PortalExample {
 
         // Create the portal entity - this plane is written to stencil buffer,
         // which is then used to test for inside / outside. This needs to render
-        // before all elements requring stencil buffer, so add ot to a portalLayer
+        // before all elements requiring stencil buffer, so add to to a portalLayer
         const portal = new pc.Entity("Portal");
         portal.addComponent('render', {
             type: 'plane',
