@@ -161,7 +161,7 @@ class PortalExample {
         border.setLocalEulerAngles(90, 0, 0);
         border.setLocalScale(4.68, 1.17, 7.019);
 
-        // Create a Entity with a Box render component and a particle system
+        // Create an Entity with a Box render component and a particle system
         // This uses insidePortal script to set up its stencil testing
         // for inside the portal
         const box = new pc.Entity("Box");
