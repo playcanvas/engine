@@ -27,7 +27,10 @@ import { Application } from './application.js';
 /** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
 /** @typedef {import('./components/sprite/component.js').SpriteComponent} SpriteComponent */
 
-/** @type {GraphNode[]} */
+/**
+ * @type {GraphNode[]}
+ * @ignore
+ */
 const _enableList = [];
 
 /**
