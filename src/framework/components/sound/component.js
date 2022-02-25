@@ -365,7 +365,7 @@ class SoundComponent extends Component {
      * Returns the slot with the specified name.
      *
      * @param {string} name - The name of the slot.
-     * @returns {SoundSlot} The slot.
+     * @returns {SoundSlot|undefined} The slot.
      * @example
      * // get a slot and set its volume
      * this.entity.sound.slot('beep').volume = 0.5;
