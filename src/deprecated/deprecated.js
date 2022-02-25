@@ -464,19 +464,6 @@ Object.defineProperties(Texture.prototype, {
 
 // SCENE
 
-class DepthMaterial extends Material {
-    updateShader(device) {
-        Debug.deprecated("pc.DepthMaterial is deprecated.");
-        const options = {
-            skin: !!this.meshInstances[0].skinInstance
-        };
-        const library = device.getProgramLibrary();
-        this.shader = library.getProgram('depth', options);
-    }
-}
-
-export { DepthMaterial };
-
 export const PhongMaterial = StandardMaterial;
 
 export const scene = {
@@ -494,7 +481,6 @@ export const scene = {
     },
     BasicMaterial: BasicMaterial,
     Command: Command,
-    DepthMaterial: DepthMaterial,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
