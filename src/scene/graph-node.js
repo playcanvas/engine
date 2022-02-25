@@ -260,8 +260,11 @@ class GraphNode extends EventHandler {
         if (this._enabled !== enabled) {
             this._enabled = enabled;
 
-            if (this._parent && this._parent.enabled)
+            // if enablng entity, make all children enabled in hierarchy only when the parent is as well
+            // if disabling entity, make all children disabled in hierarchy in all cases
+            if (enabled && this._parent?.enabled || !enabled) {
                 this._notifyHierarchyStateChanged(this, enabled);
+            }
         }
     }
 
