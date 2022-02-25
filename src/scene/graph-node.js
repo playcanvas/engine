@@ -260,7 +260,7 @@ class GraphNode extends EventHandler {
         if (this._enabled !== enabled) {
             this._enabled = enabled;
 
-            if (!this._parent || this._parent.enabled)
+            if (this._parent && this._parent.enabled)
                 this._notifyHierarchyStateChanged(this, enabled);
         }
     }
