@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class TextureBasisExample extends Example {
+
+class TextureBasisExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Texture Basis';
 
@@ -13,10 +13,10 @@ class TextureBasisExample extends Example {
     //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
     load() {
         return <>
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.basis' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.basis' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.basis' data={{ type: pc.TEXTURETYPE_SWIZZLEGGGR }} />
-            <AssetLoader name='helipad' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.basis' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.basis' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.basis' data={{ type: pc.TEXTURETYPE_SWIZZLEGGGR }} />
+            <AssetLoader name='helipad' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -25,11 +25,10 @@ class TextureBasisExample extends Example {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        // @ts-ignore engine-tsd
         pc.basisInitialize({
-            glueUrl: 'static/lib/basis/basis.wasm.js',
-            wasmUrl: 'static/lib/basis/basis.wasm.wasm',
-            fallbackUrl: 'static/lib/basis/basis.js'
+            glueUrl: '/static/lib/basis/basis.wasm.js',
+            wasmUrl: '/static/lib/basis/basis.wasm.wasm',
+            fallbackUrl: '/static/lib/basis/basis.js'
         });
 
         app.start();
@@ -39,7 +38,6 @@ class TextureBasisExample extends Example {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // Set skybox
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxMip = 1;
         app.scene.skyboxIntensity = 0.7;

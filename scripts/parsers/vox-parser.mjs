@@ -87,7 +87,6 @@ class VoxFrame {
         if (!this._flattened) {
             const data = this.data;
             const min = this.bound.min;
-            const max = this.bound.max;
             const extent = this.bound.extent;
             const flattenedData = new Uint8Array(extent[0] * extent[1] * extent[2]);
 
@@ -171,10 +170,19 @@ class VoxLoader {
                     rs.skip(numVoxels * 4);
                     break;
                 }
-                case 'RGBA':
-                    voxModel.setPalette(new VoxPalette(new Uint8Array(arrayBuffer, rs.offset, 256 * 4)));
+                case 'RGBA': {
+                    const tmp = new Uint8Array(arrayBuffer, rs.offset, 256 * 4);
+                    const data = new Uint8Array(256 * 4);
+                    for (let i = 0; i < 255; ++i) {
+                        data[(i + 1) * 4 + 0] = tmp[i * 4 + 0];
+                        data[(i + 1) * 4 + 1] = tmp[i * 4 + 1];
+                        data[(i + 1) * 4 + 2] = tmp[i * 4 + 2];
+                        data[(i + 1) * 4 + 3] = tmp[i * 4 + 3];
+                    }
+                    voxModel.setPalette(new VoxPalette(new Uint8Array(data.buffer)));
                     rs.skip(256 * 6);
                     break;
+                }
                 default:
                     // skip other chunks
                     rs.skip(chunk.numBytes + chunk.numChildBytes);
@@ -183,7 +191,7 @@ class VoxLoader {
         }
 
         if (!voxModel.palette) {
-            voxModel.setPalette(defaultPalette);
+            voxModel.setPalette(new VoxPalette(defaultPalette));
         }
 
         return voxModel;
@@ -250,7 +258,7 @@ class VoxGen {
             normals.push(normal[0], normal[1], normal[2]);
 
             // colors
-            const clr = voxMesh.palette.clr(paletteIndex - 1);
+            const clr = voxMesh.palette.clr(paletteIndex);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
             colors.push(clr[0], clr[1], clr[2], clr[3]);
@@ -450,10 +458,9 @@ Component._buildAccessors(VoxAnimComponent.prototype, VoxAnimComponentSchema);
 // parser
 
 class VoxParser {
-    constructor(device, assets, defaultMaterial, maxRetries) {
+    constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
-        this._defaultMaterial = defaultMaterial;
         this._maxRetries = maxRetries;
     }
 
@@ -477,7 +484,7 @@ const registerVoxParser = (app) => {
     app.systems.add(new VoxAnimSystem(app));
 
     // register resource handler
-    app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets, app.scene.defaultMaterial);
+    app.loader.getHandler("container").parsers.vox = new VoxParser(app.graphicsDevice, app.assets);
 };
 
 export {

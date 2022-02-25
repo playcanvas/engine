@@ -5,6 +5,9 @@ import { http } from '../net/http.js';
 
 import { Font } from '../font/font.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
     if (data.version < 3) {
@@ -30,13 +33,16 @@ function upgradeDataSchema(data) {
 }
 
 /**
- * @class
- * @name FontHandler
+ * Resource handler used for loading {@link Font} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Font} resources.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class FontHandler {
+    /**
+     * Create a new FontHandler instance.
+     *
+     * @param {ResourceLoader} loader - The resource loader.
+     */
     constructor(loader) {
         this._loader = loader;
         this.maxRetries = 0;

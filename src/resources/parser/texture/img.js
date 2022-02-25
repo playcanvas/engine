@@ -6,12 +6,13 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 /**
- * @private
- * @class
- * @name ImgParser
+ * Parser for browser-supported image formats.
+ *
  * @implements {TextureParser}
- * @classdesc Parser for browser-supported image formats.
+ * @ignore
  */
 class ImgParser {
     constructor(registry) {

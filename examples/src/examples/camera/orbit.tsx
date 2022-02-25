@@ -1,16 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class OrbitExample extends Example {
+
+class OrbitExample {
     static CATEGORY = 'Camera';
     static NAME = 'Orbit';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/orbit-camera.js' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/orbit-camera.js' />
         </>;
     }
 

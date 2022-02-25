@@ -17,16 +17,21 @@ import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
 import { ElementComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ElementComponentSystem
+ * Manages creation of {@link ElementComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ElementComponent}s.
- * @param {Application} app - The application.
  */
 class ElementComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ElementComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

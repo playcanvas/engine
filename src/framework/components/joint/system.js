@@ -4,18 +4,22 @@ import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name JointComponentSystem
- * @classdesc Creates and manages physics joint components.
- * @description Create a new JointComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages physics joint components.
+ *
  * @augments ComponentSystem
+ * @ignore
  */
 class JointComponentSystem extends ComponentSystem {
+    /**
+     * Create a new JointComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

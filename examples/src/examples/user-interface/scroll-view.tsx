@@ -1,21 +1,21 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ScrollViewExample extends Example {
+class ScrollViewExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Scroll View';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
 
-        // Create the application and start the update loop
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -42,7 +42,7 @@ class ScrollViewExample extends Example {
             scaleBlend: 0.5
         });
 
-        function createScollbar(horizontal: boolean) {
+        function createScrollbar(horizontal: boolean) {
             const handle = new pc.Entity('Handle');
             const handleOptions = {
                 type: pc.ELEMENTTYPE_IMAGE,
@@ -124,7 +124,7 @@ class ScrollViewExample extends Example {
             anchor: new pc.Vec4(0, 1, 0, 1),
             autoHeight: true,
             autoWidth: false,
-            fontAsset: assets.font,
+            fontAsset: assets.font.id,
             fontSize: 32,
             lineHeight: 36,
             pivot: new pc.Vec2(0, 1),
@@ -133,7 +133,7 @@ class ScrollViewExample extends Example {
                     "by using a trackpad. Notice the elastic bounce if you drag the content beyond the " +
                     "limits of the scroll view.",
             type: pc.ELEMENTTYPE_TEXT,
-            width: 400,
+            width: 600,
             wrapLines: true
         });
 
@@ -147,7 +147,7 @@ class ScrollViewExample extends Example {
             pivot: new pc.Vec2(0, 1),
             type: pc.ELEMENTTYPE_GROUP,
             useInput: true,
-            width: 400
+            width: 600
         });
 
         // Scroll view viewport
@@ -166,8 +166,8 @@ class ScrollViewExample extends Example {
             useInput: false
         });
 
-        const horizontalScrollbar = createScollbar(true);
-        const verticalScrollbar = createScollbar(false);
+        const horizontalScrollbar = createScrollbar(true);
+        const verticalScrollbar = createScrollbar(false);
 
         // Create a scroll view
         const scrollview = new pc.Entity('ScrollView');
@@ -184,7 +184,7 @@ class ScrollViewExample extends Example {
             pivot: new pc.Vec2(0.5, 0.5),
             type: pc.ELEMENTTYPE_GROUP,
             useInput: false,
-            width: 200
+            width: 400
         });
 
         scrollview.addComponent('scrollview', {

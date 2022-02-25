@@ -13,66 +13,105 @@ import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
+/** @typedef {import('../../../scene/materials/material.js').Material} Material */
+/** @typedef {import('../../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').RenderComponentSystem} RenderComponentSystem */
+
 /**
- * @component
- * @class
- * @name RenderComponent
+ * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches
+ * {@link MeshInstance} geometry to the Entity.
+ *
+ * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
+ * skinned meshes that are rendered by this component.
  * @augments Component
- * @classdesc Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches {@link MeshInstance} geometry to the Entity.
- * @description Create a new RenderComponent.
- * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {string} type The type of the render. Can be one of the following:
- * - "asset": The component will render a render asset
- * - "box": The component will render a box (1 unit in each dimension)
- * - "capsule": The component will render a capsule (radius 0.5, height 2)
- * - "cone": The component will render a cone (radius 0.5, height 1)
- * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
- * - "plane": The component will render a plane (1 unit in each dimension)
- * - "sphere": The component will render a sphere (radius 0.5)
- * @property {Asset|number} asset The render asset for the render component (only applies to type 'asset') - can also be an asset id.
- * @property {Asset[]|number[]} materialAssets The material assets that will be used to render the meshes. Each material corresponds to the respective mesh instance.
- * @property {Material} material The material {@link Material} that will be used to render the meshes (not used on renders of type 'asset').
- * @property {boolean} castShadows If true, attached meshes will cast shadows for lights that have shadow casting enabled.
- * @property {boolean} receiveShadows If true, shadows will be cast on attached meshes.
- * @property {boolean} castShadowsLightmap If true, the meshes will cast shadows when rendering lightmaps.
- * @property {boolean} lightmapped If true, the meshes will be lightmapped after using lightmapper.bake().
- * @property {number} lightmapSizeMultiplier Lightmap resolution multiplier.
- * @property {boolean} isStatic Mark meshes as non-movable (optimization).
- * @property {BoundingBox} customAabb If set, the object space bounding box is used as a bounding box for visibility culling of attached mesh instances. This is an optimization,
- * allowing oversized bounding box to be specified for skinned characters in order to avoid per frame bounding box computations based on bone positions.
- * @property {MeshInstance[]} meshInstances An array of meshInstances contained in the component. If meshes are not set or loaded for component it will return null.
- * @property {number} batchGroupId Assign meshes to a specific batch group (see {@link BatchGroup}). Default value is -1 (no group).
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which the meshes should belong.
- * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
- * @property {Entity} rootBone A reference to the entity to be used as the root bone for any skinned meshes that are rendered by this component.
- * @property {number} renderStyle Set rendering of all {@link MeshInstance}s to the specified render style. Can be one of the following:
- * - {@link RENDERSTYLE_SOLID}
- * - {@link RENDERSTYLE_WIREFRAME}
- * - {@link RENDERSTYLE_POINTS}
  */
 class RenderComponent extends Component {
+    /** @private */
+    _type = 'asset';
+
+    /** @private */
+    _castShadows = true;
+
+    /** @private */
+    _receiveShadows = true;
+
+    /** @private */
+    _castShadowsLightmap = true;
+
+    /** @private */
+    _lightmapped = false;
+
+    /** @private */
+    _lightmapSizeMultiplier = 1;
+
+    /** @private */
+    _isStatic = false;
+
+    /** @private */
+    _batchGroupId = -1;
+
+    /** @private */
+    _layers = [LAYERID_WORLD]; // assign to the default world layer
+
+    /** @private */
+    _renderStyle = RENDERSTYLE_SOLID;
+
+    /**
+     * @type {MeshInstance[]}
+     * @private
+     */
+    _meshInstances = [];
+
+    /**
+     * @type {BoundingBox|null}
+     * @private
+     */
+    _customAabb = null;
+
+    /**
+     * Used by lightmapper.
+     *
+     * @type {{x: number, y: number, z: number, uv: number}|null}
+     * @ignore
+     */
+    _area = null;
+
+    /**
+     * @type {AssetReference}
+     * @private
+     */
+    _assetReference = [];
+
+    /**
+     * @type {AssetReference[]}
+     * @private
+     */
+    _materialReferences = [];
+
+    /**
+     * Material used to render meshes other than asset type. It gets priority when set to
+     * something else than defaultMaterial, otherwise materialASsets[0] is used.
+     *
+     * @type {Material}
+     * @private
+     */
+    _material;
+
+    /**
+     * @type {EntityReference}
+     * @private
+     */
+    _rootBone;
+
+    /**
+     * Create a new RenderComponent.
+     *
+     * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
-
-        this._type = 'asset';
-        this._castShadows = true;
-        this._receiveShadows = true;
-        this._castShadowsLightmap = true;
-        this._lightmapped = false;
-        this._lightmapSizeMultiplier = 1;
-        this._isStatic = false;
-        this._batchGroupId = -1;
-
-        this._meshInstances = [];
-        this._layers = [LAYERID_WORLD]; // assign to the default world layer
-        this._renderStyle = RENDERSTYLE_SOLID;
-
-        // bounding box which can be set to override bounding box based on mesh
-        this._customAabb = null;
-
-        // area - used by lightmapper
-        this._area = null;
 
         // the entity that represents the root bone if this render component has skinned meshes
         this._rootBone = new EntityReference(this, 'rootBone');
@@ -91,26 +130,476 @@ class RenderComponent extends Component {
             this
         );
 
-        // material used to render meshes other than asset type
-        // it gets priority when set to something else than defaultMaterial, otherwise materialASsets[0] is used
         this._material = system.defaultMaterial;
 
-        // material asset references
-        this._materialReferences = [];
-
-        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
+        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy)
+        // added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
         entity.on('removehierarchy', this.onRemoveChild, this);
         entity.on('insert', this.onInsertChild, this);
         entity.on('inserthierarchy', this.onInsertChild, this);
     }
 
+    /**
+     * Set rendering of all {@link MeshInstance}s to the specified render style. Can be:
+     *
+     * - {@link RENDERSTYLE_SOLID}
+     * - {@link RENDERSTYLE_WIREFRAME}
+     * - {@link RENDERSTYLE_POINTS}
+     *
+     * Defaults to {@link RENDERSTYLE_SOLID}.
+     *
+     * @type {number}
+     */
+    set renderStyle(renderStyle) {
+        if (this._renderStyle !== renderStyle) {
+            this._renderStyle = renderStyle;
+            MeshInstance._prepareRenderStyleForArray(this._meshInstances, renderStyle);
+        }
+    }
+
+    get renderStyle() {
+        return this._renderStyle;
+    }
+
+    /**
+     * If set, the object space bounding box is used as a bounding box for visibility culling of
+     * attached mesh instances. This is an optimization, allowing oversized bounding box to be
+     * specified for skinned characters in order to avoid per frame bounding box computations based
+     * on bone positions.
+     *
+     * @type {BoundingBox}
+     */
+    set customAabb(value) {
+        this._customAabb = value;
+
+        // set it on meshInstances
+        const mi = this._meshInstances;
+        if (mi) {
+            for (let i = 0; i < mi.length; i++) {
+                mi[i].setCustomAabb(this._customAabb);
+            }
+        }
+    }
+
+    get customAabb() {
+        return this._customAabb;
+    }
+
+    /**
+     * The type of the render. Can be one of the following:
+     *
+     * - "asset": The component will render a render asset
+     * - "box": The component will render a box (1 unit in each dimension)
+     * - "capsule": The component will render a capsule (radius 0.5, height 2)
+     * - "cone": The component will render a cone (radius 0.5, height 1)
+     * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
+     * - "plane": The component will render a plane (1 unit in each dimension)
+     * - "sphere": The component will render a sphere (radius 0.5)
+     *
+     * @type {string}
+     */
+    set type(value) {
+
+        if (this._type !== value) {
+            this._area = null;
+            this._type = value;
+
+            this.destroyMeshInstances();
+
+            if (value !== 'asset') {
+                let material = this._material;
+                if (!material || material === this.system.defaultMaterial) {
+                    material = this._materialReferences[0] &&
+                                this._materialReferences[0].asset &&
+                                this._materialReferences[0].asset.resource;
+                }
+
+                const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
+                this._area = primData.area;
+                this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
+            }
+        }
+    }
+
+    get type() {
+        return this._type;
+    }
+
+    /**
+     * An array of meshInstances contained in the component. If meshes are not set or loaded for
+     * component it will return null.
+     *
+     * @type {MeshInstance[]}
+     */
+    set meshInstances(value) {
+
+        this.destroyMeshInstances();
+
+        this._meshInstances = value;
+
+        if (this._meshInstances) {
+
+            const mi = this._meshInstances;
+            for (let i = 0; i < mi.length; i++) {
+
+                // if mesh instance was created without a node, assign it here
+                if (!mi[i].node) {
+                    mi[i].node = this.entity;
+                }
+
+                mi[i].castShadow = this._castShadows;
+                mi[i].receiveShadow = this._receiveShadows;
+                mi[i].isStatic = this._isStatic;
+                mi[i].renderStyle = this._renderStyle;
+                mi[i].setLightmapped(this._lightmapped);
+                mi[i].setCustomAabb(this._customAabb);
+            }
+
+            if (this.enabled && this.entity.enabled) {
+                this.addToLayers();
+            }
+        }
+    }
+
+    get meshInstances() {
+        return this._meshInstances;
+    }
+
+    /**
+     * If true, the meshes will be lightmapped after using lightmapper.bake().
+     *
+     * @type {boolean}
+     */
+    set lightmapped(value) {
+        if (value !== this._lightmapped) {
+            this._lightmapped = value;
+
+            const mi = this._meshInstances;
+            if (mi) {
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].setLightmapped(value);
+                }
+            }
+        }
+    }
+
+    get lightmapped() {
+        return this._lightmapped;
+    }
+
+    /**
+     * If true, attached meshes will cast shadows for lights that have shadow casting enabled.
+     *
+     * @type {boolean}
+     */
+    set castShadows(value) {
+        if (this._castShadows !== value) {
+
+            const mi = this._meshInstances;
+
+            if (mi) {
+                const layers = this.layers;
+                const scene = this.system.app.scene;
+                if (this._castShadows && !value) {
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(this.layers[i]);
+                        if (layer) {
+                            layer.removeShadowCasters(mi);
+                        }
+                    }
+                }
+
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].castShadow = value;
+                }
+
+                if (!this._castShadows && value) {
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = scene.layers.getLayerById(layers[i]);
+                        if (layer) {
+                            layer.addShadowCasters(mi);
+                        }
+                    }
+                }
+            }
+
+            this._castShadows = value;
+        }
+    }
+
+    get castShadows() {
+        return this._castShadows;
+    }
+
+    /**
+     * If true, shadows will be cast on attached meshes.
+     *
+     * @type {boolean}
+     */
+    set receiveShadows(value) {
+        if (this._receiveShadows !== value) {
+
+            this._receiveShadows = value;
+
+            const mi = this._meshInstances;
+            if (mi) {
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].receiveShadow = value;
+                }
+            }
+        }
+    }
+
+    get receiveShadows() {
+        return this._receiveShadows;
+    }
+
+    /**
+     * If true, the meshes will cast shadows when rendering lightmaps.
+     *
+     * @type {boolean}
+     */
+    set castShadowsLightmap(value) {
+        this._castShadowsLightmap = value;
+    }
+
+    get castShadowsLightmap() {
+        return this._castShadowsLightmap;
+    }
+
+    /**
+     * Lightmap resolution multiplier.
+     *
+     * @type {number}
+     */
+    set lightmapSizeMultiplier(value) {
+        this._lightmapSizeMultiplier = value;
+    }
+
+    get lightmapSizeMultiplier() {
+        return this._lightmapSizeMultiplier;
+    }
+
+    /**
+     * Mark meshes as non-movable (optimization).
+     *
+     * @type {boolean}
+     */
+    set isStatic(value) {
+        if (this._isStatic !== value) {
+            this._isStatic = value;
+
+            const mi = this._meshInstances;
+            if (mi) {
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].isStatic = value;
+                }
+            }
+        }
+    }
+
+    get isStatic() {
+        return this._isStatic;
+    }
+
+    /**
+     * An array of layer IDs ({@link Layer#id}) to which the meshes should belong. Don't push, pop,
+     * splice or modify this array, if you want to change it - set a new one instead.
+     *
+     * @type {number[]}
+     */
+    set layers(value) {
+        const layers = this.system.app.scene.layers;
+        let layer;
+
+        if (this._meshInstances) {
+            // remove all mesh instances from old layers
+            for (let i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeMeshInstances(this._meshInstances);
+                }
+            }
+        }
+
+        // set the layer list
+        this._layers.length = 0;
+        for (let i = 0; i < value.length; i++) {
+            this._layers[i] = value[i];
+        }
+
+        // don't add into layers until we're enabled
+        if (!this.enabled || !this.entity.enabled || !this._meshInstances) return;
+
+        // add all mesh instances to new layers
+        for (let i = 0; i < this._layers.length; i++) {
+            layer = layers.getLayerById(this._layers[i]);
+            if (layer) {
+                layer.addMeshInstances(this._meshInstances);
+            }
+        }
+    }
+
+    get layers() {
+        return this._layers;
+    }
+
+    /**
+     * Assign meshes to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     *
+     * @type {number}
+     */
+    set batchGroupId(value) {
+        if (this._batchGroupId !== value) {
+
+            const batcher = this.system.app.batcher;
+            if (this.entity.enabled && this._batchGroupId >= 0) {
+                batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            }
+            if (this.entity.enabled && value >= 0) {
+                batcher.insert(BatchGroup.RENDER, value, this.entity);
+            }
+
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add render to scene, in case it was removed by batching
+                this.addToLayers();
+            }
+
+            this._batchGroupId = value;
+        }
+    }
+
+    get batchGroupId() {
+        return this._batchGroupId;
+    }
+
+    /**
+     * The material {@link Material} that will be used to render the meshes (not used on renders of
+     * type 'asset').
+     *
+     * @type {Material}
+     */
+    set material(value) {
+        if (this._material !== value) {
+            this._material = value;
+
+            if (this._meshInstances && this._type !== 'asset') {
+                for (let i = 0; i < this._meshInstances.length; i++) {
+                    this._meshInstances[i].material = value;
+                }
+            }
+        }
+    }
+
+    get material() {
+        return this._material;
+    }
+
+    /**
+     * The material assets that will be used to render the meshes. Each material corresponds to the
+     * respective mesh instance.
+     *
+     * @type {Asset[]|number[]}
+     */
+    set materialAssets(value = []) {
+        if (this._materialReferences.length > value.length) {
+            for (let i = value.length; i < this._materialReferences.length; i++) {
+                this._materialReferences[i].id = null;
+            }
+            this._materialReferences.length = value.length;
+        }
+
+        for (let i = 0; i < value.length; i++) {
+            if (!this._materialReferences[i]) {
+                this._materialReferences.push(
+                    new AssetReference(
+                        i,
+                        this,
+                        this.system.app.assets, {
+                            add: this._onMaterialAdded,
+                            load: this._onMaterialLoad,
+                            remove: this._onMaterialRemove,
+                            unload: this._onMaterialUnload
+                        },
+                        this
+                    )
+                );
+            }
+
+            if (value[i]) {
+                const id = value[i] instanceof Asset ? value[i].id : value[i];
+                if (this._materialReferences[i].id !== id) {
+                    this._materialReferences[i].id = id;
+                }
+
+                if (this._materialReferences[i].asset) {
+                    this._onMaterialAdded(i, this, this._materialReferences[i].asset);
+                }
+            } else {
+                this._materialReferences[i].id = null;
+
+                if (this._meshInstances[i]) {
+                    this._meshInstances[i].material = this.system.defaultMaterial;
+                }
+            }
+        }
+    }
+
+    get materialAssets() {
+        return this._materialReferences.map(function (ref) {
+            return ref.id;
+        });
+    }
+
+    /**
+     * The render asset for the render component (only applies to type 'asset') - can also be an
+     * asset id.
+     *
+     * @type {Asset|number}
+     */
+    set asset(value) {
+        const id = value instanceof Asset ? value.id : value;
+        if (this._assetReference.id === id) return;
+
+        if (this._assetReference.asset && this._assetReference.asset.resource) {
+            this._onRenderAssetRemove();
+        }
+
+        this._assetReference.id = id;
+
+        if (this._assetReference.asset) {
+            this._onRenderAssetAdded();
+        }
+    }
+
+    get asset() {
+        return this._assetReference.id;
+    }
+
+    /**
+     * Assign asset id to the component, without updating the component with the new asset.
+     * This can be used to assign the asset id to already fully created component.
+     *
+     * @param {Asset|number} asset - The render asset or asset id to assign.
+     * @ignore
+     */
+    assignAsset(asset) {
+        const id = asset instanceof Asset ? asset.id : asset;
+        this._assetReference.id = id;
+    }
+
+    /**
+     * @param {Entity} entity - The entity set as the root bone.
+     * @private
+     */
     _onSetRootBone(entity) {
         if (entity) {
             this._onRootBoneChanged();
         }
     }
 
+    /** @private */
     _onRootBoneChanged() {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
@@ -119,6 +608,7 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     destroyMeshInstances() {
 
         const meshInstances = this._meshInstances;
@@ -135,6 +625,7 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     addToLayers() {
         const layers = this.system.app.scene.layers;
         for (let i = 0; i < this._layers.length; i++) {
@@ -157,10 +648,12 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     onRemoveChild() {
         this.removeFromLayers();
     }
 
+    /** @private */
     onInsertChild() {
         if (this._meshInstances && this.enabled && this.entity.enabled) {
             this.addToLayers();
@@ -248,12 +741,10 @@ class RenderComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RenderComponent#hide
-     * @description Stop rendering {@link MeshInstance}s without removing them from the scene hierarchy.
-     * This method sets the {@link MeshInstance#visible} property of every MeshInstance to false.
-     * Note, this does not remove the mesh instances from the scene hierarchy or draw call list.
-     * So the render component still incurs some CPU overhead.
+     * Stop rendering {@link MeshInstance}s without removing them from the scene hierarchy. This
+     * method sets the {@link MeshInstance#visible} property of every MeshInstance to false. Note,
+     * this does not remove the mesh instances from the scene hierarchy or draw call list. So the
+     * render component still incurs some CPU overhead.
      */
     hide() {
         if (this._meshInstances) {
@@ -264,10 +755,9 @@ class RenderComponent extends Component {
     }
 
     /**
-     * @function
-     * @name RenderComponent#show
-     * @description Enable rendering of the render {@link MeshInstance}s if hidden using {@link RenderComponent#hide}.
-     * This method sets all the {@link MeshInstance#visible} property on all mesh instances to true.
+     * Enable rendering of the component's {@link MeshInstance}s if hidden using
+     * {@link RenderComponent#hide}. This method sets the {@link MeshInstance#visible} property on
+     * all mesh instances to true.
      */
     show() {
         if (this._meshInstances) {
@@ -327,7 +817,7 @@ class RenderComponent extends Component {
 
                 // if skinned but does not have instance created yet
                 if (mesh.skin && !mesh.skinInstance) {
-                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinedInstance(mesh.skin, this._rootBone.entity, this.entity);
+                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(mesh.skin, this._rootBone.entity, this.entity);
                 }
             }
         }
@@ -387,362 +877,32 @@ class RenderComponent extends Component {
         }
     }
 
+    _updateMainMaterial(index, material) {
+        // first material for primitives can be accessed using material property, so set it up
+        if (index === 0) {
+            this.material = material;
+        }
+    }
+
     _onMaterialLoad(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = asset.resource;
         }
+        this._updateMainMaterial(index, asset.resource);
     }
 
     _onMaterialRemove(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
+        this._updateMainMaterial(index, this.system.defaultMaterial);
     }
 
     _onMaterialUnload(index, component, asset) {
         if (this._meshInstances[index]) {
             this._meshInstances[index].material = this.system.defaultMaterial;
         }
-    }
-
-    get renderStyle() {
-        return this._renderStyle;
-    }
-
-    set renderStyle(renderStyle) {
-        if (this._renderStyle !== renderStyle) {
-            this._renderStyle = renderStyle;
-            MeshInstance._prepareRenderStyleForArray(this._meshInstances, renderStyle);
-        }
-    }
-
-    get customAabb() {
-        return this._customAabb;
-    }
-
-    set customAabb(value) {
-        this._customAabb = value;
-
-        // set it on meshInstances
-        const mi = this._meshInstances;
-        if (mi) {
-            for (let i = 0; i < mi.length; i++) {
-                mi[i].setCustomAabb(this._customAabb);
-            }
-        }
-    }
-
-    get type() {
-        return this._type;
-    }
-
-    set type(value) {
-
-        if (this._type !== value) {
-            this._area = null;
-            this._type = value;
-
-            this.destroyMeshInstances();
-
-            if (value !== 'asset') {
-                let material = this._material;
-                if (!material || material === this.system.defaultMaterial) {
-                    material = this._materialReferences[0] &&
-                                this._materialReferences[0].asset &&
-                                this._materialReferences[0].asset.resource;
-                }
-
-                const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
-                this._area = primData.area;
-                this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
-            }
-        }
-    }
-
-    get meshInstances() {
-        return this._meshInstances;
-    }
-
-    set meshInstances(value) {
-
-        this.destroyMeshInstances();
-
-        this._meshInstances = value;
-
-        if (this._meshInstances) {
-
-            const mi = this._meshInstances;
-            for (let i = 0; i < mi.length; i++) {
-
-                // if mesh instance was created without a node, assign it here
-                if (!mi[i].node) {
-                    mi[i].node = this.entity;
-                }
-
-                mi[i].castShadow = this._castShadows;
-                mi[i].receiveShadow = this._receiveShadows;
-                mi[i].isStatic = this._isStatic;
-                mi[i].renderStyle = this._renderStyle;
-                mi[i].setLightmapped(this._lightmapped);
-                mi[i].setCustomAabb(this._customAabb);
-            }
-
-            if (this.enabled && this.entity.enabled) {
-                this.addToLayers();
-            }
-        }
-    }
-
-    get lightmapped() {
-        return this._lightmapped;
-    }
-
-    set lightmapped(value) {
-        if (value !== this._lightmapped) {
-            this._lightmapped = value;
-
-            const mi = this._meshInstances;
-            if (mi) {
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].setLightmapped(value);
-                }
-            }
-        }
-    }
-
-    get castShadows() {
-        return this._castShadows;
-    }
-
-    set castShadows(value) {
-        if (this._castShadows !== value) {
-
-            const mi = this._meshInstances;
-
-            if (mi) {
-                const layers = this.layers;
-                const scene = this.system.app.scene;
-                if (this._castShadows && !value) {
-                    for (let i = 0; i < layers.length; i++) {
-                        const layer = scene.layers.getLayerById(this.layers[i]);
-                        if (layer) {
-                            layer.removeShadowCasters(mi);
-                        }
-                    }
-                }
-
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].castShadow = value;
-                }
-
-                if (!this._castShadows && value) {
-                    for (let i = 0; i < layers.length; i++) {
-                        const layer = scene.layers.getLayerById(layers[i]);
-                        if (layer) {
-                            layer.addShadowCasters(mi);
-                        }
-                    }
-                }
-            }
-
-            this._castShadows = value;
-        }
-    }
-
-    get receiveShadows() {
-        return this._receiveShadows;
-    }
-
-    set receiveShadows(value) {
-        if (this._receiveShadows !== value) {
-
-            this._receiveShadows = value;
-
-            const mi = this._meshInstances;
-            if (mi) {
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].receiveShadow = value;
-                }
-            }
-        }
-    }
-
-    get castShadowsLightmap() {
-        return this._castShadowsLightmap;
-    }
-
-    set castShadowsLightmap(value) {
-        this._castShadowsLightmap = value;
-    }
-
-    get lightmapSizeMultiplier() {
-        return this._lightmapSizeMultiplier;
-    }
-
-    set lightmapSizeMultiplier(value) {
-        this._lightmapSizeMultiplier = value;
-    }
-
-    get isStatic() {
-        return this._isStatic;
-    }
-
-    set isStatic(value) {
-        if (this._isStatic !== value) {
-            this._isStatic = value;
-
-            const mi = this._meshInstances;
-            if (mi) {
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].isStatic = value;
-                }
-            }
-        }
-    }
-
-    get layers() {
-        return this._layers;
-    }
-
-    set layers(value) {
-        const layers = this.system.app.scene.layers;
-        let layer;
-
-        if (this._meshInstances) {
-            // remove all meshinstances from old layers
-            for (let i = 0; i < this._layers.length; i++) {
-                layer = layers.getLayerById(this._layers[i]);
-                if (layer) {
-                    layer.removeMeshInstances(this._meshInstances);
-                }
-            }
-        }
-
-        // set the layer list
-        this._layers.length = 0;
-        for (let i = 0; i < value.length; i++) {
-            this._layers[i] = value[i];
-        }
-
-        // don't add into layers until we're enabled
-        if (!this.enabled || !this.entity.enabled || !this._meshInstances) return;
-
-        // add all mesh instances to new layers
-        for (let i = 0; i < this._layers.length; i++) {
-            layer = layers.getLayerById(this._layers[i]);
-            if (layer) {
-                layer.addMeshInstances(this._meshInstances);
-            }
-        }
-    }
-
-    get batchGroupId() {
-        return this._batchGroupId;
-    }
-
-    set batchGroupId(value) {
-        if (this._batchGroupId !== value) {
-
-            const batcher = this.system.app.batcher;
-            if (this.entity.enabled && this._batchGroupId >= 0) {
-                batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
-            }
-            if (this.entity.enabled && value >= 0) {
-                batcher.insert(BatchGroup.RENDER, value, this.entity);
-            }
-
-            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
-                // re-add render to scene, in case it was removed by batching
-                this.addToLayers();
-            }
-
-            this._batchGroupId = value;
-        }
-    }
-
-    get material() {
-        return this._material;
-    }
-
-    set material(value) {
-        if (this._material !== value) {
-            this._material = value;
-
-            if (this._meshInstances && this._type !== 'asset') {
-                for (let i = 0; i < this._meshInstances.length; i++) {
-                    this._meshInstances[i].material = value;
-                }
-            }
-        }
-    }
-
-    get materialAssets() {
-        return this._materialReferences.map(function (ref) {
-            return ref.id;
-        });
-    }
-
-    set materialAssets(value = []) {
-        if (this._materialReferences.length > value.length) {
-            for (let i = value.length; i < this._materialReferences.length; i++) {
-                this._materialReferences[i].id = null;
-            }
-            this._materialReferences.length = value.length;
-        }
-
-        for (let i = 0; i < value.length; i++) {
-            if (!this._materialReferences[i]) {
-                this._materialReferences.push(
-                    new AssetReference(
-                        i,
-                        this,
-                        this.system.app.assets, {
-                            add: this._onMaterialAdded,
-                            load: this._onMaterialLoad,
-                            remove: this._onMaterialRemove,
-                            unload: this._onMaterialUnload
-                        },
-                        this
-                    )
-                );
-            }
-
-            if (value[i]) {
-                const id = value[i] instanceof Asset ? value[i].id : value[i];
-                if (this._materialReferences[i].id !== id) {
-                    this._materialReferences[i].id = id;
-                }
-
-                if (this._materialReferences[i].asset) {
-                    this._onMaterialAdded(i, this, this._materialReferences[i].asset);
-                }
-            } else {
-                this._materialReferences[i].id = null;
-
-                if (this._meshInstances[i]) {
-                    this._meshInstances[i].material = this.system.defaultMaterial;
-                }
-            }
-        }
-    }
-
-    get asset() {
-        return this._assetReference.id;
-    }
-
-    set asset(value) {
-        const id = (value instanceof Asset ? value.id : value);
-        if (this._assetReference.id === id) return;
-
-        if (this._assetReference.asset && this._assetReference.asset.resource) {
-            this._onRenderAssetRemove();
-        }
-
-        this._assetReference.id = id;
-
-        if (this._assetReference.asset) {
-            this._onRenderAssetAdded();
-        }
+        this._updateMainMaterial(index, this.system.defaultMaterial);
     }
 
     resolveDuplicatedEntityReferenceProperties(oldRender, duplicatedIdsMap) {

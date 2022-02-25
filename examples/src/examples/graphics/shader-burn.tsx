@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 attribute vec3 aPosition;
@@ -42,14 +42,14 @@ void main(void)
 }
 `;
 
-class ShaderBurnExample extends Example {
+class ShaderBurnExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Burn';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='clouds' type='texture' url='static/assets/textures/clouds.jpg' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='clouds' type='texture' url='/static/assets/textures/clouds.jpg' />
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
         </>;
@@ -111,8 +111,9 @@ class ShaderBurnExample extends Example {
             const meshInstances = render.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
                 const meshInstance = meshInstances[i];
-                // @ts-ignore
-                if (!originalTexture) originalTexture = meshInstance.material.diffuseMap;
+                if (!originalTexture) {
+                    originalTexture = meshInstance.material.diffuseMap;
+                }
                 meshInstance.material = material;
             }
         });

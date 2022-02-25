@@ -1,20 +1,26 @@
 import { AnimSnapshot } from './anim-snapshot.js';
 
-/**
- * @private
- * @class
- * @name AnimClip
- * @classdesc AnimClip wraps the running state of an animation track. It contains and update
- * the animation 'cursor' and performs looping logic.
- * @description Create a new animation clip.
- * @param {AnimTrack} track - The animation data.
- * @param {number} time - The initial time of the clip.
- * @param {number} speed - Speed of the animation playback.
- * @param {boolean} playing - true if the clip is playing and false otherwise.
- * @param {boolean} loop - Whether the clip should loop.
- */
+/** @typedef {import('./anim-track.js').AnimTrack} AnimTrack */
+
 // TODO: add configurable looping start/end times?
+
+/**
+ * AnimClip wraps the running state of an animation track. It contains and update the animation
+ * 'cursor' and performs looping logic.
+ *
+ * @ignore
+ */
 class AnimClip {
+    /**
+     * Create a new animation clip.
+     *
+     * @param {AnimTrack} track - The animation data.
+     * @param {number} time - The initial time of the clip.
+     * @param {number} speed - Speed of the animation playback.
+     * @param {boolean} playing - true if the clip is playing and false otherwise.
+     * @param {boolean} loop - Whether the clip should loop.
+     * @param {Function} eventHandler - The handler to call when an event is fired by the clip.
+     */
     constructor(track, time, speed, playing, loop, eventHandler) {
         this._name = track.name;        // default to track name
         this._track = track;
@@ -33,12 +39,12 @@ class AnimClip {
         }
     }
 
-    get name() {
-        return this._name;
-    }
-
     set name(name) {
         this._name = name;
+    }
+
+    get name() {
+        return this._name;
     }
 
     get track() {
@@ -49,52 +55,52 @@ class AnimClip {
         return this._snapshot;
     }
 
-    get time() {
-        return this._time;
-    }
-
     set time(time) {
         this._time = time;
     }
 
-    get speed() {
-        return this._speed;
+    get time() {
+        return this._time;
     }
 
     set speed(speed) {
         this._speed = speed;
     }
 
-    get loop() {
-        return this._loop;
+    get speed() {
+        return this._speed;
     }
 
     set loop(loop) {
         this._loop = loop;
     }
 
-    get blendWeight() {
-        return this._blendWeight;
+    get loop() {
+        return this._loop;
     }
 
     set blendWeight(blendWeight) {
         this._blendWeight = blendWeight;
     }
 
-    get blendOrder() {
-        return this._blendOrder;
+    get blendWeight() {
+        return this._blendWeight;
     }
 
     set blendOrder(blendOrder) {
         this._blendOrder = blendOrder;
     }
 
-    get eventCursor() {
-        return this._eventCursor;
+    get blendOrder() {
+        return this._blendOrder;
     }
 
     set eventCursor(value) {
         this._eventCursor = value;
+    }
+
+    get eventCursor() {
+        return this._eventCursor;
     }
 
     activeEventsForFrame(frameStartTime, frameEndTime) {

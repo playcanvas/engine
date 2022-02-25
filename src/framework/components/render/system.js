@@ -1,11 +1,16 @@
+import { Vec3 } from '../../../math/vec3.js';
+
+import { BoundingBox } from '../../../shape/bounding-box.js';
+
+import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-import { BoundingBox } from '../../../shape/bounding-box';
-import { Vec3 } from '../../../math/vec3';
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
@@ -31,14 +36,17 @@ const _properties = [
 ];
 
 /**
- * @class
- * @name RenderComponentSystem
+ * Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder,
+ * cone etc.
+ *
  * @augments ComponentSystem
- * @classdesc Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder, cone etc.
- * @description Create a new RenderComponentSystem.
- * @param {Application} app - The Application.
  */
 class RenderComponentSystem extends ComponentSystem {
+    /**
+     * Create a new RenderComponentSystem.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 
@@ -48,7 +56,7 @@ class RenderComponentSystem extends ComponentSystem {
         this.DataType = RenderComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = app.scene.defaultMaterial;
+        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -83,6 +91,7 @@ class RenderComponentSystem extends ComponentSystem {
         for (let i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+        data.enabled = entity.render.enabled;
 
         // mesh instances cannot be used this way, remove them and manually clone them later
         delete data.meshInstances;

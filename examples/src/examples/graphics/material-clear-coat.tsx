@@ -1,18 +1,18 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class MaterialClearCoatExample extends Example {
+class MaterialClearCoatExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Clear Coat';
 
     load() {
         return <>
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/flakes5n.png' />
-            <AssetLoader name='diffuse' type='texture' url='static/assets/textures/flakes5c.png' />
-            <AssetLoader name='other' type='texture' url='static/assets/textures/flakes5o.png' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/flakes5n.png' />
+            <AssetLoader name='diffuse' type='texture' url='/static/assets/textures/flakes5c.png' />
+            <AssetLoader name='other' type='texture' url='/static/assets/textures/flakes5o.png' />
         </>;
     }
 
@@ -25,7 +25,6 @@ class MaterialClearCoatExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.skyboxMip = 1;

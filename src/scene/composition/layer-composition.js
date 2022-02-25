@@ -1,11 +1,9 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 
-import { Vec3 } from '../../math/vec3.js';
-
 import {
     LAYERID_DEPTH,
-    BLEND_NONE,
     COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
@@ -14,42 +12,40 @@ import { RenderAction } from './render-action.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
-import { getApplication } from '../../framework/globals.js';
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../layer.js').Layer} Layer */
 
 const tempSet = new Set();
 const tempClusterArray = [];
 
 /**
- * @class
- * @name LayerComposition
+ * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
+ * rendering order.
+ *
+ * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will
+ * be rendered.
+ * @property {boolean[]} subLayerList A read-only array of boolean values, matching
+ * {@link Layer#layerList}. True means only semi-transparent objects are rendered, and false means
+ * opaque.
+ * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching
+ * {@link Layer#layerList}. True means the layer is rendered, false means it's skipped.
+ * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be
+ * used during rendering. e.g. Inside {@link Layer#onPreCull}, {@link Layer#onPostCull},
+ * {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  * @augments EventHandler
- * @classdesc Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define rendering order.
- * @description Create a new layer composition.
- * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this layer composition. If it is not provided, a device is obtained
- * from the {@link Application}.
- * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to "Untitled" if not specified.
- * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will be rendered.
- * @property {boolean[]} subLayerList A read-only array of boolean values, matching {@link Layer#layerList}.
- * True means only semi-transparent objects are rendered, and false means opaque.
- * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link Layer#layerList}.
- * True means the layer is rendered, false means it's skipped.
- * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be used during rendering. e.g. Inside
- * {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  */
-// Composition can hold only 2 sublayers of each layer
 class LayerComposition extends EventHandler {
-    // temporary way to enable clustered lighting, will be removed later when this becomes default
-    static clusteredLightingEnabled = false;
+    // Composition can hold only 2 sublayers of each layer
 
-    constructor(graphicsDevice, name = "Untitled") {
+    /**
+     * Create a new layer composition.
+     *
+     * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
+     * "Untitled" if not specified.
+     */
+    constructor(name = "Untitled") {
         super();
 
-        if (typeof graphicsDevice === 'string') {
-            // handle previous constructor parameters: (name)
-            graphicsDevice = null;
-            name = graphicsDevice;
-        }
-        this.device = graphicsDevice || getApplication()?.graphicsDevice;
         this.name = name;
 
         // enable logging
@@ -96,12 +92,6 @@ class LayerComposition extends EventHandler {
 
         // empty cluster with no lights
         this._emptyWorldClusters = null;
-
-        // clustered lighting parameters
-        this._clusteredLightingCells = new Vec3(10, 3, 10);
-        this._clusteredLightingMaxLights = 64;
-        this._clusteredLightingCookiesEnabled = true;
-        this._clusteredLightingShadowsEnabled = true;
     }
 
     destroy() {
@@ -118,78 +108,16 @@ class LayerComposition extends EventHandler {
         this._worldClusters = null;
     }
 
-    get clusteredLightingCells() {
-        return this._clusteredLightingCells;
-    }
-
-    set clusteredLightingCells(value) {
-        if (!this._clusteredLightingCells.equals(value)) {
-            this._clusteredLightingCells.copy(value);
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingMaxLights() {
-        return this._clusteredLightingMaxLights;
-    }
-
-    set clusteredLightingMaxLights(value) {
-        if (this._clusteredLightingMaxLights !== value) {
-            this._clusteredLightingMaxLights = value;
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingCookiesEnabled() {
-        return this._clusteredLightingCookiesEnabled;
-    }
-
-    set clusteredLightingCookiesEnabled(value) {
-        if (this._clusteredLightingCookiesEnabled !== value) {
-            this._clusteredLightingCookiesEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._dirtyLights = true;
-
-            this.updateWorldClusters();
-        }
-    }
-
-    get clusteredLightingShadowsEnabled() {
-        return this._clusteredLightingShadowsEnabled;
-    }
-
-    set clusteredLightingShadowsEnabled(value) {
-        if (this._clusteredLightingShadowsEnabled !== value) {
-            this._clusteredLightingShadowsEnabled = value;
-
-            // lit shaders need to be rebuilt
-            this._dirtyLights = true;
-
-            this.updateWorldClusters();
-        }
-    }
-
-    // update clusters with parameter changes
-    updateWorldClusters() {
-        this._worldClusters.forEach((cluster) => {
-            cluster.cells = this._clusteredLightingCells;
-            cluster.maxCellLightCount = this._clusteredLightingMaxLights;
-            cluster.cookiesEnabled = this._clusteredLightingCookiesEnabled;
-            cluster.shadowsEnabled = this._clusteredLightingShadowsEnabled;
-        });
-    }
-
     // returns an empty light cluster object to be used when no lights are used
-    get emptyWorldClusters() {
+    getEmptyWorldClusters(device) {
         if (!this._emptyWorldClusters) {
 
             // create cluster structure with no lights
-            this._emptyWorldClusters = new WorldClusters(this.device, new Vec3(1, 1, 1), 4);
+            this._emptyWorldClusters = new WorldClusters(device);
             this._emptyWorldClusters.name = "ClusterEmpty";
 
             // update it once to avoid doing it each frame
-            this._emptyWorldClusters.update([], false);
+            this._emptyWorldClusters.update([], false, null);
         }
 
         return this._emptyWorldClusters;
@@ -210,7 +138,7 @@ class LayerComposition extends EventHandler {
         }
     }
 
-    _update() {
+    _update(device, clusteredLightingEnabled = false) {
         const len = this.layerList.length;
         let result = 0;
 
@@ -278,10 +206,8 @@ class LayerComposition extends EventHandler {
         // function moves transparent or opaque meshes based on moveTransparent from src to dest array
         function moveByBlendType(dest, src, moveTransparent) {
             for (let s = 0; s < src.length;) {
-                const material = src[s].material;
-                const isTransparent = material && material.blendType !== BLEND_NONE;
 
-                if (isTransparent === moveTransparent) {
+                if (src[s].material?.transparent === moveTransparent) {
 
                     // add it to dest
                     dest.push(src[s]);
@@ -415,10 +341,14 @@ class LayerComposition extends EventHandler {
                     }
                 }
 
-                // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
-                // and set these up on the first render action for the camera. Only do it if camera renders any layers.
+                // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
+                    // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
+                    // and set these up on the first render action for the camera.
                     this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
+
+                    // mark the last render action as last one using the camera
+                    lastRenderAction.lastCameraUse = true;
                 }
 
                 // if no render action for this camera was marked for end of postprocessing, mark last one
@@ -436,8 +366,8 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
-            if (LayerComposition.clusteredLightingEnabled) {
-                this.allocateLightClusters();
+            if (clusteredLightingEnabled) {
+                this.allocateLightClusters(device);
             }
         }
 
@@ -562,7 +492,7 @@ class LayerComposition extends EventHandler {
     }
 
     // assign light clusters to render actions that need it
-    allocateLightClusters() {
+    allocateLightClusters(device) {
 
         // reuse previously allocated clusters
         tempClusterArray.push(...this._worldClusters);
@@ -595,8 +525,7 @@ class LayerComposition extends EventHandler {
 
                         // create new cluster
                         if (!clusters) {
-                            clusters = new WorldClusters(this.device, this._clusteredLightingCells, this._clusteredLightingMaxLights,
-                                                         this._clusteredLightingCookiesEnabled, this._clusteredLightingShadowsEnabled);
+                            clusters = new WorldClusters(device);
                         }
 
                         clusters.name = "Cluster-" + this._worldClusters.length;
@@ -609,7 +538,7 @@ class LayerComposition extends EventHandler {
 
             // no clustered lights, use the cluster with no lights
             if (!ra.lightClusters) {
-                ra.lightClusters = this.emptyWorldClusters;
+                ra.lightClusters = this.getEmptyWorldClusters(device);
             }
         }
 
@@ -676,6 +605,7 @@ class LayerComposition extends EventHandler {
         renderAction.clearDepth = clearDepth;
         renderAction.clearStencil = clearStencil;
         renderAction.firstCameraUse = cameraFirstRenderAction;
+        renderAction.lastCameraUse = false;
 
         return renderAction;
     }
@@ -718,7 +648,7 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (this.logRenderActions) {
-            console.log("Render Actions for composition: " + this.name);
+            Debug.log("Render Actions for composition: " + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -729,7 +659,7 @@ class LayerComposition extends EventHandler {
                 const dirLightCount = ra.directionalLights.length;
                 const clear = (ra.clearColor ? "Color " : "..... ") + (ra.clearDepth ? "Depth " : "..... ") + (ra.clearStencil ? "Stencil" : ".......");
 
-                console.log(i +
+                Debug.log(i +
                     (" Cam: " + (camera ? camera.entity.name : "-")).padEnd(22, " ") +
                     (" Lay: " + layer.name).padEnd(22, " ") +
                     (transparent ? " TRANSP" : " OPAQUE") +
@@ -740,6 +670,7 @@ class LayerComposition extends EventHandler {
                     " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
                     " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
                     (ra.firstCameraUse ? " CAM-FIRST" : "") +
+                    (ra.lastCameraUse ? " CAM-LAST" : "") +
                     (ra.triggerPostprocess ? " POSTPROCESS" : "") +
                     (dirLightCount ? (" DirLights: " + dirLightCount) : "")
                 );
@@ -750,9 +681,7 @@ class LayerComposition extends EventHandler {
 
     _isLayerAdded(layer) {
         if (this.layerList.indexOf(layer) >= 0) {
-            // #if _DEBUG
-            console.error("Layer is already added.");
-            // #endif
+            Debug.error("Layer is already added.");
             return true;
         }
         return false;
@@ -761,9 +690,7 @@ class LayerComposition extends EventHandler {
     _isSublayerAdded(layer, transparent) {
         for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                // #if _DEBUG
-                console.error("Sublayer is already added.");
-                // #endif
+                Debug.error("Sublayer is already added.");
                 return true;
             }
         }
@@ -773,9 +700,8 @@ class LayerComposition extends EventHandler {
     // Whole layer API
 
     /**
-     * @function
-     * @name LayerComposition#push
-     * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     push(layer) {
@@ -794,9 +720,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insert
-     * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link Layer#layerList}.
+     * Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -817,9 +743,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#remove
-     * @description Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     * Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     remove(layer) {
@@ -849,9 +774,9 @@ class LayerComposition extends EventHandler {
     // Sublayer API
 
     /**
-     * @function
-     * @name LayerComposition#pushOpaque
-     * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link Layer#layerList}.
+     * Adds part of the layer with opaque (non semi-transparent) objects to the end of the
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     pushOpaque(layer) {
@@ -867,9 +792,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insertOpaque
-     * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link Layer#layerList}.
+     * Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen
+     * index in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -890,9 +815,9 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#removeOpaque
-     * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link Layer#layerList}.
+     * Removes an opaque part of the layer (non semi-transparent mesh instances) from
+     * {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeOpaque(layer) {
@@ -918,9 +843,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#pushTransparent
-     * @description Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     * Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     pushTransparent(layer) {
@@ -936,9 +860,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#insertTransparent
-     * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     * Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
@@ -959,9 +882,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#removeTransparent
-     * @description Removes a transparent part of the layer from {@link Layer#layerList}.
+     * Removes a transparent part of the layer from {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeTransparent(layer) {
@@ -1002,9 +924,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getOpaqueIndex
-     * @description Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
      */
@@ -1013,9 +934,8 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getTransparentIndex
-     * @description Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     *
      * @param {Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.
      */
@@ -1024,11 +944,11 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getLayerById
-     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     * Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     *
      * @param {number} id - An ID of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
+     * @returns {Layer|null} The layer corresponding to the specified ID. Returns null if layer is
+     * not found.
      */
     getLayerById(id) {
         for (let i = 0; i < this.layerList.length; i++) {
@@ -1038,11 +958,11 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @function
-     * @name LayerComposition#getLayerByName
-     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     * Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     *
      * @param {string} name - The name of the layer to find.
-     * @returns {Layer} The layer corresponding to the specified name. Returns null if layer is not found.
+     * @returns {Layer|null} The layer corresponding to the specified name. Returns null if layer
+     * is not found.
      */
     getLayerByName(name) {
         for (let i = 0; i < this.layerList.length; i++) {
@@ -1104,28 +1024,31 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name LayerComposition#sortTransparentLayers
-     * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
+     * Used to determine which array of layers has any transparent sublayer that is on top of all
+     * the transparent sublayers in the other array.
+     *
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
-     * @returns {number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
-     * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
+     * @returns {number} Returns a negative number if any of the transparent sublayers in layersA
+     * is on top of all the transparent sublayers in layersB, or a positive number if any of the
+     * transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0
+     * otherwise.
+     * @private
      */
     sortTransparentLayers(layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._transparentOrder);
     }
 
     /**
-     * @private
-     * @function
-     * @name LayerComposition#sortOpaqueLayers
-     * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
+     * Used to determine which array of layers has any opaque sublayer that is on top of all the
+     * opaque sublayers in the other array.
+     *
      * @param {number[]} layersA - IDs of layers.
      * @param {number[]} layersB - IDs of layers.
-     * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
-     * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on
+     * top of all the opaque sublayers in layersB, or a positive number if any of the opaque
+     * sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     * @private
      */
     sortOpaqueLayers(layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._opaqueOrder);

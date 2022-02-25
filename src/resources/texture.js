@@ -15,6 +15,13 @@ import { Ktx2Parser } from './parser/texture/ktx2.js';
 import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./handler.js').resourceHandlerCallback} resourceHandlerCallback */
+/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+
 const JSON_ADDRESS_MODE = {
     "repeat": ADDRESS_REPEAT,
     "clamp": ADDRESS_CLAMP_TO_EDGE,
@@ -44,6 +51,7 @@ const JSON_TEXTURE_TYPE = {
  * and opening of texture assets.
  */
 class TextureParser {
+    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name TextureParser#load
@@ -52,14 +60,12 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {resourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     load(url, callback, asset) {
         throw new Error('not implemented');
     }
-    /* eslint-enable jsdoc/require-returns-check */
 
     /**
      * @function
@@ -71,7 +77,6 @@ class TextureParser {
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     open(url, data, device) {
         throw new Error('not implemented');
     }
@@ -149,21 +154,24 @@ const _completePartialMipmapChain = function (texture) {
 };
 
 /**
- * @class
- * @name TextureHandler
+ * Resource handler used for loading 2D and 3D {@link Texture} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading 2D and 3D {@link Texture} resources.
- * @param {GraphicsDevice} device - The graphics device.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class TextureHandler {
+    /**
+     * Create a new TextureHandler instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AssetRegistry} assets - The asset registry.
+     * @param {ResourceLoader} loader - The resource loader.
+     */
     constructor(device, assets, loader) {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
 
-        // img parser handles all broswer-supported image formats, this
+        // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.
         this.imgParser = new ImgParser(assets);
 
@@ -176,16 +184,12 @@ class TextureHandler {
         };
     }
 
-    get crossOrigin() {
-        return this.imgParser.crossOrigin;
-    }
-
     set crossOrigin(value) {
         this.imgParser.crossOrigin = value;
     }
 
-    get maxRetries() {
-        return this.imgParser.maxRetries;
+    get crossOrigin() {
+        return this.imgParser.crossOrigin;
     }
 
     set maxRetries(value) {
@@ -195,6 +199,10 @@ class TextureHandler {
                 this.parsers[parser].maxRetries = value;
             }
         }
+    }
+
+    get maxRetries() {
+        return this.imgParser.maxRetries;
     }
 
     _getUrlWithoutParams(url) {

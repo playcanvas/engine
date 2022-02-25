@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class HierarchyExample extends Example {
+
+class HierarchyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';
 
@@ -18,7 +18,6 @@ class HierarchyExample extends Example {
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
-;
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -99,11 +98,10 @@ class HierarchyExample extends Example {
 
         // update each frame
         let time = 0;
-        const switchTime = 0;
         app.on("update", function (dt) {
             time += dt;
 
-            // rotation quaterion changing with time
+            // rotation quaternion changing with time
             const rot = new pc.Quat();
             rot.setFromEulerAngles(time * 5, time * 13, time * 6);
 

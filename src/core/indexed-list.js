@@ -1,20 +1,26 @@
 /**
- * @private
- * @class
- * @name IndexedList
- * @classdesc A ordered list-type data structure that can provide item look up by key, but also return return a list.\.
+ * A ordered list-type data structure that can provide item look up by key and can also return a list.
+ *
+ * @ignore
  */
 class IndexedList {
-    constructor() {
-        this._list = [];
-        this._index = {};
-    }
+    /**
+     * @type {object[]}
+     * @private
+     */
+    _list = [];
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, number>}
+     * @private
+     */
+    _index = {};
+    /* eslint-enable jsdoc/check-types */
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#push
-     * @description Add a new item into the list with a index key.
+     * Add a new item into the list with a index key.
+     *
      * @param {string} key -  Key used to look up item in index.
      * @param {object} item - Item to be stored.
      */
@@ -27,10 +33,8 @@ class IndexedList {
     }
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#has
-     * @description Test whether a key has been added to the index.
+     * Test whether a key has been added to the index.
+     *
      * @param {string} key - The key to test.
      * @returns {boolean} Returns true if key is in the index, false if not.
      */
@@ -39,12 +43,10 @@ class IndexedList {
     }
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#get
-     * @description Return the item indexed by a key.
+     * Return the item indexed by a key.
+     *
      * @param {string} key - The key of the item to retrieve.
-     * @returns {object} The item stored at key.
+     * @returns {object|null} The item stored at key. Returns null if key is not in the index.
      */
     get(key) {
         const location = this._index[key];
@@ -55,12 +57,11 @@ class IndexedList {
     }
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#remove
-     * @description Remove the item indexed by key from the list.
+     * Remove the item indexed by key from the list.
+     *
      * @param {string} key - The key at which to remove the item.
-     * @returns {boolean} Returns true if the key exists and an item was removed, returns false if no item was removed.
+     * @returns {boolean} Returns true if the key exists and an item was removed, returns false if
+     * no item was removed.
      */
     remove(key) {
         const location = this._index[key];
@@ -82,10 +83,8 @@ class IndexedList {
     }
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#list
-     * @description Returns the list of items.
+     * Returns the list of items.
+     *
      * @returns {object[]} The list of items.
      */
     list() {
@@ -93,10 +92,7 @@ class IndexedList {
     }
 
     /**
-     * @private
-     * @function
-     * @name IndexedList#clear
-     * @description Remove all items from the list.
+     * Remove all items from the list.
      */
     clear() {
         this._list.length = 0;

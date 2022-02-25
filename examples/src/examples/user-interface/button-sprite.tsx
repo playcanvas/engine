@@ -1,34 +1,33 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ButtonSpriteExample extends Example {
+class ButtonSpriteExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Button Sprite';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
-            <AssetLoader name='red_button_atlas' type='texture' url='static/assets/button/red_button_atlas.png' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
+            <AssetLoader name='red_button_atlas' type='texture' url='/static/assets/button/red_button_atlas.png' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { font: pc.Asset, red_button_atlas: pc.Asset }): void {
 
-        // Create the application and start the update loop
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
             elementInput: new pc.ElementInput(canvas)
         });
-
         app.start();
 
         // Create a camera
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         app.root.addChild(camera);
 
@@ -64,6 +63,7 @@ class ButtonSpriteExample extends Example {
         label.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(1, 1, 1),
+            fontAsset: assets.font.id,
             fontSize: 32,
             height: 64,
             opacity: 0.5,
@@ -90,7 +90,6 @@ class ButtonSpriteExample extends Example {
         });
 
         // Apply the font to the text element
-        label.element.fontAsset = assets.font.id;
         const texture = assets.red_button_atlas.resource;
         texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;

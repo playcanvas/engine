@@ -14,7 +14,6 @@ import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
-export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
@@ -55,12 +54,12 @@ export { Ray } from './shape/ray.js';
 // GRAPHICS
 export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
-export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
+export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
-export { Prefilter } from './graphics/prefilter.js';
+export { EnvLighting } from './graphics/env-lighting.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { ProgramLibrary } from './graphics/program-library.js';
@@ -74,6 +73,9 @@ export { VertexBuffer } from './graphics/vertex-buffer.js';
 export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
+// GRAPHICS / webgl
+export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
@@ -84,12 +86,12 @@ export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
-export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
+export { LightingParams } from './scene/lighting/lighting-params.js';
 export { Lightmapper } from './scene/lightmapper/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';

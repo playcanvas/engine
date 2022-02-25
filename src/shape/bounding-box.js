@@ -1,4 +1,9 @@
+import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
+
+/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
+/** @typedef {import('./ray.js').Ray} Ray */
 
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
@@ -7,27 +12,48 @@ const tmpVecD = new Vec3();
 const tmpVecE = new Vec3();
 
 /**
- * @class
- * @name BoundingBox
- * @description Create a new axis-aligned bounding box.
- * @classdesc Axis-Aligned Bounding Box.
- * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
- * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter. Defaults to 0.5 on each axis.
- * @property {Vec3} center Center of box.
- * @property {Vec3} halfExtents Half the distance across the box in each axis.
+ * Axis-Aligned Bounding Box.
  */
 class BoundingBox {
+    /**
+     * Create a new BoundingBox instance. The bounding box is axis-aligned.
+     *
+     * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
+     * takes a reference of this parameter. Defaults to 0.5 on each axis.
+     */
     constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
+        Debug.assert(!Object.isFrozen(center), `The constructor of 'BoundingBox' does not accept a constant (frozen) object as a 'center' parameter`);
+        Debug.assert(!Object.isFrozen(halfExtents), `The constructor of 'BoundingBox' does not accept a constant (frozen) object as a 'halfExtents' parameter`);
+
+        /**
+         * Center of box.
+         *
+         * @type {Vec3}
+         */
         this.center = center;
+        /**
+         * Half the distance across the box in each axis.
+         *
+         * @type {Vec3}
+         */
         this.halfExtents = halfExtents;
+
+        /**
+         * @type {Vec3}
+         * @private
+         */
         this._min = new Vec3();
+        /**
+         * @type {Vec3}
+         * @private
+         */
         this._max = new Vec3();
     }
 
     /**
-     * @function
-     * @name BoundingBox#add
-     * @description Combines two bounding boxes into one, enclosing both.
+     * Combines two bounding boxes into one, enclosing both.
+     *
      * @param {BoundingBox} other - Bounding box to add.
      */
     add(other) {
@@ -77,9 +103,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#copy
-     * @description Copies the contents of a source AABB.
+     * Copies the contents of a source AABB.
+     *
      * @param {BoundingBox} src - The AABB to copy from.
      */
     copy(src) {
@@ -88,9 +113,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#clone
-     * @description Returns a clone of the AABB.
+     * Returns a clone of the AABB.
+     *
      * @returns {BoundingBox} A duplicate AABB.
      */
     clone() {
@@ -98,9 +122,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersects
-     * @description Test whether two axis-aligned bounding boxes intersect.
+     * Test whether two axis-aligned bounding boxes intersect.
+     *
      * @param {BoundingBox} other - Bounding box to test against.
      * @returns {boolean} True if there is an intersection.
      */
@@ -196,9 +219,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersectsRay
-     * @description Test if a ray intersects with the AABB.
+     * Test if a ray intersects with the AABB.
+     *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
      * @returns {boolean} True if there is an intersection.
@@ -212,10 +234,9 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#setMinMax
-     * @description Sets the minimum and maximum corner of the AABB.
-     * Using this function is faster than assigning min and max separately.
+     * Sets the minimum and maximum corner of the AABB. Using this function is faster than
+     * assigning min and max separately.
+     *
      * @param {Vec3} min - The minimum corner of the AABB.
      * @param {Vec3} max - The maximum corner of the AABB.
      */
@@ -225,9 +246,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#getMin
-     * @description Return the minimum corner of the AABB.
+     * Return the minimum corner of the AABB.
+     *
      * @returns {Vec3} Minimum corner.
      */
     getMin() {
@@ -235,9 +255,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#getMax
-     * @description Return the maximum corner of the AABB.
+     * Return the maximum corner of the AABB.
+     *
      * @returns {Vec3} Maximum corner.
      */
     getMax() {
@@ -245,9 +264,8 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#containsPoint
-     * @description Test if a point is inside a AABB.
+     * Test if a point is inside a AABB.
+     *
      * @param {Vec3} point - Point to test.
      * @returns {boolean} True if the point is inside the AABB and false otherwise.
      */
@@ -265,27 +283,54 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#setFromTransformedAabb
-     * @description Set an AABB to enclose the specified AABB if it were to be
-     * transformed by the specified 4x4 matrix.
+     * Set an AABB to enclose the specified AABB if it were to be transformed by the specified 4x4
+     * matrix.
+     *
      * @param {BoundingBox} aabb - Box to transform and enclose.
      * @param {Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
-    setFromTransformedAabb(aabb, m) {
+    setFromTransformedAabb(aabb, m, ignoreScale = false) {
         const ac = aabb.center;
         const ar = aabb.halfExtents;
 
         const d = m.data;
-        const mx0 = d[0];
-        const mx1 = d[4];
-        const mx2 = d[8];
-        const my0 = d[1];
-        const my1 = d[5];
-        const my2 = d[9];
-        const mz0 = d[2];
-        const mz1 = d[6];
-        const mz2 = d[10];
+        let mx0 = d[0];
+        let mx1 = d[4];
+        let mx2 = d[8];
+        let my0 = d[1];
+        let my1 = d[5];
+        let my2 = d[9];
+        let mz0 = d[2];
+        let mz1 = d[6];
+        let mz2 = d[10];
+
+        // renormalize axis if scale is to be ignored
+        if (ignoreScale) {
+            let lengthSq = mx0 * mx0 + mx1 * mx1 + mx2 * mx2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                mx0 *= invLength;
+                mx1 *= invLength;
+                mx2 *= invLength;
+            }
+
+            lengthSq = my0 * my0 + my1 * my1 + my2 * my2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                my0 *= invLength;
+                my1 *= invLength;
+                my2 *= invLength;
+            }
+
+            lengthSq = mz0 * mz0 + mz1 * mz1 + mz2 * mz2;
+            if (lengthSq > 0) {
+                const invLength = 1 / Math.sqrt(lengthSq);
+                mz0 *= invLength;
+                mz1 *= invLength;
+                mz2 *= invLength;
+            }
+        }
 
         this.center.set(
             d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
@@ -301,11 +346,12 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#compute
-     * @description Compute the size of the AABB to encapsulate all specified vertices.
-     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the AABB.
-     * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array. All vertices are used if not specified.
+     * Compute the size of the AABB to encapsulate all specified vertices.
+     *
+     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
+     * AABB.
+     * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
+     * All vertices are used if not specified.
      */
     compute(vertices, numVerts) {
         numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
@@ -330,11 +376,11 @@ class BoundingBox {
     }
 
     /**
-     * @function
-     * @name BoundingBox#intersectsBoundingSphere
-     * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
+     * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
+     *
      * @param {BoundingSphere} sphere - Bounding Sphere to test.
-     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
+     * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
+     * AABB and false otherwise.
      */
     intersectsBoundingSphere(sphere) {
         const sq = this._distanceToBoundingSphereSq(sphere);

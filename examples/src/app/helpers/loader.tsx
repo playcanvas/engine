@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 
 interface AssetLoaderProps {
     name: string,
@@ -8,7 +8,7 @@ interface AssetLoaderProps {
     url?: string
 }
 
-class AssetLoader extends React.Component <AssetLoaderProps, any>  {
+class AssetLoader extends React.Component <AssetLoaderProps, any> {
     static ctor: any;
     static load(resource: AssetLoaderProps, app: pc.Application, onLoad: any) {
         if (resource.data) {
@@ -32,7 +32,7 @@ interface ScriptLoaderProps {
     name: string,
     url: string
 }
-class ScriptLoader extends React.Component <ScriptLoaderProps, any>  {
+class ScriptLoader extends React.Component <ScriptLoaderProps, any> {
     static ctor: any;
     static load(resource: ScriptLoaderProps, app: pc.Application, onLoad: any) {
         fetch(resource.url)

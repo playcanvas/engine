@@ -1,13 +1,16 @@
 import { Vec3 } from '../../math/vec3.js';
 import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../graphics/constants.js';
 import { FloatPacking } from '../../math/float-packing.js';
-import { LIGHTTYPE_SPOT } from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
 
 const epsilon = 0.000001;
 
 const tempVec3 = new Vec3();
+const tempAreaLightSizes = new Float32Array(6);
+const areaHalfAxisWidth = new Vec3(-0.5, 0, 0);
+const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 
 // format of a row in 8 bit texture used to encode light data
 // this is used to store data in the texture correctly, and also use to generate defines for the shader
@@ -16,7 +19,7 @@ const TextureIndex8 = {
     // always 8bit texture data, regardless of float texture support
     FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
     COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
-    COLOR_B: 2,                 // color.b, color.b, useCookie, -
+    COLOR_B: 2,                 // color.b, color.b, useCookie, lightMask
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
     SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
     COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
@@ -55,8 +58,15 @@ const TextureIndex8 = {
     PROJ_MAT_32: 28,
     PROJ_MAT_33: 29,
 
+    AREA_DATA_WIDTH_X: 30,
+    AREA_DATA_WIDTH_Y: 31,
+    AREA_DATA_WIDTH_Z: 32,
+    AREA_DATA_HEIGHT_X: 33,
+    AREA_DATA_HEIGHT_Y: 34,
+    AREA_DATA_HEIGHT_Z: 35,
+
     // leave last
-    COUNT: 30
+    COUNT: 36
 };
 
 // format of the float texture
@@ -64,15 +74,18 @@ const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
     SPOT_DIRECTION: 1,              // spot direction.xyz, -
 
-    PROJ_MAT_0: 2,                  // projection matrix raw 0 (spot light)
+    PROJ_MAT_0: 2,                  // projection matrix row 0 (spot light)
     ATLAS_VIEWPORT: 2,              // atlas viewport data (omni light)
 
-    PROJ_MAT_1: 3,                  // projection matrix raw 1 (spot light)
-    PROJ_MAT_2: 4,                  // projection matrix raw 2 (spot light)
-    PROJ_MAT_3: 5,                  // projection matrix raw 3 (spot light)
+    PROJ_MAT_1: 3,                  // projection matrix row 1 (spot light)
+    PROJ_MAT_2: 4,                  // projection matrix row 2 (spot light)
+    PROJ_MAT_3: 5,                  // projection matrix row 3 (spot light)
+
+    AREA_DATA_WIDTH: 6,             // area light half-width.xyz, -
+    AREA_DATA_HEIGHT: 7,            // area light half-height.xyz, -
 
     // leave last
-    COUNT: 6
+    COUNT: 8
 };
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
@@ -112,13 +125,15 @@ class LightsBuffer {
     static init(device) {
 
         // precision for texture storage
-        LightsBuffer.lightTextureFormat = device.extTextureFloat ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
+        // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
+        LightsBuffer.lightTextureFormat = (device.extTextureFloat && device.maxTextures > 8) ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
 
         LightsBuffer.initShaderDefines();
     }
 
-    static createTexture(device, width, height, format) {
+    static createTexture(device, width, height, format, name) {
         const tex = new Texture(device, {
+            name: name,
             width: width,
             height: height,
             mipmaps: false,
@@ -134,13 +149,14 @@ class LightsBuffer {
         return tex;
     }
 
-    constructor(device, cookiesEnabled, shadowsEnabled) {
+    constructor(device) {
 
         this.device = device;
 
         // features
-        this.cookiesEnabled = cookiesEnabled;
-        this.shadowsEnabled = shadowsEnabled;
+        this.cookiesEnabled = false;
+        this.shadowsEnabled = false;
+        this.areaLightsEnabled = false;
 
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;
@@ -158,13 +174,13 @@ class LightsBuffer {
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8);
+        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8, "LightsTexture8");
         this._lightsTexture8Id = this.device.scope.resolve("lightsTexture8");
 
         // float texture
         if (pixelsPerLightFloat) {
             this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-            this.lightsTextureFloat = LightsBuffer.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F);
+            this.lightsTextureFloat = LightsBuffer.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, "LightsTextureFloat");
             this._lightsTextureFloatId = this.device.scope.resolve("lightsTextureFloat");
         } else {
             this.lightsFloat = null;
@@ -242,11 +258,29 @@ class LightsBuffer {
         direction.normalize();
     }
 
-    addLightDataFlags(data8, index, light, isSpot) {
+    // half sizes of area light in world space, returned as an array of 6 floats
+    getLightAreaSizes(light) {
+
+        const mat = light._node.getWorldTransform();
+
+        mat.transformVector(areaHalfAxisWidth, tempVec3);
+        tempAreaLightSizes[0] = tempVec3.x;
+        tempAreaLightSizes[1] = tempVec3.y;
+        tempAreaLightSizes[2] = tempVec3.z;
+
+        mat.transformVector(areaHalfAxisHeight, tempVec3);
+        tempAreaLightSizes[3] = tempVec3.x;
+        tempAreaLightSizes[4] = tempVec3.y;
+        tempAreaLightSizes[5] = tempVec3.z;
+
+        return tempAreaLightSizes;
+    }
+
+    addLightDataFlags(data8, index, light, isSpot, castShadows) {
         data8[index + 0] = isSpot ? 255 : 0;
-        data8[index + 1] = light._shape * 255;         // this need different encoding as value is 0..2
-        data8[index + 2] = light._falloffMode * 255;   // we should consider making this global instead of per light
-        data8[index + 3] = light.castShadows ? 255 : 0;
+        data8[index + 1] = light._shape * 64;           // value 0..3
+        data8[index + 2] = light._falloffMode * 255;    // value 0..1
+        data8[index + 3] = castShadows ? 255 : 0;
     }
 
     addLightDataColor(data8, index, light, gammaCorrection, isCookie) {
@@ -259,7 +293,13 @@ class LightsBuffer {
         // cookie
         data8[index + 6] = isCookie ? 255 : 0;
 
-        // here we still have unused 1 byte
+        // lightMask
+        // 0: MASK_AFFECT_DYNAMIC
+        // 127: MASK_AFFECT_DYNAMIC && MASK_AFFECT_LIGHTMAPPED
+        // 255: MASK_AFFECT_LIGHTMAPPED
+        const isDynamic = !!(light.mask & MASK_AFFECT_DYNAMIC);
+        const isLightmapped = !!(light.mask & MASK_AFFECT_LIGHTMAPPED);
+        data8[index + 7] = (isDynamic && isLightmapped) ? 127 : (isLightmapped ? 255 : 0);
     }
 
     addLightDataSpotAngles(data8, index, light) {
@@ -296,7 +336,7 @@ class LightsBuffer {
         for (let m = 0; m < 12; m++)    // these are in -2..2 range
             FloatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
         for (let m = 12; m < 16; m++) {  // these are full float range
-            FloatPacking.float2MantisaExponent(matData[m], data8, index + 4 * m, 4);
+            FloatPacking.float2MantissaExponent(matData[m], data8, index + 4 * m, 4);
         }
     }
 
@@ -323,12 +363,21 @@ class LightsBuffer {
         // we have two unused bytes here
     }
 
+    addLightAreaSizes(data8, index, light) {
+        const areaSizes = this.getLightAreaSizes(light);
+        for (let i = 0; i < 6; i++) {  // these are full float range
+            FloatPacking.float2MantissaExponent(areaSizes[i], data8, index + 4 * i, 4);
+        }
+    }
+
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex, gammaCorrection) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
-        const isCookie = this.cookiesEnabled && !!light._cookie;
-        const castShadows = this.shadowsEnabled && light.castShadows;
+        const hasAtlasViewport = light.atlasViewportAllocated; // if the light does not have viewport, it does not fit to the atlas
+        const isCookie = this.cookiesEnabled && !!light._cookie && hasAtlasViewport;
+        const isArea = this.areaLightsEnabled && light.shape !== LIGHTSHAPE_PUNCTUAL;
+        const castShadows = this.shadowsEnabled && light.castShadows && hasAtlasViewport;
         const pos = light._node.getPosition();
 
         let lightProjectionMatrix = null;   // light projection matrix - used for shadow map and cookie of spot light
@@ -351,7 +400,7 @@ class LightsBuffer {
         const data8Start = lightIndex * this.lightsTexture8.width * 4;
 
         // flags
-        this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot);
+        this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot, castShadows);
 
         // light color
         this.addLightDataColor(data8, data8Start + 4 * TextureIndex8.COLOR_A, light, gammaCorrection, isCookie);
@@ -405,6 +454,18 @@ class LightsBuffer {
                 dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 2] = atlasViewport.z / 3; // size of a face slot (3x3 grid)
             }
 
+            // area light sizes
+            if (isArea) {
+                const areaSizes = this.getLightAreaSizes(light);
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 0] = areaSizes[0];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 1] = areaSizes[1];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 2] = areaSizes[2];
+
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 0] = areaSizes[3];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 1] = areaSizes[4];
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 2] = areaSizes[5];
+            }
+
         } else {    // high precision data stored using 8bit texture
 
             this.addLightDataPositionRange(data8, data8Start + 4 * TextureIndex8.POSITION_X, light, pos);
@@ -421,6 +482,11 @@ class LightsBuffer {
 
             if (atlasViewport) {
                 this.addLightAtlasViewport(data8, data8Start + 4 * TextureIndex8.ATLAS_VIEWPORT_A, atlasViewport);
+            }
+
+            // area light sizes
+            if (isArea) {
+                this.addLightAreaSizes(data8, data8Start + 4 * TextureIndex8.AREA_DATA_WIDTH_X, light);
             }
         }
     }

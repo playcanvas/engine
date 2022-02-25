@@ -1,25 +1,25 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class FirstPersonExample extends Example {
+
+class FirstPersonExample {
     static CATEGORY = 'Camera';
     static NAME = 'First Person';
 
     load() {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='script' type='script' url='static/scripts/camera/first-person-camera.js' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='script' type='script' url='/static/scripts/camera/first-person-camera.js' />
         </>;
     }
 
     example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, script: pc.Asset }, wasmSupported: any, loadWasmModuleAsync: any): void {
 
         if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', run);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', run);
         } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', run);
+            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', run);
         }
 
         // Create the application and start the update loop
@@ -112,7 +112,7 @@ class FirstPersonExample extends Example {
             characterController.script.create("touchInput");
             characterController.setLocalPosition(0, 1, 10);
 
-            // Add the character controll and camera to the hierarchy
+            // Add the character controller and camera to the hierarchy
             app.root.addChild(characterController);
             characterController.addChild(camera);
 

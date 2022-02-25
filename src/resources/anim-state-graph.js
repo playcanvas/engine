@@ -1,12 +1,13 @@
 import { http, Http } from '../net/http.js';
 import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name AnimStateGraphHandler
+ * Resource handler used for loading {@link AnimStateGraph} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link AnimStateGraph} resources.
+ * @ignore
  */
 class AnimStateGraphHandler {
     constructor() {
@@ -42,6 +43,9 @@ class AnimStateGraphHandler {
 
     open(url, data) {
         return new AnimStateGraph(data);
+    }
+
+    patch(asset, assets) {
     }
 }
 

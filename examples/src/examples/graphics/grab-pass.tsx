@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 attribute vec3 aPosition;
@@ -36,7 +36,7 @@ uniform sampler2D uOffsetMap;
 // roughness map
 uniform sampler2D uRoughnessMap;
 
-// engine built-in costant storing render target size in .xy and inverse size in .zw
+// engine built-in constant storing render target size in .xy and inverse size in .zw
 uniform vec4 uScreenSize;
 
 varying vec2 texCoord;
@@ -72,7 +72,7 @@ void main(void)
 }
 `;
 
-class GrabPassExample extends Example {
+class GrabPassExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Grab Pass';
 
@@ -80,9 +80,9 @@ class GrabPassExample extends Example {
         return <>
             <AssetLoader name='shader.vert' type='shader' data={vshader} />
             <AssetLoader name='shader.frag' type='shader' data={fshader} />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/normal-map.png' />
-            <AssetLoader name="roughness" type="texture" url="static/assets/textures/pc-gray.png" />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
+            <AssetLoader name="roughness" type="texture" url="/static/assets/textures/pc-gray.png" />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -100,7 +100,6 @@ class GrabPassExample extends Example {
         app.scene.exposure = 2;
         app.scene.setSkybox(assets['helipad.dds'].resources);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
@@ -161,7 +160,7 @@ class GrabPassExample extends Example {
         glass.render.castShadows = false;
         glass.render.receiveShadows = false;
 
-        // create shader using vertex and fragment shaders
+        // @ts-ignore create shader using vertex and fragment shaders
         const webgl2def = (app.graphicsDevice.webgl2) ? "#define GL2\n" : "";
         const shaderDefinition = {
             attributes: {

@@ -1,16 +1,16 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class MaterialPhysicalExample extends Example {
+class MaterialPhysicalExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Physical';
 
     load() {
         return <>
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/arial.json' />
         </>;
     }
 
@@ -24,7 +24,6 @@ class MaterialPhysicalExample extends Example {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
         // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.skyboxMip = 1;

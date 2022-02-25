@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class ARBasicExample extends Example {
+
+class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';
 
@@ -77,13 +77,13 @@ class ARBasicExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -113,7 +113,7 @@ class ARBasicExample extends Example {
                 message("Immersive AR is " + (available ? 'available' : 'unavailable'));
             });
 
-            if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
+            if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
                 message("Immersive AR is not available");
             }
         } else {
@@ -122,4 +122,4 @@ class ARBasicExample extends Example {
     }
 }
 
-export default ARBasicExample;
+export default ArBasicExample;

@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
@@ -868,10 +870,6 @@ class ImageElement {
         }
     }
 
-    get color() {
-        return this._color;
-    }
-
     set color(value) {
         const r = value.r;
         const g = value.g;
@@ -879,46 +877,43 @@ class ImageElement {
 
         // #if _DEBUG
         if (this._color === value) {
-            console.warn("Setting element.color to itself will have no effect");
+            Debug.warn("Setting element.color to itself will have no effect");
         }
         // #endif
 
-        if (this._color.r === r && this._color.g === g && this._color.b === b) {
-            return;
+        if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
+
+            this._colorUniform[0] = r;
+            this._colorUniform[1] = g;
+            this._colorUniform[2] = b;
+            this._renderable.setParameter('material_emissive', this._colorUniform);
         }
-
-        this._color.r = r;
-        this._color.g = g;
-        this._color.b = b;
-
-        this._colorUniform[0] = r;
-        this._colorUniform[1] = g;
-        this._colorUniform[2] = b;
-        this._renderable.setParameter('material_emissive', this._colorUniform);
 
         if (this._element) {
             this._element.fire('set:color', this._color);
         }
     }
 
-    get opacity() {
-        return this._color.a;
+    get color() {
+        return this._color;
     }
 
     set opacity(value) {
-        if (value === this._color.a) return;
-
-        this._color.a = value;
-
-        this._renderable.setParameter('material_opacity', value);
+        if (value !== this._color.a) {
+            this._color.a = value;
+            this._renderable.setParameter('material_opacity', value);
+        }
 
         if (this._element) {
             this._element.fire('set:opacity', value);
         }
     }
 
-    get rect() {
-        return this._rect;
+    get opacity() {
+        return this._color.a;
     }
 
     set rect(value) {
@@ -960,8 +955,8 @@ class ImageElement {
         }
     }
 
-    get material() {
-        return this._material;
+    get rect() {
+        return this._rect;
     }
 
     set material(value) {
@@ -995,8 +990,8 @@ class ImageElement {
         }
     }
 
-    get materialAsset() {
-        return this._materialAsset;
+    get material() {
+        return this._material;
     }
 
     set materialAsset(value) {
@@ -1033,8 +1028,8 @@ class ImageElement {
         }
     }
 
-    get texture() {
-        return this._texture;
+    get materialAsset() {
+        return this._materialAsset;
     }
 
     set texture(value) {
@@ -1071,8 +1066,8 @@ class ImageElement {
         }
     }
 
-    get textureAsset() {
-        return this._textureAsset;
+    get texture() {
+        return this._texture;
     }
 
     set textureAsset(value) {
@@ -1109,8 +1104,8 @@ class ImageElement {
         }
     }
 
-    get spriteAsset() {
-        return this._spriteAsset;
+    get textureAsset() {
+        return this._textureAsset;
     }
 
     set spriteAsset(value) {
@@ -1142,15 +1137,15 @@ class ImageElement {
             } else {
                 this.sprite = null;
             }
+        }
 
-            if (this._element) {
-                this._element.fire('set:spriteAsset', _id);
-            }
+        if (this._element) {
+            this._element.fire('set:spriteAsset', _id);
         }
     }
 
-    get sprite() {
-        return this._sprite;
+    get spriteAsset() {
+        return this._spriteAsset;
     }
 
     set sprite(value) {
@@ -1196,8 +1191,8 @@ class ImageElement {
         this._updateSprite();
     }
 
-    get spriteFrame() {
-        return this._spriteFrame;
+    get sprite() {
+        return this._sprite;
     }
 
     set spriteFrame(value) {
@@ -1210,17 +1205,17 @@ class ImageElement {
             this._spriteFrame = value;
         }
 
-        if (this._spriteFrame === oldValue) return;
-
-        this._updateSprite();
+        if (this._spriteFrame !== oldValue) {
+            this._updateSprite();
+        }
 
         if (this._element) {
             this._element.fire('set:spriteFrame', value);
         }
     }
 
-    get mesh() {
-        return this._renderable.mesh;
+    get spriteFrame() {
+        return this._spriteFrame;
     }
 
     set mesh(value) {
@@ -1232,8 +1227,8 @@ class ImageElement {
         }
     }
 
-    get mask() {
-        return this._mask;
+    get mesh() {
+        return this._renderable.mesh;
     }
 
     set mask(value) {
@@ -1243,8 +1238,8 @@ class ImageElement {
         }
     }
 
-    get pixelsPerUnit() {
-        return this._pixelsPerUnit;
+    get mask() {
+        return this._mask;
     }
 
     set pixelsPerUnit(value) {
@@ -1255,6 +1250,10 @@ class ImageElement {
             this._updateSprite();
         }
 
+    }
+
+    get pixelsPerUnit() {
+        return this._pixelsPerUnit;
     }
 
     // private

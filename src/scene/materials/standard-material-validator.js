@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE
 } from '../../graphics/constants.js';
@@ -53,9 +54,7 @@ class StandardMaterialValidator {
     setInvalid(key, data) {
         this.valid = false;
 
-        // #if _DEBUG
-        console.warn('Ignoring invalid StandardMaterial property: ' + key, data[key]);
-        // #endif
+        Debug.warn(`Ignoring invalid StandardMaterial property: ${key}`, data[key]);
 
         if (this.removeInvalid) {
             delete data[key];
@@ -74,9 +73,7 @@ class StandardMaterialValidator {
             const type = TYPES[key];
 
             if (!type) {
-                // #if _DEBUG
-                console.warn('Ignoring unsupported input property to standard material: ' + key);
-                // #endif
+                Debug.warn(`Ignoring unsupported input property to standard material: ${key}`);
                 this.valid = false;
                 continue;
             }
@@ -120,7 +117,7 @@ class StandardMaterialValidator {
                     // this counts as a valid input
                     // null texture reference is also valid
                 } else {
-                    if (!(typeof data[key] === 'string' || data[key === null])) {
+                    if (!(typeof data[key] === 'string' || data[key] === null)) {
                         if (!(data[key] instanceof Texture)) {
                             this.setInvalid(key, data);
                         }

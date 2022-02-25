@@ -1,20 +1,21 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
+
 import { AssetLoader } from '../../app/helpers/loader';
 
-class ButtonBasicExample extends Example {
+class ButtonBasicExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Button Basic';
 
     load() {
         return <>
-            <AssetLoader name='font' type='font' url='static/assets/fonts/courier.json' />
+            <AssetLoader name='font' type='font' url='/static/assets/fonts/courier.json' />
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: { font: pc.Asset }): void {
-        // Create the application and start the update loop
+    example(canvas: HTMLCanvasElement, assets: { font: pc.Asset, red_button_atlas: pc.Asset }): void {
+
+        // Create the application with input and start the update loop
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
             touch: new pc.TouchDevice(document.body),
@@ -33,7 +34,7 @@ class ButtonBasicExample extends Example {
         // Create a camera
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0)
+            clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
         });
         app.root.addChild(camera);
 
@@ -47,7 +48,7 @@ class ButtonBasicExample extends Example {
         });
         app.root.addChild(screen);
 
-        // Create a simple button
+        // Button
         const button = new pc.Entity();
         button.addComponent("button", {
             imageEntity: button
@@ -67,6 +68,7 @@ class ButtonBasicExample extends Example {
         label.addComponent("element", {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(0, 0, 0),
+            fontAsset: assets.font.id,
             fontSize: 32,
             height: 64,
             pivot: [0.5, 0.5],
@@ -81,9 +83,6 @@ class ButtonBasicExample extends Example {
         button.button.on('click', function (e) {
             camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
         });
-
-        // Apply the font to the text element
-        label.element.fontAsset = assets.font.id;
     }
 }
 

@@ -1,4 +1,5 @@
 import { now } from '../../core/time.js';
+import { Debug } from '../../core/debug.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -16,25 +17,29 @@ import {
 } from '../../graphics/constants.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     LIGHTSHAPE_PUNCTUAL,
-    MASK_BAKED, MASK_DYNAMIC, MASK_LIGHTMAP,
+    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT
+    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { Material } from '../materials/material.js';
-import { LayerComposition } from '../composition/layer-composition.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
+import { DefaultMaterial } from '../materials/default-material.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
+import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
+
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -81,16 +86,15 @@ const _drawCallList = {
 const _tempMaterialSet = new Set();
 
 /**
- * @class
- * @name ForwardRenderer
- * @classdesc The forward renderer render scene objects.
- * @hideconstructor
- * @description Creates a new forward renderer object.
- * @hideconstructor
- * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
- * @param {Scene} A - scene for the rendering.
+ * The forward renderer renders {@link Scene}s.
  */
 class ForwardRenderer {
+    /**
+     * Create a new ForwardRenderer instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @hideconstructor
+     */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         this.scene = null;
@@ -118,8 +122,7 @@ class ForwardRenderer {
 
         // Shaders
         const device = this.device;
-        const library = device.getProgramLibrary();
-        this.library = library;
+        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
@@ -559,7 +562,7 @@ class ForwardRenderer {
         this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
     }
 
-    setLTCDirectionallLight(wtm, cnt, dir, campos, far) {
+    setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
         this.lightPos[cnt][0] = campos.x - dir.x * far;
         this.lightPos[cnt][1] = campos.y - dir.y * far;
         this.lightPos[cnt][2] = campos.z - dir.z * far;
@@ -595,7 +598,7 @@ class ForwardRenderer {
 
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
-            // Directionals shine down the negative Y axis
+            // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
@@ -605,7 +608,7 @@ class ForwardRenderer {
 
             if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
                 // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
-                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
+                this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
             }
 
             if (directional.castShadows) {
@@ -870,25 +873,32 @@ class ForwardRenderer {
     }
 
     cullLights(camera, lights) {
+
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
-            // if enabled light is not already marked as visible
-            if (!light.visibleThisFrame && light.enabled) {
+            if (light.enabled) {
 
-                if (light._type === LIGHTTYPE_DIRECTIONAL) {
-                    light.visibleThisFrame = true;
-                } else {
+                // directional lights are marked visible at the start of the frame
+                if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+
+                        // maximum screen area taken by the light
+                        const screenSize = camera.getScreenSize(tempSphere);
+                        light.maxScreenSize = Math.max(light.maxScreenSize, screenSize);
                     } else {
                         // if shadow casting light does not have shadow map allocated, mark it visible to allocate shadow map
                         // Note: This won't be needed when clustered shadows are used, but at the moment even culled out lights
                         // are used for rendering, and need shadow map to be allocated
                         // TODO: delete this code when clusteredLightingEnabled is being removed and is on by default.
-                        if (light.castShadows && !light.shadowMap) {
-                            light.visibleThisFrame = true;
+                        if (!clusteredLightingEnabled) {
+                            if (light.castShadows && !light.shadowMap) {
+                                light.visibleThisFrame = true;
+                            }
                         }
                     }
                 }
@@ -989,9 +999,7 @@ class ForwardRenderer {
     // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1022,9 +1030,7 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style]);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        DebugGraphics.popGpuMarker(device);
 
         return 0;
     }
@@ -1032,9 +1038,7 @@ class ForwardRenderer {
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
 
-        // #if _DEBUG
-        device.pushMarker(meshInstance.node.name);
-        // #endif
+        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -1052,15 +1056,14 @@ class ForwardRenderer {
             device.draw(mesh.primitive[style], undefined, true);
         }
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        DebugGraphics.popGpuMarker(device);
 
         return 0;
     }
 
     renderShadows(lights, camera) {
 
+        const isClustered = this.scene.clusteredLightingEnabled;
         const device = this.device;
         device.grabPassAvailable = false;
 
@@ -1069,7 +1072,22 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < lights.length; i++) {
-            this._shadowRenderer.render(lights[i], camera);
+            const light = lights[i];
+
+            if (isClustered && light._type !== LIGHTTYPE_DIRECTIONAL) {
+
+                // skip clustered shadows with no assigned atlas slot
+                if (!light.atlasViewportAllocated) {
+                    continue;
+                }
+
+                // if atlas slot is reassigned, make sure shadow is updated
+                if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                    light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                }
+            }
+
+            this._shadowRenderer.render(light, camera);
         }
 
         device.grabPassAvailable = true;
@@ -1083,7 +1101,17 @@ class ForwardRenderer {
 
         const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
         for (let i = 0; i < lights.length; i++) {
-            this._cookieRenderer.render(lights[i], cookieRenderTarget);
+            const light = lights[i];
+
+            // skip clustered cookies with no assigned atlas slot
+            if (!light.atlasViewportAllocated)
+                continue;
+
+            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
+            if (!light.atlasSlotUpdated)
+                continue;
+
+            this._cookieRenderer.render(light, cookieRenderTarget);
         }
     }
 
@@ -1249,7 +1277,7 @@ class ForwardRenderer {
                 // #endif
 
                 if (!drawCall.material)
-                    drawCall.material = this.scene.defaultMaterial;
+                    drawCall.material = DefaultMaterial.get(device);
 
                 const material = drawCall.material;
 
@@ -1337,11 +1365,9 @@ class ForwardRenderer {
 
                 if (newMaterial) {
 
-                    if (!drawCall._shader[pass].failed && !device.setShader(drawCall._shader[pass])) {
-                        // #if _DEBUG
-                        console.error(`Error in material "${material.name}" with flags ${objDefs}`);
-                        // #endif
-                        drawCall._shader[pass].failed = true;
+                    const shader = drawCall._shader[pass];
+                    if (!shader.failed && !device.setShader(shader)) {
+                        Debug.error(`Error in material "${material.name}" with flags ${objDefs}`);
                     }
 
                     // Uniforms I: material
@@ -1515,7 +1541,7 @@ class ForwardRenderer {
         }
     }
 
-    updateShaders(drawCalls) {
+    updateShaders(drawCalls, onlyLitShaders) {
         const count = drawCalls.length;
         for (let i = 0; i < count; i++) {
             const mat = drawCalls[i].material;
@@ -1525,6 +1551,13 @@ class ForwardRenderer {
                     _tempMaterialSet.add(mat);
 
                     if (mat.updateShader !== Material.prototype.updateShader) {
+
+                        if (onlyLitShaders) {
+                            // skip materials not using lighting
+                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting))
+                                continue;
+                        }
+
                         mat.clearVariants();
                         mat.shader = null;
                     }
@@ -1536,46 +1569,15 @@ class ForwardRenderer {
         _tempMaterialSet.clear();
     }
 
-    updateLitShaders(drawCalls) {
-        const count = drawCalls.length;
-        for (let i = 0; i < count; i++) {
-            const mat = drawCalls[i].material;
-            if (mat) {
-                // material not processed yet
-                if (!_tempMaterialSet.has(mat)) {
-                    _tempMaterialSet.add(mat);
-
-                    if (mat.updateShader !== Material.prototype.updateShader) {
-
-                        // only process lit materials
-                        if (mat.useLighting && (!mat.emitter || mat.emitter.lighting)) {
-                            mat.clearVariants();
-                            mat.shader = null;
-                        }
-                    }
-                }
-            }
-        }
-
-        // keep temp set empty
-        _tempMaterialSet.clear();
-    }
-
-    beginFrame(comp) {
-        const scene = this.scene;
+    beginFrame(comp, lightsChanged) {
         const meshInstances = comp._meshInstances;
-        const lights = comp._lights;
 
         // Update shaders if needed
-        // all mesh instances (TODO: ideally can update less if only lighting changed)
-        if (scene.updateShaders) {
-            this.updateShaders(meshInstances);
+        const scene = this.scene;
+        if (scene.updateShaders || lightsChanged) {
+            const onlyLitShaders = !scene.updateShaders && lightsChanged;
+            this.updateShaders(meshInstances, onlyLitShaders);
             scene.updateShaders = false;
-            scene.updateLitShaders = false;
-            scene._shaderVersion++;
-        } else if (scene.updateLitShaders) {
-            this.updateLitShaders(meshInstances);
-            scene.updateLitShaders = false;
             scene._shaderVersion++;
         }
 
@@ -1588,9 +1590,10 @@ class ForwardRenderer {
         }
 
         // clear light visibility
+        const lights = comp._lights;
         const lightCount = lights.length;
         for (let i = 0; i < lightCount; i++) {
-            lights[i].visibleThisFrame = lights[i]._type === LIGHTTYPE_DIRECTIONAL;
+            lights[i].beginFrame();
         }
     }
 
@@ -1629,7 +1632,8 @@ class ForwardRenderer {
             }
 
             // Generate static lighting for meshes in this layer if needed
-            if (layer._needsStaticPrepare && layer._staticLightHash) {
+            // Note: Static lighting is not used when clustered lighting is enabled
+            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
                 // TODO: reuse with the same staticLightHash
                 if (layer._staticPrepareDone) {
                     StaticMeshes.revert(layer.opaqueMeshInstances);
@@ -1698,10 +1702,10 @@ class ForwardRenderer {
             for (let i = 0; i < stats.lights; i++) {
                 const l = comp._lights[i];
                 if (l.enabled) {
-                    if ((l.mask & MASK_DYNAMIC) || (l.mask & MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                    if ((l.mask & MASK_AFFECT_DYNAMIC) || (l.mask & MASK_AFFECT_LIGHTMAPPED)) { // if affects dynamic or baked objects in real-time
                         stats.dynamicLights++;
                     }
-                    if (l.mask & MASK_LIGHTMAP) { // if baked into lightmaps
+                    if (l.mask & MASK_BAKE) { // if baked into lightmaps
                         stats.bakedLights++;
                     }
                 }
@@ -1818,8 +1822,7 @@ class ForwardRenderer {
     }
 
     updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI],
-                                      comp.clusteredLightingCookiesEnabled, comp.clusteredLightingShadowsEnabled);
+        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
     updateClusters(comp) {
@@ -1830,7 +1833,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < comp._worldClusters.length; i++) {
             const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection);
+            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lighting);
         }
 
         // #if _PROFILER
@@ -1841,9 +1844,10 @@ class ForwardRenderer {
 
     renderComposition(comp) {
         const device = this.device;
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox(device);
+        this.scene._updateSkybox(this.device);
 
         this.beginLayers(comp);
 
@@ -1852,10 +1856,8 @@ class ForwardRenderer {
         // #endif
 
         // Update static layer data, if something's changed
-        const updated = comp._update();
-        if (updated & COMPUPDATED_LIGHTS) {
-            this.scene.updateLitShaders = true;
-        }
+        const updated = comp._update(device, clusteredLightingEnabled);
+        const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
@@ -1864,7 +1866,7 @@ class ForwardRenderer {
         this.updateLightStats(comp, updated);
 
         // Single per-frame calculations
-        this.beginFrame(comp);
+        this.beginFrame(comp, lightsChanged);
         this.setSceneConstants();
 
         // visibility culling of lights, meshInstances, shadows casters
@@ -1874,31 +1876,32 @@ class ForwardRenderer {
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
 
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
 
             // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(comp);
 
-            // render cookies for all local visible lights (only handling spot lights)
-            if (comp.clusteredLightingCookiesEnabled) {
+            // render cookies for all local visible lights
+            if (this.scene.lighting.cookiesEnabled) {
                 this.renderCookies(comp._splitLights[LIGHTTYPE_SPOT]);
                 this.renderCookies(comp._splitLights[LIGHTTYPE_OMNI]);
             }
         }
 
         // render shadows for all local visible lights - these shadow maps are shared by all cameras
-        if (!LayerComposition.clusteredLightingEnabled || (LayerComposition.clusteredLightingEnabled && comp.clusteredLightingShadowsEnabled)) {
+        if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
             this.renderShadows(comp._splitLights[LIGHTTYPE_SPOT]);
             this.renderShadows(comp._splitLights[LIGHTTYPE_OMNI]);
         }
 
         // update light clusters
-        if (LayerComposition.clusteredLightingEnabled) {
+        if (clusteredLightingEnabled) {
             this.updateClusters(comp);
         }
 
         // Rendering
         let sortTime, drawTime;
+        let clustersDebugRendered = false;
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
@@ -1920,10 +1923,8 @@ class ForwardRenderer {
                 continue;
             }
 
-            // #if _DEBUG
-            this.device.pushMarker(camera ? camera.entity.name : "noname");
-            this.device.pushMarker(layer.name);
-            // #endif
+            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            DebugGraphics.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER
             drawTime = now();
@@ -1931,6 +1932,11 @@ class ForwardRenderer {
 
             if (camera) {
                 camera.frameBegin(renderAction.renderTarget);
+
+                // callback on the camera component before rendering with this camera for the first time during the frame
+                if (renderAction.firstCameraUse && camera.onPreRender) {
+                    camera.onPreRender();
+                }
             }
 
             // Call prerender callback if there's one
@@ -1982,6 +1988,9 @@ class ForwardRenderer {
                 const objects = layer.instances;
                 const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
+                // add debug mesh instances to visible list
+                this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
 
@@ -1989,8 +1998,14 @@ class ForwardRenderer {
                 this.setCamera(camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
-                if (LayerComposition.clusteredLightingEnabled && renderAction.lightClusters) {
+                if (clusteredLightingEnabled && renderAction.lightClusters) {
                     renderAction.lightClusters.activate(this.lightTextureAtlas);
+
+                    // debug rendering of clusters
+                    if (!clustersDebugRendered && this.scene.lighting.debugLayer === layer.id) {
+                        clustersDebugRendered = true;
+                        WorldClustersDebug.render(renderAction.lightClusters, this.scene);
+                    }
                 }
 
                 // enable flip faces if either the camera has _flipFaces enabled or the render target
@@ -2017,13 +2032,18 @@ class ForwardRenderer {
 
                 camera.frameEnd();
 
+                // callback on the camera component when we're done rendering all layers with this camera
+                if (renderAction.lastCameraUse && camera.onPostRender) {
+                    camera.onPostRender();
+                }
+
                 // trigger postprocessing for camera
                 if (renderAction.triggerPostprocess && camera.onPostprocessing) {
-                    camera.onPostprocessing(camera);
+                    camera.onPostprocessing();
                 }
             }
 
-            // Call postrender callback if there's one
+            // Call layer's postrender callback if there's one
             if (!transparent && layer.onPostRenderOpaque) {
                 layer.onPostRenderOpaque(cameraPass);
             } else if (transparent && layer.onPostRenderTransparent) {
@@ -2038,10 +2058,8 @@ class ForwardRenderer {
                 }
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            this.device.popMarker();
-            // #endif
+            DebugGraphics.popGpuMarker(this.device);
+            DebugGraphics.popGpuMarker(this.device);
 
             // #if _PROFILER
             layer._renderTime += now() - drawTime;

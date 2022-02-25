@@ -4,17 +4,21 @@ import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
 import { LayoutChildComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name LayoutChildComponentSystem
+ * Manages creation of {@link LayoutChildComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutChildComponentSystem.
- * @classdesc Manages creation of {@link LayoutChildComponent}s.
- * @param {Application} app - The application.
  */
 class LayoutChildComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutChildComponentSystem instance.
+     *
+     * @param {Application} app - The application.
+     */
     constructor(app) {
         super(app);
 

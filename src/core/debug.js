@@ -1,54 +1,68 @@
-let table = null;
-let row = null;
-let title = null;
-let field = null;
-
-function init() {
-    table = document.createElement('table');
-    row = document.createElement('tr');
-    title = document.createElement('td');
-    field = document.createElement('td');
-
-    table.style.cssText = 'position:absolute;font-family:sans-serif;font-size:12px;color:#cccccc';
-    table.style.top = '0px';
-    table.style.left = '0px';
-    table.style.border = 'thin solid #cccccc';
-
-    document.body.appendChild(table);
-}
-
 /**
- * @private
- * @name debug
- * @namespace
+ * Internal debug system - logs, assets and similar. Note that the functions only execute in the
+ * debug build, and are stripped out in other builds.
+ *
+ * @ignore
  */
-const debug = {
+class Debug {
     /**
+     * Set storing already logged deprecated messages, to only print each unique message one time.
+     *
+     * @type {Set<string>}
      * @private
-     * @function
-     * @name debug.display
-     * @description Display an object and its data in a table on the page.
-     * @param {object} data - The object to display.
      */
-    display: function (data) {
-        if (!table) {
-            init();
-        }
+    static _deprecatedMessages = new Set();
 
-        table.innerHTML = '';
-        for (const key in data) {
-            const r = row.cloneNode();
-            const t = title.cloneNode();
-            const f = field.cloneNode();
-
-            t.textContent = key;
-            f.textContent = data[key];
-
-            r.appendChild(t);
-            r.appendChild(f);
-            table.appendChild(r);
+    /**
+     * Deprecated warning message.
+     *
+     * @param {string} message - The message to log.
+     */
+    static deprecated(message) {
+        if (!Debug._deprecatedMessages.has(message)) {
+            Debug._deprecatedMessages.add(message);
+            console.warn("DEPRECATED: " + message);
         }
     }
-};
 
-export { debug };
+    /**
+     * Assertion error message. If the assertion is false, the error message is written to the log.
+     *
+     * @param {boolean} assertion - The assertion to check.
+     * @param {...*} args - The values to be written to the log.
+     */
+    static assert(assertion, ...args) {
+        if (!assertion) {
+            console.error("ASSERT FAILED: ", ...args);
+        }
+    }
+
+    /**
+     * Info message.
+     *
+     * @param {...*} args - The values to be written to the log.
+     */
+    static log(...args) {
+        console.log(...args);
+    }
+
+    /**
+     * Warning message.
+     *
+     * @param {...*} args - The values to be written to the log.
+     */
+    static warn(...args) {
+        console.warn(...args);
+    }
+
+    /**
+     * Error message.
+     *
+     * @param {...*} args - The values to be written to the log.
+     */
+    static error(...args) {
+        console.error(...args);
+    }
+}
+
+export { Debug };

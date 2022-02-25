@@ -10,21 +10,31 @@ import { Channel3d } from '../audio/channel3d.js';
 import { Listener } from './listener.js';
 
 /**
- * @class
- * @name SoundManager
+ * The SoundManager is used to load and play audio. It also applies system-wide settings like
+ * global volume, suspend and resume.
+ *
  * @augments EventHandler
- * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
- * like global volume, suspend and resume.
- * @description Creates a new sound manager.
- * @param {object} [options] - Options options object.
- * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
- * @property {number} volume Global volume for the manager. All {@link SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
  */
 class SoundManager extends EventHandler {
+    /**
+     * Create a new SoundManager instance.
+     *
+     * @param {object} [options] - Options options object.
+     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API, even if check
+     * indicates that it is not available.
+     */
     constructor(options) {
         super();
 
+        /**
+         * @type {AudioContext}
+         * @private
+         */
         this._context = null;
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._forceWebAudioApi = options.forceWebAudioApi;
 
         this._resumeContext = null;
@@ -75,6 +85,43 @@ class SoundManager extends EventHandler {
         this.suspended = false;
     }
 
+    /**
+     * Global volume for the manager. All {@link SoundInstance}s will scale their volume with this
+     * volume. Valid between [0, 1].
+     *
+     * @type {number}
+     */
+    set volume(volume) {
+        volume = math.clamp(volume, 0, 1);
+        this._volume = volume;
+        this.fire('volumechange', volume);
+    }
+
+    get volume() {
+        return this._volume;
+    }
+
+    /**
+     * Get the Web Audio API context.
+     *
+     * @type {AudioContext}
+     * @ignore
+     */
+    get context() {
+        // lazy create the AudioContext if possible
+        if (!this._context) {
+            if (hasAudioContext() || this._forceWebAudioApi) {
+                if (typeof AudioContext !== 'undefined') {
+                    this._context = new AudioContext();
+                } else if (typeof webkitAudioContext !== 'undefined') {
+                    this._context = new webkitAudioContext();
+                }
+            }
+        }
+
+        return this._context;
+    }
+
     suspend() {
         this.suspended = true;
         this.fire('suspend');
@@ -115,15 +162,14 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name SoundManager#playSound
-     * @description Create a new {@link Channel} and begin playback of the sound.
+     * Create a new {@link Channel} and begin playback of the sound.
+     *
      * @param {Sound} sound - The Sound object to play.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel} The channel playing the sound.
+     * @private
      */
     playSound(sound, options = {}) {
         let channel = null;
@@ -135,16 +181,15 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name SoundManager#playSound3d
-     * @description Create a new {@link Channel3d} and begin playback of the sound at the position specified.
+     * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
+     *
      * @param {Sound} sound - The Sound object to play.
      * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel3d} The 3D channel playing the sound.
+     * @private
      */
     playSound3d(sound, position, options = {}) {
         let channel = null;
@@ -174,31 +219,6 @@ class SoundManager extends EventHandler {
         }
 
         return channel;
-    }
-
-    get volume() {
-        return this._volume;
-    }
-
-    set volume(volume) {
-        volume = math.clamp(volume, 0, 1);
-        this._volume = volume;
-        this.fire('volumechange', volume);
-    }
-
-    get context() {
-        // lazy create the AudioContext if possible
-        if (!this._context) {
-            if (hasAudioContext() || this._forceWebAudioApi) {
-                if (typeof AudioContext !== 'undefined') {
-                    this._context = new AudioContext();
-                } else if (typeof webkitAudioContext !== 'undefined') {
-                    this._context = new webkitAudioContext();
-                }
-            }
-        }
-
-        return this._context;
     }
 }
 

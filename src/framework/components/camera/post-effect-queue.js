@@ -1,10 +1,14 @@
 import { now } from '../../../core/time.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
+import { DebugGraphics } from '../../../graphics/debug-graphics.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
+
+/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
 let depthLayer;
 
@@ -18,34 +22,60 @@ class PostEffect {
 }
 
 /**
- * @class
- * @name PostEffectQueue
- * @classdesc Used to manage multiple post effects for a camera.
- * @description Create a new PostEffectQueue.
- * @param {Application} app - The application.
- * @param {CameraComponent} camera - The camera component.
+ * Used to manage multiple post effects for a camera.
  */
 class PostEffectQueue {
+    /**
+     * Create a new PostEffectQueue instance.
+     *
+     * @param {Application} app - The application.
+     * @param {CameraComponent} camera - The camera component.
+     */
     constructor(app, camera) {
         this.app = app;
         this.camera = camera;
 
-        // render target where the postprocessed image needs to be rendered to
-        // defaults to null which is main framebuffer
+        /**
+         * Render target where the postprocessed image needs to be rendered to. Defaults to null
+         * which is main framebuffer.
+         *
+         * @type {RenderTarget}
+         * @ignore
+         */
         this.destinationRenderTarget = null;
 
-        // stores all of the post effects of type PostEffect
+        /**
+         * All of the post effects in the queue.
+         *
+         * @type {PostEffect[]}
+         * @ignore
+         */
         this.effects = [];
 
-        // if the queue is enabled it will render all of its effects
-        // otherwise it will not render anything
+        /**
+         * If the queue is enabled it will render all of its effects, otherwise it will not render
+         * anything.
+         *
+         * @type {boolean}
+         * @ignore
+         */
         this.enabled = false;
 
         // legacy
         this.depthTarget = null;
 
         this.renderTargetScale = 1;
+        /**
+         * @type {number|null}
+         * @private
+         */
         this.resizeTimeout = null;
+        /**
+         * The time in milliseconds since the last resize.
+         *
+         * @type {number}
+         * @private
+         */
         this.resizeLast = 0;
 
         this._resizeTimeoutCallback = () => {
@@ -55,12 +85,21 @@ class PostEffectQueue {
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
+    /**
+     * Allocate a color buffer texture.
+     *
+     * @param {number} format - The format of the color buffer.
+     * @param {string} name - The name of the color buffer.
+     * @returns {Texture} The color buffer texture.
+     * @private
+     */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
         const width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
         const height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
         const colorBuffer = new Texture(this.app.graphicsDevice, {
+            name: name,
             format: format,
             width: width,
             height: height,
@@ -70,19 +109,17 @@ class PostEffectQueue {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-        colorBuffer.name = name;
 
         return colorBuffer;
     }
 
     /**
-     * @private
-     * @function
-     * @name PostEffectQueue#_createOffscreenTarget
-     * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer.
-     * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer.
+     * Creates a render target with the dimensions of the canvas, with an optional depth buffer.
+     *
+     * @param {boolean} useDepth - Set to true to create a render target with a depth buffer.
      * @param {boolean} hdr - Use HDR render target format.
      * @returns {RenderTarget} The render target.
+     * @private
      */
     _createOffscreenTarget(useDepth, hdr) {
 
@@ -123,10 +160,9 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#addEffect
-     * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
+     * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
+     *
      * @param {PostEffect} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
@@ -156,9 +192,9 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#removeEffect
-     * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
+     * Removes a post effect from the queue. If the queue becomes empty it will be disabled
+     * automatically.
+     *
      * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
@@ -241,9 +277,7 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#destroy
-     * @description Removes all the effects from the queue and disables it.
+     * Removes all the effects from the queue and disables it.
      */
     destroy() {
         // release memory for all effects
@@ -257,9 +291,8 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#enable
-     * @description Enables the queue and all of its effects. If there are no effects then the queue will not be enabled.
+     * Enables the queue and all of its effects. If there are no effects then the queue will not be
+     * enabled.
      */
     enable() {
         if (!this.enabled && this.effects.length) {
@@ -276,16 +309,14 @@ class PostEffectQueue {
             this.camera.renderTarget = this.effects[0].inputTarget;
 
             // callback when postprocessing takes place
-            this.camera.onPostprocessing = (camera) => {
+            this.camera.onPostprocessing = () => {
 
                 if (this.enabled) {
                     let rect = null;
                     const len = this.effects.length;
                     if (len) {
 
-                        // #if _DEBUG
-                        this.app.graphicsDevice.pushMarker("Postprocess");
-                        // #endif
+                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
 
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
@@ -302,20 +333,12 @@ class PostEffectQueue {
                                 }
                             }
 
-                            // #if _DEBUG
-                            this.app.graphicsDevice.pushMarker(fx.name);
-                            // #endif
-
+                            DebugGraphics.pushGpuMarker(this.app.graphicsDevice, fx.name);
                             fx.effect.render(fx.inputTarget, destTarget, rect);
-
-                            // #if _DEBUG
-                            this.app.graphicsDevice.popMarker();
-                            // #endif
+                            DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                         }
 
-                        // #if _DEBUG
-                        this.app.graphicsDevice.popMarker();
-                        // #endif
+                        DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                     }
                 }
             };
@@ -323,9 +346,7 @@ class PostEffectQueue {
     }
 
     /**
-     * @function
-     * @name PostEffectQueue#disable
-     * @description Disables the queue and all of its effects.
+     * Disables the queue and all of its effects.
      */
     disable() {
         if (this.enabled) {
@@ -342,6 +363,13 @@ class PostEffectQueue {
         }
     }
 
+    /**
+     * Handler called when the application's canvas element is resized.
+     *
+     * @param {number} width - The new width of the canvas.
+     * @param {number} height - The new height of the canvas.
+     * @private
+     */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
         const device = this.app.graphicsDevice;

@@ -7,19 +7,29 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
+/** @typedef {import('../../application.js').Application} Application */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name CameraComponentSystem
+ * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
+ * active cameras.
+ *
  * @augments ComponentSystem
- * @classdesc Used to add and remove {@link CameraComponent}s from Entities. It also holds an
- * array of all active cameras.
- * @description Create a new CameraComponentSystem.
- * @param {Application} app - The Application.
- * @property {CameraComponent[]} cameras Holds all the active camera components.
  */
 class CameraComponentSystem extends ComponentSystem {
+    /**
+     * Holds all the active camera components.
+     *
+     * @type {CameraComponent[]}
+     */
+    cameras = [];
+
+    /**
+     * Create a new CameraComponentSystem instance.
+     *
+     * @param {Application} app - The Application.
+     */
     constructor(app) {
         super(app);
 
@@ -29,9 +39,6 @@ class CameraComponentSystem extends ComponentSystem {
         this.DataType = CameraComponentData;
 
         this.schema = _schema;
-
-        // holds all the active camera components
-        this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);

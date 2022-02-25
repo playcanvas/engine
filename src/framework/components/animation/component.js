@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { AnimClip } from '../../../anim/evaluator/anim-clip.js';
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
@@ -9,29 +11,38 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../scene/model.js').Model} Model */
+/** @typedef {import('../../entity.js').Entity} Entity */
+/** @typedef {import('./system.js').AnimationComponentSystem} AnimationComponentSystem */
+
 /**
- * @component Animation
- * @class
- * @name AnimationComponent
- * @augments Component
- * @classdesc The Animation Component allows an Entity to playback animations on models.
- * @description Create a new AnimationComponent.
- * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
+ * The Animation Component allows an Entity to playback animations on models.
+ *
  * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation.
  * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end.
  * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded.
  * @property {Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
- * @property {number} currentTime Get or Set the current time position (in seconds) of the animation.
- * @property {number} duration Get the duration in seconds of the current animation. [read only]
  * @property {Skeleton|null} skeleton Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null. [read only]
  * @property {object<string, Animation>} animations Get or Set dictionary of animations by name.
+ * @augments Component
  */
 class AnimationComponent extends Component {
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, string>}
+     * @ignore
+     */
+    animationsIndex = {};
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * Create a new AnimationComponent instance.
+     *
+     * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
-
-        this.animationsIndex = { };
 
         // Handle changes to the 'animations' value
         this.on('set_animations', this.onSetAnimations, this);
@@ -42,9 +53,58 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimationComponent#play
-     * @description Start playing an animation.
+     * Get or Set the current time position (in seconds) of the animation.
+     *
+     * @type {number}
+     */
+    set currentTime(currentTime) {
+        const data = this.data;
+        if (data.skeleton) {
+            const skeleton = data.skeleton;
+            skeleton.currentTime = currentTime;
+            skeleton.addTime(0);
+            skeleton.updateGraph();
+        }
+
+        if (data.animEvaluator) {
+            const animEvaluator = data.animEvaluator;
+            for (let i = 0; i < animEvaluator.clips.length; ++i) {
+                animEvaluator.clips[i].time = currentTime;
+            }
+        }
+    }
+
+    get currentTime() {
+        const data = this.data;
+
+        if (data.skeleton) {
+            return this.data.skeleton._time;
+        }
+
+        if (data.animEvaluator) {
+            // Get the last clip's current time which will be the one
+            // that is currently being blended
+            const clips = data.animEvaluator.clips;
+            if (clips.length > 0) {
+                return clips[clips.length - 1].time;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Get the duration in seconds of the current animation.
+     *
+     * @type {number}
+     */
+    get duration() {
+        return this.data.animations[this.data.currAnim].duration;
+    }
+
+    /**
+     * Start playing an animation.
+     *
      * @param {string} name - The name of the animation asset to begin playing.
      * @param {number} [blendTime] - The time in seconds to blend from the current
      * animation state to the start of the animation being set. Defaults to 0.
@@ -57,9 +117,7 @@ class AnimationComponent extends Component {
         const data = this.data;
 
         if (!data.animations[name]) {
-            // #if _DEBUG
-            console.error(`Trying to play animation '${name}' which doesn't exist`);
-            // #endif
+            Debug.error(`Trying to play animation '${name}' which doesn't exist`);
             return;
         }
 
@@ -117,9 +175,8 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * @function
-     * @name AnimationComponent#getAnimation
-     * @description Return an animation.
+     * Return an animation.
+     *
      * @param {string} name - The name of the animation asset.
      * @returns {Animation} An Animation.
      */
@@ -127,6 +184,12 @@ class AnimationComponent extends Component {
         return this.data.animations[name];
     }
 
+    /**
+     * Set the model driven by this animation component.
+     *
+     * @param {Model} model - The model to set.
+     * @ignore
+     */
     setModel(model) {
         const data = this.data;
 
@@ -144,6 +207,7 @@ class AnimationComponent extends Component {
         }
     }
 
+    /** @private */
     _resetAnimationController() {
         const data = this.data;
         data.skeleton = null;
@@ -152,6 +216,7 @@ class AnimationComponent extends Component {
         data.animEvaluator = null;
     }
 
+    /** @private */
     _createAnimationController() {
         const data = this.data;
         const model = data.model;
@@ -183,6 +248,10 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * @param {number[]} ids - Array of animation asset ids.
+     * @private
+     */
     loadAnimationAssets(ids) {
         if (!ids || !ids.length)
             return;
@@ -230,6 +299,16 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Handle asset change events.
+     *
+     * @param {Asset} asset - The asset that changed.
+     * @param {string} attribute - The name of the asset attribute that changed. Can be 'data',
+     * 'file', 'resource' or 'resources'.
+     * @param {*} newValue - The new value of the specified asset property.
+     * @param {*} oldValue - The old value of the specified asset property.
+     * @private
+     */
     onAssetChanged(asset, attribute, newValue, oldValue) {
         if (attribute === 'resource' || attribute === 'resources') {
             // If the attribute is 'resources', newValue can be an empty array when the
@@ -306,6 +385,10 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The asset that was removed.
+     * @private
+     */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
 
@@ -325,6 +408,7 @@ class AnimationComponent extends Component {
         }
     }
 
+    /** @private */
     _stopCurrentAnimation() {
         const data = this.data;
         data.currAnim = null;
@@ -406,24 +490,6 @@ class AnimationComponent extends Component {
         }
     }
 
-    onSetCurrentTime(name, oldValue, newValue) {
-        const data = this.data;
-
-        if (data.skeleton) {
-            const skeleton = data.skeleton;
-            skeleton.currentTime = newValue;
-            skeleton.addTime(0); // update
-            skeleton.updateGraph();
-        }
-
-        if (data.animEvaluator) {
-            const animEvaluator = data.animEvaluator;
-            for (let i = 0; i < animEvaluator.clips.length; ++i) {
-                animEvaluator.clips[i].time = newValue;
-            }
-        }
-    }
-
     onEnable() {
         super.onEnable();
 
@@ -474,46 +540,6 @@ class AnimationComponent extends Component {
         delete data.toSkel;
 
         delete data.animEvaluator;
-    }
-
-    get currentTime() {
-        const data = this.data;
-
-        if (data.skeleton) {
-            return this.data.skeleton._time;
-        }
-
-        if (data.animEvaluator) {
-            // Get the last clip's current time which will be the one
-            // that is currently being blended
-            const clips = data.animEvaluator.clips;
-            if (clips.length > 0) {
-                return clips[clips.length - 1].time;
-            }
-        }
-
-        return 0;
-    }
-
-    set currentTime(currentTime) {
-        const data = this.data;
-        if (data.skeleton) {
-            const skeleton = data.skeleton;
-            skeleton.currentTime = currentTime;
-            skeleton.addTime(0);
-            skeleton.updateGraph();
-        }
-
-        if (data.animEvaluator) {
-            const animEvaluator = data.animEvaluator;
-            for (let i = 0; i < animEvaluator.clips.length; ++i) {
-                animEvaluator.clips[i].time = currentTime;
-            }
-        }
-    }
-
-    get duration() {
-        return this.data.animations[this.data.currAnim].duration;
     }
 }
 

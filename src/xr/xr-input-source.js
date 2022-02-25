@@ -8,43 +8,151 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
+/** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('./xr-hit-test.js').xrHitTestStartCallback} xrHitTestStartCallback */
+/** @typedef {import('./xr-hit-test-source.js').XrHitTestSource} XrHitTestSource */
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+
 const quat = new Quat();
 let ids = 0;
 
 /**
- * @class
- * @name XrInputSource
+ * Represents XR input source, which is any input mechanism which allows the user to perform
+ * targeted actions in the same virtual space as the viewer. Example XR input sources include, but
+ * are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods
+ * that operate on the viewer's pose.
+ *
  * @augments EventHandler
- * @classdesc Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
- * @description Represents XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @param {object} xrInputSource - [XRInputSource]{@link https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource} object that is created by WebXR API.
- * @property {number} id Unique number associated with instance of input source. Same physical devices when reconnected will not share this ID.
- * @property {object} inputSource XRInputSource object that is associated with this input source.
- * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
- *
- * - {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
- * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction with the canvas element associated with an inline session’s output context, such as a mouse click or touch event.
- * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates from either a handheld device or other hand-tracking mechanism and represents that the user is using their hands or the held device for pointing.
- *
- * @property {string} handedness Describes which hand input source is associated with. Can be one of the following:
- *
- * - {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
- * - {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
- * - {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
- *
- * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
- * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
- * @property {XrHand|null} hand If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is null.
- * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
- * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
- * @property {boolean} squeezing True if input source is in active squeeze action between squeezestart and squeezeend events.
- * @property {boolean} elementInput Set to true to allow input source to interact with Element components. Defaults to true.
- * @property {Entity} elementEntity If {@link XrInputSource#elementInput} is true, this property will hold entity with Element component at which this input source is hovering, or null if not hovering over any element.
- * @property {XrHitTestSource[]} hitTestSources list of active {@link XrHitTestSource} created by this input source.
  */
 class XrInputSource extends EventHandler {
+    /**
+     * @type {number}
+     * @private
+     */
+    _id;
+
+    /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {XRInputSource}
+     * @private
+     */
+    _xrInputSource;
+
+    /**
+     * @type {Ray}
+     * @private
+     */
+    _ray = new Ray();
+
+    /**
+     * @type {Ray}
+     * @private
+     */
+    _rayLocal = new Ray();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _grip = false;
+
+    /**
+     * @type {XrHand}
+     * @private
+     */
+    _hand = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localTransform = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _worldTransform = null;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localPosition = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localRotation = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyRay = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _selecting = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _squeezing = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _elementInput = true;
+
+    /**
+     * @type {Entity|null}
+     * @private
+     */
+    _elementEntity = null;
+
+    /**
+     * @type {XrHitTestSource[]}
+     * @private
+     */
+    _hitTestSources = [];
+
+    /**
+     * Create a new XrInputSource instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @param {*} xrInputSource - [XRInputSource](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource)
+     * object that is created by WebXR API.
+     * @hideconstructor
+     */
     constructor(manager, xrInputSource) {
         super();
 
@@ -53,29 +161,156 @@ class XrInputSource extends EventHandler {
         this._manager = manager;
         this._xrInputSource = xrInputSource;
 
-        this._ray = new Ray();
-        this._rayLocal = new Ray();
-        this._grip = false;
-        this._hand = null;
-
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
+    }
 
-        this._localTransform = null;
-        this._worldTransform = null;
-        this._position = new Vec3();
-        this._rotation = new Quat();
-        this._localPosition = null;
-        this._localRotation = null;
-        this._dirtyLocal = true;
+    /**
+     * Unique number associated with instance of input source. Same physical devices when
+     * reconnected will not share this ID.
+     *
+     * @type {number}
+     */
+    get id() {
+        return this._id;
+    }
 
-        this._selecting = false;
-        this._squeezing = false;
+    /**
+     * XRInputSource object that is associated with this input source.
+     *
+     * @type {object}
+     */
+    get inputSource() {
+        return this._xrInputSource;
+    }
 
-        this._elementInput = true;
-        this._elementEntity = null;
+    /**
+     * Type of ray Input Device is based on. Can be one of the following:
+     *
+     * - {@link XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and
+     * follow the direction it is facing. This is commonly referred to as a "gaze input" device in
+     * the context of head-mounted displays.
+     * - {@link XRTARGETRAY_SCREEN}: Screen - indicates that the input source was an interaction
+     * with the canvas element associated with an inline session's output context, such as a mouse
+     * click or touch event.
+     * - {@link XRTARGETRAY_POINTER}: Tracked Pointer - indicates that the target ray originates
+     * from either a handheld device or other hand-tracking mechanism and represents that the user
+     * is using their hands or the held device for pointing.
+     *
+     * @type {string}
+     */
+    get targetRayMode() {
+        return this._xrInputSource.targetRayMode;
+    }
 
-        this._hitTestSources = [];
+    /**
+     * Describes which hand input source is associated with. Can be one of the following:
+     *
+     * - {@link XRHAND_NONE}: None - input source is not meant to be held in hands.
+     * - {@link XRHAND_LEFT}: Left - indicates that input source is meant to be held in left hand.
+     * - {@link XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right
+     * hand.
+     *
+     * @type {string}
+     */
+    get handedness() {
+        return this._xrInputSource.handedness;
+    }
+
+    /**
+     * List of input profile names indicating both the preferred visual representation and behavior
+     * of the input source.
+     *
+     * @type {string[]}
+     */
+    get profiles() {
+        return this._xrInputSource.profiles;
+    }
+
+    /**
+     * If input source can be held, then it will have node with its world transformation, that can
+     * be used to position and rotate virtual joysticks based on it.
+     *
+     * @type {boolean}
+     */
+    get grip() {
+        return this._grip;
+    }
+
+    /**
+     * If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is
+     * null.
+     *
+     * @type {XrHand|null}
+     */
+    get hand() {
+        return this._hand;
+    }
+
+    /**
+     * If input source has buttons, triggers, thumbstick or touchpad, then this object provides
+     * access to its states.
+     *
+     * @type {Gamepad|null}
+     */
+    get gamepad() {
+        return this._xrInputSource.gamepad || null;
+    }
+
+    /**
+     * True if input source is in active primary action between selectstart and selectend events.
+     *
+     * @type {boolean}
+     */
+    get selecting() {
+        return this._selecting;
+    }
+
+    /**
+     * True if input source is in active squeeze action between squeezestart and squeezeend events.
+     *
+     * @type {boolean}
+     */
+    get squeezing() {
+        return this._squeezing;
+    }
+
+    /**
+     * Set to true to allow input source to interact with Element components. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set elementInput(value) {
+        if (this._elementInput === value)
+            return;
+
+        this._elementInput = value;
+
+        if (!this._elementInput)
+            this._elementEntity = null;
+    }
+
+    get elementInput() {
+        return this._elementInput;
+    }
+
+    /**
+     * If {@link XrInputSource#elementInput} is true, this property will hold entity with Element
+     * component at which this input source is hovering, or null if not hovering over any element.
+     *
+     * @type {Entity|null}
+     */
+    get elementEntity() {
+        return this._elementEntity;
+    }
+
+    /**
+     * List of active {@link XrHitTestSource} instances created by this input source.
+     *
+     * @type {XrHitTestSource[]}
+     */
+    get hitTestSources() {
+        return this._hitTestSources;
     }
 
     /**
@@ -113,7 +348,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#selectend
-     * @description Fired when input source has ended triggerring primary action.
+     * @description Fired when input source has ended triggering primary action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
@@ -127,7 +362,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#squeezestart
-     * @description Fired when input source has started to trigger sqeeze action.
+     * @description Fired when input source has started to trigger squeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
      * inputSource.on('squeezestart', function (evt) {
@@ -140,7 +375,7 @@ class XrInputSource extends EventHandler {
     /**
      * @event
      * @name XrInputSource#squeezeend
-     * @description Fired when input source has ended triggerring sqeeze action.
+     * @description Fired when input source has ended triggering squeeze action.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      */
 
@@ -180,6 +415,10 @@ class XrInputSource extends EventHandler {
      * });
      */
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         // hand
         if (this._hand) {
@@ -216,6 +455,7 @@ class XrInputSource extends EventHandler {
         }
     }
 
+    /** @private */
     _updateTransforms() {
         if (this._dirtyLocal) {
             this._dirtyLocal = false;
@@ -230,6 +470,7 @@ class XrInputSource extends EventHandler {
         }
     }
 
+    /** @private */
     _updateRayTransforms() {
         const dirty = this._dirtyRay;
         this._dirtyRay = false;
@@ -251,9 +492,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getPosition
-     * @description Get the world space position of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * Get the world space position of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getPosition() {
@@ -266,9 +507,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getLocalPosition
-     * @description Get the local space position of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space position of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space position of handheld input source.
      */
     getLocalPosition() {
@@ -276,9 +517,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getRotation
-     * @description Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     * Get the world space rotation of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Otherwise it will return null.
+     *
      * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getRotation() {
@@ -291,9 +532,9 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getLocalRotation
-     * @description Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip} is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     * Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip}
+     * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
+     *
      * @returns {Vec3|null} The world space rotation of handheld input source.
      */
     getLocalRotation() {
@@ -301,9 +542,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getOrigin
-     * @description Get the world space origin of input source ray.
+     * Get the world space origin of input source ray.
+     *
      * @returns {Vec3} The world space origin of input source ray.
      */
     getOrigin() {
@@ -312,9 +552,8 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#getDirection
-     * @description Get the world space direction of input source ray.
+     * Get the world space direction of input source ray.
+     *
      * @returns {Vec3} The world space direction of input source ray.
      */
     getDirection() {
@@ -323,24 +562,23 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrInputSource#hitTestStart
-     * @description Attempts to start hit test source based on this input source.
-     * @param {object} [options] - Object for passing optional arguments.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types
-     * against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ].
-     * Can be any combination of the following:
+     * Attempts to start hit test source based on this input source.
      *
-     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be
-     * computed based on the feature points detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be
-     * computed based on the planes detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be
-     * computed based on the meshes detected by the underlying Augmented Reality system.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against
+     * which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any
+     * combination of the following:
+     *
+     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed
+     * based on the feature points detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed
+     * based on the planes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
+     * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function
-     * called once hit test source is created or failed.
+     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     inputSource.hitTestStart({
@@ -366,6 +604,10 @@ class XrInputSource extends EventHandler {
         this._manager.hitTest.start(options);
     }
 
+    /**
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be added.
+     * @private
+     */
     onHitTestSourceAdd(hitTestSource) {
         this._hitTestSources.push(hitTestSource);
 
@@ -383,71 +625,13 @@ class XrInputSource extends EventHandler {
         }, this);
     }
 
+    /**
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be removed.
+     * @private
+     */
     onHitTestSourceRemove(hitTestSource) {
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
-    }
-
-    get id() {
-        return this._id;
-    }
-
-    get inputSource() {
-        return this._xrInputSource;
-    }
-
-    get targetRayMode() {
-        return this._xrInputSource.targetRayMode;
-    }
-
-    get handedness() {
-        return this._xrInputSource.handedness;
-    }
-
-    get profiles() {
-        return this._xrInputSource.profiles;
-    }
-
-    get grip() {
-        return this._grip;
-    }
-
-    get hand() {
-        return this._hand;
-    }
-
-    get gamepad() {
-        return this._xrInputSource.gamepad || null;
-    }
-
-    get selecting() {
-        return this._selecting;
-    }
-
-    get squeezing() {
-        return this._squeezing;
-    }
-
-    get elementInput() {
-        return this._elementInput;
-    }
-
-    set elementInput(value) {
-        if (this._elementInput === value)
-            return;
-
-        this._elementInput = value;
-
-        if (!this._elementInput)
-            this._elementEntity = null;
-    }
-
-    get elementEntity() {
-        return this._elementEntity;
-    }
-
-    get hitTestSources() {
-        return this._hitTestSources;
     }
 }
 

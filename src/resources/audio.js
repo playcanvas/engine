@@ -6,6 +6,9 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 // checks if user is running IE
 const ie = (function () {
     if (typeof window === 'undefined') {
@@ -41,13 +44,16 @@ const toMIME = {
 };
 
 /**
- * @class
- * @name AudioHandler
+ * Resource handler used for loading {@link Sound} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sound} resources.
- * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
+    /**
+     * Create a new AudioHandler instance.
+     *
+     * @param {SoundManager} manager - The sound manager.
+     */
     constructor(manager) {
         this.manager = manager;
         this.maxRetries = 0;
@@ -99,15 +105,19 @@ class AudioHandler {
         return data;
     }
 
+    patch(asset, assets) {
+    }
+
     /**
-     * @private
-     * @function
-     * @name SoundHandler._createSound
-     * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
+     * Loads an audio asset using an AudioContext by URL and calls success or error with the
+     * created resource or error respectively.
+     *
      * @param {string} url - The url of the audio asset.
      * @param {Function} success - Function to be called if the audio asset was loaded or if we
      * just want to continue without errors even if the audio is not loaded.
-     * @param {Function} error - Function to be called if there was an error while loading the audio asset.
+     * @param {Function} error - Function to be called if there was an error while loading the
+     * audio asset.
+     * @private
      */
     _createSound(url, success, error) {
         if (hasAudioContext()) {

@@ -3,25 +3,53 @@ import { EventHandler } from '../core/event-handler.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+
+/**
+ * @type {Vec3[]}
+ * @ignore
+ */
 const poolVec3 = [];
+
+/**
+ * @type {Quat[]}
+ * @ignore
+ */
 const poolQuat = [];
 
 /**
- * @class
- * @name XrHitTestSource
+ * Represents XR hit test source, which provides access to hit results of real world geometry from
+ * AR session.
+ *
  * @augments EventHandler
- * @classdesc Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
- * @description Represents XR hit test source, which provides access to hit results of real world geometry from AR session.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
- * @param {boolean} transient - True if XRHitTestSource created for input source profile.
- * @example
- * hitTestSource.on('result', function (position, rotation) {
- *     target.setPosition(position);
- * });
  */
 class XrHitTestSource extends EventHandler {
+    /**
+     * @type {XrManager}
+     * @private
+     */
+    manager;
+
+    /**
+     * @type {XRHitTestSource}
+     * @private
+     */
+    _xrHitTestSource;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _transient;
+
+    /**
+     * Create a new XrHitTestSource instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
+     * @param {boolean} transient - True if XRHitTestSource created for input source profile.
+     * @hideconstructor
+     */
     constructor(manager, xrHitTestSource, transient) {
         super();
 
@@ -55,9 +83,7 @@ class XrHitTestSource extends EventHandler {
      */
 
     /**
-     * @function
-     * @name XrHitTestSource#remove
-     * @description Stop and remove hit test source.
+     * Stop and remove hit test source.
      */
     remove() {
         if (!this._xrHitTestSource)
@@ -70,6 +96,7 @@ class XrHitTestSource extends EventHandler {
         this.onStop();
     }
 
+    /** @ignore */
     onStop() {
         this._xrHitTestSource.cancel();
         this._xrHitTestSource = null;
@@ -78,6 +105,10 @@ class XrHitTestSource extends EventHandler {
         this.manager.hitTest.fire('remove', this);
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (this._transient) {
             const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
@@ -95,6 +126,11 @@ class XrHitTestSource extends EventHandler {
         }
     }
 
+    /**
+     * @param {XRTransientInputHitTestResult[]} results - Hit test results.
+     * @param {XRHitTestSource} inputSource - Input source.
+     * @private
+     */
     updateHitResults(results, inputSource) {
         for (let i = 0; i < results.length; i++) {
             const pose = results[i].getPose(this.manager._referenceSpace);

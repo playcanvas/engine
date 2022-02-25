@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { version, revision } from '../core/core.js';
 
 import { Shader } from './shader.js';
@@ -45,9 +46,7 @@ class ProgramLibrary {
     getProgram(name, options) {
         const generator = this._generators[name];
         if (generator === undefined) {
-            // #if _DEBUG
-            console.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
-            // #endif
+            Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             return null;
         }
         const gd = this._device;
@@ -161,19 +160,9 @@ class ProgramLibrary {
                         if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
                             opt[p] = defaultMat[p];
                     }
-                    // Patch device specific properties
-                    opt.useTexCubeLod = this._device.useTexCubeLod;
                 }
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
-            // Uncomment to force finish linking after preload
-            // let device = this._device;
-            // let forceLink = function () {
-            //     for (let i = 0; i < shaders.length; i++) {
-            //         device.postLink(shaders[i]);
-            //     }
-            // };
-            // pc.Application.getApplication().on("preload:end", forceLink);
         }
         this._precached = true;
     }

@@ -1,4 +1,5 @@
 import { path } from '../../core/path.js';
+import { Debug } from '../../core/debug.js';
 
 import { http } from '../../net/http.js';
 
@@ -40,13 +41,13 @@ import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { Render } from '../../scene/render.js';
+import { DefaultMaterial } from '../../scene/materials/default-material.js';
 
 import { Entity } from '../../framework/entity.js';
 
 import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
 import { AnimData } from '../../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { AnimBinder } from '../../anim/binder/anim-binder.js';
 
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
@@ -823,9 +824,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                         canUseMorph = false;
                     }
                 } else {
-                    // #if _DEBUG
-                    console.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
-                    // #endif
+                    Debug.warn("File contains draco compressed data, but DracoDecoderModule is not configured.");
                 }
             }
         }
@@ -1053,7 +1052,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     const material = new StandardMaterial();
 
-    // glTF dooesn't define how to occlude specular
+    // glTF doesn't define how to occlude specular
     material.occludeSpecular = true;
 
     material.diffuseTint = true;
@@ -1356,6 +1355,15 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         'weights': 'weights'
     };
 
+    const constructNodePath = (node) => {
+        const path = [];
+        while (node) {
+            path.unshift(node.name);
+            node = node.parent;
+        }
+        return path;
+    };
+
     // convert anim channels
     for (i = 0; i < gltfAnimation.channels.length; ++i) {
         const channel = gltfAnimation.channels[i];
@@ -1363,7 +1371,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const curve = curves[channel.sampler];
 
         const node = nodes[target.node];
-        const entityPath = [nodes[0].name, ...AnimBinder.splitPath(node.path, '/')];
+        const entityPath = constructNodePath(node);
         curve._paths.push({
             entityPath: entityPath,
             component: 'graph',
@@ -1511,7 +1519,10 @@ const createLight = function (gltfLight, node) {
         enabled: false,
         type: gltfLight.type === "point" ? "omni" : gltfLight.type,
         color: gltfLight.hasOwnProperty('color') ? new Color(gltfLight.color) : Color.WHITE,
-        range: gltfLight.hasOwnProperty('range') ? gltfLight.range : Number.MAX_VALUE,
+
+        // when range is not defined, infinity should be used - but that is causing infinity in bounds calculations
+        range: gltfLight.hasOwnProperty('range') ? gltfLight.range : 9999,
+
         falloffMode: LIGHTFALLOFF_INVERSESQUARED,
 
         // TODO: (engine issue #3252) Set intensity to match glTF specification, which uses physically based values:
@@ -1629,10 +1640,16 @@ const createNodes = function (gltf, options) {
     for (let i = 0; i < gltf.nodes.length; ++i) {
         const gltfNode = gltf.nodes[i];
         if (gltfNode.hasOwnProperty('children')) {
+            const parent = nodes[i];
+            const uniqueNames = { };
             for (let j = 0; j < gltfNode.children.length; ++j) {
-                const parent = nodes[i];
                 const child = nodes[gltfNode.children[j]];
                 if (!child.parent) {
+                    if (uniqueNames.hasOwnProperty(child.name)) {
+                        child.name += uniqueNames[child.name]++;
+                    } else {
+                        uniqueNames[child.name] = 1;
+                    }
                     parent.addChild(child);
                 }
             }
@@ -1647,7 +1664,7 @@ const createScenes = function (gltf, nodes) {
     const count = gltf.scenes.length;
 
     // if there's a single scene with a single node in it, don't create wrapper nodes
-    if (count === 1 && gltf.scenes[0].nodes.length === 1) {
+    if (count === 1 && gltf.scenes[0].nodes?.length === 1) {
         const nodeIndex = gltf.scenes[0].nodes[0];
         scenes.push(nodes[nodeIndex]);
     } else {
@@ -1655,14 +1672,14 @@ const createScenes = function (gltf, nodes) {
         // create root node per scene
         for (let i = 0; i < count; i++) {
             const scene = gltf.scenes[i];
-            const sceneRoot = new GraphNode(scene.name);
-
-            for (let n = 0; n < scene.nodes.length; n++) {
-                const childNode = nodes[scene.nodes[n]];
-                sceneRoot.addChild(childNode);
+            if (scene.nodes) {
+                const sceneRoot = new GraphNode(scene.name);
+                for (let n = 0; n < scene.nodes.length; n++) {
+                    const childNode = nodes[scene.nodes[n]];
+                    sceneRoot.addChild(childNode);
+                }
+                scenes.push(sceneRoot);
             }
-
-            scenes.push(sceneRoot);
         }
     }
 
@@ -1867,6 +1884,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
         'image/jpeg': 'jpg',
         'image/basis': 'basis',
         'image/ktx': 'ktx',
+        'image/ktx2': 'ktx2',
         'image/vnd-ms.dds': 'dds'
     };
 
@@ -1878,7 +1896,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
             url: url || name
         };
         if (bufferView) {
-            file.contents = bufferView;
+            file.contents = bufferView.slice(0).buffer;
         }
         if (mimeType) {
             const extension = mimeTypeFileExtensions[mimeType];
@@ -2317,10 +2335,10 @@ class GlbParser {
         return result;
     }
 
-    constructor(device, assets, defaultMaterial, maxRetries) {
+    constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
-        this._defaultMaterial = defaultMaterial;
+        this._defaultMaterial = DefaultMaterial.get(device);
         this._maxRetries = maxRetries;
     }
 

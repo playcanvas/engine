@@ -11,13 +11,14 @@ HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテ�
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
+[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
 
-[English](https://github.com/playcanvas/engine/blob/master/README.md)
-[中文](https://github.com/playcanvas/engine/blob/master/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/master/README-ja.md)
+[English](https://github.com/playcanvas/engine/blob/dev/README.md)
+[中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/dev/README-ja.md)
 
 ## ショーケース
 
@@ -127,7 +128,7 @@ Node.jsがインストールされていることを確認します。
 
 また、ビルド済みのエンジンも利用できます。
 
-最新版のビルド(masterブランチのHEADリビジョン)
+最新版のビルド(devブランチのHEADリビジョン)
 
 * https://code.playcanvas.com/playcanvas-latest.js
 * https://code.playcanvas.com/playcanvas-latest.min.js
@@ -147,24 +148,15 @@ Node.jsがインストールされていることを確認します。
 
     npm run build -- -m
 
-これにより`build/output/playcanvas.js.map`が出力されます。
+これにより`build/playcanvas.js.map`が出力されます。
 
 注意: ソースマップを生成する際、プリプロセッサはマッピングを破壊するため無視されます。つまり、ソースマップの生成時には、すべてのデバッグコードとプロファイリングコードがエンジンのビルドに含まれます。
-
-## テスト
-
-PlayCanvasではユニットテストにKarmaを使用しています。テストを実行する方法は2つあります。
-
-| コマンド                | 説明                                                                           |
-|------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | ビルドされた `playcanvas.js` に対してユニットテストを実行します。                                              |
-| `npm run test:watch`   | 変更が検出されたときにユニットテストを再実行する - open http://localhost:9876/debug.html  |
 
 ## PlayCanvasエディター
 
 PlayCanvas エンジンは、HTML5 アプリやゲームを作成するためのオープンソースのエンジンです。エンジンに加えて、[PlayCanvasエディター](https://playcanvas.com/)があります。
 
-[![Editor](https://github.com/playcanvas/editor/blob/master/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
+[![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
 エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。
 
@@ -173,6 +165,8 @@ PlayCanvas エンジンは、HTML5 アプリやゲームを作成するための
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
+[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
+[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine

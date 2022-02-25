@@ -1,15 +1,17 @@
 import { EventHandler } from './event-handler.js';
 
 /**
- * @class
- * @name Tags
+ * Set of tag names. Tags are automatically available on {@link Entity} and {@link Asset} as `tags`
+ * field.
+ *
  * @augments EventHandler
- * @classdesc Set of tag names.
- * @description Create an instance of a Tags.
- * @param {object} [parent] - Parent object who tags belong to.
- * Note: Tags are automatically available on {@link Entity} and {@link Asset} as `tags` field.
  */
 class Tags extends EventHandler {
+    /**
+     * Create an instance of a Tags.
+     *
+     * @param {object} [parent] - Parent object who tags belong to.
+     */
     constructor(parent) {
         super();
 
@@ -19,9 +21,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#add
-     * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
+     * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
+     *
      * @param {...*} name - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
@@ -57,9 +58,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#remove
-     * @description Remove tag.
+     * Remove tag.
+     *
      * @param {...*} name - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
      * @example
@@ -99,9 +99,8 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#clear
-     * @description Remove all tags.
+     * Remove all tags.
+     *
      * @example
      * tags.clear();
      */
@@ -120,13 +119,11 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#has
-     * @description Check if tags satisfy filters.
-     * Filters can be provided by simple name of tag, as well as by array of tags.
-     * When an array is provided it will check if tags contain each tag within the array.
-     * If any of comma separated argument is satisfied, then it will return true.
-     * Any number of combinations are valid, and order is irrelevant.
+     * Check if tags satisfy filters. Filters can be provided by simple name of tag, as well as by
+     * array of tags. When an array is provided it will check if tags contain each tag within the
+     * array. If any of comma separated argument is satisfied, then it will return true. Any number
+     * of combinations are valid, and order is irrelevant.
+     *
      * @param {...*} query - Name of a tag or array of tags.
      * @returns {boolean} True if filters are satisfied.
      * @example
@@ -145,18 +142,22 @@ class Tags extends EventHandler {
         return this._has(this._processArguments(arguments));
     }
 
-
+    /**
+     * @param {string[]|string[][]} tags - Array of tags.
+     * @returns {boolean} True if the supplied tags are present.
+     * @private
+     */
     _has(tags) {
         if (!this._list.length || !tags.length)
             return false;
 
         for (let i = 0; i < tags.length; i++) {
             if (tags[i].length === 1) {
-                // single occurance
+                // single occurrence
                 if (this._index[tags[i][0]])
                     return true;
             } else {
-                // combined occurance
+                // combined occurrence
                 let multiple = true;
 
                 for (let t = 0; t < tags[i].length; t++) {
@@ -176,15 +177,20 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Tags#list
-     * @description Returns immutable array of tags.
+     * Returns immutable array of tags.
+     *
      * @returns {string[]} Copy of tags array.
      */
     list() {
         return this._list.slice(0);
     }
 
+    /**
+     * @param {IArguments} args - Arguments to process.
+     * @param {boolean} [flat] - If true, will flatten array of tags. Defaults to false.
+     * @returns {string[]|string[][]} Array of tags.
+     * @private
+     */
     _processArguments(args, flat) {
         const tags = [];
         let tmp = [];
@@ -223,11 +229,9 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @field
-     * @readonly
-     * @name Tags#size
+     * Number of tags in set.
+     *
      * @type {number}
-     * @description Number of tags in set.
      */
     get size() {
         return this._list.length;

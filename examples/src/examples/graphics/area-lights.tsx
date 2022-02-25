@@ -1,20 +1,20 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
 
-class AreaLightsExample extends Example {
+
+class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Area Lights';
 
     load() {
         return <>
-            <AssetLoader name='color' type='texture' url='static/assets/textures/seaside-rocks01-color.jpg' />
-            <AssetLoader name='normal' type='texture' url='static/assets/textures/seaside-rocks01-normal.jpg' />
-            <AssetLoader name='gloss' type='texture' url='static/assets/textures/seaside-rocks01-gloss.jpg' />
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='luts' type='binary' url='static/assets/binary/area-light-luts.bin' />
-            <AssetLoader name='helipad.dds' type='cubemap' url='static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
+            <AssetLoader name='color' type='texture' url='/static/assets/textures/seaside-rocks01-color.jpg' />
+            <AssetLoader name='normal' type='texture' url='/static/assets/textures/seaside-rocks01-normal.jpg' />
+            <AssetLoader name='gloss' type='texture' url='/static/assets/textures/seaside-rocks01-gloss.jpg' />
+            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
+            <AssetLoader name='luts' type='binary' url='/static/assets/binary/area-light-luts.bin' />
+            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
         </>;
     }
 
@@ -97,7 +97,7 @@ class AreaLightsExample extends Example {
             brightShape.addComponent("render", {
                 type: (shape === pc.LIGHTSHAPE_SPHERE) ? "sphere" : (shape === pc.LIGHTSHAPE_DISK) ? "cone" : "plane",
                 material: brightMaterial,
-                castShadows: (type === "directional") ? false : true
+                castShadows: type !== "directional"
             });
             brightShape.setLocalScale(((type === "directional") ? scale * range : scale), (shape === pc.LIGHTSHAPE_DISK) ? 0.001 : ((type === "directional") ? scale * range : scale), ((type === "directional") ? scale * range : scale));
             lightParent.addChild(brightShape);
@@ -132,7 +132,6 @@ class AreaLightsExample extends Example {
         app.setAreaLightLuts(assets.luts);
 
         // set up some general scene rendering properties
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // setup skydome

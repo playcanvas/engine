@@ -32,43 +32,29 @@ class StaticMeshes {
         let subCombineTime = 0;
         // #endif
 
-        let i, j, k, v, s, index;
-
         const drawCalls = meshInstances;
         const drawCallsCount = drawCalls.length;
-        let drawCall, light;
 
         const newDrawCalls = [];
-        let mesh;
-        let indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
-        let _x, _y, _z;
-        let minx, miny, minz, maxx, maxy, maxz;
-        let minv, maxv;
         const minVec = new Vec3();
         const maxVec = new Vec3();
         const localLightBounds = new BoundingBox();
         const invMatrix = new Mat4();
         const triLightComb = [];
-        let triLightCombUsed;
-        let indexBuffer, vertexBuffer;
-        let combIndices, combIbName, combIb;
-        let lightTypePass;
         const lightAabb = [];
-        let aabb;
         const triBounds = [];
         const staticLights = [];
-        let bit;
-        let lht;
-        for (i = 0; i < drawCallsCount; i++) {
-            drawCall = drawCalls[i];
+
+        for (let i = 0; i < drawCallsCount; i++) {
+            const drawCall = drawCalls[i];
             if (!drawCall.isStatic) {
                 newDrawCalls.push(drawCall);
             } else {
-                aabb = drawCall.aabb;
+                const aabb = drawCall.aabb;
                 staticLights.length = 0;
-                for (lightTypePass = LIGHTTYPE_OMNI; lightTypePass <= LIGHTTYPE_SPOT; lightTypePass++) {
-                    for (j = 0; j < lights.length; j++) {
-                        light = lights[j];
+                for (let lightTypePass = LIGHTTYPE_OMNI; lightTypePass <= LIGHTTYPE_SPOT; lightTypePass++) {
+                    for (let j = 0; j < lights.length; j++) {
+                        const light = lights[j];
                         if (light._type !== lightTypePass) continue;
                         if (light.enabled) {
                             if (light.mask & drawCall.mask) {
@@ -79,9 +65,7 @@ class StaticMeshes {
                                         light._node.getWorldTransform();
                                         light.getBoundingSphere(tempSphere);
                                         lightAabb[j].center.copy(tempSphere.center);
-                                        lightAabb[j].halfExtents.x = tempSphere.radius;
-                                        lightAabb[j].halfExtents.y = tempSphere.radius;
-                                        lightAabb[j].halfExtents.z = tempSphere.radius;
+                                        lightAabb[j].halfExtents.set(tempSphere.radius, tempSphere.radius, tempSphere.radius);
                                     }
                                     if (!lightAabb[j].intersects(aabb)) continue;
                                     staticLights.push(j);
@@ -96,17 +80,18 @@ class StaticMeshes {
                     continue;
                 }
 
-                mesh = drawCall.mesh;
-                vertexBuffer = mesh.vertexBuffer;
-                indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
-                indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
-                numTris = mesh.primitive[drawCall.renderStyle].count / 3;
-                baseIndex = mesh.primitive[drawCall.renderStyle].base;
-                elems = vertexBuffer.format.elements;
-                vertSize = vertexBuffer.format.size / 4; // / 4 because float
-                verts = new Float32Array(vertexBuffer.storage);
+                const mesh = drawCall.mesh;
+                const vertexBuffer = mesh.vertexBuffer;
+                const indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
+                const indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
+                const numTris = mesh.primitive[drawCall.renderStyle].count / 3;
+                const baseIndex = mesh.primitive[drawCall.renderStyle].base;
+                const elems = vertexBuffer.format.elements;
+                const vertSize = vertexBuffer.format.size / 4; // / 4 because float
+                const verts = new Float32Array(vertexBuffer.storage);
 
-                for (k = 0; k < elems.length; k++) {
+                let offsetP;
+                for (let k = 0; k < elems.length; k++) {
                     if (elems[k].name === SEMANTIC_POSITION) {
                         offsetP = elems[k].offset / 4; // / 4 because float
                     }
@@ -117,26 +102,26 @@ class StaticMeshes {
                 // #endif
 
                 triLightComb.length = numTris;
-                for (k = 0; k < numTris; k++) {
+                for (let k = 0; k < numTris; k++) {
                     // triLightComb[k] = ""; // uncomment to remove 32 lights limit
                     triLightComb[k] = 0; // comment to remove 32 lights limit
                 }
-                triLightCombUsed = false;
+                let triLightCombUsed = false;
 
                 triBounds.length = numTris * 6;
-                for (k = 0; k < numTris; k++) {
-                    minx = Number.MAX_VALUE;
-                    miny = Number.MAX_VALUE;
-                    minz = Number.MAX_VALUE;
-                    maxx = -Number.MAX_VALUE;
-                    maxy = -Number.MAX_VALUE;
-                    maxz = -Number.MAX_VALUE;
-                    for (v = 0; v < 3; v++) {
-                        index = indices[k * 3 + v + baseIndex];
+                for (let k = 0; k < numTris; k++) {
+                    let minx = Number.MAX_VALUE;
+                    let miny = Number.MAX_VALUE;
+                    let minz = Number.MAX_VALUE;
+                    let maxx = -Number.MAX_VALUE;
+                    let maxy = -Number.MAX_VALUE;
+                    let maxz = -Number.MAX_VALUE;
+                    for (let v = 0; v < 3; v++) {
+                        let index = indices[k * 3 + v + baseIndex];
                         index = index * vertSize + offsetP;
-                        _x = verts[index];
-                        _y = verts[index + 1];
-                        _z = verts[index + 2];
+                        const _x = verts[index];
+                        const _y = verts[index + 1];
+                        const _z = verts[index + 2];
                         if (_x < minx) minx = _x;
                         if (_y < miny) miny = _y;
                         if (_z < minz) minz = _z;
@@ -144,7 +129,7 @@ class StaticMeshes {
                         if (_y > maxy) maxy = _y;
                         if (_z > maxz) maxz = _z;
                     }
-                    index = k * 6;
+                    const index = k * 6;
                     triBounds[index] = minx;
                     triBounds[index + 1] = miny;
                     triBounds[index + 2] = minz;
@@ -159,18 +144,17 @@ class StaticMeshes {
                 // #if _PROFILER
                 subSearchTime = now();
                 // #endif
-                for (s = 0; s < staticLights.length; s++) {
-                    j = staticLights[s];
-                    light = lights[j];
+                for (let s = 0; s < staticLights.length; s++) {
+                    const j = staticLights[s];
 
                     invMatrix.copy(drawCall.node.worldTransform).invert();
                     localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
-                    minv = localLightBounds.getMin();
-                    maxv = localLightBounds.getMax();
-                    bit = 1 << s;
+                    const minv = localLightBounds.getMin();
+                    const maxv = localLightBounds.getMax();
+                    const bit = 1 << s;
 
-                    for (k = 0; k < numTris; k++) {
-                        index = k * 6;
+                    for (let k = 0; k < numTris; k++) {
+                        const index = k * 6;
                         if ((triBounds[index] <= maxv.x) && (triBounds[index + 3] >= minv.x) &&
                             (triBounds[index + 1] <= maxv.y) && (triBounds[index + 4] >= minv.y) &&
                             (triBounds[index + 2] <= maxv.z) && (triBounds[index + 5] >= minv.z)) {
@@ -191,12 +175,12 @@ class StaticMeshes {
                     subCombineTime = now();
                     // #endif
 
-                    combIndices = {};
-                    for (k = 0; k < numTris; k++) {
-                        j = k * 3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
-                        combIbName = triLightComb[k];
+                    const combIndices = {};
+                    for (let k = 0; k < numTris; k++) {
+                        const j = k * 3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
+                        const combIbName = triLightComb[k];
                         if (!combIndices[combIbName]) combIndices[combIbName] = [];
-                        combIb = combIndices[combIbName];
+                        const combIb = combIndices[combIbName];
                         combIb.push(indices[j]);
                         combIb.push(indices[j + 1]);
                         combIb.push(indices[j + 2]);
@@ -210,24 +194,24 @@ class StaticMeshes {
                     subWriteMeshTime = now();
                     // #endif
 
-                    for (combIbName in combIndices) {
-                        combIb = combIndices[combIbName];
+                    for (const combIbName in combIndices) {
+                        const combIb = combIndices[combIbName];
                         const ib = new IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
                         const ib2 = ib.bytesPerIndex === 2 ? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
                         ib2.set(combIb);
                         ib.unlock();
 
-                        minx = Number.MAX_VALUE;
-                        miny = Number.MAX_VALUE;
-                        minz = Number.MAX_VALUE;
-                        maxx = -Number.MAX_VALUE;
-                        maxy = -Number.MAX_VALUE;
-                        maxz = -Number.MAX_VALUE;
-                        for (k = 0; k < combIb.length; k++) {
-                            index = combIb[k];
-                            _x = verts[index * vertSize + offsetP];
-                            _y = verts[index * vertSize + offsetP + 1];
-                            _z = verts[index * vertSize + offsetP + 2];
+                        let minx = Number.MAX_VALUE;
+                        let miny = Number.MAX_VALUE;
+                        let minz = Number.MAX_VALUE;
+                        let maxx = -Number.MAX_VALUE;
+                        let maxy = -Number.MAX_VALUE;
+                        let maxz = -Number.MAX_VALUE;
+                        for (let k = 0; k < combIb.length; k++) {
+                            const index = combIb[k];
+                            const _x = verts[index * vertSize + offsetP];
+                            const _y = verts[index * vertSize + offsetP + 1];
+                            const _z = verts[index * vertSize + offsetP + 2];
                             if (_x < minx) minx = _x;
                             if (_y < miny) miny = _y;
                             if (_z < minz) minz = _z;
@@ -276,10 +260,10 @@ class StaticMeshes {
                         // }
 
                         // comment to remove 32 lights limit
-                        for (k = 0; k < staticLights.length; k++) {
-                            bit = 1 << k;
+                        for (let k = 0; k < staticLights.length; k++) {
+                            const bit = 1 << k;
                             if (combIbName & bit) {
-                                lht = lights[staticLights[k]];
+                                const lht = lights[staticLights[k]];
                                 if (instance._staticLightList.indexOf(lht) < 0) {
                                     instance._staticLightList.push(lht);
                                 }
@@ -301,7 +285,7 @@ class StaticMeshes {
         }
         // Set array to new
         meshInstances.length = newDrawCalls.length;
-        for (i = 0; i < newDrawCalls.length; i++) {
+        for (let i = 0; i < newDrawCalls.length; i++) {
             meshInstances[i] = newDrawCalls[i];
         }
         // #if _PROFILER

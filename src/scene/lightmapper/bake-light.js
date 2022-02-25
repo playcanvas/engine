@@ -63,9 +63,11 @@ class BakeLight {
         const light = this.light;
         light.enabled = false;
 
-        // return shadow map to the cache
-        if (light.shadowMap && light.shadowMap.cached) {
-            shadowMapCache.add(light, light.shadowMap);
+        if (light.shadowMap) {
+            // return shadow map to the cache
+            if (light.shadowMap.cached)
+                shadowMapCache.add(light, light.shadowMap);
+
             light.shadowMap = null;
         }
     }

@@ -1,7 +1,7 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
+import * as pc from '../../../../';
 import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+
 
 const vshader = `
 // Attributes per vertex: position
@@ -50,7 +50,7 @@ void main(void)
 }
 `;
 
-class PointCloudSimulationExample extends Example {
+class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Point Cloud Simulation';
 
@@ -142,7 +142,7 @@ class PointCloudSimulationExample extends Example {
             previousTime = time;
             time += dt;
 
-            // update particle positions using simple verlet integration, and keep them inside a sphere boundary
+            // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
             let dist;
             const pos = new pc.Vec3();
             const old = new pc.Vec3();
@@ -158,14 +158,19 @@ class PointCloudSimulationExample extends Example {
                 delta.sub2(pos, old);
                 next.add2(pos, delta);
 
-                // boundary collision to keep them inside a sphere. If outside, simply move them in oposite direction
+                // boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
                 dist = next.length();
                 if (dist > 15)
                     next.copy(old);
 
                 // write out changed positions
-                positions[i * 3] = next.x;         positions[i * 3 + 1] = next.y;             positions[i * 3 + 2] = next.z;
-                oldPositions[i * 3] = pos.x;       oldPositions[i * 3 + 1] = pos.y;           oldPositions[i * 3 + 2] = pos.z;
+                positions[i * 3] = next.x;
+                positions[i * 3 + 1] = next.y;
+                positions[i * 3 + 2] = next.z;
+
+                oldPositions[i * 3] = pos.x;
+                oldPositions[i * 3 + 1] = pos.y;
+                oldPositions[i * 3 + 2] = pos.z;
             }
 
             // once a second change how many points are visible

@@ -4,27 +4,60 @@ import { EventHandler } from '../core/event-handler.js';
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
+/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+/** @typedef {import('../shape/ray.js').Ray} Ray */
+
 /**
- * @class
- * @name XrHitTest
+ * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
+ *
+ * @callback xrHitTestStartCallback
+ * @param {Error|null} err - The Error object if failed to create hit test source or null.
+ * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against
+ * real world geometry.
+ */
+
+/**
+ * Hit Test provides ability to get position and rotation of ray intersecting point with
+ * representation of real world geometry by underlying AR system.
+ *
  * @augments EventHandler
- * @classdesc Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @description Hit Test provides ability to get position and rotation of ray intersecting point with representation of real world geometry by underlying AR system.
- * @hideconstructor
- * @param {XrManager} manager - WebXR Manager.
- * @property {boolean} supported True if AR Hit Test is supported.
- * @property {XrHitTestSource[]} sources list of active {@link XrHitTestSource}.
  */
 class XrHitTest extends EventHandler {
+    /**
+     * @type {XrManager}
+     * @private
+     */
+    manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
+
+    /**
+     * @type {XRSession}
+     * @private
+     */
+    _session = null;
+
+    /**
+     * List of active {@link XrHitTestSource}.
+     *
+     * @type {XrHitTestSource[]}
+     */
+    sources = [];
+
+    /**
+     * Create a new XrHitTest instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 
         this.manager = manager;
-        this._supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
-
-        this._session = null;
-
-        this.sources = [];
 
         if (this._supported) {
             this.manager.on('start', this._onSessionStart, this);
@@ -76,6 +109,7 @@ class XrHitTest extends EventHandler {
      * @description Fired when failed create hit test source.
      */
 
+    /** @private */
     _onSessionStart() {
         if (this.manager.type !== XRTYPE_AR)
             return;
@@ -83,6 +117,7 @@ class XrHitTest extends EventHandler {
         this._session = this.manager.session;
     }
 
+    /** @private */
     _onSessionEnd() {
         if (!this._session)
             return;
@@ -95,6 +130,14 @@ class XrHitTest extends EventHandler {
         this.sources = [];
     }
 
+    /**
+     * Checks if hit testing is available.
+     *
+     * @param {Function} callback - Error callback.
+     * @param {*} fireError - Event handler on while to fire error event.
+     * @returns {boolean} True if hit test is available.
+     * @private
+     */
     isAvailable(callback, fireError) {
         let err;
 
@@ -117,27 +160,40 @@ class XrHitTest extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrHitTest#start
-     * @description Attempts to start hit test with provided reference space.
+     * Attempts to start hit test with provided reference space.
+     *
      * @param {object} [options] - Optional object for passing arguments.
-     * @param {string} [options.spaceType] - Reference space type. Defaults to {@link XRSPACE_VIEWER}. Can be one of the following:
+     * @param {string} [options.spaceType] - Reference space type. Defaults to
+     * {@link XRSPACE_VIEWER}. Can be one of the following:
      *
      * - {@link XRSPACE_VIEWER}: Viewer - hit test will be facing relative to viewers space.
-     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation.
-     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform.
-     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
-     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the
+     * viewer at the time of creation.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin
+     * at the floor in a safe position for the user to stand. The y axis equals 0 at floor level.
+     * Floor level value might be estimated by the underlying platform.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native
+     * origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is
+     * expected to move freely around their environment, potentially long distances from their
+     * starting point.
      *
-     * @param {string} [options.profile] - if hit test source meant to match input source instead of reference space, then name of profile of the {@link XrInputSource} should be provided.
-     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any combination of the following:
+     * @param {string} [options.profile] - if hit test source meant to match input source instead
+     * of reference space, then name of profile of the {@link XrInputSource} should be provided.
+     * @param {string[]} [options.entityTypes] - Optional list of underlying entity types against
+     * which hit tests will be performed. Defaults to [ {@link XRTRACKABLE_PLANE} ]. Can be any
+     * combination of the following:
      *
-     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed based on the feature points detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed based on the planes detected by the underlying Augmented Reality system.
-     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed based on the meshes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_POINT}: Point - indicates that the hit test results will be computed
+     * based on the feature points detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_PLANE}: Plane - indicates that the hit test results will be computed
+     * based on the planes detected by the underlying Augmented Reality system.
+     * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
+     * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {callbacks.XrHitTestStart} [options.callback] - Optional callback function called once hit test source is created or failed.
+     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
@@ -171,9 +227,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      */
-    start(options) {
-        options = options || { };
-
+    start(options = {}) {
         if (!this.isAvailable(options.callback, this))
             return;
 
@@ -223,6 +277,12 @@ class XrHitTest extends EventHandler {
         }
     }
 
+    /**
+     * @param {XRHitTestSource} xrHitTestSource - Hit test source.
+     * @param {boolean} transient - True if hit test source is created from transient input source.
+     * @param {Function} callback - Callback called once hit test source is created.
+     * @private
+     */
     _onHitTestSource(xrHitTestSource, transient, callback) {
         if (!this._session) {
             xrHitTestSource.cancel();
@@ -239,12 +299,21 @@ class XrHitTest extends EventHandler {
         this.fire('add', hitTestSource);
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);
         }
     }
 
+    /**
+     * True if AR Hit Test is supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
