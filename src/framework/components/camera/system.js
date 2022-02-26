@@ -1,3 +1,4 @@
+import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../math/color.js';
 import { Vec4 } from '../../../math/vec4.js';
 
@@ -169,21 +170,15 @@ class CameraComponentSystem extends ComponentSystem {
 
     addCamera(camera) {
         this.cameras.push(camera);
-        this.sortCamerasByPriority();
+        sortPriority(this.cameras);
     }
 
     removeCamera(camera) {
         const index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
-            this.sortCamerasByPriority();
+            sortPriority(this.cameras);
         }
-    }
-
-    sortCamerasByPriority() {
-        this.cameras.sort(function (a, b) {
-            return a.priority - b.priority;
-        });
     }
 
     destroy() {
