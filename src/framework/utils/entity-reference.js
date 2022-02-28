@@ -110,7 +110,6 @@ import { EventHandler } from '../../core/event-handler.js';
  * of the parent component – you should never have to worry about manually calling
  * `Function.bind()`.
  *
- * @property {Entity} entity A reference to the entity, if present.
  * @augments EventHandler
  * @ignore
  */
@@ -406,12 +405,16 @@ class EntityReference extends EventHandler {
      *
      * @param {string} componentName - Name of the component.
      * @returns {boolean} True if the entity exists and has a component of the provided type.
-     * @private
      */
     hasComponent(componentName) {
         return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;
     }
 
+    /**
+     * A reference to the entity, if present.
+     *
+     * @type {Entity}
+     */
     get entity() {
         return this._entity;
     }

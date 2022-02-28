@@ -8,7 +8,6 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
-/** @typedef {import('../../application.js').Application} Application */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ScrollbarComponentSystem} ScrollbarComponentSystem */
 
@@ -39,8 +38,6 @@ class ScrollbarComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._app = system.app;
 
         this._handleReference = new EntityReference(this, 'handleEntity', {
             'element#gain': this._onHandleElementGain,

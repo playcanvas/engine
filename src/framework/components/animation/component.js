@@ -11,6 +11,7 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../scene/model.js').Model} Model */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').AnimationComponentSystem} AnimationComponentSystem */
 
@@ -26,6 +27,14 @@ import { Component } from '../component.js';
  * @augments Component
  */
 class AnimationComponent extends Component {
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, string>}
+     * @ignore
+     */
+    animationsIndex = {};
+    /* eslint-enable jsdoc/check-types */
+
     /**
      * Create a new AnimationComponent instance.
      *
@@ -34,8 +43,6 @@ class AnimationComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this.animationsIndex = { };
 
         // Handle changes to the 'animations' value
         this.on('set_animations', this.onSetAnimations, this);
@@ -177,6 +184,12 @@ class AnimationComponent extends Component {
         return this.data.animations[name];
     }
 
+    /**
+     * Set the model driven by this animation component.
+     *
+     * @param {Model} model - The model to set.
+     * @ignore
+     */
     setModel(model) {
         const data = this.data;
 
@@ -194,6 +207,7 @@ class AnimationComponent extends Component {
         }
     }
 
+    /** @private */
     _resetAnimationController() {
         const data = this.data;
         data.skeleton = null;
@@ -202,6 +216,7 @@ class AnimationComponent extends Component {
         data.animEvaluator = null;
     }
 
+    /** @private */
     _createAnimationController() {
         const data = this.data;
         const model = data.model;
@@ -233,6 +248,10 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * @param {number[]} ids - Array of animation asset ids.
+     * @private
+     */
     loadAnimationAssets(ids) {
         if (!ids || !ids.length)
             return;
@@ -280,6 +299,16 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Handle asset change events.
+     *
+     * @param {Asset} asset - The asset that changed.
+     * @param {string} attribute - The name of the asset attribute that changed. Can be 'data',
+     * 'file', 'resource' or 'resources'.
+     * @param {*} newValue - The new value of the specified asset property.
+     * @param {*} oldValue - The old value of the specified asset property.
+     * @private
+     */
     onAssetChanged(asset, attribute, newValue, oldValue) {
         if (attribute === 'resource' || attribute === 'resources') {
             // If the attribute is 'resources', newValue can be an empty array when the
@@ -356,6 +385,10 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - The asset that was removed.
+     * @private
+     */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
 
@@ -375,6 +408,7 @@ class AnimationComponent extends Component {
         }
     }
 
+    /** @private */
     _stopCurrentAnimation() {
         const data = this.data;
         data.currAnim = null;
@@ -452,24 +486,6 @@ class AnimationComponent extends Component {
         if (data.animEvaluator) {
             for (let i = 0; i < data.animEvaluator.clips.length; ++i) {
                 data.animEvaluator.clips[i].loop = data.loop;
-            }
-        }
-    }
-
-    onSetCurrentTime(name, oldValue, newValue) {
-        const data = this.data;
-
-        if (data.skeleton) {
-            const skeleton = data.skeleton;
-            skeleton.currentTime = newValue;
-            skeleton.addTime(0); // update
-            skeleton.updateGraph();
-        }
-
-        if (data.animEvaluator) {
-            const animEvaluator = data.animEvaluator;
-            for (let i = 0; i < animEvaluator.clips.length; ++i) {
-                animEvaluator.clips[i].time = newValue;
             }
         }
     }

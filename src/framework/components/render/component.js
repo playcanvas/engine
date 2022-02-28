@@ -27,6 +27,83 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @augments Component
  */
 class RenderComponent extends Component {
+    /** @private */
+    _type = 'asset';
+
+    /** @private */
+    _castShadows = true;
+
+    /** @private */
+    _receiveShadows = true;
+
+    /** @private */
+    _castShadowsLightmap = true;
+
+    /** @private */
+    _lightmapped = false;
+
+    /** @private */
+    _lightmapSizeMultiplier = 1;
+
+    /** @private */
+    _isStatic = false;
+
+    /** @private */
+    _batchGroupId = -1;
+
+    /** @private */
+    _layers = [LAYERID_WORLD]; // assign to the default world layer
+
+    /** @private */
+    _renderStyle = RENDERSTYLE_SOLID;
+
+    /**
+     * @type {MeshInstance[]}
+     * @private
+     */
+    _meshInstances = [];
+
+    /**
+     * @type {BoundingBox|null}
+     * @private
+     */
+    _customAabb = null;
+
+    /**
+     * Used by lightmapper.
+     *
+     * @type {{x: number, y: number, z: number, uv: number}|null}
+     * @ignore
+     */
+    _area = null;
+
+    /**
+     * @type {AssetReference}
+     * @private
+     */
+    _assetReference = [];
+
+    /**
+     * @type {AssetReference[]}
+     * @private
+     */
+    _materialReferences = [];
+
+    /**
+     * Material used to render meshes other than asset type. It gets priority when set to
+     * something else than defaultMaterial, otherwise materialASsets[0] is used.
+     *
+     * @type {Material}
+     * @private
+     */
+    _material;
+
+    /**
+     * @type {EntityReference}
+     * @private
+     */
+    _rootBone;
+
     /**
      * Create a new RenderComponent.
      *
@@ -35,32 +112,6 @@ class RenderComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._type = 'asset';
-        this._castShadows = true;
-        this._receiveShadows = true;
-        this._castShadowsLightmap = true;
-        this._lightmapped = false;
-        this._lightmapSizeMultiplier = 1;
-        this._isStatic = false;
-        this._batchGroupId = -1;
-
-        /**
-         * @type {MeshInstance[]}
-         * @private
-         */
-        this._meshInstances = [];
-        this._layers = [LAYERID_WORLD]; // assign to the default world layer
-        this._renderStyle = RENDERSTYLE_SOLID;
-
-        /**
-         * @type {BoundingBox}
-         * @private
-         */
-        this._customAabb = null;
-
-        // area - used by lightmapper
-        this._area = null;
 
         // the entity that represents the root bone if this render component has skinned meshes
         this._rootBone = new EntityReference(this, 'rootBone');
@@ -79,19 +130,10 @@ class RenderComponent extends Component {
             this
         );
 
-        /**
-         * Material used to render meshes other than asset type. It gets priority when set to
-         * something else than defaultMaterial, otherwise materialASsets[0] is used.
-         *
-         * @type {Material}
-         * @private
-         */
         this._material = system.defaultMaterial;
 
-        // material asset references
-        this._materialReferences = [];
-
-        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy) added or removed from the parent
+        // handle events when the entity is directly (or indirectly as a child of sub-hierarchy)
+        // added or removed from the parent
         entity.on('remove', this.onRemoveChild, this);
         entity.on('removehierarchy', this.onRemoveChild, this);
         entity.on('insert', this.onInsertChild, this);
@@ -517,7 +559,7 @@ class RenderComponent extends Component {
      * @type {Asset|number}
      */
     set asset(value) {
-        const id = (value instanceof Asset ? value.id : value);
+        const id = value instanceof Asset ? value.id : value;
         if (this._assetReference.id === id) return;
 
         if (this._assetReference.asset && this._assetReference.asset.resource) {
@@ -535,12 +577,29 @@ class RenderComponent extends Component {
         return this._assetReference.id;
     }
 
+    /**
+     * Assign asset id to the component, without updating the component with the new asset.
+     * This can be used to assign the asset id to already fully created component.
+     *
+     * @param {Asset|number} asset - The render asset or asset id to assign.
+     * @ignore
+     */
+    assignAsset(asset) {
+        const id = asset instanceof Asset ? asset.id : asset;
+        this._assetReference.id = id;
+    }
+
+    /**
+     * @param {Entity} entity - The entity set as the root bone.
+     * @private
+     */
     _onSetRootBone(entity) {
         if (entity) {
             this._onRootBoneChanged();
         }
     }
 
+    /** @private */
     _onRootBoneChanged() {
         // remove existing skin instances and create new ones, connected to new root bone
         this._clearSkinInstances();
@@ -549,6 +608,7 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     destroyMeshInstances() {
 
         const meshInstances = this._meshInstances;
@@ -565,6 +625,7 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     addToLayers() {
         const layers = this.system.app.scene.layers;
         for (let i = 0; i < this._layers.length; i++) {
@@ -587,10 +648,12 @@ class RenderComponent extends Component {
         }
     }
 
+    /** @private */
     onRemoveChild() {
         this.removeFromLayers();
     }
 
+    /** @private */
     onInsertChild() {
         if (this._meshInstances && this.enabled && this.entity.enabled) {
             this.addToLayers();
