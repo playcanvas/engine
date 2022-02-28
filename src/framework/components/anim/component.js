@@ -104,6 +104,11 @@ class AnimComponent extends Component {
      *
      * @type {boolean}
      */
+    set normalizeWeights(value) {
+        this._normalizeWeights = value;
+        this.resetStateGraph();
+    }
+
     get normalizeWeights() {
         return this._normalizeWeights;
     }
@@ -450,11 +455,10 @@ class AnimComponent extends Component {
     }
 
     resetStateGraph() {
+        this.removeStateGraph();
         if (this.stateGraphAsset) {
             const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
             this.loadStateGraph(stateGraph);
-        } else {
-            this.removeStateGraph();
         }
     }
 
