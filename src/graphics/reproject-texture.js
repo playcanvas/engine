@@ -14,7 +14,7 @@ import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
-import { DeviceResourceCache } from './device-resource-cache.js';
+import { DeviceCache } from './device-cache.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 
@@ -344,15 +344,17 @@ class SimpleCache {
 // cache, used to store:
 // - samples. we store these separately from textures since multiple devices can use the same
 //   set of samples.
-// - texures inside DeviceResourceCache.reprojectTextureCache - those are per device
+// - texures inside DeviceCache.data - those are per device
 const samplesCache = new SimpleCache();
 
+const deviceCache = new DeviceCache();
+
 const getCachedTexture = (device, key, getSamplesFnc) => {
-    const cache = DeviceResourceCache.get(device);
-    if (!cache.reprojectTextureCache) {
-        cache.reprojectTextureCache = new SimpleCache();
+    const cache = deviceCache.getCache(device);
+    if (!cache.data) {
+        cache.data = new SimpleCache();
     }
-    return cache.reprojectTextureCache.get(key, () => {
+    return cache.data.get(key, () => {
         return createSamplesTex(device, key, samplesCache.get(key, getSamplesFnc));
     });
 };

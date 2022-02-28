@@ -4,7 +4,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { DeviceResourceCache } from '../../../graphics/device-resource-cache.js';
+import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -39,7 +39,7 @@ class ModelComponentSystem extends ComponentSystem {
         this.DataType = ModelComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = DeviceResourceCache.get(app.graphicsDevice).defaultMaterial;
+        this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }

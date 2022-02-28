@@ -2,7 +2,7 @@ import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TY
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { DebugGraphics } from './debug-graphics.js';
-import { DeviceResourceCache } from './device-resource-cache.js';
+import { DeviceCache } from './device-cache.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -18,21 +18,27 @@ const _postEffectQuadDraw = {
     indexed: false
 };
 
-function getPostEffectQuadVB(device) {
-    const cache = DeviceResourceCache.get(device);
-    let vb = cache.postEffectQuadVB;
-    if (!vb) {
-        const vertexFormat = new VertexFormat(device, [{
-            semantic: SEMANTIC_POSITION,
-            components: 2,
-            type: TYPE_FLOAT32
-        }]);
-        const positions = new Float32Array(8);
-        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
-        vb = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
-        cache.postEffectQuadVB = vb;
+// device cache storing a quad vertex buffer
+class PostEffectDeviceCache extends DeviceCache {
+    /** @type { VertexBuffer } */
+    get(device) {
+        return super.getCache(device, () => {
+            const vertexFormat = new VertexFormat(device, [{
+                semantic: SEMANTIC_POSITION,
+                components: 2,
+                type: TYPE_FLOAT32
+            }]);
+            const positions = new Float32Array(8);
+            positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
+            return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
+        });
     }
-    return vb;
+}
+
+const postEffectDeviceCache = new PostEffectDeviceCache();
+
+function getPostEffectQuadVB(device) {
+    return postEffectDeviceCache.get(device).data;
 }
 
 /**

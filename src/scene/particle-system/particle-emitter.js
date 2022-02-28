@@ -29,6 +29,7 @@ import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
+import { DeviceCache } from '../../graphics/device-cache.js';
 
 import {
     BLEND_NORMAL,
@@ -40,7 +41,6 @@ import {
 import { Material } from '../../scene/materials/material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
-import { DeviceResourceCache } from '../../graphics/device-resource-cache.js';
 
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
@@ -214,6 +214,37 @@ function divGraphFrom2Curves(curve1, curve2, outUMax) {
     return sub;
 }
 
+// device cache storing a texture, used as a default texture parameter
+class ParticleEmitterDeviceCache extends DeviceCache {
+    /** @type { Texture } */
+    get(device) {
+        return super.getCache(device, () => {
+            const resolution = 16;
+            const centerPoint = resolution * 0.5 + 0.5;
+            const dtex = new Float32Array(resolution * resolution * 4);
+            for (let y = 0; y < resolution; y++) {
+                for (let x = 0; x < resolution; x++) {
+                    const xgrad = (x + 1) - centerPoint;
+                    const ygrad = (y + 1) - centerPoint;
+                    const c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
+                    const p = y * resolution + x;
+                    dtex[p * 4] =     1;
+                    dtex[p * 4 + 1] = 1;
+                    dtex[p * 4 + 2] = 1;
+                    dtex[p * 4 + 3] = c;
+                }
+            }
+
+            const texture = _createTexture(device, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            texture.minFilter = FILTER_LINEAR;
+            texture.magFilter = FILTER_LINEAR;
+            return texture;
+        });
+    }
+}
+
+const particleEmitterDeviceCache = new ParticleEmitterDeviceCache();
+
 class ParticleEmitter {
     constructor(graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
@@ -383,31 +414,7 @@ class ParticleEmitter {
 
     get defaultParamTexture() {
         Debug.assert(this.graphicsDevice);
-        const deviceResourceCache = DeviceResourceCache.get(this.graphicsDevice);
-        if (!deviceResourceCache.particleEmitterDefaultParamTexture) {
-
-            const resolution = 16;
-            const centerPoint = resolution * 0.5 + 0.5;
-            const dtex = new Float32Array(resolution * resolution * 4);
-            for (let y = 0; y < resolution; y++) {
-                for (let x = 0; x < resolution; x++) {
-                    const xgrad = (x + 1) - centerPoint;
-                    const ygrad = (y + 1) - centerPoint;
-                    const c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
-                    const p = y * resolution + x;
-                    dtex[p * 4] =     1;
-                    dtex[p * 4 + 1] = 1;
-                    dtex[p * 4 + 2] = 1;
-                    dtex[p * 4 + 3] = c;
-                }
-            }
-            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            texture.minFilter = FILTER_LINEAR;
-            texture.magFilter = FILTER_LINEAR;
-            deviceResourceCache.particleEmitterDefaultParamTexture = texture;
-        }
-
-        return deviceResourceCache.particleEmitterDefaultParamTexture;
+        return particleEmitterDeviceCache.get(this.graphicsDevice).data;
     }
 
     onChangeCamera() {

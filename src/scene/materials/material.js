@@ -13,7 +13,7 @@ import {
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
 import { Debug } from "../../core/debug.js";
-import { DeviceResourceCache } from "../../graphics/device-resource-cache.js";
+import { getDefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 
@@ -470,7 +470,7 @@ class Material {
             meshInstance._material = null;
 
             if (meshInstance.mesh) {
-                const defaultMaterial = DeviceResourceCache.get(meshInstance.mesh.device).defaultMaterial;
+                const defaultMaterial = getDefaultMaterial(meshInstance.mesh.device);
                 if (this !== defaultMaterial) {
                     meshInstance.material = defaultMaterial;
                 }

@@ -34,8 +34,8 @@ import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
-import { DeviceResourceCache } from '../graphics/device-resource-cache.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { setDefaultMaterial } from '../scene/materials/default-material.js'
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -748,7 +748,7 @@ class Application extends EventHandler {
         const material = new StandardMaterial();
         material.name = "Default Material";
         material.shadingModel = SPECULAR_BLINN;
-        DeviceResourceCache.get(this.graphicsDevice).defaultMaterial = material;
+        setDefaultMaterial(this.graphicsDevice, material);
     }
 
     /**
