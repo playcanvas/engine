@@ -20,7 +20,13 @@ const _postEffectQuadDraw = {
 
 // device cache storing a quad vertex buffer
 class PostEffectDeviceCache extends DeviceCache {
-    /** @type { VertexBuffer } */
+    /**
+     * Returns instance of a class containing resources for supplied device.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {VertexBuffer} The quad VertexBuffer for the device.
+     * @ignore
+     */
     get(device) {
         return super.getCache(device, () => {
             const vertexFormat = new VertexFormat(device, [{
