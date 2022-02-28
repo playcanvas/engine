@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
+import { math } from '../../../math/math.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
 /** @typedef {import('../../../asset/asset.js').Asset} Asset */
@@ -28,6 +29,10 @@ class AnimComponentLayer {
         this._blendType = blendType;
         this._normalizedWeight = normalizedWeight;
         this._mask = null;
+        this._blendTime = null;
+        this._blendTimeElapsed = 0;
+        this._startingWeight = null;
+        this._targetWeight = null;
     }
 
     /**
@@ -168,7 +173,9 @@ class AnimComponentLayer {
     set blendType(value) {
         if (value !== this._blendType) {
             this._blendType = value;
-            this._component.rebind();
+            if (this._controller.normalizeWeights) {
+                this._component.rebind();
+            }
         }
     }
 
@@ -248,7 +255,33 @@ class AnimComponentLayer {
     }
 
     update(dt) {
+        if (this._blendTime) {
+            if (this._blendTimeElapsed < this._blendTime) {
+                this.weight = math.lerp(this._startingWeight, this._targetWeight, this._blendTimeElapsed / this._blendTime);
+                this._blendTimeElapsed += dt;
+            } else {
+                this.weight = this._targetWeight;
+                this._blendTime = null;
+                this._blendTimeElapsed = 0;
+                this._startingWeight = null;
+                this._targetWeight = null;
+            }
+        }
         this._controller.update(dt);
+    }
+
+
+    /**
+     * Blend from the current weight value to the provided weight value over a given amount of time.
+     *
+     * @param {number} weight - The new weight value to blend to.
+     * @param {number} time - The duration of the blend in seconds.
+     */
+    blendToWeight(weight, time) {
+        this._startingWeight = this.weight;
+        this._targetWeight = weight;
+        this._blendTime = math.max([0, time]);
+        this._blendTimeElapsed = 0;
     }
 
     /**

@@ -46,6 +46,7 @@ class AnimComponent extends Component {
         // a collection of animated property targets
         this._targets = {};
         this._consumedTriggers = new Set();
+        this._normalizeWeights = false;
     }
 
     set stateGraphAsset(value) {
@@ -95,6 +96,16 @@ class AnimComponent extends Component {
 
     get stateGraphAsset() {
         return this._stateGraphAsset;
+    }
+
+
+    /**
+     * If true the animation component will normalize the weights of its layers by their sum total.
+     *
+     * @type {boolean}
+     */
+    get normalizeWeights() {
+        return this._normalizeWeights;
     }
 
     set animationAssets(value) {

@@ -99,7 +99,8 @@ class AnimComponentSystem extends ComponentSystem {
             stateGraph: entity.anim.stateGraph,
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
-            parameters: entity.anim.parameters
+            parameters: entity.anim.parameters,
+            normalizeWeights: entity.anim.normalizeWeights
         };
         this.addComponent(clone, data);
     }

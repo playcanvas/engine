@@ -1,7 +1,8 @@
 import { Vec3 } from '../../index.js';
 import { Quat } from '../../math/quat.js';
-import { ANIM_LAYER_ADDITIVE } from '../controller/constants.js';
+import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
+import { math } from '../../math/math.js';
 
 /**
  * Used to store and update the value of an animation target. This combines the values of multiple
@@ -44,29 +45,32 @@ class AnimTargetValue {
         this.setter = null;
     }
 
+    get _normalizeWeights() {
+        return this._component.normalizeWeights;
+    }
+
     getWeight(index) {
         if (this.dirty) this.updateWeights();
-        if (!this.mask[index]) return 0;
-        if (this._layerNormalizedWeight(index)) {
-            if (this.totalWeight === 0) {
-                return 0;
-            }
+        if (this._normalizeWeights && this.totalWeight === 0 || !this.mask[index]) {
+            return 0;
+        } else if (this._normalizeWeights) {
             return this.weights[index] / this.totalWeight;
         }
-        return this.weights[index];
+        return math.clamp(this.weights[index], 0, 1);
     }
 
-    _layerblendType(index) {
+    _layerBlendType(index) {
         return this._component.layers[index].blendType;
-    }
-
-    _layerNormalizedWeight(index) {
-        return this._component.layers[index].normalizedWeight;
     }
 
     setMask(index, value) {
         this.mask[index] = value;
-        this.dirty = true;
+        if (this._normalizeWeights) {
+            if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
+                this.mask = this.mask.fill(0, 0, index);
+            }
+            this.dirty = true;
+        }
     }
 
     updateWeights() {
@@ -81,10 +85,13 @@ class AnimTargetValue {
     updateValue(index, value) {
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            AnimEvaluator._set(this.value, this.baseValue, this.valueType);
+            AnimEvaluator._set(this.value, [0, 0, 0, 1], this.valueType);
+            if (!this._normalizeWeights) {
+                AnimEvaluator._blend(this.value, this.baseValue, 1, this.valueType);
+            }
         }
         if (!this.mask[index]) return;
-        if (this._layerblendType(index) === ANIM_LAYER_ADDITIVE) {
+        if (this._layerBlendType(index) === ANIM_LAYER_ADDITIVE && !this._normalizeWeights) {
             if (this.valueType === AnimTargetValue.TYPE_QUAT) {
                 // current value
                 const v = AnimTargetValue.q1.set(...this.value);
@@ -106,7 +113,9 @@ class AnimTargetValue {
     }
 
     unbind() {
-        this.setter(this.baseValue);
+        if (!this._normalizeWeights) {
+            this.setter(this.baseValue);
+        }
     }
 }
 
