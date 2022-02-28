@@ -18,7 +18,11 @@ const _postEffectQuadDraw = {
     indexed: false
 };
 
-// device cache storing a quad vertex buffer
+/**
+ * Device cache storing a quad vertex buffer
+ *
+ * @ignore
+ */
 class PostEffectDeviceCache extends DeviceCache {
     /**
      * Returns instance of a class containing resources for supplied device.
