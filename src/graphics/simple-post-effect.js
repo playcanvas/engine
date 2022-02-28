@@ -29,7 +29,6 @@ class PostEffectDeviceCache extends DeviceCache {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {VertexBuffer} The quad VertexBuffer for the device.
-     * @ignore
      */
     get(device) {
         return super.getCache(device, () => {
