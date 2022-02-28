@@ -630,7 +630,7 @@ class Scene extends EventHandler {
             'ambientBakeSpherePart',
             'ambientBakeOcclusionBrightness',
             'ambientBakeOcclusionContrast'
-        ].forEach(setting => {
+        ].forEach((setting) => {
             if (render.hasOwnProperty(setting)) {
                 this[setting] = render[setting];
             }
