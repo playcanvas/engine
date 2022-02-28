@@ -1606,7 +1606,7 @@ class Application extends EventHandler {
      *
      * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
      * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
-     * @param {number} settings.render.ambientBakeSpherePart - Which part of the sphere to bake.
+     * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      *
