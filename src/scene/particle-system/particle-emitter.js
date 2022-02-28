@@ -216,7 +216,6 @@ function divGraphFrom2Curves(curve1, curve2, outUMax) {
 
 // device cache storing a texture, used as a default texture parameter
 class ParticleEmitterDeviceCache extends DeviceCache {
-    /** @type { Texture } */
     get(device) {
         return super.getCache(device, () => {
             const resolution = 16;
