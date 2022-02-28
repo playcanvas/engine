@@ -1019,8 +1019,6 @@ class ForwardRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        return 0;
     }
 
     // used for stereo
@@ -1040,8 +1038,6 @@ class ForwardRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        return 0;
     }
 
     renderShadows(lights, camera) {
@@ -1458,7 +1454,7 @@ class ForwardRenderer {
                     this.viewProjId.setValue(viewProjMatL.data);
                     this.dispatchViewPos(viewPosL);
 
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
+                    this.drawInstance(device, drawCall, mesh, style, true);
                     this._forwardDrawCalls++;
 
                     // Right
@@ -1471,7 +1467,7 @@ class ForwardRenderer {
                     this.viewProjId.setValue(viewProjMatR.data);
                     this.dispatchViewPos(viewPosR);
 
-                    i += this.drawInstance2(device, drawCall, mesh, style);
+                    this.drawInstance2(device, drawCall, mesh, style);
                     this._forwardDrawCalls++;
                 } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
                     const views = camera.xr.views;
@@ -1490,15 +1486,15 @@ class ForwardRenderer {
                         this.viewPosId.setValue(view.position);
 
                         if (v === 0) {
-                            i += this.drawInstance(device, drawCall, mesh, style, true);
+                            this.drawInstance(device, drawCall, mesh, style, true);
                         } else {
-                            i += this.drawInstance2(device, drawCall, mesh, style);
+                            this.drawInstance2(device, drawCall, mesh, style);
                         }
 
                         this._forwardDrawCalls++;
                     }
                 } else {
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
+                    this.drawInstance(device, drawCall, mesh, style, true);
                     this._forwardDrawCalls++;
                 }
 
