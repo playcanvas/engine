@@ -622,7 +622,7 @@ class Scene extends EventHandler {
 
         // bake settings
         [
-            'lightmapFilterEnable',
+            'lightmapFilterEnabled',
             'lightmapFilterRange',
             'lightmapFilterSmoothness',
             'ambientBake',
