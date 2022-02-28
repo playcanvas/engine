@@ -55,7 +55,6 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LIN
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
-import { DepthMaterial } from '../scene/materials/depth-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
@@ -482,7 +481,6 @@ export const scene = {
     },
     BasicMaterial: BasicMaterial,
     Command: Command,
-    DepthMaterial: DepthMaterial,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
