@@ -32,7 +32,9 @@ class SoundManager extends EventHandler {
          */
         this._context = null;
         /**
-         * @type {string} the current state of the underlying AudioContext
+         * The current state of the underlying AudioContext.
+         *
+         * @type {string}
          * @private
          */
         this._state = 'not created';
@@ -121,19 +123,21 @@ class SoundManager extends EventHandler {
                 } else if (typeof webkitAudioContext !== 'undefined') {
                     this._context = new webkitAudioContext();
                 }
-                this._state = this._context.state;
 
-                // When the browser window looses focus (i.e. switching tab, hiding the app on Mobile, etc), the AudioContext state
-                // will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other browsers), and 'resume' must be expliclty called.
-                const self = this;
-                this._context.onstatechange = function () {
-                    // _context.state will have the state its transitioning to, while _state contains the current state
-                    if ((self._state === 'suspended' || self._state === 'interrupted') && self._context.state === 'running') {
-                        // explicitly call .resume() when going from suspended or interrupted to running
-                        self._context.resume();
-                    }
-                    self._state = self._context.state;
-                };
+                if (this._context) {
+                    this._state = this._context.state;
+
+                    // When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc), the AudioContext state
+                    // will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other browsers), and 'resume' must be expliclty called.
+                    this._context.onstatechange = () => {
+                        // _context.state will have the state its transitioning to, while _state contains the current state
+                        if ((this._state === 'suspended' || this._state === 'interrupted') && this._context.state === 'running') {
+                            // explicitly call .resume() when going from suspended or interrupted to running
+                            this._context.resume();
+                        }
+                        this._state = this._context.state;
+                    };
+                }
             }
         }
 
@@ -151,7 +155,7 @@ class SoundManager extends EventHandler {
             this.fire('resume');
         };
 
-        // When the browser window looses focus (i.e. switching tab, hiding the app on Mobile, etc), the AudioContext state
+        // When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc), the AudioContext state
         // will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other browsers), and 'resume' must be called.
         // If the AudioContext has not yet been resumed, call for a resume.
         if ((hasAudioContext() || this._forceWebAudioApi) && this._context &&
