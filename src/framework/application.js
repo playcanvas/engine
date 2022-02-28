@@ -1344,7 +1344,6 @@ class Application extends EventHandler {
         stats.sortTime = this.renderer._sortTime;
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
-        stats.instancingTime = this.renderer._instancingTime;
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
@@ -1364,7 +1363,6 @@ class Application extends EventHandler {
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
-        this.renderer._instancingTime = 0;
         this.renderer._shadowMapTime = 0;
         this.renderer._depthMapTime = 0;
         this.renderer._forwardTime = 0;
@@ -1387,7 +1385,6 @@ class Application extends EventHandler {
         this.renderer._skinDrawCalls = 0;
         this.renderer._immediateRendered = 0;
         this.renderer._instancedDrawCalls = 0;
-        this.renderer._removedByInstancing = 0;
 
         this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 

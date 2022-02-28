@@ -227,8 +227,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
 
-        this._enableAutoInstancing = false;
-        this.autoInstancingMaxObjects = 16384;
         this.defaultFramebuffer = null;
 
         this.updateClientRect();
@@ -2774,20 +2772,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     get fullscreen() {
         return !!document.fullscreenElement;
-    }
-
-    /**
-     * Automatic instancing.
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    set enableAutoInstancing(value) {
-        this._enableAutoInstancing = value && this.extInstancing;
-    }
-
-    get enableAutoInstancing() {
-        return this._enableAutoInstancing;
     }
 
     /**
