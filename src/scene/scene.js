@@ -620,18 +620,21 @@ class Scene extends EventHandler {
             this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
 
-        const apply = (name) => {
-            if (render.hasOwnProperty(name)) {
-                this[name] = render[name];
+        // bake settings
+        [
+            'lightmapFilterEnable',
+            'lightmapFilterRange',
+            'lightmapFilterSmoothness',
+            'ambientBake',
+            'ambientBakeNumSamples',
+            'ambientBakeSpherePart',
+            'ambientBakeOcclusionBrightness',
+            'ambientBakeOcclusionContrast'
+        ].forEach((setting) => {
+            if (render.hasOwnProperty(setting)) {
+                this[setting] = render[setting];
             }
-        };
-
-        // bake
-        apply('ambientBake');
-        apply('ambientBakeNumSamples');
-        apply('ambientBakeSpherePart');
-        apply('ambientBakeOcclusionBrightness');
-        apply('ambientBakeOcclusionContrast');
+        });
 
         this._resetSkyboxModel();
     }

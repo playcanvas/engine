@@ -25,7 +25,8 @@ class BakeLightAmbient extends BakeLight {
             shadowResolution: 2048,
             shadowType: SHADOW_PCF3,
             color: Color.WHITE,
-            intensity: 1
+            intensity: 1,
+            bakeDir: false
         });
 
         super(scene, lightEntity.light.light);
