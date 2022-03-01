@@ -214,35 +214,8 @@ function divGraphFrom2Curves(curve1, curve2, outUMax) {
     return sub;
 }
 
-// device cache storing a texture, used as a default texture parameter
-class ParticleEmitterDeviceCache extends DeviceCache {
-    get(device) {
-        return super.getCache(device, () => {
-            const resolution = 16;
-            const centerPoint = resolution * 0.5 + 0.5;
-            const dtex = new Float32Array(resolution * resolution * 4);
-            for (let y = 0; y < resolution; y++) {
-                for (let x = 0; x < resolution; x++) {
-                    const xgrad = (x + 1) - centerPoint;
-                    const ygrad = (y + 1) - centerPoint;
-                    const c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
-                    const p = y * resolution + x;
-                    dtex[p * 4] =     1;
-                    dtex[p * 4 + 1] = 1;
-                    dtex[p * 4 + 2] = 1;
-                    dtex[p * 4 + 3] = c;
-                }
-            }
-
-            const texture = _createTexture(device, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            texture.minFilter = FILTER_LINEAR;
-            texture.magFilter = FILTER_LINEAR;
-            return texture;
-        });
-    }
-}
-
-const particleEmitterDeviceCache = new ParticleEmitterDeviceCache();
+// a device cache storing default parameter texture for the emitter
+const particleEmitterDeviceCache = new DeviceCache();
 
 class ParticleEmitter {
     constructor(graphicsDevice, options) {
@@ -413,7 +386,28 @@ class ParticleEmitter {
 
     get defaultParamTexture() {
         Debug.assert(this.graphicsDevice);
-        return particleEmitterDeviceCache.get(this.graphicsDevice).data;
+        return particleEmitterDeviceCache.get(this.graphicsDevice, () => {
+            const resolution = 16;
+            const centerPoint = resolution * 0.5 + 0.5;
+            const dtex = new Float32Array(resolution * resolution * 4);
+            for (let y = 0; y < resolution; y++) {
+                for (let x = 0; x < resolution; x++) {
+                    const xgrad = (x + 1) - centerPoint;
+                    const ygrad = (y + 1) - centerPoint;
+                    const c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
+                    const p = y * resolution + x;
+                    dtex[p * 4] =     1;
+                    dtex[p * 4 + 1] = 1;
+                    dtex[p * 4 + 2] = 1;
+                    dtex[p * 4 + 3] = c;
+                }
+            }
+
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            texture.minFilter = FILTER_LINEAR;
+            texture.magFilter = FILTER_LINEAR;
+            return texture;
+        });
     }
 
     onChangeCamera() {

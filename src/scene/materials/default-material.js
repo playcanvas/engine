@@ -11,7 +11,7 @@ const defaultMaterialDeviceCache = new DeviceCache();
  * @ignore
  */
 function getDefaultMaterial(device) {
-    return defaultMaterialDeviceCache.getCache(device).data;
+    return defaultMaterialDeviceCache.get(device);
 }
 
 /**
@@ -22,7 +22,9 @@ function getDefaultMaterial(device) {
  * @ignore
  */
 function setDefaultMaterial(device, material) {
-    defaultMaterialDeviceCache.getCache(device).data = material;
+    defaultMaterialDeviceCache.get(device, () => {
+        return material;
+    });
 }
 
 export { setDefaultMaterial, getDefaultMaterial };

@@ -31,7 +31,7 @@ class PostEffectDeviceCache extends DeviceCache {
      * @returns {VertexBuffer} The quad VertexBuffer for the device.
      */
     get(device) {
-        return super.getCache(device, () => {
+        return super.get(device, () => {
             const vertexFormat = new VertexFormat(device, [{
                 semantic: SEMANTIC_POSITION,
                 components: 2,
@@ -47,7 +47,7 @@ class PostEffectDeviceCache extends DeviceCache {
 const postEffectDeviceCache = new PostEffectDeviceCache();
 
 function getPostEffectQuadVB(device) {
-    return postEffectDeviceCache.get(device).data;
+    return postEffectDeviceCache.get(device);
 }
 
 /**

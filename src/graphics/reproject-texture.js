@@ -341,20 +341,19 @@ class SimpleCache {
     }
 }
 
-// cache, used to store:
-// - samples. we store these separately from textures since multiple devices can use the same
-//   set of samples.
-// - texures inside DeviceCache.data - those are per device
+// cache, used to store samples. we store these separately from textures since multiple
+// devices can use the same set of samples.
 const samplesCache = new SimpleCache();
 
+// cache, storing samples stored in textures, those are per device
 const deviceCache = new DeviceCache();
 
 const getCachedTexture = (device, key, getSamplesFnc) => {
-    const cache = deviceCache.getCache(device);
-    if (!cache.data) {
-        cache.data = new SimpleCache();
-    }
-    return cache.data.get(key, () => {
+    const cache = deviceCache.get(device, () => {
+        return new SimpleCache();
+    });
+
+    return cache.get(key, () => {
         return createSamplesTex(device, key, samplesCache.get(key, getSamplesFnc));
     });
 };
