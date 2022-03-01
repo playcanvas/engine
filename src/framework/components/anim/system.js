@@ -98,7 +98,9 @@ class AnimComponentSystem extends ComponentSystem {
                     const mask = {};
                     Object.keys(layer.mask).forEach((path) => {
                         // The base of all mask paths should be mapped from the previous entity to the cloned entity
-                        const clonePath = path.replace(path.split('/')[0], clone.name);
+                        const pathArr = path.split('/');
+                        pathArr.shift();
+                        const clonePath = [clone.name, ...pathArr].join('/');
                         mask[clonePath] = layer.mask[path];
                     });
                     masks[i] = { mask };
