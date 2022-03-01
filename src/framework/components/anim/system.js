@@ -90,8 +90,8 @@ class AnimComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         let masks;
-        // If the component doesn't specify a rootBone, any layer mask hierarchy should be updated from the old entity to the cloned entity.
-        if (!entity.anim.rootBone) {
+        // If the component animaites from the components entity, any layer mask hierarchy should be updated from the old entity to the cloned entity.
+        if (!entity.anim.rootBone || entity.anim.rootBone === entity) {
             masks = {};
             entity.anim.layers.forEach((layer, i) => {
                 if (layer.mask) {
@@ -116,7 +116,6 @@ class AnimComponentSystem extends ComponentSystem {
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
             parameters: entity.anim.parameters,
-            masks
         };
         return this.addComponent(clone, data);
     }
