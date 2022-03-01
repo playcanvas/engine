@@ -102,11 +102,7 @@ class SoundManager extends EventHandler {
 
                         // explicitly call .resume() when previous state was suspended or interrupted
                         if (this._state === 'interrupted' || this._state === 'suspended') {
-                            this._context.resume().catch(() => {
-                                // if context could not be resumed at this point (for instance, due to auto-play policy),
-                                // add interaction listeners to resume the context later
-                                this._addAudioContextUserInteractionListeners();
-                            });
+                            this._safelyResumeContext();
                         }
                         this._state = this._context.state;
                     };
@@ -126,12 +122,9 @@ class SoundManager extends EventHandler {
         this.suspended = false;
         this.fire('resume');
 
-        // Attempt to resume the AudioContext, but gracefully handle failures (i.e. auto-play policy or hardware is too slow)
+        // attempt to safely resume the AudioContext
         if (this.context && (this._state === 'interrupted' || this._state === 'suspended')) {
-            this.context.resume().catch(() => {
-                // add interaction listeners to resume context later
-                this._addAudioContextUserInteractionListeners();
-            });
+            this._safelyResumeContext();
         }
     }
 
@@ -211,6 +204,31 @@ class SoundManager extends EventHandler {
         }
 
         return channel;
+    }
+
+    /**
+     * Attempt to resume the AudioContext, but safely handle failure scenarios.
+     * When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc),
+     * the AudioContext state will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other
+     * browsers), and 'resume' must be expliclty called. However, the Auto-Play policy might block
+     * the AudioContext from running - in those cases, we need to add the interaction listeners,
+     * making the AudioContext be resumed later.
+     *
+     * @private
+     */
+    _safelyResumeContext() {
+        if (!this._context) return;
+
+        this._context.resume().then(() => {
+            // if after the callback the state is not yet running, add interaction listeners to resume context later
+            if (this._context.state !== 'running') {
+                this._addAudioContextUserInteractionListeners();
+            }
+        }).catch(() => {
+            // if context could not be resumed at this point (for instance, due to auto-play policy),
+            // add interaction listeners to resume the context later
+            this._addAudioContextUserInteractionListeners();
+        });
     }
 
     /**
