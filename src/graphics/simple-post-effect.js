@@ -18,36 +18,20 @@ const _postEffectQuadDraw = {
     indexed: false
 };
 
-/**
- * Device cache storing a quad vertex buffer
- *
- * @ignore
- */
-class PostEffectDeviceCache extends DeviceCache {
-    /**
-     * Returns instance of a class containing resources for supplied device.
-     *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @returns {VertexBuffer} The quad VertexBuffer for the device.
-     */
-    get(device) {
-        return super.get(device, () => {
-            const vertexFormat = new VertexFormat(device, [{
-                semantic: SEMANTIC_POSITION,
-                components: 2,
-                type: TYPE_FLOAT32
-            }]);
-            const positions = new Float32Array(8);
-            positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
-            return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
-        });
-    }
-}
-
-const postEffectDeviceCache = new PostEffectDeviceCache();
+// Device cache storing a quad vertex buffer
+const postEffectDeviceCache = new DeviceCache();
 
 function getPostEffectQuadVB(device) {
-    return postEffectDeviceCache.get(device);
+    return postEffectDeviceCache.get(device, () => {
+        const vertexFormat = new VertexFormat(device, [{
+            semantic: SEMANTIC_POSITION,
+            components: 2,
+            type: TYPE_FLOAT32
+        }]);
+        const positions = new Float32Array(8);
+        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
+        return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
+    });
 }
 
 /**
