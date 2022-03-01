@@ -144,6 +144,8 @@ class ModelComponentSystem extends ComponentSystem {
         if (entity.model.customAabb) {
             component.customAabb = entity.model.customAabb.clone();
         }
+
+        return component;
     }
 
     onRemove(entity, component) {

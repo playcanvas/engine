@@ -101,7 +101,7 @@ class AnimComponentSystem extends ComponentSystem {
             layerIndices: entity.anim.layerIndices,
             parameters: entity.anim.parameters
         };
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {

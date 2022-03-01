@@ -112,6 +112,8 @@ class RenderComponentSystem extends ComponentSystem {
         if (entity.render.customAabb) {
             component.customAabb = entity.render.customAabb.clone();
         }
+
+        return component;
     }
 
     onRemove(entity, component) {
