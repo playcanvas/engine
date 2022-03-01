@@ -23,7 +23,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
  *
- * @callback xrErrorCallback
+ * @callback XrErrorCallback
  * @param {Error|null} err - The Error object or null if operation was successful.
  */
 
@@ -333,7 +333,7 @@ class XrManager extends EventHandler {
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
      * {@link XrPlaneDetection}.
-     * @param {xrErrorCallback} [options.callback] - Optional callback function called once session
+     * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
@@ -462,7 +462,7 @@ class XrManager extends EventHandler {
      * @param {string} type - Session type.
      * @param {string} spaceType - Reference space type.
      * @param {*} options - Session options.
-     * @param {xrErrorCallback} callback - Error callback.
+     * @param {XrErrorCallback} callback - Error callback.
      * @private
      */
     _onStartOptionsReady(type, spaceType, options, callback) {
@@ -483,7 +483,7 @@ class XrManager extends EventHandler {
      * Attempts to end XR session and optionally fires callback when session is ended or failed to
      * end.
      *
-     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * @param {XrErrorCallback} [callback] - Optional callback function called once session is
      * started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @example

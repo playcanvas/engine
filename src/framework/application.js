@@ -152,14 +152,14 @@ class Progress {
  * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
  * an error occurs).
  *
- * @callback configureAppCallback
+ * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
  * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
  *
- * @callback preloadAppCallback
+ * @callback PreloadAppCallback
  */
 
 let app = null;
@@ -785,7 +785,7 @@ class Application extends EventHandler {
      * registry.
      *
      * @param {string} url - The URL of the configuration file to load.
-     * @param {configureAppCallback} callback - The Function called when the configuration file is
+     * @param {ConfigureAppCallback} callback - The Function called when the configuration file is
      * loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
@@ -814,7 +814,7 @@ class Application extends EventHandler {
     /**
      * Load all assets in the asset registry that are marked as 'preload'.
      *
-     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
+     * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");

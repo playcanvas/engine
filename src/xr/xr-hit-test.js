@@ -10,7 +10,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  *
- * @callback xrHitTestStartCallback
+ * @callback XrHitTestStartCallback
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
  * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against
  * real world geometry.
@@ -192,7 +192,7 @@ class XrHitTest extends EventHandler {
      * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
