@@ -355,7 +355,7 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    updateShader(device, scene, objDefs) {
+    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // For vanilla materials, the shader can only be set by the user
     }
 

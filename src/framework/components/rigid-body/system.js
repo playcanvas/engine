@@ -398,7 +398,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             mask: rigidbody.mask
         };
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
