@@ -3,7 +3,7 @@ import { EventHandler } from '../core/event-handler.js';
 /* eslint-disable-next-line no-unused-vars */
 import { ScriptType } from './script-type.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 
 /**
  * Container for all {@link ScriptType}s that are available to this application. Note that

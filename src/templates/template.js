@@ -1,6 +1,6 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**

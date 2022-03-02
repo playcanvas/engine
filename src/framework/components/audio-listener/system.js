@@ -5,7 +5,7 @@ import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
 
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const _schema = ['enabled'];
 

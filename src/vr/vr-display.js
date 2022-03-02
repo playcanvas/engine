@@ -6,7 +6,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 
 /**
  * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
