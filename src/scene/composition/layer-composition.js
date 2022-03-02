@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
+import { sortPriority } from '../../core/sort.js';
 
 import {
     LAYERID_DEPTH,
@@ -277,7 +278,7 @@ class LayerComposition extends EventHandler {
 
             // sort cameras by priority
             if (this.cameras.length > 1) {
-                this.cameras.sort((a, b) => a.priority - b.priority);
+                sortPriority(this.cameras);
             }
 
             // collect a list of layers this camera renders
