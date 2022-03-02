@@ -262,7 +262,10 @@ class BoxReflectionExample {
             layers: [worldLayer.id],
 
             // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
-            enabled: false
+            enabled: false,
+
+            nearClip: 1,
+            farClip: 500
         });
 
         // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly useable
