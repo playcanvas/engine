@@ -610,9 +610,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
         this.grabPassAvailable = true;
-
         this.grabPass = new GrabPass(this, options.alpha);
-        this.grabPass.create();
 
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
@@ -629,8 +627,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     destroy() {
         super.destroy();
         const gl = this.gl;
-
-        this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {
             gl.deleteTransformFeedback(this.feedback);
@@ -1006,9 +1002,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
-        // grab pass
-        this.grabPass.destroy();
-
         // release textures
         for (const texture of this.textures) {
             texture.loseContext();
@@ -1047,8 +1040,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
-
-        this.grabPass.create();
     }
 
     /**
