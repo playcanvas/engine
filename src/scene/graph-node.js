@@ -60,6 +60,7 @@ class GraphNode extends EventHandler {
          * @type {string}
          */
         this.name = name;
+
         /**
          * Interface for tagging graph nodes. Tag based searches can be performed using the
          * {@link GraphNode#findByTag} function.
@@ -77,16 +78,19 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.localPosition = new Vec3();
+
         /**
          * @type {Quat}
          * @private
          */
         this.localRotation = new Quat();
+
         /**
          * @type {Vec3}
          * @private
          */
         this.localScale = new Vec3(1, 1, 1);
+
         /**
          * @type {Vec3}
          * @private
@@ -99,16 +103,19 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.position = new Vec3();
+
         /**
          * @type {Quat}
          * @private
          */
         this.rotation = new Quat();
+
         /**
          * @type {Vec3}
          * @private
          */
         this.eulerAngles = new Vec3();
+
         /**
          * @type {Vec3|null}
          * @private
@@ -120,11 +127,13 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.localTransform = new Mat4();
+
         /**
          * @type {boolean}
          * @private
          */
         this._dirtyLocal = false;
+
         /**
          * @type {number}
          * @private
@@ -173,6 +182,7 @@ class GraphNode extends EventHandler {
          * @private
          */
         this._up = null;
+
         /**
          * @type {Vec3|null}
          * @private
@@ -184,11 +194,13 @@ class GraphNode extends EventHandler {
          * @private
          */
         this._parent = null;
+
         /**
          * @type {GraphNode[]}
          * @private
          */
         this._children = [];
+
         /**
          * @type {number}
          * @private
@@ -196,11 +208,18 @@ class GraphNode extends EventHandler {
         this._graphDepth = 0;
 
         /**
+         * Represents enabled state of the entity. If the entity is disabled, the entity including
+         * all children are excluded from updates.
+         *
          * @type {boolean}
          * @private
          */
         this._enabled = true;
+
         /**
+         * Represents enabled state of the entity in the hierarchy. It's true only if this entity
+         * and all parent entities all the way to the scene's root are enabled.
+         *
          * @type {boolean}
          * @private
          */
@@ -260,8 +279,11 @@ class GraphNode extends EventHandler {
         if (this._enabled !== enabled) {
             this._enabled = enabled;
 
-            if (!this._parent || this._parent.enabled)
+            // if enablng entity, make all children enabled in hierarchy only when the parent is as well
+            // if disabling entity, make all children disabled in hierarchy in all cases
+            if (enabled && this._parent?.enabled || !enabled) {
                 this._notifyHierarchyStateChanged(this, enabled);
+            }
         }
     }
 
