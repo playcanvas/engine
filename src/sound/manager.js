@@ -55,7 +55,9 @@ class SoundManager extends EventHandler {
         this._forceWebAudioApi = options.forceWebAudioApi;
 
         this._resumeContext = null;
+        this._resumeContextAttached = false;
         this._unlock = null;
+        this._unlockAttached = false;
 
         if (hasAudioContext() || this._forceWebAudioApi) {
             this._addAudioContextUserInteractionListeners();
@@ -139,13 +141,13 @@ class SoundManager extends EventHandler {
     }
 
     destroy() {
-        if (this._resumeContext && !!this._resumeContextIsAttached) {
+        if (this._resumeContext && this._resumeContextAttached) {
             USER_INPUT_EVENTS.forEach((eventName) => {
                 window.removeEventListener(eventName, this._resumeContext);
             });
         }
 
-        if (this._unlock && !!this._unlockAttached) {
+        if (this._unlock && this._unlockAttached) {
             window.removeEventListener('touchend', this._unlock);
         }
 
@@ -257,19 +259,19 @@ class SoundManager extends EventHandler {
                         window.removeEventListener(eventName, this._resumeContext);
                     });
 
-                    this._resumeContextIsAttached = false;
+                    this._resumeContextAttached = false;
                 } else {
                     this.context.resume();
                 }
             };
         }
 
-        if (!this._resumeContextIsAttached) {
+        if (!this._resumeContextAttached) {
             USER_INPUT_EVENTS.forEach((eventName) => {
                 window.addEventListener(eventName, this._resumeContext);
             });
 
-            this._resumeContextIsAttached = true;
+            this._resumeContextAttached = true;
         }
 
         // iOS only starts sound as a response to user interaction
