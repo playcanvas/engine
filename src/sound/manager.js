@@ -254,7 +254,7 @@ class SoundManager extends EventHandler {
         // resume AudioContext on user interaction because of autoplay policy
         if (!this._resumeContext) {
             this._resumeContext = () => {
-                if (!this.context || this.context.state === 'running') {
+                if (!this.context || this.context.state === CONTEXT_STATE_RUNNING) {
                     USER_INPUT_EVENTS.forEach((eventName) => {
                         window.removeEventListener(eventName, this._resumeContext);
                     });
