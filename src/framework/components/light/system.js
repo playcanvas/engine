@@ -106,7 +106,7 @@ class LightComponentSystem extends ComponentSystem {
             }
         }
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     changeType(component, oldValue, newValue) {

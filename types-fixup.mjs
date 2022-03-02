@@ -84,8 +84,8 @@ fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
     ['aspectRatioMode', 'number'],
-    ['calculateProjection', 'calculateMatrixCallback'],
-    ['calculateTransform', 'calculateMatrixCallback'],
+    ['calculateProjection', 'CalculateMatrixCallback'],
+    ['calculateTransform', 'CalculateMatrixCallback'],
     ['clearColor', 'Color'],
     ['cullFaces', 'boolean'],
     ['farClip', 'number'],
@@ -422,7 +422,7 @@ const standardMaterialProps = [
     ['occludeDirect', 'number'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
-    ['onUpdateShader', 'updateShaderCallback'],
+    ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
     ['opacityFadesSpecular', 'boolean'],
     ['opacityMap', 'Texture'],

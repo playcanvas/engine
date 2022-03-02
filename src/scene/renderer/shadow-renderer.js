@@ -504,7 +504,7 @@ class ShadowRenderer {
             device.setIndexBuffer(mesh.indexBuffer[style]);
 
             // draw
-            i += forwardRenderer.drawInstance(device, meshInstance, mesh, style);
+            forwardRenderer.drawInstance(device, meshInstance, mesh, style);
             forwardRenderer._shadowDrawCalls++;
         }
     }

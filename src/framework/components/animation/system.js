@@ -80,6 +80,8 @@ class AnimationComponentSystem extends ComponentSystem {
             }
         }
         clone.animation.animationsIndex = clonedAnimationsIndex;
+
+        return clone.animation;
     }
 
     onBeforeRemove(entity, component) {

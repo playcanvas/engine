@@ -152,14 +152,14 @@ class Progress {
  * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
  * an error occurs).
  *
- * @callback configureAppCallback
+ * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
  * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
  *
- * @callback preloadAppCallback
+ * @callback PreloadAppCallback
  */
 
 let app = null;
@@ -785,7 +785,7 @@ class Application extends EventHandler {
      * registry.
      *
      * @param {string} url - The URL of the configuration file to load.
-     * @param {configureAppCallback} callback - The Function called when the configuration file is
+     * @param {ConfigureAppCallback} callback - The Function called when the configuration file is
      * loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
@@ -814,7 +814,7 @@ class Application extends EventHandler {
     /**
      * Load all assets in the asset registry that are marked as 'preload'.
      *
-     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
+     * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");
@@ -1344,7 +1344,6 @@ class Application extends EventHandler {
         stats.sortTime = this.renderer._sortTime;
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
-        stats.instancingTime = this.renderer._instancingTime;
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
@@ -1364,7 +1363,6 @@ class Application extends EventHandler {
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
-        this.renderer._instancingTime = 0;
         this.renderer._shadowMapTime = 0;
         this.renderer._depthMapTime = 0;
         this.renderer._forwardTime = 0;
@@ -1387,7 +1385,6 @@ class Application extends EventHandler {
         this.renderer._skinDrawCalls = 0;
         this.renderer._immediateRendered = 0;
         this.renderer._instancedDrawCalls = 0;
-        this.renderer._removedByInstancing = 0;
 
         this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 

@@ -104,7 +104,7 @@ class CameraComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.camera;
-        this.addComponent(clone, {
+        return this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
             aspectRatioMode: c.aspectRatioMode,
             calculateProjection: c.calculateProjection,
