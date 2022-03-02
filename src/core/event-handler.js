@@ -1,7 +1,7 @@
 /**
  * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  *
- * @callback handleEventCallback
+ * @callback HandleEventCallback
  * @param {*} [arg1] - First argument that is passed from caller.
  * @param {*} [arg2] - Second argument that is passed from caller.
  * @param {*} [arg3] - Third argument that is passed from caller.
@@ -57,7 +57,7 @@ class EventHandler {
      * Registers a new event handler.
      *
      * @param {string} name - Name of the event to bind the callback to.
-     * @param {handleEventCallback} callback - Function that is called when event is fired. Note
+     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
@@ -85,7 +85,7 @@ class EventHandler {
      * Attach an event handler to an event.
      *
      * @param {string} name - Name of the event to bind the callback to.
-     * @param {handleEventCallback} callback - Function that is called when event is fired. Note
+     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
@@ -108,7 +108,7 @@ class EventHandler {
      * unbound.
      *
      * @param {string} [name] - Name of the event to unbind.
-     * @param {handleEventCallback} [callback] - Function to be unbound.
+     * @param {HandleEventCallback} [callback] - Function to be unbound.
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
@@ -228,7 +228,7 @@ class EventHandler {
      * Attach an event handler to an event. This handler will be removed after being fired once.
      *
      * @param {string} name - Name of the event to bind the callback to.
-     * @param {handleEventCallback} callback - Function that is called when event is fired. Note
+     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.

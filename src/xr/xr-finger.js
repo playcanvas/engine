@@ -6,6 +6,30 @@
  */
 class XrFinger {
     /**
+     * @type {number}
+     * @private
+     */
+    _index;
+
+    /**
+     * @type {XrHand}
+     * @private
+     */
+    _hand;
+
+    /**
+     * @type {XrJoint[]}
+     * @private
+     */
+    _joints = [];
+
+    /**
+     * @type {XrJoint|null}
+     * @private
+     */
+    _tip = null;
+
+    /**
      * Create a new XrFinger instance.
      *
      * @param {number} index - Index of a finger.
@@ -16,8 +40,6 @@ class XrFinger {
         this._index = index;
         this._hand = hand;
         this._hand._fingers.push(this);
-        this._joints = [];
-        this._tip = null;
     }
 
     /**

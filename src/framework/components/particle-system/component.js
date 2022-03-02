@@ -6,6 +6,10 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../../math/curve.js').Curve} Curve */
+/** @typedef {import('../../../math/curve-set.js').CurveSet} CurveSet */
+/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ParticleSystemComponentSystem} ParticleSystemComponentSystem */
 
@@ -254,6 +258,12 @@ let depthLayer;
  * @augments Component
  */
 class ParticleSystemComponent extends Component {
+    /** @private */
+    _requestedDepth = false;
+
+    /** @private */
+    _drawOrder = 0;
+
     /**
      * Create a new ParticleSystemComponent.
      *
@@ -285,9 +295,6 @@ class ParticleSystemComponent extends Component {
         GRAPH_PROPERTIES.forEach((prop) => {
             this.on(`set_${prop}`, this.onSetGraphProperty, this);
         });
-
-        this._requestedDepth = false;
-        this._drawOrder = 0;
     }
 
     set drawOrder(drawOrder) {

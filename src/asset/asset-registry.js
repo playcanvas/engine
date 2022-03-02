@@ -14,7 +14,7 @@ import { Asset } from './asset.js';
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
  *
- * @callback filterAssetCallback
+ * @callback FilterAssetCallback
  * @param {Asset} asset - The current asset to filter.
  * @returns {boolean} Return `true` to include asset to result list.
  */
@@ -23,7 +23,7 @@ import { Asset } from './asset.js';
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
  *
- * @callback loadAssetCallback
+ * @callback LoadAssetCallback
  * @param {string|null} err - The error message is null if no errors were encountered.
  * @param {Asset} [asset] - The loaded asset if no errors were encountered.
  */
@@ -424,7 +424,7 @@ class AssetRegistry extends EventHandler {
      *
      * @param {string} url - The url to load.
      * @param {string} type - The type of asset to load.
-     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * @param {LoadAssetCallback} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
@@ -443,7 +443,7 @@ class AssetRegistry extends EventHandler {
      * @param {string} url - The url to load.
      * @param {string} filename - The filename of the asset to load.
      * @param {string} type - The type of asset to load.
-     * @param {loadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * @param {LoadAssetCallback} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * var file = magicallyAttainAFile();
@@ -656,7 +656,7 @@ class AssetRegistry extends EventHandler {
     /**
      * Return all Assets that satisfy a filter callback.
      *
-     * @param {filterAssetCallback} callback - The callback function that is used to filter assets.
+     * @param {FilterAssetCallback} callback - The callback function that is used to filter assets.
      * Return `true` to include an asset in the returned array.
      * @returns {Asset[]} A list of all Assets found.
      * @example
@@ -674,7 +674,7 @@ class AssetRegistry extends EventHandler {
      *
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.
-     * @returns {Asset} A single Asset or null if no Asset is found.
+     * @returns {Asset|null} A single Asset or null if no Asset is found.
      * @example
      * var asset = app.assets.find("myTextureAsset", "texture");
      */

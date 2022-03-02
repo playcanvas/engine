@@ -38,6 +38,53 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  */
 class ScriptType extends EventHandler {
     /**
+     * The {@link Application} that the instance of this type belongs to.
+     *
+     * @type {Application}
+     */
+    app;
+
+    /**
+     * The {@link Entity} that the instance of this type belongs to.
+     *
+     * @type {Entity}
+     */
+    entity;
+
+    /** @private */
+    _enabled;
+
+    /** @private */
+    _enabledOld;
+
+    /** @private */
+    _initialized;
+
+    /** @private */
+    _postInitialized;
+
+    /** @private */
+    __destroyed;
+
+    /** @private */
+    __attributes;
+
+    /** @private */
+    __attributesRaw;
+
+    /** @private */
+    __scriptType;
+
+    /**
+     * The order in the script component that the methods of this script instance will run
+     * relative to other script instances in the component.
+     *
+     * @type {number}
+     * @private
+     */
+    __executionOrder;
+
+    /**
      * Create a new ScriptType instance.
      *
      * @param {object} args - The input arguments object.
@@ -94,34 +141,24 @@ class ScriptType extends EventHandler {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }
 
+    /**
+     * @param {{entity: Entity, app: Application}} args - The entity and app.
+     * @private
+     */
     initScriptType(args) {
         const script = this.constructor; // get script type, i.e. function (class)
         Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
-        /**
-         * The {@link Application} that the instance of this type belongs to.
-         *
-         * @type {Application}
-         */
         this.app = args.app;
-
-        /**
-         * The {@link Entity} that the instance of this type belongs to.
-         *
-         * @type {Entity}
-         */
         this.entity = args.entity;
 
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
         this._enabledOld = this.enabled;
+
         this.__destroyed = false;
         this.__attributes = { };
         this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
         this.__scriptType = script;
-
-        // the order in the script component that the
-        // methods of this script instance will run relative to
-        // other script instances in the component
         this.__executionOrder = -1;
     }
 
@@ -133,6 +170,11 @@ class ScriptType extends EventHandler {
      */
     static __name = null; // Will be assigned when calling createScript or registerScript.
 
+    /**
+     * @param {*} constructorFn - The constructor function of the script type.
+     * @returns {string} The script name.
+     * @private
+     */
     static __getScriptName(constructorFn) {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
@@ -169,7 +211,10 @@ class ScriptType extends EventHandler {
         return this.__attributes;
     }
 
-    // initialize attributes
+    /**
+     * @param {boolean} force - Set to true to force initialization of the attributes.
+     * @private
+     */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw)
             return;
@@ -216,58 +261,39 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @callback scriptTypeInitializeCallback
+     * @function
+     * @name ScriptType#[initialize]
+     * @description Called when script is about to run for the first time.
      */
 
     /**
-     * @callback scriptTypeUpdateCallback
+     * @function
+     * @name ScriptType#[postInitialize]
+     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
+
+    /**
+     * @function
+     * @name ScriptType#[update]
+     * @description Called for enabled (running state) scripts on each tick.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
-     * @callback scriptTypeSwapCallback
-     * @param {ScriptType} old - The delta time in seconds since the last frame.
+     * @function
+     * @name ScriptType#[postUpdate]
+     * @description Called for enabled (running state) scripts on each tick, after update.
+     * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
-     * Called when script is about to run for the first time.
-     *
-     * @type {scriptTypeInitializeCallback}
+     * @function
+     * @name ScriptType#[swap]
+     * @description Called when a ScriptType that already exists in the registry
+     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+     * then it will be executed to perform hot-reload at runtime.
+     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
      */
-    initialize;
-
-    /**
-     * Called after all initialize methods are executed in the same tick or enabling chain of actions.
-     *
-     * @type {scriptTypeInitializeCallback}
-     */
-    postInitialize;
-
-    /**
-     * Called for enabled (running state) scripts on each tick. It is passed the delta time in
-     * seconds since the last frame.
-     *
-     * @type {scriptTypeUpdateCallback}
-     */
-    update;
-
-    /**
-     * Called for enabled (running state) scripts on each tick, after update. It is passed the
-     * delta time in seconds since the last frame.
-     *
-     * @type {scriptTypeUpdateCallback}
-     */
-    postUpdate;
-
-    /**
-     * Called when a ScriptType that already exists in the registry gets redefined. If the new
-     * ScriptType has a `swap` method in its prototype, then it will be executed to perform
-     * hot-reload at runtime. It is passed the old instance of the scriptType to copy data to the
-     * new instance.
-     *
-     * @type {scriptTypeSwapCallback}
-     */
-    swap;
 
     /**
      * @event

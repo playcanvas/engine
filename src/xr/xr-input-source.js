@@ -8,7 +8,8 @@ import { Ray } from '../shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-/** @typedef {import('./xr-hit-test.js').xrHitTestStartCallback} xrHitTestStartCallback */
+/** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('./xr-hit-test.js').XrHitTestStartCallback} XrHitTestStartCallback */
 /** @typedef {import('./xr-hit-test-source.js').XrHitTestSource} XrHitTestSource */
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
@@ -25,10 +26,130 @@ let ids = 0;
  */
 class XrInputSource extends EventHandler {
     /**
+     * @type {number}
+     * @private
+     */
+    _id;
+
+    /**
+     * @type {XrManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {XRInputSource}
+     * @private
+     */
+    _xrInputSource;
+
+    /**
+     * @type {Ray}
+     * @private
+     */
+    _ray = new Ray();
+
+    /**
+     * @type {Ray}
+     * @private
+     */
+    _rayLocal = new Ray();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _grip = false;
+
+    /**
+     * @type {XrHand}
+     * @private
+     */
+    _hand = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localTransform = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _worldTransform = null;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localPosition = null;
+
+    /**
+     * @type {Mat4|null}
+     * @private
+     */
+    _localRotation = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = true;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyRay = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _selecting = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _squeezing = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _elementInput = true;
+
+    /**
+     * @type {Entity|null}
+     * @private
+     */
+    _elementEntity = null;
+
+    /**
+     * @type {XrHitTestSource[]}
+     * @private
+     */
+    _hitTestSources = [];
+
+    /**
      * Create a new XrInputSource instance.
      *
      * @param {XrManager} manager - WebXR Manager.
-     * @param {object} xrInputSource - [XRInputSource](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource)
+     * @param {*} xrInputSource - [XRInputSource](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource)
      * object that is created by WebXR API.
      * @hideconstructor
      */
@@ -40,29 +161,8 @@ class XrInputSource extends EventHandler {
         this._manager = manager;
         this._xrInputSource = xrInputSource;
 
-        this._ray = new Ray();
-        this._rayLocal = new Ray();
-        this._grip = false;
-        this._hand = null;
-
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
-
-        this._localTransform = null;
-        this._worldTransform = null;
-        this._position = new Vec3();
-        this._rotation = new Quat();
-        this._localPosition = null;
-        this._localRotation = null;
-        this._dirtyLocal = true;
-
-        this._selecting = false;
-        this._squeezing = false;
-
-        this._elementInput = true;
-        this._elementEntity = null;
-
-        this._hitTestSources = [];
     }
 
     /**
@@ -315,6 +415,10 @@ class XrInputSource extends EventHandler {
      * });
      */
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         // hand
         if (this._hand) {
@@ -351,6 +455,7 @@ class XrInputSource extends EventHandler {
         }
     }
 
+    /** @private */
     _updateTransforms() {
         if (this._dirtyLocal) {
             this._dirtyLocal = false;
@@ -365,6 +470,7 @@ class XrInputSource extends EventHandler {
         }
     }
 
+    /** @private */
     _updateRayTransforms() {
         const dirty = this._dirtyRay;
         this._dirtyRay = false;
@@ -471,7 +577,7 @@ class XrInputSource extends EventHandler {
      * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
@@ -498,6 +604,10 @@ class XrInputSource extends EventHandler {
         this._manager.hitTest.start(options);
     }
 
+    /**
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be added.
+     * @private
+     */
     onHitTestSourceAdd(hitTestSource) {
         this._hitTestSources.push(hitTestSource);
 
@@ -515,6 +625,10 @@ class XrInputSource extends EventHandler {
         }, this);
     }
 
+    /**
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be removed.
+     * @private
+     */
     onHitTestSourceRemove(hitTestSource) {
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);

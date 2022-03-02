@@ -36,7 +36,7 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 /**
  * Callback used by {@link Mouse#enablePointerLock} and {@link Application#disablePointerLock}.
  *
- * @callback lockMouseCallback
+ * @callback LockMouseCallback
  */
 
 /**
@@ -143,9 +143,9 @@ class Mouse extends EventHandler {
      * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for
      * a mouse or keyboard input.
      *
-     * @param {lockMouseCallback} [success] - Function called if the request for mouse lock is
+     * @param {LockMouseCallback} [success] - Function called if the request for mouse lock is
      * successful.
-     * @param {lockMouseCallback} [error] - Function called if the request for mouse lock is
+     * @param {LockMouseCallback} [error] - Function called if the request for mouse lock is
      * unsuccessful.
      */
     enablePointerLock(success, error) {
@@ -179,7 +179,7 @@ class Mouse extends EventHandler {
     /**
      * Return control of the mouse cursor to the user.
      *
-     * @param {lockMouseCallback} [success] - Function called when the mouse lock is disabled.
+     * @param {LockMouseCallback} [success] - Function called when the mouse lock is disabled.
      */
     disablePointerLock(success) {
         if (!document.exitPointerLock) {

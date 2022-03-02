@@ -18,6 +18,7 @@ fs.copyFileSync(`${MAIN_DIR}/./node_modules/@playcanvas/observer/dist/index.js`,
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/url-search-params-polyfill/index.js`, `${MAIN_DIR}/dist/build/urlSearchParamsPolyfill.js`);
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/promise-polyfill/dist/polyfill.min.js`, `${MAIN_DIR}/dist/build/promisePolyfill.js`);
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/whatwg-fetch/dist/fetch.umd.js`, `${MAIN_DIR}/dist/build/fetchPolyfill.js`);
+fs.copyFileSync(`${MAIN_DIR}/./node_modules/regenerator-runtime/runtime.js`, `${MAIN_DIR}/dist/build/regeneratorRuntimePolyfill.js`);
 
 const EXAMPLE_CONSTS = [
     "vshader",
@@ -55,10 +56,22 @@ function buildExample(category, filename) {
     if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/${category}/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/${category}/`);
     }
+    let enginePath;
+    switch (formatters.getEngineTypeFromClass(exampleClass)) {
+        case "DEBUG":
+            enginePath = '/build/playcanvas.dbg.js';
+            break;
+        case "PERFORMANCE":
+            enginePath = '/build/playcanvas.prf.js';
+            break;
+        default:
+            enginePath = '/build/playcanvas.js';
+            break;
+    }
     fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}/${filename.replace(".tsx", "")}.html`, loadHtmlTemplate({
         exampleClass: exampleClass,
         exampleConstValues: JSON.stringify(exampleConstValues),
-        enginePath: process.env.ENGINE_PATH || '../../build/playcanvas.js'
+        enginePath: process.env.ENGINE_PATH || enginePath
     }));
 }
 

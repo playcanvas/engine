@@ -8,15 +8,12 @@ import { Vec3 } from '../../math/vec3.js';
 import { BoundingSphere } from '../../shape/bounding-sphere.js';
 
 import {
-    BUFFER_DYNAMIC,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
     SEMANTIC_ATTR,
     STENCILOP_KEEP
 } from '../../graphics/constants.js';
-import { VertexBuffer } from '../../graphics/vertex-buffer.js';
-import { VertexFormat } from '../../graphics/vertex-format.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import {
@@ -31,7 +28,7 @@ import {
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
-import { DefaultMaterial } from '../materials/default-material.js';
+import { getDefaultMaterial } from '../materials/default-material.js';
 
 import { ShadowRenderer } from './shadow-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
@@ -73,8 +70,6 @@ let boneTexture, instancingData, modelMatrix, normalMatrix;
 
 let keyA, keyB;
 
-let _autoInstanceBuffer = null;
-
 let _skinUpdateIndex = 0;
 
 const _drawCallList = {
@@ -114,16 +109,13 @@ class ForwardRenderer {
         this._sortTime = 0;
         this._skinTime = 0;
         this._morphTime = 0;
-        this._instancingTime = 0;
-        this._removedByInstancing = 0;
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
 
         // Shaders
         const device = this.device;
-        const library = device.getProgramLibrary();
-        this.library = library;
+        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
@@ -563,7 +555,7 @@ class ForwardRenderer {
         this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
     }
 
-    setLTCDirectionallLight(wtm, cnt, dir, campos, far) {
+    setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
         this.lightPos[cnt][0] = campos.x - dir.x * far;
         this.lightPos[cnt][1] = campos.y - dir.y * far;
         this.lightPos[cnt][2] = campos.z - dir.z * far;
@@ -599,7 +591,7 @@ class ForwardRenderer {
 
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
-            // Directionals shine down the negative Y axis
+            // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);
             directional._direction.normalize();
             this.lightDir[cnt][0] = directional._direction.x;
@@ -609,7 +601,7 @@ class ForwardRenderer {
 
             if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
                 // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
-                this.setLTCDirectionallLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
+                this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
             }
 
             if (directional.castShadows) {
@@ -1008,11 +1000,6 @@ class ForwardRenderer {
                 this._instancedDrawCalls++;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData.vertexBuffer === _autoInstanceBuffer) {
-                    this._removedByInstancing += instancingData.count;
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
-                }
             }
         } else {
             modelMatrix = meshInstance.node.worldTransform;
@@ -1032,8 +1019,6 @@ class ForwardRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        return 0;
     }
 
     // used for stereo
@@ -1046,11 +1031,6 @@ class ForwardRenderer {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 device.draw(mesh.primitive[style], instancingData.count, true);
-                if (instancingData.vertexBuffer === _autoInstanceBuffer) {
-                    this._removedByInstancing += instancingData.count;
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
-                }
             }
         } else {
             // matrices are already set
@@ -1058,8 +1038,6 @@ class ForwardRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        return 0;
     }
 
     renderShadows(lights, camera) {
@@ -1278,7 +1256,7 @@ class ForwardRenderer {
                 // #endif
 
                 if (!drawCall.material)
-                    drawCall.material = DefaultMaterial.get(device);
+                    drawCall.material = getDefaultMaterial(device);
 
                 const material = drawCall.material;
 
@@ -1369,7 +1347,6 @@ class ForwardRenderer {
                     const shader = drawCall._shader[pass];
                     if (!shader.failed && !device.setShader(shader)) {
                         Debug.error(`Error in material "${material.name}" with flags ${objDefs}`);
-                        shader.failed = true;
                     }
 
                     // Uniforms I: material
@@ -1477,7 +1454,7 @@ class ForwardRenderer {
                     this.viewProjId.setValue(viewProjMatL.data);
                     this.dispatchViewPos(viewPosL);
 
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
+                    this.drawInstance(device, drawCall, mesh, style, true);
                     this._forwardDrawCalls++;
 
                     // Right
@@ -1490,7 +1467,7 @@ class ForwardRenderer {
                     this.viewProjId.setValue(viewProjMatR.data);
                     this.dispatchViewPos(viewPosR);
 
-                    i += this.drawInstance2(device, drawCall, mesh, style);
+                    this.drawInstance2(device, drawCall, mesh, style);
                     this._forwardDrawCalls++;
                 } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
                     const views = camera.xr.views;
@@ -1509,15 +1486,15 @@ class ForwardRenderer {
                         this.viewPosId.setValue(view.position);
 
                         if (v === 0) {
-                            i += this.drawInstance(device, drawCall, mesh, style, true);
+                            this.drawInstance(device, drawCall, mesh, style, true);
                         } else {
-                            i += this.drawInstance2(device, drawCall, mesh, style);
+                            this.drawInstance2(device, drawCall, mesh, style);
                         }
 
                         this._forwardDrawCalls++;
                     }
                 } else {
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
+                    this.drawInstance(device, drawCall, mesh, style, true);
                     this._forwardDrawCalls++;
                 }
 
@@ -1533,14 +1510,6 @@ class ForwardRenderer {
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
         // #endif
-    }
-
-    setupInstancing(device) {
-        if (device.enableAutoInstancing) {
-            if (!_autoInstanceBuffer) {
-                _autoInstanceBuffer = new VertexBuffer(device, VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, BUFFER_DYNAMIC);
-            }
-        }
     }
 
     updateShaders(drawCalls, onlyLitShaders) {

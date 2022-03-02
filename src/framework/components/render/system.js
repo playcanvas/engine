@@ -2,7 +2,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -56,7 +56,7 @@ class RenderComponentSystem extends ComponentSystem {
         this.DataType = RenderComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
+        this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -91,6 +91,7 @@ class RenderComponentSystem extends ComponentSystem {
         for (let i = 0; i < _properties.length; i++) {
             data[_properties[i]] = entity.render[_properties[i]];
         }
+        data.enabled = entity.render.enabled;
 
         // mesh instances cannot be used this way, remove them and manually clone them later
         delete data.meshInstances;
@@ -111,6 +112,8 @@ class RenderComponentSystem extends ComponentSystem {
         if (entity.render.customAabb) {
             component.customAabb = entity.render.customAabb.clone();
         }
+
+        return component;
     }
 
     onRemove(entity, component) {

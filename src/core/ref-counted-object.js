@@ -1,5 +1,5 @@
 /**
- * Base class implementing reference counting for objects.
+ * Base class that implements reference counting for objects.
  *
  * @ignore
  */
@@ -11,14 +11,14 @@ class RefCountedObject {
     _refCount = 0;
 
     /**
-     * Inrements the counter.
+     * Increments the reference counter.
      */
     incRefCount() {
         this._refCount++;
     }
 
     /**
-     * Decrements the counter. When the value reaches zero, destroy is called.
+     * Decrements the reference counter.
      */
     decRefCount() {
         this._refCount--;

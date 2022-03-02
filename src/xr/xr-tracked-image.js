@@ -11,6 +11,66 @@ import { Quat } from '../math/quat.js';
  */
 class XrTrackedImage extends EventHandler {
     /**
+     * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
+     * @private
+     */
+    _image;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _width;
+
+    /**
+     * @type {ImageBitmap|null}
+     * @private
+     */
+    _bitmap = null;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    _measuredWidth = 0;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _trackable = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _tracking = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _emulated = false;
+
+    /**
+     * @type {*}
+     * @ignore
+     */
+    _pose = null;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
      * The tracked image interface that is created by the Image Tracking system and is provided as
      * a list from {@link XrImageTracking#images}. It contains information about the tracking state
      * as well as the position and rotation of the tracked image.
@@ -28,16 +88,7 @@ class XrTrackedImage extends EventHandler {
         super();
 
         this._image = image;
-        this._bitmap = null;
         this._width = width;
-        this._measuredWidth = 0;
-        this._trackable = false;
-        this._tracking = false;
-        this._emulated = false;
-        this._pose = null;
-
-        this._position = new Vec3();
-        this._rotation = new Quat();
     }
 
     /**
@@ -106,6 +157,10 @@ class XrTrackedImage extends EventHandler {
      * @description Fired when image is no more actively tracked.
      */
 
+    /**
+     * @returns {Promise<ImageBitmap>} Promise that resolves to an image bitmap.
+     * @ignore
+     */
     prepare() {
         if (this._bitmap) {
             return {
@@ -124,6 +179,11 @@ class XrTrackedImage extends EventHandler {
             });
     }
 
+    /**
+     * Destroys the tracked image.
+     *
+     * @ignore
+     */
     destroy() {
         this._image = null;
         this._pose = null;

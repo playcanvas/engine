@@ -73,6 +73,9 @@ export { VertexBuffer } from './graphics/vertex-buffer.js';
 export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
+// GRAPHICS / webgl
+export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
@@ -83,7 +86,6 @@ export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
-export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';

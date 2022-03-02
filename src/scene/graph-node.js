@@ -26,7 +26,7 @@ const up = new Vec3();
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
  *
- * @callback findNodeCallback
+ * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from
  * {@link GraphNode#find} or {@link GraphNode#findOne}.
@@ -36,7 +36,7 @@ const up = new Vec3();
  * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
  * descendants.
  *
- * @callback forEachNodeCallback
+ * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
  */
 
@@ -60,6 +60,7 @@ class GraphNode extends EventHandler {
          * @type {string}
          */
         this.name = name;
+
         /**
          * Interface for tagging graph nodes. Tag based searches can be performed using the
          * {@link GraphNode#findByTag} function.
@@ -77,16 +78,19 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.localPosition = new Vec3();
+
         /**
          * @type {Quat}
          * @private
          */
         this.localRotation = new Quat();
+
         /**
          * @type {Vec3}
          * @private
          */
         this.localScale = new Vec3(1, 1, 1);
+
         /**
          * @type {Vec3}
          * @private
@@ -99,16 +103,19 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.position = new Vec3();
+
         /**
          * @type {Quat}
          * @private
          */
         this.rotation = new Quat();
+
         /**
          * @type {Vec3}
          * @private
          */
         this.eulerAngles = new Vec3();
+
         /**
          * @type {Vec3|null}
          * @private
@@ -120,11 +127,13 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.localTransform = new Mat4();
+
         /**
          * @type {boolean}
          * @private
          */
         this._dirtyLocal = false;
+
         /**
          * @type {number}
          * @private
@@ -173,6 +182,7 @@ class GraphNode extends EventHandler {
          * @private
          */
         this._up = null;
+
         /**
          * @type {Vec3|null}
          * @private
@@ -184,11 +194,13 @@ class GraphNode extends EventHandler {
          * @private
          */
         this._parent = null;
+
         /**
          * @type {GraphNode[]}
          * @private
          */
         this._children = [];
+
         /**
          * @type {number}
          * @private
@@ -196,11 +208,18 @@ class GraphNode extends EventHandler {
         this._graphDepth = 0;
 
         /**
+         * Represents enabled state of the entity. If the entity is disabled, the entity including
+         * all children are excluded from updates.
+         *
          * @type {boolean}
          * @private
          */
         this._enabled = true;
+
         /**
+         * Represents enabled state of the entity in the hierarchy. It's true only if this entity
+         * and all parent entities all the way to the scene's root are enabled.
+         *
          * @type {boolean}
          * @private
          */
@@ -260,8 +279,11 @@ class GraphNode extends EventHandler {
         if (this._enabled !== enabled) {
             this._enabled = enabled;
 
-            if (!this._parent || this._parent.enabled)
+            // if enablng entity, make all children enabled in hierarchy only when the parent is as well
+            // if disabling entity, make all children disabled in hierarchy in all cases
+            if (enabled && this._parent?.enabled || !enabled) {
                 this._notifyHierarchyStateChanged(this, enabled);
+            }
         }
     }
 
@@ -427,7 +449,7 @@ class GraphNode extends EventHandler {
      * Search the graph node and all of its descendants for the nodes that satisfy some search
      * criteria.
      *
-     * @param {findNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
      * logic. Returning true from the function will include the node into the results. If it's a
      * string then it represents the name of a field or a method of the node. If this is the name
@@ -489,7 +511,7 @@ class GraphNode extends EventHandler {
      * Search the graph node and all of its descendants for the first node that satisfies some
      * search criteria.
      *
-     * @param {findNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
      * logic. Returning true from the function will result in that node being returned from
      * findOne. If it's a string then it represents the name of a field or a method of the node. If
@@ -638,7 +660,7 @@ class GraphNode extends EventHandler {
     /**
      * Executes a provided function once on this graph node and all of its descendants.
      *
-     * @param {forEachNodeCallback} callback - The function to execute on the graph node and each
+     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
      * descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
@@ -1303,6 +1325,12 @@ class GraphNode extends EventHandler {
 
         // Clear parent
         child._parent = null;
+
+        // notify the child hierarchy it has been removed from the parent,
+        // which marks them as not enabled in hierarchy
+        if (child._enabledInHierarchy) {
+            child._notifyHierarchyStateChanged(child, false);
+        }
 
         // alert children that they has been removed
         child._fireOnHierarchy('remove', 'removehierarchy', this);

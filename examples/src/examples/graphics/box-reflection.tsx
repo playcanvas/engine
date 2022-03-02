@@ -34,7 +34,7 @@ class BoxReflectionExample {
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.updateFrequency' }} type="number" options={[
                         { v: 0, t: 'Once' },
                         { v: 1, t: 'Every frame' },
-                        { v: 5, t: 'Every 5 frames' },
+                        { v: 10, t: 'Every 10 frames' },
                         { v: 30, t: 'Every 30 frames' }
                     ]} />
                 </LabelGroup>}
@@ -58,7 +58,7 @@ class BoxReflectionExample {
         app.start();
 
         data.set('settings', {
-            updateFrequency: 1,
+            updateFrequency: 10,
             shininess: 90,
             metalness: 0.7,
             bumpiness: 0.2
@@ -262,7 +262,10 @@ class BoxReflectionExample {
             layers: [worldLayer.id],
 
             // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
-            enabled: false
+            enabled: false,
+
+            nearClip: 1,
+            farClip: 500
         });
 
         // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly useable

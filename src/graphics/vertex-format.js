@@ -116,7 +116,7 @@ class VertexFormat {
      * ]);
      */
     constructor(graphicsDevice, description, vertexCount) {
-        this.elements = [];
+        this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
         this.hasColor = false;
@@ -154,7 +154,7 @@ class VertexFormat {
                 normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
                 size: elementSize
             };
-            this.elements.push(element);
+            this._elements.push(element);
 
             if (vertexCount) {
                 offset += elementSize * vertexCount;
@@ -177,7 +177,11 @@ class VertexFormat {
             this.verticesByteSize = offset;
         }
 
-        this.update();
+        this._evaluateHash();
+    }
+
+    get elements() {
+        return this._elements;
     }
 
     /**
@@ -187,36 +191,22 @@ class VertexFormat {
     static _defaultInstancingFormat = null;
 
     /**
-     * Initialize a default format use for instanced rendering.
-     *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to create the format.
-     * @ignore
-     */
-    static init(graphicsDevice) {
-        const formatDesc = [
-            { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
-        ];
-
-        VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
-    }
-
-    /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
      * @type {VertexFormat}
      */
     static get defaultInstancingFormat() {
-        return VertexFormat._defaultInstancingFormat;
-    }
 
-    /**
-     * Applies any changes made to the VertexFormat's properties.
-     */
-    update() {
-        this._evaluateHash();
+        if (!VertexFormat._defaultInstancingFormat) {
+            VertexFormat._defaultInstancingFormat = new VertexFormat(null, [
+                { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
+            ]);
+        }
+
+        return VertexFormat._defaultInstancingFormat;
     }
 
     /**
@@ -229,9 +219,9 @@ class VertexFormat {
         const stringElementsBatch = [];
         let stringElementRender;
         const stringElementsRender = [];
-        const len = this.elements.length;
+        const len = this._elements.length;
         for (let i = 0; i < len; i++) {
-            const element = this.elements[i];
+            const element = this._elements[i];
 
             // create string description of each element that is relevant for batching
             stringElementBatch = element.name;
@@ -248,7 +238,7 @@ class VertexFormat {
             stringElementsRender.push(stringElementRender);
         }
 
-        // sort batching ones them alphabetically to make hash order independent
+        // sort batching ones alphabetically to make the hash order independent
         stringElementsBatch.sort();
         this.batchingHash = hashCode(stringElementsBatch.join());
 

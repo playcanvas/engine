@@ -96,7 +96,7 @@ class TransformFeedback {
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
             // have to recreate input buffer with other usage
-            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
+            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
@@ -158,14 +158,14 @@ class TransformFeedback {
 
         // swap buffers
         if (swap) {
-            let tmp = this._inputBuffer.bufferId;
-            this._inputBuffer.bufferId = this._outputBuffer.bufferId;
-            this._outputBuffer.bufferId = tmp;
+            let tmp = this._inputBuffer.impl.bufferId;
+            this._inputBuffer.impl.bufferId = this._outputBuffer.impl.bufferId;
+            this._outputBuffer.impl.bufferId = tmp;
 
             // swap VAO
-            tmp = this._inputBuffer._vao;
-            this._inputBuffer._vao = this._outputBuffer._vao;
-            this._outputBuffer._vao = tmp;
+            tmp = this._inputBuffer.impl.vao;
+            this._inputBuffer.impl.vao = this._outputBuffer.impl.vao;
+            this._outputBuffer.impl.vao = tmp;
         }
     }
 

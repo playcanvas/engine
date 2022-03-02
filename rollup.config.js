@@ -36,7 +36,7 @@ function spacesToTabs() {
             if (!filter(id)) return;
             return {
                 code: code.replace(/ {2}/g, '\t'),
-                map: { mappings: '' }
+                map: null
             };
         }
     };
@@ -230,7 +230,8 @@ const target_debug = {
             values: {
                 _DEBUG: 1,
                 _PROFILER: 1
-            }
+            },
+            keepLines: true
         }),
         shaderChunks(false),
         replace({
@@ -258,7 +259,8 @@ const target_profiler = {
         jscc({
             values: {
                 _PROFILER: 1
-            }
+            },
+            keepLines: true
         }),
         shaderChunks(false),
         replace({

@@ -1,3 +1,4 @@
+import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../math/color.js';
 import { Vec4 } from '../../../math/vec4.js';
 
@@ -15,10 +16,16 @@ const _schema = ['enabled'];
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
  * active cameras.
  *
- * @property {CameraComponent[]} cameras Holds all the active camera components.
  * @augments ComponentSystem
  */
 class CameraComponentSystem extends ComponentSystem {
+    /**
+     * Holds all the active camera components.
+     *
+     * @type {CameraComponent[]}
+     */
+    cameras = [];
+
     /**
      * Create a new CameraComponentSystem instance.
      *
@@ -33,9 +40,6 @@ class CameraComponentSystem extends ComponentSystem {
         this.DataType = CameraComponentData;
 
         this.schema = _schema;
-
-        // holds all the active camera components
-        this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
@@ -101,7 +105,7 @@ class CameraComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const c = entity.camera;
-        this.addComponent(clone, {
+        return this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
             aspectRatioMode: c.aspectRatioMode,
             calculateProjection: c.calculateProjection,
@@ -166,21 +170,15 @@ class CameraComponentSystem extends ComponentSystem {
 
     addCamera(camera) {
         this.cameras.push(camera);
-        this.sortCamerasByPriority();
+        sortPriority(this.cameras);
     }
 
     removeCamera(camera) {
         const index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
-            this.sortCamerasByPriority();
+            sortPriority(this.cameras);
         }
-    }
-
-    sortCamerasByPriority() {
-        this.cameras.sort(function (a, b) {
-            return a.priority - b.priority;
-        });
     }
 
     destroy() {

@@ -131,7 +131,7 @@ class GrabPass {
             }
 
             // this allocates texture (texture was already bound to gl)
-            const format = texture._glFormat;
+            const format = texture.impl._glFormat;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
             texture._width = width;
             texture._height = height;
@@ -154,7 +154,7 @@ class GrabPass {
         // first downscaling the captured framebuffer texture to smaller power of 2 texture, and
         // then generate mipmaps and use it for rendering
         if (this.useMipmaps) {
-            this.device.gl.generateMipmap(this.texture._glTarget);
+            this.device.gl.generateMipmap(this.texture.impl._glTarget);
         }
     }
 

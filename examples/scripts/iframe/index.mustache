@@ -7,6 +7,7 @@
     <script src="../../build/urlSearchParamsPolyfill.js"></script>
     <script src="../../build/promisePolyfill.js"></script>
     <script src="../../build/fetchPolyfill.js"></script>
+    <script src="../../build/regeneratorRuntimePolyfill.js"></script>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -38,7 +39,7 @@
         // include any constants necessary for the example
         var constValues = {{{ exampleConstValues }}};
         for (var i = 0; i < constValues.length; i++) {
-            windows[constValues.k] = constValues.v;
+            window[constValues[i].k] = constValues[i].v;
         }
 
         // include the example class which contains the example function to execute and any assets to load
@@ -119,6 +120,15 @@
             return app;
         }
 
+        function hasBasisAssets (assets) {
+        for (let i = 0; i < assets.length; i++) {
+            if (assets[i].url && assets[i].url.includes('.basis')) {
+                return true;
+            }
+        }
+        return false;
+    };
+
         function loadResource(app, resource, callback) {
             if (!resource.type) {
                 fetch(resource.url)
@@ -164,8 +174,17 @@
 
             // stub out react
             window.React = { createElement: function(type, props) { if (type === 'div') assets.push(props); } };
-            // call the stubbed load function
+            // call the stubbed load function to add all assets to the assets list
             window.loadFunction();
+
+            // if we have any basis assets then initialize basis
+            if (hasBasisAssets(assets)) {
+                pc.basisInitialize({
+                    glueUrl: '/static/lib/basis/basis.wasm.js',
+                    wasmUrl: '/static/lib/basis/basis.wasm.wasm',
+                    fallbackUrl: '/static/lib/basis/basis.js'
+                });
+            }
 
             var count = assets.length;
             function onLoadedResource(key, asset) {

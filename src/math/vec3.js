@@ -178,7 +178,7 @@ class Vec3 {
      * var v1 = new pc.Vec3(5, 10, 20);
      * var v2 = new pc.Vec3(10, 20, 40);
      * var d = v1.distance(v2);
-     * console.log("The between v1 and v2 is: " + d);
+     * console.log("The distance between v1 and v2 is: " + d);
      */
     distance(rhs) {
         const x = this.x - rhs.x;

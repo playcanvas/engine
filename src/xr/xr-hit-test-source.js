@@ -5,7 +5,16 @@ import { Vec3 } from '../math/vec3.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
+/**
+ * @type {Vec3[]}
+ * @ignore
+ */
 const poolVec3 = [];
+
+/**
+ * @type {Quat[]}
+ * @ignore
+ */
 const poolQuat = [];
 
 /**
@@ -16,10 +25,28 @@ const poolQuat = [];
  */
 class XrHitTestSource extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    manager;
+
+    /**
+     * @type {XRHitTestSource}
+     * @private
+     */
+    _xrHitTestSource;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _transient;
+
+    /**
      * Create a new XrHitTestSource instance.
      *
      * @param {XrManager} manager - WebXR Manager.
-     * @param {object} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
+     * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
      * @hideconstructor
      */
@@ -69,6 +96,7 @@ class XrHitTestSource extends EventHandler {
         this.onStop();
     }
 
+    /** @ignore */
     onStop() {
         this._xrHitTestSource.cancel();
         this._xrHitTestSource = null;
@@ -77,6 +105,10 @@ class XrHitTestSource extends EventHandler {
         this.manager.hitTest.fire('remove', this);
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (this._transient) {
             const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
@@ -94,6 +126,11 @@ class XrHitTestSource extends EventHandler {
         }
     }
 
+    /**
+     * @param {XRTransientInputHitTestResult[]} results - Hit test results.
+     * @param {XRHitTestSource} inputSource - Input source.
+     * @private
+     */
     updateHitResults(results, inputSource) {
         for (let i = 0; i < results.length; i++) {
             const pose = results[i].getPose(this.manager._referenceSpace);

@@ -23,19 +23,175 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
  *
- * @callback xrErrorCallback
+ * @callback XrErrorCallback
  * @param {Error|null} err - The Error object or null if operation was successful.
  */
 
 /**
  * Manage and update XR session and its states.
  *
- * @property {XrInput} input Provides access to Input Sources.
- * @property {XrHitTest} hitTest Provides ability to hit test representation of real world geometry
- * of underlying AR system.
  * @augments EventHandler
  */
 class XrManager extends EventHandler {
+    /**
+     * @type {Application}
+     * @ignore
+     */
+    app;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!navigator.xr;
+
+    /* eslint-disable jsdoc/check-types */
+    /**
+     * @type {Object.<string, boolean>}
+     * @private
+     */
+    _available = {};
+    /* eslint-enable jsdoc/check-types */
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _type = null;
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _spaceType = null;
+
+    /**
+     * @type {XRSession|null}
+     * @private
+     */
+    _session = null;
+
+    /**
+     * @type {XRWebGLLayer|null}
+     * @private
+     */
+    _baseLayer = null;
+
+    /**
+     * @type {XRReferenceSpace|null}
+     * @private
+     */
+    _referenceSpace = null;
+
+    /**
+     * Provides access to depth sensing capabilities.
+     *
+     * @type {XrDepthSensing}
+     * @ignore
+     */
+    depthSensing;
+
+    /**
+     * Provides access to DOM overlay capabilities.
+     *
+     * @type {XrDomOverlay}
+     * @ignore
+     */
+    domOverlay;
+
+    /**
+     * Provides the ability to perform hit tests on the representation of real world geometry
+     * of the underlying AR system.
+     *
+     * @type {XrHitTest}
+     */
+    hitTest;
+
+    /**
+     * Provides access to image tracking capabilities.
+     *
+     * @type {XrImageTracking}
+     * @ignore
+     */
+    imageTracking;
+
+    /**
+     * Provides access to plane detection capabilities.
+     *
+     * @type {XrPlaneDetection}
+     * @ignore
+     */
+    planeDetection;
+
+    /**
+     * Provides access to Input Sources.
+     *
+     * @type {XrInput}
+     */
+    input;
+
+    /**
+     * Provides access to light estimation capabilities.
+     *
+     * @type {XrLightEstimation}
+     * @ignore
+     */
+    lightEstimation;
+
+    /**
+     * @type {CameraComponent}
+     * @private
+     */
+    _camera = null;
+
+    /**
+     * @type {Array<*>}
+     * @ignore
+     */
+    views = [];
+
+    /**
+     * @type {Array<*>}
+     * @ignore
+     */
+    viewsPool = [];
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _localRotation = new Quat();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _depthNear = 0.1;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _depthFar = 1000;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _width = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _height = 0;
+
     /**
      * Create a new XrManager instance.
      *
@@ -47,20 +203,10 @@ class XrManager extends EventHandler {
 
         this.app = app;
 
-        this._supported = platform.browser && !!navigator.xr;
-
-        this._available = { };
-
         // Add all the supported session types
         this._available[XRTYPE_INLINE] = false;
         this._available[XRTYPE_VR] = false;
         this._available[XRTYPE_AR] = false;
-
-        this._type = null;
-        this._spaceType = null;
-        this._session = null;
-        this._baseLayer = null;
-        this._referenceSpace = null;
 
         this.depthSensing = new XrDepthSensing(this);
         this.domOverlay = new XrDomOverlay(this);
@@ -69,18 +215,6 @@ class XrManager extends EventHandler {
         this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
-
-        this._camera = null;
-        this.views = [];
-        this.viewsPool = [];
-        this._localPosition = new Vec3();
-        this._localRotation = new Quat();
-
-        this._depthNear = 0.1;
-        this._depthFar = 1000;
-
-        this._width = 0;
-        this._height = 0;
 
         // TODO
         // 1. HMD class with its params
@@ -199,7 +333,7 @@ class XrManager extends EventHandler {
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
      * {@link XrPlaneDetection}.
-     * @param {xrErrorCallback} [options.callback] - Optional callback function called once session
+     * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
@@ -324,6 +458,13 @@ class XrManager extends EventHandler {
         }
     }
 
+    /**
+     * @param {string} type - Session type.
+     * @param {string} spaceType - Reference space type.
+     * @param {*} options - Session options.
+     * @param {XrErrorCallback} callback - Error callback.
+     * @private
+     */
     _onStartOptionsReady(type, spaceType, options, callback) {
         navigator.xr.requestSession(type, options).then((session) => {
             this._onSessionStart(session, spaceType, callback);
@@ -342,7 +483,7 @@ class XrManager extends EventHandler {
      * Attempts to end XR session and optionally fires callback when session is ended or failed to
      * end.
      *
-     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * @param {XrErrorCallback} [callback] - Optional callback function called once session is
      * started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @example
@@ -385,12 +526,17 @@ class XrManager extends EventHandler {
         return this._available[type];
     }
 
+    /** @private */
     _deviceAvailabilityCheck() {
         for (const key in this._available) {
             this._sessionSupportCheck(key);
         }
     }
 
+    /**
+     * @param {string} type - Session type.
+     * @private
+     */
     _sessionSupportCheck(type) {
         navigator.xr.isSessionSupported(type).then((available) => {
             if (this._available[type] === available)
@@ -404,6 +550,12 @@ class XrManager extends EventHandler {
         });
     }
 
+    /**
+     * @param {XRSession} session - XR session.
+     * @param {string} spaceType - Space type to request for the session.
+     * @param {Function} callback - Callback to call when session is started.
+     * @private
+     */
     _onSessionStart(session, spaceType, callback) {
         let failed = false;
 
@@ -451,7 +603,11 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
-        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl);
+        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
+            alpha: true,
+            depth: true,
+            stencil: true
+        });
 
         session.updateRenderState({
             baseLayer: this._baseLayer,
@@ -477,6 +633,11 @@ class XrManager extends EventHandler {
         });
     }
 
+    /**
+     * @param {number} near - Near plane distance.
+     * @param {number} far - Far plane distance.
+     * @private
+     */
     _setClipPlanes(near, far) {
         if (this._depthNear === near && this._depthFar === far)
             return;
@@ -495,6 +656,10 @@ class XrManager extends EventHandler {
         });
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         if (!this._session) return;
 
@@ -646,6 +811,13 @@ class XrManager extends EventHandler {
         return this._camera ? this._camera.entity : null;
     }
 
+    /**
+     * Indicates whether WebXR content is currently visible to the user, and if it is, whether it's
+     * the primary focus. Can be 'hidden', 'visible' or 'visible-blurred'.
+     *
+     * @type {string}
+     * @ignore
+     */
     get visibilityState() {
         if (!this._session)
             return null;

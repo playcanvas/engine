@@ -13,7 +13,7 @@ import {
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
 import { Debug } from "../../core/debug.js";
-import { DefaultMaterial } from './default-material.js';
+import { getDefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 
@@ -338,7 +338,7 @@ class Material {
     /**
      * Clone a material.
      *
-     * @returns {Material} A newly cloned material.
+     * @returns {this} A newly cloned material.
      */
     clone() {
         const clone = new this.constructor();
@@ -355,7 +355,7 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    updateShader(device, scene, objDefs) {
+    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // For vanilla materials, the shader can only be set by the user
     }
 
@@ -470,7 +470,7 @@ class Material {
             meshInstance._material = null;
 
             if (meshInstance.mesh) {
-                const defaultMaterial = DefaultMaterial.get(meshInstance.mesh.device);
+                const defaultMaterial = getDefaultMaterial(meshInstance.mesh.device);
                 if (this !== defaultMaterial) {
                     meshInstance.material = defaultMaterial;
                 }

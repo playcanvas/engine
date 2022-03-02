@@ -18,10 +18,6 @@ let ammoRayStart, ammoRayEnd;
 
 /**
  * Object holding the result of a successful raycast hit.
- *
- * @property {Entity} entity The entity that was hit.
- * @property {Vec3} point The point at which the ray hit the entity in world space.
- * @property {Vec3} normal The normal vector of the surface where the ray hit in world space.
  */
 class RaycastResult {
     /**
@@ -30,24 +26,34 @@ class RaycastResult {
      * @param {Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     * @hideconstructor
      */
     constructor(entity, point, normal) {
+        /**
+         * The entity that was hit.
+         *
+         * @type {Entity}
+         */
         this.entity = entity;
+
+        /**
+         * The point at which the ray hit the entity in world space.
+         *
+         * @type {Vec3}
+         */
         this.point = point;
+
+        /**
+         * The normal vector of the surface where the ray hit in world space.
+         *
+         * @type {Vec3}
+         */
         this.normal = normal;
     }
 }
 
 /**
  * Object holding the result of a contact between two rigid bodies.
- *
- * @property {Entity} a The first entity involved in the contact.
- * @property {Entity} b The second entity involved in the contact.
- * @property {Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
- * @property {Vec3} localPointB The point on Entity B where the contact occurred, relative to B.
- * @property {Vec3} pointA The point on Entity A where the contact occurred, in world space.
- * @property {Vec3} pointB The point on Entity B where the contact occurred, in world space.
- * @property {Vec3} normal The normal vector of the contact on Entity B, in world space.
  */
 class SingleContactResult {
     /**
@@ -56,16 +62,65 @@ class SingleContactResult {
      * @param {Entity} a - The first entity involved in the contact.
      * @param {Entity} b - The second entity involved in the contact.
      * @param {ContactPoint} contactPoint - The contact point between the two entities.
+     * @hideconstructor
      */
     constructor(a, b, contactPoint) {
         if (arguments.length === 0) {
+            /**
+             * The first entity involved in the contact.
+             *
+             * @type {Entity}
+             */
             this.a = null;
+
+            /**
+             * The second entity involved in the contact.
+             *
+             * @type {Entity}
+             */
             this.b = null;
+
+            /**
+             * The total accumulated impulse applied by the constraint solver during the last
+             * sub-step. Describes how hard two bodies collided.
+             *
+             * @type {number}
+             */
             this.impulse = 0;
+
+            /**
+             * The point on Entity A where the contact occurred, relative to A.
+             *
+             * @type {Vec3}
+             */
             this.localPointA = new Vec3();
+
+            /**
+             * The point on Entity B where the contact occurred, relative to B.
+             *
+             * @type {Vec3}
+             */
             this.localPointB = new Vec3();
+
+            /**
+             * The point on Entity A where the contact occurred, in world space.
+             *
+             * @type {Vec3}
+             */
             this.pointA = new Vec3();
+
+            /**
+             * The point on Entity B where the contact occurred, in world space.
+             *
+             * @type {Vec3}
+             */
             this.pointB = new Vec3();
+
+            /**
+             * The normal vector of the contact on Entity B, in world space.
+             *
+             * @type {Vec3}
+             */
             this.normal = new Vec3();
         } else {
             this.a = a;
@@ -82,17 +137,6 @@ class SingleContactResult {
 
 /**
  * Object holding the result of a contact between two Entities.
- *
- * @property {Vec3} localPoint The point on the entity where the contact occurred, relative to the
- * entity.
- * @property {Vec3} localPointOther The point on the other entity where the contact occurred,
- * relative to the other entity.
- * @property {Vec3} point The point on the entity where the contact occurred, in world space.
- * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world
- * space.
- * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
- * @property {number} impulse The total accumulated impulse applied by the constraint solver during
- * the last sub-step. Describes how hard two objects collide.
  */
 class ContactPoint {
     /**
@@ -109,22 +153,56 @@ class ContactPoint {
      * space.
      * @param {number} [impulse] - The total accumulated impulse applied by the constraint solver
      * during the last sub-step. Describes how hard two objects collide. Defaults to 0.
+     * @hideconstructor
      */
     constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
+        /**
+         * The point on the entity where the contact occurred, relative to the entity.
+         *
+         * @type {Vec3}
+         */
         this.localPoint = localPoint;
+
+        /**
+         * The point on the other entity where the contact occurred, relative to the other entity.
+         *
+         * @type {Vec3}
+         */
         this.localPointOther = localPointOther;
+
+        /**
+         * The point on the entity where the contact occurred, in world space.
+         *
+         * @type {Vec3}
+         */
         this.point = point;
+
+        /**
+         * The point on the other entity where the contact occurred, in world space.
+         *
+         * @type {Vec3}
+         */
         this.pointOther = pointOther;
+
+        /**
+         * The normal vector of the contact on the other entity, in world space.
+         *
+         * @type {Vec3}
+         */
         this.normal = normal;
+
+        /**
+         * The total accumulated impulse applied by the constraint solver during the last sub-step.
+         * Describes how hard two objects collide.
+         *
+         * @type {number}
+         */
         this.impulse = impulse;
     }
 }
 
 /**
  * Object holding the result of a contact between two Entities.
- *
- * @property {Entity} other The entity that was involved in the contact with this entity.
- * @property {ContactPoint[]} contacts An array of ContactPoints with the other entity.
  */
 class ContactResult {
     /**
@@ -132,9 +210,21 @@ class ContactResult {
      *
      * @param {Entity} other - The entity that was involved in the contact with this entity.
      * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
+     * @hideconstructor
      */
     constructor(other, contacts) {
+        /**
+         * The entity that was involved in the contact with this entity.
+         *
+         * @type {Entity}
+         */
         this.other = other;
+
+        /**
+         * An array of ContactPoints with the other entity.
+         *
+         * @type {ContactPoint[]}
+         */
         this.contacts = contacts;
     }
 }
@@ -155,12 +245,53 @@ const _schema = ['enabled'];
  * valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
  *
- * @property {Vec3} gravity The world space vector representing global gravity in the physics
- * simulation. Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on
- * Earth.
  * @augments ComponentSystem
  */
 class RigidBodyComponentSystem extends ComponentSystem {
+    /**
+     * @type {number}
+     * @ignore
+     */
+    maxSubSteps = 10;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    fixedTimeStep = 1 / 60;
+
+    /**
+     * The world space vector representing global gravity in the physics simulation. Defaults to
+     * [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
+     *
+     * @type {Vec3}
+     */
+    gravity = new Vec3(0, -9.81, 0);
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _dynamic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _kinematic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _triggers = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _compounds = [];
+
     /**
      * Create a new RigidBodyComponentSystem.
      *
@@ -180,16 +311,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool = null;
 
         this.schema = _schema;
-
-        this.maxSubSteps = 10;
-        this.fixedTimeStep = 1 / 60;
-        this.gravity = new Vec3(0, -9.81, 0);
-
-        // Arrays of pc.RigidBodyComponents filtered on body type
-        this._dynamic = [];
-        this._kinematic = [];
-        this._triggers = [];
-        this._compounds = [];
 
         this.collisions = {};
         this.frameCollisions = {};
@@ -277,7 +398,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             mask: rigidbody.mask
         };
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {

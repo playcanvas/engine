@@ -9,14 +9,14 @@ import { getApplication } from './globals.js';
 /**
  * Callback used by {@link script.createLoadingScreen}.
  *
- * @callback createScreenCallback
+ * @callback CreateScreenCallback
  * @param {Application} app - The application.
  */
 
 /**
  * Callback used by {@link script.create}.
  *
- * @callback createScriptCallback
+ * @callback CreateScriptCallback
  * @param {Application} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  * @ignore
@@ -44,7 +44,7 @@ const script = {
      * instantiated when attached to Entities.
      *
      * @param {string} name - The name of the script object.
-     * @param {createScriptCallback} callback - The callback function which is passed an
+     * @param {CreateScriptCallback} callback - The callback function which is passed an
      * {@link Application} object, which is used to access Entities and Components, and should
      * return the Type of the script resource to be instanced for each Entity.
      * @example
@@ -144,7 +144,7 @@ const script = {
      * this to work you need to set the project's loading screen script to the script that calls
      * this method.
      *
-     * @param {createScreenCallback} callback - A function which can set up and tear down a
+     * @param {CreateScreenCallback} callback - A function which can set up and tear down a
      * customized loading screen.
      * @example
      * pc.script.createLoadingScreen(function (app) {

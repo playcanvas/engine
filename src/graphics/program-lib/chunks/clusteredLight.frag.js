@@ -81,7 +81,7 @@ struct ClusterLightData {
     // 1.0 if cookie texture is rgb, otherwise it is using a single channel selectable by cookieChannelMask
     float cookieRgb;
 
-    // invensity of the cookie
+    // intensity of the cookie
     float cookieIntensity;
 
     // channel mask - one of the channels has 1, the others are 0
@@ -164,7 +164,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     // cookie
     clusterLightData.cookie = colorB.z;
 
-    // lightmaks
+    // light mask
     clusterLightData.mask = colorB.w;
 
     #ifdef CLUSTER_TEXTURE_FLOAT

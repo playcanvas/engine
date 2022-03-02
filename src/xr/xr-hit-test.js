@@ -10,7 +10,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  *
- * @callback xrHitTestStartCallback
+ * @callback XrHitTestStartCallback
  * @param {Error|null} err - The Error object if failed to create hit test source or null.
  * @param {XrHitTestSource|null} hitTestSource - Object that provides access to hit results against
  * real world geometry.
@@ -24,6 +24,31 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 class XrHitTest extends EventHandler {
     /**
+     * @type {XrManager}
+     * @private
+     */
+    manager;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
+
+    /**
+     * @type {XRSession}
+     * @private
+     */
+    _session = null;
+
+    /**
+     * List of active {@link XrHitTestSource}.
+     *
+     * @type {XrHitTestSource[]}
+     */
+    sources = [];
+
+    /**
      * Create a new XrHitTest instance.
      *
      * @param {XrManager} manager - WebXR Manager.
@@ -33,16 +58,6 @@ class XrHitTest extends EventHandler {
         super();
 
         this.manager = manager;
-        this._supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
-
-        this._session = null;
-
-        /**
-         * List of active {@link XrHitTestSource}.
-         *
-         * @type {XrHitTestSource[]}
-         */
-        this.sources = [];
 
         if (this._supported) {
             this.manager.on('start', this._onSessionStart, this);
@@ -94,6 +109,7 @@ class XrHitTest extends EventHandler {
      * @description Fired when failed create hit test source.
      */
 
+    /** @private */
     _onSessionStart() {
         if (this.manager.type !== XRTYPE_AR)
             return;
@@ -101,6 +117,7 @@ class XrHitTest extends EventHandler {
         this._session = this.manager.session;
     }
 
+    /** @private */
     _onSessionEnd() {
         if (!this._session)
             return;
@@ -113,6 +130,14 @@ class XrHitTest extends EventHandler {
         this.sources = [];
     }
 
+    /**
+     * Checks if hit testing is available.
+     *
+     * @param {Function} callback - Error callback.
+     * @param {*} fireError - Event handler on while to fire error event.
+     * @returns {boolean} True if hit test is available.
+     * @private
+     */
     isAvailable(callback, fireError) {
         let err;
 
@@ -167,7 +192,7 @@ class XrHitTest extends EventHandler {
      * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
      * app.xr.hitTest.start({
@@ -202,9 +227,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      */
-    start(options) {
-        options = options || { };
-
+    start(options = {}) {
         if (!this.isAvailable(options.callback, this))
             return;
 
@@ -254,6 +277,12 @@ class XrHitTest extends EventHandler {
         }
     }
 
+    /**
+     * @param {XRHitTestSource} xrHitTestSource - Hit test source.
+     * @param {boolean} transient - True if hit test source is created from transient input source.
+     * @param {Function} callback - Callback called once hit test source is created.
+     * @private
+     */
     _onHitTestSource(xrHitTestSource, transient, callback) {
         if (!this._session) {
             xrHitTestSource.cancel();
@@ -270,6 +299,10 @@ class XrHitTest extends EventHandler {
         this.fire('add', hitTestSource);
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);

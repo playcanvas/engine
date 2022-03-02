@@ -11,7 +11,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
 /**
  * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
  *
- * @callback vrDisplayCallback
+ * @callback VrDisplayCallback
  * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
  * @ignore
  */
@@ -19,7 +19,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
 /**
  * Callback used by {@link VrDisplay#requestAnimationFrame}.
  *
- * @callback vrFrameCallback
+ * @callback VrFrameCallback
  * @ignore
  */
 
@@ -28,17 +28,32 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
  * present content on a separate screen or a phone which can display content full screen on the
  * same screen. This object contains the native `navigator.VRDisplay` object from the WebVR API.
  *
- * @property {number} id An identifier for this distinct VRDisplay.
- * @property {*} display The native VRDisplay object from the WebVR API.
- * @property {boolean} presenting True if this display is currently presenting VR content.
- * @property {VRDisplayCapabilities} capabilities Returns the
- * [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities) object
- * from the VRDisplay. This can be used to determine what features are available on this display.
  * @augments EventHandler
  * @deprecated
  * @ignore
  */
 class VrDisplay extends EventHandler {
+    /**
+     * An identifier for this distinct VRDisplay.
+     *
+     * @type {number}
+     */
+    id;
+
+    /**
+     * The native VRDisplay object from the WebVR API.
+     *
+     * @type {*}
+     */
+    display;
+
+    /**
+     * True if this display is currently presenting VR content.
+     *
+     * @type {boolean}
+     */
+    presenting = false;
+
     /**
      * Create a new VrDisplay instance.
      *
@@ -79,8 +94,6 @@ class VrDisplay extends EventHandler {
         this.combinedViewInv = new Mat4();
         this.combinedFov = 0;
         this.combinedAspect = 0;
-
-        this.presenting = false;
 
         this._presentChange = (event) => {
             let display;
@@ -238,7 +251,7 @@ class VrDisplay extends EventHandler {
     /**
      * Try to present full screen VR content on this display.
      *
-     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * @param {VrDisplayCallback} callback - Called when the request is completed. Callback takes a
      * single argument (err) that is the error message return if presenting fails, or null if the
      * call succeeds. Usually called by {@link CameraComponent#enterVr}.
      * @deprecated
@@ -264,7 +277,7 @@ class VrDisplay extends EventHandler {
     /**
      * Try to stop presenting VR content on this display.
      *
-     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * @param {VrDisplayCallback} callback - Called when the request is completed. Callback takes a
      * single argument (err) that is the error message return if presenting fails, or null if the
      * call succeeds. Usually called by {@link CameraComponent#exitVr}.
      * @deprecated
@@ -290,7 +303,7 @@ class VrDisplay extends EventHandler {
      * Used in the main application loop instead of the regular `window.requestAnimationFrame`.
      * Usually only called from inside {@link Application}.
      *
-     * @param {vrFrameCallback} fn - Function called when it is time to update the frame.
+     * @param {VrFrameCallback} fn - Function called when it is time to update the frame.
      * @deprecated
      */
     requestAnimationFrame(fn) {
@@ -342,6 +355,13 @@ class VrDisplay extends EventHandler {
         if (this.display) return this._frameData;
     }
 
+    /**
+     * Returns the [VRDisplayCapabilities](https://w3c.github.io/webvr/#interface-vrdisplaycapabilities)
+     * object from the VRDisplay. This can be used to determine what features are available on this
+     * display.
+     *
+     * @type {*}
+     */
     get capabilities() {
         if (this.display) return this.display.capabilities;
         return {};
