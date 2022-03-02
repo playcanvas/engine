@@ -89,6 +89,24 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
+        let masks;
+        // If the component animaites from the components entity, any layer mask hierarchy should be updated from the old entity to the cloned entity.
+        if (!entity.anim.rootBone || entity.anim.rootBone === entity) {
+            masks = {};
+            entity.anim.layers.forEach((layer, i) => {
+                if (layer.mask) {
+                    const mask = {};
+                    Object.keys(layer.mask).forEach((path) => {
+                        // The base of all mask paths should be mapped from the previous entity to the cloned entity
+                        const pathArr = path.split('/');
+                        pathArr.shift();
+                        const clonePath = [clone.name, ...pathArr].join('/');
+                        mask[clonePath] = layer.mask[path];
+                    });
+                    masks[i] = { mask };
+                }
+            });
+        }
         const data = {
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
@@ -99,7 +117,8 @@ class AnimComponentSystem extends ComponentSystem {
             stateGraph: entity.anim.stateGraph,
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
-            parameters: entity.anim.parameters
+            parameters: entity.anim.parameters,
+            masks
         };
         return this.addComponent(clone, data);
     }
