@@ -29,6 +29,7 @@ import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
+import { DeviceCache } from '../../graphics/device-cache.js';
 
 import {
     BLEND_NORMAL,
@@ -213,6 +214,9 @@ function divGraphFrom2Curves(curve1, curve2, outUMax) {
     return sub;
 }
 
+// a device cache storing default parameter texture for the emitter
+const particleEmitterDeviceCache = new DeviceCache();
+
 class ParticleEmitter {
     constructor(graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
@@ -221,8 +225,6 @@ class ParticleEmitter {
         this.precision = precision;
 
         this._addTimeTime = 0;
-
-        ParticleEmitter.staticInit(gd);
 
         // Global system parameters
         setPropertyTarget = this;
@@ -247,7 +249,7 @@ class ParticleEmitter {
         setProperty("localSpace", false);
         setProperty("screenSpace", false);
         setProperty("wrapBounds", null);
-        setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
+        setProperty("colorMap", this.defaultParamTexture);
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
@@ -382,12 +384,9 @@ class ParticleEmitter {
         this.rebuild();
     }
 
-    static DEFAULT_PARAM_TEXTURE = null;
-
-    static staticInit(device) {
-
-        // White radial gradient
-        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
+    get defaultParamTexture() {
+        Debug.assert(this.graphicsDevice);
+        return particleEmitterDeviceCache.get(this.graphicsDevice, () => {
             const resolution = 16;
             const centerPoint = resolution * 0.5 + 0.5;
             const dtex = new Float32Array(resolution * resolution * 4);
@@ -403,18 +402,12 @@ class ParticleEmitter {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(device, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = FILTER_LINEAR;
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = FILTER_LINEAR;
-        }
-    }
 
-    static staticDestroy() {
-
-        if (ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE.destroy();
-            ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
-        }
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            texture.minFilter = FILTER_LINEAR;
+            texture.magFilter = FILTER_LINEAR;
+            return texture;
+        });
     }
 
     onChangeCamera() {
@@ -577,7 +570,7 @@ class ParticleEmitter {
     rebuild() {
         const gd = this.graphicsDevice;
 
-        if (this.colorMap === null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
+        if (this.colorMap === null) this.colorMap = this.defaultParamTexture;
 
         this.spawnBounds = this.emitterShape === EMITTERSHAPE_BOX ? this.emitterExtents : this.emitterRadius;
 
@@ -739,7 +732,7 @@ class ParticleEmitter {
     _isAnimated() {
         return this.animNumFrames >= 1 &&
                (this.animTilesX > 1 || this.animTilesY > 1) &&
-               (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
+               (this.colorMap && this.colorMap !== this.defaultParamTexture || this.normalMap);
     }
 
     rebuildGraphs() {

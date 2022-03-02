@@ -40,8 +40,8 @@ import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { Render } from '../../scene/render.js';
-import { DefaultMaterial } from '../../scene/materials/default-material.js';
 
 import { Entity } from '../../framework/entity.js';
 
@@ -2338,7 +2338,7 @@ class GlbParser {
     constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
-        this._defaultMaterial = DefaultMaterial.get(device);
+        this._defaultMaterial = getDefaultMaterial(device);
         this._maxRetries = maxRetries;
     }
 

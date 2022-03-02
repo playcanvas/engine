@@ -1261,7 +1261,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                 } else {
-                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                    const depthFormat = this.webgl2 ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT16;
+                    gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, target.width, target.height);
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                 }
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
