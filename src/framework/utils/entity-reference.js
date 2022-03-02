@@ -266,10 +266,11 @@ class EntityReference extends EventHandler {
             nextEntityGuid = nextEntity.getGuid();
             this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
         } else {
-            const root = this._parentComponent.system.app.root;
-            const isOnSceneGraph = this._parentComponent.entity.isDescendantOf(root);
+            const appRoot = this._parentComponent.system.app.root;
+            const isOnSceneGraph = this._parentComponent.entity.isDescendantOf(appRoot);
 
-            nextEntity = (isOnSceneGraph && nextEntityGuid) ? root.findByGuid(nextEntityGuid) : null;
+            const searchRoot = isOnSceneGraph ? appRoot : this._parentComponent.entity;
+            nextEntity = nextEntityGuid ? searchRoot.findByGuid(nextEntityGuid) : null;
         }
 
         const hasChanged = this._entity !== nextEntity;
