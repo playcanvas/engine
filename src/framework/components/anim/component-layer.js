@@ -280,7 +280,7 @@ class AnimComponentLayer {
     blendToWeight(weight, time) {
         this._startingWeight = this.weight;
         this._targetWeight = weight;
-        this._blendTime = math.max([0, time]);
+        this._blendTime = Math.max(0, time);
         this._blendTimeElapsed = 0;
     }
 
