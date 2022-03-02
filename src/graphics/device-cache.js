@@ -21,15 +21,9 @@ class DeviceCache {
      * @returns {any} The resource for the device.
      */
     get(device, onCreate) {
-        let entry = this._cache.get(device);
 
-        // if no entry for the device, create it
-        if (!entry) {
-
-            if (onCreate) {
-                entry = onCreate();
-            }
-            this._cache.set(device, entry);
+        if (!this._cache.has(device)) {
+            this._cache.set(device, onCreate());
 
             // when the device is destroyed, destroy and remove its entry
             device.on('destroy', () => {
@@ -38,7 +32,7 @@ class DeviceCache {
             });
         }
 
-        return entry;
+        return this._cache.get(device);
     }
 }
 
