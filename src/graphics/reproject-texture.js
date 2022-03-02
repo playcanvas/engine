@@ -323,12 +323,18 @@ const createSamplesTex = (device, name, samples) => {
 // simple cache storing key->value
 // missFunc is called if the key is not present
 class SimpleCache {
+    constructor(destroyContent = true) {
+        this.destroyContent = destroyContent;
+    }
+
     map = new Map();
 
     destroy() {
-        this.map.forEach((value, key) => {
-            value.destroy();
-        });
+        if (this.destroyContent) {
+            this.map.forEach((value, key) => {
+                value.destroy();
+            });
+        }
     }
 
     get(key, missFunc) {
@@ -343,7 +349,7 @@ class SimpleCache {
 
 // cache, used to store samples. we store these separately from textures since multiple
 // devices can use the same set of samples.
-const samplesCache = new SimpleCache();
+const samplesCache = new SimpleCache(false);
 
 // cache, storing samples stored in textures, those are per device
 const deviceCache = new DeviceCache();
