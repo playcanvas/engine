@@ -9,6 +9,16 @@ import { Channel3d } from '../audio/channel3d.js';
 
 import { Listener } from './listener.js';
 
+const CONTEXT_STATE_NOT_CREATED = 'not created';
+const CONTEXT_STATE_RUNNING = 'running';
+const CONTEXT_STATE_SUSPENDED = 'suspended';
+const CONTEXT_STATE_INTERRUPTED = 'interrupted';
+
+const USER_INPUT_EVENTS = [
+    'click', 'contextmenu', 'auxclick', 'dblclick', 'mousedown',
+    'mouseup', 'pointerup', 'touchend', 'keydown', 'keyup'
+];
+
 /**
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
@@ -37,7 +47,7 @@ class SoundManager extends EventHandler {
          * @type {string}
          * @private
          */
-        this._state = 'not created';
+        this._state = CONTEXT_STATE_NOT_CREATED;
         /**
          * @type {boolean}
          * @private
@@ -101,7 +111,7 @@ class SoundManager extends EventHandler {
                         if (!this._context) return;
 
                         // explicitly call .resume() when previous state was suspended or interrupted
-                        if (this._state === 'interrupted' || this._state === 'suspended') {
+                        if (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED) {
                             this._safelyResumeContext();
                         }
                         this._state = this._context.state;
@@ -123,18 +133,19 @@ class SoundManager extends EventHandler {
         this.fire('resume');
 
         // attempt to safely resume the AudioContext
-        if (this.context && (this._state === 'interrupted' || this._state === 'suspended')) {
+        if (this.context && (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED)) {
             this._safelyResumeContext();
         }
     }
 
     destroy() {
-        if (this._resumeContext) {
-            window.removeEventListener('mousedown', this._resumeContext);
-            window.removeEventListener('touchend', this._resumeContext);
+        if (this._resumeContext && !!this._resumeContextIsAttached) {
+            USER_INPUT_EVENTS.forEach((eventName) => {
+                window.removeEventListener(eventName, this._resumeContext);
+            });
         }
 
-        if (this._unlock) {
+        if (this._unlock && !!this._unlockAttached) {
             window.removeEventListener('touchend', this._unlock);
         }
 
@@ -221,7 +232,7 @@ class SoundManager extends EventHandler {
 
         this._context.resume().then(() => {
             // if after the callback the state is not yet running, add interaction listeners to resume context later
-            if (this._context.state !== 'running') {
+            if (this._context.state !== CONTEXT_STATE_RUNNING) {
                 this._addAudioContextUserInteractionListeners();
             }
         }).catch(() => {
@@ -238,16 +249,11 @@ class SoundManager extends EventHandler {
      * @private
      */
     _addAudioContextUserInteractionListeners() {
-        const userInputEventNames = [
-            'click', 'contextmenu', 'auxclick', 'dblclick', 'mousedown',
-            'mouseup', 'pointerup', 'touchend', 'keydown', 'keyup'
-        ];
-
         // resume AudioContext on user interaction because of autoplay policy
         if (!this._resumeContext) {
             this._resumeContext = () => {
                 if (!this.context || this.context.state === 'running') {
-                    userInputEventNames.forEach((eventName) => {
+                    USER_INPUT_EVENTS.forEach((eventName) => {
                         window.removeEventListener(eventName, this._resumeContext);
                     });
 
@@ -259,7 +265,7 @@ class SoundManager extends EventHandler {
         }
 
         if (!this._resumeContextIsAttached) {
-            userInputEventNames.forEach((eventName) => {
+            USER_INPUT_EVENTS.forEach((eventName) => {
                 window.addEventListener(eventName, this._resumeContext);
             });
 
