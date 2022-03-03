@@ -258,7 +258,7 @@ class EntityReference extends EventHandler {
 
     _updateEntityReference() {
         let nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
-        let nextEntity;
+        let nextEntity = null;
 
         if (nextEntityGuid instanceof Entity) {
             // if value is set to a Entity itself replace value with the GUID
@@ -274,8 +274,6 @@ class EntityReference extends EventHandler {
                 const entityRoot = this._parentComponent.entity.root;
 
                 nextEntity = entityRoot.findByGuid(nextEntityGuid) || sceneRoot.findByGuid(nextEntityGuid);
-            } else {
-                nextEntity = null;
             }
         }
 
