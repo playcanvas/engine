@@ -69,7 +69,7 @@ import { Skin } from '../scene/skin.js';
 import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
-import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { getDefaultMaterial } from '../scene/materials/default-material.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
 import { Skeleton } from '../animation/skeleton.js';
@@ -502,7 +502,7 @@ export const scene = {
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
-        return DefaultMaterial.get(getApplication().graphicsDevice);
+        return getDefaultMaterial(getApplication().graphicsDevice);
     }
 });
 

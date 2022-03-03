@@ -6,7 +6,7 @@ import { http, Http } from '../net/http.js';
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';
 
-import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { getDefaultMaterial } from '../scene/materials/default-material.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -14,7 +14,7 @@ import { DefaultMaterial } from '../scene/materials/default-material.js';
 /**
  * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
  *
- * @callback addParserCallback
+ * @callback AddParserCallback
  * @param {string} url - The resource url.
  * @param {object} data - The raw model data.
  * @returns {boolean} Return true if this parser should be used to parse the data into a
@@ -35,7 +35,7 @@ class ModelHandler {
     constructor(device) {
         this._device = device;
         this._parsers = [];
-        this._defaultMaterial = DefaultMaterial.get(device);
+        this._defaultMaterial = getDefaultMaterial(device);
         this.maxRetries = 0;
 
         this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
@@ -155,7 +155,7 @@ class ModelHandler {
      * Add a parser that converts raw data into a {@link Model}. Default parser is for JSON models.
      *
      * @param {object} parser - See JsonModelParser for example.
-     * @param {addParserCallback} decider - Function that decides on which parser to use. Function
+     * @param {AddParserCallback} decider - Function that decides on which parser to use. Function
      * should take (url, data) arguments and return true if this parser should be used to parse the
      * data into a {@link Model}. The first parser to return true is used.
      */

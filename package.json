@@ -79,10 +79,10 @@
     "@rollup/pluginutils": "^4.1.2",
     "c8": "^7.10.0",
     "chai": "^4.3.6",
-    "eslint": "^8.9.0",
+    "eslint": "^8.10.0",
     "jsdoc": "^3.6.10",
     "jsdoc-tsimport-plugin": "^1.0.5",
-    "karma": "^6.3.16",
+    "karma": "^6.3.17",
     "karma-chrome-launcher": "3.1.0",
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.33",
@@ -94,7 +94,7 @@
     "rollup-plugin-visualizer": "^5.6.0",
     "serve": "^13.0.2",
     "sinon": "^13.0.1",
-    "typescript": "^4.5.5",
+    "typescript": "^4.6.2",
     "xhr2": "^0.2.1"
   },
   "scripts": {

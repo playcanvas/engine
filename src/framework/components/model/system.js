@@ -4,7 +4,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { DefaultMaterial } from '../../../scene/materials/default-material.js';
+import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -39,7 +39,7 @@ class ModelComponentSystem extends ComponentSystem {
         this.DataType = ModelComponentData;
 
         this.schema = _schema;
-        this.defaultMaterial = DefaultMaterial.get(app.graphicsDevice);
+        this.defaultMaterial = getDefaultMaterial(app.graphicsDevice);
 
         this.on('beforeremove', this.onRemove, this);
     }
@@ -144,6 +144,8 @@ class ModelComponentSystem extends ComponentSystem {
         if (entity.model.customAabb) {
             component.customAabb = entity.model.customAabb.clone();
         }
+
+        return component;
     }
 
     onRemove(entity, component) {

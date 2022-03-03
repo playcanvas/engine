@@ -1,28 +1,30 @@
-import { Debug } from "../../core/debug.js";
+import { DeviceCache } from '../../graphics/device-cache.js';
 
-// Default material used in case no other material is available.
-// There is one instance of it per device (application) stored in the cache in this class.
-class DefaultMaterial {
-    // dictionary of Device -> default material
-    static cache = new Map();
+// device cache storing default material
+const defaultMaterialDeviceCache = new DeviceCache();
 
-    // returns a default material for the device
-    static get(device) {
-        const material = this.cache.get(device);
-        Debug.assert(material);
-        return material;
-    }
-
-    static add(device, material) {
-        Debug.assert(!this.cache.has(device));
-        this.cache.set(device, material);
-    }
-
-    // releases a default material for the device (when device is getting destroyed)
-    static remove(device) {
-        Debug.assert(this.cache.has(device));
-        this.cache.delete(device);
-    }
+/**
+ * Returns default material, which is a material used instad of null material.
+ *
+ * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @returns {StandardMaterial} The default instance of {@link StandardMaterial}
+ * @ignore
+ */
+function getDefaultMaterial(device) {
+    return defaultMaterialDeviceCache.get(device);
 }
 
-export { DefaultMaterial };
+/**
+ * Assigns the default material to device cache
+ *
+ * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @param {StandardMaterial} material - The instance of {@link StandardMaterial}
+ * @ignore
+ */
+function setDefaultMaterial(device, material) {
+    defaultMaterialDeviceCache.get(device, () => {
+        return material;
+    });
+}
+
+export { setDefaultMaterial, getDefaultMaterial };

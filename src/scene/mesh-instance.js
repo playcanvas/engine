@@ -62,7 +62,7 @@ class Command {
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
- * @callback calculateSortDistanceCallback
+ * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
@@ -417,7 +417,7 @@ class MeshInstance {
      * the center of the mesh instance's axis-aligned bounding box. This option can be particularly
      * useful for rendering transparent meshes in a better order than default.
      *
-     * @type {calculateSortDistanceCallback}
+     * @type {CalculateSortDistanceCallback}
      */
     set calculateSortDistance(calculateSortDistance) {
         this._calculateSortDistance = calculateSortDistance;

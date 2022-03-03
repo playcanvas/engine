@@ -4,7 +4,7 @@
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
- * @callback resourceLoaderCallback
+ * @callback ResourceLoaderCallback
  * @description Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
  * @param {string|null} err - The error message in the case where the load fails.
  * @param {*} [resource] - The resource that has been successfully loaded.
@@ -87,7 +87,7 @@ class ResourceLoader {
      *
      * @param {string} url - The URL of the resource to load.
      * @param {string} type - The type of resource expected.
-     * @param {resourceLoaderCallback} callback - The callback used when the resource is loaded or
+     * @param {ResourceLoaderCallback} callback - The callback used when the resource is loaded or
      * an error occurs. Passed (err, resource) where err is null if there are no errors.
      * @param {Asset} [asset] - Optional asset that is passed into handler
      * @example

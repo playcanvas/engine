@@ -9,6 +9,16 @@ import { Channel3d } from '../audio/channel3d.js';
 
 import { Listener } from './listener.js';
 
+const CONTEXT_STATE_NOT_CREATED = 'not created';
+const CONTEXT_STATE_RUNNING = 'running';
+const CONTEXT_STATE_SUSPENDED = 'suspended';
+const CONTEXT_STATE_INTERRUPTED = 'interrupted';
+
+const USER_INPUT_EVENTS = [
+    'click', 'contextmenu', 'auxclick', 'dblclick', 'mousedown',
+    'mouseup', 'pointerup', 'touchend', 'keydown', 'keyup'
+];
+
 /**
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
@@ -32,49 +42,25 @@ class SoundManager extends EventHandler {
          */
         this._context = null;
         /**
+         * The current state of the underlying AudioContext.
+         *
+         * @type {string}
+         * @private
+         */
+        this._state = CONTEXT_STATE_NOT_CREATED;
+        /**
          * @type {boolean}
          * @private
          */
         this._forceWebAudioApi = options.forceWebAudioApi;
 
         this._resumeContext = null;
+        this._resumeContextAttached = false;
         this._unlock = null;
+        this._unlockAttached = false;
 
         if (hasAudioContext() || this._forceWebAudioApi) {
-            // resume AudioContext on user interaction because of new Chrome autoplay policy
-            this._resumeContext = () => {
-                window.removeEventListener('mousedown', this._resumeContext);
-                window.removeEventListener('touchend', this._resumeContext);
-
-                if (this.context) {
-                    this.context.resume();
-                }
-            };
-
-            window.addEventListener('mousedown', this._resumeContext);
-            window.addEventListener('touchend', this._resumeContext);
-
-            // iOS only starts sound as a response to user interaction
-            if (platform.ios) {
-                // Play an inaudible sound when the user touches the screen
-                // This only happens once
-                this._unlock = () => {
-                    // no further need for this so remove the listener
-                    window.removeEventListener('touchend', this._unlock);
-
-                    const context = this.context;
-                    if (context) {
-                        const buffer = context.createBuffer(1, 1, 44100);
-                        const source = context.createBufferSource();
-                        source.buffer = buffer;
-                        source.connect(context.destination);
-                        source.start(0);
-                        source.disconnect();
-                    }
-                };
-
-                window.addEventListener('touchend', this._unlock);
-            }
+            this._addAudioContextUserInteractionListeners();
         } else {
             console.warn('No support for 3D audio found');
         }
@@ -116,6 +102,23 @@ class SoundManager extends EventHandler {
                 } else if (typeof webkitAudioContext !== 'undefined') {
                     this._context = new webkitAudioContext();
                 }
+
+                if (this._context) {
+                    this._state = this._context.state;
+
+                    // When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc),
+                    // the AudioContext state will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other
+                    // browsers), and 'resume' must be expliclty called.
+                    this._context.onstatechange = () => {
+                        if (!this._context) return;
+
+                        // explicitly call .resume() when previous state was suspended or interrupted
+                        if (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED) {
+                            this._safelyResumeContext();
+                        }
+                        this._state = this._context.state;
+                    };
+                }
             }
         }
 
@@ -128,28 +131,23 @@ class SoundManager extends EventHandler {
     }
 
     resume() {
-        const resumeFunction = () => {
-            this.suspended = false;
-            this.fire('resume');
-        };
+        this.suspended = false;
+        this.fire('resume');
 
-        // On iOS safari, switching tab or minimizing the browser will set the AudioContext state as 'interrupted'.
-        // On other browsers, AudioContext state will be set to 'suspended'.
-        // In those situations, the .resume() API must be called explicitly
-        if ((hasAudioContext() || this._forceWebAudioApi) &&
-            (this.context.state === 'interrupted' || this.context.state === 'suspended')) {
-            this.context.resume().then(resumeFunction);
-        } else
-            resumeFunction();
+        // attempt to safely resume the AudioContext
+        if (this.context && (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED)) {
+            this._safelyResumeContext();
+        }
     }
 
     destroy() {
-        if (this._resumeContext) {
-            window.removeEventListener('mousedown', this._resumeContext);
-            window.removeEventListener('touchend', this._resumeContext);
+        if (this._resumeContext && this._resumeContextAttached) {
+            USER_INPUT_EVENTS.forEach((eventName) => {
+                window.removeEventListener(eventName, this._resumeContext);
+            });
         }
 
-        if (this._unlock) {
+        if (this._unlock && this._unlockAttached) {
             window.removeEventListener('touchend', this._unlock);
         }
 
@@ -219,6 +217,90 @@ class SoundManager extends EventHandler {
         }
 
         return channel;
+    }
+
+    /**
+     * Attempt to resume the AudioContext, but safely handle failure scenarios.
+     * When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc),
+     * the AudioContext state will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other
+     * browsers), and 'resume' must be expliclty called. However, the Auto-Play policy might block
+     * the AudioContext from running - in those cases, we need to add the interaction listeners,
+     * making the AudioContext be resumed later.
+     *
+     * @private
+     */
+    _safelyResumeContext() {
+        if (!this._context) return;
+
+        this._context.resume().then(() => {
+            // if after the callback the state is not yet running, add interaction listeners to resume context later
+            if (this._context.state !== CONTEXT_STATE_RUNNING) {
+                this._addAudioContextUserInteractionListeners();
+            }
+        }).catch(() => {
+            // if context could not be resumed at this point (for instance, due to auto-play policy),
+            // add interaction listeners to resume the context later
+            this._addAudioContextUserInteractionListeners();
+        });
+    }
+
+    /**
+     * Add the necessary Window EventListeners for resuming the AudioContext to comply with auto-play policies.
+     * For more info, https://developers.google.com/web/updates/2018/11/web-audio-autoplay.
+     *
+     * @private
+     */
+    _addAudioContextUserInteractionListeners() {
+        // resume AudioContext on user interaction because of autoplay policy
+        if (!this._resumeContext) {
+            this._resumeContext = () => {
+                if (!this.context || this.context.state === CONTEXT_STATE_RUNNING) {
+                    USER_INPUT_EVENTS.forEach((eventName) => {
+                        window.removeEventListener(eventName, this._resumeContext);
+                    });
+
+                    this._resumeContextAttached = false;
+                } else {
+                    this.context.resume();
+                }
+            };
+        }
+
+        if (!this._resumeContextAttached) {
+            USER_INPUT_EVENTS.forEach((eventName) => {
+                window.addEventListener(eventName, this._resumeContext);
+            });
+
+            this._resumeContextAttached = true;
+        }
+
+        // iOS only starts sound as a response to user interaction
+        if (platform.ios) {
+            // Play an inaudible sound when the user touches the screen
+            // This only happens once
+            if (!this._unlock) {
+                this._unlock = () => {
+                    // no further need for this so remove the listener
+                    window.removeEventListener('touchend', this._unlock);
+                    this._unlockAttached = false;
+
+                    const context = this.context;
+                    if (context) {
+                        const buffer = context.createBuffer(1, 1, 44100);
+                        const source = context.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(context.destination);
+                        source.start(0);
+                        source.disconnect();
+                    }
+                };
+            }
+
+            if (!this._unlockAttached) {
+                window.addEventListener('touchend', this._unlock);
+                this._unlockAttached = true;
+            }
+        }
     }
 }
 
