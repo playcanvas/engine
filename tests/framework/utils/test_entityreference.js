@@ -1,4 +1,4 @@
-describe.only("pc.EntityReference", function () {
+describe("pc.EntityReference", function () {
     var app;
     var testEntity;
     var testComponent;
