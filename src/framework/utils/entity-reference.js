@@ -235,15 +235,11 @@ class EntityReference extends EventHandler {
 
     /**
      * Must be called from the parent component's onEnable() method in order for entity references
-     * to be correctly resolved when {@link Entity#clone} is called.
+     * to be correctly resolved when the referenced entity was not in the same graph as the parent.
      *
      * @private
      */
     onParentComponentEnable() {
-        // When an entity is cloned via the JS API, we won't be able to resolve the
-        // entity reference until the cloned entity has been added to the scene graph.
-        // We can detect this by waiting for the parent component to be enabled, in the
-        // specific case where we haven't yet been able to resolve an entity reference.
         if (!this._entity) {
             this._updateEntityReference();
         }
