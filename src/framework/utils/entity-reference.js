@@ -266,11 +266,12 @@ class EntityReference extends EventHandler {
             nextEntityGuid = nextEntity.getGuid();
             this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
         } else {
-            const appRoot = this._parentComponent.system.app.root;
-            const isOnSceneGraph = this._parentComponent.entity.isDescendantOf(appRoot);
+            // If value is the GUID, look for the entity from the root of the parent entity.
+            // We use entity.root rather than app.root because the parent entity may be detached
+            // from the scene, and the value is referencing an entity within this detached graph.
+            const root = this._parentComponent.entity.root;
 
-            const searchRoot = isOnSceneGraph ? appRoot : this._parentComponent.entity;
-            nextEntity = nextEntityGuid ? searchRoot.findByGuid(nextEntityGuid) : null;
+            nextEntity = nextEntityGuid ? root.findByGuid(nextEntityGuid) : null;
         }
 
         const hasChanged = this._entity !== nextEntity;
