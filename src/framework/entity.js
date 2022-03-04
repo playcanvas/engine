@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { Application } from './app-base.js';
+import { AppBase } from './app-base.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
 /** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
@@ -283,10 +283,10 @@ class Entity extends GraphNode {
     constructor(name, app) {
         super(name);
 
-        if (name instanceof Application) app = name;
+        if (name instanceof AppBase) app = name;
 
         if (!app) {
-            app = Application.getApplication(); // get the current application
+            app = AppBase.getApplication(); // get the current application
             if (!app) {
                 throw new Error("Couldn't find current application");
             }

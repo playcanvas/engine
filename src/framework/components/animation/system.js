@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = [
     'enabled',

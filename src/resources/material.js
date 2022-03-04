@@ -10,7 +10,7 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/application.js').Application} Application */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 const PLACEHOLDER_MAP = {

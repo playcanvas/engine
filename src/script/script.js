@@ -4,7 +4,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { ScriptHandler } from '../resources/script.js';
 
 import { script } from '../framework/script.js';
-import { Application } from '../framework/app-base.js';
+import { AppBase } from '../framework/app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
@@ -141,7 +141,7 @@ function registerScript(script, name, app) {
     script.__name = name;
 
     // add to scripts registry
-    const registry = app ? app.scripts : Application.getApplication().scripts;
+    const registry = app ? app.scripts : AppBase.getApplication().scripts;
     registry.add(script);
 
     ScriptHandler._push(script);

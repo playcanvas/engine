@@ -6,7 +6,7 @@ import { ScrollViewComponentData } from './data.js';
 
 import { Vec2 } from '../../../math/vec2.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },

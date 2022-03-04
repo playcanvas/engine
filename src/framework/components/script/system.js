@@ -5,7 +5,7 @@ import { ComponentSystem } from '../system.js';
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';

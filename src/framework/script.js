@@ -4,7 +4,7 @@ import { ScriptHandler } from '../resources/script.js';
 
 import { getApplication } from './globals.js';
 
-/** @typedef {import('./app-base.js').Application} Application */
+/** @typedef {import('./application.js').Application} Application */
 
 /**
  * Callback used by {@link script.createLoadingScreen}.

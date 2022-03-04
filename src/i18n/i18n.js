@@ -4,7 +4,7 @@ import { Asset } from '../asset/asset.js';
 
 import { I18nParser } from './i18n-parser.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/application.js').Application} Application */
 
 import {
     DEFAULT_LOCALE,

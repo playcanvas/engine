@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },

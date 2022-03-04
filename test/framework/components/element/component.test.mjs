@@ -1,5 +1,5 @@
 import { LAYERID_UI } from '../../../../src/scene/constants.js';
-import { Application } from '../../../../src/framework/app-base.js';
+import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';

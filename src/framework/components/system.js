@@ -5,7 +5,7 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
-/** @typedef {import('../app-base.js').Application} Application */
+/** @typedef {import('../application.js').Application} Application */
 /** @typedef {import('./component.js').Component} Component */
 /** @typedef {import('../entity.js').Entity} Entity */
 

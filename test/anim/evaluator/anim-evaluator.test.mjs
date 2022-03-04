@@ -4,7 +4,7 @@ import { AnimClip } from '../../../src/anim/evaluator/anim-clip.js';
 import { AnimData } from '../../../src/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../src/anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../../src/anim/evaluator/anim-track.js';
-import { Application } from '../../../src/framework/app-base.js';
+import { Application } from '../../../src/framework/application.js';
 import { DefaultAnimBinder } from '../../../src/anim/binder/default-anim-binder.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 

@@ -7,7 +7,7 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { ElementComponent } from './component.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();

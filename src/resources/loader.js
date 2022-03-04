@@ -1,6 +1,6 @@
 /** @typedef {import('../asset/asset.js').Asset} Asset */
 /** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/application.js').Application} Application */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**

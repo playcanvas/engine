@@ -7,7 +7,7 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../application.js').Application} Application */
 /** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
 let depthLayer;

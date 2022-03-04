@@ -1,4 +1,4 @@
-import { Application } from '../../src/framework/app-base.js';
+import { Application } from '../../src/framework/application.js';
 import { Asset } from '../../src/asset/asset.js';
 import { AssetRegistry } from '../../src/asset/asset-registry.js';
 import { GlbContainerResource } from '../../src/resources/parser/glb-container-resource.js';
