@@ -7,7 +7,7 @@ void applyAO() {
     dAo = 1.0;
 
     #ifdef MAPTEXTURE
-    dAo *= texture2D(texture_aoMap, $UV).$CH;
+    dAo *= texture2D(texture_aoMap, $UV, globalTextureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
