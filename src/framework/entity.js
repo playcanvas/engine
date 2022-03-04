@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { Application } from './application.js';
+import { Application } from './app-base.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
 /** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
