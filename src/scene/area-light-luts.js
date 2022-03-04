@@ -1,6 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { FloatPacking } from '../math/float-packing.js';
 import { Texture } from '../graphics/texture.js';
+import { DeviceCache } from '../graphics/device-cache.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -9,9 +10,25 @@ import {
     TEXTURETYPE_DEFAULT
 } from '../graphics/constants.js';
 
+// class used to hold LUT textures in the device cache
+class AreaLightCacheEntry {
+    constructor(texture0, texture1) {
+        this.texture0 = texture0;
+        this.texture1 = texture1;
+    }
+
+    destroy() {
+        this.texture0?.destroy();
+        this.texture1?.destroy();
+    }
+}
+
+// device cache storing LUT textures, taking care of their removal when the device is destroyed
+const deviceCache = new DeviceCache();
+
 // static class managing LUT tables for the area lights
 class AreaLightLuts {
-    static createTexture(device, format, size) {
+    static createTexture(device, format, size, postfix = "") {
         const tex = new Texture(device, {
             width: size,
             height: size,
@@ -23,24 +40,33 @@ class AreaLightLuts {
             minFilter: FILTER_NEAREST,
             anisotropy: 1
         });
-        tex.name = 'AreaLightLUT';
+        tex.name = `AreaLightLUT${postfix}`;
         return tex;
     }
 
-    static setUniforms(device, texture1, texture2) {
+    static applyTextures(device, texture1, texture2) {
+        // remove previous textures from cache
+        deviceCache.remove(device);
+
+        // add new textures to cache
+        deviceCache.get(device, () => {
+            return new AreaLightCacheEntry(texture1, texture1 === texture2 ? null : texture2);
+        });
+
+        // set them as uniforms
         device.scope.resolve('areaLightsLutTex1').setValue(texture1);
         device.scope.resolve('areaLightsLutTex2').setValue(texture2);
     }
 
     // placeholder LUT textures for area light
     static createPlaceholder(device) {
-        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2);
+        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2, "placeholder");
 
         const pixels = texture.lock();
         pixels.fill(0);
         texture.unlock();
 
-        AreaLightLuts.setUniforms(device, texture, texture);
+        AreaLightLuts.applyTextures(device, texture, texture);
     }
 
     // creates LUT texture used by area lights
@@ -135,7 +161,7 @@ class AreaLightLuts {
             const tex2 = buildTexture(device, data2, format);
 
             // assign to uniforms
-            AreaLightLuts.setUniforms(device, tex1, tex2);
+            AreaLightLuts.applyTextures(device, tex1, tex2);
         }
     }
 }
