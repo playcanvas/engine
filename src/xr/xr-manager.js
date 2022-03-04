@@ -17,7 +17,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**

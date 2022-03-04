@@ -16,7 +16,7 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const mat4 = new Mat4();
 const vec3 = new Vec3();

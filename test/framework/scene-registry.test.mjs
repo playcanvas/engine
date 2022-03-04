@@ -1,4 +1,4 @@
-import { Application } from '../../src/framework/application.js';
+import { Application } from '../../src/framework/app-base.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';

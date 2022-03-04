@@ -5,7 +5,7 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 
-/** @typedef {import('./application.js').Application} Application */
+/** @typedef {import('./app-base.js').Application} Application */
 /** @typedef {import('./entity.js').Entity} Entity */
 
 /**

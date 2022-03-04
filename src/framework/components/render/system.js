@@ -10,7 +10,7 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
