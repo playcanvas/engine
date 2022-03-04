@@ -568,6 +568,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.constantTexSource = this.scope.resolve("source");
+        this.globalTextureBias = this.scope.resolve("globalTextureBias");
+
+        this.globalTextureBias.setValue(0.0);
 
         if (this.extTextureFloat) {
             if (this.webgl2) {

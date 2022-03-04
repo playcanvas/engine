@@ -18,7 +18,7 @@ float shinyMipLevel(vec2 uv) {
     // calculate min of both sets of dF to handle discontinuity at the azim edge
     float maxd = min(max(dot(dx, dx), dot(dy, dy)), max(dot(dx2, dx2), dot(dy2, dy2)));
 
-    return clamp(0.5 * log2(maxd) - 1.0, 0.0, 6.0);
+    return clamp(0.5 * log2(maxd) - 1.0 + globalTextureBias, 0.0, 6.0);
 }
 
 vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
