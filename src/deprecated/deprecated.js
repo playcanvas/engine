@@ -434,6 +434,19 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
     });
 });
 
+// Note: This was never public interface, but has been used in external scripts
+Object.defineProperties(RenderTarget.prototype, {
+    _glFrameBuffer: {
+        get: function () {
+            Debug.deprecated("pc.RenderTarget#_glFrameBuffer is deprecated. Use pc.RenderTarget.impl#_glFrameBuffer instead.");
+            return null;
+        },
+        set: function (rgbm) {
+            Debug.deprecated("pc.RenderTarget#_glFrameBuffer is deprecated. Use pc.RenderTarget.impl#_glFrameBuffer instead.");
+        }
+    }
+});
+
 VertexFormat.prototype.update = function () {
     Debug.deprecated('pc.VertexFormat.update is deprecated, and VertexFormat cannot be changed after it has been created.');
 };
