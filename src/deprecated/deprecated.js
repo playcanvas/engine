@@ -804,18 +804,18 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 
 // INPUT
 
-// export const input2 = {
-//     getTouchTargetCoords: getTouchTargetCoords,
-//     Controller: Controller,
-//     GamePads: GamePads,
-//     Keyboard: Keyboard,
-//     KeyboardEvent: KeyboardEvent,
-//     Mouse: Mouse,
-//     MouseEvent: MouseEvent,
-//     Touch: Touch,
-//     TouchDevice: TouchDevice,
-//     TouchEvent: TouchEvent
-// };
+export const input = {
+    getTouchTargetCoords: getTouchTargetCoords,
+    Controller: Controller,
+    GamePads: GamePads,
+    Keyboard: Keyboard,
+    KeyboardEvent: KeyboardEvent,
+    Mouse: Mouse,
+    MouseEvent: MouseEvent,
+    Touch: Touch,
+    TouchDevice: TouchDevice,
+    TouchEvent: TouchEvent
+};
 
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {
