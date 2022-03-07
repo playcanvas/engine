@@ -439,7 +439,7 @@ Object.defineProperties(RenderTarget.prototype, {
     _glFrameBuffer: {
         get: function () {
             Debug.deprecated("pc.RenderTarget#_glFrameBuffer is deprecated. Use pc.RenderTarget.impl#_glFrameBuffer instead.");
-            return null;
+            return this.impl._glFrameBuffer;
         },
         set: function (rgbm) {
             Debug.deprecated("pc.RenderTarget#_glFrameBuffer is deprecated. Use pc.RenderTarget.impl#_glFrameBuffer instead.");
