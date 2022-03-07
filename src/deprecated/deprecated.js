@@ -459,6 +459,13 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated("pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
             this.type = swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
         }
+    },
+
+    _glTexture: {
+        get: function () {
+            Debug.deprecated("pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.");
+            return this.impl._glTexture;
+        }
     }
 });
 
