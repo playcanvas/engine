@@ -462,7 +462,7 @@ Object.defineProperties(Texture.prototype, {
     },
 
     _glTexture: {
-        get: function() {
+        get: function () {
             Debug.deprecated("pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.");
             return null;
         }
