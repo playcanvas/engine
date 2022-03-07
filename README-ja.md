@@ -122,7 +122,7 @@ Node.jsがインストールされていることを確認します。
 | コマンド                | 説明                               | 出力ファイル                          |
 |------------------------|-------------------------------------------|----------------------------------|
 | `npm run build`        | リリース用、デバッグ用、プロファイラー用エンジンをビルドする | `build\playcanvas[.dbg/.prf].js` |
-| `npm run tsd`          | TypeScript型定義ファイルをビルドする          | `build\playcanvas.d.ts`          |
+| `npm run build:types`  | TypeScript型定義ファイルをビルドする          | `build\playcanvas.d.ts`          |
 | `npm run docs`         |  [APIリファレンス][docs] をビルドする| `docs`                           |
 
 
