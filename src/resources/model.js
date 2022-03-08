@@ -31,6 +31,7 @@ class ModelHandler {
      * Create a new ModelHandler instance.
      *
      * @param {GraphicsDevice} device - The graphics device that will be rendering.
+     * @hideconstructor
      */
     constructor(device) {
         this._device = device;

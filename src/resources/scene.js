@@ -14,6 +14,7 @@ class SceneHandler {
      * Create a new SceneHandler instance.
      *
      * @param {Application} app - The running {@link Application}.
+     * @hideconstructor
      */
     constructor(app) {
         this._app = app;

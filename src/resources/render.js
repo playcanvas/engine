@@ -52,6 +52,7 @@ class RenderHandler {
      * Create a new RenderHandler instance.
      *
      * @param {AssetRegistry} assets - The asset registry.
+     * @hideconstructor
      */
     constructor(assets) {
         this._registry = assets;

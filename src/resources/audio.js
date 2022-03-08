@@ -53,6 +53,7 @@ class AudioHandler {
      * Create a new AudioHandler instance.
      *
      * @param {SoundManager} manager - The sound manager.
+     * @hideconstructor
      */
     constructor(manager) {
         this.manager = manager;

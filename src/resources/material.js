@@ -37,6 +37,7 @@ class MaterialHandler {
      * Create a new MaterialHandler instance.
      *
      * @param {Application} app - The running {@link Application}.
+     * @hideconstructor
      */
     constructor(app) {
         this._assets = app.assets;

@@ -43,6 +43,7 @@ class TextureAtlasHandler {
      * Create a new TextureAtlasHandler instance.
      *
      * @param {ResourceLoader} loader - The resource loader.
+     * @hideconstructor
      */
     constructor(loader) {
         this._loader = loader;

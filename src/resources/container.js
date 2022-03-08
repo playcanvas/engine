@@ -107,6 +107,7 @@ class ContainerHandler {
      * @param {AssetRegistry} assets - The asset registry
      * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any
      * place that a material is not specified.
+     * @hideconstructor
      */
     constructor(device, assets) {
         this.glbParser = new GlbParser(device, assets, 0);

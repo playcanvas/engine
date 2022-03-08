@@ -23,6 +23,7 @@ class CubemapHandler {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {AssetRegistry} assets - The asset registry.
      * @param {ResourceLoader} loader - The resource loader.
+     * @hideconstructor
      */
     constructor(device, assets, loader) {
         this._device = device;

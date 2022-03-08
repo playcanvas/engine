@@ -33,6 +33,7 @@ class SpriteHandler {
      *
      * @param {AssetRegistry} assets - The asset registry.
      * @param {GraphicsDevice} device - The graphics device.
+     * @hideconstructor
      */
     constructor(assets, device) {
         this._assets = assets;

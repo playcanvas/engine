@@ -42,6 +42,7 @@ class FontHandler {
      * Create a new FontHandler instance.
      *
      * @param {ResourceLoader} loader - The resource loader.
+     * @hideconstructor
      */
     constructor(loader) {
         this._loader = loader;
