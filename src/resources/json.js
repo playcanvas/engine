@@ -1,6 +1,13 @@
 import { http, Http } from '../net/http.js';
 
 class JsonHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "json";
+
     constructor(app) {
         this.maxRetries = 0;
     }

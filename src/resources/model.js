@@ -28,6 +28,13 @@ import { getDefaultMaterial } from '../scene/materials/default-material.js';
  */
 class ModelHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "model";
+
+     /**
      * Create a new ModelHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

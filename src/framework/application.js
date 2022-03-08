@@ -34,6 +34,31 @@ import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
 
+import { RenderHandler } from '../resources/render.js';
+import { AnimationHandler } from '../resources/animation.js';
+import { AnimClipHandler } from '../resources/anim-clip.js';
+import { AnimStateGraphHandler } from '../resources/anim-state-graph.js';
+import { AudioHandler } from '../resources/audio.js';
+import { BinaryHandler } from '../resources/binary.js';
+import { ContainerHandler } from '../resources/container.js';
+import { CssHandler } from '../resources/css.js';
+import { CubemapHandler } from '../resources/cubemap.js';
+import { FolderHandler } from '../resources/folder.js';
+import { FontHandler } from '../resources/font.js';
+import { HierarchyHandler } from '../resources/hierarchy.js';
+import { HtmlHandler } from '../resources/html.js';
+import { JsonHandler } from '../resources/json.js';
+import { MaterialHandler } from '../resources/material.js';
+import { ModelHandler } from '../resources/model.js';
+import { SceneHandler } from '../resources/scene.js';
+import { ScriptHandler } from '../resources/script.js';
+import { ShaderHandler } from '../resources/shader.js';
+import { SpriteHandler } from '../resources/sprite.js';
+import { TemplateHandler } from '../resources/template.js';
+import { TextHandler } from '../resources/text.js';
+import { TextureAtlasHandler } from '../resources/texture-atlas.js';
+import { TextureHandler } from '../resources/texture.js';
+
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
@@ -95,6 +120,7 @@ import { ScriptComponentSystem } from './components/script/system.js';
 
         createOptions.graphicsDevice = this.createDevice(canvas, options);
         this.addComponentSystems(createOptions);
+        this.addResourceHandles(createOptions);
 
         createOptions.elementInput = options.elementInput;
         createOptions.keyboard = options.keyboard;
@@ -150,6 +176,35 @@ import { ScriptComponentSystem } from './components/script/system.js';
             LayoutGroupComponentSystem,
             LayoutChildComponentSystem,
             ZoneComponentSystem
+        ];
+    }
+
+    addResourceHandles(createOptions) {
+        createOptions.resourceHandlers = [
+            RenderHandler,
+            AnimationHandler,
+            AnimClipHandler,
+            AnimStateGraphHandler,
+            ModelHandler,
+            MaterialHandler,
+            TextureHandler,
+            TextHandler,
+            JsonHandler,
+            AudioHandler,
+            ScriptHandler,
+            SceneHandler,
+            CubemapHandler,
+            HtmlHandler,
+            CssHandler,
+            ShaderHandler,
+            HierarchyHandler,
+            FolderHandler,
+            FontHandler,
+            BinaryHandler,
+            TextureAtlasHandler,
+            SpriteHandler,
+            TemplateHandler,
+            ContainerHandler
         ];
     }
 }

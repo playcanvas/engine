@@ -39,6 +39,13 @@ function upgradeDataSchema(data) {
  */
 class FontHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "font";
+
+    /**
      * Create a new FontHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

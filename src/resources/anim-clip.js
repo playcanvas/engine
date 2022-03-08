@@ -13,6 +13,13 @@ import { AnimTrack } from '../anim/evaluator/anim-track.js';
  * @ignore
  */
 class AnimClipHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animclip";
+
     constructor(app) {
         this.maxRetries = 0;
     }

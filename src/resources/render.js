@@ -49,6 +49,13 @@ function onContainerAssetRemoved(containerAsset) {
  */
 class RenderHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "render";
+
+    /**
      * Create a new RenderHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

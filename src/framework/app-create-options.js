@@ -1,3 +1,4 @@
+/** @typedef {import('../resources/handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
@@ -92,6 +93,13 @@ class AppCreateOptions {
      * @type {ComponentSystem[]}
      */
     componentSystems = [];
+
+    /**
+     * The resource handlers the app requires.
+     *
+     * @type {ResourceHandler[]}
+     */
+    resourceHandlers = [];
 }
 
 export { AppCreateOptions };

@@ -40,6 +40,13 @@ const regexFrame = /^data\.frames\.(\d+)$/;
  */
 class TextureAtlasHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "textureatlas";
+
+    /**
      * Create a new TextureAtlasHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

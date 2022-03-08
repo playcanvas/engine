@@ -16,6 +16,13 @@ import { Texture } from '../graphics/texture.js';
  */
 class CubemapHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "cubemap";
+
+    /**
      * Create a new CubemapHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

@@ -35,32 +35,8 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { AnimationHandler } from '../resources/animation.js';
-import { AnimClipHandler } from '../resources/anim-clip.js';
-import { AnimStateGraphHandler } from '../resources/anim-state-graph.js';
-import { AudioHandler } from '../resources/audio.js';
-import { BinaryHandler } from '../resources/binary.js';
 import { BundleHandler } from '../resources/bundle.js';
-import { ContainerHandler } from '../resources/container.js';
-import { CssHandler } from '../resources/css.js';
-import { CubemapHandler } from '../resources/cubemap.js';
-import { FolderHandler } from '../resources/folder.js';
-import { FontHandler } from '../resources/font.js';
-import { HierarchyHandler } from '../resources/hierarchy.js';
-import { HtmlHandler } from '../resources/html.js';
-import { JsonHandler } from '../resources/json.js';
-import { MaterialHandler } from '../resources/material.js';
-import { ModelHandler } from '../resources/model.js';
-import { RenderHandler } from '../resources/render.js';
 import { ResourceLoader } from '../resources/loader.js';
-import { SceneHandler } from '../resources/scene.js';
-import { ScriptHandler } from '../resources/script.js';
-import { ShaderHandler } from '../resources/shader.js';
-import { SpriteHandler } from '../resources/sprite.js';
-import { TemplateHandler } from '../resources/template.js';
-import { TextHandler } from '../resources/text.js';
-import { TextureAtlasHandler } from '../resources/texture-atlas.js';
-import { TextureHandler } from '../resources/texture.js';
 
 import { Asset } from '../asset/asset.js';
 import { AssetRegistry } from '../asset/asset-registry.js';
@@ -575,30 +551,11 @@ class AppBase extends EventHandler {
             this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
-        this.loader.addHandler("animation", new AnimationHandler(this));
-        this.loader.addHandler("animclip", new AnimClipHandler(this));
-        this.loader.addHandler("animstategraph", new AnimStateGraphHandler(this));
-        this.loader.addHandler("model", new ModelHandler(this));
-        this.loader.addHandler("render", new RenderHandler(this));
-        this.loader.addHandler("material", new MaterialHandler(this));
-        this.loader.addHandler("texture", new TextureHandler(this));
-        this.loader.addHandler("text", new TextHandler(this));
-        this.loader.addHandler("json", new JsonHandler(this));
-        this.loader.addHandler("audio", new AudioHandler(this));
-        this.loader.addHandler("script", new ScriptHandler(this));
-        this.loader.addHandler("scene", new SceneHandler(this));
-        this.loader.addHandler("cubemap", new CubemapHandler(this));
-        this.loader.addHandler("html", new HtmlHandler(this));
-        this.loader.addHandler("css", new CssHandler(this));
-        this.loader.addHandler("shader", new ShaderHandler(this));
-        this.loader.addHandler("hierarchy", new HierarchyHandler(this));
-        this.loader.addHandler("folder", new FolderHandler(this));
-        this.loader.addHandler("font", new FontHandler(this));
-        this.loader.addHandler("binary", new BinaryHandler(this));
-        this.loader.addHandler("textureatlas", new TextureAtlasHandler(this));
-        this.loader.addHandler("sprite", new SpriteHandler(this));
-        this.loader.addHandler("template", new TemplateHandler(this));
-        this.loader.addHandler("container", new ContainerHandler(this));
+        // create and register all required resource handlers
+        createOptions.resourceHandlers.forEach((resourceHandler) => {
+            const handler = new resourceHandler(this);
+            this.loader.addHandler(handler.handlerType, handler);
+        });
 
         /**
          * The application's component system registry. The Application constructor adds the

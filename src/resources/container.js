@@ -100,6 +100,13 @@ class ContainerResource {
  */
 class ContainerHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "container";
+
+    /**
      * Create a new ContainerResource instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

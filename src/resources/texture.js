@@ -158,6 +158,13 @@ const _completePartialMipmapChain = function (texture) {
  */
 class TextureHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "texture";
+
+    /**
      * Create a new TextureHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

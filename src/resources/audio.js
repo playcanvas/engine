@@ -51,6 +51,13 @@ const toMIME = {
  */
 class AudioHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "audio";
+
+    /**
      * Create a new AudioHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

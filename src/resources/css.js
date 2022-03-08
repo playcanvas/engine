@@ -1,6 +1,13 @@
 import { http } from '../net/http.js';
 
 class CssHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "css";
+
     constructor(app) {
         this.maxRetries = 0;
     }

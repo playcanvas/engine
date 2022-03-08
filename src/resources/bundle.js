@@ -17,6 +17,13 @@ import { Untar, UntarWorker } from './untar.js';
  */
 class BundleHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "bundle";
+
+     /**
      * Create a new BundleHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

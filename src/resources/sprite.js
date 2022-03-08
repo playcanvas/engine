@@ -28,6 +28,13 @@ function onTextureAtlasAdded(atlasAsset) {
  */
 class SpriteHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "sprite";
+
+    /**
      * Create a new SpriteHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.

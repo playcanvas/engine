@@ -10,6 +10,13 @@ import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
  * @ignore
  */
 class AnimStateGraphHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animstategraph";
+
     constructor(app) {
         this.maxRetries = 0;
     }

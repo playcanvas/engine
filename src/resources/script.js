@@ -12,6 +12,13 @@ import { script } from '../framework/script.js';
  */
 class ScriptHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "script";
+
+    /**
      * Create a new ScriptHandler instance.
      *
      * @param {Application} app - The running {@link Application}.

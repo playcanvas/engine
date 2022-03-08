@@ -11,6 +11,13 @@ import { SceneParser } from './parser/scene.js';
  */
 class SceneHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "scene";
+
+    /**
      * Create a new SceneHandler instance.
      *
      * @param {Application} app - The running {@link Application}.

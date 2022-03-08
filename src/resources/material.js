@@ -34,6 +34,13 @@ const PLACEHOLDER_MAP = {
  */
 class MaterialHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "material";
+
+    /**
      * Create a new MaterialHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.
