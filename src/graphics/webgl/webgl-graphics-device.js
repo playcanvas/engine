@@ -762,6 +762,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
             // EXT_disjoint_timer_query_webgl2
             this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = getExtension("EXT_blend_minmax");
             this.extDrawBuffers = getExtension('EXT_draw_buffers');
@@ -790,6 +791,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.extColorBufferFloat = null;
             this.extDisjointTimerQuery = null;
+            this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
         }
 
         this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
