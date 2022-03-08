@@ -700,7 +700,7 @@ class AppBase extends EventHandler {
 
     /**
      * @type {SoundManager}
-     * @pignore
+     * @ignore
      */
     get soundManager() {
         return this._soundManager;
