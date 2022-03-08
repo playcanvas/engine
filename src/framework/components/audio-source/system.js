@@ -9,7 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
 
 const _schema = [
@@ -40,7 +40,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
     /**
      * Create a new AudioSourceComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

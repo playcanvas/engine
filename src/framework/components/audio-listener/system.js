@@ -7,7 +7,7 @@ import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
 
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -21,10 +21,10 @@ class AudioListenerComponentSystem extends ComponentSystem {
     /**
      * Create a new AudioListenerComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
-     * @param {SoundManager} manager - A sound manager instance.
+     * @param {AppBase} app - The application managing this system.
+     * @hideconstructor
      */
-    constructor(app, manager) {
+    constructor(app) {
         super(app);
 
         this.id = "audiolistener";

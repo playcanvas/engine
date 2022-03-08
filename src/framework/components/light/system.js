@@ -9,7 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
@@ -27,7 +27,8 @@ class LightComponentSystem extends ComponentSystem {
     /**
      * Create a new LightComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

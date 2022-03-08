@@ -9,7 +9,7 @@ import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -23,7 +23,8 @@ class SoundComponentSystem extends ComponentSystem {
     /**
      * Create a SoundComponentSystem.
      *
-     * @param {Application} app - The Application.
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

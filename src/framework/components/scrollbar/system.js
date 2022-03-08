@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },
@@ -23,7 +23,8 @@ class ScrollbarComponentSystem extends ComponentSystem {
     /**
      * Create a new ScrollbarComponentSystem.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

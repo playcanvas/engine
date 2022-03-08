@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     'enabled',
@@ -33,7 +33,8 @@ class AnimationComponentSystem extends ComponentSystem {
     /**
      * Create an AnimationComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

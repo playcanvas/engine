@@ -7,7 +7,7 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -22,7 +22,8 @@ class LayoutGroupComponentSystem extends ComponentSystem {
     /**
      * Create a new LayoutGroupComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

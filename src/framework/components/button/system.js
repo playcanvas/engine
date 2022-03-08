@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     'enabled',
@@ -33,7 +33,8 @@ class ButtonComponentSystem extends ComponentSystem {
     /**
      * Create a new ButtonComponentSystem.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
 import { LayoutChildComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -17,7 +17,8 @@ class LayoutChildComponentSystem extends ComponentSystem {
     /**
      * Create a new LayoutChildComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
