@@ -23,12 +23,12 @@ class BundleHandler {
      */
     handlerType = "bundle";
 
-     /**
-     * Create a new BundleHandler instance.
-     *
-     * @param {AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
-     */
+    /**
+      * Create a new BundleHandler instance.
+      *
+      * @param {AppBase} app - The running {@link AppBase}.
+      * @hideconstructor
+      */
     constructor(app) {
         this._assets = app.assets;
         this._worker = null;

@@ -34,12 +34,12 @@ class ModelHandler {
      */
     handlerType = "model";
 
-     /**
-     * Create a new ModelHandler instance.
-     *
-     * @param {AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
-     */
+    /**
+      * Create a new ModelHandler instance.
+      *
+      * @param {AppBase} app - The running {@link AppBase}.
+      * @hideconstructor
+      */
     constructor(app) {
         this._device = app.graphicsDevice;
         this._parsers = [];
