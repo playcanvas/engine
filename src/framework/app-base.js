@@ -572,33 +572,33 @@ class AppBase extends EventHandler {
         this._scriptPrefix = createOptions.scriptPrefix || '';
 
         if (this.enableBundles) {
-            this.loader.addHandler("bundle", new BundleHandler(this.assets));
+            this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
         this.loader.addHandler("animation", new AnimationHandler());
         this.loader.addHandler("animclip", new AnimClipHandler());
         this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
-        this.loader.addHandler("model", new ModelHandler(this.graphicsDevice));
-        this.loader.addHandler("render", new RenderHandler(this.assets));
+        this.loader.addHandler("model", new ModelHandler(this));
+        this.loader.addHandler("render", new RenderHandler(this));
         this.loader.addHandler("material", new MaterialHandler(this));
-        this.loader.addHandler("texture", new TextureHandler(this.graphicsDevice, this.assets, this.loader));
+        this.loader.addHandler("texture", new TextureHandler(this));
         this.loader.addHandler("text", new TextHandler());
         this.loader.addHandler("json", new JsonHandler());
-        this.loader.addHandler("audio", new AudioHandler(this._soundManager));
+        this.loader.addHandler("audio", new AudioHandler(this));
         this.loader.addHandler("script", new ScriptHandler(this));
         this.loader.addHandler("scene", new SceneHandler(this));
-        this.loader.addHandler("cubemap", new CubemapHandler(this.graphicsDevice, this.assets, this.loader));
+        this.loader.addHandler("cubemap", new CubemapHandler(this));
         this.loader.addHandler("html", new HtmlHandler());
         this.loader.addHandler("css", new CssHandler());
         this.loader.addHandler("shader", new ShaderHandler());
         this.loader.addHandler("hierarchy", new HierarchyHandler(this));
         this.loader.addHandler("folder", new FolderHandler());
-        this.loader.addHandler("font", new FontHandler(this.loader));
+        this.loader.addHandler("font", new FontHandler(this));
         this.loader.addHandler("binary", new BinaryHandler());
-        this.loader.addHandler("textureatlas", new TextureAtlasHandler(this.loader));
-        this.loader.addHandler("sprite", new SpriteHandler(this.assets, this.graphicsDevice));
+        this.loader.addHandler("textureatlas", new TextureAtlasHandler(this));
+        this.loader.addHandler("sprite", new SpriteHandler(this));
         this.loader.addHandler("template", new TemplateHandler(this));
-        this.loader.addHandler("container", new ContainerHandler(this.graphicsDevice, this.assets));
+        this.loader.addHandler("container", new ContainerHandler(this));
 
         /**
          * The application's component system registry. The Application constructor adds the

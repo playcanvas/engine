@@ -4,8 +4,7 @@ import { http } from '../net/http.js';
 
 import { Sprite } from '../scene/sprite.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the sprite asset
@@ -31,13 +30,12 @@ class SpriteHandler {
     /**
      * Create a new SpriteHandler instance.
      *
-     * @param {AssetRegistry} assets - The asset registry.
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
-    constructor(assets, device) {
-        this._assets = assets;
-        this._device = device;
+    constructor(app) {
+        this._assets = app.assets;
+        this._device = app.graphicsDevice;
         this.maxRetries = 0;
     }
 

@@ -1,9 +1,8 @@
 import { path } from '../core/path.js';
 import { GlbParser } from './parser/glb-parser.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -103,14 +102,11 @@ class ContainerHandler {
     /**
      * Create a new ContainerResource instance.
      *
-     * @param {GraphicsDevice} device - The graphics device that will be rendering.
-     * @param {AssetRegistry} assets - The asset registry
-     * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any
-     * place that a material is not specified.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
-    constructor(device, assets) {
-        this.glbParser = new GlbParser(device, assets, 0);
+    constructor(app) {
+        this.glbParser = new GlbParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }
 

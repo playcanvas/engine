@@ -6,10 +6,8 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
@@ -20,15 +18,13 @@ class CubemapHandler {
     /**
      * Create a new CubemapHandler instance.
      *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {AssetRegistry} assets - The asset registry.
-     * @param {ResourceLoader} loader - The resource loader.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
-    constructor(device, assets, loader) {
-        this._device = device;
-        this._registry = assets;
-        this._loader = loader;
+    constructor(app) {
+        this._device = app.graphicsDevice;
+        this._registry = app.assets;
+        this._loader = app.loader;
     }
 
     load(url, callback, asset) {

@@ -10,7 +10,7 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 const PLACEHOLDER_MAP = {
@@ -36,7 +36,7 @@ class MaterialHandler {
     /**
      * Create a new MaterialHandler instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
