@@ -157,10 +157,7 @@ class CubemapHandler {
                 // Force RGBA8 if we are loading a RGB8 texture due to a bug on M1 Macs Monterey and Chrome not
                 // rendering the face on right of the cubemap (`faceAssets[0]` and `resources[1]`).
                 // Using a RGBA8 texture works around the issue https://github.com/playcanvas/engine/issues/4091
-                let format = faceTextures[0].format;
-                if (format === PIXELFORMAT_R8_G8_B8) {
-                    format = PIXELFORMAT_R8_G8_B8_A8;
-                }
+                const format = faceTextures[0].format;
 
                 const faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
