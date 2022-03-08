@@ -21,7 +21,7 @@ void getSpecularity() {
     #endif
 
     #ifdef MAPTEXTURE
-    metalness *= texture2D(texture_metalnessMap, $UV, globalTextureBias).$CH;
+    metalness *= texture2D(texture_metalnessMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

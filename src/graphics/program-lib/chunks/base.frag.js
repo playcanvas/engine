@@ -3,7 +3,7 @@ uniform vec3 view_position;
 
 uniform vec3 light_globalAmbient;
 
-uniform float globalTextureBias;
+uniform float textureBias;
 
 float square(float x) {
     return x*x;

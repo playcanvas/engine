@@ -15,7 +15,7 @@ void getSpecularity() {
     #endif
 
     #ifdef MAPTEXTURE
-    dSpecularity *= texture2D(texture_specularMap, $UV, globalTextureBias).$CH;
+    dSpecularity *= texture2D(texture_specularMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
