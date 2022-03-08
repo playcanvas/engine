@@ -1,7 +1,7 @@
 import { http } from '../net/http.js';
 
 class CssHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

@@ -13,7 +13,7 @@ import { AnimTrack } from '../anim/evaluator/anim-track.js';
  * @ignore
  */
 class AnimClipHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

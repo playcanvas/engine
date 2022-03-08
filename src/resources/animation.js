@@ -18,7 +18,7 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
  */
 class AnimationHandler {
     /** @hideconstructor */
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

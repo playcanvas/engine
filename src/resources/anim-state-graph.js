@@ -10,7 +10,7 @@ import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
  * @ignore
  */
 class AnimStateGraphHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

@@ -1,7 +1,7 @@
 import { http, Http } from '../net/http.js';
 
 class BinaryHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

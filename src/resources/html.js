@@ -1,7 +1,7 @@
 import { http } from '../net/http.js';
 
 class HtmlHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 

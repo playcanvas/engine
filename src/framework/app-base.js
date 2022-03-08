@@ -575,26 +575,26 @@ class AppBase extends EventHandler {
             this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
-        this.loader.addHandler("animation", new AnimationHandler());
-        this.loader.addHandler("animclip", new AnimClipHandler());
-        this.loader.addHandler("animstategraph", new AnimStateGraphHandler());
+        this.loader.addHandler("animation", new AnimationHandler(this));
+        this.loader.addHandler("animclip", new AnimClipHandler(this));
+        this.loader.addHandler("animstategraph", new AnimStateGraphHandler(this));
         this.loader.addHandler("model", new ModelHandler(this));
         this.loader.addHandler("render", new RenderHandler(this));
         this.loader.addHandler("material", new MaterialHandler(this));
         this.loader.addHandler("texture", new TextureHandler(this));
-        this.loader.addHandler("text", new TextHandler());
-        this.loader.addHandler("json", new JsonHandler());
+        this.loader.addHandler("text", new TextHandler(this));
+        this.loader.addHandler("json", new JsonHandler(this));
         this.loader.addHandler("audio", new AudioHandler(this));
         this.loader.addHandler("script", new ScriptHandler(this));
         this.loader.addHandler("scene", new SceneHandler(this));
         this.loader.addHandler("cubemap", new CubemapHandler(this));
-        this.loader.addHandler("html", new HtmlHandler());
-        this.loader.addHandler("css", new CssHandler());
-        this.loader.addHandler("shader", new ShaderHandler());
+        this.loader.addHandler("html", new HtmlHandler(this));
+        this.loader.addHandler("css", new CssHandler(this));
+        this.loader.addHandler("shader", new ShaderHandler(this));
         this.loader.addHandler("hierarchy", new HierarchyHandler(this));
-        this.loader.addHandler("folder", new FolderHandler());
+        this.loader.addHandler("folder", new FolderHandler(this));
         this.loader.addHandler("font", new FontHandler(this));
-        this.loader.addHandler("binary", new BinaryHandler());
+        this.loader.addHandler("binary", new BinaryHandler(this));
         this.loader.addHandler("textureatlas", new TextureAtlasHandler(this));
         this.loader.addHandler("sprite", new SpriteHandler(this));
         this.loader.addHandler("template", new TemplateHandler(this));

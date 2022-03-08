@@ -1,7 +1,7 @@
 import { http, Http } from '../net/http.js';
 
 class JsonHandler {
-    constructor() {
+    constructor(app) {
         this.maxRetries = 0;
     }
 
