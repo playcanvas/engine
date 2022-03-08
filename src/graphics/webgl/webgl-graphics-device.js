@@ -1009,6 +1009,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
+        // grab pass
+        this.grabPass.destroy();
+
         // release textures
         for (const texture of this.textures) {
             texture.loseContext();
@@ -1047,6 +1050,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
+
+        this.grabPass.create();
     }
 
     /**
