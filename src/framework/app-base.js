@@ -100,6 +100,8 @@ import {
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('../scene/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
 
 // Mini-object used to measure progress of loading sets
 class Progress {

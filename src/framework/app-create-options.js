@@ -6,7 +6,7 @@
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
 /** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 /** @typedef {import('../scene/lightmapper.js').Lightmapper} Lightmapper */
-/** @typedef {import('../components/system.js').ComponentSystem} ComponentSystem */
+/** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
 
 class AppCreateOptions {
     /**
