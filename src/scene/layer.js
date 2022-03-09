@@ -338,6 +338,10 @@ class Layer {
          * @type {Layer}
          */
         this.layerReference = options.layerReference; // should use the same camera
+        /**
+         * @type {InstanceList}
+         * @private
+         */
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
         /**
@@ -349,11 +353,31 @@ class Layer {
          */
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.shadowCasters = this.instances.shadowCasters;
 
+        /**
+         * @type {Function|null}
+         * @ignore
+         */
         this.customSortCallback = null;
+        /**
+         * @type {Function|null}
+         * @ignore
+         */
         this.customCalculateSortValues = null;
 
         /**
@@ -375,10 +399,18 @@ class Layer {
          */
         this._clusteredLightsSet = new Set();
 
-        // lights separated by light type
+        /**
+         * Lights separated by light type.
+         *
+         * @type {Light[][]}
+         * @ignore
+         */
         this._splitLights = [[], [], []];
 
-        // array of CameraComponent
+        /**
+         * @type {CameraComponent[]}
+         * @ignore
+         */
         this.cameras = [];
 
         this._dirty = false;
@@ -400,6 +432,11 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
+
+        /**
+         * @type {Float32Array}
+         * @ignore
+         */
         this._lightCube = null;
     }
 
@@ -542,7 +579,7 @@ class Layer {
 
     /**
      * Adds an array of mesh instances to this layer.
-     *
+     *1
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
      * to cast shadows in this layer.
@@ -878,4 +915,4 @@ class Layer {
     }
 }
 
-export { Layer, VisibleInstanceList };
+export { Layer };
