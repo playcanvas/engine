@@ -844,7 +844,7 @@ class SpriteComponent extends Component {
      * @param {object} data - Data for the new animation clip.
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
-     * @param {object} [data.loop] - Whether to loop the animation clip.
+     * @param {boolean} [data.loop] - Whether to loop the animation clip.
      * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite
      * that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
