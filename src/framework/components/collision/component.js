@@ -2,6 +2,8 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../../../scene/model.js').Model} Model */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').CollisionComponentSystem} CollisionComponentSystem */
 
