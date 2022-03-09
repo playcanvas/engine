@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    FUNC_ALWAYS, FUNC_LESSEQUAL,
+    FUNC_ALWAYS,
     SEMANTIC_ATTR,
     STENCILOP_KEEP
 } from '../../graphics/constants.js';

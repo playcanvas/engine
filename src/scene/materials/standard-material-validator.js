@@ -1,6 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import {
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE
+    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
+    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL,
+    FUNC_GREATEREQUAL, FUNC_ALWAYS
 } from '../../graphics/constants.js';
 import { Texture } from '../../graphics/texture.js';
 
@@ -12,10 +14,6 @@ import {
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
 
-import {
-    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL,
-    FUNC_GREATEREQUAL, FUNC_ALWAYS
-} from '../../graphics/constants.js';
 import { standardMaterialParameterTypes } from './standard-material-parameters.js';
 
 class StandardMaterialValidator {
