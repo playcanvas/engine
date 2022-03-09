@@ -114,9 +114,9 @@ class Layer {
         if (options.id !== undefined) {
             /**
              * A unique ID of the layer. Layer IDs are stored inside {@link ModelComponent#layers},
-             * {@link CameraComponent#layers}, {@link LightComponent#layers} and
-             * {@link ElementComponent#layers} instead of names. Can be used in
-             * {@link LayerComposition#getLayerById}.
+             * {@link RenderComponent#layers}, {@link CameraComponent#layers},
+             * {@link LightComponent#layers} and {@link ElementComponent#layers} instead of names.
+             * Can be used in {@link LayerComposition#getLayerById}.
              *
              * @type {number}
              */
