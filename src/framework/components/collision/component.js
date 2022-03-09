@@ -62,6 +62,7 @@ class CollisionComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
+        /** @private */
         this._compoundParent = null;
 
         this.entity.on('insert', this._onInsert, this);
@@ -115,12 +116,14 @@ class CollisionComponent extends Component {
      * @param {Entity} other - The {@link Entity} that exited this collision volume.
      */
 
+    /** @private */
     onSetType(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             this.system.changeType(this, oldValue, newValue);
         }
     }
 
+    /** @private */
     onSetHalfExtents(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && t === 'box') {
@@ -128,6 +131,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetRadius(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -135,6 +139,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetHeight(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -142,6 +147,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetAxis(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -149,6 +155,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
 
@@ -183,6 +190,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetRenderAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
 
@@ -217,6 +225,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetModel(name, oldValue, newValue) {
         if (this.data.initialized && this.data.type === 'mesh') {
             // recreate physical shapes skipping loading the model
@@ -226,10 +235,12 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onSetRender(name, oldValue, newValue) {
         this.onSetModel(name, oldValue, newValue);
     }
 
+    /** @private */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this.data.asset === asset.id) {
@@ -237,6 +248,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onRenderAssetRemoved(asset) {
         asset.off('remove', this.onRenderAssetRemoved, this);
         if (this.data.renderAsset === asset.id) {
@@ -244,6 +256,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     _getCompoundChildShapeIndex(shape) {
         const compound = this.data.shape;
         const shapes = compound.getNumChildShapes();
@@ -258,6 +271,7 @@ class CollisionComponent extends Component {
         return null;
     }
 
+    /** @private */
     _onInsert(parent) {
         // TODO
         // if is child of compound shape
@@ -285,6 +299,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     _updateCompound() {
         const entity = this.entity;
         if (entity._dirtyWorld) {
@@ -310,6 +325,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onEnable() {
         if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
             const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
@@ -341,6 +357,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onDisable() {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
@@ -356,6 +373,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onBeforeRemove() {
         if (this.asset) {
             this.asset = null;
