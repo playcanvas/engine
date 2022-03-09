@@ -1367,9 +1367,13 @@ class AppBase extends EventHandler {
      */
     onVisibilityChange() {
         if (this.isHidden()) {
-            this._soundManager.suspend();
+            if (this._soundManager) {
+                this._soundManager.suspend();
+            }
         } else {
-            this._soundManager.resume();
+            if (this._soundManager) {
+                this._soundManager.resume();
+            }
         }
     }
 
@@ -1453,7 +1457,10 @@ class AppBase extends EventHandler {
      */
     onLibrariesLoaded() {
         this._librariesLoaded = true;
-        this.systems.rigidbody.onLibraryLoaded();
+
+        if (this.systems.rigidbody) {
+            this.systems.rigidbody.onLibraryLoaded();
+        }
     }
 
     /**
