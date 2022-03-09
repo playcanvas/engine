@@ -1,6 +1,5 @@
 import { Debug } from '../core/debug.js';
 import { hashCode } from '../core/hash.js';
-import { RenderTarget } from '../index.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
