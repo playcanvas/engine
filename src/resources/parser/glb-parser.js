@@ -1154,6 +1154,8 @@ const createMaterial = function (gltfMaterial, textures) {
                 break;
             case 'BLEND':
                 material.blendType = BLEND_NORMAL;
+                // note: by default don't write depth on semitransparent materials
+                material.depthWrite = false;
                 break;
             default:
             case 'OPAQUE':
