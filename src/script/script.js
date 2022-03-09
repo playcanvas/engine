@@ -31,9 +31,9 @@ const reservedScriptNames = new Set([
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some
  * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
  * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
- * {@link Application}.
+ * {@link AppBase}.
  * @returns {Class<ScriptType>|null} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * Returns null if there was an error.
@@ -99,9 +99,9 @@ createScript.reservedAttributes = reservedAttributes;
  * list of names that cannot be used, such as list below as well as some starting from `_`
  * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
  * onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to register the script type to. By default it will use `Application.getApplication()` to get
- * current {@link Application}.
+ * current {@link AppBase}.
  * @example
  * // define a ES6 script class
  * class PlayerController extends pc.ScriptType {

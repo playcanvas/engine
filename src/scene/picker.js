@@ -15,7 +15,7 @@ import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 import { Debug } from '../core/debug.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('./scene.js').Scene} Scene */
@@ -39,14 +39,14 @@ class Picker {
     /**
      * Create a new Picker instance.
      *
-     * @param {Application} app - The application managing this picker instance.
+     * @param {AppBase} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
-            Debug.deprecated("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
+            Debug.deprecated("pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.");
         }
 
         this.app = app;

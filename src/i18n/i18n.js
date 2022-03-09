@@ -4,7 +4,7 @@ import { Asset } from '../asset/asset.js';
 
 import { I18nParser } from './i18n-parser.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 import {
     DEFAULT_LOCALE,
@@ -29,7 +29,7 @@ class I18n extends EventHandler {
     /**
      * Create a new I18n instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         super();

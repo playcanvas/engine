@@ -4,20 +4,20 @@ import { ScriptHandler } from '../resources/script.js';
 
 import { getApplication } from './globals.js';
 
-/** @typedef {import('./application.js').Application} Application */
+/** @typedef {import('./app-base.js').AppBase} AppBase */
 
 /**
  * Callback used by {@link script.createLoadingScreen}.
  *
  * @callback CreateScreenCallback
- * @param {Application} app - The application.
+ * @param {AppBase} app - The application.
  */
 
 /**
  * Callback used by {@link script.create}.
  *
  * @callback CreateScriptCallback
- * @param {Application} app - The application.
+ * @param {AppBase} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  * @ignore
  */
@@ -45,7 +45,7 @@ const script = {
      *
      * @param {string} name - The name of the script object.
      * @param {CreateScriptCallback} callback - The callback function which is passed an
-     * {@link Application} object, which is used to access Entities and Components, and should
+     * {@link AppBase} object, which is used to access Entities and Components, and should
      * return the Type of the script resource to be instanced for each Entity.
      * @example
      * pc.script.create(function (app) {
@@ -140,7 +140,7 @@ const script = {
 
     /**
      * Handles the creation of the loading screen of the application. A script can subscribe to the
-     * events of a {@link Application} to show a loading screen, progress bar etc. In order for
+     * events of a {@link AppBase} to show a loading screen, progress bar etc. In order for
      * this to work you need to set the project's loading screen script to the script that calls
      * this method.
      *

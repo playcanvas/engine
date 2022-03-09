@@ -2,7 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 import { VrDisplay } from './vr-display.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Manage and update {@link VrDisplay}s that are attached to this device.
@@ -36,7 +36,7 @@ class VrManager extends EventHandler {
     /**
      * Create a new VrManager instance.
      *
-     * @param {Application} app - The main application.
+     * @param {AppBase} app - The main application.
      */
     constructor(app) {
         super();

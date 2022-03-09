@@ -44,7 +44,7 @@ const _enableList = [];
  * Component and ComponentSystem provide the logic to give an Entity a specific type of behavior.
  * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
  * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
- * and Components and are attached to the {@link Application}.
+ * and Components and are attached to the {@link AppBase}.
  *
  * @augments GraphNode
  */
@@ -220,7 +220,7 @@ class Entity extends GraphNode {
     /* eslint-enable jsdoc/check-types */
 
     /**
-     * @type {Application}
+     * @type {AppBase}
      * @private
      */
     _app;
@@ -252,7 +252,7 @@ class Entity extends GraphNode {
      * Create a new Entity.
      *
      * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
-     * @param {Application} [app] - The application the entity belongs to, default is the current application.
+     * @param {AppBase} [app] - The application the entity belongs to, default is the current application.
      * @example
      * var entity = new pc.Entity();
      *

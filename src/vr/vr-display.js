@@ -6,7 +6,7 @@ import { Vec3 } from '../math/vec3.js';
 
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
@@ -57,7 +57,7 @@ class VrDisplay extends EventHandler {
     /**
      * Create a new VrDisplay instance.
      *
-     * @param {Application} app - The application outputting to this VR display.
+     * @param {AppBase} app - The application outputting to this VR display.
      * @param {*} display - The native VRDisplay object from the WebVR API.
      */
     constructor(app, display) {
