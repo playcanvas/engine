@@ -29,10 +29,10 @@ class AnimComponentLayer {
         this._blendType = blendType;
         this._normalizedWeight = normalizedWeight;
         this._mask = null;
-        this._blendTime = null;
+        this._blendTime = 0;
         this._blendTimeElapsed = 0;
-        this._startingWeight = null;
-        this._targetWeight = null;
+        this._startingWeight = 0;
+        this._targetWeight = 0;
     }
 
     /**
@@ -209,19 +209,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * Whether this layers weight should be normalized by the total weight of all layers or calculated separately.
-     *
-     * @type {boolean}
-     */
-    set normalizedWeight(value) {
-        this._normalizedWeight = value;
-    }
-
-    get normalizedWeight() {
-        return this._normalizedWeight;
-    }
-
-    /**
      * Start playing the animation in the current state.
      *
      * @param {string} [name] - If provided, will begin playing from the start of the state with
@@ -261,10 +248,10 @@ class AnimComponentLayer {
                 this._blendTimeElapsed += dt;
             } else {
                 this.weight = this._targetWeight;
-                this._blendTime = null;
+                this._blendTime = 0;
                 this._blendTimeElapsed = 0;
-                this._startingWeight = null;
-                this._targetWeight = null;
+                this._startingWeight = 0;
+                this._targetWeight = 0;
             }
         }
         this._controller.update(dt);
