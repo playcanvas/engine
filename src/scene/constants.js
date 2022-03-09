@@ -82,6 +82,13 @@ export const BLEND_MIN = 9;
 export const BLEND_MAX = 10;
 
 /**
+ * Custom combination of srcBlend and dstBlend not covered by the other predefined blend types.
+ *
+ * @type {number}
+ */
+ export const BLEND_CUSTOM = 11;
+
+/**
  * No fog is applied to the scene.
  *
  * @type {string}
