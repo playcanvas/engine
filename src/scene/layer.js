@@ -14,6 +14,7 @@ import { Material } from './materials/material.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
+/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('./light.js').Light} Light */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
@@ -495,7 +496,7 @@ class Layer {
     /**
      * Returns lights used by clustered lighting in a set.
      *
-     * @returns {Set<Light>}
+     * @type {Set<Light>}
      * @ignore
      */
     get clusteredLightsSet() {
