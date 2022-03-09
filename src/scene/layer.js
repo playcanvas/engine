@@ -580,6 +580,7 @@ class Layer {
     /**
      * Adds an array of mesh instances to this layer.
      *1
+     *
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
      * to cast shadows in this layer.

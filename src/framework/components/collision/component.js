@@ -116,14 +116,24 @@ class CollisionComponent extends Component {
      * @param {Entity} other - The {@link Entity} that exited this collision volume.
      */
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetType(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             this.system.changeType(this, oldValue, newValue);
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetHalfExtents(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && t === 'box') {
@@ -131,7 +141,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetRadius(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -139,7 +154,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetHeight(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -147,7 +167,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetAxis(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
@@ -155,7 +180,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
 
@@ -190,7 +220,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetRenderAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
 
@@ -225,7 +260,12 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetModel(name, oldValue, newValue) {
         if (this.data.initialized && this.data.type === 'mesh') {
             // recreate physical shapes skipping loading the model
@@ -235,12 +275,20 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
     onSetRender(name, oldValue, newValue) {
         this.onSetModel(name, oldValue, newValue);
     }
 
-    /** @private */
+    /**
+     * @param {Asset} asset - Asset that was removed.
+     * @private
+     */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this.data.asset === asset.id) {
@@ -248,7 +296,10 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {Asset} asset - Asset that was removed.
+     * @private
+     */
     onRenderAssetRemoved(asset) {
         asset.off('remove', this.onRenderAssetRemoved, this);
         if (this.data.renderAsset === asset.id) {
@@ -256,7 +307,11 @@ class CollisionComponent extends Component {
         }
     }
 
-    /** @private */
+    /**
+     * @param {*} shape - Ammo shape.
+     * @returns {number|null} The shape's index in the child array of the compound shape.
+     * @private
+     */
     _getCompoundChildShapeIndex(shape) {
         const compound = this.data.shape;
         const shapes = compound.getNumChildShapes();
@@ -271,7 +326,10 @@ class CollisionComponent extends Component {
         return null;
     }
 
-    /** @private */
+    /**
+     * @param {GraphNode} parent - The parent node.
+     * @private
+     */
     _onInsert(parent) {
         // TODO
         // if is child of compound shape
