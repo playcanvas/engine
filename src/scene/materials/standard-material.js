@@ -20,8 +20,6 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../math/color.js').Color} Color */
-/** @typedef {import('../../math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
