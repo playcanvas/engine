@@ -299,7 +299,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get width() {
-        Debug.assert("GraphicsDevice.width is not implemented on current device.");
+        Debug.error("GraphicsDevice.width is not implemented on current device.");
         return this.canvas.width;
     }
 
@@ -309,7 +309,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get height() {
-        Debug.assert("GraphicsDevice.height is not implemented on current device.");
+        Debug.error("GraphicsDevice.height is not implemented on current device.");
         return this.canvas.height;
     }
 
@@ -319,11 +319,11 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     set fullscreen(fullscreen) {
-        Debug.assert("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
     }
 
     get fullscreen() {
-        Debug.assert("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
         return false;
     }
 
