@@ -74,4 +74,8 @@ if (debug) {
     });
 }
 
+// Export all callbacks
+const regexCallback = /type [a-zA-Z]+Callback/g;
+content = content.replace(regexCallback, 'export $&');
+
 fs.writeFileSync('build/playcanvas.d.ts', content);

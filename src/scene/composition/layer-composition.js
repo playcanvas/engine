@@ -14,6 +14,7 @@ import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 
 const tempSet = new Set();
@@ -23,16 +24,6 @@ const tempClusterArray = [];
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
  * rendering order.
  *
- * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will
- * be rendered.
- * @property {boolean[]} subLayerList A read-only array of boolean values, matching
- * {@link Layer#layerList}. True means only semi-transparent objects are rendered, and false means
- * opaque.
- * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching
- * {@link Layer#layerList}. True means the layer is rendered, false means it's skipped.
- * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be
- * used during rendering. e.g. Inside {@link Layer#onPreCull}, {@link Layer#onPostCull},
- * {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  * @augments EventHandler
  */
 class LayerComposition extends EventHandler {
@@ -52,11 +43,29 @@ class LayerComposition extends EventHandler {
         // enable logging
         this.logRenderActions = false;
 
-        // all layers added into the composition
+        /**
+         * A read-only array of {@link Layer} sorted in the order they will be rendered.
+         *
+         * @type {Layer[]}
+         */
         this.layerList = [];
 
+        /**
+         * A read-only array of boolean values, matching {@link Layer#layerList}. True means only
+         * semi-transparent objects are rendered, and false means opaque.
+         *
+         * @type {boolean[]}
+         */
         this.subLayerList = [];
+
+        /**
+         * A read-only array of boolean values, matching {@link Layer#layerList}. True means the
+         * layer is rendered, false means it's skipped.
+         *
+         * @type {boolean[]}
+         */
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+
         this._opaqueOrder = {};
         this._transparentOrder = {};
 
@@ -82,7 +91,13 @@ class LayerComposition extends EventHandler {
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
 
-        // array of unique cameras from all layers (CameraComponent type)
+        /**
+         * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
+         * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
+         * {@link Layer#onPostRender}.
+         *
+         * @type {CameraComponent[]}
+         */
         this.cameras = [];
 
         // the actual rendering sequence, generated based on layers and cameras

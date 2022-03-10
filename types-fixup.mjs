@@ -106,9 +106,9 @@ fs.writeFileSync(path, dts);
 
 const collisionComponentProps = [
     ['axis', 'number'],
-    ['halfExtents', 'any'],
+    ['halfExtents', 'Vec3'],
     ['height', 'number'],
-    ['model', 'any'],
+    ['model', 'Model|null'],
     ['radius', 'number'],
     ['type', 'string']
 ];

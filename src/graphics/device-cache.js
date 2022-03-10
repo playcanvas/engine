@@ -10,7 +10,7 @@ class DeviceCache {
     /**
      * Cache storing the resource for each GraphicsDevice
      *
-     * @type {Map<GraphicsDevice, any}
+     * @type {Map<GraphicsDevice, any>}
      */
     _cache = new Map();
 
