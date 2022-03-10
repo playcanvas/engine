@@ -186,7 +186,6 @@ class StandardMaterialOptionsBuilder {
 
         let usingSceneEnv = false;
 
-        // use skybox intensity if either a sphere or cubemap is used on the material
         let usingSphereMap = false;
 
         // source of environment reflections is as follows:
