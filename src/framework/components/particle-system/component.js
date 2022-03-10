@@ -6,7 +6,6 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
 /** @typedef {import('../../../math/curve.js').Curve} Curve */
 /** @typedef {import('../../../math/curve-set.js').CurveSet} CurveSet */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */

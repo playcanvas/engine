@@ -14,7 +14,7 @@ class GrabPass {
     /**
      * Create a new GrabPass instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this grab pass.
+     * @param {GraphicsDevice} device - The graphics device used to manage this grab pass.
      * @param {boolean} useAlpha - Whether the grab pass should have an alpha channel.
      */
     constructor(device, useAlpha) {
