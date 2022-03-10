@@ -186,6 +186,9 @@ class StandardMaterialOptionsBuilder {
 
         let usingSceneEnv = false;
 
+        // use skybox intensity if either a sphere or cubemap is used on the material
+        let usingSphereMap = false;
+
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
@@ -196,6 +199,7 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.sphereMap) {
             options.reflectionSource = 'sphereMap';
             options.reflectionEncoding = stdMat.sphereMap.encoding;
+            usingSphereMap = true;
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
@@ -221,7 +225,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1);
+        options.skyboxIntensity = (usingSceneEnv || usingSphereMap) && (scene.skyboxIntensity !== 1);
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
