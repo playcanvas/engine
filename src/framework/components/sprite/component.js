@@ -85,7 +85,6 @@ class SpriteComponent extends Component {
         // animated sprites
         this._autoPlayClip = null;
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * Dictionary of sprite animation clips.
          *
@@ -93,7 +92,6 @@ class SpriteComponent extends Component {
          * @private
          */
         this._clips = {};
-        /* eslint-enable jsdoc/check-types */
 
         // create default clip for simple sprite type
         this._defaultClip = new SpriteAnimationClip(this, {
@@ -251,7 +249,6 @@ class SpriteComponent extends Component {
         return this._color.a;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that contains {@link SpriteAnimationClip}s.
      *
@@ -312,7 +309,6 @@ class SpriteComponent extends Component {
     get clips() {
         return this._clips;
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * The current clip being played.

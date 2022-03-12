@@ -494,7 +494,6 @@ class StandardMaterial extends Material {
         this.reset();
     }
 
-    /* eslint-disable jsdoc/check-types */
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
@@ -523,7 +522,6 @@ class StandardMaterial extends Material {
         this._dirtyShader = true;
         return this._chunks;
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Copy a `StandardMaterial`.

@@ -9,7 +9,6 @@
  * attributes specified in the vertex shader code.
  */
 class Shader {
-    /* eslint-disable jsdoc/check-types */
     /**
      * Creates a new Shader instance.
      *
@@ -56,7 +55,6 @@ class Shader {
 
         this.impl = graphicsDevice.createShaderImpl(this);
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Initialize a shader back to its default state.

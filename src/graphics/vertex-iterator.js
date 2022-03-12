@@ -233,14 +233,12 @@ class VertexIterator {
         // Create an empty list
         this.accessors = [];
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * The vertex buffer elements.
          *
          * @type {Object.<string, VertexIteratorAccessor>}
          */
         this.element = {};
-        /* eslint-enable jsdoc/check-types */
 
         // Add a new 'setter' function for each element
         const vertexFormat = this.vertexBuffer.getFormat();

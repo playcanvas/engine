@@ -45,13 +45,11 @@ class XrManager extends EventHandler {
      */
     _supported = platform.browser && !!navigator.xr;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, boolean>}
      * @private
      */
     _available = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {string|null}
