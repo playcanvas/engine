@@ -501,7 +501,7 @@ class Application extends EventHandler {
          * The forward renderer.
          *
          * @type {ForwardRenderer}
-         * @private
+         * @ignore
          */
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -1224,13 +1224,13 @@ class Application extends EventHandler {
             this.controller.update(dt);
         }
         if (this.mouse) {
-            this.mouse.update(dt);
+            this.mouse.update();
         }
         if (this.keyboard) {
-            this.keyboard.update(dt);
+            this.keyboard.update();
         }
         if (this.gamepads) {
-            this.gamepads.update(dt);
+            this.gamepads.update();
         }
     }
 

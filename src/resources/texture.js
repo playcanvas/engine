@@ -73,7 +73,6 @@ class TextureParser {
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
