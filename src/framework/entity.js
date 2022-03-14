@@ -209,7 +209,6 @@ class Entity extends GraphNode {
      */
     sprite;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * Component storage.
      *
@@ -217,7 +216,6 @@ class Entity extends GraphNode {
      * @ignore
      */
     c = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {Application}
@@ -604,7 +602,6 @@ class Entity extends GraphNode {
         return clone;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @param {Object.<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
@@ -631,7 +628,6 @@ class Entity extends GraphNode {
 
         return clone;
     }
-    /* eslint-enable jsdoc/check-types */
 }
 
 // When an entity that has properties that contain references to other

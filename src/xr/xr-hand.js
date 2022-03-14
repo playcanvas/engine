@@ -67,13 +67,11 @@ class XrHand extends EventHandler {
      */
     _joints = [];
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, XrJoint>}
      * @private
      */
     _jointsById = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {XrJoint[]}

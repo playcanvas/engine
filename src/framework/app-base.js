@@ -347,7 +347,6 @@ class Application extends EventHandler {
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * Stores all entities that have been created for this app by guid.
          *
@@ -355,7 +354,6 @@ class Application extends EventHandler {
          * @ignore
          */
         this._entityIndex = {};
-        /* eslint-enable jsdoc/check-types */
 
         /**
          * The scene managed by the application.

@@ -43,13 +43,11 @@ class ModelComponent extends Component {
      */
     _model = null;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, number>}
      * @private
      */
     _mapping = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {boolean}
@@ -631,7 +629,6 @@ class ModelComponent extends Component {
         return this._material;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that holds material overrides for each mesh instance. Only applies to model
      * components of type 'asset'. The mapping contains pairs of mesh instance index - material
@@ -688,7 +685,6 @@ class ModelComponent extends Component {
     get mapping() {
         return this._mapping;
     }
-    /* eslint-enable jsdoc/check-types */
 
     addModelToLayers() {
         const layers = this.system.app.scene.layers;
