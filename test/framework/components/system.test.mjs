@@ -26,7 +26,7 @@ describe("ComponentSystem", function () {
         app.destroy();
     });
 
-    describe.only("#initializeComponentData()", function () {
+    describe("#initializeComponentData()", function () {
 
         it("works with a flat list of property names", function () {
             const component = {};
@@ -200,7 +200,7 @@ describe("ComponentSystem", function () {
 
     });
 
-    describe.only("#getPropertiesOfType()", function () {
+    describe("#getPropertiesOfType()", function () {
 
         it("returns properties of the specified type", function () {
             system.schema = [
