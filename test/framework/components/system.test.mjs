@@ -9,7 +9,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe.only("ComponentSystem", function () {
+describe("ComponentSystem", function () {
     /** @type {Application} */
     let app;
     /** @type {ComponentSystem} */
