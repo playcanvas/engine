@@ -49,7 +49,8 @@ fs.writeFileSync(path, dts);
 
 const animationComponentProps = [
     ['activate', 'boolean'],
-    ['assets', 'any[]'],
+    ['assets', 'Asset[]|number[]'],
+    ['animations', '{[string]: Animation}'],
     ['loop', 'boolean'],
     ['skeleton', 'any'],
     ['speed', 'number']

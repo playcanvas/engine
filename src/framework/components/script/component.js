@@ -73,7 +73,7 @@ class ScriptComponent extends Component {
      * An array of all script instances attached to an entity. This array is read-only and should
      * not be modified by developer.
      *
-     * @type {ScriptType[]}
+     * @param {ScriptType[]} value
      */
     set scripts(value) {
         this._scriptsData = value;

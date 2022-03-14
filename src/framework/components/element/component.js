@@ -226,6 +226,11 @@ class ElementComponent extends Component {
 
         this._patch();
 
+        /**
+         * The Entity with a ScreenComponent that this component belongs to
+         *
+         * @type {Entity}
+         */
         this.screen = null;
 
         this._type = ELEMENTTYPE_GROUP;

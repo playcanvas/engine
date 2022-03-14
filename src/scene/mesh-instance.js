@@ -124,7 +124,7 @@ class MeshInstance {
          */
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
-        mesh.incRefCount();
+        mesh.incRefCount(); 
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
@@ -365,7 +365,7 @@ class MeshInstance {
     /**
      * The material used by this mesh instance.
      *
-     * @type {Material}
+     * @param {Material} material
      */
     set material(material) {
         for (let i = 0; i < this._shader.length; i++) {
