@@ -74,6 +74,12 @@ class Command {
  */
 class MeshInstance {
     /**
+     * @type {Material}
+     * @private
+     */
+    _material;
+
+    /**
      * Create a new MeshInstance instance.
      *
      * @param {Mesh} mesh - The graphics mesh to instance.

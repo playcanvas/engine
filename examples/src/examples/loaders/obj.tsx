@@ -35,11 +35,12 @@ class ObjExample {
                 app.root.addChild(entity);
 
                 // add a randomly generated material to all mesh instances
-                const mis = entity.model.model.meshInstances;
+                const mis = entity.model.meshInstances;
                 for (let i = 0; i < mis.length; i++) {
-                    mis[i].material = new pc.StandardMaterial();
-                    mis[i].material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
-                    mis[i].material.update();
+                    const material = new pc.StandardMaterial();
+                    material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
+                    material.update();
+                    mis[i].material = material;
                 }
             });
         });
