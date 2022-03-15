@@ -569,13 +569,6 @@ class XrManager extends EventHandler {
 
         // clean up once session is ended
         const onEnd = () => {
-            this._session = null;
-            this._referenceSpace = null;
-            this.views = [];
-            this._width = 0;
-            this._height = 0;
-            this._type = null;
-            this._spaceType = null;
 
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
@@ -589,6 +582,14 @@ class XrManager extends EventHandler {
             session.removeEventListener('visibilitychange', onVisibilityChange);
 
             if (!failed) this.fire('end');
+
+            this._session = null;
+            this._referenceSpace = null;
+            this.views = [];
+            this._width = 0;
+            this._height = 0;
+            this._type = null;
+            this._spaceType = null;
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
