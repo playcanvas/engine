@@ -74,7 +74,7 @@ describe("EntityReference", function () {
         expect(reference.entity).to.equal(otherEntity1);
     });
 
-    it("attempts to resolve the entity reference if the parent component is not on the scene graph yet", function () {
+    it("does not attempt to resolve the entity reference if the parent component is not on the scene graph yet", function () {
         app.root.removeChild(testEntity);
 
         sinon.spy(app.root, "findByGuid");
@@ -82,38 +82,20 @@ describe("EntityReference", function () {
         const reference = new EntityReference(testComponent, "myEntity1");
         testComponent.myEntity1 = otherEntity1.getGuid();
 
-        expect(reference.entity).to.equal(otherEntity1);
-        expect(app.root.findByGuid.callCount).to.equal(1);
+        expect(reference.entity).to.equal(null);
+        expect(app.root.findByGuid.callCount).to.equal(0);
     });
 
-    it("resolves the entity reference when added to graph later and onParentComponentEnable() is called", function () {
-        app.root.removeChild(otherEntity1);
+    it("resolves the entity reference when onParentComponentEnable() is called", function () {
+        app.root.removeChild(testEntity);
 
         const reference = new EntityReference(testComponent, "myEntity1");
         testComponent.myEntity1 = otherEntity1.getGuid();
         expect(reference.entity).to.equal(null);
 
-        app.root.addChild(otherEntity1);
+        app.root.addChild(testEntity);
         reference.onParentComponentEnable();
 
-        expect(reference.entity).to.equal(otherEntity1);
-    });
-
-    it("resolves the entity reference when entity and parent are in their own graph", function () {
-        app.root.removeChild(testEntity);
-        app.root.removeChild(otherEntity1);
-        testEntity.root.addChild(otherEntity1);
-
-        const reference = new EntityReference(testComponent, "myEntity1");
-        testComponent.myEntity1 = otherEntity1.getGuid();
-        expect(reference.entity).to.equal(otherEntity1);
-    });
-
-    it("resolves the entity reference when entity is in scene graph but parent is not", function () {
-        app.root.removeChild(testEntity);
-
-        const reference = new EntityReference(testComponent, "myEntity1");
-        testComponent.myEntity1 = otherEntity1.getGuid();
         expect(reference.entity).to.equal(otherEntity1);
     });
 

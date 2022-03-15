@@ -235,11 +235,15 @@ class EntityReference extends EventHandler {
 
     /**
      * Must be called from the parent component's onEnable() method in order for entity references
-     * to be correctly resolved when the referenced entity was not in the same graph as the parent.
+     * to be correctly resolved when {@link Entity#clone} is called.
      *
      * @private
      */
     onParentComponentEnable() {
+        // When an entity is cloned via the JS API, we won't be able to resolve the
+        // entity reference until the cloned entity has been added to the scene graph.
+        // We can detect this by waiting for the parent component to be enabled, in the
+        // specific case where we haven't yet been able to resolve an entity reference.
         if (!this._entity) {
             this._updateEntityReference();
         }
@@ -254,21 +258,18 @@ class EntityReference extends EventHandler {
 
     _updateEntityReference() {
         let nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
-        let nextEntity = null;
+        let nextEntity;
 
         if (nextEntityGuid instanceof Entity) {
             // if value is set to a Entity itself replace value with the GUID
             nextEntity = nextEntityGuid;
             nextEntityGuid = nextEntity.getGuid();
             this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
-        } else if (nextEntityGuid) {
-            // If value is the GUID, look for the entity from the root of the parent entity.
-            // We use both entity.root and app.root because the parent entity may be detached
-            // from the scene, and the value could be referencing an entity within this detached graph.
-            const sceneRoot = this._parentComponent.system.app.root;
-            const entityRoot = this._parentComponent.entity.root;
+        } else {
+            const root = this._parentComponent.system.app.root;
+            const isOnSceneGraph = this._parentComponent.entity.isDescendantOf(root);
 
-            nextEntity = entityRoot.findByGuid(nextEntityGuid) || sceneRoot.findByGuid(nextEntityGuid);
+            nextEntity = (isOnSceneGraph && nextEntityGuid) ? root.findByGuid(nextEntityGuid) : null;
         }
 
         const hasChanged = this._entity !== nextEntity;
