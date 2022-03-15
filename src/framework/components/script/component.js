@@ -28,7 +28,12 @@ class ScriptComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        // holds all script instances for this component
+        /**
+         * Holds all script instances for this component.
+         *
+         * @type {ScriptType[]}
+         * @private
+         */
         this._scripts = [];
         // holds all script instances with an update method
         this._updateList = new SortedLoopArray({ sortBy: '__executionOrder' });
