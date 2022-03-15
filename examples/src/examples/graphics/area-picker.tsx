@@ -184,7 +184,7 @@ class AreaPickerExample {
                 // process all meshInstances it found - highlight them to appropriate color for the area
                 for (let s = 0; s < selection.length; s++) {
                     if (selection[s]) {
-                        highlightMaterial(selection[s].material, color);
+                        highlightMaterial(selection[s].material as pc.StandardMaterial, color);
                         highlights.push(selection[s].material);
                     }
                 }
