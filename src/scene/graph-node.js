@@ -1326,11 +1326,12 @@ class GraphNode extends EventHandler {
         // Clear parent
         child._parent = null;
 
+        // NOTE: see PR #4047 - this fix is removed for now as it breaks other things
         // notify the child hierarchy it has been removed from the parent,
         // which marks them as not enabled in hierarchy
-        if (child._enabledInHierarchy) {
-            child._notifyHierarchyStateChanged(child, false);
-        }
+        // if (child._enabledInHierarchy) {
+        //     child._notifyHierarchyStateChanged(child, false);
+        // }
 
         // alert children that they has been removed
         child._fireOnHierarchy('remove', 'removehierarchy', this);
