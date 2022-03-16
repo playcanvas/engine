@@ -1761,8 +1761,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const shader = this.shader;
         if (!shader)
             return;
-        const samplers = shader.samplers;
-        const uniforms = shader.uniforms;
+        const samplers = shader.impl.samplers;
+        const uniforms = shader.impl.uniforms;
 
         // vertex buffers
         if (!keepBuffers) {

@@ -62,10 +62,6 @@ class Shader {
      * @private
      */
     init() {
-        this.attributes = [];
-        this.uniforms = [];
-        this.samplers = [];
-
         this.ready = false;
         this.failed = false;
     }
