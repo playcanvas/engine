@@ -666,6 +666,10 @@ class RenderComponent extends Component {
         this.asset = null;
         this.materialAsset = null;
 
+        for (let i = 0; i < this._materialReferences.length; i++) {
+            this._materialReferences[i].id = null;
+        }
+
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
     }
