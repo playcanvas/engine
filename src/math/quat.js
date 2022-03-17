@@ -389,9 +389,10 @@ class Quat {
      */
     setFromEulerAngles(ex, ey, ez) {
         if (ex instanceof Vec3) {
-            ez = ex.z;
-            ey = ex.y;
-            ex = ex.x;
+            const vec = ex;
+            ex = vec.x;
+            ey = vec.y;
+            ez = vec.z;
         }
 
         const halfToRad = 0.5 * math.DEG_TO_RAD;
