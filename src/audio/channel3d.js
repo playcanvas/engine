@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -48,20 +50,26 @@ class Channel3d extends Channel {
         return this.position;
     }
 
+    setPosition(position) {
+        this.position.copy(position);
+        const panner = this.panner;
+        if ('positionX' in panner) {
+            panner.positionX.value = position.x;
+            panner.positionY.value = position.y;
+            panner.positionZ.value = position.z;
+        } else if (panner.setPosition) { // Firefox (and legacy browsers)
+            panner.setPosition(position.x, position.y, position.z);
+        }
+    }
+
     getVelocity() {
+        Debug.warn('Channel3d#getVelocity is not implemented.');
         return this.velocity;
     }
 
-    setPosition(position) {
-        this.position.copy(position);
-        this.panner.positionX.value = position.x;
-        this.panner.positionY.value = position.y;
-        this.panner.positionZ.value = position.z;
-    }
-
     setVelocity(velocity) {
+        Debug.warn('Channel3d#setVelocity is not implemented.');
         this.velocity.copy(velocity);
-        this.panner.setVelocity(velocity.x, velocity.y, velocity.z);
     }
 
     getMaxDistance() {
@@ -160,10 +168,6 @@ if (!hasAudioContext()) {
                 const v = this.getVolume();
                 this.source.volume = v * factor;
             }
-        },
-
-        setVelocity: function (velocity) {
-            this.velocity.copy(velocity);
         },
 
         getMaxDistance: function () {
