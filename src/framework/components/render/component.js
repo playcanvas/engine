@@ -666,6 +666,8 @@ class RenderComponent extends Component {
         this.asset = null;
         this.materialAsset = null;
 
+        this._assetReference.id = null;
+
         for (let i = 0; i < this._materialReferences.length; i++) {
             this._materialReferences[i].id = null;
         }
