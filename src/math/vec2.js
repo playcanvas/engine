@@ -98,14 +98,15 @@ class Vec2 {
     /**
      * Returns an identical copy of the specified 2-dimensional vector.
      *
-     * @returns {Vec2} A 2-dimensional vector containing the result of the cloning.
+     * @returns {this} A 2-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec2(10, 20);
      * var vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec2(this.x, this.y);
+        // @ts-ignore
+        return new this.constructor(this.x, this.y);
     }
 
     /**

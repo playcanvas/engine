@@ -101,14 +101,15 @@ class Mat4 {
     /**
      * Creates a duplicate of the specified matrix.
      *
-     * @returns {Mat4} A duplicate matrix.
+     * @returns {this} A duplicate matrix.
      * @example
      * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
-        return new Mat4().copy(this);
+        // @ts-ignore
+        return new this.constructor().copy(this);
     }
 
     /**

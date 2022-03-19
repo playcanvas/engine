@@ -181,6 +181,12 @@ describe('CurveSet', function () {
             }
         });
 
+        it("cloning an extending class should keep its class prototype", function () {
+            class UserCurveSet extends CurveSet {}
+            const a = new UserCurveSet();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserCurveSet);
+        });
     });
 
     describe('#get()', function () {

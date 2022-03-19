@@ -147,10 +147,12 @@ class Curve {
     /**
      * Returns a clone of the specified curve object.
      *
-     * @returns {Curve} A clone of the specified curve.
+     * @returns {this} A clone of the specified curve.
      */
     clone() {
-        const result = new Curve();
+        /** @type {this} */
+        // @ts-ignore
+        const result = new this.constructor();
         result.keys = extend(result.keys, this.keys);
         result.type = this.type;
         result.tension = this.tension;

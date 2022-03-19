@@ -115,6 +115,13 @@ describe('Vec3', function () {
             expect(v2.z).to.equal(3);
         });
 
+        it("cloning an extending class should keep its class prototype", function () {
+            class UserVec3 extends Vec3 {}
+            const a = new UserVec3();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserVec3);
+        });
+
     });
 
     describe('#copy', function () {

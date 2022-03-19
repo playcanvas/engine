@@ -53,7 +53,7 @@ class Quat {
     /**
      * Returns an identical copy of the specified quaternion.
      *
-     * @returns {Quat} A quaternion containing the result of the cloning.
+     * @returns {this} A quaternion containing the result of the cloning.
      * @example
      * var q = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
      * var qclone = q.clone();
@@ -61,7 +61,8 @@ class Quat {
      * console.log("The result of the cloning is: " + q.toString());
      */
     clone() {
-        return new Quat(this.x, this.y, this.z, this.w);
+        // @ts-ignore
+        return new this.constructor(this.x, this.y, this.z, this.w);
     }
 
     conjugate() {

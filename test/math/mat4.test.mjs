@@ -78,6 +78,13 @@ describe("Mat4", function () {
             expect(m2.data).to.deep.equal(m1.data);
         });
 
+        it("cloning an extending class should keep its class prototype", function () {
+            class UserMat4 extends Mat4 {}
+            const a = new UserMat4();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserMat4);
+        });
+
     });
 
     describe('#copy()', function () {

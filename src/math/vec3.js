@@ -109,14 +109,15 @@ class Vec3 {
     /**
      * Returns an identical copy of the specified 3-dimensional vector.
      *
-     * @returns {Vec3} A 3-dimensional vector containing the result of the cloning.
+     * @returns {this} A 3-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec3(10, 20, 30);
      * var vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec3(this.x, this.y, this.z);
+        // @ts-ignore
+        return new this.constructor(this.x, this.y, this.z);
     }
 
     /**

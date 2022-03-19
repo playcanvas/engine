@@ -51,10 +51,11 @@ class Color {
     /**
      * Returns a clone of the specified color.
      *
-     * @returns {Color} A duplicate color object.
+     * @returns {this} A duplicate color object.
      */
     clone() {
-        return new Color(this.r, this.g, this.b, this.a);
+        // @ts-ignore
+        return new this.constructor(this.r, this.g, this.b, this.a);
     }
 
     /**
