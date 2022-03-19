@@ -14,9 +14,8 @@ class Trigger {
      *
      * @param {Application} app - The running {@link Application}.
      * @param {Component} component - The component for which the trigger will be created.
-     * @param {ComponentData} data - The data for the component.
      */
-    constructor(app, component, data) {
+    constructor(app, component) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
@@ -27,12 +26,12 @@ class Trigger {
             ammoTransform = new Ammo.btTransform();
         }
 
-        this.initialize(data);
+        this.initialize(component);
     }
 
-    initialize(data) {
+    initialize(component) {
         const entity = this.entity;
-        const shape = data.shape;
+        const shape = component.shape;
 
         if (shape && typeof Ammo !== 'undefined') {
             if (entity.trigger) {

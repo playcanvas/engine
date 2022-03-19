@@ -1,4 +1,5 @@
 import { Asset } from '../../../asset/asset.js';
+import { Vec3 } from '../../../math/vec3.js';
 
 import { Component } from '../component.js';
 
@@ -51,6 +52,39 @@ import { Component } from '../component.js';
  * @augments Component
  */
 class CollisionComponent extends Component {
+    /** @private */
+    _type = 'box';
+
+    /** @private */
+    _halfExtents = new Vec3(0.5, 0.5, 0.5);
+
+    /** @private */
+    _radius = 0.5;
+
+    /** @private */
+    _height = 1;
+
+    /** @private */
+    _axis = 1;
+
+    /** @private */
+    _initialized = false;
+
+    /** @private */
+    _asset = null;
+
+    /** @private */
+    _model = null;
+
+    /** @private */
+    _renderAsset = null;
+
+    /** @private */
+    _render = null;
+
+    /** @private */
+    _shape = null;
+
     /**
      * Create a new CollisionComponent.
      *
@@ -63,187 +97,244 @@ class CollisionComponent extends Component {
         this._compoundParent = null;
 
         this.entity.on('insert', this._onInsert, this);
-
-        this.on('set_type', this.onSetType, this);
-        this.on('set_halfExtents', this.onSetHalfExtents, this);
-        this.on('set_radius', this.onSetRadius, this);
-        this.on('set_height', this.onSetHeight, this);
-        this.on('set_axis', this.onSetAxis, this);
-        this.on("set_asset", this.onSetAsset, this);
-        this.on("set_renderAsset", this.onSetRenderAsset, this);
-        this.on("set_model", this.onSetModel, this);
-        this.on("set_render", this.onSetRender, this);
     }
 
-    // Events Documentation
     /**
-     * @event
-     * @name CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+     * Sets the collision shape type. Possible values: "box", "capsule",
+     * "compound", "cone", "cylinder", "mesh", "sphere".
+     *
+     * @type {string}
      */
+    set type(type) {
+        if (this._type !== type) {
+            this._type = type;
 
-    /**
-     * @event
-     * @name CollisionComponent#collisionstart
-     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {ContactResult} result - Details of the contact between the two Entities.
-     */
-
-    /**
-     * @event
-     * @name CollisionComponent#collisionend
-     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
-     */
-
-    /**
-     * @event
-     * @name CollisionComponent#triggerenter
-     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link RigidBodyComponent} attached.
-     * @param {Entity} other - The {@link Entity} that entered this collision volume.
-     */
-
-    /**
-     * @event
-     * @name CollisionComponent#triggerleave
-     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link RigidBodyComponent} attached.
-     * @param {Entity} other - The {@link Entity} that exited this collision volume.
-     */
-
-    onSetType(name, oldValue, newValue) {
-        if (oldValue !== newValue) {
-            this.system.changeType(this, oldValue, newValue);
+            if (this._initialized) {
+                this.system.changeType(this, type);
+                this._type = type;
+            }
         }
     }
 
-    onSetHalfExtents(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && t === 'box') {
-            this.system.recreatePhysicalShapes(this);
+    get type() {
+        return this._type;
+    }
+
+    /**
+     * The half-extents of the collision box. This is a 3-dimensional vector:
+     * local space half-width, half-height, and half-depth.
+     *
+     * @type {Vec3}
+     */
+    set halfExtents(he) {
+        if (this._type === 'box' && !this._halfExtents.equals(he)) {
+            this._halfExtents.copy(he);
+            if (this._initialized) this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetRadius(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
+    get halfExtents() {
+        return this._halfExtents;
+    }
+
+    /**
+     * The radius of the capsule/cylinder/sphere/cone body.
+     *
+     * @type {number}
+     */
+    set radius(radius) {
+        const t = this._type;
+        if (this._radius !== radius && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this._radius = radius;
+            if (this._initialized) this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetHeight(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
+    get radius() {
+        return this._radius;
+    }
+
+    /**
+     * The tip-to-tip height of the capsule/cylinder/cone.
+     *
+     * @type {number}
+     */
+    set height(height) {
+        const t = this._type;
+        if (this._height !== height && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this._height = height;
+            if (this._initialized) this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetAxis(name, oldValue, newValue) {
-        const t = this.data.type;
-        if (this.data.initialized && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
-            this.system.recreatePhysicalShapes(this);
+    get height() {
+        return this._height;
+    }
+
+    /**
+     * Aligns the capsule/cylinder/cone with the local-space X(0), Y(1) or Z(2)
+     * axis of the entity.
+     *
+     * @type {number}
+     */
+    set axis(axis) {
+        const t = this._type;
+        if (this._axis !== axis && (t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+            this._axis = axis;
+            if (this._initialized) this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetAsset(name, oldValue, newValue) {
+    get axis() {
+        return this._axis;
+    }
+
+    /**
+     * A model asset that will be used as a source for the triangle-based collision mesh.
+     *
+     * @type {Asset|number}
+     */
+    set asset(asset) {
         const assets = this.system.app.assets;
 
-        if (oldValue) {
+        if (this._asset) {
             // Remove old listeners
-            const asset = assets.get(oldValue);
-            if (asset) {
-                asset.off('remove', this.onAssetRemoved, this);
+            const oldAsset = assets.get(this._asset);
+            if (oldAsset) {
+                oldAsset.off('remove', this.onAssetRemoved, this);
             }
         }
 
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.asset = newValue.id;
+        if (asset) {
+            if (asset instanceof Asset) {
+                this._asset = asset.id;
             }
 
-            const asset = assets.get(this.data.asset);
-            if (asset) {
+            const current = assets.get(this._asset);
+            if (current) {
                 // make sure we don't subscribe twice
-                asset.off('remove', this.onAssetRemoved, this);
-                asset.on('remove', this.onAssetRemoved, this);
+                current.off('remove', this.onAssetRemoved, this);
+                current.on('remove', this.onAssetRemoved, this);
             }
         }
 
-        if (this.data.initialized && this.data.type === 'mesh') {
-            if (!newValue) {
+        if (this._initialized && this._type === 'mesh') {
+            if (!asset) {
                 // if asset is null set model to null
                 // so that it's going to be removed from the simulation
-                this.data.model = null;
+                this._model = null;
             }
             this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetRenderAsset(name, oldValue, newValue) {
+    get asset() {
+        return this._asset;
+    }
+
+    /**
+     * The render asset that will be used as a source for the triangle-based collision mesh.
+     *
+     * @type {Asset|number}
+     */
+    set renderAsset(asset) {
         const assets = this.system.app.assets;
 
-        if (oldValue) {
+        if (this._renderAsset) {
             // Remove old listeners
-            const asset = assets.get(oldValue);
-            if (asset) {
-                asset.off('remove', this.onRenderAssetRemoved, this);
+            const oldAsset = assets.get(this._renderAsset);
+            if (oldAsset) {
+                oldAsset.off('remove', this.onRenderAssetRemoved, this);
             }
         }
 
-        if (newValue) {
-            if (newValue instanceof Asset) {
-                this.data.renderAsset = newValue.id;
+        if (asset) {
+            if (asset instanceof Asset) {
+                this._renderAsset = asset.id;
             }
 
-            const asset = assets.get(this.data.renderAsset);
-            if (asset) {
+            const current = assets.get(this._renderAsset);
+            if (current) {
                 // make sure we don't subscribe twice
-                asset.off('remove', this.onRenderAssetRemoved, this);
-                asset.on('remove', this.onRenderAssetRemoved, this);
+                current.off('remove', this.onRenderAssetRemoved, this);
+                current.on('remove', this.onRenderAssetRemoved, this);
             }
         }
 
-        if (this.data.initialized && this.data.type === 'mesh') {
-            if (!newValue) {
+        if (this._initialized && this._type === 'mesh') {
+            if (!asset) {
                 // if render asset is null set render to null
                 // so that it's going to be removed from the simulation
-                this.data.render = null;
+                this._render = null;
             }
             this.system.recreatePhysicalShapes(this);
         }
     }
 
-    onSetModel(name, oldValue, newValue) {
-        if (this.data.initialized && this.data.type === 'mesh') {
+    get renderAsset() {
+        return this._renderAsset;
+    }
+
+    /**
+     * A model that is added to the scene graph for the mesh collision volume.
+     *
+     * @type {Model}
+     */
+    set model(model) {
+        if (this._initialized && this._type === 'mesh') {
             // recreate physical shapes skipping loading the model
-            // from the 'asset' as the model passed in newValue might
+            // from the 'asset' as the model passed in attribute might
             // have been created procedurally
             this.system.implementations.mesh.doRecreatePhysicalShape(this);
+        } else {
+            this._model = model;
         }
     }
 
-    onSetRender(name, oldValue, newValue) {
-        this.onSetModel(name, oldValue, newValue);
+    get model() {
+        return this._model;
+    }
+
+    set render(render) {
+        this.model = render;
+    }
+
+    get render() {
+        return this._render;
+    }
+
+    set shape(shape) {
+        this._shape = shape;
+    }
+
+    get shape() {
+        return this._shape;
+    }
+
+    set initialized(bool) {
+        this._initialized = bool;
+    }
+
+    get initialized() {
+        return this._initialized;
     }
 
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
-        if (this.data.asset === asset.id) {
-            this.asset = null;
+        if (this._asset === asset.id) {
+            this._asset = null;
         }
     }
 
     onRenderAssetRemoved(asset) {
         asset.off('remove', this.onRenderAssetRemoved, this);
-        if (this.data.renderAsset === asset.id) {
-            this.renderAsset = null;
+        if (this._renderAsset === asset.id) {
+            this._renderAsset = null;
         }
     }
 
     _getCompoundChildShapeIndex(shape) {
-        const compound = this.data.shape;
+        const compound = this._shape;
         const shapes = compound.getNumChildShapes();
 
         for (let i = 0; i < shapes; i++) {
@@ -309,11 +400,11 @@ class CollisionComponent extends Component {
     }
 
     onEnable() {
-        if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
-            const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
+        if (this._type === 'mesh' && (this._asset || this._renderAsset) && this._initialized) {
+            const asset = this.system.app.assets.get(this._asset || this._renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
-            if (asset && (!asset.resource || !this.data.shape)) {
+            if (asset && (!asset.resource || !this._shape)) {
                 this.system.recreatePhysicalShapes(this);
                 return;
             }
@@ -328,7 +419,7 @@ class CollisionComponent extends Component {
                 this.system.recreatePhysicalShapes(this._compoundParent);
             } else {
                 const transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
-                this._compoundParent.shape.addChildShape(transform, this.data.shape);
+                this._compoundParent.shape.addChildShape(transform, this._shape);
                 Ammo.destroy(transform);
 
                 if (this._compoundParent.entity.rigidbody)
@@ -344,7 +435,7 @@ class CollisionComponent extends Component {
             this.entity.rigidbody.disableSimulation();
         } else if (this._compoundParent && this !== this._compoundParent) {
             if (!this._compoundParent.entity._destroying) {
-                this.system._removeCompoundChild(this._compoundParent, this.data.shape);
+                this.system._removeCompoundChild(this._compoundParent, this._shape);
 
                 if (this._compoundParent.entity.rigidbody)
                     this._compoundParent.entity.rigidbody.activate();
@@ -355,11 +446,11 @@ class CollisionComponent extends Component {
     }
 
     onBeforeRemove() {
-        if (this.asset) {
-            this.asset = null;
+        if (this._asset) {
+            this._asset = null;
         }
-        if (this.renderAsset) {
-            this.renderAsset = null;
+        if (this._renderAsset) {
+            this._renderAsset = null;
         }
 
         this.entity.off('insert', this._onInsert, this);
@@ -367,5 +458,43 @@ class CollisionComponent extends Component {
         this.off();
     }
 }
+
+// Events Documentation
+/**
+ * @event
+ * @name CollisionComponent#contact
+ * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+ * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+ */
+
+/**
+ * @event
+ * @name CollisionComponent#collisionstart
+ * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+ * @param {ContactResult} result - Details of the contact between the two Entities.
+ */
+
+/**
+ * @event
+ * @name CollisionComponent#collisionend
+ * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+ * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
+ */
+
+/**
+ * @event
+ * @name CollisionComponent#triggerenter
+ * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+ * a {@link RigidBodyComponent} attached.
+ * @param {Entity} other - The {@link Entity} that entered this collision volume.
+ */
+
+/**
+ * @event
+ * @name CollisionComponent#triggerleave
+ * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+ * a {@link RigidBodyComponent} attached.
+ * @param {Entity} other - The {@link Entity} that exited this collision volume.
+ */
 
 export { CollisionComponent };
