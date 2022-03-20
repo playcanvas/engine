@@ -201,11 +201,11 @@ class CollisionComponentSystem extends ComponentSystem {
         // TODO
         // use updateChildTransform once it is exposed in ammo.js
 
-        this._removeCompoundChild(entity.collision._compoundParent, entity.collision.shape);
+        this._removeCompoundChild(entity.collision.compoundParent, entity.collision.shape);
 
         if (entity.enabled && entity.collision.enabled) {
-            const transform = this._getNodeTransform(entity, entity.collision._compoundParent.entity);
-            entity.collision._compoundParent.shape.addChildShape(transform, entity.collision.shape);
+            const transform = this._getNodeTransform(entity, entity.collision.compoundParent.entity);
+            entity.collision.compoundParent.shape.addChildShape(transform, entity.collision.shape);
             Ammo.destroy(transform);
         }
     }

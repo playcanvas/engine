@@ -85,6 +85,9 @@ class CollisionComponent extends Component {
     /** @private */
     _shape = null;
 
+    /** @private */
+    _compoundParent = null;
+
     /**
      * Create a new CollisionComponent.
      *
@@ -93,8 +96,6 @@ class CollisionComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._compoundParent = null;
 
         this.entity.on('insert', this._onInsert, this);
     }
@@ -317,6 +318,14 @@ class CollisionComponent extends Component {
 
     get initialized() {
         return this._initialized;
+    }
+
+    set compoundParent(component) {
+        this._compoundParent = component;
+    }
+
+    get compoundParent() {
+        return this._compoundParent;
     }
 
     onAssetRemoved(asset) {
