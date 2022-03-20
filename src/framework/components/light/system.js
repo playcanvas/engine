@@ -9,7 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
@@ -106,7 +106,7 @@ class LightComponentSystem extends ComponentSystem {
             }
         }
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     changeType(component, oldValue, newValue) {

@@ -15,7 +15,7 @@ import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 import { Debug } from '../core/debug.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('./scene.js').Scene} Scene */

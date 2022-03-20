@@ -55,7 +55,6 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LIN
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
-import { DepthMaterial } from '../scene/materials/depth-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
@@ -70,7 +69,7 @@ import { Skin } from '../scene/skin.js';
 import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
-import { DefaultMaterial } from '../scene/materials/default-material.js';
+import { getDefaultMaterial } from '../scene/materials/default-material.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
 import { Skeleton } from '../animation/skeleton.js';
@@ -96,7 +95,7 @@ import { TouchDevice } from '../input/touch-device.js';
 import { getTouchTargetCoords, Touch, TouchEvent } from '../input/touch-event.js';
 
 import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
-import { Application } from '../framework/application.js';
+import { Application } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
 import { Component } from '../framework/components/component.js';
@@ -460,6 +459,13 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated("pc.Texture#swizzleGGGR is deprecated. Use pc.Texture#type instead.");
             this.type = swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
         }
+    },
+
+    _glTexture: {
+        get: function () {
+            Debug.deprecated("pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.");
+            return this.impl._glTexture;
+        }
     }
 });
 
@@ -482,7 +488,6 @@ export const scene = {
     },
     BasicMaterial: BasicMaterial,
     Command: Command,
-    DepthMaterial: DepthMaterial,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -504,7 +509,7 @@ export const scene = {
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
-        return DefaultMaterial.get(getApplication().graphicsDevice);
+        return getDefaultMaterial(getApplication().graphicsDevice);
     }
 });
 

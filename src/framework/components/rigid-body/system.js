@@ -11,7 +11,7 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 /** @typedef {import('../../entity.js').Entity} Entity */
 
 let ammoRayStart, ammoRayEnd;
@@ -398,7 +398,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             mask: rigidbody.mask
         };
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {

@@ -31,7 +31,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AnimComponentSystem} from the registry.
      *
-     * @type {AnimComponentSystem}
+     * @type {AnimComponentSystem|undefined}
      * @readonly
      */
     anim;
@@ -39,7 +39,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AnimationComponentSystem} from the registry.
      *
-     * @type {AnimationComponentSystem}
+     * @type {AnimationComponentSystem|undefined}
      * @readonly
      */
     animation;
@@ -47,7 +47,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AudioListenerComponentSystem} from the registry.
      *
-     * @type {AudioListenerComponentSystem}
+     * @type {AudioListenerComponentSystem|undefined}
      * @readonly
      */
     audiolistener;
@@ -55,7 +55,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AudioSourceComponentSystem} from the registry.
      *
-     * @type {AudioSourceComponentSystem}
+     * @type {AudioSourceComponentSystem|undefined}
      * @readonly
      * @ignore
      */
@@ -64,7 +64,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ButtonComponentSystem} from the registry.
      *
-     * @type {ButtonComponentSystem}
+     * @type {ButtonComponentSystem|undefined}
      * @readonly
      */
     button;
@@ -72,7 +72,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link CameraComponentSystem} from the registry.
      *
-     * @type {CameraComponentSystem}
+     * @type {CameraComponentSystem|undefined}
      * @readonly
      */
     camera;
@@ -80,7 +80,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link CollisionComponentSystem} from the registry.
      *
-     * @type {CollisionComponentSystem}
+     * @type {CollisionComponentSystem|undefined}
      * @readonly
      */
     collision;
@@ -88,7 +88,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ElementComponentSystem} from the registry.
      *
-     * @type {ElementComponentSystem}
+     * @type {ElementComponentSystem|undefined}
      * @readonly
      */
     element;
@@ -96,7 +96,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link JointComponentSystem} from the registry.
      *
-     * @type {JointComponentSystem}
+     * @type {JointComponentSystem|undefined}
      * @readonly
      * @ignore
      */
@@ -105,7 +105,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LayoutChildComponentSystem} from the registry.
      *
-     * @type {LayoutChildComponentSystem}
+     * @type {LayoutChildComponentSystem|undefined}
      * @readonly
      */
     layoutchild;
@@ -113,7 +113,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LayoutGroupComponentSystem} from the registry.
      *
-     * @type {LayoutGroupComponentSystem}
+     * @type {LayoutGroupComponentSystem|undefined}
      * @readonly
      */
     layoutgroup;
@@ -121,7 +121,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LightComponentSystem} from the registry.
      *
-     * @type {LightComponentSystem}
+     * @type {LightComponentSystem|undefined}
      * @readonly
      */
     light;
@@ -129,7 +129,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ModelComponentSystem} from the registry.
      *
-     * @type {ModelComponentSystem}
+     * @type {ModelComponentSystem|undefined}
      * @readonly
      */
     model;
@@ -137,7 +137,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ParticleSystemComponentSystem} from the registry.
      *
-     * @type {ParticleSystemComponentSystem}
+     * @type {ParticleSystemComponentSystem|undefined}
      * @readonly
      */
     particlesystem;
@@ -145,7 +145,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link RenderComponentSystem} from the registry.
      *
-     * @type {RenderComponentSystem}
+     * @type {RenderComponentSystem|undefined}
      * @readonly
      */
     render;
@@ -153,7 +153,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link RigidBodyComponentSystem} from the registry.
      *
-     * @type {RigidBodyComponentSystem}
+     * @type {RigidBodyComponentSystem|undefined}
      * @readonly
      */
     rigidbody;
@@ -161,7 +161,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScreenComponentSystem} from the registry.
      *
-     * @type {ScreenComponentSystem}
+     * @type {ScreenComponentSystem|undefined}
      * @readonly
      */
     screen;
@@ -169,7 +169,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScriptComponentSystem} from the registry.
      *
-     * @type {ScriptComponentSystem}
+     * @type {ScriptComponentSystem|undefined}
      * @readonly
      */
     script;
@@ -177,7 +177,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScrollbarComponentSystem} from the registry.
      *
-     * @type {ScrollbarComponentSystem}
+     * @type {ScrollbarComponentSystem|undefined}
      * @readonly
      */
     scrollbar;
@@ -185,7 +185,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScrollViewComponentSystem} from the registry.
      *
-     * @type {ScrollViewComponentSystem}
+     * @type {ScrollViewComponentSystem|undefined}
      * @readonly
      */
     scrollview;
@@ -193,7 +193,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link SoundComponentSystem} from the registry.
      *
-     * @type {SoundComponentSystem}
+     * @type {SoundComponentSystem|undefined}
      * @readonly
      */
     sound;
@@ -201,7 +201,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link SpriteComponentSystem} from the registry.
      *
-     * @type {SpriteComponentSystem}
+     * @type {SpriteComponentSystem|undefined}
      * @readonly
      */
     sprite;
@@ -209,7 +209,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ZoneComponentSystem} from the registry.
      *
-     * @type {ZoneComponentSystem}
+     * @type {ZoneComponentSystem|undefined}
      * @readonly
      * @ignore
      */

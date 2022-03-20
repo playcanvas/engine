@@ -19,7 +19,7 @@ import { HdrParser } from './parser/texture/hdr.js';
 /** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./handler.js').resourceHandlerCallback} resourceHandlerCallback */
+/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 /** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
 
 const JSON_ADDRESS_MODE = {
@@ -60,7 +60,7 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {resourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {
@@ -73,7 +73,6 @@ class TextureParser {
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */

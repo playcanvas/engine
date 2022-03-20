@@ -5,9 +5,9 @@ const fs = require('fs');
 const releaseBranchName = 'release-';
 
 const printUsage = () => {
-    console.log(`Run without arguments to perform operation based on current branch (dev or release-1.XX branch).
+    console.log(`Run without arguments to perform operation based on current branch (main or release-1.XX branch).
 Or specify the operation as an argument:
-    create-release - create the next minor release branch '${releaseBranchName}1.XX'. invoke from dev branch.
+    create-release - create the next minor release branch '${releaseBranchName}1.XX'. invoke from main branch.
     finalize-release - finalize the package version and tag the release. invoke from release branch.
 `);
 };
@@ -108,33 +108,33 @@ const getUserConfirmation = (question, callback) => {
 };
 
 // create a new release branch.
-// assumed called from dev.
-// updates package versions on dev and newly created release branch.
-const createRelease = (devBranch) => {
+// assumed called from main.
+// updates package versions on main and newly created release branch.
+const createRelease = (mainBranch) => {
     // check branch name
-    if (devBranch !== 'dev') {
-        console.log(`warning: source branch is not 'dev'.`);
+    if (mainBranch !== 'main') {
+        console.log(`warning: source branch is not 'main'.`);
     }
 
     // read current package version. this contains the version we're releasing.
-    const devVersion = readPackageVersion();
-    if (devVersion.build !== 'dev') {
+    const mainVersion = readPackageVersion();
+    if (mainVersion.build !== 'main') {
         // say something?
-        console.warn(`warning: package isn't tagged as 'dev' build.`);
+        console.warn(`warning: package isn't tagged as 'main' build.`);
     }
 
     // build release branch string
-    const releaseBranch = `${releaseBranchName}${devVersion.major}.${devVersion.minor}`;
-    const releaseMessage = `Branch ${devVersion.major}.${devVersion.minor}`;
+    const releaseBranch = `${releaseBranchName}${mainVersion.major}.${mainVersion.minor}`;
+    const releaseMessage = `Branch ${mainVersion.major}.${mainVersion.minor}`;
 
     // print summary and get user buy-in
-    const question = `About to create minor release branch '${releaseBranch}' taken from '${devBranch}' branch.\nContinue? (Y/n) `;
+    const question = `About to create minor release branch '${releaseBranch}' taken from '${mainBranch}' branch.\nContinue? (Y/n) `;
     getUserConfirmation(question, () => {
         // create branch for the new minor release
-        exec(`git branch ${releaseBranch} ${devBranch}`);
+        exec(`git branch ${releaseBranch} ${mainBranch}`);
 
-        // write next minor version to the dev package
-        writePackageVersion(bumpPackageVersion(devVersion, 'minor'));
+        // write next minor version to the main package
+        writePackageVersion(bumpPackageVersion(mainVersion, 'minor'));
 
         // commit with message indicating release branch
         exec(`git commit -m "${releaseMessage}" -- package.json`);
@@ -144,9 +144,9 @@ const createRelease = (devBranch) => {
 
         // update package version build to 'preview'
         writePackageVersion({
-            major: devVersion.major,
-            minor: devVersion.minor,
-            patch: devVersion.patch,
+            major: mainVersion.major,
+            minor: mainVersion.minor,
+            patch: mainVersion.patch,
             build: 'preview'
         });
 
@@ -198,7 +198,7 @@ const run = () => {
         // use current branch to decide operation
         const curBranch = getCurrentBranch();
 
-        if (curBranch === 'dev') {
+        if (curBranch === 'main') {
             createRelease(curBranch);
             return 0;
         } else if (curBranch.startsWith(releaseBranchName)) {

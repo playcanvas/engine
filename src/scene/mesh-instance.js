@@ -30,15 +30,20 @@ const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
 
 
-// internal data structure used to store data used by hardware instancing
+/**
+ * Internal data structure used to store data used by hardware instancing.
+ *
+ * @ignore
+ */
 class InstancingData {
+    /** @type {VertexBuffer|null} */
+    vertexBuffer = null;
+
+    /**
+     * @param {number} numObjects - The number of objects instanced.
+     */
     constructor(numObjects) {
-        /**
-         * @type {number}
-         * @private
-         */
         this.count = numObjects;
-        this.vertexBuffer = null;
     }
 }
 
@@ -62,7 +67,7 @@ class Command {
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
- * @callback calculateSortDistanceCallback
+ * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {Vec3} cameraPosition - The position of the camera.
  * @param {Vec3} cameraForward - The forward vector of the camera.
@@ -73,6 +78,12 @@ class Command {
  * have different transforms and materials.
  */
 class MeshInstance {
+    /**
+     * @type {Material}
+     * @private
+     */
+    _material;
+
     /**
      * Create a new MeshInstance instance.
      *
@@ -140,6 +151,7 @@ class MeshInstance {
          */
         this.visible = true;
         this.layer = LAYER_WORLD; // legacy
+        /** @private */
         this._renderStyle = RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
@@ -158,7 +170,7 @@ class MeshInstance {
          * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
          *
          * @type {boolean}
-         * @private
+         * @ignore
          */
         this.pick = true;
 
@@ -208,7 +220,7 @@ class MeshInstance {
          *
          * @type {boolean}
          */
-        this.visibleThisFrame = 0;
+        this.visibleThisFrame = false;
 
         // custom function used to customize culling (e.g. for 2D UI elements)
         this.isVisibleFunc = null;
@@ -417,7 +429,7 @@ class MeshInstance {
      * the center of the mesh instance's axis-aligned bounding box. This option can be particularly
      * useful for rendering transparent meshes in a better order than default.
      *
-     * @type {calculateSortDistanceCallback}
+     * @type {CalculateSortDistanceCallback}
      */
     set calculateSortDistance(calculateSortDistance) {
         this._calculateSortDistance = calculateSortDistance;

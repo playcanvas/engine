@@ -985,7 +985,7 @@ class Lightmapper {
             let numVirtualLights = bakeLight.numVirtualLights;
 
             // direction baking is not currently compatible with virtual lights, as we end up with no valid direction in lights penumbra
-            if (passCount > 1 && numVirtualLights > 1) {
+            if (passCount > 1 && numVirtualLights > 1 && bakeLight.light.bakeDir) {
                 numVirtualLights = 1;
                 Debug.warn("Lightmapper's BAKE_COLORDIR mode is not compatible with Light's bakeNumSamples larger than one. Forcing it to one.");
             }

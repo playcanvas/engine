@@ -10,7 +10,7 @@ import {
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
-/** @typedef {import('../application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;

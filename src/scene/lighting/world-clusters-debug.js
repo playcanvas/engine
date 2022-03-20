@@ -1,10 +1,14 @@
+import { Color } from "../../math/color.js";
 import { Mat4 } from "../../math/mat4.js";
 import { Vec3 } from "../../math/vec3.js";
-import { Color } from "../../math/color.js";
-import { GraphNode } from "../graph-node.js";
-import { MeshInstance } from "../mesh-instance.js";
+
 import { PRIMITIVE_TRIANGLES } from '../../graphics/constants.js';
+
+import { BLEND_ADDITIVEALPHA } from '../../scene/constants.js';
+import { GraphNode } from "../graph-node.js";
 import { Mesh } from "../mesh.js";
+import { MeshInstance } from "../mesh-instance.js";
+import { StandardMaterial } from "../materials/standard-material.js";
 
 class WorldClustersDebug {
     static gridPositions = [];
@@ -162,12 +166,12 @@ class WorldClustersDebug {
 
 
             if (!WorldClustersDebug.meshInstance) {
-                const material = new pc.StandardMaterial();
+                const material = new StandardMaterial();
                 material.useLighting = false;
-                material.emissive = new pc.Color(1, 1, 1);
+                material.emissive = new Color(1, 1, 1);
                 material.emissiveVertexColor = true;
                 material.emissiveTint = false;
-                material.blendType = pc.BLEND_ADDITIVEALPHA;
+                material.blendType = BLEND_ADDITIVEALPHA;
                 material.depthWrite = false;
                 material.update();
 

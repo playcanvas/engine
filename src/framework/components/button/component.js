@@ -456,7 +456,7 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
-        if (!tintColor || !this._imageReference.hasComponent('element'))
+        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
             return;
 
         const color3 = toColor3(tintColor);
@@ -473,7 +473,7 @@ class ButtonComponent extends Component {
     }
 
     _applyTintWithTween(tintColor) {
-        if (!tintColor || !this._imageReference.hasComponent('element'))
+        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
             return;
 
         const color3 = toColor3(tintColor);

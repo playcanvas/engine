@@ -19,7 +19,6 @@ import { http } from '../net/http.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
-import { destroyPostEffectQuad } from '../graphics/simple-post-effect.js';
 import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
 import {
@@ -32,12 +31,11 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
-import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
 import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
-import { DefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
 import { SoundManager } from '../sound/manager.js';
 
@@ -152,14 +150,14 @@ class Progress {
  * Callback used by {@link Application#configure} when configuration file is loaded and parsed (or
  * an error occurs).
  *
- * @callback configureAppCallback
+ * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
  */
 
 /**
  * Callback used by {@link Application#preload} when all assets (marked as 'preload') are loaded.
  *
- * @callback preloadAppCallback
+ * @callback PreloadAppCallback
  */
 
 let app = null;
@@ -349,7 +347,6 @@ class Application extends EventHandler {
         this.loader = new ResourceLoader(this);
         LightsBuffer.init(this.graphicsDevice);
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * Stores all entities that have been created for this app by guid.
          *
@@ -357,7 +354,6 @@ class Application extends EventHandler {
          * @ignore
          */
         this._entityIndex = {};
-        /* eslint-enable jsdoc/check-types */
 
         /**
          * The scene managed by the application.
@@ -380,12 +376,6 @@ class Application extends EventHandler {
          */
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
-
-        /**
-         * @type {GraphNode[]}
-         * @ignore
-         */
-        this._enableList = [];
 
         /**
          * The asset registry managed by the application.
@@ -509,7 +499,7 @@ class Application extends EventHandler {
          * The forward renderer.
          *
          * @type {ForwardRenderer}
-         * @private
+         * @ignore
          */
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -756,7 +746,7 @@ class Application extends EventHandler {
         const material = new StandardMaterial();
         material.name = "Default Material";
         material.shadingModel = SPECULAR_BLINN;
-        DefaultMaterial.add(this.graphicsDevice, material);
+        setDefaultMaterial(this.graphicsDevice, material);
     }
 
     /**
@@ -791,7 +781,7 @@ class Application extends EventHandler {
      * registry.
      *
      * @param {string} url - The URL of the configuration file to load.
-     * @param {configureAppCallback} callback - The Function called when the configuration file is
+     * @param {ConfigureAppCallback} callback - The Function called when the configuration file is
      * loaded and parsed (or an error occurs).
      */
     configure(url, callback) {
@@ -820,7 +810,7 @@ class Application extends EventHandler {
     /**
      * Load all assets in the asset registry that are marked as 'preload'.
      *
-     * @param {preloadAppCallback} callback - Function called when all assets are loaded.
+     * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
         this.fire("preload:start");
@@ -1232,13 +1222,13 @@ class Application extends EventHandler {
             this.controller.update(dt);
         }
         if (this.mouse) {
-            this.mouse.update(dt);
+            this.mouse.update();
         }
         if (this.keyboard) {
-            this.keyboard.update(dt);
+            this.keyboard.update();
         }
         if (this.gamepads) {
-            this.gamepads.update(dt);
+            this.gamepads.update();
         }
     }
 
@@ -1350,7 +1340,6 @@ class Application extends EventHandler {
         stats.sortTime = this.renderer._sortTime;
         stats.skinTime = this.renderer._skinTime;
         stats.morphTime = this.renderer._morphTime;
-        stats.instancingTime = this.renderer._instancingTime;
         stats.lightClusters = this.renderer._lightClusters;
         stats.lightClustersTime = this.renderer._lightClustersTime;
         stats.otherPrimitives = 0;
@@ -1370,7 +1359,6 @@ class Application extends EventHandler {
         this.renderer._sortTime = 0;
         this.renderer._skinTime = 0;
         this.renderer._morphTime = 0;
-        this.renderer._instancingTime = 0;
         this.renderer._shadowMapTime = 0;
         this.renderer._depthMapTime = 0;
         this.renderer._forwardTime = 0;
@@ -1393,7 +1381,6 @@ class Application extends EventHandler {
         this.renderer._skinDrawCalls = 0;
         this.renderer._immediateRendered = 0;
         this.renderer._instancedDrawCalls = 0;
-        this.renderer._removedByInstancing = 0;
 
         this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 
@@ -1609,6 +1596,12 @@ class Application extends EventHandler {
      *
      * - {@link BAKE_COLOR}: single color lightmap
      * - {@link BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+     *
+     * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
+     * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
+     * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
+     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
+     * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
@@ -2127,20 +2120,14 @@ class Application extends EventHandler {
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        destroyPostEffectQuad();
-
         if (this.vr) {
             this.vr.destroy();
             this.vr = null;
         }
         this.xr.end();
 
-        ParticleEmitter.staticDestroy();
-
         this.renderer.destroy();
         this.renderer = null;
-
-        DefaultMaterial.remove(this.graphicsDevice);
 
         this.graphicsDevice.destroy();
         this.graphicsDevice = null;

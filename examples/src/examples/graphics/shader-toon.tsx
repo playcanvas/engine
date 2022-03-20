@@ -128,7 +128,8 @@ class ShaderToonExample {
             for (let i = 0; i < meshInstances.length; i++) {
                 const meshInstance = meshInstances[i];
                 if (!originalTexture) {
-                    originalTexture = meshInstance.material.diffuseMap;
+                    const originalMaterial = meshInstance.material as pc.StandardMaterial;
+                    originalTexture = originalMaterial.diffuseMap;
                 }
                 meshInstance.material = material;
             }

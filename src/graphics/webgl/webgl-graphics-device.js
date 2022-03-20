@@ -227,8 +227,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
 
-        this._enableAutoInstancing = false;
-        this.autoInstancingMaxObjects = 16384;
         this.defaultFramebuffer = null;
 
         this.updateClientRect();
@@ -255,6 +253,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         options.stencil = true;
         if (!options.powerPreference) {
             options.powerPreference = 'high-performance';
+        }
+
+        // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
+        if (typeof navigator !== 'undefined') {
+            const ua = navigator.userAgent;
+            if (ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'))) {
+                options.antialias = false;
+                Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
+            }
         }
 
         // Retrieve the WebGL context
@@ -570,6 +577,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.constantTexSource = this.scope.resolve("source");
+        this.textureBias = this.scope.resolve("textureBias");
+
+        this.textureBias.setValue(0.0);
 
         if (this.extTextureFloat) {
             if (this.webgl2) {
@@ -765,6 +775,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
             // EXT_disjoint_timer_query_webgl2
             this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = getExtension("EXT_blend_minmax");
             this.extDrawBuffers = getExtension('EXT_draw_buffers');
@@ -793,6 +804,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.extColorBufferFloat = null;
             this.extDisjointTimerQuery = null;
+            this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
         }
 
         this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
@@ -1272,7 +1284,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                 } else {
-                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                    const depthFormat = this.webgl2 ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT16;
+                    gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, target.width, target.height);
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                 }
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -1757,8 +1770,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const shader = this.shader;
         if (!shader)
             return;
-        const samplers = shader.samplers;
-        const uniforms = shader.uniforms;
+        const samplers = shader.impl.samplers;
+        const uniforms = shader.impl.uniforms;
 
         // vertex buffers
         if (!keepBuffers) {
@@ -2774,20 +2787,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     get fullscreen() {
         return !!document.fullscreenElement;
-    }
-
-    /**
-     * Automatic instancing.
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    set enableAutoInstancing(value) {
-        this._enableAutoInstancing = value && this.extInstancing;
-    }
-
-    get enableAutoInstancing() {
-        return this._enableAutoInstancing;
     }
 
     /**

@@ -132,7 +132,7 @@ class Keyboard extends EventHandler {
     /**
      * Attach the keyboard event handlers to an Element.
      *
-     * @param {Element} element - The element to listen for keyboard events on.
+     * @param {Element|Window} element - The element to listen for keyboard events on.
      */
     attach(element) {
         if (this._element) {

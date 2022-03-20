@@ -27,13 +27,11 @@ import { Component } from '../component.js';
  * @augments Component
  */
 class AnimationComponent extends Component {
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, string>}
      * @ignore
      */
     animationsIndex = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Create a new AnimationComponent instance.

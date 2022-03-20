@@ -230,11 +230,10 @@ class ScrollViewComponent extends Component {
             this._velocity.set(0, 0, 0);
         }
 
-        let hasChanged = false;
-        hasChanged |= this._updateAxis(x, 'x', ORIENTATION_HORIZONTAL);
-        hasChanged |= this._updateAxis(y, 'y', ORIENTATION_VERTICAL);
+        const xChanged = this._updateAxis(x, 'x', ORIENTATION_HORIZONTAL);
+        const yChanged = this._updateAxis(y, 'y', ORIENTATION_VERTICAL);
 
-        if (hasChanged) {
+        if (xChanged || yChanged) {
             this.fire('set:scroll', this._scroll);
         }
     }

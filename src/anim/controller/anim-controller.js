@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { sortPriority } from '../../core/sort.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -202,9 +203,7 @@ class AnimController {
             });
 
             // sort transitions in priority order
-            transitions.sort(function (a, b) {
-                return a.priority < b.priority;
-            });
+            sortPriority(transitions);
 
             this._findTransitionsFromStateCache[stateName] = transitions;
         }
@@ -220,9 +219,7 @@ class AnimController {
             });
 
             // sort transitions in priority order
-            transitions.sort(function (a, b) {
-                return a.priority < b.priority;
-            });
+            sortPriority(transitions);
 
             this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName] = transitions;
         }

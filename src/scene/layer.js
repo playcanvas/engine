@@ -13,7 +13,9 @@ import { Material } from './materials/material.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
+/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./graph-node.js').GraphNode} GraphNode */
+/** @typedef {import('./light.js').Light} Light */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 
 let keyA, keyB, sortPos, sortDir;
@@ -99,110 +101,8 @@ class InstanceList {
  * A Layer represents a renderable subset of the scene. It can contain a list of mesh instances,
  * lights and cameras, their render settings and also defines custom callbacks before, after or
  * during rendering. Layers are organized inside {@link LayerComposition} in a desired order.
- *
- * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-
- * transparent) mesh instances before rendering. Can be:
- *
- * - {@link SORTMODE_NONE}
- * - {@link SORTMODE_MANUAL}
- * - {@link SORTMODE_MATERIALMESH}
- * - {@link SORTMODE_BACK2FRONT}
- * - {@link SORTMODE_FRONT2BACK}
- *
- * Defaults to {@link SORTMODE_MATERIALMESH}.
- * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh
- * instances before rendering. Can be:
- *
- * - {@link SORTMODE_NONE}
- * - {@link SORTMODE_MANUAL}
- * - {@link SORTMODE_MATERIALMESH}
- * - {@link SORTMODE_BACK2FRONT}
- * - {@link SORTMODE_FRONT2BACK}
- *
- * Defaults to {@link SORTMODE_BACK2FRONT}.
- * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
- *
- * - {@link SHADER_FORWARD}
- * - {@link SHADER_FORWARDHDR}
- * - {@link SHADER_DEPTH}
- * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader}
- * to apply shader modifications based on this value.
- *
- * Defaults to {@link SHADER_FORWARD}.
- * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch
- * of mesh instances without lighting, skinning and morphing (faster).
- * @property {Layer} layerReference Make this layer render the same mesh instances that another
- * layer does instead of having its own mesh instance list. Both layers must share cameras. Frustum
- * culling is only performed for one layer. Useful for rendering multiple passes using different
- * shaders.
- * @property {Function} cullingMask Visibility mask that interacts with {@link MeshInstance#mask}.
- * @property {Function} onEnable Custom function that is called after the layer has been enabled.
- * This happens when:
- *
- * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
- * - {@link Layer#enabled} was changed from false to true
- * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
- *
- * Useful for allocating resources this layer will use (e.g. creating render targets).
- * @property {Function} onDisable Custom function that is called after the layer has been disabled.
- * This happens when:
- *
- * - {@link Layer#enabled} was changed from true to false
- * - {@link Layer#decrementCounter} was called and set the counter to zero.
- *
- * @property {Function} onPreCull Custom function that is called before visibility culling is
- * performed for this layer. Useful, for example, if you want to modify camera projection while
- * still using the same camera and make frustum culling work correctly with it (see
- * {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}).
- * This function will receive camera index as the only argument. You can get the actual camera
- * being used by looking up {@link LayerComposition#cameras} with this index.
- * @property {Function} onPostCull Custom function that is called after visibility culling is
- * performed for this layer. Useful for reverting changes done in {@link Layer#onPreCull} and
- * determining final mesh instance visibility (see {@link MeshInstance#visibleThisFrame}). This
- * function will receive camera index as the only argument. You can get the actual camera being
- * used by looking up {@link LayerComposition#cameras} with this index.
- * @property {Function} onPreRender Custom function that is called before this layer is rendered.
- * Useful, for example, for reacting on screen size changes. This function is called before the
- * first occurrence of this layer in {@link LayerComposition}. It will receive camera index as the
- * only argument. You can get the actual camera being used by looking up
- * {@link LayerComposition#cameras} with this index.
- * @property {Function} onPreRenderOpaque Custom function that is called before opaque mesh
- * instances (not semi-transparent) in this layer are rendered. This function will receive camera
- * index as the only argument. You can get the actual camera being used by looking up
- * {@link LayerComposition#cameras} with this index.
- * @property {Function} onPreRenderTransparent Custom function that is called before semi-
- * transparent mesh instances in this layer are rendered. This function will receive camera index
- * as the only argument. You can get the actual camera being used by looking up
- * {@link LayerComposition#cameras} with this index.
- * @property {Function} onPostRender Custom function that is called after this layer is rendered.
- * Useful to revert changes made in {@link Layer#onPreRender} or performing some processing on
- * {@link Layer#renderTarget}. This function is called after the last occurrence of this layer in
- * {@link LayerComposition}. It will receive camera index as the only argument. You can get the
- * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
- * @property {Function} onPostRenderOpaque Custom function that is called after opaque mesh
- * instances (not semi-transparent) in this layer are rendered. This function will receive camera
- * index as the only argument. You can get the actual camera being used by looking up
- * {@link LayerComposition#cameras} with this index.
- * @property {Function} onPostRenderTransparent Custom function that is called after semi-
- * transparent mesh instances in this layer are rendered. This function will receive camera index
- * as the only argument. You can get the actual camera being used by looking up
- * {@link LayerComposition#cameras} with this index.
- * @property {Function} onDrawCall Custom function that is called before every mesh instance in
- * this layer is rendered. It is not recommended to set this function when rendering many objects
- * every frame due to performance reasons.
- * @property {number} id A unique ID of the layer. Layer IDs are stored inside
- * {@link ModelComponent#layers}, {@link CameraComponent#layers}, {@link LightComponent#layers}
- * and {@link ElementComponent#layers} instead of names. Can be used in
- * {@link LayerComposition#getLayerById}.
  */
 class Layer {
-    /**
-     * Name of the layer. Can be used in {@link LayerComposition#getLayerByName}.
-     *
-     * @type {string}
-     */
-    name;
-
     /**
      * Create a new Layer instance.
      *
@@ -212,73 +112,305 @@ class Layer {
     constructor(options = {}) {
 
         if (options.id !== undefined) {
+            /**
+             * A unique ID of the layer. Layer IDs are stored inside {@link ModelComponent#layers},
+             * {@link RenderComponent#layers}, {@link CameraComponent#layers},
+             * {@link LightComponent#layers} and {@link ElementComponent#layers} instead of names.
+             * Can be used in {@link LayerComposition#getLayerById}.
+             *
+             * @type {number}
+             */
             this.id = options.id;
             layerCounter = Math.max(this.id + 1, layerCounter);
         } else {
             this.id = layerCounter++;
         }
 
+        /**
+         * Name of the layer. Can be used in {@link LayerComposition#getLayerByName}.
+         *
+         * @type {string}
+         */
         this.name = options.name;
 
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._enabled = options.enabled === undefined ? true : options.enabled;
+        /**
+         * @type {number}
+         * @private
+         */
         this._refCounter = this._enabled ? 1 : 0;
 
+        /**
+         * Defines the method used for sorting opaque (that is, not semi-transparent) mesh
+         * instances before rendering. Can be:
+         *
+         * - {@link SORTMODE_NONE}
+         * - {@link SORTMODE_MANUAL}
+         * - {@link SORTMODE_MATERIALMESH}
+         * - {@link SORTMODE_BACK2FRONT}
+         * - {@link SORTMODE_FRONT2BACK}
+         *
+         * Defaults to {@link SORTMODE_MATERIALMESH}.
+         *
+         * @type {number}
+         */
         this.opaqueSortMode = options.opaqueSortMode === undefined ? SORTMODE_MATERIALMESH : options.opaqueSortMode;
+
+        /**
+         * Defines the method used for sorting semi-transparent mesh instances before rendering. Can be:
+         *
+         * - {@link SORTMODE_NONE}
+         * - {@link SORTMODE_MANUAL}
+         * - {@link SORTMODE_MATERIALMESH}
+         * - {@link SORTMODE_BACK2FRONT}
+         * - {@link SORTMODE_FRONT2BACK}
+         *
+         * Defaults to {@link SORTMODE_BACK2FRONT}.
+         *
+         * @type {number}
+         */
         this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
+
         this.renderTarget = options.renderTarget;
+
+        /**
+         * A type of shader to use during rendering. Possible values are:
+         *
+         * - {@link SHADER_FORWARD}
+         * - {@link SHADER_FORWARDHDR}
+         * - {@link SHADER_DEPTH}
+         * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader}
+         * to apply shader modifications based on this value.
+         *
+         * Defaults to {@link SHADER_FORWARD}.
+         *
+         * @type {number}
+         */
         this.shaderPass = options.shaderPass === undefined ? SHADER_FORWARD : options.shaderPass;
 
-        // true if the layer is just pass-through meshInstance drawing - used for UI and Gizmo layers. The layers doesn't have lights, shadows, culling ..
+        /**
+         * Tells that this layer is simple and needs to just render a bunch of mesh instances
+         * without lighting, skinning and morphing (faster). Used for UI and Gizmo layers (the
+         * layer doesn't use lights, shadows, culling, etc).
+         *
+         * @type {boolean}
+         */
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
 
         // clear flags
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._clearColorBuffer = options.clearColorBuffer ? options.clearColorBuffer : false;
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._clearDepthBuffer = options.clearDepthBuffer ? options.clearDepthBuffer : false;
+        /**
+         * @type {boolean}
+         * @private
+         */
         this._clearStencilBuffer = options.clearStencilBuffer ? options.clearStencilBuffer : false;
 
+        /**
+         * Custom function that is called before visibility culling is performed for this layer.
+         * Useful, for example, if you want to modify camera projection while still using the same
+         * camera and make frustum culling work correctly with it (see
+         * {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}).
+         * This function will receive camera index as the only argument. You can get the actual
+         * camera being used by looking up {@link LayerComposition#cameras} with this index.
+         *
+         * @type {Function}
+         */
         this.onPreCull = options.onPreCull;
+        /**
+         * Custom function that is called before this layer is rendered. Useful, for example, for
+         * reacting on screen size changes. This function is called before the first occurrence of
+         * this layer in {@link LayerComposition}. It will receive camera index as the only
+         * argument. You can get the actual camera being used by looking up
+         * {@link LayerComposition#cameras} with this index.
+         *
+         * @type {Function}
+         */
         this.onPreRender = options.onPreRender;
+        /**
+         * Custom function that is called before opaque mesh instances (not semi-transparent) in
+         * this layer are rendered. This function will receive camera index as the only argument.
+         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
+         * with this index.
+         *
+         * @type {Function}
+         */
         this.onPreRenderOpaque = options.onPreRenderOpaque;
+        /**
+         * Custom function that is called before semi-transparent mesh instances in this layer are
+         * rendered. This function will receive camera index as the only argument. You can get the
+         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
+         *
+         * @type {Function}
+         */
         this.onPreRenderTransparent = options.onPreRenderTransparent;
 
+        /**
+         * Custom function that is called after visibility culling is performed for this layer.
+         * Useful for reverting changes done in {@link Layer#onPreCull} and determining final mesh
+         * instance visibility (see {@link MeshInstance#visibleThisFrame}). This function will
+         * receive camera index as the only argument. You can get the actual camera being used by
+         * looking up {@link LayerComposition#cameras} with this index.
+         *
+         * @type {Function}
+         */
         this.onPostCull = options.onPostCull;
+        /**
+         * Custom function that is called after this layer is rendered. Useful to revert changes
+         * made in {@link Layer#onPreRender} or performing some processing on
+         * {@link Layer#renderTarget}. This function is called after the last occurrence of this
+         * layer in {@link LayerComposition}. It will receive camera index as the only argument.
+         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
+         * with this index.
+         *
+         * @type {Function}
+         */
         this.onPostRender = options.onPostRender;
+        /**
+         * Custom function that is called after opaque mesh instances (not semi-transparent) in
+         * this layer are rendered. This function will receive camera index as the only argument.
+         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
+         * with this index.
+         *
+         * @type {Function}
+         */
         this.onPostRenderOpaque = options.onPostRenderOpaque;
+        /**
+         * Custom function that is called after semi-transparent mesh instances in this layer are
+         * rendered. This function will receive camera index as the only argument. You can get the
+         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
+         *
+         * @type {Function}
+         */
         this.onPostRenderTransparent = options.onPostRenderTransparent;
 
+        /**
+         * Custom function that is called before every mesh instance in this layer is rendered. It
+         * is not recommended to set this function when rendering many objects every frame due to
+         * performance reasons.
+         *
+         * @type {Function}
+         */
         this.onDrawCall = options.onDrawCall;
+        /**
+         * Custom function that is called after the layer has been enabled. This happens when:
+         *
+         * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
+         * - {@link Layer#enabled} was changed from false to true
+         * - {@link Layer#incrementCounter} was called and incremented the counter above zero.
+         *
+         * Useful for allocating resources this layer will use (e.g. creating render targets).
+         *
+         * @type {Function}
+         */
         this.onEnable = options.onEnable;
+        /**
+         * Custom function that is called after the layer has been disabled. This happens when:
+         *
+         * - {@link Layer#enabled} was changed from true to false
+         * - {@link Layer#decrementCounter} was called and set the counter to zero.
+         *
+         * @type {Function}
+         */
         this.onDisable = options.onDisable;
 
         if (this._enabled && this.onEnable) {
             this.onEnable();
         }
 
+        /**
+         * Make this layer render the same mesh instances that another layer does instead of having
+         * its own mesh instance list. Both layers must share cameras. Frustum culling is only
+         * performed for one layer. Useful for rendering multiple passes using different shaders.
+         *
+         * @type {Layer}
+         */
         this.layerReference = options.layerReference; // should use the same camera
+        /**
+         * @type {InstanceList}
+         * @private
+         */
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
-        // a bit mask that interacts with meshInstance.mask. Especially useful combined with layerReference,
-        // allowing to filter some objects, while sharing their list and culling.
+        /**
+         * Visibility bit mask that interacts with {@link MeshInstance#mask}. Especially useful
+         * when combined with layerReference, allowing for the filtering of some objects, while
+         * sharing their list and culling.
+         *
+         * @type {number}
+         */
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
+        /**
+         * @type {MeshInstance[]}
+         * @ignore
+         */
         this.shadowCasters = this.instances.shadowCasters;
 
+        /**
+         * @type {Function|null}
+         * @ignore
+         */
         this.customSortCallback = null;
+        /**
+         * @type {Function|null}
+         * @ignore
+         */
         this.customCalculateSortValues = null;
 
-        // array and set of all lights of type Light (not a LightComponent)
+        /**
+         * @type {Light[]}
+         * @private
+         */
         this._lights = [];
+        /**
+         * @type {Set<Light>}
+         * @private
+         */
         this._lightsSet = new Set();
 
-        // set of light used by clustered lighting (omni and spot, but no directional)
+        /**
+         * Set of light used by clustered lighting (omni and spot, but no directional).
+         *
+         * @type {Set<Light>}
+         * @private
+         */
         this._clusteredLightsSet = new Set();
 
-        // lights separated by light type
+        /**
+         * Lights separated by light type.
+         *
+         * @type {Light[][]}
+         * @ignore
+         */
         this._splitLights = [[], [], []];
 
-        // array of CameraComponent
+        /**
+         * @type {CameraComponent[]}
+         * @ignore
+         */
         this.cameras = [];
 
         this._dirty = false;
@@ -300,10 +432,23 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
+
+        /**
+         * @type {Float32Array}
+         * @ignore
+         */
         this._lightCube = null;
     }
 
+    /**
+     * @type {RenderTarget}
+     * @ignore
+     */
     set renderTarget(rt) {
+        /**
+         * @type {RenderTarget}
+         * @private
+         */
         this._renderTarget = rt;
         this._dirtyCameras = true;
     }
@@ -385,6 +530,16 @@ class Layer {
     }
 
     /**
+     * Returns lights used by clustered lighting in a set.
+     *
+     * @type {Set<Light>}
+     * @ignore
+     */
+    get clusteredLightsSet() {
+        return this._clusteredLightsSet;
+    }
+
+    /**
      * Increments the usage counter of this layer. By default, layers are created with counter set
      * to 1 (if {@link Layer.enabled} is true) or 0 (if it was false). Incrementing the counter
      * from 0 to 1 will enable the layer and call {@link Layer.onEnable}. Use this function to
@@ -424,6 +579,7 @@ class Layer {
 
     /**
      * Adds an array of mesh instances to this layer.
+     *1
      *
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
@@ -589,11 +745,6 @@ class Layer {
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
         this._dirtyLights = true;
-    }
-
-    // returns lights used by clustered lighting in a set
-    get clusteredLightsSet() {
-        return this._clusteredLightsSet;
     }
 
     /**
@@ -765,4 +916,4 @@ class Layer {
     }
 }
 
-export { Layer, VisibleInstanceList };
+export { Layer };

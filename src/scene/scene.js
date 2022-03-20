@@ -596,26 +596,45 @@ class Scene extends EventHandler {
     }
 
     applySettings(settings) {
-        // settings
-        this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
-        this.ambientLight.set(settings.render.global_ambient[0], settings.render.global_ambient[1], settings.render.global_ambient[2]);
-        this._fog = settings.render.fog;
-        this.fogColor.set(settings.render.fog_color[0], settings.render.fog_color[1], settings.render.fog_color[2]);
-        this.fogStart = settings.render.fog_start;
-        this.fogEnd = settings.render.fog_end;
-        this.fogDensity = settings.render.fog_density;
-        this._gammaCorrection = settings.render.gamma_correction;
-        this._toneMapping = settings.render.tonemapping;
-        this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
-        this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
-        this.lightmapMode = settings.render.lightmapMode;
-        this.exposure = settings.render.exposure;
-        this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
-        this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
+        const physics = settings.physics;
+        const render = settings.render;
 
-        if (settings.render.skyboxRotation) {
-            this._skyboxRotation.setFromEulerAngles(settings.render.skyboxRotation[0], settings.render.skyboxRotation[1], settings.render.skyboxRotation[2]);
+        // settings
+        this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
+        this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
+        this._fog = render.fog;
+        this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this.fogStart = render.fog_start;
+        this.fogEnd = render.fog_end;
+        this.fogDensity = render.fog_density;
+        this._gammaCorrection = render.gamma_correction;
+        this._toneMapping = render.tonemapping;
+        this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
+        this.lightmapMaxResolution = render.lightmapMaxResolution;
+        this.lightmapMode = render.lightmapMode;
+        this.exposure = render.exposure;
+        this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
+        this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
+
+        if (render.skyboxRotation) {
+            this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
+
+        // bake settings
+        [
+            'lightmapFilterEnabled',
+            'lightmapFilterRange',
+            'lightmapFilterSmoothness',
+            'ambientBake',
+            'ambientBakeNumSamples',
+            'ambientBakeSpherePart',
+            'ambientBakeOcclusionBrightness',
+            'ambientBakeOcclusionContrast'
+        ].forEach((setting) => {
+            if (render.hasOwnProperty(setting)) {
+                this[setting] = render[setting];
+            }
+        });
 
         this._resetSkyboxModel();
     }
