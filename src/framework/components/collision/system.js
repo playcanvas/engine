@@ -56,7 +56,6 @@ class CollisionComponentSystem extends ComponentSystem {
         super(app);
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('remove', this.onRemove, this);
     }
 
     get id() {
