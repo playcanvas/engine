@@ -61,8 +61,9 @@ class Quat {
      * console.log("The result of the cloning is: " + q.toString());
      */
     clone() {
-        // @ts-ignore
-        return new this.constructor(this.x, this.y, this.z, this.w);
+        /** @type {*} */
+        const cstr = this.constructor;
+        return new cstr(this.x, this.y, this.z, this.w);
     }
 
     conjugate() {

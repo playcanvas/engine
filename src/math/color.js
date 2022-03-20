@@ -54,8 +54,9 @@ class Color {
      * @returns {this} A duplicate color object.
      */
     clone() {
-        // @ts-ignore
-        return new this.constructor(this.r, this.g, this.b, this.a);
+        /** @type {*} */
+        const cstr = this.constructor;
+        return new cstr(this.r, this.g, this.b, this.a);
     }
 
     /**

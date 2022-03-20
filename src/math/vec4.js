@@ -127,8 +127,9 @@ class Vec4 {
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        // @ts-ignore
-        return new this.constructor(this.x, this.y, this.z, this.w);
+        /** @type {*} */
+        const cstr = this.constructor;
+        return new cstr(this.x, this.y, this.z, this.w);
     }
 
     /**

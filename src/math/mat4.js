@@ -108,8 +108,9 @@ class Mat4 {
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
-        // @ts-ignore
-        return new this.constructor().copy(this);
+        /** @type {*} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 
     /**

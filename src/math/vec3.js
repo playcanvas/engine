@@ -116,8 +116,9 @@ class Vec3 {
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        // @ts-ignore
-        return new this.constructor(this.x, this.y, this.z);
+        /** @type {*} */
+        const cstr = this.constructor;
+        return new cstr(this.x, this.y, this.z);
     }
 
     /**
