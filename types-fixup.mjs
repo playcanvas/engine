@@ -84,8 +84,8 @@ fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
     ['aspectRatioMode', 'number'],
-    ['calculateProjection', 'calculateMatrixCallback'],
-    ['calculateTransform', 'calculateMatrixCallback'],
+    ['calculateProjection', 'CalculateMatrixCallback'],
+    ['calculateTransform', 'CalculateMatrixCallback'],
     ['clearColor', 'Color'],
     ['cullFaces', 'boolean'],
     ['farClip', 'number'],
@@ -106,9 +106,9 @@ fs.writeFileSync(path, dts);
 
 const collisionComponentProps = [
     ['axis', 'number'],
-    ['halfExtents', 'any'],
+    ['halfExtents', 'Vec3'],
     ['height', 'number'],
-    ['model', 'any'],
+    ['model', 'Model|null'],
     ['radius', 'number'],
     ['type', 'string']
 ];
@@ -422,7 +422,7 @@ const standardMaterialProps = [
     ['occludeDirect', 'number'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
-    ['onUpdateShader', 'updateShaderCallback'],
+    ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
     ['opacityFadesSpecular', 'boolean'],
     ['opacityMap', 'Texture'],
@@ -493,4 +493,10 @@ dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
      */
     swap?(old: ScriptType): void;
 `);
+fs.writeFileSync(path, dts);
+
+path = './types/resources/handler.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
+dts = dts.replace('patch(', 'patch?(');
 fs.writeFileSync(path, dts);

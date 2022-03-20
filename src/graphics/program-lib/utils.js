@@ -26,7 +26,6 @@ const attrib2Semantic = {
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT
 };
 
-/* eslint-disable jsdoc/check-types */
 /**
  * Extract the attributes specified in a vertex shader.
  *
@@ -57,7 +56,6 @@ function collectAttribs(vsCode) {
     }
     return attribs;
 }
-/* eslint-enable jsdoc/check-types */
 
 /**
  * Create a shader from named shader chunks.

@@ -1,5 +1,6 @@
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
+import { Vec4 } from '../../math/vec4.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
 
@@ -83,7 +84,7 @@ const visibleSceneAabb = new BoundingBox();
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
-const blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
+const blurScissorRect = new Vec4(1, 1, 0, 0);
 const opChanId = { r: 1, g: 2, b: 3, a: 4 };
 const center = new Vec3();
 const viewportMatrix = new Mat4();
@@ -504,7 +505,7 @@ class ShadowRenderer {
             device.setIndexBuffer(mesh.indexBuffer[style]);
 
             // draw
-            i += forwardRenderer.drawInstance(device, meshInstance, mesh, style);
+            forwardRenderer.drawInstance(device, meshInstance, mesh, style);
             forwardRenderer._shadowDrawCalls++;
         }
     }

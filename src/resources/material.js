@@ -10,7 +10,7 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 const PLACEHOLDER_MAP = {
@@ -166,7 +166,7 @@ class MaterialHandler {
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset) {
 
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset);
+        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName);
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
@@ -244,7 +244,7 @@ class MaterialHandler {
             const dataAssetId = data[name];
 
             const materialTexture = material[name];
-            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name, materialAsset);
+            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name);
             const dataValidated = data.validated;
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {

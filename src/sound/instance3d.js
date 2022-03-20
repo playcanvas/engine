@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -45,7 +47,6 @@ class SoundInstance3d extends SoundInstance {
      * @param {number} [options.duration=null] - The total time after the startTime when playback
      * will stop or restart if loop is true.
      * @param {Vec3} [options.position=null] - The position of the sound in 3D space.
-     * @param {Vec3} [options.velocity=null] - The velocity of the sound.
      * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use
      * to reduce the volume of the audio as it moves away from the listener. Can be:
      *
@@ -66,9 +67,6 @@ class SoundInstance3d extends SoundInstance {
 
         if (options.position)
             this.position = options.position;
-
-        if (options.velocity)
-            this.velocity = options.velocity;
 
         this.maxDistance = options.maxDistance !== undefined ? Number(options.maxDistance) : MAX_DISTANCE;
         this.refDistance = options.refDistance !== undefined ? Number(options.refDistance) : 1;
@@ -97,9 +95,14 @@ class SoundInstance3d extends SoundInstance {
      */
     set position(value) {
         this._position.copy(value);
-        this.panner.positionX.value = value.x;
-        this.panner.positionY.value = value.y;
-        this.panner.positionZ.value = value.z;
+        const panner = this.panner;
+        if ('positionX' in panner) {
+            panner.positionX.value = value.x;
+            panner.positionY.value = value.y;
+            panner.positionZ.value = value.z;
+        } else if (panner.setPosition) { // Firefox (and legacy browsers)
+            panner.setPosition(value.x, value.y, value.z);
+        }
     }
 
     get position() {
@@ -110,13 +113,16 @@ class SoundInstance3d extends SoundInstance {
      * The velocity of the sound.
      *
      * @type {Vec3}
+     * @deprecated
+     * @ignore
      */
     set velocity(velocity) {
+        Debug.warn('SoundInstance3d#velocity is not implemented.');
         this._velocity.copy(velocity);
-        this.panner.setVelocity(velocity.x, velocity.y, velocity.z);
     }
 
     get velocity() {
+        Debug.warn('SoundInstance3d#velocity is not implemented.');
         return this._velocity;
     }
 
@@ -227,15 +233,6 @@ if (!hasAudioContext()) {
 
                 this.source.volume = v * factor * this._manager.volume;
             }
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'velocity', {
-        get: function () {
-            return this._velocity;
-        },
-        set: function (velocity) {
-            this._velocity.copy(velocity);
         }
     });
 

@@ -2,6 +2,7 @@ import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TY
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { DeviceCache } from './device-cache.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -10,13 +11,28 @@ import { DebugGraphics } from './debug-graphics.js';
 /** @typedef {import('./texture.js').Texture} Texture */
 
 // Draws shaded full-screen quad in a single call
-let _postEffectQuadVB = null;
 const _postEffectQuadDraw = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
     count: 4,
     indexed: false
 };
+
+// Device cache storing a quad vertex buffer
+const postEffectDeviceCache = new DeviceCache();
+
+function getPostEffectQuadVB(device) {
+    return postEffectDeviceCache.get(device, () => {
+        const vertexFormat = new VertexFormat(device, [{
+            semantic: SEMANTIC_POSITION,
+            components: 2,
+            type: TYPE_FLOAT32
+        }]);
+        const positions = new Float32Array(8);
+        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
+        return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
+    });
+}
 
 /**
  * Draws a screen-space quad using a specific shader. Mostly used by post-effects.
@@ -35,17 +51,6 @@ const _postEffectQuadDraw = {
 function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
 
     DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
-
-    if (_postEffectQuadVB === null) {
-        const vertexFormat = new VertexFormat(device, [{
-            semantic: SEMANTIC_POSITION,
-            components: 2,
-            type: TYPE_FLOAT32
-        }]);
-        const positions = new Float32Array(8);
-        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
-        _postEffectQuadVB = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
-    }
 
     const oldRt = device.renderTarget;
     device.setRenderTarget(target);
@@ -101,7 +106,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     device.setColorWrite(true, true, true, true);
     if (!useBlend) device.setBlending(false);
 
-    device.setVertexBuffer(_postEffectQuadVB, 0);
+    device.setVertexBuffer(getPostEffectQuadVB(device), 0);
     device.setShader(shader);
 
     device.draw(_postEffectQuadDraw);
@@ -120,13 +125,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
 
     DebugGraphics.popGpuMarker(device);
-}
-
-function destroyPostEffectQuad() {
-    if (_postEffectQuadVB) {
-        _postEffectQuadVB.destroy();
-        _postEffectQuadVB = null;
-    }
 }
 
 /**
@@ -149,4 +147,4 @@ function drawTexture(device, texture, target, shader, rect, scissorRect, useBlen
     drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
 }
 
-export { destroyPostEffectQuad, drawQuadWithShader, drawTexture };
+export { drawQuadWithShader, drawTexture };

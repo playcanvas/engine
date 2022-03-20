@@ -85,7 +85,6 @@ class SpriteComponent extends Component {
         // animated sprites
         this._autoPlayClip = null;
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * Dictionary of sprite animation clips.
          *
@@ -93,7 +92,6 @@ class SpriteComponent extends Component {
          * @private
          */
         this._clips = {};
-        /* eslint-enable jsdoc/check-types */
 
         // create default clip for simple sprite type
         this._defaultClip = new SpriteAnimationClip(this, {
@@ -251,7 +249,6 @@ class SpriteComponent extends Component {
         return this._color.a;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that contains {@link SpriteAnimationClip}s.
      *
@@ -312,7 +309,6 @@ class SpriteComponent extends Component {
     get clips() {
         return this._clips;
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * The current clip being played.
@@ -844,7 +840,7 @@ class SpriteComponent extends Component {
      * @param {object} data - Data for the new animation clip.
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
-     * @param {object} [data.loop] - Whether to loop the animation clip.
+     * @param {boolean} [data.loop] - Whether to loop the animation clip.
      * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite
      * that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.

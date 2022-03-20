@@ -123,11 +123,11 @@ Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of th
 
 Now you can run various build options:
 
-| Command                | Description                               | Outputs                          |
-|------------------------|-------------------------------------------|----------------------------------|
-| `npm run build`        | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run tsd`          | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`         | Build engine [API reference docs][docs]   | `docs`                           |
+| Command               | Description                               | Outputs                          |
+|-----------------------|-------------------------------------------|----------------------------------|
+| `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
+| `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
+| `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
 
 Pre-built versions of the engine are also available.
 
@@ -153,8 +153,6 @@ To build the source map to allow for easier engine debugging, you can add `-- -m
     npm run build -- -m
 
 This will output to `build/playcanvas.js.map`
-
-Note: The preprocessor is ignored when generating the source map as it breaks the mapping. This means that all debug and profiling code is included in the engine build when generating the source map.
 
 ## PlayCanvas Editor
 

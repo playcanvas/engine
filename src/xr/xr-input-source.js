@@ -9,7 +9,7 @@ import { Ray } from '../shape/ray.js';
 import { XrHand } from './xr-hand.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */
-/** @typedef {import('./xr-hit-test.js').xrHitTestStartCallback} xrHitTestStartCallback */
+/** @typedef {import('./xr-hit-test.js').XrHitTestStartCallback} XrHitTestStartCallback */
 /** @typedef {import('./xr-hit-test-source.js').XrHitTestSource} XrHitTestSource */
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
@@ -577,7 +577,7 @@ class XrInputSource extends EventHandler {
      * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {xrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {

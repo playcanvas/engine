@@ -6,12 +6,12 @@ import { Vec3 } from '../math/vec3.js';
 
 import { RESOLUTION_AUTO } from '../framework/constants.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 
 /**
  * Callback used by {@link VrDisplay#requestPresent} and {@link VrDisplay#exitPresent}.
  *
- * @callback vrDisplayCallback
+ * @callback VrDisplayCallback
  * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
  * @ignore
  */
@@ -19,7 +19,7 @@ import { RESOLUTION_AUTO } from '../framework/constants.js';
 /**
  * Callback used by {@link VrDisplay#requestAnimationFrame}.
  *
- * @callback vrFrameCallback
+ * @callback VrFrameCallback
  * @ignore
  */
 
@@ -251,7 +251,7 @@ class VrDisplay extends EventHandler {
     /**
      * Try to present full screen VR content on this display.
      *
-     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * @param {VrDisplayCallback} callback - Called when the request is completed. Callback takes a
      * single argument (err) that is the error message return if presenting fails, or null if the
      * call succeeds. Usually called by {@link CameraComponent#enterVr}.
      * @deprecated
@@ -277,7 +277,7 @@ class VrDisplay extends EventHandler {
     /**
      * Try to stop presenting VR content on this display.
      *
-     * @param {vrDisplayCallback} callback - Called when the request is completed. Callback takes a
+     * @param {VrDisplayCallback} callback - Called when the request is completed. Callback takes a
      * single argument (err) that is the error message return if presenting fails, or null if the
      * call succeeds. Usually called by {@link CameraComponent#exitVr}.
      * @deprecated
@@ -303,7 +303,7 @@ class VrDisplay extends EventHandler {
      * Used in the main application loop instead of the regular `window.requestAnimationFrame`.
      * Usually only called from inside {@link Application}.
      *
-     * @param {vrFrameCallback} fn - Function called when it is time to update the frame.
+     * @param {VrFrameCallback} fn - Function called when it is time to update the frame.
      * @deprecated
      */
     requestAnimationFrame(fn) {

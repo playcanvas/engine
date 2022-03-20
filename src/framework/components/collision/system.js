@@ -17,7 +17,7 @@ import { CollisionConeSystemImpl } from './shapes/cone.js';
 import { CollisionMeshSystemImpl } from './shapes/mesh.js';
 import { CollisionCompoundSystemImpl } from './shapes/compound.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const mat4 = new Mat4();
 const vec3 = new Vec3();

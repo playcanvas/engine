@@ -17,13 +17,13 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
  *
- * @callback xrErrorCallback
+ * @callback XrErrorCallback
  * @param {Error|null} err - The Error object or null if operation was successful.
  */
 
@@ -45,13 +45,11 @@ class XrManager extends EventHandler {
      */
     _supported = platform.browser && !!navigator.xr;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, boolean>}
      * @private
      */
     _available = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {string|null}
@@ -333,7 +331,7 @@ class XrManager extends EventHandler {
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
      * {@link XrPlaneDetection}.
-     * @param {xrErrorCallback} [options.callback] - Optional callback function called once session
+     * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
@@ -462,7 +460,7 @@ class XrManager extends EventHandler {
      * @param {string} type - Session type.
      * @param {string} spaceType - Reference space type.
      * @param {*} options - Session options.
-     * @param {xrErrorCallback} callback - Error callback.
+     * @param {XrErrorCallback} callback - Error callback.
      * @private
      */
     _onStartOptionsReady(type, spaceType, options, callback) {
@@ -483,7 +481,7 @@ class XrManager extends EventHandler {
      * Attempts to end XR session and optionally fires callback when session is ended or failed to
      * end.
      *
-     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * @param {XrErrorCallback} [callback] - Optional callback function called once session is
      * started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @example
@@ -571,14 +569,6 @@ class XrManager extends EventHandler {
 
         // clean up once session is ended
         const onEnd = () => {
-            this._session = null;
-            this._referenceSpace = null;
-            this.views = [];
-            this._width = 0;
-            this._height = 0;
-            this._type = null;
-            this._spaceType = null;
-
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
@@ -592,6 +582,14 @@ class XrManager extends EventHandler {
 
             if (!failed) this.fire('end');
 
+            this._session = null;
+            this._referenceSpace = null;
+            this.views = [];
+            this._width = 0;
+            this._height = 0;
+            this._type = null;
+            this._spaceType = null;
+
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
             this.app.tick();
@@ -603,7 +601,11 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
-        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl);
+        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
+            alpha: true,
+            depth: true,
+            stencil: true
+        });
 
         session.updateRenderState({
             baseLayer: this._baseLayer,

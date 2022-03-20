@@ -1,6 +1,6 @@
 import { script } from '../framework/script.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**

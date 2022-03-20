@@ -87,8 +87,6 @@ const matD = new Mat4();
  * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
  * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
  *
- * @property {Entity} screen The Entity with a {@link ScreenComponent} that this component belongs
- * to. This is automatically set when the component is a child of a ScreenComponent.
  * @property {Color} color The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color
  * of the text for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} opacity The opacity of the image for {@link ELEMENTTYPE_IMAGE} types or the
@@ -226,6 +224,12 @@ class ElementComponent extends Component {
 
         this._patch();
 
+        /**
+         * The Entity with a {@link ScreenComponent} that this component belongs to. This is
+         * automatically set when the component is a child of a ScreenComponent.
+         *
+         * @type {Entity|null}
+         */
         this.screen = null;
 
         this._type = ELEMENTTYPE_GROUP;

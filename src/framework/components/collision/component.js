@@ -3,6 +3,8 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../../../scene/model.js').Model} Model */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').CollisionComponentSystem} CollisionComponentSystem */
 
@@ -301,6 +303,10 @@ class CollisionComponent extends Component {
         return this._compoundParent;
     }
 
+    /**
+     * @param {Asset} asset - Asset that was removed.
+     * @private
+     */
     onAssetRemoved(asset) {
         asset.off('remove', this.onAssetRemoved, this);
         if (this._asset === asset.id) {
@@ -308,6 +314,10 @@ class CollisionComponent extends Component {
         }
     }
 
+    /**
+     * @param {Asset} asset - Asset that was removed.
+     * @private
+     */
     onRenderAssetRemoved(asset) {
         asset.off('remove', this.onRenderAssetRemoved, this);
         if (this._renderAsset === asset.id) {
@@ -315,6 +325,11 @@ class CollisionComponent extends Component {
         }
     }
 
+    /**
+     * @param {*} shape - Ammo shape.
+     * @returns {number|null} The shape's index in the child array of the compound shape.
+     * @private
+     */
     _getCompoundChildShapeIndex(shape) {
         const compound = this._shape;
         const shapes = compound.getNumChildShapes();
@@ -329,6 +344,10 @@ class CollisionComponent extends Component {
         return null;
     }
 
+    /**
+     * @param {GraphNode} parent - The parent node.
+     * @private
+     */
     _onInsert(parent) {
         // TODO
         // if is child of compound shape
@@ -356,6 +375,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     _updateCompound() {
         const entity = this.entity;
         if (entity._dirtyWorld) {
@@ -381,6 +401,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onEnable() {
         if (this._type === 'mesh' && (this._asset || this._renderAsset) && this._initialized) {
             const asset = this.system.app.assets.get(this._asset || this._renderAsset);
@@ -412,6 +433,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onDisable() {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
@@ -427,6 +449,7 @@ class CollisionComponent extends Component {
         }
     }
 
+    /** @private */
     onBeforeRemove() {
         if (this._asset) {
             this._asset = null;

@@ -1,7 +1,7 @@
 import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from './parser/scene.js';
 
-/** @typedef {import('../framework/application.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').Application} Application */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**

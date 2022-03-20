@@ -11,7 +11,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('../../../shape/frustum.js').Frustum} Frustum */
-/** @typedef {import('../../../xr/xr-manager.js').xrErrorCallback} xrErrorCallback */
+/** @typedef {import('../../../xr/xr-manager.js').XrErrorCallback} XrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').CameraComponentSystem} CameraComponentSystem */
 
@@ -38,7 +38,7 @@ const properties = [
 /**
  * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  *
- * @callback calculateMatrixCallback
+ * @callback CalculateMatrixCallback
  * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
  */
@@ -46,7 +46,7 @@ const properties = [
 /**
  * Callback used by {@link CameraComponent#enterVr} and {@link CameraComponent#exitVr}.
  *
- * @callback vrCameraCallback
+ * @callback VrCameraCallback
  * @param {string|null} err - On success it is null on failure it is the error message.
  */
 
@@ -107,7 +107,7 @@ const properties = [
  * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
  * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
  * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
- * @property {calculateMatrixCallback} calculateTransform Custom function you can provide to
+ * @property {CalculateMatrixCallback} calculateTransform Custom function you can provide to
  * calculate the camera transformation matrix manually. Can be used for complex effects like
  * reflections. Function is called using component's scope. Arguments:
  *
@@ -115,7 +115,7 @@ const properties = [
  * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
  *
  * Left and right are only used in stereo rendering.
- * @property {calculateMatrixCallback} calculateProjection Custom function you can provide to
+ * @property {CalculateMatrixCallback} calculateProjection Custom function you can provide to
  * calculate the camera projection matrix manually. Can be used for complex effects like doing
  * oblique projection. Function is called using component's scope. Arguments:
  *
@@ -532,7 +532,7 @@ class CameraComponent extends Component {
      * @function
      * @name CameraComponent#enterVr
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {vrCameraCallback} callback - Function called once to indicate success
+     * @param {VrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err).
      * On success it returns null on failure it returns the error message.
      * @example
@@ -554,7 +554,7 @@ class CameraComponent extends Component {
      * @description Attempt to start presenting this camera to a {@link VrDisplay}.
      * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
      * {@link VrManager#display} as the default.
-     * @param {vrCameraCallback} callback - Function called once to indicate success
+     * @param {VrCameraCallback} callback - Function called once to indicate success
      * of failure. The callback takes one argument (err). On success it returns null on
      * failure it returns the error message.
      * @example
@@ -613,7 +613,7 @@ class CameraComponent extends Component {
     /**
      * Attempt to stop presenting this camera.
      *
-     * @param {vrCameraCallback} callback - Function called once to indicate success of failure.
+     * @param {VrCameraCallback} callback - Function called once to indicate success of failure.
      * The callback takes one argument (err). On success it returns null on failure it returns the
      * error message.
      * @example
@@ -675,7 +675,7 @@ class CameraComponent extends Component {
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {xrErrorCallback} [options.callback] - Optional callback function called once the
+     * @param {XrErrorCallback} [options.callback] - Optional callback function called once the
      * session is started. The callback has one argument Error - it is null if the XR session
      * started successfully.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
@@ -707,7 +707,7 @@ class CameraComponent extends Component {
     /**
      * Attempt to end XR session of this camera.
      *
-     * @param {xrErrorCallback} [callback] - Optional callback function called once session is
+     * @param {XrErrorCallback} [callback] - Optional callback function called once session is
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component

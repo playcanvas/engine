@@ -11,7 +11,7 @@ import { getApplication } from '../framework/globals.js';
 import { http } from '../net/http.js';
 
 /** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../resources/loader.js').resourceLoaderCallback} resourceLoaderCallback */
+/** @typedef {import('../resources/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
@@ -29,7 +29,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 /**
  * Callback used by {@link Asset#ready} and called when an asset is ready.
  *
- * @callback assetReadyCallback
+ * @callback AssetReadyCallback
  * @param {Asset} asset - The ready asset.
  */
 
@@ -95,10 +95,10 @@ class Asset extends EventHandler {
 
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
-         * "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
+         * "css", "font", "json", "html", "material", "model", "render", "script", "shader", "sprite",
          * "template", "text", "texture"]
          *
-         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
+         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
          */
         this.type = type;
 
@@ -450,7 +450,7 @@ class Asset extends EventHandler {
      * Take a callback which is called as soon as the asset is loaded. If the asset is already
      * loaded the callback is called straight away.
      *
-     * @param {assetReadyCallback} callback - The function called when the asset is ready. Passed
+     * @param {AssetReadyCallback} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
@@ -521,7 +521,7 @@ class Asset extends EventHandler {
      * via http.
      *
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {resourceLoaderCallback} callback - The callback function to receive results.
+     * @param {ResourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      * @ignore

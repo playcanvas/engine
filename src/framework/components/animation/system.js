@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
-/** @typedef {import('../../application.js').Application} Application */
+/** @typedef {import('../../app-base.js').Application} Application */
 
 const _schema = [
     'enabled',
@@ -80,6 +80,8 @@ class AnimationComponentSystem extends ComponentSystem {
             }
         }
         clone.animation.animationsIndex = clonedAnimationsIndex;
+
+        return clone.animation;
     }
 
     onBeforeRemove(entity, component) {

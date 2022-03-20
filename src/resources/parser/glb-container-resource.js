@@ -99,7 +99,7 @@ class GlbContainerResource {
         };
 
         // helper function to recursively clone a hierarchy of GraphNodes to Entities
-        const cloneHierarchy = function (root, node, glb) {
+        const cloneHierarchy = (root, node, glb) => {
 
             const entity = new Entity();
             node._cloneInternal(entity);
@@ -109,6 +109,7 @@ class GlbContainerResource {
 
             // find all components needed for this node
             let attachedMi = null;
+            let renderAsset = null;
             for (let i = 0; i < glb.nodes.length; i++) {
                 const glbNode = glb.nodes[i];
                 if (glbNode === node) {
@@ -117,6 +118,7 @@ class GlbContainerResource {
                     // mesh
                     if (gltfNode.hasOwnProperty('mesh')) {
                         const meshGroup = glb.renders[gltfNode.mesh].meshes;
+                        renderAsset = this.renders[gltfNode.mesh];
                         for (var mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
@@ -158,6 +160,9 @@ class GlbContainerResource {
                     meshInstances: attachedMi,
                     rootBone: root
                 }, options));
+
+                // assign asset id without recreating mesh instances which are already set up with materials
+                entity.render.assignAsset(renderAsset);
             }
 
             // recursively clone children

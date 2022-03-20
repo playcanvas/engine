@@ -559,7 +559,7 @@ class RenderComponent extends Component {
      * @type {Asset|number}
      */
     set asset(value) {
-        const id = (value instanceof Asset ? value.id : value);
+        const id = value instanceof Asset ? value.id : value;
         if (this._assetReference.id === id) return;
 
         if (this._assetReference.asset && this._assetReference.asset.resource) {
@@ -575,6 +575,18 @@ class RenderComponent extends Component {
 
     get asset() {
         return this._assetReference.id;
+    }
+
+    /**
+     * Assign asset id to the component, without updating the component with the new asset.
+     * This can be used to assign the asset id to already fully created component.
+     *
+     * @param {Asset|number} asset - The render asset or asset id to assign.
+     * @ignore
+     */
+    assignAsset(asset) {
+        const id = asset instanceof Asset ? asset.id : asset;
+        this._assetReference.id = id;
     }
 
     /**
@@ -653,6 +665,12 @@ class RenderComponent extends Component {
 
         this.asset = null;
         this.materialAsset = null;
+
+        this._assetReference.id = null;
+
+        for (let i = 0; i < this._materialReferences.length; i++) {
+            this._materialReferences[i].id = null;
+        }
 
         this.entity.off('remove', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);

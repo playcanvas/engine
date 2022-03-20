@@ -10,13 +10,11 @@ class IndexedList {
      */
     _list = [];
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, number>}
      * @private
      */
     _index = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Add a new item into the list with a index key.

@@ -20,8 +20,6 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../math/color.js').Color} Color */
-/** @typedef {import('../../math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
@@ -36,7 +34,7 @@ let _params = new Set();
 /**
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
- * @callback updateShaderCallback
+ * @callback UpdateShaderCallback
  * @param {*} options - An object with shader generator settings (based on current material and
  * scene properties), that you can change and then return. Properties of the object passed into
  * this function are documented in {@link StandardMaterial#onUpdateShader}.
@@ -366,7 +364,7 @@ let _params = new Set();
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
  * backfaces.
- * @property {updateShaderCallback} onUpdateShader A custom function that will be called after all
+ * @property {UpdateShaderCallback} onUpdateShader A custom function that will be called after all
  * shader generator properties are collected and before shader code is generated. This function
  * will receive an object with shader generator settings (based on current material and scene
  * properties), that you can change and then return. Returned value will be used instead. This is
@@ -496,7 +494,6 @@ class StandardMaterial extends Material {
         this.reset();
     }
 
-    /* eslint-disable jsdoc/check-types */
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
@@ -525,7 +522,6 @@ class StandardMaterial extends Material {
         this._dirtyShader = true;
         return this._chunks;
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Copy a `StandardMaterial`.

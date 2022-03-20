@@ -1,5 +1,5 @@
 import { LocalizedAsset } from '../../src/asset/asset-localized.js';
-import { Application } from '../../src/framework/application.js';
+import { Application } from '../../src/framework/app-base.js';
 import { Asset } from '../../src/asset/asset.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';

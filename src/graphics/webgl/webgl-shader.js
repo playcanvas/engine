@@ -15,6 +15,10 @@ import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 class WebglShader {
     constructor(shader) {
 
+        this.uniforms = [];
+        this.samplers = [];
+        this.attributes = [];
+
         this.glProgram = null;
         this.glVertexShader = null;
         this.glFragmentShader = null;
@@ -218,7 +222,7 @@ class WebglShader {
 
             shaderInput = new ShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
 
-            shader.attributes.push(shaderInput);
+            this.attributes.push(shaderInput);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
@@ -233,9 +237,9 @@ class WebglShader {
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                 (device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
             ) {
-                shader.samplers.push(shaderInput);
+                this.samplers.push(shaderInput);
             } else {
-                shader.uniforms.push(shaderInput);
+                this.uniforms.push(shaderInput);
             }
         }
 

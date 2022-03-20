@@ -86,7 +86,6 @@ export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
-export { DepthMaterial } from './scene/materials/depth-material.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
@@ -211,7 +210,7 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js'
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { app, Application } from './framework/application.js';
+export { app, Application } from './framework/app-base.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './anim/controller/constants.js';
