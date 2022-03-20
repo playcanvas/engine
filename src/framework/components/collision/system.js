@@ -39,9 +39,6 @@ class CollisionComponentSystem extends ComponentSystem {
     _DataType = CollisionComponentData;
 
     /** @private */
-    _schema = ['enabled'];
-
-    /** @private */
     _implementations = { };
 
     /** @private */
@@ -54,6 +51,8 @@ class CollisionComponentSystem extends ComponentSystem {
      */
     constructor(app) {
         super(app);
+
+        this.schema.push('enabled');
 
         this.on('beforeremove', this.onBeforeRemove, this);
     }
@@ -68,14 +67,6 @@ class CollisionComponentSystem extends ComponentSystem {
 
     get DataType() {
         return this._DataType;
-    }
-
-    set schema(schema) {
-        // Do not allow base class to override with an empty array.
-    }
-
-    get schema() {
-        return this._schema;
     }
 
     get implementations() {
