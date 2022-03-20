@@ -22,33 +22,6 @@ import { Component } from '../component.js';
  * | **Rigid Body (Dynamic or Kinematic)** | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>triggerenter</li><li>triggerleave</li></ul> |
  * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
  *
- * @property {string} type The type of the collision volume. Can be:
- *
- * - "box": A box-shaped collision volume.
- * - "capsule": A capsule-shaped collision volume.
- * - "compound": A compound shape. Any descendant entities with a collision component
- * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid
- * shape.
- * - "cone": A cone-shaped collision volume.
- * - "cylinder": A cylinder-shaped collision volume.
- * - "mesh": A collision volume that uses a model asset as its shape.
- * - "sphere": A sphere-shaped collision volume.
- *
- * Defaults to "box".
- * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and
- * z axes. Defaults to [0.5, 0.5, 0.5].
- * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
- * volumes. Defaults to 0.5.
- * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
- * collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
- * @property {number} height The total height of the capsule, cylinder or cone-shaped collision
- * volume from tip to tip. Defaults to 2.
- * @property {Asset|number} asset The asset for the model of the mesh collision volume - can also
- * be an asset id. Defaults to null.
- * @property {Asset|number} renderAsset The render asset of the mesh collision volume - can also be
- * an asset id. Defaults to null. If not set then the asset property will be checked instead.
- * @property {Model} model The model that is added to the scene graph for the mesh collision
- * volume.
  * @augments Component
  */
 class CollisionComponent extends Component {

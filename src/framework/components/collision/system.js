@@ -71,7 +71,7 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     set schema(schema) {
-        this._schema = schema;
+        // Do not allow base class to override with an empty array.
     }
 
     get schema() {
