@@ -915,7 +915,7 @@ class GraphNode extends EventHandler {
      */
     setLocalEulerAngles(x, y, z) {
         if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
+            this.localRotation.setFromEulerAngles(x);
         } else {
             this.localRotation.setFromEulerAngles(x, y, z);
         }
@@ -1139,7 +1139,7 @@ class GraphNode extends EventHandler {
      */
     setEulerAngles(x, y, z) {
         if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
+            this.localRotation.setFromEulerAngles(x);
         } else {
             this.localRotation.setFromEulerAngles(x, y, z);
         }
@@ -1549,7 +1549,7 @@ class GraphNode extends EventHandler {
      */
     rotate(x, y, z) {
         if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
+            rotation.setFromEulerAngles(x);
         } else {
             rotation.setFromEulerAngles(x, y, z);
         }
@@ -1588,7 +1588,7 @@ class GraphNode extends EventHandler {
      */
     rotateLocal(x, y, z) {
         if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
+            rotation.setFromEulerAngles(x);
         } else {
             rotation.setFromEulerAngles(x, y, z);
         }

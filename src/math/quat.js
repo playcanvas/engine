@@ -383,7 +383,7 @@ class Quat {
      * q.setFromEulerAngles(45, 90, 180);
      *
      * // Create the same quaternion from a vector containing the same 3 euler angles
-     * var v = new Vec3(45, 90, 180);
+     * var v = new pc.Vec3(45, 90, 180);
      * var r = new pc.Quat();
      * r.setFromEulerAngles(v);
      */
