@@ -340,7 +340,7 @@ class ParticleEmitter {
 
         this.swapTex = false;
         this.useMesh = true;
-        this.useCpu = false;
+        this.useCpu = !graphicsDevice.supportsGpuParticles;
 
         this.pack8 = true;
         this.localBounds = new BoundingBox();
