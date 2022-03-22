@@ -749,7 +749,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     initializeExtensions() {
         const gl = this.gl;
-
         const supportedExtensions = gl.getSupportedExtensions();
 
         const getExtension = function () {
@@ -822,8 +821,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
         this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
-
-        this.supportsInstancing = !!this.extInstancing;
     }
 
     /**
@@ -835,11 +832,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         let ext;
 
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
+
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs.antialias;
         this.supportsStencil = contextAttribs.stencil;
+
+        this.supportsInstancing = !!this.extInstancing;
 
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -864,6 +865,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         ext = this.extDebugRendererInfo;
         this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
         this.unmaskedVendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : '';
+
+        // Check if we support GPU particles. At the moment, Samsung devices with Exynos (ARM) either crash or render
+        // incorrectly when using GPU for particles. See:
+        // https://github.com/playcanvas/engine/issues/3967
+        // https://github.com/playcanvas/engine/issues/3415
+        const samsungModelRegex = /SM-[a-zA-Z0-9]+\)/;
+        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex));
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
