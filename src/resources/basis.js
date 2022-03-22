@@ -18,7 +18,7 @@ const getCompressionFormats = (device) => {
 };
 
 // download basis code and compile the wasm module for use in workers
-const prepareWorkerModules = (config, callback) => {
+const prepareWorkerModules = (config, maxRetries, callback) => {
     const getWorkerBlob = () => {
         const code = '(' + BasisWorker.toString() + ')()\n\n';
         return new Blob([code], { type: 'application/javascript' });
@@ -45,12 +45,18 @@ const prepareWorkerModules = (config, callback) => {
         });
     };
 
+    const options = {
+        responseType: 'blob',
+        retry: maxRetries > 0,
+        maxRetries: maxRetries
+    };
+
     if (config.glueUrl && config.wasmUrl && wasmSupported()) {
         let basisCode = null;
         let module = null;
 
         // download glue script
-        http.get(config.glueUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.glueUrl, options, (err, response) => {
             if (err) {
                 callback(err);
             } else {
@@ -98,7 +104,7 @@ const prepareWorkerModules = (config, callback) => {
             compileManual();
         }
     } else {
-        http.get(config.fallbackUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.fallbackUrl, options, (err, response) => {
             if (err) {
                 callback(err, null);
             } else {
