@@ -147,8 +147,17 @@
         }
 
         function callExample(canvas, assetManifest, files, data) {
-            var args = window.exampleFunction.toString().match(/function\s.*?\(([^)]*)\)/)[1].split(', ');
-            window.exampleFunction.apply(this, args.map(function(arg) {
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            function replaceAll(str, find, replace) {
+                return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+            }
+            var argsString = window.exampleFunction.toString().match(/function\s.*?\(([^)]*)\)/)[1];
+            argsString = replaceAll(argsString, ' ', '');
+            argsString = replaceAll(argsString, '\n', '');
+            var argNames = argsString.split(',');
+            var args = argNames.map(function(arg) {
                 if (arg === 'canvas') {
                     return canvas;
                 } else if (arg === 'assetManifest') {
@@ -164,7 +173,8 @@
                 } else if (arg === 'wasmSupported') {
                     return wasmSupported;
                 }
-            }));
+            });
+            window.exampleFunction.apply(this, args);
             if (pc.app && pc.app.graphicsDevice.canvas) {
                 setupApplication(pc.app);
             }
