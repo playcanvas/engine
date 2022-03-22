@@ -374,8 +374,8 @@ class Quat {
      *
      * @param {number|Vec3} ex - Angle to rotate around X axis in degrees. If ex is a Vec3,
      * the Vec3 will be used to populate the first 3 components.
-     * @param {number} ey - Angle to rotate around Y axis in degrees.
-     * @param {number} ez - Angle to rotate around Z axis in degrees.
+     * @param {number} [ey] - Angle to rotate around Y axis in degrees.
+     * @param {number} [ez] - Angle to rotate around Z axis in degrees.
      * @returns {Quat} Self for chaining.
      * @example
      * // Create a quaternion from 3 euler angles
