@@ -1,9 +1,11 @@
-import React from 'react';
 import * as pc from '../../../../';
-import { AssetLoader } from '../../app/helpers/loader';
 
 
-const vshader = `
+class GrabPassExample {
+    static CATEGORY = 'Graphics';
+    static NAME = 'Grab Pass';
+    static FILES = {
+        'shader.vert': `
 attribute vec3 aPosition;
 attribute vec2 aUv;
 
@@ -20,10 +22,8 @@ void main(void)
 
 
     texCoord = aUv;
-}
-`;
-
-const fshader = `
+}`,
+        'shader.frag': `
 precision mediump float;
 
 // use the special texture_grabPass texture, which is a built-in texture. Each time this texture is used
@@ -69,137 +69,141 @@ void main(void)
     // brighten the refracted texture a little bit
     // brighten even more the rough parts of the glass
     gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
-}
-`;
+}`
+    };
 
-class GrabPassExample {
-    static CATEGORY = 'Graphics';
-    static NAME = 'Grab Pass';
 
-    load() {
-        return <>
-            <AssetLoader name='shader.vert' type='shader' data={vshader} />
-            <AssetLoader name='shader.frag' type='shader' data={fshader} />
-            <AssetLoader name='normal' type='texture' url='/static/assets/textures/normal-map.png' />
-            <AssetLoader name="roughness" type="texture" url="/static/assets/textures/pc-gray.png" />
-            <AssetLoader name='helipad.dds' type='cubemap' url='/static/assets/cubemaps/helipad.dds' data={{ type: pc.TEXTURETYPE_RGBM }}/>
-        </>;
-    }
-
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         // Create the app and start the update loop
-        const app = new pc.Application(canvas, {});
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        // setup skydome
-        app.scene.skyboxMip = 0;
-        app.scene.exposure = 2;
-        app.scene.setSkybox(assets['helipad.dds'].resources);
-
-        app.scene.toneMapping = pc.TONEMAP_ACES;
-
-        // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
-        // Set up front to back sorting for those meshes - so when we get to render the glass,
-        // object behind it would be rendered already
-        const immediateLayer = app.scene.layers.getLayerByName("Immediate");
-        immediateLayer.opaqueSortMode = pc.SORTMODE_BACK2FRONT;
-
-        // helper function to create a primitive with shape type, position, scale, color
-        function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
-            // create material of specified color
-            const material = new pc.StandardMaterial();
-            material.diffuse = color;
-            material.shininess = 60;
-            material.metalness = 0.4;
-            material.useMetalness = true;
-            material.update();
-
-            // create primitive
-            const primitive = new pc.Entity();
-            primitive.addComponent('render', {
-                type: primitiveType,
-                material: material,
-                layers: [immediateLayer.id]
-            });
-
-            // set position and scale and add it to scene
-            primitive.setLocalPosition(position);
-            primitive.setLocalScale(scale);
-            app.root.addChild(primitive);
-
-            return primitive;
-        }
-
-        // create few primitives, keep their references to rotate them later
-        const primitives: any = [];
-        const count = 7;
-        const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
-        for (let i = 0; i < count; i++) {
-            const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-            const color = new pc.Color(Math.random(), Math.random(), Math.random());
-            const angle = 2 * Math.PI * i / count;
-            const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
-            primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
-        }
-
-        // Create the camera, which renders entities
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.2, 0.2)
+        const app = new pc.Application(canvas, {
+            graphicsDeviceOptions: {
+                alpha: true
+            }
         });
-        app.root.addChild(camera);
-        camera.setLocalPosition(0, 10, 20);
-        camera.lookAt(pc.Vec3.ZERO);
 
-        // create a primitive which uses refraction shader to distort the view behind it
-        const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
-        glass.render.castShadows = false;
-        glass.render.receiveShadows = false;
-
-        // @ts-ignore create shader using vertex and fragment shaders
-        const webgl2def = (app.graphicsDevice.webgl2) ? "#define GL2\n" : "";
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION,
-                aUv: pc.SEMANTIC_TEXCOORD0
-            },
-            vshader: assets['shader.vert'].data,
-            fshader: webgl2def + assets['shader.frag'].data
+        const assets = {
+            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+            "roughness": new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
+            'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM })
         };
 
-        // reflection material using the shader
-        const refractionMaterial = new pc.Material();
-        refractionMaterial.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-        glass.render.material = refractionMaterial;
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-        // set an offset map on the material
-        refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
-
-        // set roughness map
-        refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
-
-        refractionMaterial.update();
-        app.start();
-
-        // update things each frame
-        let time = 0;
-        app.on("update", function (dt) {
-            time += dt;
-
-            // rotate the primitives
-            primitives.forEach((prim: pc.Entity) => {
-                prim.rotate(0.3, 0.2, 0.1);
+            Object.values(assets).forEach((asset) => {
+                console.log(asset, asset.loaded);
             });
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            glass.rotate(-0.1, 0.1, -0.15);
+            // setup skydome
+            app.scene.skyboxMip = 0;
+            app.scene.exposure = 2;
+            app.scene.setSkybox(assets['helipad.dds'].resources);
 
-            // orbit the camera
-            camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
-            camera.lookAt(new pc.Vec3(0, 2, 0));
+            app.scene.toneMapping = pc.TONEMAP_ACES;
+
+            // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
+            // Set up front to back sorting for those meshes - so when we get to render the glass,
+            // object behind it would be rendered already
+            const immediateLayer = app.scene.layers.getLayerByName("Immediate");
+            immediateLayer.opaqueSortMode = pc.SORTMODE_BACK2FRONT;
+
+            // helper function to create a primitive with shape type, position, scale, color
+            function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
+                // create material of specified color
+                const material = new pc.StandardMaterial();
+                material.diffuse = color;
+                material.shininess = 60;
+                material.metalness = 0.4;
+                material.useMetalness = true;
+                material.update();
+
+                // create primitive
+                const primitive = new pc.Entity();
+                primitive.addComponent('render', {
+                    type: primitiveType,
+                    material: material,
+                    layers: [immediateLayer.id]
+                });
+
+                // set position and scale and add it to scene
+                primitive.setLocalPosition(position);
+                primitive.setLocalScale(scale);
+                app.root.addChild(primitive);
+
+                return primitive;
+            }
+
+            // create few primitives, keep their references to rotate them later
+            const primitives: any = [];
+            const count = 7;
+            const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+            for (let i = 0; i < count; i++) {
+                const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+                const color = new pc.Color(Math.random(), Math.random(), Math.random());
+                const angle = 2 * Math.PI * i / count;
+                const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
+                primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
+            }
+
+            // Create the camera, which renders entities
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.2, 0.2, 0.2)
+            });
+            app.root.addChild(camera);
+            camera.setLocalPosition(0, 10, 20);
+            camera.lookAt(pc.Vec3.ZERO);
+
+            // create a primitive which uses refraction shader to distort the view behind it
+            const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
+            glass.render.castShadows = false;
+            glass.render.receiveShadows = false;
+
+            // @ts-ignore create shader using vertex and fragment shaders
+            const webgl2def = (app.graphicsDevice.webgl2) ? "#define GL2\n" : "";
+            const shaderDefinition = {
+                attributes: {
+                    aPosition: pc.SEMANTIC_POSITION,
+                    aUv: pc.SEMANTIC_TEXCOORD0
+                },
+                vshader: files['shader.vert'],
+                fshader: webgl2def + files['shader.frag']
+            };
+
+            // reflection material using the shader
+            const refractionMaterial = new pc.Material();
+            refractionMaterial.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+            glass.render.material = refractionMaterial;
+
+            // set an offset map on the material
+            refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
+
+            // set roughness map
+            refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
+
+            // refractionMaterial.update();
+            app.start();
+
+            // update things each frame
+            let time = 0;
+            app.on("update", function (dt) {
+                time += dt;
+
+                // rotate the primitives
+                primitives.forEach((prim: pc.Entity) => {
+                    prim.rotate(0.3, 0.2, 0.1);
+                });
+
+                glass.rotate(-0.1, 0.1, -0.15);
+
+                // orbit the camera
+                camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
+                camera.lookAt(new pc.Vec3(0, 2, 0));
+            });
         });
     }
 }
