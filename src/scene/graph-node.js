@@ -914,11 +914,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalEulerAngles(angles);
      */
     setLocalEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (!this._dirtyLocal)
             this._dirtifyLocal();
@@ -1138,11 +1134,7 @@ class GraphNode extends EventHandler {
      * this.entity.setEulerAngles(angles);
      */
     setEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (this._parent !== null) {
             const parentRot = this._parent.getRotation();
@@ -1548,11 +1540,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotate(r);
      */
     rotate(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         if (this._parent === null) {
             this.localRotation.mul2(rotation, this.localRotation);
@@ -1587,11 +1575,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotateLocal(r);
      */
     rotateLocal(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         this.localRotation.mul(rotation);
 
