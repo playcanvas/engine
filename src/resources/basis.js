@@ -45,12 +45,18 @@ const prepareWorkerModules = (config, callback) => {
         });
     };
 
+    const options = {
+        responseType: 'blob',
+        retry: config.maxRetries > 0,
+        maxRetries: config.maxRetries
+    };
+
     if (config.glueUrl && config.wasmUrl && wasmSupported()) {
         let basisCode = null;
         let module = null;
 
         // download glue script
-        http.get(config.glueUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.glueUrl, options, (err, response) => {
             if (err) {
                 callback(err);
             } else {
@@ -98,7 +104,7 @@ const prepareWorkerModules = (config, callback) => {
             compileManual();
         }
     } else {
-        http.get(config.fallbackUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.fallbackUrl, options, (err, response) => {
             if (err) {
                 callback(err, null);
             } else {
@@ -217,6 +223,7 @@ class BasisClient {
 const defaultNumWorkers = 1;
 const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
 const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
+const defaultMaxRetries = 5;
 
 // global state
 const queue = new BasisQueue();
@@ -250,6 +257,7 @@ let initializing = false;
  * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order
  * for textures with alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
  * 'etc2', 'pvr'.
+ * @param {number} [config.maxRetries] - Number of http load retry attempts. Defaults to 5.
  */
 function basisInitialize(config) {
     if (initializing) {
@@ -292,6 +300,7 @@ function basisInitialize(config) {
 
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
+        config.maxRetries = config.hasOwnProperty('maxRetries') ? config.maxRetries : defaultMaxRetries;
 
         prepareWorkerModules(config, (err, clientConfig) => {
             if (err) {
