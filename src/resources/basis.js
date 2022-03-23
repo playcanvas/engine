@@ -257,7 +257,7 @@ let initializing = false;
  * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order
  * for textures with alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
  * 'etc2', 'pvr'.
- * @param {number} [config.maxRetries] - Number of http load retry attempts.
+ * @param {number} [config.maxRetries] - Number of http load retry attempts. Defaults to 5.
  */
 function basisInitialize(config) {
     if (initializing) {
@@ -300,7 +300,7 @@ function basisInitialize(config) {
 
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
-        config.maxRetries = config.maxRetries || defaultMaxRetries;
+        config.maxRetries = config.hasOwnProperty('maxRetries') ? config.maxRetries : defaultMaxRetries;
 
         prepareWorkerModules(config, (err, clientConfig) => {
             if (err) {
