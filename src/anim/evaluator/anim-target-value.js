@@ -21,10 +21,6 @@ class AnimTargetValue {
 
     static q3 = new Quat();
 
-    static v1 = new Vec3();
-
-    static v2 = new Vec3();
-
     static quatArr = [0, 0, 0, 1];
 
     static vecArr = [0, 0, 0];
@@ -115,12 +111,9 @@ class AnimTargetValue {
                 AnimTargetValue.quatArr[3] = v.w;
                 AnimEvaluator._set(this.value, AnimTargetValue.quatArr, this.valueType);
             } else {
-                AnimTargetValue.v1.set(value[0], value[1], value[2]);
-                AnimTargetValue.v2.set(this.baseValue[0], this.baseValue[1], this.baseValue[2]);
-                const addValue = AnimTargetValue.v1.sub(AnimTargetValue.v2);
-                AnimTargetValue.vecArr[0] = addValue.x;
-                AnimTargetValue.vecArr[1] = addValue.y;
-                AnimTargetValue.vecArr[2] = addValue.z;
+                AnimTargetValue.vecArr[0] = value[0] - this.baseValue[0];
+                AnimTargetValue.vecArr[1] = value[1] - this.baseValue[1];
+                AnimTargetValue.vecArr[2] = value[2] - this.baseValue[2];
                 AnimEvaluator._blend(this.value, AnimTargetValue.vecArr, this.getWeight(index), this.valueType, true);
             }
         } else {
