@@ -59,7 +59,7 @@ class AssetListLoader extends EventHandler {
     }
 
     /**
-     * Destroys the asset list loader.
+     * Removes all references to this asset list loader.
      */
     destroy() {
         // remove any outstanding listeners
