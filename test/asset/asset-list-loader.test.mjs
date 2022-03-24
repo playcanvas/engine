@@ -21,10 +21,12 @@ describe('AssetListLoader', function () {
     });
 
     describe('#constructor', function () {
+
         it('instantiates correctly', function () {
             const assetListLoader = new AssetListLoader([], app.assets);
             expect(assetListLoader).to.be.ok;
         });
+
         it('stores a single asset', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
@@ -32,6 +34,7 @@ describe('AssetListLoader', function () {
             const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
             expect(assetListLoader._assets[0].name).to.be.equal('model');
         });
+
         it('stores multiple assets', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -41,6 +44,7 @@ describe('AssetListLoader', function () {
             expect(assetListLoader._assets[0].name).to.be.equal('model');
             expect(assetListLoader._assets[1].name).to.be.equal('styling');
         });
+
         it('stores single copies of duplicated assets', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
@@ -48,6 +52,7 @@ describe('AssetListLoader', function () {
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
             expect(assetListLoader._assets.length).to.be.equal(1);
         });
+
         it('adds the supplied registry to any assets that do not have one', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
@@ -56,9 +61,11 @@ describe('AssetListLoader', function () {
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
             expect(assetListLoader._assets[0].registry).to.be.equal(app.assets);
         });
+
     });
 
     describe('#ready', function () {
+
         it('can return a single loaded asset', function (done) {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
@@ -70,6 +77,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can return multiple loaded assets', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -86,6 +94,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can return a single duplicated loaded asset', function (done) {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset, asset], app.assets);
@@ -97,9 +106,11 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
     });
 
     describe('#load', function () {
+
         it('can succeed if an asset is already loaded', function (done) {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
@@ -116,6 +127,7 @@ describe('AssetListLoader', function () {
             app.assets.add(asset);
             app.assets.load(asset);
         });
+
         it('can succeed if one asset is already loaded and another is not', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -138,6 +150,7 @@ describe('AssetListLoader', function () {
             app.assets.add(assets[0]);
             app.assets.load(assets[0]);
         });
+
         it('can succeed if an asset is already loading', function (done) {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
@@ -152,6 +165,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can succeed if one asset is already loading and another is not', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -171,6 +185,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can succeed if one asset is already loaded, another is loading and one is not loaded', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -199,6 +214,7 @@ describe('AssetListLoader', function () {
             app.assets.add(assets[0]);
             app.assets.load(assets[0]);
         });
+
         it('can succeed if multiple assets load the same url', function (done) {
             const assets = [
                 new Asset('model1', 'container', { url: `${assetPath}test.glb` }),
@@ -215,6 +231,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can succeed if an empty list is passed in', function (done) {
             const assetListLoader = new AssetListLoader([], app.assets);
             assetListLoader.ready((assets) => {
@@ -223,6 +240,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can successfully load assets from ids that are in the registry', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -237,6 +255,7 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
+
         it('can successfully load assets from ids that are not yet in the registry', function (done) {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
@@ -251,5 +270,7 @@ describe('AssetListLoader', function () {
             app.assets.add(assets[0]);
             app.assets.add(assets[1]);
         });
+
     });
+
 });
