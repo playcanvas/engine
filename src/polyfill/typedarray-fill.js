@@ -10,7 +10,7 @@ const typedArrays = [
     Uint32Array,
     Float32Array
 ];
-for (var typedArray of typedArrays) {
+for (const typedArray of typedArrays) {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill#polyfill
     defineProtoFunc(typedArray, "fill", Array.prototype.fill);
     defineProtoFunc(typedArray, "join", Array.prototype.join);
