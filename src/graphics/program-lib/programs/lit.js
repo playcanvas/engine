@@ -22,7 +22,6 @@ import {
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
-import { optionalMemberExpression } from '../../../../../../../../Library/Caches/typescript/4.6/node_modules/@babel/types/lib/index.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,

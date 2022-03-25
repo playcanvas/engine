@@ -25,7 +25,6 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 import { LitShader } from './lit.js';
-import { textChangeRangeIsUnchanged } from 'node_modules/typescript/lib/typescript.js';
 
 /** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
