@@ -1,4 +1,5 @@
-import { Debug } from 'src/core/debug.js';
+import { Debug } from '../../core/debug.js';
+
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
 import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
