@@ -353,6 +353,7 @@ class VrDisplay extends EventHandler {
      */
     getFrameData() {
         if (this.display) return this._frameData;
+        return undefined;
     }
 
     /**

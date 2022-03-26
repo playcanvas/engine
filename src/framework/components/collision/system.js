@@ -389,7 +389,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     createPhysicalShape(entity, data) {
-        if (typeof Ammo === 'undefined') return;
+        if (typeof Ammo === 'undefined') return undefined;
 
         if (data.model || data.render) {
 
@@ -415,6 +415,8 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             return shape;
         }
+
+        return undefined;
     }
 
     recreatePhysicalShapes(component) {

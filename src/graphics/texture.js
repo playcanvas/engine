@@ -974,19 +974,19 @@ class Texture {
                 const mipSize = this._levels[idx].length;
                 if (!mipSize) {
                     Debug.error(`No byte array for mip ${idx}`);
-                    return;
+                    return undefined;
                 }
                 fsize += mipSize;
             } else {
                 for (let face = 0; face < 6; face++) {
                     if (!this._levels[idx][face]) {
                         Debug.error(`No level data for mip ${idx}, face ${face}`);
-                        return;
+                        return undefined;
                     }
                     const mipSize = this._levels[idx][face].length;
                     if (!mipSize) {
                         Debug.error(`No byte array for mip ${idx}, face ${face}`);
-                        return;
+                        return undefined;
                     }
                     fsize += mipSize;
                 }

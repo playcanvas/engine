@@ -39,14 +39,14 @@ const getCoding = (texture) => {
 };
 
 const getProjectionName = (projection) => {
-    // default to equirect if not specified
-    if (projection === TEXTUREPROJECTION_NONE) {
-        projection = TEXTUREPROJECTION_EQUIRECT;
-    }
     switch (projection) {
-        case TEXTUREPROJECTION_CUBE: return "Cubemap";
-        case TEXTUREPROJECTION_EQUIRECT: return "Equirect";
-        case TEXTUREPROJECTION_OCTAHEDRAL: return "Octahedral";
+        case TEXTUREPROJECTION_CUBE:
+            return "Cubemap";
+        case TEXTUREPROJECTION_OCTAHEDRAL:
+            return "Octahedral";
+        default: // for anything else, assume equirect
+            return "Equirect";
+        }
     }
 };
 

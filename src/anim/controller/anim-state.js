@@ -1,3 +1,4 @@
+import { Debug } from 'src/core/debug.js';
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
 import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
@@ -65,6 +66,9 @@ class AnimState {
             case ANIM_BLEND_DIRECT:
                 return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
         }
+
+        Debug.error(`Invalid anim blend type: ${type}`);
+        return undefined;
     }
 
     _getNodeFromPath(path) {

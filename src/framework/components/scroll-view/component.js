@@ -1,3 +1,5 @@
+import { Debug } from 'src/core/debug.js';
+
 import { math } from '../../../math/math.js';
 import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -441,7 +443,8 @@ class ScrollViewComponent extends Component {
             return this.vertical;
         }
 
-        console.warn('Unrecognized orientation: ' + orientation);
+        Debug.warn(`Unrecognized orientation: ${orientation}`);
+        return undefined;
     }
 
     _getScrollbarVisibility(orientation) {
@@ -451,7 +454,8 @@ class ScrollViewComponent extends Component {
             return this.verticalScrollbarVisibility;
         }
 
-        console.warn('Unrecognized orientation: ' + orientation);
+        Debug.warn(`Unrecognized orientation: ${orientation}`);
+        return undefined;
     }
 
     _getSign(orientation) {
