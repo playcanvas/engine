@@ -256,7 +256,7 @@ class Texture {
 
         this._gpuSize = 0;
 
-        this.impl = graphicsDevice.createTextureImpl(this);
+        this.impl = graphicsDevice.createTextureImpl();
 
         // track the texture
         graphicsDevice.textures.push(this);
