@@ -674,8 +674,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
-    createTextureImpl(texture) {
-        return new WebglTexture(texture);
+    createTextureImpl() {
+        return new WebglTexture();
     }
 
     // #if _DEBUG
