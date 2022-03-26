@@ -46,7 +46,6 @@ const getProjectionName = (projection) => {
             return "Octahedral";
         default: // for anything else, assume equirect
             return "Equirect";
-        }
     }
 };
 
