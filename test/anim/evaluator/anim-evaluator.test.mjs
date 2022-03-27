@@ -19,31 +19,31 @@ describe('AnimEvaluator', function () {
         const app = new Application(canvas);
 
         // build the graph to be animated
-        var parent = new GraphNode('parent');
-        var child1 = new GraphNode('child1');
-        var child2 = new GraphNode('child2');
+        const parent = new GraphNode('parent');
+        const child1 = new GraphNode('child1');
+        const child2 = new GraphNode('child2');
 
         app.root.addChild(parent);
         parent.addChild(child1);
         child1.addChild(child2);
         // create curve
-        var keys = new AnimData(1, [0, 1, 2]);
-        var translations = new AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curvePath = {
+        const keys = new AnimData(1, [0, 1, 2]);
+        const translations = new AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
+        const curvePath = {
             entityPath: ['child1'],
             component: 'graph',
             propertyPath: ['localPosition']
         };
-        var curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
+        const curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
 
         // construct the animation track
-        var track = new AnimTrack('test track', 2, [keys], [translations], [curve]);
+        const track = new AnimTrack('test track', 2, [keys], [translations], [curve]);
 
         // construct an animation clip
-        var clip = new AnimClip(track, 0.0, 1.0, true, true);
+        const clip = new AnimClip(track, 0.0, 1.0, true, true);
 
         // construct the animation evaluator
-        var animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
+        const animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
         animEvaluator.addClip(clip);
 
         // check initial state
