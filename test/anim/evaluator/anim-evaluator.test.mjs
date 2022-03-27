@@ -12,16 +12,16 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe("AnimEvaluator", function () {
+describe('AnimEvaluator', function () {
 
-    it("AnimEvaluator: looping", function () {
+    it('AnimEvaluator: looping', function () {
         const canvas = new HTMLCanvasElement(500, 500);
         const app = new Application(canvas);
 
         // build the graph to be animated
-        var parent = new GraphNode("parent");
-        var child1 = new GraphNode("child1");
-        var child2 = new GraphNode("child2");
+        var parent = new GraphNode('parent');
+        var child1 = new GraphNode('child1');
+        var child2 = new GraphNode('child2');
 
         app.root.addChild(parent);
         parent.addChild(child1);
@@ -37,7 +37,7 @@ describe("AnimEvaluator", function () {
         var curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
 
         // construct the animation track
-        var track = new AnimTrack("test track", 2, [keys], [translations], [curve]);
+        var track = new AnimTrack('test track', 2, [keys], [translations], [curve]);
 
         // construct an animation clip
         var clip = new AnimClip(track, 0.0, 1.0, true, true);
