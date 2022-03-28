@@ -46,6 +46,7 @@ class AnimComponent extends Component {
         // a collection of animated property targets
         this._targets = {};
         this._consumedTriggers = new Set();
+        this._normalizeWeights = false;
     }
 
     set stateGraphAsset(value) {
@@ -95,6 +96,21 @@ class AnimComponent extends Component {
 
     get stateGraphAsset() {
         return this._stateGraphAsset;
+    }
+
+
+    /**
+     * If true the animation component will normalize the weights of its layers by their sum total.
+     *
+     * @type {boolean}
+     */
+    set normalizeWeights(value) {
+        this._normalizeWeights = value;
+        this.resetStateGraph();
+    }
+
+    get normalizeWeights() {
+        return this._normalizeWeights;
     }
 
     set animationAssets(value) {
@@ -431,14 +447,18 @@ class AnimComponent extends Component {
         this._layerIndices = {};
         this._parameters = {};
         this._playing = false;
+        Object.keys(this._targets).forEach((targetKey) => {
+            this._targets[targetKey].unbind();
+        });
+        // clear all targets from previous binding
+        this._targets = {};
     }
 
     resetStateGraph() {
+        this.removeStateGraph();
         if (this.stateGraphAsset) {
             const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
             this.loadStateGraph(stateGraph);
-        } else {
-            this.removeStateGraph();
         }
     }
 

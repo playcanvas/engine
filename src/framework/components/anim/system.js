@@ -118,6 +118,7 @@ class AnimComponentSystem extends ComponentSystem {
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
             parameters: entity.anim.parameters,
+            normalizeWeights: entity.anim.normalizeWeights,
             masks
         };
         return this.addComponent(clone, data);
