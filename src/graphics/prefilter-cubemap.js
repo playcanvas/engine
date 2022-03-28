@@ -98,7 +98,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 drawQuadWithShader(device, targ, shader);
 
                 const gl = device.gl;
-                gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, targ.impl._glFrameBuffer);
 
                 const pixels = new Uint8Array(cubeSize * cubeSize * 4);
                 gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);

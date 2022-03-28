@@ -137,7 +137,7 @@ class SceneDepth {
 
                     const gl = app.graphicsDevice.gl;
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
-                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget.impl._glFrameBuffer);
                     gl.blitFramebuffer(0, 0, this.renderTarget.width, this.renderTarget.height,
                                        0, 0, this.renderTarget.width, this.renderTarget.height,
                                        gl.DEPTH_BUFFER_BIT, gl.NEAREST);
