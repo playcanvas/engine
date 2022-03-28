@@ -174,7 +174,7 @@ class Color {
      * console.log(c.toString());
      */
     toString(alpha) {
-        let s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
+        let s = '#' + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
         if (alpha === true) {
             const a = Math.round(this.a * 255).toString(16);
             if (this.a < 16 / 255) {

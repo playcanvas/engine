@@ -138,9 +138,9 @@ class LocalizedAsset extends EventHandler {
         const asset = this._app.assets.get(this._localizedAsset);
         if (!asset) return;
 
-        asset.on("load", this._onLocalizedAssetLoad, this);
-        asset.on("change", this._onLocalizedAssetChange, this);
-        asset.on("remove", this._onLocalizedAssetRemove, this);
+        asset.on('load', this._onLocalizedAssetLoad, this);
+        asset.on('change', this._onLocalizedAssetChange, this);
+        asset.on('remove', this._onLocalizedAssetRemove, this);
 
         if (asset.resource) {
             this._onLocalizedAssetLoad(asset);
@@ -153,9 +153,9 @@ class LocalizedAsset extends EventHandler {
         const asset = this._app.assets.get(this._localizedAsset);
         if (!asset) return;
 
-        asset.off("load", this._onLocalizedAssetLoad, this);
-        asset.off("change", this._onLocalizedAssetChange, this);
-        asset.off("remove", this._onLocalizedAssetRemove, this);
+        asset.off('load', this._onLocalizedAssetLoad, this);
+        asset.off('change', this._onLocalizedAssetChange, this);
+        asset.off('remove', this._onLocalizedAssetRemove, this);
     }
 
     _onLocalizedAssetAdd(asset) {

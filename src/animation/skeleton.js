@@ -7,7 +7,7 @@ import { Vec3 } from '../math/vec3.js';
 class InterpolatedKey {
     constructor() {
         this._written = false;
-        this._name = "";
+        this._name = '';
         this._keyFrames = [];
 
         // Result of interpolation

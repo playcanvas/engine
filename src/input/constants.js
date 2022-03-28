@@ -29,28 +29,28 @@ export const EVENT_KEYUP = 'keyup';
  *
  * @type {string}
  */
-export const EVENT_MOUSEDOWN = "mousedown";
+export const EVENT_MOUSEDOWN = 'mousedown';
 
 /**
  * Name of event fired when the mouse is moved.
  *
  * @type {string}
  */
-export const EVENT_MOUSEMOVE = "mousemove";
+export const EVENT_MOUSEMOVE = 'mousemove';
 
 /**
  * Name of event fired when a mouse button is released.
  *
  * @type {string}
  */
-export const EVENT_MOUSEUP = "mouseup";
+export const EVENT_MOUSEUP = 'mouseup';
 
 /**
  * Name of event fired when the mouse wheel is rotated.
  *
  * @type {string}
  */
-export const EVENT_MOUSEWHEEL = "mousewheel";
+export const EVENT_MOUSEWHEEL = 'mousewheel';
 
 /**
  * Name of event fired when a new touch occurs. For example, a finger is placed on the device.
