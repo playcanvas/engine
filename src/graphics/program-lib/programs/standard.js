@@ -218,12 +218,7 @@ const standard = {
             }
 
             // normal
-            if (litShader.needsNormal && options.normalMap) {
-                decl += "vec3 dNormalMap;\n";
-
-                // normal detail is assumed by the normal chunk
-                code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
-
+            if (litShader.needsNormal) {
                 if (options.normalMap || options.clearCoatNormalMap) {
                     // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
                     code += options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS;
@@ -235,13 +230,20 @@ const standard = {
                     }
                 }
 
-                const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
-                if (options.normalizeNormalMap) {
-                    code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
-                } else {
-                    code += litShader.chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
+                if (options.normalMap) {
+                    decl += "vec3 dNormalMap;\n";
+
+                    // normal detail is assumed by the normal chunk
+                    code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
+
+                    const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                    if (options.normalizeNormalMap) {
+                        code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
+                    } else {
+                        code += litShader.chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
+                    }
+                    func += "getNormal();\n";
                 }
-                func += "getNormal();\n";
             }
 
             // albedo
@@ -261,6 +263,8 @@ const standard = {
                 code += this._addMap("gloss", "glossPS", options, litShader.chunks);
                 func += "getSpecularity();\n"
                 func += "getGlossiness();\n";
+            } else {
+                decl += "vec3 dSpecularity = vec3(0.0);\n";
             }
 
             // ao

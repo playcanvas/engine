@@ -5,7 +5,7 @@ export default /* glsl */`
     gl_FragColor.rgb = combineColor();
     #endif 
 
-    gl_FragColor.rgb += getEmission();
+    gl_FragColor.rgb += dEmission;
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
 
     #ifndef HDR
