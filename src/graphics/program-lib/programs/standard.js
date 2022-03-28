@@ -126,18 +126,15 @@ const standard = {
     },
 
     _addMapDef: function (name, enabled) {
-        let s = "\n#undef " + name + "\n";
-        if (enabled) s += " #define " + name + "\n";
-        return s;
+        return enabled ? `#define ${name}\n` : `#undef ${name}\n`;
     },
 
     _addMapDefs: function (float, color, vertex, map) {
-        let s = "";
-        s += this._addMapDef("MAPFLOAT", float);
-        s += this._addMapDef("MAPCOLOR", color);
-        s += this._addMapDef("MAPVERTEX", vertex);
-        s += this._addMapDef("MAPTEXTURE", map);
-        return s;
+        return "\n" +
+               this._addMapDef("MAPFLOAT", float) +
+               this._addMapDef("MAPCOLOR", color) +
+               this._addMapDef("MAPVERTEX", vertex) +
+               this._addMapDef("MAPTEXTURE", map);
     },
 
     /**

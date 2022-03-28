@@ -1122,25 +1122,25 @@ class LitShader {
         if (this.needsNormal) {
             if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {
                 if (options.twoSidedLighting) {
-                    code += "   dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
+                    code += "    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
                 } else {
-                    code += "   dVertexNormalW = normalize(vNormalW);\n";
+                    code += "    dVertexNormalW = normalize(vNormalW);\n";
                 }
             } else {
                 if (options.twoSidedLighting) {
-                    code += "   dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
+                    code += "    dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
                 } else {
-                    code += "   dVertexNormalW = vNormalW;\n";
+                    code += "    dVertexNormalW = vNormalW;\n";
                 }
             }
 
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
-                    code += "   dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
-                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
+                    code += "    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
+                    code += "    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
                 } else {
-                    code += "   dTangentW = vTangentW;\n";
-                    code += "   dBinormalW = vBinormalW;\n";
+                    code += "    dTangentW = vTangentW;\n";
+                    code += "    dBinormalW = vBinormalW;\n";
                 }
             }
         }
@@ -1162,9 +1162,9 @@ class LitShader {
         // let getGlossinessCalled = false;
 
         if (this.needsNormal) {
-            code += "   getViewDir();\n";
+            code += "    getViewDir();\n";
             if (hasTBN) {
-                code += "   getTBN();\n";
+                code += "    getTBN();\n";
             }
             // if (options.heightMap) {
             //     code += "   getParallax();\n";
@@ -1188,9 +1188,9 @@ class LitShader {
         }
 
         // invoke frontend functions
-        code += "//-- frontend start\n";
+        code += "\n//-- frontend start\n";
         code += this.frontendFunc;
-        code += "//-- frontend end\n";
+        code += "//-- frontend end\n\n";
 
         // transform tangent space normals to world space
         if (this.needsNormal) {

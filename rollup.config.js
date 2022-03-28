@@ -223,7 +223,8 @@ const target_debug = {
         file: 'build/playcanvas.dbg.js',
         format: 'umd',
         indent: '\t',
-        name: 'pc'
+        name: 'pc',
+        sourcemap: true
     },
     plugins: [
         jscc({
