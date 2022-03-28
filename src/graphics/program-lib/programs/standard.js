@@ -327,6 +327,11 @@ const standard = {
             }
         }
 
+        decl = `//-------- frontend begin\n${decl}//-------- frontend end\n`;
+        code = `//-------- frontend begin\n${code}//-------- frontend end\n`;
+        func = `//-------- frontend begin\n${func}//-------- frontend end\n`;
+        func = `\n${func.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
+
         litShader.generateVertexShader(_matTex2D);
         litShader.generateFragmentShader(decl, code, func, lightingUv);
         return litShader.getDefinition();

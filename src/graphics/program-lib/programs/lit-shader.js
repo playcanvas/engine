@@ -868,9 +868,7 @@ class LitShader {
         }
 
         // frontend
-        code += "\n//-------- frontend begin\n";
         code += this.frontendCode;
-        code += "//-------- frontend end\n\n";
 
         if (options.useCubeMapRotation) {
             code += "#define CUBEMAP_ROTATION\n";
@@ -1203,9 +1201,7 @@ class LitShader {
         }
 
         // invoke frontend functions
-        code += "\n//-- frontend start\n";
         code += this.frontendFunc;
-        code += "//-- frontend end\n\n";
 
         // transform tangent space normals to world space
         if (this.needsNormal) {
