@@ -1,29 +1,11 @@
 import { hashCode } from '../../../core/hash.js';
 
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    SHADERTAG_MATERIAL,
-    PIXELFORMAT_R8_G8_B8_A8
-} from '../../constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
-
-import {
-    BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
-    FRESNEL_SCHLICK,
-    LIGHTFALLOFF_LINEAR,
-    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
-    SPECOCC_AO,
-    SPECULAR_PHONG,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
+    BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
+    SHADER_FORWARD, SHADER_FORWARDHDR, SPECULAR_PHONG,
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
-import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 import { LitShader } from './lit-shader.js';
 
 /** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -285,7 +267,7 @@ const standard = {
             if (options.aoMap || options.aoVertexColor) {
                 decl += "float dAo;\n"
                 code += this._addMap("ao", "aoPS", options, litShader.chunks);
-                func += "getAO()\n";
+                func += "getAO();\n";
             }
 
             // emission

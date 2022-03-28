@@ -910,7 +910,7 @@ const createMaterial = function (gltfMaterial, textures) {
         "",
         "    dGlossiness += 0.0000001;",
         "}"
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const specularChunk = [
         "#ifdef MAPCOLOR",
@@ -937,7 +937,7 @@ const createMaterial = function (gltfMaterial, textures) {
         "        dSpecularity *= saturate(vVertexColor.$VC);",
         "    #endif",
         "}"
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const clearCoatGlossChunk = [
         "#ifdef MAPFLOAT",
@@ -967,7 +967,7 @@ const createMaterial = function (gltfMaterial, textures) {
         "",
         "    ccGlossiness += 0.0000001;",
         "}"
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const zeros = [0, 0];
     const ones = [1, 1];
