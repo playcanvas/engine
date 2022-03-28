@@ -99,6 +99,7 @@ class LitShader {
         this.vshader = null;
 
         // supplied by caller
+        this.frontendDecl = null;
         this.frontendCode = null;
         this.frontendFunc = null;
         this.frontendLightingUv = null;
@@ -643,28 +644,28 @@ class LitShader {
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
 
         if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
-            code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+            code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
         } else {
-            code += "   float depth = gl_FragCoord.z;\n";
+            code += "    float depth = gl_FragCoord.z;\n";
         }
 
         if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             if (device.extStandardDerivatives && !device.webgl2) {
-                code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-                code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
-                code += "   gl_FragColor = packFloat(depth);\n";
+                code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+                code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+                code += "    gl_FragColor = packFloat(depth);\n";
             } else {
-                code += "   gl_FragColor = packFloat(depth);\n";
+                code += "    gl_FragColor = packFloat(depth);\n";
             }
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
-            code += "   gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
+            code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
             if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.webgl2) {
-                code += "   gl_FragDepth = depth;\n";
+                code += "    gl_FragDepth = depth;\n";
             }
         } else if (shadowType === SHADOW_VSM8) {
-            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
+            code += "    gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         } else {
             code += chunks.storeEVSMPS;
         }
@@ -684,8 +685,7 @@ class LitShader {
             this._fsGetBeginCode() +
             this.varyings +
             this._fsGetBaseCode() +
-            (options.detailModes ? chunks.detailModesPS : "") +
-            this.frontendCode;
+            (options.detailModes ? chunks.detailModesPS : "");
 
         let code = "";
 
@@ -851,6 +851,11 @@ class LitShader {
         //     }
         // }
 
+        if (this.needsNormal && !options.normalMap) {
+            // frontend didn't generate normal
+            code += chunks.normalVertexPS;
+        }
+
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
@@ -858,7 +863,14 @@ class LitShader {
         // FIXME: only add decode when needed
         code += chunks.decodePS;
 
-        if (options.useRgbm) code += chunks.rgbmPS;
+        if (options.useRgbm) {
+            code += chunks.rgbmPS;
+        }
+
+        // frontend
+        code += "\n//-------- frontend begin\n";
+        code += this.frontendCode;
+        code += "//-------- frontend end\n\n";
 
         if (options.useCubeMapRotation) {
             code += "#define CUBEMAP_ROTATION\n";
@@ -1040,7 +1052,7 @@ class LitShader {
             code += chunks.combineClearCoatPS;
         }
 
-        const addAmbient = (options.lightMap || options.lightVertexColor) && options.lightMapWithoutAmbient;
+        const addAmbient = (!options.lightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
 
         // let addAmbient = true;
         // if (options.lightMap || options.lightVertexColor) {
@@ -1163,6 +1175,9 @@ class LitShader {
 
         if (this.needsNormal) {
             code += "    getViewDir();\n";
+            if (!options.normalMap) {
+                code += "    getNormal();\n";
+            }
             if (hasTBN) {
                 code += "    getTBN();\n";
             }
@@ -1195,11 +1210,11 @@ class LitShader {
         // transform tangent space normals to world space
         if (this.needsNormal) {
             if (options.normalMap) {
-                code += "dNormalW = dTBN * dNormalMap;\n";
+                code += "    dNormalW = dTBN * dNormalMap;\n";
             }
 
             if (options.clearCoat > 0) {
-                code += "ccNormalW = dTBN * ccNormalMap;\n";
+                code += "    ccNormalW = dTBN * ccNormalMap;\n";
             }
         }
 
@@ -1217,15 +1232,15 @@ class LitShader {
 
             // this is needed to allow custom area light fresnel calculations
             if (hasAreaLights) {
-                code += "   #ifdef AREA_LIGHTS\n";
-                code += "   dSpecularityNoFres = dSpecularity;\n";
-                code += "   #ifdef CLEARCOAT\n";
-                code += "   ccSpecularityNoFres = ccSpecularity;\n";
-                code += "   #endif\n";
-                code += "   #endif\n";
+                code += "    #ifdef AREA_LIGHTS\n";
+                code += "    dSpecularityNoFres = dSpecularity;\n";
+                code += "    #ifdef CLEARCOAT\n";
+                code += "    ccSpecularityNoFres = ccSpecularity;\n";
+                code += "    #endif\n";
+                code += "    #endif\n";
             }
 
-            if (options.fresnelModel > 0) code += "   getFresnel();\n";
+            if (options.fresnelModel > 0) code += "    getFresnel();\n";
 
             // if (useAo) {
             //     code += "  getAO();\n";
@@ -1233,7 +1248,7 @@ class LitShader {
         }
 
         if (addAmbient) {
-            code += "   addAmbient();\n";
+            code += "    addAmbient();\n";
 
             // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
             if (options.separateAmbient) {
@@ -1244,7 +1259,7 @@ class LitShader {
             }
         }
         if (options.ambientTint && !useOldAmbient) {
-            code += "   dDiffuseLight *= material_ambient;\n";
+            code += "    dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
             code += "    occludeDiffuse();\n";
@@ -1256,21 +1271,21 @@ class LitShader {
         if (this.lighting || this.reflections) {
             if (this.reflections) {
                 if (options.clearCoat > 0) {
-                    code += "   addReflectionCC();\n";
+                    code += "    addReflectionCC();\n";
                 }
-                code += "   addReflection();\n";
+                code += "    addReflection();\n";
             }
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                code += "   ccReflection.rgb *= ccSpecularity;\n";
-                code += "   dReflection.rgb *= dSpecularity;\n";
-                code += "   dSpecularLight *= dSpecularity;\n";
+                code += "    ccReflection.rgb *= ccSpecularity;\n";
+                code += "    dReflection.rgb *= dSpecularity;\n";
+                code += "    dSpecularLight *= dSpecularity;\n";
 
-                code += "   float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+                code += "    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
 
                 // evaluate material based area lights data, shared by all area lights
-                code += "   calcLTCLightValues();\n";
+                code += "    calcLTCLightValues();\n";
             }
 
             for (let i = 0; i < options.lights.length; i++) {
@@ -1296,13 +1311,13 @@ class LitShader {
                 const shapeString = (hasAreaLights && light._shape) ? this._getLightSourceShapeString(lightShape) : '';
 
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                    code += "   calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
+                    code += "    calc" + shapeString + "LightValues(light" + i + "_position, light" + i + "_halfWidth, light" + i + "_halfHeight);\n";
                 }
 
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     // directional
-                    code += "   dLightDirNormW = light" + i + "_direction;\n";
-                    code += "   dAtten = 1.0;\n";
+                    code += "    dLightDirNormW = light" + i + "_direction;\n";
+                    code += "    dAtten = 1.0;\n";
                 } else {
 
                     if (light._cookie) {
@@ -1315,36 +1330,36 @@ class LitShader {
                         }
                     }
 
-                    code += "   getLightDirPoint(light" + i + "_position);\n";
+                    code += "    getLightDirPoint(light" + i + "_position);\n";
                     hasPointLights = true;
 
                     if (usesCookieNow) {
                         if (lightType === LIGHTTYPE_SPOT) {
-                            code += "   dAtten3 = getCookie2D" + (light._cookieFalloff ? "" : "Clip") + (light._cookieTransform ? "Xform" : "") + "(light" + i + "_cookie, light" + i + "_shadowMatrix, light" + i + "_cookieIntensity" + (light._cookieTransform ? ", light" + i + "_cookieMatrix, light" + i + "_cookieOffset" : "") + ")." + light._cookieChannel + ";\n";
+                            code += "    dAtten3 = getCookie2D" + (light._cookieFalloff ? "" : "Clip") + (light._cookieTransform ? "Xform" : "") + "(light" + i + "_cookie, light" + i + "_shadowMatrix, light" + i + "_cookieIntensity" + (light._cookieTransform ? ", light" + i + "_cookieMatrix, light" + i + "_cookieOffset" : "") + ")." + light._cookieChannel + ";\n";
                         } else {
-                            code += "   dAtten3 = getCookieCube(light" + i + "_cookie, light" + i + "_shadowMatrix, light" + i + "_cookieIntensity)." + light._cookieChannel + ";\n";
+                            code += "    dAtten3 = getCookieCube(light" + i + "_cookie, light" + i + "_shadowMatrix, light" + i + "_cookieIntensity)." + light._cookieChannel + ";\n";
                         }
                     }
 
                     if (lightShape === LIGHTSHAPE_PUNCTUAL) {
                         if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
-                            code += "   dAtten = getFalloffLinear(light" + i + "_radius);\n";
+                            code += "    dAtten = getFalloffLinear(light" + i + "_radius);\n";
                             usesLinearFalloff = true;
                         } else {
-                            code += "   dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
+                            code += "    dAtten = getFalloffInvSquared(light" + i + "_radius);\n";
                             usesInvSquaredFalloff = true;
                         }
                     } else {
                         // non punctual lights only gets the range window here
-                        code += "   dAtten = getFalloffWindow(light" + i + "_radius);\n";
+                        code += "    dAtten = getFalloffWindow(light" + i + "_radius);\n";
                         usesInvSquaredFalloff = true;
                     }
 
-                    code += "   if (dAtten > 0.00001) {\n"; // BRANCH START
+                    code += "    if (dAtten > 0.00001) {\n"; // BRANCH START
 
                     if (lightType === LIGHTTYPE_SPOT) {
                         if (!(usesCookieNow && !light._cookieFalloff)) {
-                            code += "       dAtten *= getSpotEffect(light" + i + "_direction, light" + i + "_innerConeAngle, light" + i + "_outerConeAngle);\n";
+                            code += "    dAtten *= getSpotEffect(light" + i + "_direction, light" + i + "_innerConeAngle, light" + i + "_outerConeAngle);\n";
                             usesSpot = true;
                         }
                     }
@@ -1354,13 +1369,13 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     if (lightType === LIGHTTYPE_DIRECTIONAL) {
                         // NB: A better aproximation perhaps using wrap lighting could be implemented here
-                        code += "       dAttenD = getLightDiffuse();\n";
+                        code += "    dAttenD = getLightDiffuse();\n";
                     } else {
                         // 16.0 is a constant that is in getFalloffInvSquared()
-                        code += "       dAttenD = get" + shapeString + "LightDiffuse() * 16.0;\n";
+                        code += "    dAttenD = get" + shapeString + "LightDiffuse() * 16.0;\n";
                     }
                 } else {
-                    code += "       dAtten *= getLightDiffuse();\n";
+                    code += "    dAtten *= getLightDiffuse();\n";
                 }
 
                 if (light.castShadows && !options.noShadow) {
@@ -1389,16 +1404,16 @@ class LitShader {
                         if (lightType === LIGHTTYPE_OMNI) {
                             const shadowCoordArgs = "(light" + i + "_shadowMap, light" + i + "_shadowParams);\n";
                             if (light._normalOffsetBias) {
-                                code += "       normalOffsetPointShadow(light" + i + "_shadowParams);\n";
+                                code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
-                            code += "       dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                            code += "    dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
                             code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "       dAtten *= getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
+                            code += "    dAtten *= getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }
@@ -1407,17 +1422,17 @@ class LitShader {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
                     if (options.conserveEnergy && options.useSpecular) {
-                        code += "       dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
+                        code += "    dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
                     } else {
-                        code += "       dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        code += "    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 } else {
 
                     // punctual light
                     if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
-                        code += "       dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
+                        code += "    dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
                     } else {
-                        code += "       dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        code += "    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
 
@@ -1425,24 +1440,24 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light
-                    if (options.clearCoat > 0) code += "       ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    if (options.useSpecular) code += "       dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.clearCoat > 0) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) code += "    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 } else {
 
                     // punctual light
                     if (hasAreaLights) {
                         // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                        if (options.clearCoat > 0) code += "       ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "       dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "    dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     } else {
-                        if (options.clearCoat > 0) code += "       ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "       dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.clearCoat > 0) code += "    ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                        if (options.useSpecular) code += "    dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
                 }
 
                 if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-                    code += "   }\n"; // BRANCH END
+                    code += "    }\n"; // BRANCH END
                 }
 
                 code += "\n";
@@ -1453,21 +1468,21 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                code += '   addClusteredLights();\n';
+                code += "    addClusteredLights();\n";
             }
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.clearCoat > 0) {
-                    code += "   ccSpecularity = 1.0;\n";
+                    code += "    ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {
-                    code += "   dSpecularity = vec3(1);\n";
+                    code += "    dSpecularity = vec3(1);\n";
                 }
             }
 
             if (this.reflections && options.refraction) {
-                code += "   addRefraction();\n";
+                code += "    addRefraction();\n";
             }
         }
         code += "\n";
@@ -1500,7 +1515,7 @@ class LitShader {
         }
 
         if (options.msdf) {
-            code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
+            code += "    gl_FragColor = applyMsdf(gl_FragColor);\n";
         }
 
         code += "\n";
@@ -1557,12 +1572,13 @@ class LitShader {
         if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
         // if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
-        return beginCode + structCode + code;
+        return beginCode + structCode + this.frontendDecl + code;
     }
 
-    generateFragmentShader(frontendCode, frontendFunc, frontendLightingUv) {
+    generateFragmentShader(frontendDecl, frontendCode, frontendFunc, frontendLightingUv) {
         const options = this.options;
 
+        this.frontendDecl = frontendDecl;
         this.frontendCode = frontendCode;
         this.frontendFunc = frontendFunc;
         this.frontendLightingUv = frontendLightingUv;

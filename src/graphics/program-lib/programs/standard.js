@@ -130,8 +130,7 @@ const standard = {
     },
 
     _addMapDefs: function (float, color, vertex, map) {
-        return "\n" +
-               this._addMapDef("MAPFLOAT", float) +
+        return this._addMapDef("MAPFLOAT", float) +
                this._addMapDef("MAPCOLOR", color) +
                this._addMapDef("MAPVERTEX", vertex) +
                this._addMapDef("MAPTEXTURE", map);
@@ -203,12 +202,13 @@ const standard = {
 
         const litShader = new LitShader(device, options);
 
+        let decl = "";
         let code = "";
         let func = "";
         let lightingUv = "";
 
         // global texture bias for standard textures
-        code += "uniform float textureBias;\n";
+        decl += "uniform float textureBias;\n";
 
         if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR) {
             // parallax
@@ -224,7 +224,7 @@ const standard = {
 
             // opacity
             if (options.blendType !== BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
-                code += "float dAlpha;\n";
+                decl += "float dAlpha;\n";
                 code += this._addMap("opacity", "opacityPS", options, litShader.chunks);
                 func += "getOpacity();\n";
                 if (options.alphaTest) {
@@ -232,11 +232,13 @@ const standard = {
                     func += "alphaTest(dAlpha);\n";
                 }
             } else {
-                code += "float dAlpha = 1.0;\n";
+                decl += "float dAlpha = 1.0;\n";
             }
 
             // normal
             if (litShader.needsNormal && options.normalMap) {
+                decl += "vec3 dNormalMap;\n";
+
                 // normal detail is assumed by the normal chunk
                 code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
 
@@ -251,18 +253,17 @@ const standard = {
                     }
                 }
 
-                code += "vec3 dNormalMap;\n";
                 const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.normalizeNormalMap) {
                     code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 } else {
                     code += litShader.chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                func += "getNormal()\n";
+                func += "getNormal();\n";
             }
 
             // albedo
-            code += "vec3 dAlbedo;\n";
+            decl += "vec3 dAlbedo;\n";
             if (options.diffuseDetail) {
                 code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, litShader.chunks);
             }
@@ -272,8 +273,8 @@ const standard = {
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 const specularPropName = options.useMetalness ? "metalness" : "specular";
-                code += "vec3 dSpecularity;\n";
-                code += "float dGlossiness;\n";
+                decl += "vec3 dSpecularity;\n";
+                decl += "float dGlossiness;\n";
                 code += this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks);
                 code += this._addMap("gloss", "glossPS", options, litShader.chunks);
                 func += "getSpecularity();\n"
@@ -282,21 +283,21 @@ const standard = {
 
             // ao
             if (options.aoMap || options.aoVertexColor) {
-                code += "float dAo;"
+                decl += "float dAo;\n"
                 code += this._addMap("ao", "aoPS", options, litShader.chunks);
                 func += "getAO()\n";
             }
 
             // emission
-            code += "vec3 dEmission;\n";
+            decl += "vec3 dEmission;\n";
             code += this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveFormat);
             func += "dEmission = getEmission();\n";
 
             // clearcoat
             if (options.clearCoat > 0) {
-                code += "float ccSpecularity;\n";
-                code += "float ccGlossiness;\n";
-                code += "vec3 ccNormalMap;\n";
+                decl += "float ccSpecularity;\n";
+                decl += "float ccGlossiness;\n";
+                decl += "vec3 ccNormalMap;\n";
 
                 code += this._addMap("clearCoat", "clearCoatPS", options, litShader.chunks);
                 code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, litShader.chunks);
@@ -318,7 +319,7 @@ const standard = {
         } else {
             // all other passes require only opacity
             if (options.alphaTest) {
-                code += "float dAlpha;\n";
+                decl += "float dAlpha;\n";
                 code += this._addMap("opacity", "opacityPS", options, litShader.chunks);
                 code += litShader.chunks.alphaTestPS;
                 func += "getOpacity();\n";
@@ -327,7 +328,7 @@ const standard = {
         }
 
         litShader.generateVertexShader(_matTex2D);
-        litShader.generateFragmentShader(code, func, lightingUv);
+        litShader.generateFragmentShader(decl, code, func, lightingUv);
         return litShader.getDefinition();
     }
 };

@@ -35,7 +35,7 @@ function spacesToTabs() {
         transform(code, id) {
             if (!filter(id)) return;
             return {
-                code: code.replace(/ {2}/g, '\t'),
+                code: code.replace(/\G {4}/g, '\t'),
                 map: null
             };
         }

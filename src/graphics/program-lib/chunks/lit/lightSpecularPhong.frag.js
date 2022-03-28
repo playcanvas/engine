@@ -12,7 +12,9 @@ float getLightSpecular() {
     return calcLightSpecular(dGlossiness, dReflDirW);
 }
 
+#ifdef CLEARCOAT
 float getLightSpecularCC() {
     return calcLightSpecular(ccGlossiness, ccReflDirW);
 }
+#endif
 `;
