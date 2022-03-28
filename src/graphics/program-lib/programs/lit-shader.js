@@ -470,16 +470,16 @@ class LitShader {
         code += chunks.endVS;
         code += "}";
 
-        let newVars = "";
-        newVars += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
-        newVars += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");
-        newVars += this._addVaryingIfNeeded(code, "vec2", "vUv0");
-        newVars += this._addVaryingIfNeeded(code, "vec2", "vUv1");
+        // handle varyings
+        this.varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
+        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");
+        this.varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
+        this.varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
 
         let startCode = "";
         if (device.webgl2) {
@@ -494,7 +494,7 @@ class LitShader {
             }
         }
 
-        this.vshader = startCode + newVars + this.varyings + code;
+        this.vshader = startCode + this.varyings + code;
     }
 
     _fsGetBeginCode() {
@@ -1117,7 +1117,7 @@ class LitShader {
 
         // FRAGMENT SHADER BODY
 
-        code = this._fsGetStartCode(code, device, chunks, options);
+        code += this._fsGetStartCode(code, device, chunks, options);
 
         if (this.needsNormal) {
             if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {

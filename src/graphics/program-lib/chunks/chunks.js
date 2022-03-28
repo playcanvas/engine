@@ -270,7 +270,6 @@ const shaderChunks = {
     lightDirPointPS,
     lightmapDirPS,
     lightmapSinglePS,
-    lightmapSingleVertPS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSpecularPhongPS,

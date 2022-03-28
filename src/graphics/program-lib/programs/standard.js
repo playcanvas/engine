@@ -24,7 +24,7 @@ import {
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
-import { LitShader } from './lit.js';
+import { LitShader } from './lit-shader.js';
 
 /** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
@@ -211,7 +211,7 @@ const standard = {
         let lightingUv = "";
 
         // global texture bias for standard textures
-        code += "uniform float textureBias;";
+        code += "uniform float textureBias;\n";
 
         if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR) {
             // parallax
