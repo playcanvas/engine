@@ -144,17 +144,17 @@ describe('LayerComposition', function () {
     describe('#sortTransparentLayers', function () {
 
         it('should return negative if the first layers are on top of the second layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.push(layerBack);
             this.composition.push(layerFront);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
         });
 
         it('should return negative if one the first layers is on top of the second layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -167,17 +167,17 @@ describe('LayerComposition', function () {
         });
 
         it('should return positive if the second layers are on top of the first layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.push(layerBack);
             this.composition.push(layerFront);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
         });
 
         it('should return positive if one the second layers is on top of the first layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -199,8 +199,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after insert()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.insert(layerFront, 0);
             this.composition.insert(layerBack, 0);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -208,9 +208,9 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after remove()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -224,8 +224,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after pushTransparent()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.pushTransparent(layerBack);
             this.composition.pushTransparent(layerFront);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -233,8 +233,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after insertTransparent()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.insertTransparent(layerFront, 0);
             this.composition.insertTransparent(layerBack, 0);
             expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -242,9 +242,9 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after removeTransparent()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.pushTransparent(layerBack);
             this.composition.pushTransparent(layerMiddle);
             this.composition.pushTransparent(layerFront);
@@ -262,17 +262,17 @@ describe('LayerComposition', function () {
     describe('#sortOpaqueLayers', function () {
 
         it('should return negative if the first layers are on top of the second layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.push(layerBack);
             this.composition.push(layerFront);
             expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
         });
 
         it('should return negative if one the first layers is on top of the second layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -285,17 +285,17 @@ describe('LayerComposition', function () {
         });
 
         it('should return positive if the second layers are on top of the first layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.push(layerBack);
             this.composition.push(layerFront);
             expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
         });
 
         it('should return positive if one the second layers is on top of the first layers', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -317,8 +317,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after insert()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.insert(layerFront, 0);
             this.composition.insert(layerBack, 0);
             expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -326,9 +326,9 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after remove()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
@@ -342,8 +342,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after pushOpaque()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.pushOpaque(layerBack);
             this.composition.pushOpaque(layerFront);
             expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -351,8 +351,8 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after insertOpaque()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerBack = new Layer({ id: 3 });
+            const layerFront = new Layer({ id: 2 });
+            const layerBack = new Layer({ id: 3 });
             this.composition.insertOpaque(layerFront, 0);
             this.composition.insertOpaque(layerBack, 0);
             expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
@@ -360,9 +360,9 @@ describe('LayerComposition', function () {
         });
 
         it('returns correct value after removeOpaque()', function () {
-            var layerFront = new Layer({ id: 2 });
-            var layerMiddle = new Layer({ id: 3 });
-            var layerBack = new Layer({ id: 4 });
+            const layerFront = new Layer({ id: 2 });
+            const layerMiddle = new Layer({ id: 3 });
+            const layerBack = new Layer({ id: 4 });
             this.composition.pushOpaque(layerBack);
             this.composition.pushOpaque(layerMiddle);
             this.composition.pushOpaque(layerFront);

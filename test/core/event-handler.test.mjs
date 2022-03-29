@@ -7,13 +7,13 @@ describe('EventHandler', function () {
     describe('#hasEvent', function () {
 
         it('returns true if the event is registered', function () {
-            var e = new EventHandler();
+            const e = new EventHandler();
             e.on('test', function () { });
             expect(e.hasEvent('test')).to.be.true;
         });
 
         it('returns false if the event is not registered', function () {
-            var e = new EventHandler();
+            const e = new EventHandler();
             e.on('test', function () { });
             expect(e.hasEvent('hello')).to.be.false;
         });
