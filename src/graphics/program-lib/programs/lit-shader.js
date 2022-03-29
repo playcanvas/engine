@@ -855,7 +855,7 @@ class LitShader {
         // }
 
         if (this.needsNormal && !options.normalMap) {
-            // frontend didn't generate normal
+            // frontend didn't supply normal
             code += chunks.normalVertexPS;
         }
 
@@ -1212,12 +1212,13 @@ class LitShader {
                 code += "    dNormalW = dTBN * dNormalMap;\n";
             }
 
-            if (options.clearCoat > 0) {
-                code += "    ccNormalW = dTBN * ccNormalMap;\n";
-            }
-
             if (options.useSpecular) {
                 code += "   getReflDir();\n";
+            }
+
+            if (options.clearCoat > 0) {
+                code += "    ccNormalW = dTBN * ccNormalMap;\n";
+                code += "    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));\n";
             }
         }
 
@@ -1243,7 +1244,9 @@ class LitShader {
                 code += "    #endif\n";
             }
 
-            if (options.fresnelModel > 0) code += "    getFresnel();\n";
+            if (options.fresnelModel > 0) {
+                code += "    getFresnel();\n";
+            }
 
             // if (useAo) {
             //     code += "  getAO();\n";
@@ -1559,7 +1562,7 @@ class LitShader {
         // if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
         // if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
         if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
-        if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
+        // if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
         // if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         // if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
