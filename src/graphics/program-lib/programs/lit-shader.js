@@ -1213,11 +1213,15 @@ class LitShader {
             }
 
             if (options.useSpecular) {
-                code += "   getReflDir();\n";
+                code += "    getReflDir();\n";
             }
 
             if (options.clearCoat > 0) {
-                code += "    ccNormalW = dTBN * ccNormalMap;\n";
+                if (hasTBN) {
+                    code += "    ccNormalW = dTBN * ccNormalMap;\n";
+                } else {
+                    code += "    ccNormalW = dVertexNormalW;\n";
+                }
                 code += "    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));\n";
             }
         }

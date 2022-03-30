@@ -297,8 +297,8 @@ const standard = {
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
                 const lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
-                code += "vec3 dDiffuseLight = vec3(0.0);\n";
-                code += "vec3 dSpecularLight = vec3(0.0);\n";
+                // code += "vec3 dDiffuseLight = vec3(0.0);\n";
+                // code += "vec3 dSpecularLight = vec3(0.0);\n";
                 code += this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapFormat);
                 func += "addLightMap();\n";
             }
