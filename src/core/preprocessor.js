@@ -53,7 +53,7 @@ class Preprocessor {
     static run(source) {
 
         // strips comments, handles // and many cases of /*
-        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');  // lgtm[js/polynomial-regular-expression-used-on-uncontrolled-data]
 
         // right trim each line
         source = source.split(/\r?\n/)
