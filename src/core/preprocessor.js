@@ -14,7 +14,7 @@ const logAssert = (condition, keyword, src, index) => {
 };
 
 // accepted keywords
-const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;
+const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;  // lgtm[js/inefficient-regular-expression]
 
 // #define EXPRESSION
 const DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
