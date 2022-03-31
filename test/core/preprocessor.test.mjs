@@ -2,7 +2,7 @@ import { Preprocessor } from '../../src/core/preprocessor.js';
 
 import { expect } from 'chai';
 
-describe('preprocessor', function () {
+describe('Preprocessor', function () {
 
     const srcData = `
         
