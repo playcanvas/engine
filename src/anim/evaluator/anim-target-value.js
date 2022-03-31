@@ -118,7 +118,7 @@ class AnimTargetValue {
         } else {
             AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
         }
-        this.setter(this.value);
+        if (this.setter) this.setter(this.value);
     }
 
     unbind() {
