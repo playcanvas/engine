@@ -3,6 +3,17 @@ uniform sampler2D clusterWorldTexture;
 uniform sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
+// complex ifdef expression are not supported, handle it here
+// defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
+#if defined(CLUSTER_COOKIES)
+    #define CLUSTER_COOKIES_OR_SHADOWOWS
+#endif
+#if defined(CLUSTER_SHADOWS)
+    #ifndef CLUSTER_COOKIES_OR_SHADOWOWS
+        #define CLUSTER_COOKIES_OR_SHADOWOWS
+    #endif
+#endif
+
 #ifdef CLUSTER_SHADOWS
     #ifdef GL2
         // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
@@ -358,7 +369,7 @@ void evaluateLight(ClusterLightData light) {
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
 
-        #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
+        #if defined(CLUSTER_COOKIES_OR_SHADOWOWS)
 
         if (dAtten > 0.00001) {
 
@@ -441,8 +452,10 @@ void evaluateLight(ClusterLightData light) {
             {
                 vec3 areaDiffuse = (dAttenD * dAtten) * light.color * dAtten3;
 
-                #if defined(CLUSTER_SPECULAR) && defined(CLUSTER_CONSERVE_ENERGY)
-                    areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
+                #if defined(CLUSTER_SPECULAR)
+                    #if defined(CLUSTER_CONSERVE_ENERGY)
+                        areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
+                    #endif
                 #endif
 
                 // area light diffuse - it does not mix diffuse lighting into specular attenuation
@@ -494,8 +507,12 @@ void evaluateLight(ClusterLightData light) {
             {
                 vec3 punctualDiffuse = dAtten * light.color * dAtten3;
 
-                #if defined(CLUSTER_AREALIGHTS) && defined(CLUSTER_SPECULAR) && defined(CLUSTER_CONSERVE_ENERGY)
+                #if defined(CLUSTER_AREALIGHTS)
+                #if defined(CLUSTER_SPECULAR)
+                #if defined(CLUSTER_CONSERVE_ENERGY)
                     punctualDiffuse = mix(punctualDiffuse, vec3(0), dSpecularity);
+                #endif
+                #endif
                 #endif
 
                 dDiffuseLight += punctualDiffuse;

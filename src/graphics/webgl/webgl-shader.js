@@ -1,5 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
+import { Preprocessor } from '../../core/preprocessor.js';
 
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
@@ -66,6 +67,10 @@ class WebglShader {
         const definition = shader.definition;
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
+
+        // resolve ifdefs
+        definition.vshader = Preprocessor.run(definition.vshader);
+        definition.fshader = Preprocessor.run(definition.fshader);
 
         const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
         const glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
