@@ -14,7 +14,7 @@ const logAssert = (condition, keyword, src, index) => {
 };
 
 // accepted keywords
-const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;  // lgtm[js/inefficient-regular-expression]
+const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;
 
 // #define EXPRESSION
 const DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
@@ -53,7 +53,7 @@ class Preprocessor {
     static run(source) {
 
         // strips comments, handles // and many cases of /*
-        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');  // lgtm[js/polynomial-regular-expression-used-on-uncontrolled-data]
+        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
 
         // right trim each line
         source = source.split(/\r?\n/)
