@@ -361,5 +361,3 @@ describe('AnimBlendTreeDirectional2D', function () {
     });
 
 });
-
-
