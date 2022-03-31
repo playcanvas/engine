@@ -21,9 +21,9 @@ const shapePrimitives = [];
  * Generates normal information from the specified positions and triangle indices. See
  * {@link createMesh}.
  *
- * @param {number[]} positions - An array of 3-dimensional vertex positions.
- * @param {number[]} indices - An array of triangle indices.
- * @returns {number[]} An array of 3-dimensional vertex normals.
+ * @param {number[]|Uint16Array|Float32Array|Int8Array|Uint8Array|Int16Array|Int32Array|Uint32Array} positions - An array of 3-dimensional vertex positions.
+ * @param {number[]|Uint16Array|Float32Array|Int8Array|Uint8Array|Int16Array|Int32Array|Uint32Array} indices - An array of triangle indices.
+ * @returns {Float32Array} An array of 3-dimensional vertex normals.
  * @example
  * var normals = pc.calculateNormals(positions, indices);
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
@@ -39,36 +39,31 @@ function calculateNormals(positions, indices) {
     const p1p3 = new Vec3();
     const faceNormal = new Vec3();
 
-    const normals = [];
-
-    // Initialize the normal array to zero
-    for (let i = 0; i < positions.length; i++) {
-        normals[i] = 0;
-    }
+    const normals = new Float32Array(positions.length);
 
     // Accumulate face normals for each vertex
     for (let i = 0; i < triangleCount; i++) {
-        const i1 = indices[i * 3];
-        const i2 = indices[i * 3 + 1];
-        const i3 = indices[i * 3 + 2];
+        const i1 = indices[i * 3    ] * 3;
+        const i2 = indices[i * 3 + 1] * 3;
+        const i3 = indices[i * 3 + 2] * 3;
 
-        p1.set(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
-        p2.set(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
-        p3.set(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
+        p1.set(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+        p2.set(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+        p3.set(positions[i3], positions[i3 + 1], positions[i3 + 2]);
 
         p1p2.sub2(p2, p1);
         p1p3.sub2(p3, p1);
         faceNormal.cross(p1p2, p1p3).normalize();
 
-        normals[i1 * 3]     += faceNormal.x;
-        normals[i1 * 3 + 1] += faceNormal.y;
-        normals[i1 * 3 + 2] += faceNormal.z;
-        normals[i2 * 3]     += faceNormal.x;
-        normals[i2 * 3 + 1] += faceNormal.y;
-        normals[i2 * 3 + 2] += faceNormal.z;
-        normals[i3 * 3]     += faceNormal.x;
-        normals[i3 * 3 + 1] += faceNormal.y;
-        normals[i3 * 3 + 2] += faceNormal.z;
+        normals[i1]     += faceNormal.x;
+        normals[i1 + 1] += faceNormal.y;
+        normals[i1 + 2] += faceNormal.z;
+        normals[i2]     += faceNormal.x;
+        normals[i2 + 1] += faceNormal.y;
+        normals[i2 + 2] += faceNormal.z;
+        normals[i3]     += faceNormal.x;
+        normals[i3 + 1] += faceNormal.y;
+        normals[i3 + 2] += faceNormal.z;
     }
 
     // Normalize all normals
@@ -93,7 +88,7 @@ function calculateNormals(positions, indices) {
  * @param {number[]} normals - An array of 3-dimensional vertex normals.
  * @param {number[]} uvs - An array of 2-dimensional vertex texture coordinates.
  * @param {number[]} indices - An array of triangle indices.
- * @returns {number[]} An array of 3-dimensional vertex tangents.
+ * @returns {Float32Array} An array of 3-dimensional vertex tangents.
  * @example
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
@@ -114,20 +109,28 @@ function calculateTangents(positions, normals, uvs, indices) {
     const tan1 = new Float32Array(vertexCount * 3);
     const tan2 = new Float32Array(vertexCount * 3);
 
-    const tangents = [];
+    const tangents = new Float32Array(vertexCount * 4);
 
     for (let i = 0; i < triangleCount; i++) {
         const i1 = indices[i * 3];
         const i2 = indices[i * 3 + 1];
         const i3 = indices[i * 3 + 2];
 
-        v1.set(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
-        v2.set(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
-        v3.set(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
+        const i1Duo = i1 * 2;
+        const i2Duo = i2 * 2;
+        const i3Duo = i3 * 2;
 
-        w1.set(uvs[i1 * 2], uvs[i1 * 2 + 1]);
-        w2.set(uvs[i2 * 2], uvs[i2 * 2 + 1]);
-        w3.set(uvs[i3 * 2], uvs[i3 * 2 + 1]);
+        const i1Trio = i1 * 3;
+        const i2Trio = i2 * 3;
+        const i3Trio = i3 * 3;
+
+        v1.set(positions[i1Trio], positions[i1Trio + 1], positions[i1Trio + 2]);
+        v2.set(positions[i2Trio], positions[i2Trio + 1], positions[i2Trio + 2]);
+        v3.set(positions[i3Trio], positions[i3Trio + 1], positions[i3Trio + 2]);
+
+        w1.set(uvs[i1Duo], uvs[i1Duo + 1]);
+        w2.set(uvs[i2Duo], uvs[i2Duo + 1]);
+        w3.set(uvs[i3Duo], uvs[i3Duo + 1]);
 
         const x1 = v2.x - v1.x;
         const x2 = v3.x - v1.x;
@@ -158,25 +161,25 @@ function calculateTangents(positions, normals, uvs, indices) {
                      (s1 * z2 - s2 * z1) * r);
         }
 
-        tan1[i1 * 3 + 0] += sdir.x;
-        tan1[i1 * 3 + 1] += sdir.y;
-        tan1[i1 * 3 + 2] += sdir.z;
-        tan1[i2 * 3 + 0] += sdir.x;
-        tan1[i2 * 3 + 1] += sdir.y;
-        tan1[i2 * 3 + 2] += sdir.z;
-        tan1[i3 * 3 + 0] += sdir.x;
-        tan1[i3 * 3 + 1] += sdir.y;
-        tan1[i3 * 3 + 2] += sdir.z;
+        tan1[i1Trio    ] += sdir.x;
+        tan1[i1Trio + 1] += sdir.y;
+        tan1[i1Trio + 2] += sdir.z;
+        tan1[i2Trio    ] += sdir.x;
+        tan1[i2Trio + 1] += sdir.y;
+        tan1[i2Trio + 2] += sdir.z;
+        tan1[i3Trio    ] += sdir.x;
+        tan1[i3Trio + 1] += sdir.y;
+        tan1[i3Trio + 2] += sdir.z;
 
-        tan2[i1 * 3 + 0] += tdir.x;
-        tan2[i1 * 3 + 1] += tdir.y;
-        tan2[i1 * 3 + 2] += tdir.z;
-        tan2[i2 * 3 + 0] += tdir.x;
-        tan2[i2 * 3 + 1] += tdir.y;
-        tan2[i2 * 3 + 2] += tdir.z;
-        tan2[i3 * 3 + 0] += tdir.x;
-        tan2[i3 * 3 + 1] += tdir.y;
-        tan2[i3 * 3 + 2] += tdir.z;
+        tan2[i1Trio    ] += tdir.x;
+        tan2[i1Trio + 1] += tdir.y;
+        tan2[i1Trio + 2] += tdir.z;
+        tan2[i2Trio    ] += tdir.x;
+        tan2[i2Trio + 1] += tdir.y;
+        tan2[i2Trio + 2] += tdir.z;
+        tan2[i3Trio    ] += tdir.x;
+        tan2[i3Trio + 1] += tdir.y;
+        tan2[i3Trio + 2] += tdir.z;
     }
 
     const t1 = new Vec3();

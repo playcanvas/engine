@@ -348,9 +348,7 @@ const generateNormals = function (sourceDesc, indices) {
     }
 
     // generate normals
-    const normalsTemp = calculateNormals(positions, indices);
-    const normals = new Float32Array(normalsTemp.length);
-    normals.set(normalsTemp);
+    const normals = calculateNormals(positions, indices);
 
     sourceDesc[SEMANTIC_NORMAL] = {
         buffer: normals.buffer,
