@@ -97,7 +97,8 @@ function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     const indicesLength = indices.length;
-    const vertexCount   = positions.length / 3;
+    const positionsLength = positions.length;
+    const vertexCount   = positionsLength / 3;
     const v1   = new Vec3();
     const v2   = new Vec3();
     const v3   = new Vec3();
@@ -188,13 +189,11 @@ function calculateTangents(positions, normals, uvs, indices) {
     const n = new Vec3();
     const temp = new Vec3();
 
-    for (let i = 0; i < vertexCount; i++) {
-        const iTrio = i * 3;
-        // `<< 2` is same as `* 4`
-        const iQuad = i << 2;
-        n.set(normals[iTrio], normals[iTrio + 1], normals[iTrio + 2]);
-        t1.set(tan1[iTrio], tan1[iTrio + 1], tan1[iTrio + 2]);
-        t2.set(tan2[iTrio], tan2[iTrio + 1], tan2[iTrio + 2]);
+    let iQuad = 0;
+    for (let i = 0; i < positionsLength; i += 3, iQuad += 4) {
+        n .set(normals[i], normals[i + 1], normals[i + 2]);
+        t1.set(   tan1[i],    tan1[i + 1],    tan1[i + 2]);
+        t2.set(   tan2[i],    tan2[i + 1],    tan2[i + 2]);
 
         // Gram-Schmidt orthogonalize
         const ndott = n.dot(t1);
