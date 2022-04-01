@@ -140,7 +140,7 @@ class Controller {
         }
 
         if (keys === undefined) {
-            throw new Error("Invalid button");
+            throw new Error('Invalid button');
         }
 
         // convert to an array
@@ -389,7 +389,7 @@ class Controller {
     _enableMouse() {
         this._mouse = new Mouse();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._mouse.attach(this._element);
     }
@@ -397,7 +397,7 @@ class Controller {
     _enableKeyboard() {
         this._keyboard = new Keyboard();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._keyboard.attach(this._element);
     }
