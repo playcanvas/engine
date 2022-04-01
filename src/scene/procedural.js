@@ -344,6 +344,7 @@ function createTorus(device, opts) {
     const options = {
         normals: normals,
         uvs: uvs,
+        uvs1: uvs,
         indices: indices
     };
 

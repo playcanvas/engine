@@ -76,17 +76,6 @@
                 callback();
             };
             document.head.appendChild(script);
-
-//            fetch(enginePath)
-//                .then(function(response) { return response.text() })
-//                .then(function(data) {
-//                    var module = {
-//                        exports: {}
-//                    };
-//                    window.pc = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
-//                    window.top.pc = window.pc;
-//                    callback();
-//                });
         }
 
         function createApplication(canvas) {

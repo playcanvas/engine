@@ -15,13 +15,13 @@ class LightsBakedExample {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // All render component primitive shape types
-        const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
         const funcs = [
             pc.createBox,
             pc.createCone,
             pc.createCylinder,
             pc.createSphere,
-            pc.createCapsule
+            pc.createCapsule,
+            pc.createTorus
         ];
 
         const material = new pc.StandardMaterial();
