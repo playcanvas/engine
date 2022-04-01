@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
@@ -17,9 +16,26 @@ class LightsBakedExample {
 
         // All render component primitive shape types
         const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+        const funcs = [
+            pc.createBox,
+            pc.createCone,
+            pc.createCylinder,
+            pc.createSphere,
+            pc.createCapsule
+        ];
+
+        const material = new pc.StandardMaterial();
+        material.useLighting = true;
+        material.shadingModel = pc.SPECULAR_BLINN;
+        material.useMetalness = true;
+        material.metalness = 0.7;
+        material.diffuse.set(1, 1, 1);
+        material.metalness = 0.7;
+        material.shininess = 50;
 
         for (let i = 0; i < 40; i++) {
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            const func = funcs[Math.floor(Math.random() * funcs.length)];
+            const meshInstance = new pc.MeshInstance(func(app.graphicsDevice), material);
 
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
             const entity = new pc.Entity();
@@ -27,7 +43,8 @@ class LightsBakedExample {
                 castShadows: false,
                 castShadowsLightmap: true,
                 lightmapped: true,
-                type: shape
+                meshInstances: [meshInstance],
+                material: material
             });
             app.root.addChild(entity);
 

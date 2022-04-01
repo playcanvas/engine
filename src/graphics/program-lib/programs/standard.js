@@ -265,6 +265,7 @@ const standard = {
                 func += "getGlossiness();\n";
             } else {
                 decl += "vec3 dSpecularity = vec3(0.0);\n";
+                decl += "float dGlossiness = 0.0;\n";
             }
 
             // ao
@@ -296,11 +297,14 @@ const standard = {
 
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
-                const lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
-                // code += "vec3 dDiffuseLight = vec3(0.0);\n";
-                // code += "vec3 dSpecularLight = vec3(0.0);\n";
+                const lightmapDir = (options.dirLightMap && options.useSpecular);
+                const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
+                decl += "vec3 dLightmap;\n";
+                if (lightmapDir) {
+                    decl += "vec3 dLightmapDir;\n";
+                }
                 code += this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapFormat);
-                func += "addLightMap();\n";
+                func += "getLightMap();\n";
             }
         } else {
             // all other passes require only opacity

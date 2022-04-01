@@ -1041,6 +1041,11 @@ function getShapePrimitive(device, type) {
                 area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
                 break;
 
+            case 'torus':
+                mesh = createTorus(device, { tubeRadius: 0.2, ringRadius: 0.3 });
+                area = { x: Math.PI * 0.5 * 0.5 - Math.PI * 0.1 * 0.1, y: 0.4, z: 0.4, uv: 1 };
+                break;
+
             default:
                 throw new Error("Invalid primitive type: " + type);
         }

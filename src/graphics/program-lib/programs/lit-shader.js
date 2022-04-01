@@ -296,7 +296,7 @@ class LitShader {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap || options.enableGGXSpecular) && options.hasTangents) {
+            if (options.hasTangents && (options.heightMap || options.normalMap || options.enableGGXSpecular)) {
                 this.attributes.vertex_tangent = SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -817,13 +817,13 @@ class LitShader {
         code += "\n"; // End of uniform declarations
 
         // TBN
-        const hasTBN = this.needsNormal && (options.heightMap || options.normalMap || options.clearCoatNormalMap || options.enableGGXSpecular);
+        const hasTBN = this.needsNormal && (options.normalMap || options.clearCoatNormalMap || (options.enableGGXSpecular && !options.heightMap));
 
         if (hasTBN) {
             if (options.hasTangents) {
                 code += options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
             } else {
-                if (device.extStandardDerivatives) {
+                if (device.extStandardDerivatives && (options.normalMap || options.clearCoatNormalMap)) {
                     code += chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv);
                 } else {
                     code += chunks.TBNObjectSpacePS;
@@ -1053,6 +1053,11 @@ class LitShader {
             code += chunks.combineClearCoatPS;
         }
 
+        // lightmap support
+        if (options.lightMap || options.lightVertexColor) {
+            code += (options.useSpecular && options.dirLightMap) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
+        }
+
         const addAmbient = (!options.lightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
 
         // let addAmbient = true;
@@ -1268,15 +1273,18 @@ class LitShader {
                 `;
             }
         }
+
         if (options.ambientTint && !useOldAmbient) {
             code += "    dDiffuseLight *= material_ambient;\n";
         }
+
         if (useAo && !options.occludeDirect) {
             code += "    occludeDiffuse();\n";
         }
-        // if (options.lightMap || options.lightVertexColor) {
-        //     code += "   addLightMap();\n";
-        // }
+
+        if (options.lightMap || options.lightVertexColor) {
+            code += "    addLightMap();\n";
+        }
 
         if (this.lighting || this.reflections) {
             if (this.reflections) {
@@ -1288,14 +1296,18 @@ class LitShader {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
+                code += "    #ifdef CLEARCOAT\n"
                 code += "    ccReflection.rgb *= ccSpecularity;\n";
+                code += "    #endif\n"
                 code += "    dReflection.rgb *= dSpecularity;\n";
                 code += "    dSpecularLight *= dSpecularity;\n";
 
-                code += "    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
+                // code += "    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
 
                 // evaluate material based area lights data, shared by all area lights
-                code += "    calcLTCLightValues();\n";
+                if (options.useSpecular) {
+                    code += "    calcLTCLightValues();\n";
+                }
             }
 
             for (let i = 0; i < options.lights.length; i++) {

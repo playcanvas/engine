@@ -58,7 +58,7 @@ class StandardMaterialOptionsBuilder {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
             options.toneMap = TONEMAP_LINEAR;
         }
-        options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & SHADERDEF_TANGENTS) !== 0);
+        options.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
