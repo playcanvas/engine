@@ -226,7 +226,7 @@ class TextureHandler {
 
     open(url, data, asset) {
         if (!url)
-            return;
+            return undefined;
 
         let texture = this._getParser(url).open(url, data, this._device);
 

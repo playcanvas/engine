@@ -142,8 +142,8 @@ class BatchManager {
         }
 
         if (this._batchGroups[id]) {
-            Debug.error(`batch group with id ${id} already exists`);
-            return;
+            Debug.error(`Batch group with id ${id} already exists.`);
+            return undefined;
         }
 
         const group = new BatchGroup(id, name, dynamic, maxAabbSize, layers);
@@ -160,7 +160,7 @@ class BatchManager {
      */
     removeGroup(id) {
         if (!this._batchGroups[id]) {
-            Debug.error(`batch group with id ${id} doesn't exist`);
+            Debug.error(`Batch group with id ${id} doesn't exist.`);
             return;
         }
 

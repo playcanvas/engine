@@ -33,7 +33,7 @@ function spacesToTabs() {
 
     return {
         transform(code, id) {
-            if (!filter(id)) return;
+            if (!filter(id)) return undefined;
             return {
                 code: code.replace(/ {2}/g, '\t'),
                 map: null
@@ -50,7 +50,7 @@ function shaderChunks(removeComments) {
 
     return {
         transform(code, id) {
-            if (!filter(id)) return;
+            if (!filter(id)) return undefined;
 
             code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
 
