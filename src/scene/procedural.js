@@ -30,8 +30,8 @@ const shapePrimitives = [];
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  */
 function calculateNormals(positions, indices) {
-    const triangleCount = indices.length / 3;
-    const vertexCount   = positions.length / 3;
+    const indicesLength = indices.length;
+    const positionsLength = positions.length;
     const p1 = new Vec3();
     const p2 = new Vec3();
     const p3 = new Vec3();
@@ -39,13 +39,13 @@ function calculateNormals(positions, indices) {
     const p1p3 = new Vec3();
     const faceNormal = new Vec3();
 
-    const normals = new Float32Array(positions.length);
+    const normals = new Float32Array(positionsLength);
 
     // Accumulate face normals for each vertex
-    for (let i = 0; i < triangleCount; i++) {
-        const i1 = indices[i * 3    ] * 3;
-        const i2 = indices[i * 3 + 1] * 3;
-        const i3 = indices[i * 3 + 2] * 3;
+    for (let i = 0; i < indicesLength; i += 3) {
+        const i1 = indices[i    ] * 3;
+        const i2 = indices[i + 1] * 3;
+        const i3 = indices[i + 2] * 3;
 
         p1.set(positions[i1], positions[i1 + 1], positions[i1 + 2]);
         p2.set(positions[i2], positions[i2 + 1], positions[i2 + 2]);
@@ -67,14 +67,14 @@ function calculateNormals(positions, indices) {
     }
 
     // Normalize all normals
-    for (let i = 0; i < vertexCount; i++) {
-        const nx = normals[i * 3];
-        const ny = normals[i * 3 + 1];
-        const nz = normals[i * 3 + 2];
+    for (let i = 0; i < positionsLength; i += 3) {
+        const nx = normals[i];
+        const ny = normals[i + 1];
+        const nz = normals[i + 2];
         const invLen = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
-        normals[i * 3] *= invLen;
-        normals[i * 3 + 1] *= invLen;
-        normals[i * 3 + 2] *= invLen;
+        normals[i] *= invLen;
+        normals[i + 1] *= invLen;
+        normals[i + 2] *= invLen;
     }
 
     return normals;
@@ -96,7 +96,7 @@ function calculateNormals(positions, indices) {
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
-    const triangleCount = indices.length / 3;
+    const indicesLength = indices.length;
     const vertexCount   = positions.length / 3;
     const v1   = new Vec3();
     const v2   = new Vec3();
@@ -111,14 +111,15 @@ function calculateTangents(positions, normals, uvs, indices) {
 
     const tangents = new Float32Array(vertexCount * 4);
 
-    for (let i = 0; i < triangleCount; i++) {
-        const i1 = indices[i * 3];
-        const i2 = indices[i * 3 + 1];
-        const i3 = indices[i * 3 + 2];
+    for (let i = 0; i < indicesLength; i += 3) {
+        const i1 = indices[i];
+        const i2 = indices[i + 1];
+        const i3 = indices[i + 2];
 
-        const i1Duo = i1 * 2;
-        const i2Duo = i2 * 2;
-        const i3Duo = i3 * 2;
+        // `<< 1` is same `* 2`
+        const i1Duo = i1 << 1;
+        const i2Duo = i2 << 1;
+        const i3Duo = i3 << 1;
 
         const i1Trio = i1 * 3;
         const i2Trio = i2 * 3;
@@ -161,23 +162,23 @@ function calculateTangents(positions, normals, uvs, indices) {
                      (s1 * z2 - s2 * z1) * r);
         }
 
-        tan1[i1Trio    ] += sdir.x;
+        tan1[i1Trio]     += sdir.x;
         tan1[i1Trio + 1] += sdir.y;
         tan1[i1Trio + 2] += sdir.z;
-        tan1[i2Trio    ] += sdir.x;
+        tan1[i2Trio]     += sdir.x;
         tan1[i2Trio + 1] += sdir.y;
         tan1[i2Trio + 2] += sdir.z;
-        tan1[i3Trio    ] += sdir.x;
+        tan1[i3Trio]     += sdir.x;
         tan1[i3Trio + 1] += sdir.y;
         tan1[i3Trio + 2] += sdir.z;
 
-        tan2[i1Trio    ] += tdir.x;
+        tan2[i1Trio]     += tdir.x;
         tan2[i1Trio + 1] += tdir.y;
         tan2[i1Trio + 2] += tdir.z;
-        tan2[i2Trio    ] += tdir.x;
+        tan2[i2Trio]     += tdir.x;
         tan2[i2Trio + 1] += tdir.y;
         tan2[i2Trio + 2] += tdir.z;
-        tan2[i3Trio    ] += tdir.x;
+        tan2[i3Trio]     += tdir.x;
         tan2[i3Trio + 1] += tdir.y;
         tan2[i3Trio + 2] += tdir.z;
     }
@@ -188,22 +189,25 @@ function calculateTangents(positions, normals, uvs, indices) {
     const temp = new Vec3();
 
     for (let i = 0; i < vertexCount; i++) {
-        n.set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
-        t1.set(tan1[i * 3], tan1[i * 3 + 1], tan1[i * 3 + 2]);
-        t2.set(tan2[i * 3], tan2[i * 3 + 1], tan2[i * 3 + 2]);
+        const iTrio = i * 3;
+        // `<< 2` is same as `* 4`
+        const iQuad = i << 2;
+        n.set(normals[iTrio], normals[iTrio + 1], normals[iTrio + 2]);
+        t1.set(tan1[iTrio], tan1[iTrio + 1], tan1[iTrio + 2]);
+        t2.set(tan2[iTrio], tan2[iTrio + 1], tan2[iTrio + 2]);
 
         // Gram-Schmidt orthogonalize
         const ndott = n.dot(t1);
         temp.copy(n).mulScalar(ndott);
         temp.sub2(t1, temp).normalize();
 
-        tangents[i * 4]     = temp.x;
-        tangents[i * 4 + 1] = temp.y;
-        tangents[i * 4 + 2] = temp.z;
+        tangents[iQuad]     = temp.x;
+        tangents[iQuad + 1] = temp.y;
+        tangents[iQuad + 2] = temp.z;
 
         // Calculate handedness
         temp.cross(n, t1);
-        tangents[i * 4 + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
+        tangents[iQuad + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
     }
 
     return tangents;
