@@ -80,6 +80,161 @@ function calculateNormals(positions, indices) {
     return normals;
 }
 
+function fillTan1Tan2(indices, positions, uvs, tan1, tan2) {
+    let sdirx = 0;
+    let sdiry = 0;
+    let sdirz = 0;
+    let tdirx = 0;
+    let tdiry = 0;
+    let tdirz = 0;
+    let v1x   = 0;
+    let v1y   = 0;
+    let v1z   = 0;
+    let v2x   = 0;
+    let v2y   = 0;
+    let v2z   = 0;
+    let v3x   = 0;
+    let v3y   = 0;
+    let v3z   = 0;
+    let w1x   = 0;
+    let w1y   = 0;
+    let w2x   = 0;
+    let w2y   = 0;
+    let w3x   = 0;
+    let w3y   = 0;
+    let x1    = 0;
+    let x2    = 0;
+    let y1    = 0;
+    let y2    = 0;
+    let z1    = 0;
+    let z2    = 0;
+    let s1    = 0;
+    let s2    = 0;
+    let t1    = 0;
+    let t2    = 0;
+    let area  = 0;
+    let r     = 0;
+    let i1    = 0;
+    let i2    = 0;
+    let i3    = 0;
+    let i1Duo = 0;
+    let i2Duo = 0;
+    let i3Duo = 0;
+    let i1Trio = 0;
+    let i2Trio = 0;
+    let i3Trio = 0;
+    const n = indices.length;
+    for (let i = 0; i < n; i += 3) {
+        i1 = indices[i    ] >>> 0;
+        i2 = indices[i + 1] >>> 0;
+        i3 = indices[i + 2] >>> 0;
+
+        // `<< 1` is same `* 2`
+        i1Duo = i1 << 1;
+        i2Duo = i2 << 1;
+        i3Duo = i3 << 1;
+
+        // Same as * 3
+        i1Trio = (i1 << 1) + i1;
+        i2Trio = (i2 << 1) + i2;
+        i3Trio = (i3 << 1) + i3;
+
+        v1x = positions[i1Trio];
+        v1y = positions[i1Trio + 1];
+        v1z = positions[i1Trio + 2];
+        v2x = positions[i2Trio];
+        v2y = positions[i2Trio + 1];
+        v2z = positions[i2Trio + 2];
+        v3x = positions[i3Trio];
+        v3y = positions[i3Trio + 1];
+        v3z = positions[i3Trio + 2];
+
+        w1x = uvs[i1Duo];
+        w1y = uvs[i1Duo + 1];
+        w2x = uvs[i2Duo];
+        w2y = uvs[i2Duo + 1];
+        w3x = uvs[i3Duo];
+        w3y = uvs[i3Duo + 1];
+
+        x1 = v2x - v1x;
+        x2 = v3x - v1x;
+        y1 = v2y - v1y;
+        y2 = v3y - v1y;
+        z1 = v2z - v1z;
+        z2 = v3z - v1z;
+
+        s1 = w2x - w1x;
+        s2 = w3x - w1x;
+        t1 = w2y - w1y;
+        t2 = w3y - w1y;
+
+        area = s1 * t2 - s2 * t1;
+
+        // Area can be 0 for degenerate triangles or bad uv coordinates
+        if (area === 0) {
+            // Fallback to default values
+            sdirx = 0;
+            sdiry = 1;
+            sdirz = 0;
+            tdirx = 1;
+            tdiry = 0;
+            tdirz = 0;
+        } else {
+            r = 1 / area;
+            sdirx = (t2 * x1 - t1 * x2) * r;
+            sdiry = (t2 * y1 - t1 * y2) * r;
+            sdirz = (t2 * z1 - t1 * z2) * r;
+            tdirx = (s1 * x2 - s2 * x1) * r;
+            tdiry = (s1 * y2 - s2 * y1) * r;
+            tdirz = (s1 * z2 - s2 * z1) * r;
+        }
+
+        tan1[i1Trio]     += sdirx;
+        tan1[i1Trio + 1] += sdiry;
+        tan1[i1Trio + 2] += sdirz;
+        tan1[i2Trio]     += sdirx;
+        tan1[i2Trio + 1] += sdiry;
+        tan1[i2Trio + 2] += sdirz;
+        tan1[i3Trio]     += sdirx;
+        tan1[i3Trio + 1] += sdiry;
+        tan1[i3Trio + 2] += sdirz;
+
+        tan2[i1Trio]     += tdirx;
+        tan2[i1Trio + 1] += tdiry;
+        tan2[i1Trio + 2] += tdirz;
+        tan2[i2Trio]     += tdirx;
+        tan2[i2Trio + 1] += tdiry;
+        tan2[i2Trio + 2] += tdirz;
+        tan2[i3Trio]     += tdirx;
+        tan2[i3Trio + 1] += tdiry;
+        tan2[i3Trio + 2] += tdirz;
+    }
+}
+
+function fillTangents(normals, tangents, tan1, tan2) {
+    const t1 = new Vec3();
+    const t2 = new Vec3();
+    const n = new Vec3();
+    const temp = new Vec3();
+    let iQuad = 0;
+    const len = normals.length;
+    for (let i = 0; i < len; i += 3, iQuad += 4) {
+        n .set(normals[i], normals[i + 1], normals[i + 2]);
+        t1.set(   tan1[i],    tan1[i + 1],    tan1[i + 2]);
+        t2.set(   tan2[i],    tan2[i + 1],    tan2[i + 2]);
+        // Gram-Schmidt orthogonalize
+        const ndott = n.dot(t1);
+        temp.copy(n).mulScalar(ndott);
+        temp.sub2(t1, temp).normalize();
+        tangents[iQuad]     = temp.x;
+        tangents[iQuad + 1] = temp.y;
+        tangents[iQuad + 2] = temp.z;
+        // Calculate handedness
+        temp.cross(n, t1);
+        tangents[iQuad + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
+    }
+}
+
 /**
  * Generates tangent information from the specified positions, normals, texture coordinates and
  * triangle indices. See {@link createMesh}.
@@ -96,119 +251,13 @@ function calculateNormals(positions, indices) {
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
-    const indicesLength = indices.length;
     const positionsLength = positions.length;
     const vertexCount   = positionsLength / 3;
-    const v1   = new Vec3();
-    const v2   = new Vec3();
-    const v3   = new Vec3();
-    const w1   = new Vec2();
-    const w2   = new Vec2();
-    const w3   = new Vec2();
-    const sdir = new Vec3();
-    const tdir = new Vec3();
-    const tan1 = new Float32Array(vertexCount * 3);
-    const tan2 = new Float32Array(vertexCount * 3);
-
+    const tan1     = new Float32Array(vertexCount * 3);
+    const tan2     = new Float32Array(vertexCount * 3);
     const tangents = new Float32Array(vertexCount * 4);
-
-    for (let i = 0; i < indicesLength; i += 3) {
-        const i1 = indices[i];
-        const i2 = indices[i + 1];
-        const i3 = indices[i + 2];
-
-        // `<< 1` is same `* 2`
-        const i1Duo = i1 << 1;
-        const i2Duo = i2 << 1;
-        const i3Duo = i3 << 1;
-
-        const i1Trio = i1 * 3;
-        const i2Trio = i2 * 3;
-        const i3Trio = i3 * 3;
-
-        v1.set(positions[i1Trio], positions[i1Trio + 1], positions[i1Trio + 2]);
-        v2.set(positions[i2Trio], positions[i2Trio + 1], positions[i2Trio + 2]);
-        v3.set(positions[i3Trio], positions[i3Trio + 1], positions[i3Trio + 2]);
-
-        w1.set(uvs[i1Duo], uvs[i1Duo + 1]);
-        w2.set(uvs[i2Duo], uvs[i2Duo + 1]);
-        w3.set(uvs[i3Duo], uvs[i3Duo + 1]);
-
-        const x1 = v2.x - v1.x;
-        const x2 = v3.x - v1.x;
-        const y1 = v2.y - v1.y;
-        const y2 = v3.y - v1.y;
-        const z1 = v2.z - v1.z;
-        const z2 = v3.z - v1.z;
-
-        const s1 = w2.x - w1.x;
-        const s2 = w3.x - w1.x;
-        const t1 = w2.y - w1.y;
-        const t2 = w3.y - w1.y;
-
-        const area = s1 * t2 - s2 * t1;
-
-        // Area can be 0 for degenerate triangles or bad uv coordinates
-        if (area === 0) {
-            // Fallback to default values
-            sdir.set(0, 1, 0);
-            tdir.set(1, 0, 0);
-        } else {
-            const r = 1 / area;
-            sdir.set((t2 * x1 - t1 * x2) * r,
-                     (t2 * y1 - t1 * y2) * r,
-                     (t2 * z1 - t1 * z2) * r);
-            tdir.set((s1 * x2 - s2 * x1) * r,
-                     (s1 * y2 - s2 * y1) * r,
-                     (s1 * z2 - s2 * z1) * r);
-        }
-
-        tan1[i1Trio]     += sdir.x;
-        tan1[i1Trio + 1] += sdir.y;
-        tan1[i1Trio + 2] += sdir.z;
-        tan1[i2Trio]     += sdir.x;
-        tan1[i2Trio + 1] += sdir.y;
-        tan1[i2Trio + 2] += sdir.z;
-        tan1[i3Trio]     += sdir.x;
-        tan1[i3Trio + 1] += sdir.y;
-        tan1[i3Trio + 2] += sdir.z;
-
-        tan2[i1Trio]     += tdir.x;
-        tan2[i1Trio + 1] += tdir.y;
-        tan2[i1Trio + 2] += tdir.z;
-        tan2[i2Trio]     += tdir.x;
-        tan2[i2Trio + 1] += tdir.y;
-        tan2[i2Trio + 2] += tdir.z;
-        tan2[i3Trio]     += tdir.x;
-        tan2[i3Trio + 1] += tdir.y;
-        tan2[i3Trio + 2] += tdir.z;
-    }
-
-    const t1 = new Vec3();
-    const t2 = new Vec3();
-    const n = new Vec3();
-    const temp = new Vec3();
-
-    let iQuad = 0;
-    for (let i = 0; i < positionsLength; i += 3, iQuad += 4) {
-        n .set(normals[i], normals[i + 1], normals[i + 2]);
-        t1.set(   tan1[i],    tan1[i + 1],    tan1[i + 2]);
-        t2.set(   tan2[i],    tan2[i + 1],    tan2[i + 2]);
-
-        // Gram-Schmidt orthogonalize
-        const ndott = n.dot(t1);
-        temp.copy(n).mulScalar(ndott);
-        temp.sub2(t1, temp).normalize();
-
-        tangents[iQuad]     = temp.x;
-        tangents[iQuad + 1] = temp.y;
-        tangents[iQuad + 2] = temp.z;
-
-        // Calculate handedness
-        temp.cross(n, t1);
-        tangents[iQuad + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
-    }
-
+    fillTan1Tan2(indices, positions, uvs, tan1, tan2);
+    fillTangents(normals, tangents, tan1, tan2);
     return tangents;
 }
 
