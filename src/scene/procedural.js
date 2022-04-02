@@ -18,6 +18,31 @@ const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 const shapePrimitives = [];
 
 /**
+ * Normalizes the entire array in place.
+ * 
+ * @example ```js
+ *   let arr = [0,10,0, 20,20,20, 0,1,30];
+ *   normalizeArray(arr);
+ *   arr.map(_ => _.toFixed(3));
+ *   // Output: ['0.000', '1.000', '0.000', '0.577', '0.577', '0.577', '0.000', '0.033', '0.999']
+ * ```
+ * @param {number[] | Float32Array} arr
+ */
+function normalizeArray(arr) {
+    const n = arr.length;
+    const sqrt = Math.sqrt;
+    for (let i = 0; i < n; i += 3) {
+        const nx = arr[i];
+        const ny = arr[i + 1];
+        const nz = arr[i + 2];
+        const invLen = 1 / sqrt(nx * nx + ny * ny + nz * nz);
+        arr[i] *= invLen;
+        arr[i + 1] *= invLen;
+        arr[i + 2] *= invLen;
+    }
+}
+
+/**
  * Generates normal information from the specified positions and triangle indices. See
  * {@link createMesh}.
  *
@@ -32,9 +57,15 @@ const shapePrimitives = [];
 function calculateNormals(positions, indices) {
     const indicesLength = indices.length;
     const positionsLength = positions.length;
-    const p1 = new Vec3();
-    const p2 = new Vec3();
-    const p3 = new Vec3();
+    let p1x = 0;
+    let p1y = 0;
+    let p1z = 0;
+    let p2x = 0;
+    let p2y = 0;
+    let p2z = 0;
+    let p3x = 0;
+    let p3y = 0;
+    let p3z = 0;
     const p1p2 = new Vec3();
     const p1p3 = new Vec3();
     const faceNormal = new Vec3();
@@ -46,36 +77,40 @@ function calculateNormals(positions, indices) {
         const i1 = indices[i    ] * 3;
         const i2 = indices[i + 1] * 3;
         const i3 = indices[i + 2] * 3;
-
-        p1.set(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-        p2.set(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-        p3.set(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-
-        p1p2.sub2(p2, p1);
-        p1p3.sub2(p3, p1);
+        p1x = positions[i1];
+        p1y = positions[i1 + 1];
+        p1z = positions[i1 + 2];
+        p2x = positions[i2];
+        p2y = positions[i2 + 1];
+        p2z = positions[i2 + 2];
+        p3x = positions[i3];
+        p3y = positions[i3 + 1];
+        p3z = positions[i3 + 2];
+        // p1p2.sub2(p2, p1)
+        p1p2.x = p2x - p1x;
+        p1p2.y = p2y - p1y;
+        p1p2.z = p2z - p1z;
+        // p1p3.sub2(p3, p1);
+        p1p3.x = p3x - p1x;
+        p1p3.y = p3y - p1y;
+        p1p3.z = p3z - p1z;
         faceNormal.cross(p1p2, p1p3).normalize();
-
-        normals[i1]     += faceNormal.x;
-        normals[i1 + 1] += faceNormal.y;
-        normals[i1 + 2] += faceNormal.z;
-        normals[i2]     += faceNormal.x;
-        normals[i2 + 1] += faceNormal.y;
-        normals[i2 + 2] += faceNormal.z;
-        normals[i3]     += faceNormal.x;
-        normals[i3 + 1] += faceNormal.y;
-        normals[i3 + 2] += faceNormal.z;
+        const nx = faceNormal.x;
+        const ny = faceNormal.y;
+        const nz = faceNormal.z;
+        normals[i1]     += nx;
+        normals[i1 + 1] += ny;
+        normals[i1 + 2] += nz;
+        normals[i2]     += nx;
+        normals[i2 + 1] += ny;
+        normals[i2 + 2] += nz;
+        normals[i3]     += nx;
+        normals[i3 + 1] += ny;
+        normals[i3 + 2] += nz;
     }
-
+    
     // Normalize all normals
-    for (let i = 0; i < positionsLength; i += 3) {
-        const nx = normals[i];
-        const ny = normals[i + 1];
-        const nz = normals[i + 2];
-        const invLen = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
-        normals[i] *= invLen;
-        normals[i + 1] *= invLen;
-        normals[i + 2] *= invLen;
-    }
+    normalizeArray(normals);
 
     return normals;
 }
@@ -219,13 +254,26 @@ function fillTangents(normals, tangents, tan1, tan2) {
     let iQuad = 0;
     const len = normals.length;
     for (let i = 0; i < len; i += 3, iQuad += 4) {
-        n .set(normals[i], normals[i + 1], normals[i + 2]);
-        t1.set(   tan1[i],    tan1[i + 1],    tan1[i + 2]);
-        t2.set(   tan2[i],    tan2[i + 1],    tan2[i + 2]);
+        //n.set(normals[i], normals[i + 1], normals[i + 2]);
+        n.x = normals[i];
+        n.y = normals[i + 1];
+        n.z = normals[i + 2];
+        //t1.set(   tan1[i],    tan1[i + 1],    tan1[i + 2]);
+        t1.x = tan1[i];
+        t1.y = tan1[i + 1];
+        t1.z = tan1[i + 2];
+        //t2.set(   tan2[i],    tan2[i + 1],    tan2[i + 2]);
+        t2.x = tan2[i];
+        t2.y = tan2[i + 1];
+        t2.z = tan2[i + 2];
         // Gram-Schmidt orthogonalize
         const ndott = n.dot(t1);
-        temp.copy(n).mulScalar(ndott);
-        temp.sub2(t1, temp).normalize();
+        // temp.copy(n).mulScalar(ndott);
+        // temp.sub2(t1, temp);
+        temp.x = t1.x - n.x * ndott;
+        temp.y = t1.y - n.y * ndott;
+        temp.z = t1.z - n.z * ndott;
+        temp.normalize();
         tangents[iQuad]     = temp.x;
         tangents[iQuad + 1] = temp.y;
         tangents[iQuad + 2] = temp.z;
