@@ -2249,7 +2249,6 @@ const makeTick = function (_app) {
         _frameEndData.target = application;
 
         application.fire("frameend", _frameEndData);
-        application.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
 
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();
