@@ -5,9 +5,9 @@
  * @returns {number} The time in milliseconds.
  * @ignore
  */
-const now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
-    return window.performance.now();
-} : Date.now;
+const now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ?
+    performance.now.bind(performance) :
+    Date.now;
 
 /**
  * A Timer counts milliseconds from when start() is called until when stop() is called.
