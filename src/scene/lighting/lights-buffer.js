@@ -100,21 +100,21 @@ class LightsBuffer {
     static lightTextureFormat = LightsBuffer.FORMAT_8BIT;
 
     // defines used for unpacking of light textures to allow CPU packing to match the GPU unpacking
-    static shaderDefines = "";
+    static shaderDefines = '';
 
     // creates list of defines specifying texture coordinates for decoding lights
     static initShaderDefines() {
-        const clusterTextureFormat = LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT ? "FLOAT" : "8BIT";
+        const clusterTextureFormat = LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT ? 'FLOAT' : '8BIT';
         LightsBuffer.shaderDefines = `
             \n#define CLUSTER_TEXTURE_${clusterTextureFormat}
-            ${LightsBuffer.buildShaderDefines(TextureIndex8, "CLUSTER_TEXTURE_8_")}
-            ${LightsBuffer.buildShaderDefines(TextureIndexFloat, "CLUSTER_TEXTURE_F_")}
+            ${LightsBuffer.buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
+            ${LightsBuffer.buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
         `;
     }
 
     // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
-        let str = "";
+        let str = '';
         Object.keys(object).forEach((key) => {
             str += `\n#define ${prefix}${key} ${object[key]}.5`;
         });
@@ -174,14 +174,14 @@ class LightsBuffer {
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8, "LightsTexture8");
-        this._lightsTexture8Id = this.device.scope.resolve("lightsTexture8");
+        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8, 'LightsTexture8');
+        this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
 
         // float texture
         if (pixelsPerLightFloat) {
             this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-            this.lightsTextureFloat = LightsBuffer.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, "LightsTextureFloat");
-            this._lightsTextureFloatId = this.device.scope.resolve("lightsTextureFloat");
+            this.lightsTextureFloat = LightsBuffer.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
+            this._lightsTextureFloatId = this.device.scope.resolve('lightsTextureFloat');
         } else {
             this.lightsFloat = null;
             this.lightsTextureFloat = null;
@@ -189,7 +189,7 @@ class LightsBuffer {
         }
 
         // inverse sizes for both textures
-        this._lightsTextureInvSizeId = this.device.scope.resolve("lightsTextureInvSize");
+        this._lightsTextureInvSizeId = this.device.scope.resolve('lightsTextureInvSize');
         this._lightsTextureInvSizeData = new Float32Array(4);
         this._lightsTextureInvSizeData[0] = pixelsPerLightFloat ? 1.0 / this.lightsTextureFloat.width : 0;
         this._lightsTextureInvSizeData[1] = pixelsPerLightFloat ? 1.0 / this.lightsTextureFloat.height : 0;
@@ -341,17 +341,17 @@ class LightsBuffer {
     }
 
     addLightDataCookies(data8, index, light) {
-        const isRgb = light._cookieChannel === "rgb";
+        const isRgb = light._cookieChannel === 'rgb';
         data8[index + 0] = Math.floor(light.cookieIntensity * 255);
         data8[index + 1] = isRgb ? 255 : 0;
         // we have two unused bytes here
 
         if (!isRgb) {
             const channel = light._cookieChannel;
-            data8[index + 4] = channel === "rrr" ? 255 : 0;
-            data8[index + 5] = channel === "ggg" ? 255 : 0;
-            data8[index + 6] = channel === "bbb" ? 255 : 0;
-            data8[index + 7] = channel === "aaa" ? 255 : 0;
+            data8[index + 4] = channel === 'rrr' ? 255 : 0;
+            data8[index + 5] = channel === 'ggg' ? 255 : 0;
+            data8[index + 6] = channel === 'bbb' ? 255 : 0;
+            data8[index + 7] = channel === 'aaa' ? 255 : 0;
         }
     }
 

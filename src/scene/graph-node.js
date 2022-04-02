@@ -1156,7 +1156,7 @@ class GraphNode extends EventHandler {
      */
     addChild(node) {
         if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
+            throw new Error('GraphNode is already parented');
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1207,7 +1207,7 @@ class GraphNode extends EventHandler {
      */
     insertChild(node, index) {
         if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
+            throw new Error('GraphNode is already parented');
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1224,10 +1224,10 @@ class GraphNode extends EventHandler {
      */
     _debugInsertChild(node) {
         if (this === node)
-            throw new Error("GraphNode cannot be a child of itself");
+            throw new Error('GraphNode cannot be a child of itself');
 
         if (this.isDescendantOf(node))
-            throw new Error("GraphNode cannot add an ancestor as a child");
+            throw new Error('GraphNode cannot add an ancestor as a child');
     }
     // #endif
 

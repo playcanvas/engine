@@ -28,7 +28,7 @@ const deviceCache = new DeviceCache();
 
 // static class managing LUT tables for the area lights
 class AreaLightLuts {
-    static createTexture(device, format, size, postfix = "") {
+    static createTexture(device, format, size, postfix = '') {
         const tex = new Texture(device, {
             width: size,
             height: size,
@@ -60,7 +60,7 @@ class AreaLightLuts {
 
     // placeholder LUT textures for area light
     static createPlaceholder(device) {
-        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2, "placeholder");
+        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2, 'placeholder');
 
         const pixels = texture.lock();
         pixels.fill(0);

@@ -13,7 +13,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -118,7 +118,7 @@ class Material {
      * Create a new Material instance.
      */
     constructor() {
-        this.name = "Untitled";
+        this.name = 'Untitled';
         this.id = id++;
 
         this._shader = null;

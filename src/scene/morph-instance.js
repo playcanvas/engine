@@ -79,11 +79,11 @@ class MorphInstance {
             };
 
             if (morph.morphPositions) {
-                this.rtPositions = createRT("MorphRTPos", "texturePositions");
+                this.rtPositions = createRT('MorphRTPos', 'texturePositions');
             }
 
             if (morph.morphNormals) {
-                this.rtNormals = createRT("MorphRTNrm", "textureNormals");
+                this.rtNormals = createRT('MorphRTNrm', 'textureNormals');
             }
 
             // texture params
@@ -92,10 +92,10 @@ class MorphInstance {
 
             // resolve possible texture names
             for (let i = 0; i < this.maxSubmitCount; i++) {
-                this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
+                this['morphBlendTex' + i] = this.device.scope.resolve('morphBlendTex' + i);
             }
 
-            this.morphFactor = this.device.scope.resolve("morphFactor[0]");
+            this.morphFactor = this.device.scope.resolve('morphFactor[0]');
 
             // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
             this.zeroTextures = false;
@@ -238,7 +238,7 @@ class MorphInstance {
         // if shader is not in cache, generate one
         if (!shader) {
             const fs = this._getFragmentShader(count);
-            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, 'textureMorph' + count);
             this.shaderCache[count] = shader;
         }
 
@@ -277,7 +277,7 @@ class MorphInstance {
             if (tex) {
 
                 // texture
-                this["morphBlendTex" + usedCount].setValue(tex);
+                this['morphBlendTex' + usedCount].setValue(tex);
 
                 // weight
                 this._shaderMorphWeights[usedCount] = activeTarget.weight;
@@ -303,7 +303,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "MorphUpdate");
+        DebugGraphics.pushGpuMarker(device, 'MorphUpdate');
 
         // update textures if active targets, or no active targets and textures need to be cleared
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
