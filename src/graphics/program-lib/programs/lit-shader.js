@@ -33,6 +33,18 @@ const builtinAttributes = {
     vertex_boneIndices: SEMANTIC_BLENDINDICES
 };
 
+const builtinVaryings = {
+    vVertexColor: "vec4",
+    vPositionW: "vec3",
+    vNormalV: "vec3",
+    vNormalW: "vec3",
+    vTangentW: "vec3",
+    vBinormalW: "vec3",
+    vObjectSpaceUpW: "vec3",
+    vUv0: "vec2",
+    vUv1: "vec2",
+};
+
 const decodeTable = {
     'rgbm': 'decodeRGBM',
     'rgbe': 'decodeRGBE',
@@ -131,10 +143,6 @@ class LitShader {
     _vsAddTransformCode(code, device, chunks, options) {
         code += this.chunks.transformVS;
         return code;
-    }
-
-    _addVaryingIfNeeded(code, type, name) {
-        return code.indexOf(name) >= 0 ? ("varying " + type + " " + name + ";\n") : "";
     }
 
     _correctChannel(p, chan, _matTex2D) {
@@ -471,16 +479,12 @@ class LitShader {
         code += chunks.endVS;
         code += "}";
 
-        // handle varyings
-        this.varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
-        this.varyings += this._addVaryingIfNeeded(code, "vec3", "vObjectSpaceUpW");
-        this.varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
-        this.varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
+        // build varyings
+        Object.keys(builtinVaryings).forEach((v) => {
+            if (code.indexOf(v) >= 0) {
+                this.varyings += `varying ${builtinVaryings[v]} ${v};\n`;
+            }
+        });
 
         let startCode = "";
         if (device.webgl2) {
@@ -683,12 +687,6 @@ class LitShader {
         const device = this.device;
         const options = this.options;
         const chunks = this.chunks;
-
-        let beginCode =
-            this._fsGetBeginCode() +
-            this.varyings +
-            this._fsGetBaseCode() +
-            (options.detailModes ? chunks.detailModesPS : "");
 
         let code = "";
 
@@ -1594,11 +1592,13 @@ class LitShader {
         if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
         // if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
-        const result = beginCode + structCode + this.frontendDecl + code;
-
-        if (result.indexOf('vec2 uv = ;') !== -1) {
-            console.log('gotcha');
-        }
+        const result = this._fsGetBeginCode() +
+            this.varyings +
+            this._fsGetBaseCode() +
+            (options.detailModes ? chunks.detailModesPS : "") +
+            structCode +
+            this.frontendDecl +
+            code;
 
         return result;
     }
