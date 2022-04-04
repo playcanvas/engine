@@ -6,14 +6,10 @@ uniform float material_clearCoatBumpiness;
 
 void getClearCoatNormal() {
     #ifdef MAPTEXTURE
-    vec3 normalMap = unpackNormal(texture2D(texture_clearCoatNormalMap, $UV, textureBias));
-    ccNormalMap = normalize(mix(vec3(0.0, 0.0, 1.0), normalMap, material_clearCoatBumpiness));
-    // ccNormalW = dTBN * normalMap;
+        vec3 normalMap = unpackNormal(texture2D(texture_clearCoatNormalMap, $UV, textureBias));
+        ccNormalMap = normalize(mix(vec3(0.0, 0.0, 1.0), normalMap, material_clearCoatBumpiness));
     #else
-    // ccNormalW = normalize(dVertexNormalW);
-    ccNormalMap = vec3(0.0, 0.0, 1.0);
+        ccNormalMap = vec3(0.0, 0.0, 1.0);
     #endif
-
-    // ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));
 }
 `;
