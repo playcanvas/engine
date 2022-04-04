@@ -1,22 +1,19 @@
-describe("pc.ModelComponent", function () {
-    var app;
-    var assets = {};
+import { Application } from '../../../../src/framework/app-base.js';
+import { Asset } from '../../../../src/asset/asset.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 
-    beforeEach(function (done) {
-        app = new pc.Application(document.createElement("canvas"));
-        loadAssets(function () {
-            done();
-        });
-    });
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
-    afterEach(function () {
-        app.destroy();
-        assets = {};
-    });
+import { expect } from 'chai';
 
-    var loadAssetList = function (list, cb) {
+describe('ModelComponent', function () {
+    let app;
+    let assets = {};
+
+    const loadAssetList = function (list, cb) {
         // listen for asset load events and fire cb() when all assets are loaded
-        var count = 0;
+        let count = 0;
         app.assets.on('load', function (asset) {
             count++;
             if (count === list.length) {
@@ -25,19 +22,19 @@ describe("pc.ModelComponent", function () {
         });
 
         // add and load assets
-        for (var i = 0; i < list.length; i++) {
+        for (let i = 0; i < list.length; i++) {
             app.assets.add(list[i]);
             app.assets.load(list[i]);
         }
     };
 
-    var loadAssets = function (cb) {
-        var assetlist = [
-            new pc.Asset('plane.json', 'model', {
-                url: 'base/tests/test-assets/plane/plane.json'
+    const loadAssets = function (cb) {
+        const assetlist = [
+            new Asset('plane.json', 'model', {
+                url: 'http://localhost:3000/test/test-assets/plane/plane.json'
             }),
-            new pc.Asset('lambert1.json', 'material', {
-                url: 'base/tests/test-assets/plane/31208636/lambert1.json'
+            new Asset('lambert1.json', 'material', {
+                url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json'
             })
         ];
 
@@ -48,10 +45,23 @@ describe("pc.ModelComponent", function () {
         });
     };
 
+    beforeEach(function (done) {
+        const canvas = new HTMLCanvasElement(500, 500);
+        app = new Application(canvas);
+
+        loadAssets(function () {
+            done();
+        });
+    });
+
+    afterEach(function () {
+        app.destroy();
+        assets = {};
+    });
 
     it('Create default model component', function () {
-        var e = new pc.Entity();
-        e.addComponent("model");
+        const e = new Entity();
+        e.addComponent('model');
 
         expect(e.model.type).to.equal('asset');
         expect(e.model.asset).to.equal(null);
@@ -63,13 +73,13 @@ describe("pc.ModelComponent", function () {
         expect(e.model.isStatic).to.equal(false);
         expect(e.model.model).to.equal(null);
         expect(e.model.mapping).to.be.empty;
-        expect(e.model.layers).to.contain(pc.LAYERID_WORLD);
+        expect(e.model.layers).to.contain(LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
 
     });
 
     it('Set modelAsset and model', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
         });
@@ -81,13 +91,13 @@ describe("pc.ModelComponent", function () {
     });
 
     it('Default cloned model component is identical', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
         });
         app.root.addChild(e);
 
-        var c = e.clone();
+        const c = e.clone();
         app.root.addChild(c);
 
         expect(c.model.asset).to.equal(assets.model.id);
@@ -105,7 +115,7 @@ describe("pc.ModelComponent", function () {
 
 
     it('Cloned model component with flags set has correct meshinstance flags', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('model', {
             asset: assets.model,
             lightmapped: true,
@@ -115,13 +125,13 @@ describe("pc.ModelComponent", function () {
         });
         app.root.addChild(e);
 
-        var c = e.clone();
+        const c = e.clone();
         app.root.addChild(c);
 
-        var srcMi = e.model.meshInstances;
-        var dstMi = c.model.meshInstances;
+        const srcMi = e.model.meshInstances;
+        const dstMi = c.model.meshInstances;
 
-        for (var i = 0; i< srcMi.length; i++) {
+        for (let i = 0; i < srcMi.length; i++) {
             expect(srcMi[i].mask).to.equal(dstMi[i].mask);
             expect(srcMi[i].layer).to.equal(dstMi[i].layer);
             expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
@@ -134,9 +144,8 @@ describe("pc.ModelComponent", function () {
     });
 
 
-
     it('Cloned model component with flags set directly on mesh instance is identical', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
         });
@@ -151,13 +160,13 @@ describe("pc.ModelComponent", function () {
         // e.model.model.meshInstances[0].isStatic = true;
         // e.model.model.meshInstances[0].screenSpace = true;
 
-        var c = e.clone();
+        const c = e.clone();
         app.root.addChild(c);
 
-        var srcMi = e.model.meshInstances;
-        var dstMi = c.model.meshInstances;
+        const srcMi = e.model.meshInstances;
+        const dstMi = c.model.meshInstances;
 
-        for (var i = 0; i< srcMi.length; i++) {
+        for (let i = 0; i < srcMi.length; i++) {
             expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
             expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
             expect(srcMi[i].mask).to.equal(dstMi[i].mask);
@@ -166,7 +175,7 @@ describe("pc.ModelComponent", function () {
     });
 
     it('ModelAsset unbinds on destroy', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
             asset: assets.model
@@ -186,7 +195,7 @@ describe("pc.ModelComponent", function () {
     });
 
     it('ModelAsset unbinds on reset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
             asset: assets.model
@@ -206,10 +215,10 @@ describe("pc.ModelComponent", function () {
     });
 
     it('Material Asset unbinds on destroy', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
-            type: "box",
+            type: 'box',
             materialAsset: assets.material
         });
 
@@ -227,10 +236,10 @@ describe("pc.ModelComponent", function () {
     });
 
     it('Material Asset unbinds on reset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
-            type: "box",
+            type: 'box',
             materialAsset: assets.material
         });
 
@@ -239,7 +248,7 @@ describe("pc.ModelComponent", function () {
         expect(assets.material.hasEvent('change')).to.be.true;
         expect(assets.material.hasEvent('remove')).to.be.true;
 
-        e.model.materialAsset = null
+        e.model.materialAsset = null;
 
         expect(assets.material.hasEvent('load')).to.be.false;
         expect(assets.material.hasEvent('remove')).to.be.false;
@@ -247,20 +256,20 @@ describe("pc.ModelComponent", function () {
         expect(assets.material._callbacks.unload.length).to.equal(1);
     });
 
-    it("Materials applied when loading asynchronously", function (done) {
-        var boxAsset = new pc.Asset("Box", "model", {
-            url: "base/tests/test-assets/box/box.json"
+    it('Materials applied when loading asynchronously', function (done) {
+        const boxAsset = new Asset('Box', 'model', {
+            url: 'http://localhost:3000/test/test-assets/box/box.json'
         }, {
-            "mapping": [
+            'mapping': [
                 {
-                    "path": "1/Box Material.json"
+                    'path': '1/Box Material.json'
                 }
             ],
-            "area": 0
+            'area': 0
         });
 
-        var materialAsset = new pc.Asset("Box Material", "material",  {
-            url: "base/tests/test-assets/box/1/Box Material.json"
+        const materialAsset = new Asset('Box Material', 'material', {
+            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -268,33 +277,33 @@ describe("pc.ModelComponent", function () {
 
         app.assets.load(boxAsset);
 
-        boxAsset.on("load", function () {
-            var e = new pc.Entity();
+        boxAsset.on('load', function () {
+            const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
             });
             app.root.addChild(e);
 
-            expect(app.assets.hasEvent('load:'+materialAsset.id)).to.be.true;
+            expect(app.assets.hasEvent('load:' + materialAsset.id)).to.be.true;
 
             done();
         });
     });
 
-    it("Materials applied when added later", function (done) {
-        var boxAsset = new pc.Asset("Box", "model", {
-            url: "base/tests/test-assets/box/box.json"
+    it('Materials applied when added later', function (done) {
+        const boxAsset = new Asset('Box', 'model', {
+            url: 'http://localhost:3000/test/test-assets/box/box.json'
         });
 
-        var materialAsset = new pc.Asset("Box Material", "material",  {
-            url: "base/tests/test-assets/box/1/Box Material.json"
+        const materialAsset = new Asset('Box Material', 'material', {
+            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on("load", function () {
-            var e = new pc.Entity();
+        boxAsset.on('load', function () {
+            const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
             });
@@ -318,20 +327,20 @@ describe("pc.ModelComponent", function () {
         });
     });
 
-    it("Material add events unbound on destroy", function (done) {
-        var boxAsset = new pc.Asset("Box", "model", {
-            url: "base/tests/test-assets/box/box.json"
+    it('Material add events unbound on destroy', function (done) {
+        const boxAsset = new Asset('Box', 'model', {
+            url: 'http://localhost:3000/test/test-assets/box/box.json'
         });
 
-        var materialAsset = new pc.Asset("Box Material", "material",  {
-            url: "base/tests/test-assets/box/1/Box Material.json"
+        const materialAsset = new Asset('Box Material', 'material', {
+            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on("load", function () {
-            var e = new pc.Entity();
+        boxAsset.on('load', function () {
+            const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
             });
@@ -350,25 +359,25 @@ describe("pc.ModelComponent", function () {
         });
     });
 
-    it("Layers are initialized before model is set", function () {
-        var e = new pc.Entity();
-        e.addComponent("model", {
-            layers: [pc.LAYERID_UI]
+    it('Layers are initialized before model is set', function () {
+        const e = new Entity();
+        e.addComponent('model', {
+            layers: [LAYERID_UI]
         });
 
         expect(e.model.model).to.be.null;
-        expect(e.model.layers[0]).to.equal(pc.LAYERID_UI);
+        expect(e.model.layers[0]).to.equal(LAYERID_UI);
 
         e.model.asset = assets.model;
 
-        expect(e.model.layers[0]).to.equal(pc.LAYERID_UI);
+        expect(e.model.layers[0]).to.equal(LAYERID_UI);
         expect(e.model.model).to.not.be.null;
 
     });
 
-    it("Asset materials unbound on destroy", function (done) {
-        var modelAsset = new pc.Asset('box.json', 'model', {
-            url: "base/tests/test-assets/box/box.json"
+    it('Asset materials unbound on destroy', function (done) {
+        const modelAsset = new Asset('box.json', 'model', {
+            url: 'http://localhost:3000/test/test-assets/box/box.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -378,13 +387,13 @@ describe("pc.ModelComponent", function () {
         app.assets.load(modelAsset);
 
         modelAsset.ready(function () {
-            var e = new pc.Entity();
-            e.addComponent("model", {
+            const e = new Entity();
+            e.addComponent('model', {
                 asset: modelAsset
             });
             app.root.addChild(e);
 
-            expect(app.assets.hasEvent('remove:'+assets.material.id)).to.be.true;
+            expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.true;
             expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
 
             e.destroy();
@@ -394,20 +403,20 @@ describe("pc.ModelComponent", function () {
         });
     });
 
-    it("Asset materials unbound on change model", function (done) {
-        var modelAsset = new pc.Asset('plane.json', 'model', {
-            url: 'base/tests/test-assets/plane/plane.json'
+    it('Asset materials unbound on change model', function (done) {
+        const modelAsset = new Asset('plane.json', 'model', {
+            url: 'http://localhost:3000/test/test-assets/plane/plane.json'
         }, {
             mapping: [{
                 material: assets.material.id
             }]
         });
 
-        var materialAsset2 = new pc.Asset('lambert2.json', 'material',  {
-            url: 'base/tests/test-assets/plane/31208636/lambert1.json?t=1'
+        const materialAsset2 = new Asset('lambert2.json', 'material', {
+            url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json?t=1'
         });
-        var modelAsset2 = new pc.Asset('plane2.json', 'model', {
-            url: 'base/tests/test-assets/plane/plane.json?t=1'
+        const modelAsset2 = new Asset('plane2.json', 'model', {
+            url: 'http://localhost:3000/test/test-assets/plane/plane.json?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id
@@ -423,8 +432,8 @@ describe("pc.ModelComponent", function () {
 
         materialAsset2.ready(function () {
             modelAsset.ready(function () {
-                var e = new pc.Entity();
-                e.addComponent("model", {
+                const e = new Entity();
+                e.addComponent('model', {
                     asset: modelAsset
                 });
                 app.root.addChild(e);
