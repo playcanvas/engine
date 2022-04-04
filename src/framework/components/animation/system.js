@@ -8,20 +8,6 @@ import { AnimationComponentData } from './data.js';
 
 const _schema = [
     'enabled',
-    'assets',
-    'speed',
-    'loop',
-    'activate',
-    'animations',
-    'skeleton',
-    'model',
-    'prevAnim',
-    'currAnim',
-    'fromSkel',
-    'toSkel',
-    'blending',
-    'blendTimeRemaining',
-    'playing'
 ];
 
 /**
@@ -50,18 +36,23 @@ class AnimationComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
-        super.initializeComponentData(component, data, properties);
+        for (const property in data) {
+            if (data.hasOwnProperty(property)) {
+                component[property] = data[property];
+            }
+        }
+
+        super.initializeComponentData(component, data, _schema);
     }
 
     cloneComponent(entity, clone) {
         this.addComponent(clone, {});
 
         clone.animation.assets = entity.animation.assets.slice();
-        clone.animation.data.speed = entity.animation.speed;
-        clone.animation.data.loop = entity.animation.loop;
-        clone.animation.data.activate = entity.animation.activate;
-        clone.animation.data.enabled = entity.animation.enabled;
+        clone.animation.speed = entity.animation.speed;
+        clone.animation.loop = entity.animation.loop;
+        clone.animation.activate = entity.animation.activate;
+        clone.animation.enabled = entity.animation.enabled;
 
         const clonedAnimations = { };
         const animations = entity.animation.animations;
@@ -94,71 +85,9 @@ class AnimationComponentSystem extends ComponentSystem {
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const component = components[id];
-                const componentData = component.data;
 
-                if (componentData.enabled && component.entity.enabled) {
-
-                    // update blending
-                    if (componentData.blending) {
-                        componentData.blend += dt * componentData.blendSpeed;
-                        if (componentData.blend >= 1.0) {
-                            componentData.blend = 1.0;
-                        }
-                    }
-
-                    // update skeleton
-                    if (componentData.playing) {
-                        const skeleton = componentData.skeleton;
-                        if (skeleton !== null && componentData.model !== null) {
-                            if (componentData.blending) {
-                                skeleton.blend(componentData.fromSkel, componentData.toSkel, componentData.blend);
-                            } else {
-                                // Advance the animation, interpolating keyframes at each animated node in
-                                // skeleton
-                                const delta = dt * componentData.speed;
-                                skeleton.addTime(delta);
-                                if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
-                                    componentData.playing = false;
-                                } else if (componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
-                                    componentData.playing = false;
-                                }
-                            }
-
-                            if (componentData.blending && (componentData.blend === 1.0)) {
-                                skeleton.animation = componentData.toSkel._animation;
-                            }
-
-                            skeleton.updateGraph();
-                        }
-                    }
-
-                    // update anim controller
-                    const animEvaluator = componentData.animEvaluator;
-                    if (animEvaluator) {
-
-                        // force all clip's speed and playing state from the component
-                        for (let i = 0; i < animEvaluator.clips.length; ++i) {
-                            const clip = animEvaluator.clips[i];
-                            clip.speed = componentData.speed;
-                            if (!componentData.playing) {
-                                clip.pause();
-                            } else {
-                                clip.resume();
-                            }
-                        }
-
-                        // update blend weight
-                        if (componentData.blending && animEvaluator.clips.length > 1) {
-                            animEvaluator.clips[1].blendWeight = componentData.blend;
-                        }
-
-                        animEvaluator.update(dt);
-                    }
-
-                    // clear blending flag
-                    if (componentData.blending && componentData.blend === 1.0) {
-                        componentData.blending = false;
-                    }
+                if (component.data.enabled && component.entity.enabled) {
+                    component.entity.animation.update(dt);
                 }
             }
         }
