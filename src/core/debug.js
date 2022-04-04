@@ -14,6 +14,30 @@ class Debug {
     static _deprecatedMessages = new Set();
 
     /**
+     * Set storing names of enabled trace channels
+     *
+     * @type {Set<string>}
+     */
+    static _traceChannels = new Set();
+
+    /**
+     * Enable or disable trace channel
+     *
+     * @param {string} channel - Name of the trace channel
+     * @param {boolean} enabled - new enabled state for it
+     */
+    static setTrace(channel, enabled = true) {
+
+        // #if _DEBUG
+        if (enabled) {
+            Debug._traceChannels.add(channel);
+        } else {
+            Debug._traceChannels.delete(channel);
+        }
+        // #endif
+    }
+
+    /**
      * Deprecated warning message.
      *
      * @param {string} message - The message to log.
@@ -62,6 +86,18 @@ class Debug {
      */
     static error(...args) {
         console.error(...args);
+    }
+
+    /**
+     * Trace message, which is logged to the console if the tracing for the channel is enabled
+     *
+     * @param {string} channel - The trace channel
+     * @param {...*} args - The values to be written to the log.
+     */
+    static trace(channel, ...args) {
+        if (Debug._traceChannels.has(channel)) {
+            console.log(`[${channel}] `, ...args);
+        }
     }
 }
 

@@ -1,17 +1,7 @@
 import { Debug } from './debug.js';
 
-// set to true to enable debug logging
-const enableLogging = false;
-
-const log = (...args) => {
-    if (enableLogging) {
-        Debug.log(...args);
-    }
-};
-
-const logAssert = (condition, keyword, src, index) => {
-    Debug.assert(condition, `Invalid [${keyword}]: ${src.substring(index, index + 100)}...`);
-};
+// id for debug tracing
+const TRACEID = 'Preprocessor';
 
 // accepted keywords
 const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;
@@ -93,7 +83,7 @@ class Preprocessor {
                     // read the rest of the define line
                     DEFINE.lastIndex = match.index;
                     const define = DEFINE.exec(source);
-                    logAssert(define, keyword, source, match.index);
+                    Debug.assert(define, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
                     const expression = define[1];
 
                     // split it to identifier name and a value
@@ -110,7 +100,7 @@ class Preprocessor {
                         defines.set(identifier, value);
                     }
 
-                    log(`${keyword}: [${identifier}] ${value} ${keep ? "" : "IGNORED"}`);
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${value} ${keep ? "" : "IGNORED"}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = define.index + define[0].length;
@@ -132,7 +122,7 @@ class Preprocessor {
                         defines.delete(identifier);
                     }
 
-                    log(`${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = undef.index + undef[0].length;
@@ -162,7 +152,7 @@ class Preprocessor {
                         end: IF.lastIndex       // end index of IF line
                     });
 
-                    log(`${keyword}: [${expression}] => ${result}`);
+                    Debug.trace(TRACEID, `${keyword}: [${expression}] => ${result}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = iff.index + iff[0].length;
@@ -181,7 +171,7 @@ class Preprocessor {
 
                     // code between if and endif
                     const blockCode = blockInfo.keep ? source.substring(blockInfo.end, match.index) : "";
-                    log(`${keyword}: [previous block] => ${blockCode !== ""}`);
+                    Debug.trace(TRACEID, `${keyword}: [previous block] => ${blockCode !== ""}`);
 
                     // cut out the IF and ENDIF lines, leave block if required
                     source = source.substring(0, blockInfo.start) + blockCode + source.substring(ENDIF.lastIndex);
@@ -204,7 +194,7 @@ class Preprocessor {
                             start: KEYWORD.lastIndex,
                             end: KEYWORD.lastIndex
                         });
-                        log(`${keyword}: [${endif[2]}] => ${result}`);
+                        Debug.trace(TRACEID, `${keyword}: [${endif[2]}] => ${result}`);
                     }
 
                     break;
