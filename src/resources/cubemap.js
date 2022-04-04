@@ -75,7 +75,7 @@ class CubemapHandler {
     // test whether two assets ids are the same
     compareAssetIds(assetIdA, assetIdB) {
         if (assetIdA && assetIdB) {
-            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
+            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === 'string') {
                 return assetIdA === assetIdB;           // id or url
             }
             // else {
@@ -300,17 +300,17 @@ class CubemapHandler {
                         if (texAsset) {
                             processTexAsset(index, texAsset);
                         } else {
-                            onError(index, "failed to find dependent cubemap asset=" + assetId_);
+                            onError(index, 'failed to find dependent cubemap asset=' + assetId_);
                         }
                     }.bind(null, i, assetId));
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
-                const file = (typeof assetId === "string") ? {
+                const file = (typeof assetId === 'string') ? {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new Asset(cubemapAsset.name + "_part_" + i, "texture", file);
+                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
                 registry.add(texAsset);
                 registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));

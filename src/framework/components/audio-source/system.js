@@ -45,7 +45,7 @@ class AudioSourceComponentSystem extends ComponentSystem {
     constructor(app, manager) {
         super(app);
 
-        this.id = "audiosource";
+        this.id = 'audiosource';
 
         this.ComponentType = AudioSourceComponent;
         this.DataType = AudioSourceComponentData;

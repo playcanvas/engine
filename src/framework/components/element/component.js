@@ -451,7 +451,7 @@ class ElementComponent extends Component {
         }
 
         if (value > 0xFFFFFF) {
-            Debug.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
+            Debug.warn('Element.drawOrder larger than max size of: ' + 0xFFFFFF);
             value = 0xFFFFFF;
         }
 
@@ -770,7 +770,7 @@ class ElementComponent extends Component {
             }
         } else {
             if (this._useInput === true) {
-                console.warn("Elements will not get any input events because this.system.app.elementInput is not created");
+                console.warn('Elements will not get any input events because this.system.app.elementInput is not created');
             }
         }
 
@@ -1157,7 +1157,7 @@ class ElementComponent extends Component {
         if (mask) {
             const ref = mask.element._image._maskRef;
             // #if _DEBUG
-            if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
+            if (_debugLogging) console.log('masking: ' + this.entity.name + ' with ' + ref);
             // #endif
 
             const sp = new StencilParameters({
@@ -1173,7 +1173,7 @@ class ElementComponent extends Component {
             this._maskedBy = mask;
         } else {
             // #if _DEBUG
-            if (_debugLogging) console.log("no masking on: " + this.entity.name);
+            if (_debugLogging) console.log('no masking on: ' + this.entity.name);
             // #endif
 
             // remove stencil params if this is image or text
@@ -1206,8 +1206,8 @@ class ElementComponent extends Component {
 
                 // #if _DEBUG
                 if (_debugLogging) {
-                    console.log("masking from: " + this.entity.name + " with " + (sp.ref + 1));
-                    console.log("depth++ to: ", depth);
+                    console.log('masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                    console.log('depth++ to: ', depth);
                 }
                 // #endif
 
@@ -1243,8 +1243,8 @@ class ElementComponent extends Component {
 
                 // #if _DEBUG
                 if (_debugLogging) {
-                    console.log("masking from: " + this.entity.name + " with " + sp.ref);
-                    console.log("depth++ to: ", depth);
+                    console.log('masking from: ' + this.entity.name + ' with ' + sp.ref);
+                    console.log('depth++ to: ', depth);
                 }
                 // #endif
 
@@ -1352,10 +1352,10 @@ class ElementComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addModelToLayers(this._image ? this._image._renderable.model : this._text._model);
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -1387,24 +1387,24 @@ class ElementComponent extends Component {
             this.system.app.elementInput.addElement(this);
         }
 
-        this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {
             this.system.app.batcher.insert(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
         }
 
-        this.fire("enableelement");
+        this.fire('enableelement');
     }
 
     onDisable() {
-        this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this._image) this._image.onDisable();
@@ -1419,7 +1419,7 @@ class ElementComponent extends Component {
             this.system.app.batcher.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
         }
 
-        this.fire("disableelement");
+        this.fire('disableelement');
     }
 
     onRemove() {
@@ -1649,44 +1649,44 @@ function _define(name) {
     });
 }
 
-_define("fontSize");
-_define("minFontSize");
-_define("maxFontSize");
-_define("maxLines");
-_define("autoFitWidth");
-_define("autoFitHeight");
-_define("color");
-_define("font");
-_define("fontAsset");
-_define("spacing");
-_define("lineHeight");
-_define("wrapLines");
-_define("lines");
-_define("alignment");
-_define("autoWidth");
-_define("autoHeight");
-_define("rtlReorder");
-_define("unicodeConverter");
-_define("text");
-_define("key");
-_define("texture");
-_define("textureAsset");
-_define("material");
-_define("materialAsset");
-_define("sprite");
-_define("spriteAsset");
-_define("spriteFrame");
-_define("pixelsPerUnit");
-_define("opacity");
-_define("rect");
-_define("mask");
-_define("outlineColor");
-_define("outlineThickness");
-_define("shadowColor");
-_define("shadowOffset");
-_define("enableMarkup");
-_define("rangeStart");
-_define("rangeEnd");
+_define('fontSize');
+_define('minFontSize');
+_define('maxFontSize');
+_define('maxLines');
+_define('autoFitWidth');
+_define('autoFitHeight');
+_define('color');
+_define('font');
+_define('fontAsset');
+_define('spacing');
+_define('lineHeight');
+_define('wrapLines');
+_define('lines');
+_define('alignment');
+_define('autoWidth');
+_define('autoHeight');
+_define('rtlReorder');
+_define('unicodeConverter');
+_define('text');
+_define('key');
+_define('texture');
+_define('textureAsset');
+_define('material');
+_define('materialAsset');
+_define('sprite');
+_define('spriteAsset');
+_define('spriteFrame');
+_define('pixelsPerUnit');
+_define('opacity');
+_define('rect');
+_define('mask');
+_define('outlineColor');
+_define('outlineThickness');
+_define('shadowColor');
+_define('shadowOffset');
+_define('enableMarkup');
+_define('rangeStart');
+_define('rangeEnd');
 
 // Events Documentation
 

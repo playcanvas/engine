@@ -72,10 +72,10 @@ class CollisionComponent extends Component {
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
-        this.on("set_asset", this.onSetAsset, this);
-        this.on("set_renderAsset", this.onSetRenderAsset, this);
-        this.on("set_model", this.onSetModel, this);
-        this.on("set_render", this.onSetRender, this);
+        this.on('set_asset', this.onSetAsset, this);
+        this.on('set_renderAsset', this.onSetRenderAsset, this);
+        this.on('set_model', this.onSetModel, this);
+        this.on('set_render', this.onSetRender, this);
     }
 
     // Events Documentation

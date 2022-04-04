@@ -46,7 +46,7 @@ class Picker {
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
-            Debug.deprecated("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
+            Debug.deprecated('pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.');
         }
 
         this.app = app;
@@ -99,7 +99,7 @@ class Picker {
         const device = this.device;
 
         if (typeof x === 'object') {
-            Debug.deprecated("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
+            Debug.deprecated('Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
             const rect = x;
             x = rect.x;
@@ -192,11 +192,11 @@ class Picker {
 
         // camera
         this.cameraEntity = new Entity();
-        this.cameraEntity.addComponent("camera");
+        this.cameraEntity.addComponent('camera');
 
         // layer all meshes rendered for picking at added to
         this.layer = new Layer({
-            name: "Picker",
+            name: 'Picker',
             shaderPass: SHADER_PICK,
             opaqueSortMode: SORTMODE_NONE,
 
@@ -215,7 +215,7 @@ class Picker {
         this.layer.addCamera(this.cameraEntity.camera);
 
         // composition
-        this.layerComp = new LayerComposition("picker");
+        this.layerComp = new LayerComposition('picker');
         this.layerComp.pushOpaque(this.layer);
     }
 
@@ -233,7 +233,7 @@ class Picker {
 
         // handle deprecated arguments
         if (camera instanceof Camera) {
-            Debug.deprecated("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+            Debug.deprecated('pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.');
 
             // Get the camera component
             camera = camera.node.camera;
@@ -303,7 +303,7 @@ class Picker {
 
         // copy transform
         this.cameraEntity.copy(srcCamera.entity);
-        this.cameraEntity.name = "PickerCamera";
+        this.cameraEntity.name = 'PickerCamera';
 
         // copy camera component properties - which overwrites few properties we change to what is needed later
         const destCamera = this.cameraEntity.camera;
