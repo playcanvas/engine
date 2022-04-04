@@ -6,12 +6,10 @@ uniform highp sampler2D lightsTextureFloat;
 // complex ifdef expression are not supported, handle it here
 // defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
 #if defined(CLUSTER_COOKIES)
-    #define CLUSTER_COOKIES_OR_SHADOWOWS
+    #define CLUSTER_COOKIES_OR_SHADOWS
 #endif
 #if defined(CLUSTER_SHADOWS)
-    #ifndef CLUSTER_COOKIES_OR_SHADOWOWS
-        #define CLUSTER_COOKIES_OR_SHADOWOWS
-    #endif
+    #define CLUSTER_COOKIES_OR_SHADOWS
 #endif
 
 #ifdef CLUSTER_SHADOWS
@@ -369,7 +367,7 @@ void evaluateLight(ClusterLightData light) {
             dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
         }
 
-        #if defined(CLUSTER_COOKIES_OR_SHADOWOWS)
+        #if defined(CLUSTER_COOKIES_OR_SHADOWS)
 
         if (dAtten > 0.00001) {
 
