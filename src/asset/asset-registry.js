@@ -236,10 +236,10 @@ class AssetRegistry extends EventHandler {
         asset.tags.on('add', this._onTagAdd, this);
         asset.tags.on('remove', this._onTagRemove, this);
 
-        this.fire("add", asset);
-        this.fire("add:" + asset.id, asset);
+        this.fire('add', asset);
+        this.fire('add:' + asset.id, asset);
         if (url)
-            this.fire("add:url:" + url, asset);
+            this.fire('add:url:' + url, asset);
 
         if (asset.preload)
             this.load(asset);
@@ -291,11 +291,11 @@ class AssetRegistry extends EventHandler {
             asset.tags.off('add', this._onTagAdd, this);
             asset.tags.off('remove', this._onTagRemove, this);
 
-            asset.fire("remove", asset);
-            this.fire("remove", asset);
-            this.fire("remove:" + asset.id, asset);
+            asset.fire('remove', asset);
+            this.fire('remove', asset);
+            this.fire('remove:' + asset.id, asset);
             if (url)
-                this.fire("remove:url:" + url, asset);
+                this.fire('remove:url:' + url, asset);
 
             return true;
         }
@@ -373,11 +373,11 @@ class AssetRegistry extends EventHandler {
             // let handler patch the resource
             this._loader.patch(asset, this);
 
-            this.fire("load", asset);
-            this.fire("load:" + asset.id, asset);
+            this.fire('load', asset);
+            this.fire('load:' + asset.id, asset);
             if (file && file.url)
-                this.fire("load:url:" + file.url, asset);
-            asset.fire("load", asset);
+                this.fire('load:url:' + file.url, asset);
+            asset.fire('load', asset);
         };
 
         // load has completed on the resource
@@ -386,9 +386,9 @@ class AssetRegistry extends EventHandler {
             asset.loading = false;
 
             if (err) {
-                this.fire("error", err, asset);
-                this.fire("error:" + asset.id, err, asset);
-                asset.fire("error", err, asset);
+                this.fire('error', err, asset);
+                this.fire('error:' + asset.id, err, asset);
+                asset.fire('error', err, asset);
             } else {
                 if (!script.legacy && asset.type === 'script') {
                     const handler = this._loader.getHandler('script');
@@ -405,8 +405,8 @@ class AssetRegistry extends EventHandler {
 
         if (file || asset.type === 'cubemap') {
             // start loading the resource
-            this.fire("load:start", asset);
-            this.fire("load:" + asset.id + ":start", asset);
+            this.fire('load:start', asset);
+            this.fire('load:' + asset.id + ':start', asset);
 
             asset.loading = true;
             this._loader.load(asset.getFileUrl(), asset.type, _loaded, asset);
@@ -470,7 +470,7 @@ class AssetRegistry extends EventHandler {
         }
 
         const startLoad = (asset) => {
-            asset.once("load", (loadedAsset) => {
+            asset.once('load', (loadedAsset) => {
                 if (type === 'material') {
                     this._loadTextures(loadedAsset, (err, textures) => {
                         callback(err, loadedAsset);
@@ -479,7 +479,7 @@ class AssetRegistry extends EventHandler {
                     callback(null, loadedAsset);
                 }
             });
-            asset.once("error", (err) => {
+            asset.once('error', (err) => {
                 // store the error on the asset in case user requests this asset again
                 if (err) {
                     this.loadFromUrlError = err;
@@ -508,7 +508,7 @@ class AssetRegistry extends EventHandler {
             const basename = path.getBasename(url);
 
             // PlayCanvas model format supports material mapping file
-            const mappingUrl = path.join(dir, basename.replace(ext, ".mapping.json"));
+            const mappingUrl = path.join(dir, basename.replace(ext, '.mapping.json'));
             this._loader.load(mappingUrl, 'json', (err, data) => {
                 if (err) {
                     modelAsset.data = { mapping: [] };
@@ -546,7 +546,7 @@ class AssetRegistry extends EventHandler {
             if (path) {
                 count++;
                 const url = modelAsset.getAbsoluteUrl(path);
-                this.loadFromUrl(url, "material", onMaterialLoaded);
+                this.loadFromUrl(url, 'material', onMaterialLoaded);
             }
         }
 
@@ -582,7 +582,7 @@ class AssetRegistry extends EventHandler {
             if (path && typeof path === 'string') {
                 count++;
                 const url = materialAsset.getAbsoluteUrl(path);
-                this.loadFromUrl(url, "texture", onTextureLoaded);
+                this.loadFromUrl(url, 'texture', onTextureLoaded);
             }
         }
 

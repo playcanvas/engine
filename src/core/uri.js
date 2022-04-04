@@ -13,23 +13,23 @@
  * @ignore
  */
 function createURI(options) {
-    let s = "";
+    let s = '';
     if ((options.authority || options.scheme) && (options.host || options.hostpath)) {
-        throw new Error("Can't have 'scheme' or 'authority' and 'host' or 'hostpath' option");
+        throw new Error('Can\'t have \'scheme\' or \'authority\' and \'host\' or \'hostpath\' option');
     }
     if (options.host && options.hostpath) {
-        throw new Error("Can't have 'host' and 'hostpath' option");
+        throw new Error('Can\'t have \'host\' and \'hostpath\' option');
     }
     if (options.path && options.hostpath) {
-        throw new Error("Can't have 'path' and 'hostpath' option");
+        throw new Error('Can\'t have \'path\' and \'hostpath\' option');
     }
 
     if (options.scheme) {
-        s += options.scheme + ":";
+        s += options.scheme + ':';
     }
 
     if (options.authority) {
-        s += "//" + options.authority;
+        s += '//' + options.authority;
     }
 
     if (options.host) {
@@ -45,11 +45,11 @@ function createURI(options) {
     }
 
     if (options.query) {
-        s += "?" + options.query;
+        s += '?' + options.query;
     }
 
     if (options.fragment) {
-        s += "#" + options.fragment;
+        s += '#' + options.fragment;
     }
 
     return s;
@@ -110,24 +110,24 @@ class URI {
      * @returns {string} The URI as a string.
      */
     toString() {
-        let s = "";
+        let s = '';
 
         if (this.scheme) {
-            s += this.scheme + ":";
+            s += this.scheme + ':';
         }
 
         if (this.authority) {
-            s += "//" + this.authority;
+            s += '//' + this.authority;
         }
 
         s += this.path;
 
         if (this.query) {
-            s += "?" + this.query;
+            s += '?' + this.query;
         }
 
         if (this.fragment) {
-            s += "#" + this.fragment;
+            s += '#' + this.fragment;
         }
 
         return s;
@@ -149,9 +149,9 @@ class URI {
         const result = {};
 
         if (this.query) {
-            const queryParams = decodeURIComponent(this.query).split("&");
+            const queryParams = decodeURIComponent(this.query).split('&');
             for (const queryParam of queryParams) {
-                const pair = queryParam.split("=");
+                const pair = queryParam.split('=');
                 result[pair[0]] = pair[1];
             }
         }
@@ -173,13 +173,13 @@ class URI {
      * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
      */
     setQuery(params) {
-        let q = "";
+        let q = '';
         for (const key in params) {
             if (params.hasOwnProperty(key)) {
-                if (q !== "") {
-                    q += "&";
+                if (q !== '') {
+                    q += '&';
                 }
-                q += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
+                q += encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
             }
         }
 

@@ -472,12 +472,12 @@ class AnimController {
 
     removeNodeAnimations(nodeName) {
         if (ANIM_CONTROL_STATES.indexOf(nodeName) !== -1) {
-            return;
+            return false;
         }
         const state = this._findState(nodeName);
         if (!state) {
             Debug.error('Attempting to unassign animation tracks from a state that does not exist.');
-            return;
+            return false;
         }
 
         state.animations = [];

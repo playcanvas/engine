@@ -15,7 +15,7 @@ class Node {
      * Create a new Node instance.
      */
     constructor() {
-        this._name = "";
+        this._name = '';
         this._keys = [];
     }
 }

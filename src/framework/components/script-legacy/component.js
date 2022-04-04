@@ -21,8 +21,8 @@ class ScriptLegacyComponent extends Component {
             if (fn) {
                 return fn.apply(instances[name].instance, args);
             }
-
         }
+        return undefined;
     }
 
     onEnable() {

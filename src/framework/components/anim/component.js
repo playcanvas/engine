@@ -616,6 +616,7 @@ class AnimComponent extends Component {
             return param.value;
         }
         Debug.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
+        return undefined;
     }
 
     setParameterValue(name, type, value) {

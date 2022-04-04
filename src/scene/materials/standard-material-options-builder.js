@@ -297,7 +297,7 @@ class StandardMaterialOptionsBuilder {
 
         const isOpacity = p === "opacity";
         if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
-            return options;
+            return;
 
         if (!minimalOptions || isOpacity) {
             if (p !== "height" && stdMat[vname]) {
