@@ -53,21 +53,28 @@ class Preprocessor {
         // proprocess defines / ifdefs ..
         source = this._preprocess(source);
 
-        // convert lines with only white space into empty string
-        source = source.split(/\r?\n/)
-            .map(line => (line.trim() === '' ? '' : line))
-            .join('\n');
+        if (source !== null) {
+            // convert lines with only white space into empty string
+            source = source.split(/\r?\n/)
+                .map(line => (line.trim() === '' ? '' : line))
+                .join('\n');
 
-        // remove more than 1 consecutive empty lines
-        source = source.replace(/(\n\n){3,}/gm, '\n\n');
+            // remove more than 1 consecutive empty lines
+            source = source.replace(/(\n\n){3,}/gm, '\n\n');
+        }
 
         return source;
     }
 
     static _preprocess(source) {
 
+        const originalSource = source;
+
         // stack, storing info about ifdef blocks
         const stack = [];
+
+        // true if the function encounter a problem
+        let error = false;
 
         // active defines, maps define name to its value
         /** @type {Map<string, string>} */
@@ -84,6 +91,7 @@ class Preprocessor {
                     DEFINE.lastIndex = match.index;
                     const define = DEFINE.exec(source);
                     Debug.assert(define, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    error ||= define === null;
                     const expression = define[1];
 
                     // split it to identifier name and a value
@@ -139,7 +147,9 @@ class Preprocessor {
                     const expression = iff[2];
 
                     // evaluate expression
-                    let result = Preprocessor.evaluate(expression, defines);
+                    const evaluated = Preprocessor.evaluate(expression, defines);
+                    error ||= evaluated.error;
+                    let result = evaluated.result;
                     if (keyword === 'ifndef') {
                         result = !result;
                     }
@@ -184,7 +194,13 @@ class Preprocessor {
                         // if any branch was already accepted, all else branches need to fail regardless of the result
                         let result = false;
                         if (!blockInfo.anyKeep) {
-                            result = endifCommand === 'else' ? !blockInfo.keep : Preprocessor.evaluate(endif[2], defines);
+                            if (endifCommand === 'else') {
+                                result = !blockInfo.keep;
+                            } else {
+                                const evaluated = Preprocessor.evaluate(endif[2], defines);
+                                result = evaluated.result;
+                                error ||= evaluated.error;
+                            }
                         }
 
                         // add back to stack
@@ -200,6 +216,11 @@ class Preprocessor {
                     break;
                 }
             }
+        }
+
+        if (error) {
+            Debug.error("Failed to preprocess shader: ", { source: originalSource });
+            return null;
         }
 
         return source;
@@ -226,7 +247,8 @@ class Preprocessor {
      */
     static evaluate(expression, defines) {
 
-        Debug.assert(!INVALID.exec(expression), `Resolving expression like this is not supported: ${expression}`);
+        const correct = INVALID.exec(expression) === null;
+        Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
         // if the format is defined(expression), extract expression
         let invert = false;
@@ -245,7 +267,10 @@ class Preprocessor {
             exists = !exists;
         }
 
-        return exists;
+        return {
+            result: exists,
+            error: !correct
+        };
     }
 }
 

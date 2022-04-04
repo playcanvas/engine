@@ -303,33 +303,33 @@ class WebglShader {
      * @private
      */
     _processError(src, infoLog) {
-        if (!src)
-            return "";
-
-        const lines = src.split('\n');
         const error = { };
         let code = '';
-        let from = 0;
-        let to = lines.length;
 
-        // if error is in the code, only show nearby lines instead of whole shader code
-        if (infoLog && infoLog.startsWith('ERROR:')) {
-            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
-            if (match) {
-                error.message = match[3];
-                error.line = parseInt(match[2], 10);
+        if (src) {
+            const lines = src.split('\n');
+            let from = 0;
+            let to = lines.length;
 
-                from = Math.max(0, error.line - 6);
-                to = Math.min(lines.length, error.line + 5);
+            // if error is in the code, only show nearby lines instead of whole shader code
+            if (infoLog && infoLog.startsWith('ERROR:')) {
+                const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+                if (match) {
+                    error.message = match[3];
+                    error.line = parseInt(match[2], 10);
+
+                    from = Math.max(0, error.line - 6);
+                    to = Math.min(lines.length, error.line + 5);
+                }
             }
-        }
 
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = from; i < to; i++) {
-            code += (i + 1) + ":\t" + lines[i] + '\n';
-        }
+            // Chrome reports shader errors on lines indexed from 1
+            for (let i = from; i < to; i++) {
+                code += (i + 1) + ":\t" + lines[i] + '\n';
+            }
 
-        error.source = src;
+            error.source = src;
+        }
 
         return [code, error];
     }
