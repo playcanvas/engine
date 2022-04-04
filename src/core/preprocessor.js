@@ -124,9 +124,15 @@ class Preprocessor {
                     const undef = UNDEF.exec(source);
                     const identifier = undef[1].trim();
 
+                    // are we inside if-blocks that are accepted
+                    const keep = Preprocessor._keep(stack);
+
                     // remove it from defines
-                    defines.delete(identifier);
-                    log(`${keyword}: [${identifier}]`);
+                    if (keep) {
+                        defines.delete(identifier);
+                    }
+
+                    log(`${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = undef.index + undef[0].length;
