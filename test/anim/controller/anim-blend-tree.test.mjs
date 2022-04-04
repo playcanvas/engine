@@ -31,12 +31,12 @@ describe('AnimBlendTree', function () {
     describe('#getChild', function () {
 
         it('can retrieve a child by name', function () {
-            expect(animBlendTree.getChild('child1').name).to.be.equal('child1');
-            expect(animBlendTree.getChild('child2').name).to.be.equal('child2');
+            expect(animBlendTree.getChild('child1').name).to.equal('child1');
+            expect(animBlendTree.getChild('child2').name).to.equal('child2');
         });
 
         it('returns null when a child is not found', function () {
-            expect(animBlendTree.getChild('child3')).to.be.equal(null);
+            expect(animBlendTree.getChild('child3')).to.equal(null);
         });
 
     });
@@ -44,7 +44,7 @@ describe('AnimBlendTree', function () {
     describe('#getNodeCount', function () {
 
         it('returns the count of children in the blend tree', function () {
-            expect(animBlendTree.getNodeCount()).to.be.equal(2);
+            expect(animBlendTree.getNodeCount()).to.equal(2);
         });
 
     });
@@ -86,12 +86,11 @@ describe('AnimBlendTree', function () {
             const animBlendTree = new AnimBlendTree(animState, null, 'blendTree', 1, ['param1', 'param2'], [], false, animState._createTree, findParameter);
 
             animBlendTree.updateParameterValues();
-            expect(animBlendTree._parameterValues[0]).to.be.equal('value1');
-            expect(animBlendTree._parameterValues[1]).to.be.equal('value2');
+            expect(animBlendTree._parameterValues).to.be.deep.equal(['value1', 'value2']);
             params.param2.value = 'value3';
-            expect(animBlendTree._parameterValues[1]).to.be.equal('value2');
+            expect(animBlendTree._parameterValues[1]).to.equal('value2');
             animBlendTree.updateParameterValues();
-            expect(animBlendTree._parameterValues[1]).to.be.equal('value3');
+            expect(animBlendTree._parameterValues[1]).to.equal('value3');
         });
 
         it('returns false when stored parameters are already up to date', function () {
@@ -110,7 +109,7 @@ describe('AnimBlendTree', function () {
             const animBlendTree = new AnimBlendTree(animState, null, 'blendTree', 1, ['param1', 'param2'], [], false, animState._createTree, findParameter);
 
             const result = animBlendTree.updateParameterValues();
-            expect(result).to.be.equal(false);
+            expect(result).to.equal(false);
         });
 
         it('returns true when stored parameters are already up to date', function () {
@@ -129,9 +128,9 @@ describe('AnimBlendTree', function () {
             const animBlendTree = new AnimBlendTree(animState, null, 'blendTree', 1, ['param1', 'param2'], [], false, animState._createTree, findParameter);
 
             let result = animBlendTree.updateParameterValues();
-            expect(result).to.be.equal(false);
+            expect(result).to.equal(false);
             result = animBlendTree.updateParameterValues();
-            expect(result).to.be.equal(true);
+            expect(result).to.equal(true);
         });
 
     });
@@ -163,22 +162,22 @@ describe('AnimBlendTree1D', function () {
 
         it('produces equal weights when the parameter is at the midpoint of both children', function () {
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.5);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.5);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
         it('produces unequal weights when the parameter is not the midpoint of both children', function () {
             params.blendParam.value = 0.25;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.75);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.25);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.75);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
         it('produces correct results when a parameter is the same as a childs point', function () {
             params.blendParam.value = 1;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(1);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0);
+            expect(animBlendTree.getChild('child2').weight).to.equal(1);
         });
 
     });
@@ -210,32 +209,32 @@ describe('AnimBlendTreeDirect', function () {
 
         it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.5);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.5);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
         it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam1.value = 0.75;
             params.blendParam2.value = 0.25;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.75);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.25);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.75);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
         it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam1.value = 1;
             params.blendParam2.value = 0;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(1);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(1);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
-        it('produces a zero weights when all parameters are zero', function () {
+        it('produces zero weights when all parameters are zero', function () {
             params.blendParam1.value = 0;
             params.blendParam2.value = 0;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
     });
@@ -270,22 +269,22 @@ describe('AnimBlendTreeCartesian2D', function () {
 
         it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.5);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.5);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
         it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam2.value = 0.5;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.75);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.25);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.75);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
         it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam2.value = 1;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(1);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(1);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
         it('produces a zero weights when all parameters are zero', function () {
@@ -294,8 +293,8 @@ describe('AnimBlendTreeCartesian2D', function () {
             animBlendTree._children[0]._point = [0, 0];
             animBlendTree._children[1]._point = [0, 0];
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
     });
@@ -330,22 +329,22 @@ describe('AnimBlendTreeDirectional2D', function () {
 
         it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0.5);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0.5);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
         it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam2.value = 0.5;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(1);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(1);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
         it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam2.value = 1;
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(1);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(1);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
         it('produces a zero weights when all parameters are zero', function () {
@@ -354,8 +353,8 @@ describe('AnimBlendTreeDirectional2D', function () {
             animBlendTree._children[0]._point = [0, 0];
             animBlendTree._children[1]._point = [0, 0];
             animBlendTree.calculateWeights();
-            expect(animBlendTree.getChild('child1').weight).to.be.equal(0);
-            expect(animBlendTree.getChild('child2').weight).to.be.equal(0);
+            expect(animBlendTree.getChild('child1').weight).to.equal(0);
+            expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
     });

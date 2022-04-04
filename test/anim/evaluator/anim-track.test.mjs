@@ -15,11 +15,11 @@ describe('AnimTrack', function () {
 
         it('instantiates correctly', function () {
             expect(animTrack).to.be.ok;
-            expect(animTrack.name).to.be.equal('track');
-            expect(animTrack.duration).to.be.equal(2);
-            expect(animTrack.inputs).to.be.equal(inputs);
-            expect(animTrack.outputs).to.be.equal(outputs);
-            expect(animTrack.curves).to.be.equal(curves);
+            expect(animTrack.name).to.equal('track');
+            expect(animTrack.duration).to.equal(2);
+            expect(animTrack.inputs).to.equal(inputs);
+            expect(animTrack.outputs).to.equal(outputs);
+            expect(animTrack.curves).to.equal(curves);
         });
 
     });

@@ -20,11 +20,11 @@ describe('AnimClip', function () {
 
         it('instantiates correctly', function () {
             expect(animClip).to.be.ok;
-            expect(animClip.name).to.be.equal('track');
-            expect(animClip.track.name).to.be.equal('track');
-            expect(animClip.snapshot._name).to.be.equal('trackSnapshot');
-            expect(animClip.time).to.be.equal(0);
-            expect(animClip.loop).to.be.equal(false);
+            expect(animClip.name).to.equal('track');
+            expect(animClip.track.name).to.equal('track');
+            expect(animClip.snapshot._name).to.equal('trackSnapshot');
+            expect(animClip.time).to.equal(0);
+            expect(animClip.loop).to.equal(false);
         });
 
     });
@@ -33,9 +33,7 @@ describe('AnimClip', function () {
 
         it('can update the clip\'s snapshot by a given deltaTime', function () {
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0.5);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(1);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(1.5);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0.5, 1, 1.5]);
         });
 
     });
@@ -45,9 +43,7 @@ describe('AnimClip', function () {
         it('can stop the clip from updating', function () {
             animClip.pause();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(0);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
         });
 
     });
@@ -58,9 +54,7 @@ describe('AnimClip', function () {
             animClip._update(0.5);
             animClip.stop();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(0);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
         });
 
     });
@@ -71,9 +65,7 @@ describe('AnimClip', function () {
             animClip._update(0.5);
             animClip.reset();
             animClip._update(0);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(0);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
         });
 
     });
@@ -84,9 +76,7 @@ describe('AnimClip', function () {
             animClip.pause();
             animClip.resume();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0.5);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(1);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(1.5);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0.5, 1, 1.5]);
         });
 
     });
@@ -98,9 +88,7 @@ describe('AnimClip', function () {
             animClip.pause();
             animClip.play();
             animClip._update(0);
-            expect(animClip.snapshot._results[0][0]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][1]).to.be.equal(0);
-            expect(animClip.snapshot._results[0][2]).to.be.equal(0);
+            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
         });
 
     });

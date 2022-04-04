@@ -44,7 +44,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.dirty = false;
             animTargetValue.setMask(0, 1);
-            expect(animTargetValue.dirty).to.be.equal(true);
+            expect(animTargetValue.dirty).to.equal(true);
         });
 
         it('doesn\'t set dirty to true if normalizeWeights is false', function () {
@@ -64,7 +64,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.dirty = false;
             animTargetValue.setMask(0, 1);
-            expect(animTargetValue.dirty).to.be.equal(false);
+            expect(animTargetValue.dirty).to.equal(false);
         });
 
         it('sets the indexed mask value to the given value', function () {
@@ -82,9 +82,9 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            expect(animTargetValue.mask[0]).to.be.equal(0);
+            expect(animTargetValue.mask[0]).to.equal(0);
             animTargetValue.setMask(0, 1);
-            expect(animTargetValue.mask[0]).to.be.equal(1);
+            expect(animTargetValue.mask[0]).to.equal(1);
         });
 
         it('sets the previous mask values to 0 if normalizeWeights is true and the layers blend type is overwrite', function () {
@@ -104,7 +104,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 1;
             animTargetValue.setMask(1, 1);
-            expect(animTargetValue.mask[0]).to.be.equal(0);
+            expect(animTargetValue.mask[0]).to.equal(0);
         });
 
         it('doesn\'t set the previous mask value to 0 if normalizeWeights is true and the layers blend type is additive', function () {
@@ -124,7 +124,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 1;
             animTargetValue.setMask(1, 1);
-            expect(animTargetValue.mask[0]).to.be.equal(1);
+            expect(animTargetValue.mask[0]).to.equal(1);
         });
 
         it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is overwrite', function () {
@@ -144,7 +144,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 1;
             animTargetValue.setMask(1, 1);
-            expect(animTargetValue.mask[0]).to.be.equal(1);
+            expect(animTargetValue.mask[0]).to.equal(1);
         });
 
         it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is additive', function () {
@@ -164,7 +164,7 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 1;
             animTargetValue.setMask(1, 1);
-            expect(animTargetValue.mask[0]).to.be.equal(1);
+            expect(animTargetValue.mask[0]).to.equal(1);
         });
 
     });
@@ -185,11 +185,9 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            expect(animTargetValue.weights[0]).to.be.equal(0);
-            expect(animTargetValue.weights[1]).to.be.equal(0);
+            expect(animTargetValue.weights).to.be.deep.equal(new Float32Array([0, 0]));
             animTargetValue.updateWeights();
-            expect(animTargetValue.weights[0]).to.be.equal(1);
-            expect(animTargetValue.weights[1]).to.be.equal(2);
+            expect(animTargetValue.weights).to.be.deep.equal(new Float32Array([1, 2]));
         });
 
         it('sets the total weight to the sum of all the component\'s layers weights and their masks', function () {
@@ -206,13 +204,13 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            expect(animTargetValue.totalWeight).to.be.equal(0);
+            expect(animTargetValue.totalWeight).to.equal(0);
             animTargetValue.updateWeights();
-            expect(animTargetValue.totalWeight).to.be.equal(0);
+            expect(animTargetValue.totalWeight).to.equal(0);
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateWeights();
-            expect(animTargetValue.totalWeight).to.be.equal(3);
+            expect(animTargetValue.totalWeight).to.equal(3);
         });
 
     });
@@ -239,7 +237,7 @@ describe('AnimTargetValue', function () {
             };
             animTargetValue.dirty = true;
             animTargetValue.getWeight(0);
-            expect(updateWeightsCalled).to.be.equal(true);
+            expect(updateWeightsCalled).to.equal(true);
         });
 
         it('does not call updateWeights if dirty is false', function () {
@@ -262,7 +260,7 @@ describe('AnimTargetValue', function () {
             };
             animTargetValue.dirty = false;
             animTargetValue.getWeight(0);
-            expect(updateWeightsCalled).to.be.equal(false);
+            expect(updateWeightsCalled).to.equal(false);
         });
 
         it('returns 0 when the indexed mask is 0', function () {
@@ -280,7 +278,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 0;
-            expect(animTargetValue.getWeight(0)).to.be.equal(0);
+            expect(animTargetValue.getWeight(0)).to.equal(0);
         });
 
         it('returns 1 when the indexed mask is 1', function () {
@@ -299,7 +297,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.mask[0] = 1;
-            expect(animTargetValue.getWeight(0)).to.be.equal(1);
+            expect(animTargetValue.getWeight(0)).to.equal(1);
         });
 
         it('returns 0 when normalizeWeights is true and totalWeight is 0', function () {
@@ -321,7 +319,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.mask[0] = 1;
             animTargetValue.dirty = false;
             const weight = animTargetValue.getWeight(0);
-            expect(weight).to.be.equal(0);
+            expect(weight).to.equal(0);
         });
 
         it('returns a normalized weight when normalizeWeights is true and totalWeight is non 0', function () {
@@ -343,7 +341,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.mask[1] = 1;
             animTargetValue.dirty = true;
             const weight = animTargetValue.getWeight(0);
-            expect(weight).to.be.equal(0.2);
+            expect(weight).to.equal(0.2);
         });
 
         it('returns a weight when normalizeWeights is false and totalWeight is non 0', function () {
@@ -365,7 +363,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.mask[1] = 1;
             animTargetValue.dirty = true;
             const weight = animTargetValue.getWeight(0);
-            expect(weight).to.be.equal(1);
+            expect(weight).to.equal(1);
         });
 
     });
@@ -381,14 +379,11 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
-            expect(animTargetValue.value[0]).to.be.equal(1);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(1);
+            expect(animTargetValue.value).to.be.deep.equal([1, 1, 1]);
         });
 
         it('can set a normalized vector', function () {
@@ -401,14 +396,11 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
-            expect(animTargetValue.value[0]).to.be.equal(1);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(1);
+            expect(animTargetValue.value).to.be.deep.equal([1, 1, 1]);
         });
 
         it('can set a quat', function () {
@@ -420,15 +412,11 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(1);
-            expect(animTargetValue.value[1]).to.be.equal(0);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([1, 0, 0, 0]);
         });
 
         it('can set a normalized quat', function () {
@@ -441,15 +429,11 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(1);
-            expect(animTargetValue.value[1]).to.be.equal(0);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([1, 0, 0, 0]);
         });
 
         it('can blend two additive vectors together', function () {
@@ -465,17 +449,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(3);
-            expect(animTargetValue.value[1]).to.be.equal(3);
-            expect(animTargetValue.value[2]).to.be.equal(3);
+            expect(animTargetValue.value).to.be.deep.equal([3, 3, 3]);
         });
 
         it('can blend two additive vectors together with normalized weights', function () {
@@ -492,17 +473,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(1.25);
-            expect(animTargetValue.value[1]).to.be.equal(1.25);
-            expect(animTargetValue.value[2]).to.be.equal(1.25);
+            expect(animTargetValue.value).to.be.deep.equal([1.25, 1.25, 1.25]);
         });
 
         it('can blend two additive quats together', function () {
@@ -518,18 +496,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(0);
-            expect(animTargetValue.value[2]).to.be.equal(1);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 0, 1, 0]);
         });
 
         it('can blend two additive quats together with normalized weights', function () {
@@ -546,18 +520,19 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0.4999999999999999);
-            expect(animTargetValue.value[1]).to.be.equal(0.7071067811865475);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0.4999999999999999);
+            expect(animTargetValue.value).to.be.deep.equal([
+                0.4999999999999999,
+                0.7071067811865475,
+                0,
+                0.4999999999999999
+            ]);
         });
 
 
@@ -574,17 +549,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(2);
-            expect(animTargetValue.value[1]).to.be.equal(2);
-            expect(animTargetValue.value[2]).to.be.equal(2);
+            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
         });
 
         it('can blend two overwrite vectors together with normalized weights', function () {
@@ -601,17 +573,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(2);
-            expect(animTargetValue.value[1]).to.be.equal(2);
-            expect(animTargetValue.value[2]).to.be.equal(2);
+            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
         });
 
         it('can blend two overwrite quats together', function () {
@@ -627,18 +596,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend two overwrite quats together with normalized weights', function () {
@@ -655,18 +620,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one additive and one overwrite vector together', function () {
@@ -682,17 +643,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(2);
-            expect(animTargetValue.value[1]).to.be.equal(2);
-            expect(animTargetValue.value[2]).to.be.equal(2);
+            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite vector together', function () {
@@ -708,17 +666,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(2);
-            expect(animTargetValue.value[1]).to.be.equal(2);
-            expect(animTargetValue.value[2]).to.be.equal(2);
+            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite vector together with normalized weights', function () {
@@ -735,17 +690,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(2);
-            expect(animTargetValue.value[1]).to.be.equal(2);
-            expect(animTargetValue.value[2]).to.be.equal(2);
+            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite quat together', function () {
@@ -761,18 +713,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one additive and one overwrite quat together with normalized weights', function () {
@@ -789,18 +737,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(1);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one overwrite and one additive vector together', function () {
@@ -816,17 +760,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(3);
-            expect(animTargetValue.value[1]).to.be.equal(3);
-            expect(animTargetValue.value[2]).to.be.equal(3);
+            expect(animTargetValue.value).to.be.deep.equal([3, 3, 3]);
         });
 
         it('can blend one overwrite and one additive vector together with normalized weights', function () {
@@ -843,17 +784,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_VEC3;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value[0]).to.be.equal(1.25);
-            expect(animTargetValue.value[1]).to.be.equal(1.25);
-            expect(animTargetValue.value[2]).to.be.equal(1.25);
+            expect(animTargetValue.value).to.be.deep.equal([1.25, 1.25, 1.25]);
         });
 
         it('can blend one overwrite and one additive quat together', function () {
@@ -869,18 +807,14 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0);
-            expect(animTargetValue.value[1]).to.be.equal(0);
-            expect(animTargetValue.value[2]).to.be.equal(1);
-            expect(animTargetValue.value[3]).to.be.equal(0);
+            expect(animTargetValue.value).to.be.deep.equal([0, 0, 1, 0]);
         });
 
         it('can blend one overwrite and one additive quat together with normalized weights', function () {
@@ -897,18 +831,19 @@ describe('AnimTargetValue', function () {
                     }
                 ]
             };
-            const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.valueType = AnimTargetValue.TYPE_QUAT;
+            const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value[0]).to.be.equal(0.4999999999999999);
-            expect(animTargetValue.value[1]).to.be.equal(0.7071067811865475);
-            expect(animTargetValue.value[2]).to.be.equal(0);
-            expect(animTargetValue.value[3]).to.be.equal(0.4999999999999999);
+            expect(animTargetValue.value).to.be.deep.equal([
+                0.4999999999999999,
+                0.7071067811865475,
+                0,
+                0.4999999999999999
+            ]);
         });
 
     });

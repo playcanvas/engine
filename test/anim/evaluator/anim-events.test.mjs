@@ -26,8 +26,8 @@ describe('AnimEvents', function () {
     describe('#constructor', function () {
 
         it('sorts the events', function () {
-            expect(animEvents.events[0].name).to.be.equal('event1');
-            expect(animEvents.events[1].name).to.be.equal('event2');
+            expect(animEvents.events[0].name).to.equal('event1');
+            expect(animEvents.events[1].name).to.equal('event2');
         });
 
     });
@@ -35,12 +35,12 @@ describe('AnimEvents', function () {
     describe('#events', function () {
 
         it('returns the events stored in the instance', function () {
-            expect(animEvents.events[0].name).to.be.equal('event1');
-            expect(animEvents.events[0].time).to.be.equal(0.5);
-            expect(animEvents.events[0].property).to.be.equal(false);
-            expect(animEvents.events[1].name).to.be.equal('event2');
-            expect(animEvents.events[1].time).to.be.equal(1.5);
-            expect(animEvents.events[1].property).to.be.equal(true);
+            expect(animEvents.events[0].name).to.equal('event1');
+            expect(animEvents.events[0].time).to.equal(0.5);
+            expect(animEvents.events[0].property).to.equal(false);
+            expect(animEvents.events[1].name).to.equal('event2');
+            expect(animEvents.events[1].time).to.equal(1.5);
+            expect(animEvents.events[1].property).to.equal(true);
         });
 
     });

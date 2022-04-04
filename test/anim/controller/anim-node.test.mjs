@@ -19,7 +19,7 @@ describe('AnimNode', function () {
         it('returns the name of the AnimNode', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
-            expect(animNode.name).to.be.equal('node');
+            expect(animNode.name).to.equal('node');
         });
 
     });
@@ -30,7 +30,7 @@ describe('AnimNode', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNodeParent = new AnimNode(animState, null, 'parent', 1);
             const animNode = new AnimNode(animState, animNodeParent, 'node', 1);
-            expect(animNode.parent).to.be.equal(animNodeParent);
+            expect(animNode.parent).to.equal(animNodeParent);
         });
 
     });
@@ -40,14 +40,14 @@ describe('AnimNode', function () {
         it('returns the name of the AnimNode when it has no parent', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
-            expect(animNode.path).to.be.equal('node');
+            expect(animNode.path).to.equal('node');
         });
 
         it('returns a path representing a node and its hierarchy', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNodeParent = new AnimNode(animState, null, 'parent', 1);
             const animNode = new AnimNode(animState, animNodeParent, 'node', 1);
-            expect(animNode.path).to.be.equal('parent.node');
+            expect(animNode.path).to.equal('parent.node');
         });
 
     });
@@ -57,13 +57,13 @@ describe('AnimNode', function () {
         it('returns the correct point length when the point is 1 dimensional', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
-            expect(animNode.pointLength).to.be.equal(1);
+            expect(animNode.pointLength).to.equal(1);
         });
 
         it('returns the correct point length when the point is 2 dimensional', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', [5, 2]);
-            expect(animNode.pointLength).to.be.equal(Math.sqrt(5 * 5 + 2 * 2));
+            expect(animNode.pointLength).to.equal(Math.sqrt(5 * 5 + 2 * 2));
         });
 
     });
@@ -74,14 +74,14 @@ describe('AnimNode', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
             animNode.weight = 0.5;
-            expect(animNode._weight).to.be.equal(0.5);
+            expect(animNode._weight).to.equal(0.5);
         });
 
         it('can get the weight of the AnimNode when no parent is present', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
-            expect(animNode.parent).to.be.equal(null);
-            expect(animNode.weight).to.be.equal(1.0);
+            expect(animNode.parent).to.equal(null);
+            expect(animNode.weight).to.equal(1.0);
         });
 
         it('can get the correct weight of the AnimNode when a parent is present', function () {
@@ -90,8 +90,8 @@ describe('AnimNode', function () {
             animNodeParent.weight = 0.5;
             const animNode = new AnimNode(animState, animNodeParent, 'node', 1);
             animNode.weight = 0.5;
-            expect(animNode.parent).to.be.equal(animNodeParent);
-            expect(animNode.weight).to.be.equal(0.25);
+            expect(animNode.parent).to.equal(animNodeParent);
+            expect(animNode.weight).to.equal(0.25);
         });
 
     });
@@ -112,14 +112,14 @@ describe('AnimNode', function () {
             ];
             const animNode = new AnimNode(animState, null, 'node', 1);
             animNode.weight = 2.5;
-            expect(animNode.normalizedWeight).to.be.equal(0.5);
+            expect(animNode.normalizedWeight).to.equal(0.5);
         });
 
         it('can get the normalized weight when the AnimNode\'s state total weight is zero', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1);
             animNode.weight = 2.5;
-            expect(animNode.normalizedWeight).to.be.equal(0);
+            expect(animNode.normalizedWeight).to.equal(0);
         });
 
     });
@@ -129,15 +129,15 @@ describe('AnimNode', function () {
         it('returns an absolue speed when speed is negative', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, -5);
-            expect(animNode.speed).to.be.equal(-5);
-            expect(animNode.absoluteSpeed).to.be.equal(5);
+            expect(animNode.speed).to.equal(-5);
+            expect(animNode.absoluteSpeed).to.equal(5);
         });
 
         it('returns an absolue speed when speed is positive', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, 5);
-            expect(animNode.speed).to.be.equal(5);
-            expect(animNode.absoluteSpeed).to.be.equal(5);
+            expect(animNode.speed).to.equal(5);
+            expect(animNode.absoluteSpeed).to.equal(5);
         });
 
     });
@@ -148,7 +148,7 @@ describe('AnimNode', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, 0.5);
             animNode.weightedSpeed = 0.5;
-            expect(animNode.speed).to.be.equal(0.25);
+            expect(animNode.speed).to.equal(0.25);
         });
 
     });

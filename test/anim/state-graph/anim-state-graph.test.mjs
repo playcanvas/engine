@@ -37,9 +37,9 @@ describe('AnimStateGraph', function () {
             };
             const animStateGraph = new AnimStateGraph(data);
             expect(animStateGraph).to.be.ok;
-            expect(animStateGraph.layers[0].name).to.be.equal('Base');
-            expect(animStateGraph.layers[0].states[0].name).to.be.equal('START');
-            expect(animStateGraph.layers[0].states[1].name).to.be.equal('New State');
+            expect(animStateGraph.layers[0].name).to.equal('Base');
+            expect(animStateGraph.layers[0].states[0].name).to.equal('START');
+            expect(animStateGraph.layers[0].states[1].name).to.equal('New State');
         });
 
         it('instantiates correctly with data layers as an array', function () {
@@ -72,9 +72,9 @@ describe('AnimStateGraph', function () {
             };
             const animStateGraph = new AnimStateGraph(data);
             expect(animStateGraph).to.be.ok;
-            expect(animStateGraph.layers[0].name).to.be.equal('Base');
-            expect(animStateGraph.layers[0].states[0].name).to.be.equal('START');
-            expect(animStateGraph.layers[0].states[1].name).to.be.equal('New State');
+            expect(animStateGraph.layers[0].name).to.equal('Base');
+            expect(animStateGraph.layers[0].states[0].name).to.equal('START');
+            expect(animStateGraph.layers[0].states[1].name).to.equal('New State');
         });
 
     });

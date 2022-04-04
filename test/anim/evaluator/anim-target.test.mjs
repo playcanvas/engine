@@ -13,12 +13,12 @@ describe('AnimTarget', function () {
             const animTarget = new AnimTarget(func, 'vector', 3, 'path/to/entity');
 
             expect(animTarget).to.be.ok;
-            expect(animTarget.set).to.be.equal(func.set);
-            expect(animTarget.get).to.be.equal(func.get);
-            expect(animTarget.type).to.be.equal('vector');
-            expect(animTarget.components).to.be.equal(3);
-            expect(animTarget.targetPath).to.be.equal('path/to/entity');
-            expect(animTarget.isTransform).to.be.equal(false);
+            expect(animTarget.set).to.equal(func.set);
+            expect(animTarget.get).to.equal(func.get);
+            expect(animTarget.type).to.equal('vector');
+            expect(animTarget.components).to.equal(3);
+            expect(animTarget.targetPath).to.equal('path/to/entity');
+            expect(animTarget.isTransform).to.equal(false);
         });
 
         it('instantiates correctly with a function', function () {
@@ -26,12 +26,12 @@ describe('AnimTarget', function () {
             const animTarget = new AnimTarget(func, 'vector', 3, 'path/to/entity');
 
             expect(animTarget).to.be.ok;
-            expect(animTarget.set).to.be.equal(func);
-            expect(animTarget.get).to.be.equal(undefined);
-            expect(animTarget.type).to.be.equal('vector');
-            expect(animTarget.components).to.be.equal(3);
-            expect(animTarget.targetPath).to.be.equal('path/to/entity');
-            expect(animTarget.isTransform).to.be.equal(false);
+            expect(animTarget.set).to.equal(func);
+            expect(animTarget.get).to.equal(undefined);
+            expect(animTarget.type).to.equal('vector');
+            expect(animTarget.components).to.equal(3);
+            expect(animTarget.targetPath).to.equal('path/to/entity');
+            expect(animTarget.isTransform).to.equal(false);
         });
 
         it('instantiates correctly with a transform path', function () {
@@ -39,12 +39,12 @@ describe('AnimTarget', function () {
             const animTarget = new AnimTarget(func, 'vector', 3, 'path/to/entity/localScale');
 
             expect(animTarget).to.be.ok;
-            expect(animTarget.set).to.be.equal(func);
-            expect(animTarget.get).to.be.equal(undefined);
-            expect(animTarget.type).to.be.equal('vector');
-            expect(animTarget.components).to.be.equal(3);
-            expect(animTarget.targetPath).to.be.equal('path/to/entity/localScale');
-            expect(animTarget.isTransform).to.be.equal(true);
+            expect(animTarget.set).to.equal(func);
+            expect(animTarget.get).to.equal(undefined);
+            expect(animTarget.type).to.equal('vector');
+            expect(animTarget.components).to.equal(3);
+            expect(animTarget.targetPath).to.equal('path/to/entity/localScale');
+            expect(animTarget.isTransform).to.equal(true);
         });
 
     });

@@ -41,7 +41,7 @@ class AnimTargetValue {
         this.layerCounter = 0;
         this.valueType = type;
         this.dirty = true;
-        this.value = [0, 0, 0, 1];
+        this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
         this.baseValue = null;
         this.setter = null;
     }

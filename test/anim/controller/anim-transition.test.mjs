@@ -11,8 +11,8 @@ describe('AnimTransition', function () {
                 to: 'toState'
             });
             expect(animTransition).to.be.ok;
-            expect(animTransition.from).to.be.equal('fromState');
-            expect(animTransition.to).to.be.equal('toState');
+            expect(animTransition.from).to.equal('fromState');
+            expect(animTransition.to).to.equal('toState');
         });
 
     });

@@ -13,8 +13,8 @@ describe('AnimState', function () {
         it('instantiates correctly', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             expect(animState).to.be.ok;
-            expect(animState.name).to.be.equal('state');
-            expect(animState.nodeCount).to.be.equal(1);
+            expect(animState.name).to.equal('state');
+            expect(animState.nodeCount).to.equal(1);
         });
 
         it('instansiates correctly with a blend tree', function () {
@@ -24,8 +24,8 @@ describe('AnimState', function () {
                 children: []
             });
             expect(animState).to.be.ok;
-            expect(animState.name).to.be.equal('state');
-            expect(animState.nodeCount).to.be.equal(0);
+            expect(animState.name).to.equal('state');
+            expect(animState.nodeCount).to.equal(0);
         });
 
     });
@@ -39,9 +39,9 @@ describe('AnimState', function () {
             const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];
             const animTrack = new AnimTrack('track', 2, inputs, outputs, curves);
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
-            expect(animState.animations.length).to.be.equal(0);
+            expect(animState.animations.length).to.equal(0);
             animState.addAnimation(['track'], animTrack);
-            expect(animState.animations.length).to.be.equal(1);
+            expect(animState.animations.length).to.equal(1);
         });
     });
 

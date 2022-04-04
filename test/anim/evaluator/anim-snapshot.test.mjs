@@ -16,13 +16,11 @@ describe('AnimSnapshot', function () {
 
         it('instantiates correctly', function () {
             expect(animSnapshot).to.be.ok;
-            expect(animSnapshot._name).to.be.equal('trackSnapshot');
-            expect(animSnapshot._time).to.be.equal(-1);
-            expect(animSnapshot._results.length).to.be.equal(1);
-            expect(animSnapshot._results[0].length).to.be.equal(3);
-            expect(animSnapshot._results[0][0]).to.be.equal(0);
-            expect(animSnapshot._results[0][1]).to.be.equal(0);
-            expect(animSnapshot._results[0][2]).to.be.equal(0);
+            expect(animSnapshot._name).to.equal('trackSnapshot');
+            expect(animSnapshot._time).to.equal(-1);
+            expect(animSnapshot._results.length).to.equal(1);
+            expect(animSnapshot._results[0].length).to.equal(3);
+            expect(animSnapshot._results[0]).to.be.deep.equal([0, 0, 0]);
         });
 
     });
