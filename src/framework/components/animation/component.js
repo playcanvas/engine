@@ -29,7 +29,7 @@ class AnimationComponent extends Component {
     _animations = {};
 
     /**
-     * @type {number[]}
+     * @type {(number|Asset)[]}
      * @private
      */
     _assets = [];
@@ -140,22 +140,7 @@ class AnimationComponent extends Component {
     set animations(value) {
         this._animations = value;
 
-        // If we have animations _and_ a model, we can create the skeletons
-        const modelComponent = this.entity.model;
-        if (modelComponent) {
-            const m = modelComponent.model;
-            if (m && m !== this.model) {
-                this.setModel(m);
-            }
-        }
-
-        if (!this.currAnim && this.activate && this.enabled && this.entity.enabled) {
-            // Set the first loaded animation as the current
-            const animationNames = Object.keys(value);
-            if (animationNames.length > 0) {
-                this.play(animationNames[0]);
-            }
-        }
+        this.onSetAnimations();
     }
 
     get animations() {
@@ -165,7 +150,7 @@ class AnimationComponent extends Component {
     /**
      * The array of animation assets. Can also be an array of asset ids.
      *
-     * @type {number[]}
+     * @type {(number|Asset)[]}
      */
     set assets(value) {
         const assets = this._assets;
@@ -368,6 +353,25 @@ class AnimationComponent extends Component {
             // Reset the current animation on the new model
             if (this.animations && this.currAnim && this.animations[this.currAnim]) {
                 this.play(this.currAnim);
+            }
+        }
+    }
+
+    onSetAnimations() {
+        // If we have animations _and_ a model, we can create the skeletons
+        const modelComponent = this.entity.model;
+        if (modelComponent) {
+            const m = modelComponent.model;
+            if (m && m !== this.model) {
+                this.setModel(m);
+            }
+        }
+
+        if (!this.currAnim && this.activate && this.enabled && this.entity.enabled) {
+            // Set the first loaded animation as the current
+            const animationNames = Object.keys(this._animations);
+            if (animationNames.length > 0) {
+                this.play(animationNames[0]);
             }
         }
     }
