@@ -26,7 +26,7 @@ describe('AnimData', function () {
 
         it('can retrieve the number of components', function () {
             expect(animData.data.length).to.equal(3);
-            expect(animData.data).to.be.deep.equal([0, 1, 2]);
+            expect(animData.data).to.deep.equal([0, 1, 2]);
         });
 
     });

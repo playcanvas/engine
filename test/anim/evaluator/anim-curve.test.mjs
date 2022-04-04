@@ -22,7 +22,7 @@ describe('AnimCurve', function () {
 
         it('can retrieve the curve paths', function () {
             expect(animCurve.paths.length).to.equal(2);
-            expect(animCurve.paths).to.be.deep.equal(['path/to/entity1', 'path/to/entity2']);
+            expect(animCurve.paths).to.deep.equal(['path/to/entity1', 'path/to/entity2']);
         });
 
     });

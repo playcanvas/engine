@@ -20,7 +20,7 @@ describe('AnimSnapshot', function () {
             expect(animSnapshot._time).to.equal(-1);
             expect(animSnapshot._results.length).to.equal(1);
             expect(animSnapshot._results[0].length).to.equal(3);
-            expect(animSnapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(animSnapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
 
     });

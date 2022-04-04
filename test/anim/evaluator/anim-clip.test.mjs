@@ -33,7 +33,7 @@ describe('AnimClip', function () {
 
         it('can update the clip\'s snapshot by a given deltaTime', function () {
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0.5, 1, 1.5]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0.5, 1, 1.5]);
         });
 
     });
@@ -43,7 +43,7 @@ describe('AnimClip', function () {
         it('can stop the clip from updating', function () {
             animClip.pause();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
 
     });
@@ -54,7 +54,7 @@ describe('AnimClip', function () {
             animClip._update(0.5);
             animClip.stop();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
 
     });
@@ -65,7 +65,7 @@ describe('AnimClip', function () {
             animClip._update(0.5);
             animClip.reset();
             animClip._update(0);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
 
     });
@@ -76,7 +76,7 @@ describe('AnimClip', function () {
             animClip.pause();
             animClip.resume();
             animClip._update(0.5);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0.5, 1, 1.5]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0.5, 1, 1.5]);
         });
 
     });
@@ -88,7 +88,7 @@ describe('AnimClip', function () {
             animClip.pause();
             animClip.play();
             animClip._update(0);
-            expect(animClip.snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
 
     });

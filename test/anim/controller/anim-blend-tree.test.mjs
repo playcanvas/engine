@@ -86,7 +86,7 @@ describe('AnimBlendTree', function () {
             const animBlendTree = new AnimBlendTree(animState, null, 'blendTree', 1, ['param1', 'param2'], [], false, animState._createTree, findParameter);
 
             animBlendTree.updateParameterValues();
-            expect(animBlendTree._parameterValues).to.be.deep.equal(['value1', 'value2']);
+            expect(animBlendTree._parameterValues).to.deep.equal(['value1', 'value2']);
             params.param2.value = 'value3';
             expect(animBlendTree._parameterValues[1]).to.equal('value2');
             animBlendTree.updateParameterValues();

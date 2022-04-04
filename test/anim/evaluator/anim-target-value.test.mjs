@@ -185,9 +185,9 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            expect(animTargetValue.weights).to.be.deep.equal(new Float32Array([0, 0]));
+            expect(animTargetValue.weights).to.deep.equal(new Float32Array([0, 0]));
             animTargetValue.updateWeights();
-            expect(animTargetValue.weights).to.be.deep.equal(new Float32Array([1, 2]));
+            expect(animTargetValue.weights).to.deep.equal(new Float32Array([1, 2]));
         });
 
         it('sets the total weight to the sum of all the component\'s layers weights and their masks', function () {
@@ -383,7 +383,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
-            expect(animTargetValue.value).to.be.deep.equal([1, 1, 1]);
+            expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
 
         it('can set a normalized vector', function () {
@@ -400,7 +400,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.baseValue = [0, 0, 0];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
-            expect(animTargetValue.value).to.be.deep.equal([1, 1, 1]);
+            expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
 
         it('can set a quat', function () {
@@ -416,7 +416,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([1, 0, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
 
         it('can set a normalized quat', function () {
@@ -433,7 +433,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([1, 0, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
 
         it('can blend two additive vectors together', function () {
@@ -456,7 +456,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([3, 3, 3]);
+            expect(animTargetValue.value).to.deep.equal([3, 3, 3]);
         });
 
         it('can blend two additive vectors together with normalized weights', function () {
@@ -480,7 +480,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([1.25, 1.25, 1.25]);
+            expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
         });
 
         it('can blend two additive quats together', function () {
@@ -503,7 +503,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 0, 1, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 0, 1, 0]);
         });
 
         it('can blend two additive quats together with normalized weights', function () {
@@ -527,7 +527,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([
+            expect(animTargetValue.value).to.deep.equal([
                 0.4999999999999999,
                 0.7071067811865475,
                 0,
@@ -556,7 +556,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
+            expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
         it('can blend two overwrite vectors together with normalized weights', function () {
@@ -580,7 +580,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
+            expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
         it('can blend two overwrite quats together', function () {
@@ -603,7 +603,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend two overwrite quats together with normalized weights', function () {
@@ -627,7 +627,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one additive and one overwrite vector together', function () {
@@ -650,7 +650,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
+            expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite vector together', function () {
@@ -673,7 +673,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
+            expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite vector together with normalized weights', function () {
@@ -697,7 +697,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([2, 2, 2]);
+            expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
         it('can blend one additive and one overwrite quat together', function () {
@@ -720,7 +720,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one additive and one overwrite quat together with normalized weights', function () {
@@ -744,7 +744,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 1, 0, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
         it('can blend one overwrite and one additive vector together', function () {
@@ -767,7 +767,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([3, 3, 3]);
+            expect(animTargetValue.value).to.deep.equal([3, 3, 3]);
         });
 
         it('can blend one overwrite and one additive vector together with normalized weights', function () {
@@ -791,7 +791,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.be.deep.equal([1.25, 1.25, 1.25]);
+            expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
         });
 
         it('can blend one overwrite and one additive quat together', function () {
@@ -814,7 +814,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([0, 0, 1, 0]);
+            expect(animTargetValue.value).to.deep.equal([0, 0, 1, 0]);
         });
 
         it('can blend one overwrite and one additive quat together with normalized weights', function () {
@@ -838,7 +838,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.be.deep.equal([
+            expect(animTargetValue.value).to.deep.equal([
                 0.4999999999999999,
                 0.7071067811865475,
                 0,

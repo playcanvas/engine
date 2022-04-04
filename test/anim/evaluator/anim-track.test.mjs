@@ -29,11 +29,11 @@ describe('AnimTrack', function () {
         it('correctly updates a given snapshot', function () {
             const snapshot = new AnimSnapshot(animTrack);
             animTrack.eval(0, snapshot);
-            expect(snapshot._results[0]).to.be.deep.equal([0, 0, 0]);
+            expect(snapshot._results[0]).to.deep.equal([0, 0, 0]);
             animTrack.eval(1, snapshot);
-            expect(snapshot._results[0]).to.be.deep.equal([1, 2, 3]);
+            expect(snapshot._results[0]).to.deep.equal([1, 2, 3]);
             animTrack.eval(1.5, snapshot);
-            expect(snapshot._results[0]).to.be.deep.equal([1.5, 3, 4.5]);
+            expect(snapshot._results[0]).to.deep.equal([1.5, 3, 4.5]);
         });
 
     });
