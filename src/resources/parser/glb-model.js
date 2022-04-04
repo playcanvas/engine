@@ -8,7 +8,7 @@ class GlbModelParser {
     }
 
     parse(data) {
-        const glbResources = GlbParser.parse("filename.glb", data, this._device);
+        const glbResources = GlbParser.parse('filename.glb', data, this._device);
         if (glbResources) {
             const model = GlbContainerResource.createModel(glbResources, this._defaultMaterial);
             glbResources.destroy();

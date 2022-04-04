@@ -639,9 +639,9 @@ class ImageElement {
     _bindMaterialAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onMaterialLoad, this);
-        asset.on("change", this._onMaterialChange, this);
-        asset.on("remove", this._onMaterialRemove, this);
+        asset.on('load', this._onMaterialLoad, this);
+        asset.on('change', this._onMaterialChange, this);
+        asset.on('remove', this._onMaterialRemove, this);
 
         if (asset.resource) {
             this._onMaterialLoad(asset);
@@ -651,9 +651,9 @@ class ImageElement {
     }
 
     _unbindMaterialAsset(asset) {
-        asset.off("load", this._onMaterialLoad, this);
-        asset.off("change", this._onMaterialChange, this);
-        asset.off("remove", this._onMaterialRemove, this);
+        asset.off('load', this._onMaterialLoad, this);
+        asset.off('change', this._onMaterialChange, this);
+        asset.off('remove', this._onMaterialRemove, this);
     }
 
     _onMaterialChange() {
@@ -674,9 +674,9 @@ class ImageElement {
     _bindTextureAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onTextureLoad, this);
-        asset.on("change", this._onTextureChange, this);
-        asset.on("remove", this._onTextureRemove, this);
+        asset.on('load', this._onTextureLoad, this);
+        asset.on('change', this._onTextureChange, this);
+        asset.on('remove', this._onTextureRemove, this);
 
         if (asset.resource) {
             this._onTextureLoad(asset);
@@ -686,9 +686,9 @@ class ImageElement {
     }
 
     _unbindTextureAsset(asset) {
-        asset.off("load", this._onTextureLoad, this);
-        asset.off("change", this._onTextureChange, this);
-        asset.off("remove", this._onTextureRemove, this);
+        asset.off('load', this._onTextureLoad, this);
+        asset.off('change', this._onTextureChange, this);
+        asset.off('remove', this._onTextureRemove, this);
     }
 
     _onTextureLoad(asset) {
@@ -715,9 +715,9 @@ class ImageElement {
     _bindSpriteAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onSpriteAssetLoad, this);
-        asset.on("change", this._onSpriteAssetChange, this);
-        asset.on("remove", this._onSpriteAssetRemove, this);
+        asset.on('load', this._onSpriteAssetLoad, this);
+        asset.on('change', this._onSpriteAssetChange, this);
+        asset.on('remove', this._onSpriteAssetRemove, this);
 
         if (asset.resource) {
             this._onSpriteAssetLoad(asset);
@@ -727,12 +727,12 @@ class ImageElement {
     }
 
     _unbindSpriteAsset(asset) {
-        asset.off("load", this._onSpriteAssetLoad, this);
-        asset.off("change", this._onSpriteAssetChange, this);
-        asset.off("remove", this._onSpriteAssetRemove, this);
+        asset.off('load', this._onSpriteAssetLoad, this);
+        asset.off('change', this._onSpriteAssetChange, this);
+        asset.off('remove', this._onSpriteAssetRemove, this);
 
         if (asset.data.textureAtlasAsset) {
-            this._system.app.assets.off("load:" + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            this._system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
         }
     }
 
@@ -877,7 +877,7 @@ class ImageElement {
 
         // #if _DEBUG
         if (this._color === value) {
-            Debug.warn("Setting element.color to itself will have no effect");
+            Debug.warn('Setting element.color to itself will have no effect');
         }
         // #endif
 
@@ -1007,9 +1007,9 @@ class ImageElement {
                 assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
                 const _prev = assets.get(this._materialAsset);
                 if (_prev) {
-                    _prev.off("load", this._onMaterialLoad, this);
-                    _prev.off("change", this._onMaterialChange, this);
-                    _prev.off("remove", this._onMaterialRemove, this);
+                    _prev.off('load', this._onMaterialLoad, this);
+                    _prev.off('change', this._onMaterialChange, this);
+                    _prev.off('remove', this._onMaterialRemove, this);
                 }
             }
 
@@ -1052,17 +1052,17 @@ class ImageElement {
             }
 
             // default texture just uses emissive and opacity maps
-            this._renderable.setParameter("texture_emissiveMap", this._texture);
-            this._renderable.setParameter("texture_opacityMap", this._texture);
+            this._renderable.setParameter('texture_emissiveMap', this._texture);
+            this._renderable.setParameter('texture_opacityMap', this._texture);
             this._colorUniform[0] = this._color.r;
             this._colorUniform[1] = this._color.g;
             this._colorUniform[2] = this._color.b;
-            this._renderable.setParameter("material_emissive", this._colorUniform);
-            this._renderable.setParameter("material_opacity", this._color.a);
+            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._renderable.setParameter('material_opacity', this._color.a);
         } else {
             // clear texture params
-            this._renderable.deleteParameter("texture_emissiveMap");
-            this._renderable.deleteParameter("texture_opacityMap");
+            this._renderable.deleteParameter('texture_emissiveMap');
+            this._renderable.deleteParameter('texture_opacityMap');
         }
     }
 
@@ -1083,9 +1083,9 @@ class ImageElement {
                 assets.off('add:' + this._textureAsset, this._onTextureAdded, this);
                 const _prev = assets.get(this._textureAsset);
                 if (_prev) {
-                    _prev.off("load", this._onTextureLoad, this);
-                    _prev.off("change", this._onTextureChange, this);
-                    _prev.off("remove", this._onTextureRemove, this);
+                    _prev.off('load', this._onTextureLoad, this);
+                    _prev.off('change', this._onTextureChange, this);
+                    _prev.off('remove', this._onTextureRemove, this);
                 }
             }
 
@@ -1175,12 +1175,12 @@ class ImageElement {
 
         if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
             // default texture just uses emissive and opacity maps
-            this._renderable.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-            this._renderable.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+            this._renderable.setParameter('texture_emissiveMap', this._sprite.atlas.texture);
+            this._renderable.setParameter('texture_opacityMap', this._sprite.atlas.texture);
         } else {
             // clear texture params
-            this._renderable.deleteParameter("texture_emissiveMap");
-            this._renderable.deleteParameter("texture_opacityMap");
+            this._renderable.deleteParameter('texture_emissiveMap');
+            this._renderable.deleteParameter('texture_opacityMap');
         }
 
         // clamp frame

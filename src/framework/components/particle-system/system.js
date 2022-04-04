@@ -189,7 +189,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
                 sourceProp = sourceProp.clone();
                 data[prop] = sourceProp;
-            } else if (prop === "layers") {
+            } else if (prop === 'layers') {
                 data.layers = source.layers.slice(0);
             } else {
                 if (sourceProp !== null && sourceProp !== undefined) {

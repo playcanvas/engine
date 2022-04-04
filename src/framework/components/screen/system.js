@@ -38,7 +38,7 @@ class ScreenComponentSystem extends ComponentSystem {
         // queue of callbacks
         this._drawOrderSyncQueue = new IndexedList();
 
-        this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.on('resizecanvas', this._onResize, this);
 
         this.app.systems.on('update', this._onUpdate, this);
 
@@ -76,7 +76,7 @@ class ScreenComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.off('resizecanvas', this._onResize, this);
         this.app.systems.off('update', this._onUpdate, this);
     }
 

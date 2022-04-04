@@ -198,7 +198,7 @@ class Morph extends RefCountedObject {
             // create texture and assign it to target
             const target = deltaInfos[i].target;
             const format = this._textureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
-            target._setTexture(deltaInfos[i].name, this._createTexture("MorphTarget", format, packedDeltas));
+            target._setTexture(deltaInfos[i].name, this._createTexture('MorphTarget', format, packedDeltas));
         }
 
         // create vertex stream with vertex_id used to map vertex to texture

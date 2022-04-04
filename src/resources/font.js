@@ -114,9 +114,9 @@ class FontHandler {
             };
 
             if (index === 0) {
-                loader.load(url, "texture", onLoaded);
+                loader.load(url, 'texture', onLoaded);
             } else {
-                loader.load(url.replace('.png', index + '.png'), "texture", onLoaded);
+                loader.load(url.replace('.png', index + '.png'), 'texture', onLoaded);
             }
         };
 

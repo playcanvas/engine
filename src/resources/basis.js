@@ -26,7 +26,7 @@ const prepareWorkerModules = (config, callback) => {
 
     const wasmSupported = () => {
         try {
-            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+            if (typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function') {
                 const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
                 if (module instanceof WebAssembly.Module)
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
@@ -279,7 +279,7 @@ function basisInitialize(config) {
             return m.moduleName === 'BASIS';
         });
         if (wasmModule) {
-            const urlBase = window.ASSET_PREFIX || "";
+            const urlBase = window.ASSET_PREFIX || '';
             if (!config.glueUrl) {
                 config.glueUrl = urlBase + wasmModule.glueUrl;
             }

@@ -58,7 +58,7 @@ class ImgParser {
 
     open(url, data, device) {
         const ext = path.getExtension(url).toLowerCase();
-        const format = (ext === ".jpg" || ext === ".jpeg") ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
+        const format = (ext === '.jpg' || ext === '.jpeg') ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -116,7 +116,7 @@ class ImgParser {
     _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
         const options = {
             cache: true,
-            responseType: "blob",
+            responseType: 'blob',
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };

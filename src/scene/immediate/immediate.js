@@ -126,7 +126,7 @@ class Immediate {
     getDepthTextureShader() {
         if (!this.depthTextureShader) {
 
-            const gl2 = this.device.webgl2 ? "#define GL2" : "";
+            const gl2 = this.device.webgl2 ? '#define GL2' : '';
             const shaderDefinition = {
                 attributes: {
                     aPosition: SEMANTIC_POSITION

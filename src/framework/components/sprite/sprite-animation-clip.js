@@ -240,8 +240,8 @@ class SpriteAnimationClip extends EventHandler {
 
     // Hook up event handlers on sprite asset
     _bindSpriteAsset(asset) {
-        asset.on("load", this._onSpriteAssetLoad, this);
-        asset.on("remove", this._onSpriteAssetRemove, this);
+        asset.on('load', this._onSpriteAssetLoad, this);
+        asset.on('remove', this._onSpriteAssetRemove, this);
 
         if (asset.resource) {
             this._onSpriteAssetLoad(asset);
@@ -251,8 +251,8 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     _unbindSpriteAsset(asset) {
-        asset.off("load", this._onSpriteAssetLoad, this);
-        asset.off("remove", this._onSpriteAssetRemove, this);
+        asset.off('load', this._onSpriteAssetLoad, this);
+        asset.off('remove', this._onSpriteAssetRemove, this);
 
         // unbind atlas
         if (asset.resource && asset.resource.atlas) {

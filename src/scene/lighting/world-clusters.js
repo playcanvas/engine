@@ -31,7 +31,7 @@ class ClusterLight {
 class WorldClusters {
     constructor(device) {
         this.device = device;
-        this.name = "Untitled";
+        this.name = 'Untitled';
 
         // number of times a warning was reported
         this.reportCount = 0;
@@ -115,30 +115,30 @@ class WorldClusters {
 
     registerUniforms(device) {
 
-        this._clusterWorldTextureId = device.scope.resolve("clusterWorldTexture");
-        this._clusterPixelsPerCellId = device.scope.resolve("clusterPixelsPerCell");
+        this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
+        this._clusterPixelsPerCellId = device.scope.resolve('clusterPixelsPerCell');
 
-        this._clusterTextureSizeId = device.scope.resolve("clusterTextureSize");
+        this._clusterTextureSizeId = device.scope.resolve('clusterTextureSize');
         this._clusterTextureSizeData = new Float32Array(3);
 
-        this._clusterBoundsMinId = device.scope.resolve("clusterBoundsMin");
+        this._clusterBoundsMinId = device.scope.resolve('clusterBoundsMin');
         this._clusterBoundsMinData = new Float32Array(3);
 
-        this._clusterBoundsDeltaId = device.scope.resolve("clusterBoundsDelta");
+        this._clusterBoundsDeltaId = device.scope.resolve('clusterBoundsDelta');
         this._clusterBoundsDeltaData = new Float32Array(3);
 
-        this._clusterCellsCountByBoundsSizeId = device.scope.resolve("clusterCellsCountByBoundsSize");
+        this._clusterCellsCountByBoundsSizeId = device.scope.resolve('clusterCellsCountByBoundsSize');
         this._clusterCellsCountByBoundsSizeData = new Float32Array(3);
 
-        this._clusterCellsDotId = device.scope.resolve("clusterCellsDot");
+        this._clusterCellsDotId = device.scope.resolve('clusterCellsDot');
         this._clusterCellsDotData = new Float32Array(3);
 
         // number of cells in each direction (vec3)
-        this._clusterCellsMaxId = device.scope.resolve("clusterCellsMax");
+        this._clusterCellsMaxId = device.scope.resolve('clusterCellsMax');
         this._clusterCellsMaxData = new Float32Array(3);
 
         // compression limit 0
-        this._clusterCompressionLimit0Id = device.scope.resolve("clusterCompressionLimit0");
+        this._clusterCompressionLimit0Id = device.scope.resolve('clusterCompressionLimit0');
         this._clusterCompressionLimit0Data = new Float32Array(2);
     }
 
@@ -174,7 +174,7 @@ class WorldClusters {
 
             // if the texture is allowed size
             Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
-                         "Clustered lights parameters cause the texture size to be over the limit, please adjust them.");
+                         'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
@@ -195,7 +195,7 @@ class WorldClusters {
             this._clusterTextureSizeData[2] = 1.0 / height;
 
             this.releaseClusterTexture();
-            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8, "ClusterTexture");
+            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8, 'ClusterTexture');
         }
     }
 
@@ -426,8 +426,8 @@ class WorldClusters {
         if (tooManyLights) {
             const reportLimit = 5;
             if (this.reportCount < reportLimit) {
-                console.warn("Too many lights in light cluster " + this.name + ", please adjust parameters." +
-                (this.reportCount == reportLimit - 1 ? " Giving up on reporting it." : ""));
+                console.warn('Too many lights in light cluster ' + this.name + ', please adjust parameters.' +
+                (this.reportCount == reportLimit - 1 ? ' Giving up on reporting it.' : ''));
                 this.reportCount++;
             }
         }

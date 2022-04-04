@@ -332,7 +332,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                Debug.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
+                Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
             }
 
             // Lazily create temp vars
@@ -508,7 +508,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        Debug.assert(Ammo.AllHitsRayResultCallback, "pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
+        Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -652,7 +652,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         if (entity.trigger) {
                             // handle a trigger entity
                             if (entityCollision) {
-                                entityCollision.fire("triggerleave", other);
+                                entityCollision.fire('triggerleave', other);
                             }
                             if (other.rigidbody) {
                                 other.rigidbody.fire('triggerleave', entity);
@@ -660,10 +660,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         } else if (!other.trigger) {
                             // suppress events if the other entity is a trigger
                             if (entityRigidbody) {
-                                entityRigidbody.fire("collisionend", other);
+                                entityRigidbody.fire('collisionend', other);
                             }
                             if (entityCollision) {
-                                entityCollision.fire("collisionend", other);
+                                entityCollision.fire('collisionend', other);
                             }
                         }
                     }
@@ -685,12 +685,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     _hasContactEvent(entity) {
         const c = entity.collision;
-        if (c && (c.hasEvent("collisionstart") || c.hasEvent("collisionend") || c.hasEvent("contact"))) {
+        if (c && (c.hasEvent('collisionstart') || c.hasEvent('collisionend') || c.hasEvent('contact'))) {
             return true;
         }
 
         const r = entity.rigidbody;
-        return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
+        return r && (r.hasEvent('collisionstart') || r.hasEvent('collisionend') || r.hasEvent('contact'));
     }
 
     /**
@@ -740,23 +740,23 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 if ((flags0 & BODYFLAG_NORESPONSE_OBJECT) ||
                     (flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
 
-                    const e0Events = e0.collision && (e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave"));
-                    const e1Events = e1.collision && (e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave"));
-                    const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent("triggerenter") || e0.rigidbody.hasEvent("triggerleave"));
-                    const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent("triggerenter") || e1.rigidbody.hasEvent("triggerleave"));
+                    const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
+                    const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
+                    const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
+                    const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
 
                     // fire triggerenter events for triggers
                     if (e0Events) {
                         newCollision = this._storeCollision(e0, e1);
                         if (newCollision && !(flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e0.collision.fire("triggerenter", e1);
+                            e0.collision.fire('triggerenter', e1);
                         }
                     }
 
                     if (e1Events) {
                         newCollision = this._storeCollision(e1, e0);
                         if (newCollision && !(flags0 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e1.collision.fire("triggerenter", e0);
+                            e1.collision.fire('triggerenter', e0);
                         }
                     }
 
@@ -767,7 +767,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         }
 
                         if (newCollision) {
-                            e0.rigidbody.fire("triggerenter", e1);
+                            e0.rigidbody.fire('triggerenter', e1);
                         }
                     }
 
@@ -777,13 +777,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         }
 
                         if (newCollision) {
-                            e1.rigidbody.fire("triggerenter", e0);
+                            e1.rigidbody.fire('triggerenter', e0);
                         }
                     }
                 } else {
                     const e0Events = this._hasContactEvent(e0);
                     const e1Events = this._hasContactEvent(e1);
-                    const globalEvents = this.hasEvent("contact");
+                    const globalEvents = this.hasEvent('contact');
 
                     if (globalEvents || e0Events || e1Events) {
                         for (let j = 0; j < numContacts; j++) {
@@ -799,7 +799,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             if (globalEvents) {
                                 // fire global contact event for every contact
                                 const result = this._createSingleContactResult(e0, e1, contactPoint);
-                                this.fire("contact", result);
+                                this.fire('contact', result);
                             }
                         }
 
@@ -808,16 +808,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             newCollision = this._storeCollision(e0, e1);
 
                             if (e0.collision) {
-                                e0.collision.fire("contact", forwardResult);
+                                e0.collision.fire('contact', forwardResult);
                                 if (newCollision) {
-                                    e0.collision.fire("collisionstart", forwardResult);
+                                    e0.collision.fire('collisionstart', forwardResult);
                                 }
                             }
 
                             if (e0.rigidbody) {
-                                e0.rigidbody.fire("contact", forwardResult);
+                                e0.rigidbody.fire('contact', forwardResult);
                                 if (newCollision) {
-                                    e0.rigidbody.fire("collisionstart", forwardResult);
+                                    e0.rigidbody.fire('collisionstart', forwardResult);
                                 }
                             }
                         }
@@ -827,16 +827,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             newCollision = this._storeCollision(e1, e0);
 
                             if (e1.collision) {
-                                e1.collision.fire("contact", reverseResult);
+                                e1.collision.fire('contact', reverseResult);
                                 if (newCollision) {
-                                    e1.collision.fire("collisionstart", reverseResult);
+                                    e1.collision.fire('collisionstart', reverseResult);
                                 }
                             }
 
                             if (e1.rigidbody) {
-                                e1.rigidbody.fire("contact", reverseResult);
+                                e1.rigidbody.fire('contact', reverseResult);
                                 if (newCollision) {
-                                    e1.rigidbody.fire("collisionstart", reverseResult);
+                                    e1.rigidbody.fire('collisionstart', reverseResult);
                                 }
                             }
                         }

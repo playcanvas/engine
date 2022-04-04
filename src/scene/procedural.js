@@ -1042,7 +1042,7 @@ function getShapePrimitive(device, type) {
                 break;
 
             default:
-                throw new Error("Invalid primitive type: " + type);
+                throw new Error('Invalid primitive type: ' + type);
         }
 
         // inc reference to keep primitive alive
