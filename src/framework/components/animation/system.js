@@ -7,7 +7,7 @@ import { AnimationComponentData } from './data.js';
 /** @typedef {import('../../app-base.js').Application} Application */
 
 const _schema = [
-    'enabled',
+    'enabled'
 ];
 
 /**
