@@ -1,4 +1,4 @@
-import { Application } from '../../../src/framework/app-base.js';
+import { Application } from '../../../src/framework/application.js';
 import { Color } from '../../../src/math/color.js';
 import { ComponentSystem } from '../../../src/framework/components/system.js';
 import { Vec2 } from '../../../src/math/vec2.js';

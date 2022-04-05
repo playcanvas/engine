@@ -1,4 +1,4 @@
-import { Application } from '../../../src/framework/app-base.js';
+import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { LAYERID_WORLD } from '../../../src/scene/constants.js';
 
