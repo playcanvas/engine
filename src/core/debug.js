@@ -17,6 +17,7 @@ class Debug {
      * Set storing names of enabled trace channels
      *
      * @type {Set<string>}
+     * @private
      */
     static _traceChannels = new Set();
 
