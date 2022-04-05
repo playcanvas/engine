@@ -15,7 +15,6 @@ class Component extends EventHandler {
      * The ComponentSystem used to create this Component.
      *
      * @type {ComponentSystem}
-     * @ignore
      */
     system;
 
@@ -23,7 +22,6 @@ class Component extends EventHandler {
      * The Entity that this Component is attached to.
      *
      * @type {Entity}
-     * @ignore
      */
     entity;
 
