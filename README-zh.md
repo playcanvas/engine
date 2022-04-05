@@ -124,11 +124,11 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 现在您就可以运行不同的搭建选项了：
 
-| Command           | Description                               | Outputs                          |
-| ----------------- | ----------------------------------------- | -------------------------------- |
-| `npm run build`   | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run tsd`     | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`    | Build engine [API reference docs][docs]   | `docs`                           |
+| Command               | Description                               | Outputs                          |
+|-----------------------|-------------------------------------------|----------------------------------|
+| `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
+| `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
+| `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
 
 您也可以使用 PlayCanvas 的预搭建版本
 
@@ -154,8 +154,6 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
     npm run build -- -m
 
 此条指令将会将结果输出到 `build/playcanvas.js.map`
-
-提示：在生成 source map 过程中，系统会忽略预处理器以防止其对过程产生影响。这意味着在生成 source map 的过程中，所有 debug 和 profiling 代码将会被包含在引擎构建中。
 
 ## PlayCanvas 平台
 

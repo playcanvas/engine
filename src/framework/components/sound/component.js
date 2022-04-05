@@ -40,13 +40,11 @@ class SoundComponent extends Component {
         /** @private */
         this._distanceModel = DISTANCE_LINEAR;
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * @type {Object.<string, SoundSlot>}
          * @private
          */
         this._slots = {};
-        /* eslint-enable jsdoc/check-types */
 
         /** @private */
         this._playingBeforeDisable = {};
@@ -210,7 +208,6 @@ class SoundComponent extends Component {
         return this._positional;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
      *
@@ -249,7 +246,6 @@ class SoundComponent extends Component {
     get slots() {
         return this._slots;
     }
-    /* eslint-enable jsdoc/check-types */
 
     onEnable() {
         // do not run if running in Editor

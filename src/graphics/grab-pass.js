@@ -14,7 +14,7 @@ class GrabPass {
     /**
      * Create a new GrabPass instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this grab pass.
+     * @param {GraphicsDevice} device - The graphics device used to manage this grab pass.
      * @param {boolean} useAlpha - Whether the grab pass should have an alpha channel.
      */
     constructor(device, useAlpha) {
@@ -92,7 +92,7 @@ class GrabPass {
 
         // render target currently being rendered to (these are null if default framebuffer is active)
         const renderTarget = device.renderTarget;
-        const resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+        const resolveRenderTarget = renderTarget && renderTarget.impl._glResolveFrameBuffer;
 
         const texture = this.texture;
         const width = device.width;
@@ -106,12 +106,12 @@ class GrabPass {
             }
 
             // these are null if rendering to default framebuffer
-            const currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
-            const resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+            const currentFrameBuffer = renderTarget ? renderTarget.impl._glFrameBuffer : null;
+            const resolvedFrameBuffer = renderTarget ? renderTarget.impl._glResolveFrameBuffer || renderTarget.impl._glFrameBuffer : null;
 
             // init grab pass framebuffer (only does it once)
             device.initRenderTarget(this.renderTarget);
-            const grabPassFrameBuffer = this.renderTarget._glFrameBuffer;
+            const grabPassFrameBuffer = this.renderTarget.impl._glFrameBuffer;
 
             // blit from currently used render target (or default framebuffer if null)
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
@@ -127,7 +127,7 @@ class GrabPass {
         } else {
             if (resolveRenderTarget) {
                 renderTarget.resolve(true);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget.impl._glResolveFrameBuffer);
             }
 
             // this allocates texture (texture was already bound to gl)
@@ -137,7 +137,7 @@ class GrabPass {
             texture._height = height;
 
             if (resolveRenderTarget) {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget.impl._glFrameBuffer);
             }
         }
 

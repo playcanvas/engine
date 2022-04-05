@@ -4,6 +4,7 @@ import { GlbParser } from './parser/glb-parser.js';
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 /** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 
 /**
  * @interface
@@ -117,15 +118,35 @@ class ContainerHandler {
         this.parsers = { };
     }
 
+    /**
+     * @param {string} url - The resource URL.
+     * @returns {string} The URL with query parameters removed.
+     * @private
+     */
     _getUrlWithoutParams(url) {
         return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
     }
 
+    /**
+     * @param {string} url - The resource URL.
+     * @returns {*} A suitable parser to parse the resource.
+     * @private
+     */
     _getParser(url) {
         const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
         return this.parsers[ext] || this.glbParser;
     }
 
+    /**
+     * @param {string|object} url - Either the URL of the resource to load or a structure
+     * containing the load and original URL.
+     * @param {string} [url.load] - The URL to be used for loading the resource.
+     * @param {string} [url.original] - The original URL to be used for identifying the resource
+     * format. This is necessary when loading, for example from blob.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
+     * an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     */
     load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
@@ -137,10 +158,20 @@ class ContainerHandler {
         this._getParser(url.original).load(url, callback, asset);
     }
 
+    /**
+     * @param {string} url - The URL of the resource to open.
+     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @returns {*} The parsed resource data.
+     */
     open(url, data, asset) {
         return this._getParser(url).open(url, data, asset);
     }
 
+    /**
+     * @param {Asset} asset - The asset to patch.
+     * @param {AssetRegistry} assets - The asset registry.
+     */
     patch(asset, assets) {
 
     }

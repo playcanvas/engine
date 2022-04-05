@@ -31,7 +31,7 @@ class TemplateHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error requesting template: " + url.original);
+                callback('Error requesting template: ' + url.original);
             } else {
                 callback(err, response);
             }

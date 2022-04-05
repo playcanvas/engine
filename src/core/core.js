@@ -4,8 +4,8 @@
  * @description Root namespace for the PlayCanvas Engine.
  */
 
-const version = "__CURRENT_SDK_VERSION__";
-const revision = "__REVISION__";
+const version = '__CURRENT_SDK_VERSION__';
+const revision = '__REVISION__';
 const config = { };
 const common = { };
 const apps = { }; // Storage for the applications using the PlayCanvas Engine
@@ -14,10 +14,10 @@ const data = { }; // Storage for exported entity data
 // Create look up table for types.
 const _typeLookup = function () {
     const result = { };
-    const names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
+    const names = ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'];
 
     for (let i = 0; i < names.length; i++)
-        result["[object " + names[i] + "]"] = names[i].toLowerCase();
+        result['[object ' + names[i] + ']'] = names[i].toLowerCase();
 
     return result;
 }();
@@ -31,12 +31,12 @@ const _typeLookup = function () {
  */
 function type(obj) {
     if (obj === null) {
-        return "null";
+        return 'null';
     }
 
     const type = typeof obj;
 
-    if (type === "undefined" || type === "number" || type === "string" || type === "boolean") {
+    if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
         return type;
     }
 
@@ -72,9 +72,9 @@ function extend(target, ex) {
     for (const prop in ex) {
         const copy = ex[prop];
 
-        if (type(copy) === "object") {
+        if (type(copy) === 'object') {
             target[prop] = extend({}, copy);
-        } else if (type(copy) === "array") {
+        } else if (type(copy) === 'array') {
             target[prop] = extend([], copy);
         } else {
             target[prop] = copy;

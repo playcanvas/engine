@@ -58,7 +58,7 @@ class LightCamera {
 
         let cookieCamera = LightCamera._spotCookieCamera;
         if (!cookieCamera) {
-            cookieCamera = LightCamera.create("SpotCookieCamera", LIGHTTYPE_SPOT);
+            cookieCamera = LightCamera.create('SpotCookieCamera', LIGHTTYPE_SPOT);
             LightCamera._spotCookieCamera = cookieCamera;
         }
 

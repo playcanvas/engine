@@ -10,7 +10,7 @@ import {
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
-/** @typedef {import('../app-base.js').AppBase} AppBase */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
@@ -41,7 +41,7 @@ class CanvasFont extends EventHandler {
     constructor(app, options = {}) {
         super();
 
-        this.type = "bitmap";
+        this.type = 'bitmap';
 
         this.app = app;
 
@@ -76,7 +76,7 @@ class CanvasFont extends EventHandler {
 
         this.textures = [texture];
 
-        this.chars = "";
+        this.chars = '';
         this.data = {};
     }
 
@@ -334,7 +334,7 @@ class CanvasFont extends EventHandler {
         }
 
         // alert text-elements that the font has been re-rendered
-        this.fire("render");
+        this.fire('render');
     }
 
     /**
@@ -347,18 +347,18 @@ class CanvasFont extends EventHandler {
      */
     _createJson(chars, fontName, width, height) {
         const base = {
-            "version": 3,
-            "intensity": this.intensity,
-            "info": {
-                "face": fontName,
-                "width": width,
-                "height": height,
-                "maps": [{
-                    "width": width,
-                    "height": height
+            'version': 3,
+            'intensity': this.intensity,
+            'info': {
+                'face': fontName,
+                'width': width,
+                'height': height,
+                'maps': [{
+                    'width': width,
+                    'height': height
                 }]
             },
-            "chars": {}
+            'chars': {}
         };
 
         return base;
@@ -382,25 +382,25 @@ class CanvasFont extends EventHandler {
      */
     _addChar(json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
         if (json.info.maps.length < mapNum + 1) {
-            json.info.maps.push({ "width": mapW, "height": mapH });
+            json.info.maps.push({ 'width': mapW, 'height': mapH });
         }
 
         const scale = this.fontSize / 32;
 
         json.chars[char] = {
-            "id": charCode,
-            "letter": char,
-            "x": x,
-            "y": y,
-            "width": w,
-            "height": h,
-            "xadvance": xadvance / scale,
-            "xoffset": xoffset / scale,
-            "yoffset": (yoffset + this.padding) / scale,
-            "scale": scale,
-            "range": 1,
-            "map": mapNum,
-            "bounds": [0, 0, w / scale, h / scale]
+            'id': charCode,
+            'letter': char,
+            'x': x,
+            'y': y,
+            'width': w,
+            'height': h,
+            'xadvance': xadvance / scale,
+            'xoffset': xoffset / scale,
+            'yoffset': (yoffset + this.padding) / scale,
+            'scale': scale,
+            'range': 1,
+            'map': mapNum,
+            'bounds': [0, 0, w / scale, h / scale]
         };
     }
 
@@ -444,7 +444,7 @@ class CanvasFont extends EventHandler {
         textSpan.id = 'content-span';
         textSpan.innerHTML = text;
 
-        const block = document.createElement("div");
+        const block = document.createElement('div');
         block.id = 'content-block';
         block.style.display = 'inline-block';
         block.style.width = '1px';

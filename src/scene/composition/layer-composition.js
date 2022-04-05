@@ -14,6 +14,7 @@ import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 
 const tempSet = new Set();
@@ -23,16 +24,6 @@ const tempClusterArray = [];
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
  * rendering order.
  *
- * @property {Layer[]} layerList A read-only array of {@link Layer} sorted in the order they will
- * be rendered.
- * @property {boolean[]} subLayerList A read-only array of boolean values, matching
- * {@link Layer#layerList}. True means only semi-transparent objects are rendered, and false means
- * opaque.
- * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching
- * {@link Layer#layerList}. True means the layer is rendered, false means it's skipped.
- * @property {CameraComponent[]} cameras A read-only array of {@link CameraComponent} that can be
- * used during rendering. e.g. Inside {@link Layer#onPreCull}, {@link Layer#onPostCull},
- * {@link Layer#onPreRender}, {@link Layer#onPostRender}.
  * @augments EventHandler
  */
 class LayerComposition extends EventHandler {
@@ -44,7 +35,7 @@ class LayerComposition extends EventHandler {
      * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
      * "Untitled" if not specified.
      */
-    constructor(name = "Untitled") {
+    constructor(name = 'Untitled') {
         super();
 
         this.name = name;
@@ -52,11 +43,29 @@ class LayerComposition extends EventHandler {
         // enable logging
         this.logRenderActions = false;
 
-        // all layers added into the composition
+        /**
+         * A read-only array of {@link Layer} sorted in the order they will be rendered.
+         *
+         * @type {Layer[]}
+         */
         this.layerList = [];
 
+        /**
+         * A read-only array of boolean values, matching {@link Layer#layerList}. True means only
+         * semi-transparent objects are rendered, and false means opaque.
+         *
+         * @type {boolean[]}
+         */
         this.subLayerList = [];
+
+        /**
+         * A read-only array of boolean values, matching {@link Layer#layerList}. True means the
+         * layer is rendered, false means it's skipped.
+         *
+         * @type {boolean[]}
+         */
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+
         this._opaqueOrder = {};
         this._transparentOrder = {};
 
@@ -82,7 +91,13 @@ class LayerComposition extends EventHandler {
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
 
-        // array of unique cameras from all layers (CameraComponent type)
+        /**
+         * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
+         * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
+         * {@link Layer#onPostRender}.
+         *
+         * @type {CameraComponent[]}
+         */
         this.cameras = [];
 
         // the actual rendering sequence, generated based on layers and cameras
@@ -115,7 +130,7 @@ class LayerComposition extends EventHandler {
 
             // create cluster structure with no lights
             this._emptyWorldClusters = new WorldClusters(device);
-            this._emptyWorldClusters.name = "ClusterEmpty";
+            this._emptyWorldClusters.name = 'ClusterEmpty';
 
             // update it once to avoid doing it each frame
             this._emptyWorldClusters.update([], false, null);
@@ -529,7 +544,7 @@ class LayerComposition extends EventHandler {
                             clusters = new WorldClusters(device);
                         }
 
-                        clusters.name = "Cluster-" + this._worldClusters.length;
+                        clusters.name = 'Cluster-' + this._worldClusters.length;
                         this._worldClusters.push(clusters);
                     }
 
@@ -649,7 +664,7 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (this.logRenderActions) {
-            Debug.log("Render Actions for composition: " + this.name);
+            Debug.log('Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -658,22 +673,22 @@ class LayerComposition extends EventHandler {
                 const transparent = this.subLayerList[layerIndex];
                 const camera = layer.cameras[ra.cameraIndex];
                 const dirLightCount = ra.directionalLights.length;
-                const clear = (ra.clearColor ? "Color " : "..... ") + (ra.clearDepth ? "Depth " : "..... ") + (ra.clearStencil ? "Stencil" : ".......");
+                const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
                 Debug.log(i +
-                    (" Cam: " + (camera ? camera.entity.name : "-")).padEnd(22, " ") +
-                    (" Lay: " + layer.name).padEnd(22, " ") +
-                    (transparent ? " TRANSP" : " OPAQUE") +
-                    (enabled ? " ENABLED " : " DISABLED") +
-                    " Meshes: ", (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
-                    (" RT: " + (ra.renderTarget ? ra.renderTarget.name : "-")).padEnd(30, " ") +
-                    " Clear: " + clear +
-                    " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
-                    " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
-                    (ra.firstCameraUse ? " CAM-FIRST" : "") +
-                    (ra.lastCameraUse ? " CAM-LAST" : "") +
-                    (ra.triggerPostprocess ? " POSTPROCESS" : "") +
-                    (dirLightCount ? (" DirLights: " + dirLightCount) : "")
+                    (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
+                    (' Lay: ' + layer.name).padEnd(22, ' ') +
+                    (transparent ? ' TRANSP' : ' OPAQUE') +
+                    (enabled ? ' ENABLED ' : ' DISABLED') +
+                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
+                    (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
+                    ' Clear: ' + clear +
+                    ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
+                    ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
+                    (ra.firstCameraUse ? ' CAM-FIRST' : '') +
+                    (ra.lastCameraUse ? ' CAM-LAST' : '') +
+                    (ra.triggerPostprocess ? ' POSTPROCESS' : '') +
+                    (dirLightCount ? (' DirLights: ' + dirLightCount) : '')
                 );
             }
         }
@@ -682,7 +697,7 @@ class LayerComposition extends EventHandler {
 
     _isLayerAdded(layer) {
         if (this.layerList.indexOf(layer) >= 0) {
-            Debug.error("Layer is already added.");
+            Debug.error('Layer is already added.');
             return true;
         }
         return false;
@@ -691,7 +706,7 @@ class LayerComposition extends EventHandler {
     _isSublayerAdded(layer, transparent) {
         for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                Debug.error("Sublayer is already added.");
+                Debug.error('Sublayer is already added.');
                 return true;
             }
         }
@@ -717,7 +732,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -740,7 +755,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -763,7 +778,7 @@ class LayerComposition extends EventHandler {
             this._dirty = true;
             this._dirtyLights = true;
             this._dirtyCameras = true;
-            this.fire("remove", layer);
+            this.fire('remove', layer);
         }
 
         // update both orders
@@ -789,7 +804,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -812,7 +827,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -836,7 +851,7 @@ class LayerComposition extends EventHandler {
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
-                    this.fire("remove", layer); // no sublayers left
+                    this.fire('remove', layer); // no sublayers left
                 }
                 return;
             }
@@ -857,7 +872,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -879,7 +894,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -902,7 +917,7 @@ class LayerComposition extends EventHandler {
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
-                    this.fire("remove", layer); // no sublayers left
+                    this.fire('remove', layer); // no sublayers left
                 }
                 return;
             }

@@ -10,13 +10,11 @@ class IndexedList {
      */
     _list = [];
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, number>}
      * @private
      */
     _index = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Add a new item into the list with a index key.
@@ -26,7 +24,7 @@ class IndexedList {
      */
     push(key, item) {
         if (this._index[key]) {
-            throw Error("Key already in index " + key);
+            throw Error('Key already in index ' + key);
         }
         const location = this._list.push(item) - 1;
         this._index[key] = location;

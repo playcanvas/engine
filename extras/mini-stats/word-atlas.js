@@ -8,9 +8,9 @@ class WordAtlas {
         // configure the context
         const context = canvas.getContext('2d', { alpha: true });
         context.font = '10px "Lucida Console", Monaco, monospace';
-        context.textAlign = "left";
-        context.textBaseline = "alphabetic";
-        context.fillStyle = "rgb(255, 255, 255)";
+        context.textAlign = 'left';
+        context.textBaseline = 'alphabetic';
+        context.fillStyle = 'rgb(255, 255, 255)';
 
         const padding = 5;
         let x = padding;
@@ -36,7 +36,7 @@ class WordAtlas {
             }
 
             // digits and '.' are white, the rest grey
-            context.fillStyle = words[i].length === 1 ? "rgb(255, 255, 255)" : "rgb(150, 150, 150)";
+            context.fillStyle = words[i].length === 1 ? 'rgb(255, 255, 255)' : 'rgb(150, 150, 150)';
 
             // render the word
             context.fillText(words[i], x - l, y + a);

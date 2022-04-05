@@ -10,7 +10,7 @@ class DeviceCache {
     /**
      * Cache storing the resource for each GraphicsDevice
      *
-     * @type {Map<GraphicsDevice, any}
+     * @type {Map<GraphicsDevice, any>}
      */
     _cache = new Map();
 
@@ -27,12 +27,21 @@ class DeviceCache {
 
             // when the device is destroyed, destroy and remove its entry
             device.on('destroy', () => {
-                this._cache.get(device)?.destroy();
-                this._cache.delete(device);
+                this.remove(device);
             });
         }
 
         return this._cache.get(device);
+    }
+
+    /**
+     * Destroyes and removes the content of the cache associated with the device
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     */
+    remove(device) {
+        this._cache.get(device)?.destroy();
+        this._cache.delete(device);
     }
 }
 

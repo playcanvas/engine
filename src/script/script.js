@@ -54,7 +54,7 @@ const reservedScriptNames = new Set([
  */
 function createScript(name, app) {
     if (script.legacy) {
-        Debug.error("This project is using the legacy script system. You cannot call pc.createScript().");
+        Debug.error('This project is using the legacy script system. You cannot call pc.createScript().');
         return null;
     }
 
@@ -123,7 +123,7 @@ createScript.reservedAttributes = reservedAttributes;
  */
 function registerScript(script, name, app) {
     if (script.legacy) {
-        Debug.error("This project is using the legacy script system. You cannot call pc.registerScript().");
+        Debug.error('This project is using the legacy script system. You cannot call pc.registerScript().');
         return;
     }
 

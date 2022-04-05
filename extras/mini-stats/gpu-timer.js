@@ -11,7 +11,7 @@ class GpuTimer {
         this._prevTimings = [];
 
         this.enabled = true;
-        this.unitsName = "ms";
+        this.unitsName = 'ms';
         this.decimalPlaces = 1;
 
         app.on('frameupdate', this.begin.bind(this, 'update'));
@@ -100,7 +100,7 @@ class GpuTimer {
     // either returns a previously free'd query or if there aren't any allocates a new one
     _allocateQuery() {
         return (this._freeQueries.length > 0) ?
-            this._freeQueries.splice(-1, 1)[0] : ["", this._gl.createQuery()];
+            this._freeQueries.splice(-1, 1)[0] : ['', this._gl.createQuery()];
     }
 
     // attempt to resolve one frame's worth of timings

@@ -105,6 +105,7 @@ const standard = {
             }
             return chan;
         }
+        return undefined;
     },
 
     _setMapTransform: function (codes, name, id, uv) {
@@ -388,6 +389,7 @@ const standard = {
 
         code += varyings;
         if (options.alphaTest) {
+            code += "uniform float textureBias;";
             code += "float dAlpha;\n";
             code += this._addMap("opacity", "opacityPS", options, chunks);
             code += chunks.alphaTestPS;
@@ -811,6 +813,7 @@ const standard = {
             code += "uniform vec4 uColor;\n";
             code += varyings;
             if (options.alphaTest) {
+                code += "uniform float textureBias;";
                 code += "float dAlpha;\n";
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
@@ -834,6 +837,7 @@ const standard = {
             code += varyings;
             code += chunks.packDepthPS;
             if (options.alphaTest) {
+                code += "uniform float textureBias;";
                 code += "float dAlpha;\n";
                 code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
@@ -1122,6 +1126,7 @@ const standard = {
         const useAo = options.aoMap || options.aoVertexColor;
         if (useAo) {
             code += this._addMap("ao", "aoPS", options, chunks);
+            code += chunks.aoDiffuseOccPS;
             if (options.occludeSpecular) {
                 if (options.occludeSpecular === SPECOCC_AO) {
                     code += options.occludeSpecularFloat ? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
@@ -1412,6 +1417,10 @@ const standard = {
             }
 
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
+
+            if (useAo) {
+                code += "  getAO();\n";
+            }
         }
 
         if (addAmbient) {
@@ -1429,7 +1438,7 @@ const standard = {
             code += "   dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
-            code += "    applyAO();\n";
+            code += "    occludeDiffuse();\n";
         }
         if (options.lightMap || options.lightVertexColor) {
             code += "   addLightMap();\n";
@@ -1656,7 +1665,7 @@ const standard = {
 
         if (useAo) {
             if (options.occludeDirect) {
-                code += "    applyAO();\n";
+                code += "    occludeDiffuse();\n";
             }
             if (options.occludeSpecular) {
                 code += "    occludeSpecular();\n";

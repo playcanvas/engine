@@ -35,7 +35,7 @@ describe('AssetRegistry', function () {
     describe('#add', function () {
 
         it('adds an asset', function () {
-            const asset = new Asset("Test Asset", 'text', {
+            const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
             app.assets.add(asset);
@@ -50,14 +50,14 @@ describe('AssetRegistry', function () {
     describe('#find', function () {
 
         it('works after removing an asset', function () {
-            const asset1 = new Asset("Asset 1", "text", {
-                url: "fake/one/file.txt"
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
             });
-            const asset2 = new Asset("Asset 2", "text", {
-                url: "fake/two/file.txt"
+            const asset2 = new Asset('Asset 2', 'text', {
+                url: 'fake/two/file.txt'
             });
-            const asset3 = new Asset("Asset 3", "text", {
-                url: "fake/three/file.txt"
+            const asset3 = new Asset('Asset 3', 'text', {
+                url: 'fake/three/file.txt'
             });
 
             app.assets.add(asset1);
@@ -76,7 +76,7 @@ describe('AssetRegistry', function () {
     describe('#get', function () {
 
         it('retrieves an asset by id', function () {
-            const asset = new Asset("Test Asset", 'text', {
+            const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
             app.assets.add(asset);
@@ -91,7 +91,7 @@ describe('AssetRegistry', function () {
     describe('#getByUrl', function () {
 
         it('retrieves an asset by url', function () {
-            const asset = new Asset("Test Asset", 'text', {
+            const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
             app.assets.add(asset);
@@ -102,14 +102,14 @@ describe('AssetRegistry', function () {
         });
 
         it('works after removing an asset', function () {
-            const asset1 = new Asset("Asset 1", "text", {
-                url: "fake/one/file.txt"
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
             });
-            const asset2 = new Asset("Asset 2", "text", {
-                url: "fake/two/file.txt"
+            const asset2 = new Asset('Asset 2', 'text', {
+                url: 'fake/two/file.txt'
             });
-            const asset3 = new Asset("Asset 3", "text", {
-                url: "fake/three/file.txt"
+            const asset3 = new Asset('Asset 3', 'text', {
+                url: 'fake/three/file.txt'
             });
 
             app.assets.add(asset1);
@@ -128,14 +128,14 @@ describe('AssetRegistry', function () {
     describe('#list', function () {
 
         it('lists all assets', function () {
-            const asset1 = new Asset("Asset 1", "text", {
-                url: "fake/one/file.txt"
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
             });
-            const asset2 = new Asset("Asset 2", "text", {
-                url: "fake/two/file.txt"
+            const asset2 = new Asset('Asset 2', 'text', {
+                url: 'fake/two/file.txt'
             });
-            const asset3 = new Asset("Asset 3", "text", {
-                url: "fake/three/file.txt"
+            const asset3 = new Asset('Asset 3', 'text', {
+                url: 'fake/three/file.txt'
             });
 
             app.assets.add(asset1);
@@ -233,14 +233,14 @@ describe('AssetRegistry', function () {
     describe('#remove', function () {
 
         it('removes by id', function () {
-            const asset1 = new Asset("Asset 1", "text", {
-                url: "fake/one/file.txt"
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
             });
-            const asset2 = new Asset("Asset 2", "text", {
-                url: "fake/two/file.txt"
+            const asset2 = new Asset('Asset 2', 'text', {
+                url: 'fake/two/file.txt'
             });
-            const asset3 = new Asset("Asset 3", "text", {
-                url: "fake/three/file.txt"
+            const asset3 = new Asset('Asset 3', 'text', {
+                url: 'fake/three/file.txt'
             });
 
             app.assets.add(asset1);

@@ -73,7 +73,7 @@ class ReadStream {
 
     readLine() {
         const view = this.dataView;
-        let result = "";
+        let result = '';
         while (true) {
             if (this.offset >= view.byteLength) {
                 break;

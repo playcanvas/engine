@@ -4,8 +4,9 @@
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
+ * Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
+ *
  * @callback ResourceLoaderCallback
- * @description Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
  * @param {string|null} err - The error message in the case where the load fails.
  * @param {*} [resource] - The resource that has been successfully loaded.
  */
@@ -98,7 +99,7 @@ class ResourceLoader {
     load(url, type, callback, asset) {
         const handler = this._handlers[type];
         if (!handler) {
-            const err = "No handler for asset type: " + type;
+            const err = 'No handler for asset type: ' + type;
             callback(err);
             return;
         }
@@ -216,7 +217,7 @@ class ResourceLoader {
     open(type, data) {
         const handler = this._handlers[type];
         if (!handler) {
-            console.warn("No resource handler found for: " + type);
+            console.warn('No resource handler found for: ' + type);
             return data;
         }
 
@@ -234,7 +235,7 @@ class ResourceLoader {
     patch(asset, assets) {
         const handler = this._handlers[asset.type];
         if (!handler)  {
-            console.warn("No resource handler found for: " + asset.type);
+            console.warn('No resource handler found for: ' + asset.type);
             return;
         }
 
@@ -264,6 +265,7 @@ class ResourceLoader {
         if (this._cache[url + type]) {
             return this._cache[url + type];
         }
+        return undefined;
     }
 
     /**

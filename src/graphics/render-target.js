@@ -88,9 +88,6 @@ class RenderTarget {
             this._colorBuffer._isRenderTarget = true;
         }
 
-        this._glFrameBuffer = null;
-        this._glDepthBuffer = null;
-
         // Process optional arguments
         options = (options !== undefined) ? options : defaultOptions;
         this._depthBuffer = options.depthBuffer;
@@ -120,9 +117,6 @@ class RenderTarget {
 
         this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
         this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
-        this._glResolveFrameBuffer = null;
-        this._glMsaaColorBuffer = null;
-        this._glMsaaDepthBuffer = null;
 
         // use specified name, otherwise get one from color or depth buffer
         this.name = options.name;
@@ -138,6 +132,9 @@ class RenderTarget {
 
         // render image flipped in Y
         this.flipY = !!options.flipY;
+
+        // device specific implementation
+        this.impl = this._device.createRenderTargetImpl(this);
     }
 
     /**
@@ -157,7 +154,7 @@ class RenderTarget {
     }
 
     /**
-     * Free WebGL resources associated with this render target.
+     * Free device resources associated with this render target.
      *
      * @ignore
      */
@@ -165,31 +162,7 @@ class RenderTarget {
 
         const device = this._device;
         if (device) {
-            const gl = device.gl;
-            if (this._glFrameBuffer) {
-                gl.deleteFramebuffer(this._glFrameBuffer);
-                this._glFrameBuffer = null;
-            }
-
-            if (this._glDepthBuffer) {
-                gl.deleteRenderbuffer(this._glDepthBuffer);
-                this._glDepthBuffer = null;
-            }
-
-            if (this._glResolveFrameBuffer) {
-                gl.deleteFramebuffer(this._glResolveFrameBuffer);
-                this._glResolveFrameBuffer = null;
-            }
-
-            if (this._glMsaaColorBuffer) {
-                gl.deleteRenderbuffer(this._glMsaaColorBuffer);
-                this._glMsaaColorBuffer = null;
-            }
-
-            if (this._glMsaaDepthBuffer) {
-                gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
-                this._glMsaaDepthBuffer = null;
-            }
+            this.impl.destroy(device);
         }
     }
 
@@ -212,16 +185,21 @@ class RenderTarget {
     }
 
     /**
-     * Called when the WebGL context was lost. It releases all context related resources.
+     * Initialises the resources associated with this render target.
+     *
+     * @ignore
+     */
+    init() {
+        this.impl.init(this._device, this);
+    }
+
+    /**
+     * Called when the device context was lost. It releases all context related resources.
      *
      * @ignore
      */
     loseContext() {
-        this._glFrameBuffer = undefined;
-        this._glDepthBuffer = undefined;
-        this._glResolveFrameBuffer = undefined;
-        this._glMsaaColorBuffer = undefined;
-        this._glMsaaDepthBuffer = undefined;
+        this.impl.loseContext();
     }
 
     /**
@@ -239,17 +217,9 @@ class RenderTarget {
      * depth buffer.
      */
     resolve(color = true, depth = !!this._depthBuffer) {
-        if (!this._device) return;
-        if (!this._device.webgl2) return;
-
-        const gl = this._device.gl;
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
-        gl.blitFramebuffer(0, 0, this.width, this.height,
-                           0, 0, this.width, this.height,
-                           (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                           gl.NEAREST);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
+        if (this._device) {
+            this.impl.resolve(this._device, this, color, depth);
+        }
     }
 
     /**

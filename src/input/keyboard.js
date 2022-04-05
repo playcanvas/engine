@@ -28,7 +28,7 @@ function makeKeyboardEvent(event) {
  * @ignore
  */
 function toKeyCode(s) {
-    if (typeof s === "string") {
+    if (typeof s === 'string') {
         return s.toUpperCase().charCodeAt(0);
     }
     return s;
@@ -132,7 +132,7 @@ class Keyboard extends EventHandler {
     /**
      * Attach the keyboard event handlers to an Element.
      *
-     * @param {Element} element - The element to listen for keyboard events on.
+     * @param {Element|Window} element - The element to listen for keyboard events on.
      */
     attach(element) {
         if (this._element) {
@@ -141,9 +141,9 @@ class Keyboard extends EventHandler {
         }
 
         this._element = element;
-        this._element.addEventListener("keydown", this._keyDownHandler, false);
-        this._element.addEventListener("keypress", this._keyPressHandler, false);
-        this._element.addEventListener("keyup", this._keyUpHandler, false);
+        this._element.addEventListener('keydown', this._keyDownHandler, false);
+        this._element.addEventListener('keypress', this._keyPressHandler, false);
+        this._element.addEventListener('keyup', this._keyUpHandler, false);
         document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.addEventListener('blur', this._windowBlurHandler, false);
     }
@@ -157,9 +157,9 @@ class Keyboard extends EventHandler {
             return;
         }
 
-        this._element.removeEventListener("keydown", this._keyDownHandler);
-        this._element.removeEventListener("keypress", this._keyPressHandler);
-        this._element.removeEventListener("keyup", this._keyUpHandler);
+        this._element.removeEventListener('keydown', this._keyDownHandler);
+        this._element.removeEventListener('keypress', this._keyPressHandler);
+        this._element.removeEventListener('keyup', this._keyUpHandler);
         this._element = null;
 
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -207,7 +207,7 @@ class Keyboard extends EventHandler {
 
         this._keymap[id] = true;
 
-        this.fire("keydown", makeKeyboardEvent(event));
+        this.fire('keydown', makeKeyboardEvent(event));
 
         if (this.preventDefault) {
             event.preventDefault();
@@ -233,7 +233,7 @@ class Keyboard extends EventHandler {
 
         delete this._keymap[id];
 
-        this.fire("keyup", makeKeyboardEvent(event));
+        this.fire('keyup', makeKeyboardEvent(event));
 
         if (this.preventDefault) {
             event.preventDefault();
@@ -250,7 +250,7 @@ class Keyboard extends EventHandler {
      * @private
      */
     _handleKeyPress(event) {
-        this.fire("keypress", makeKeyboardEvent(event));
+        this.fire('keypress', makeKeyboardEvent(event));
 
         if (this.preventDefault) {
             event.preventDefault();

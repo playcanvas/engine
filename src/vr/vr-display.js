@@ -118,8 +118,8 @@ class VrDisplay extends EventHandler {
                 this.presenting = (this.display && this.display.isPresenting);
 
                 if (this.presenting) {
-                    const leftEye = this.display.getEyeParameters("left");
-                    const rightEye = this.display.getEyeParameters("right");
+                    const leftEye = this.display.getEyeParameters('left');
+                    const rightEye = this.display.getEyeParameters('right');
                     const w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
                     const h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
                     // set canvas resolution to the display resolution
@@ -258,12 +258,12 @@ class VrDisplay extends EventHandler {
      */
     requestPresent(callback) {
         if (!this.display) {
-            if (callback) callback(new Error("No VrDisplay to requestPresent"));
+            if (callback) callback(new Error('No VrDisplay to requestPresent'));
             return;
         }
 
         if (this.presenting) {
-            if (callback) callback(new Error("VrDisplay already presenting"));
+            if (callback) callback(new Error('VrDisplay already presenting'));
             return;
         }
 
@@ -284,18 +284,18 @@ class VrDisplay extends EventHandler {
      */
     exitPresent(callback) {
         if (!this.display) {
-            if (callback) callback(new Error("No VrDisplay to exitPresent"));
+            if (callback) callback(new Error('No VrDisplay to exitPresent'));
         }
 
         if (!this.presenting) {
-            if (callback) callback(new Error("VrDisplay not presenting"));
+            if (callback) callback(new Error('VrDisplay not presenting'));
             return;
         }
 
         this.display.exitPresent().then(function () {
             if (callback) callback();
         }, function () {
-            if (callback) callback(new Error("exitPresent failed"));
+            if (callback) callback(new Error('exitPresent failed'));
         });
     }
 
@@ -353,6 +353,7 @@ class VrDisplay extends EventHandler {
      */
     getFrameData() {
         if (this.display) return this._frameData;
+        return undefined;
     }
 
     /**

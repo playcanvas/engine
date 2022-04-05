@@ -29,23 +29,23 @@ import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 
 const JSON_PRIMITIVE_TYPE = {
-    "points": PRIMITIVE_POINTS,
-    "lines": PRIMITIVE_LINES,
-    "lineloop": PRIMITIVE_LINELOOP,
-    "linestrip": PRIMITIVE_LINESTRIP,
-    "triangles": PRIMITIVE_TRIANGLES,
-    "trianglestrip": PRIMITIVE_TRISTRIP,
-    "trianglefan": PRIMITIVE_TRIFAN
+    'points': PRIMITIVE_POINTS,
+    'lines': PRIMITIVE_LINES,
+    'lineloop': PRIMITIVE_LINELOOP,
+    'linestrip': PRIMITIVE_LINESTRIP,
+    'triangles': PRIMITIVE_TRIANGLES,
+    'trianglestrip': PRIMITIVE_TRISTRIP,
+    'trianglefan': PRIMITIVE_TRIFAN
 };
 
 const JSON_VERTEX_ELEMENT_TYPE = {
-    "int8": TYPE_INT8,
-    "uint8": TYPE_UINT8,
-    "int16": TYPE_INT16,
-    "uint16": TYPE_UINT16,
-    "int32": TYPE_INT32,
-    "uint32": TYPE_UINT32,
-    "float32": TYPE_FLOAT32
+    'int8': TYPE_INT8,
+    'uint8': TYPE_UINT8,
+    'int16': TYPE_INT16,
+    'uint16': TYPE_UINT16,
+    'int32': TYPE_INT32,
+    'uint32': TYPE_UINT32,
+    'float32': TYPE_FLOAT32
 };
 
 // Take PlayCanvas JSON model data and create pc.Model
@@ -62,7 +62,7 @@ class JsonModelParser {
         }
 
         if (modelData.version <= 1) {
-            Debug.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
+            Debug.warn('JsonModelParser#parse: Trying to parse unsupported model format.');
             return null;
         }
 

@@ -52,7 +52,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AnimComponent} attached to this entity.
      *
-     * @type {AnimComponent}
+     * @type {AnimComponent|undefined}
      * @readonly
      */
     anim;
@@ -60,7 +60,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AnimationComponent} attached to this entity.
      *
-     * @type {AnimationComponent}
+     * @type {AnimationComponent|undefined}
      * @readonly
      */
     animation;
@@ -68,7 +68,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AudioListenerComponent} attached to this entity.
      *
-     * @type {AudioListenerComponent}
+     * @type {AudioListenerComponent|undefined}
      * @readonly
      */
     audiolistener;
@@ -76,7 +76,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ButtonComponent} attached to this entity.
      *
-     * @type {ButtonComponent}
+     * @type {ButtonComponent|undefined}
      * @readonly
      */
     button;
@@ -84,7 +84,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link CameraComponent} attached to this entity.
      *
-     * @type {CameraComponent}
+     * @type {CameraComponent|undefined}
      * @readonly
      */
     camera;
@@ -92,7 +92,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link CollisionComponent} attached to this entity.
      *
-     * @type {CollisionComponent}
+     * @type {CollisionComponent|undefined}
      * @readonly
      */
     collision;
@@ -100,7 +100,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ElementComponent} attached to this entity.
      *
-     * @type {ElementComponent}
+     * @type {ElementComponent|undefined}
      * @readonly
      */
     element;
@@ -108,7 +108,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
      *
-     * @type {LayoutChildComponent}
+     * @type {LayoutChildComponent|undefined}
      * @readonly
      */
     layoutchild;
@@ -116,7 +116,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LayoutGroupComponent} attached to this entity.
      *
-     * @type {LayoutGroupComponent}
+     * @type {LayoutGroupComponent|undefined}
      * @readonly
      */
     layoutgroup;
@@ -124,7 +124,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LightComponent} attached to this entity.
      *
-     * @type {LightComponent}
+     * @type {LightComponent|undefined}
      * @readonly
      */
     light;
@@ -132,7 +132,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ModelComponent} attached to this entity.
      *
-     * @type {ModelComponent}
+     * @type {ModelComponent|undefined}
      * @readonly
      */
     model;
@@ -140,7 +140,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ParticleSystemComponent} attached to this entity.
      *
-     * @type {ParticleSystemComponent}
+     * @type {ParticleSystemComponent|undefined}
      * @readonly
      */
     particlesystem;
@@ -148,7 +148,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link RenderComponent} attached to this entity.
      *
-     * @type {RenderComponent}
+     * @type {RenderComponent|undefined}
      * @readonly
      */
     render;
@@ -156,7 +156,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link RigidBodyComponent} attached to this entity.
      *
-     * @type {RigidBodyComponent}
+     * @type {RigidBodyComponent|undefined}
      * @readonly
      */
     rigidbody;
@@ -164,7 +164,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScreenComponent} attached to this entity.
      *
-     * @type {ScreenComponent}
+     * @type {ScreenComponent|undefined}
      * @readonly
      */
     screen;
@@ -172,7 +172,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScriptComponent} attached to this entity.
      *
-     * @type {ScriptComponent}
+     * @type {ScriptComponent|undefined}
      * @readonly
      */
     script;
@@ -180,7 +180,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScrollbarComponent} attached to this entity.
      *
-     * @type {ScrollbarComponent}
+     * @type {ScrollbarComponent|undefined}
      * @readonly
      */
     scrollbar;
@@ -188,7 +188,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScrollViewComponent} attached to this entity.
      *
-     * @type {ScrollViewComponent}
+     * @type {ScrollViewComponent|undefined}
      * @readonly
      */
     scrollview;
@@ -196,7 +196,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link SoundComponent} attached to this entity.
      *
-     * @type {SoundComponent}
+     * @type {SoundComponent|undefined}
      * @readonly
      */
     sound;
@@ -204,12 +204,11 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link SpriteComponent} attached to this entity.
      *
-     * @type {SpriteComponent}
+     * @type {SpriteComponent|undefined}
      * @readonly
      */
     sprite;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * Component storage.
      *
@@ -217,7 +216,6 @@ class Entity extends GraphNode {
      * @ignore
      */
     c = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {AppBase}
@@ -604,7 +602,6 @@ class Entity extends GraphNode {
         return clone;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @param {Object.<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
@@ -631,7 +628,6 @@ class Entity extends GraphNode {
 
         return clone;
     }
-    /* eslint-enable jsdoc/check-types */
 }
 
 // When an entity that has properties that contain references to other

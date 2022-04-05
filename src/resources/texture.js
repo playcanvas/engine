@@ -21,25 +21,25 @@ import { HdrParser } from './parser/texture/hdr.js';
 /** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 
 const JSON_ADDRESS_MODE = {
-    "repeat": ADDRESS_REPEAT,
-    "clamp": ADDRESS_CLAMP_TO_EDGE,
-    "mirror": ADDRESS_MIRRORED_REPEAT
+    'repeat': ADDRESS_REPEAT,
+    'clamp': ADDRESS_CLAMP_TO_EDGE,
+    'mirror': ADDRESS_MIRRORED_REPEAT
 };
 
 const JSON_FILTER_MODE = {
-    "nearest": FILTER_NEAREST,
-    "linear": FILTER_LINEAR,
-    "nearest_mip_nearest": FILTER_NEAREST_MIPMAP_NEAREST,
-    "linear_mip_nearest": FILTER_LINEAR_MIPMAP_NEAREST,
-    "nearest_mip_linear": FILTER_NEAREST_MIPMAP_LINEAR,
-    "linear_mip_linear": FILTER_LINEAR_MIPMAP_LINEAR
+    'nearest': FILTER_NEAREST,
+    'linear': FILTER_LINEAR,
+    'nearest_mip_nearest': FILTER_NEAREST_MIPMAP_NEAREST,
+    'linear_mip_nearest': FILTER_LINEAR_MIPMAP_NEAREST,
+    'nearest_mip_linear': FILTER_NEAREST_MIPMAP_LINEAR,
+    'linear_mip_linear': FILTER_LINEAR_MIPMAP_LINEAR
 };
 
 const JSON_TEXTURE_TYPE = {
-    "default": TEXTURETYPE_DEFAULT,
-    "rgbm": TEXTURETYPE_RGBM,
-    "rgbe": TEXTURETYPE_RGBE,
-    "swizzleGGGR": TEXTURETYPE_SWIZZLEGGGR
+    'default': TEXTURETYPE_DEFAULT,
+    'rgbm': TEXTURETYPE_RGBM,
+    'rgbe': TEXTURETYPE_RGBE,
+    'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
 };
 
 /**
@@ -71,7 +71,6 @@ class TextureParser {
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
@@ -234,7 +233,7 @@ class TextureHandler {
 
     open(url, data, asset) {
         if (!url)
-            return;
+            return undefined;
 
         let texture = this._getParser(url).open(url, data, this._device);
 

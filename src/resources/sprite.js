@@ -97,7 +97,7 @@ class SpriteHandler {
                 if (atlas) {
                     asset.data.textureAtlasAsset = atlas.id;
                 } else {
-                    console.warn("Could not find textureatlas with url: " + sprite.__data.textureAtlasAsset);
+                    console.warn('Could not find textureatlas with url: ' + sprite.__data.textureAtlasAsset);
                 }
             }
 

@@ -291,7 +291,6 @@ class AppBase extends EventHandler {
 
         LightsBuffer.init(this.graphicsDevice);
 
-        /* eslint-disable jsdoc/check-types */
         /**
          * Stores all entities that have been created for this app by guid.
          *
@@ -299,7 +298,6 @@ class AppBase extends EventHandler {
          * @ignore
          */
         this._entityIndex = {};
-        /* eslint-enable jsdoc/check-types */
 
         /**
          * The scene managed by the application.
@@ -445,7 +443,7 @@ class AppBase extends EventHandler {
          * The forward renderer.
          *
          * @type {ForwardRenderer}
-         * @private
+         * @ignore
          */
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -1138,13 +1136,13 @@ class AppBase extends EventHandler {
             this.controller.update(dt);
         }
         if (this.mouse) {
-            this.mouse.update(dt);
+            this.mouse.update();
         }
         if (this.keyboard) {
-            this.keyboard.update(dt);
+            this.keyboard.update();
         }
         if (this.gamepads) {
-            this.gamepads.update(dt);
+            this.gamepads.update();
         }
     }
 
@@ -1391,11 +1389,11 @@ class AppBase extends EventHandler {
      * @returns {object} A object containing the values calculated to use as width and height.
      */
     resizeCanvas(width, height) {
-        if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
+        if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
 
         // prevent resizing when in XR session
         if (this.xr && this.xr.session)
-            return;
+            return undefined;
 
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
@@ -2174,7 +2172,6 @@ const makeTick = function (_app) {
         _frameEndData.target = application;
 
         application.fire("frameend", _frameEndData);
-        application.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
 
         if (application.vr && application.vr.display && application.vr.display.presenting) {
             application.vr.display.submitFrame();

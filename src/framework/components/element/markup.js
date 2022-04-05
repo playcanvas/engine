@@ -10,7 +10,7 @@ const EQUALS_TOKEN = 5;
 const STRING_TOKEN = 6;
 const IDENTIFIER_TOKEN = 7;
 const WHITESPACE_TOKEN = 8;
-const WHITESPACE_CHARS = " \t\n\r\v\f";
+const WHITESPACE_CHARS = ' \t\n\r\v\f';
 const IDENTIFIER_REGEX = /[A-Z|a-z|0-9|_|-|/]/;
 
 class Scanner {
@@ -20,7 +20,7 @@ class Scanner {
         this._last = 0;
         this._cur = (this._symbols.length > 0) ? this._symbols[0] : null;
         this._buf = [];
-        this._mode = "text";
+        this._mode = 'text';
         this._error = null;
     }
 
@@ -53,13 +53,13 @@ class Scanner {
 
     // print the scanner output
     debugPrint() {
-        const tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
+        const tokenStrings = ['EOF', 'ERROR', 'TEXT', 'OPEN_BRACKET', 'CLOSE_BRACKET', 'EQUALS', 'STRING', 'IDENTIFIER', 'WHITESPACE'];
         let token = this.read();
-        let result = "";
+        let result = '';
         while (true) {
-            result += (result.length > 0 ? "\n" : "") +
+            result += (result.length > 0 ? '\n' : '') +
                         tokenStrings[token] +
-                        " '" + this.buf().join("") + "'";
+                        ' \'' + this.buf().join('') + '\'';
             if (token === EOF_TOKEN || token === ERROR_TOKEN) {
                 break;
             }
@@ -74,7 +74,7 @@ class Scanner {
         if (this._eof()) {
             return EOF_TOKEN;
         }
-        return (this._mode === "text") ? this._text() : this._tag();
+        return (this._mode === 'text') ? this._text() : this._tag();
     }
 
     // read text block until eof or start of tag
@@ -84,21 +84,21 @@ class Scanner {
                 case null:
                     // reached end of input
                     return (this._buf.length > 0) ? TEXT_TOKEN : EOF_TOKEN;
-                case "[":
+                case '[':
                     // start of tag mode
-                    this._mode = "tag";
+                    this._mode = 'tag';
                     return (this._buf.length > 0) ? TEXT_TOKEN : this._tag();
-                case "\\":
+                case '\\':
                     // handle escape sequence
                     this._next();           // skip \
                     switch (this._cur) {
-                        case "[":
+                        case '[':
                             this._store();
                             break;
                         default:
                             // if we don't recognize the escape sequence, output
                             // the slash without interpretation and continue
-                            this._output("\\");
+                            this._output('\\');
                             break;
                     }
                     break;
@@ -113,30 +113,30 @@ class Scanner {
     _tag() {
         switch (this._cur) {
             case null:
-                this._error = "unexpected end of input reading tag";
+                this._error = 'unexpected end of input reading tag';
                 return ERROR_TOKEN;
-            case "[":
+            case '[':
                 this._store();
                 return OPEN_BRACKET_TOKEN;
-            case "]":
+            case ']':
                 this._store();
-                this._mode = "text";
+                this._mode = 'text';
                 return CLOSE_BRACKET_TOKEN;
-            case "=":
+            case '=':
                 this._store();
                 return EQUALS_TOKEN;
-            case " ":
-            case "\t":
-            case "\n":
-            case "\r":
-            case "\v":
-            case "\f":
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\v':
+            case '\f':
                 return this._whitespace();
-            case "\"":
+            case '"':
                 return this._string();
             default:
                 if (!this._isIdentifierSymbol(this._cur)) {
-                    this._error = "unrecognized character";
+                    this._error = 'unrecognized character';
                     return ERROR_TOKEN;
                 }
                 return this._identifier();
@@ -156,9 +156,9 @@ class Scanner {
         while (true) {
             switch (this._cur) {
                 case null:
-                    this._error = "unexpected end of input reading string";
+                    this._error = 'unexpected end of input reading string';
                     return ERROR_TOKEN;
-                case "\"":
+                case '"':
                     this._next();           // skip "
                     return STRING_TOKEN;
                 default:
@@ -247,34 +247,34 @@ class Parser {
 
     // access an error message if the parser failed
     error() {
-        return "Error evaluating markup at #" + this._scanner.last().toString() +
-                " (" + (this._scanner.error() || this._error) + ")";
+        return 'Error evaluating markup at #' + this._scanner.last().toString() +
+                ' (' + (this._scanner.error() || this._error) + ')';
     }
 
     _parseTag(symbols, tags) {
         // first token after [ must be an identifier
         let token = this._scanner.read();
         if (token !== IDENTIFIER_TOKEN) {
-            this._error = "expected identifier";
+            this._error = 'expected identifier';
             return false;
         }
 
-        const name = this._scanner.buf().join("");
+        const name = this._scanner.buf().join('');
 
         // handle close tags
-        if (name[0] === "/") {
+        if (name[0] === '/') {
             for (let index = tags.length - 1; index >= 0; --index) {
-                if (name === "/" + tags[index].name && tags[index].end === null) {
+                if (name === '/' + tags[index].name && tags[index].end === null) {
                     tags[index].end = symbols.length;
                     token = this._scanner.read();
                     if (token !== CLOSE_BRACKET_TOKEN) {
-                        this._error = "expected close bracket";
+                        this._error = 'expected close bracket';
                         return false;
                     }
                     return true;
                 }
             }
-            this._error = "failed to find matching tag";
+            this._error = 'failed to find matching tag';
             return false;
         }
 
@@ -292,10 +292,10 @@ class Parser {
         if (token === EQUALS_TOKEN) {
             token = this._scanner.read();
             if (token !== STRING_TOKEN) {
-                this._error = "expected string";
+                this._error = 'expected string';
                 return false;
             }
-            tag.value = this._scanner.buf().join("");
+            tag.value = this._scanner.buf().join('');
             token = this._scanner.read();
         }
 
@@ -306,23 +306,23 @@ class Parser {
                     tags.push(tag);
                     return true;
                 case IDENTIFIER_TOKEN: {
-                    const identifier = this._scanner.buf().join("");
+                    const identifier = this._scanner.buf().join('');
                     token = this._scanner.read();
                     if (token !== EQUALS_TOKEN) {
-                        this._error = "expected equals";
+                        this._error = 'expected equals';
                         return false;
                     }
                     token = this._scanner.read();
                     if (token !== STRING_TOKEN) {
-                        this._error = "expected string";
+                        this._error = 'expected string';
                         return false;
                     }
-                    const value = this._scanner.buf().join("");
+                    const value = this._scanner.buf().join('');
                     tag.attributes[identifier] = value;
                     break;
                 }
                 default:
-                    this._error = "expected close bracket or identifier";
+                    this._error = 'expected close bracket or identifier';
                     return false;
             }
             token = this._scanner.read();

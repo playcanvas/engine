@@ -20,7 +20,7 @@ describe('LocalizedAsset', function () {
     });
 
     it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
 
@@ -32,7 +32,7 @@ describe('LocalizedAsset', function () {
     });
 
     it('does not add load and change events to the asset when autoLoad is false', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
 
@@ -44,7 +44,7 @@ describe('LocalizedAsset', function () {
     });
 
     it('adds load, change and remove events to the asset when autoLoad is true', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
 
@@ -58,7 +58,7 @@ describe('LocalizedAsset', function () {
     });
 
     it('adds events to the asset when autoLoad becomes true later', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
 
@@ -73,8 +73,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('picks the correct localizedAsset when the locale is already different', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
@@ -91,8 +91,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('changes the localized asset after defaultAsset and then the locale change', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
@@ -110,8 +110,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('removes events from the defaultAsset and localizedAsset is changed', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
@@ -142,7 +142,7 @@ describe('LocalizedAsset', function () {
     });
 
     it('propagates asset events to LocalizedAsset', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
 
@@ -176,8 +176,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('uses only the defaultAsset when disableLocalization is true', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
@@ -195,8 +195,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('falls back to defaultAsset when a null asset is set for a locale', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', null);
 
@@ -213,8 +213,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('fires add:localized on setting a new locale', function (done) {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.on('add:localized', function (locale, assetId) {
             expect(locale).to.equal('fr');
@@ -226,8 +226,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('fires remove:localized on removing a locale', function (done) {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
@@ -241,9 +241,9 @@ describe('LocalizedAsset', function () {
     });
 
     it('updates the localizedAsset on setting a localized asset for the current locale', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
 
         const la = new LocalizedAsset(app);
@@ -256,9 +256,9 @@ describe('LocalizedAsset', function () {
     });
 
     it('updates the localizedAsset to the defaultAsset on removing a localized asset for the current locale', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
 
         asset.addLocalizedAssetId('fr', asset2.id);
@@ -273,8 +273,8 @@ describe('LocalizedAsset', function () {
     });
 
     it('updates the localizedAsset on setting a localized asset for the current locale even if defaultAsset is added to the registry later', function () {
-        const asset = new Asset("Default Asset", "texture");
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
+        const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
 
         const la = new LocalizedAsset(app);
@@ -290,9 +290,9 @@ describe('LocalizedAsset', function () {
 
 
     it('switches LocalizedAsset to the defaultAsset by removing a localized asset from the registry', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
 
         asset.addLocalizedAssetId('fr', asset2.id);
@@ -308,9 +308,9 @@ describe('LocalizedAsset', function () {
     });
 
     it('keeps same localizedAsset and adds "add" event handler on removing the defaultAsset from the registry', function () {
-        const asset = new Asset("Default Asset", "texture");
+        const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
-        const asset2 = new Asset("Localized Asset", "texture");
+        const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
 
         asset.addLocalizedAssetId('fr', asset2.id);
@@ -332,7 +332,7 @@ describe('LocalizedAsset', function () {
     describe('#destroy', function () {
 
         it('removes asset references and events', function () {
-            const asset = new Asset("Default Asset", "texture");
+            const asset = new Asset('Default Asset', 'texture');
 
             const la = new LocalizedAsset(app);
             la.defaultAsset = asset.id;

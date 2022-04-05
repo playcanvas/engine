@@ -165,7 +165,7 @@ class AudioHandler {
             } catch (e) {
                 // Some windows platforms will report Audio as available, then throw an exception when
                 // the object is created.
-                error("No support for Audio element");
+                error('No support for Audio element');
                 return;
             }
 

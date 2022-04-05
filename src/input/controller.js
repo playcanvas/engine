@@ -107,15 +107,15 @@ class Controller {
      */
     update(dt) {
         if (this._keyboard) {
-            this._keyboard.update(dt);
+            this._keyboard.update();
         }
 
         if (this._mouse) {
-            this._mouse.update(dt);
+            this._mouse.update();
         }
 
         if (this._gamepads) {
-            this._gamepads.update(dt);
+            this._gamepads.update();
         }
 
         // clear axes values
@@ -140,7 +140,7 @@ class Controller {
         }
 
         if (keys === undefined) {
-            throw new Error("Invalid button");
+            throw new Error('Invalid button');
         }
 
         // convert to an array
@@ -221,7 +221,7 @@ class Controller {
      * Register an action against a controller axis.
      *
      * @param {object} [options] - Optional options object.
-     * @param {object} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
+     * @param {number} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
      */
     registerAxis(options) {
         const name = options.name;
@@ -389,7 +389,7 @@ class Controller {
     _enableMouse() {
         this._mouse = new Mouse();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._mouse.attach(this._element);
     }
@@ -397,7 +397,7 @@ class Controller {
     _enableKeyboard() {
         this._keyboard = new Keyboard();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._keyboard.attach(this._element);
     }

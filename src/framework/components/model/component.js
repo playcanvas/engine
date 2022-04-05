@@ -43,13 +43,11 @@ class ModelComponent extends Component {
      */
     _model = null;
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * @type {Object.<string, number>}
      * @private
      */
     _mapping = {};
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * @type {boolean}
@@ -631,7 +629,6 @@ class ModelComponent extends Component {
         return this._material;
     }
 
-    /* eslint-disable jsdoc/check-types */
     /**
      * A dictionary that holds material overrides for each mesh instance. Only applies to model
      * components of type 'asset'. The mapping contains pairs of mesh instance index - material
@@ -688,7 +685,6 @@ class ModelComponent extends Component {
     get mapping() {
         return this._mapping;
     }
-    /* eslint-enable jsdoc/check-types */
 
     addModelToLayers() {
         const layers = this.system.app.scene.layers;
@@ -736,10 +732,10 @@ class ModelComponent extends Component {
      */
     onLayersChanged(oldComp, newComp) {
         this.addModelToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     /**
@@ -873,10 +869,10 @@ class ModelComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.on("add", this.onLayerAdded, this);
-            scene.layers.on("remove", this.onLayerRemoved, this);
+            scene.layers.on('add', this.onLayerAdded, this);
+            scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -924,10 +920,10 @@ class ModelComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.off("add", this.onLayerAdded, this);
-            scene.layers.off("remove", this.onLayerRemoved, this);
+            scene.layers.off('add', this.onLayerAdded, this);
+            scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {

@@ -1258,13 +1258,7 @@ class Mat4 {
      * console.log(m.toString());
      */
     toString() {
-        let t = '[';
-        for (let i = 0; i < 16; i += 1) {
-            t += this.data[i];
-            t += (i !== 15) ? ', ' : '';
-        }
-        t += ']';
-        return t;
+        return '[' + this.data.join(', ') + ']';
     }
 
     /**

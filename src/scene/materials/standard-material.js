@@ -20,8 +20,6 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../math/color.js').Color} Color */
-/** @typedef {import('../../math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
@@ -496,7 +494,6 @@ class StandardMaterial extends Material {
         this.reset();
     }
 
-    /* eslint-disable jsdoc/check-types */
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
@@ -525,7 +522,6 @@ class StandardMaterial extends Material {
         this._dirtyShader = true;
         return this._chunks;
     }
-    /* eslint-enable jsdoc/check-types */
 
     /**
      * Copy a `StandardMaterial`.
@@ -575,12 +571,12 @@ class StandardMaterial extends Material {
     }
 
     _updateMap(p) {
-        const mname = p + "Map";
+        const mname = p + 'Map';
         const map = this[mname];
         if (map) {
-            this._setParameter("texture_" + mname, map);
+            this._setParameter('texture_' + mname, map);
 
-            const tname = mname + "Transform";
+            const tname = mname + 'Transform';
             const uniform = this.getUniform(tname);
             if (uniform) {
                 this._setParameters(uniform);
@@ -634,7 +630,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter("material_shininess", getUniform('shininess'));
+        this._setParameter('material_shininess', getUniform('shininess'));
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
@@ -659,7 +655,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            this._setParameter(getUniform("cubeMapProjectionBox"));
+            this._setParameter(getUniform('cubeMapProjectionBox'));
         }
 
         for (const p in _matTex2D) {
@@ -848,7 +844,7 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
     if (channels > 0) {
         defineProp({
             name: `${name}MapChannel`,
-            defaultValue: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+            defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
         });
     }
 
@@ -861,7 +857,7 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
         if (channels > 0) {
             defineProp({
                 name: `${name}VertexColorChannel`,
-                defaultValue: defChannel ? defChannel : (channels > 1 ? "rgb" : "g")
+                defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
             });
         }
     }
@@ -985,41 +981,41 @@ function _defineFlag(name, defaultValue) {
 }
 
 function _defineMaterialProps() {
-    _defineColor("ambient", new Color(0.7, 0.7, 0.7));
-    _defineColor("diffuse", new Color(1, 1, 1));
-    _defineColor("specular", new Color(0, 0, 0));
-    _defineColor("emissive", new Color(0, 0, 0));
-    _defineFloat("emissiveIntensity", 1);
+    _defineColor('ambient', new Color(0.7, 0.7, 0.7));
+    _defineColor('diffuse', new Color(1, 1, 1));
+    _defineColor('specular', new Color(0, 0, 0));
+    _defineColor('emissive', new Color(0, 0, 0));
+    _defineFloat('emissiveIntensity', 1);
 
-    _defineFloat("shininess", 25, (material, device, scene) => {
+    _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
         return material.shadingModel === SPECULAR_PHONG ?
             // legacy: expand back to specular power
             Math.pow(2, material.shininess * 0.01 * 11) :
             material.shininess * 0.01;
     });
-    _defineFloat("heightMapFactor", 1, (material, device, scene) => {
+    _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
-    _defineFloat("opacity", 1);
-    _defineFloat("alphaFade", 1);
-    _defineFloat("alphaTest", 0);       // NOTE: overwrites Material.alphaTest
-    _defineFloat("bumpiness", 1);
-    _defineFloat("normalDetailMapBumpiness", 1);
-    _defineFloat("reflectivity", 1);
-    _defineFloat("occludeSpecularIntensity", 1);
-    _defineFloat("refraction", 0);
-    _defineFloat("refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
-    _defineFloat("metalness", 1);
-    _defineFloat("anisotropy", 0);
-    _defineFloat("clearCoat", 0);
-    _defineFloat("clearCoatGlossiness", 1);
-    _defineFloat("clearCoatBumpiness", 1);
-    _defineFloat("aoUvSet", 0, null); // legacy
+    _defineFloat('opacity', 1);
+    _defineFloat('alphaFade', 1);
+    _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
+    _defineFloat('bumpiness', 1);
+    _defineFloat('normalDetailMapBumpiness', 1);
+    _defineFloat('reflectivity', 1);
+    _defineFloat('occludeSpecularIntensity', 1);
+    _defineFloat('refraction', 0);
+    _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('metalness', 1);
+    _defineFloat('anisotropy', 0);
+    _defineFloat('clearCoat', 0);
+    _defineFloat('clearCoatGlossiness', 1);
+    _defineFloat('clearCoatBumpiness', 1);
+    _defineFloat('aoUvSet', 0, null); // legacy
 
-    _defineObject("ambientSH");
+    _defineObject('ambientSH');
 
-    _defineObject("cubeMapProjectionBox", (material, device, scene) => {
+    _defineObject('cubeMapProjectionBox', (material, device, scene) => {
         const uniform = material._allocUniform('cubeMapProjectionBox', () => {
             return [{
                 name: 'envBoxMin',
@@ -1045,53 +1041,53 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag("ambientTint", false);
-    _defineFlag("diffuseTint", false);
-    _defineFlag("specularTint", false);
-    _defineFlag("emissiveTint", false);
-    _defineFlag("fastTbn", false);
-    _defineFlag("specularAntialias", false);
-    _defineFlag("useMetalness", false);
-    _defineFlag("enableGGXSpecular", false);
-    _defineFlag("occludeDirect", false);
-    _defineFlag("normalizeNormalMap", true);
-    _defineFlag("conserveEnergy", true);
-    _defineFlag("opacityFadesSpecular", true);
-    _defineFlag("occludeSpecular", SPECOCC_AO);
-    _defineFlag("shadingModel", SPECULAR_BLINN);
-    _defineFlag("fresnelModel", FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
-    _defineFlag("cubeMapProjection", CUBEPROJ_NONE);
-    _defineFlag("customFragmentShader", null);
-    _defineFlag("forceFragmentPrecision", null);
-    _defineFlag("useFog", true);
-    _defineFlag("useLighting", true);
-    _defineFlag("useGammaTonemap", true);
-    _defineFlag("useSkybox", true);
-    _defineFlag("forceUv1", false);
-    _defineFlag("pixelSnap", false);
-    _defineFlag("twoSidedLighting", false);
-    _defineFlag("nineSlicedMode", undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
+    _defineFlag('ambientTint', false);
+    _defineFlag('diffuseTint', false);
+    _defineFlag('specularTint', false);
+    _defineFlag('emissiveTint', false);
+    _defineFlag('fastTbn', false);
+    _defineFlag('specularAntialias', false);
+    _defineFlag('useMetalness', false);
+    _defineFlag('enableGGXSpecular', false);
+    _defineFlag('occludeDirect', false);
+    _defineFlag('normalizeNormalMap', true);
+    _defineFlag('conserveEnergy', true);
+    _defineFlag('opacityFadesSpecular', true);
+    _defineFlag('occludeSpecular', SPECOCC_AO);
+    _defineFlag('shadingModel', SPECULAR_BLINN);
+    _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
+    _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
+    _defineFlag('customFragmentShader', null);
+    _defineFlag('forceFragmentPrecision', null);
+    _defineFlag('useFog', true);
+    _defineFlag('useLighting', true);
+    _defineFlag('useGammaTonemap', true);
+    _defineFlag('useSkybox', true);
+    _defineFlag('forceUv1', false);
+    _defineFlag('pixelSnap', false);
+    _defineFlag('twoSidedLighting', false);
+    _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
 
-    _defineTex2D("diffuse", 0, 3, "", true);
-    _defineTex2D("specular", 0, 3, "", true);
-    _defineTex2D("emissive", 0, 3, "", true);
-    _defineTex2D("normal", 0, -1, "", false);
-    _defineTex2D("metalness", 0, 1, "", true);
-    _defineTex2D("gloss", 0, 1, "", true);
-    _defineTex2D("opacity", 0, 1, "a", true);
-    _defineTex2D("height", 0, 1, "", false);
-    _defineTex2D("ao", 0, 1, "", true);
-    _defineTex2D("light", 1, 3, "", true);
-    _defineTex2D("msdf", 0, 3, "", false);
-    _defineTex2D("diffuseDetail", 0, 3, "", false, true);
-    _defineTex2D("normalDetail", 0, -1, "", false);
-    _defineTex2D("clearCoat", 0, 1, "", true);
-    _defineTex2D("clearCoatGloss", 0, 1, "", true);
-    _defineTex2D("clearCoatNormal", 0, -1, "", false);
+    _defineTex2D('diffuse', 0, 3, '', true);
+    _defineTex2D('specular', 0, 3, '', true);
+    _defineTex2D('emissive', 0, 3, '', true);
+    _defineTex2D('normal', 0, -1, '', false);
+    _defineTex2D('metalness', 0, 1, '', true);
+    _defineTex2D('gloss', 0, 1, '', true);
+    _defineTex2D('opacity', 0, 1, 'a', true);
+    _defineTex2D('height', 0, 1, '', false);
+    _defineTex2D('ao', 0, 1, '', true);
+    _defineTex2D('light', 1, 3, '', true);
+    _defineTex2D('msdf', 0, 3, '', false);
+    _defineTex2D('diffuseDetail', 0, 3, '', false, true);
+    _defineTex2D('normalDetail', 0, -1, '', false);
+    _defineTex2D('clearCoat', 0, 1, '', true);
+    _defineTex2D('clearCoatGloss', 0, 1, '', true);
+    _defineTex2D('clearCoatNormal', 0, -1, '', false);
 
-    _defineObject("cubeMap");
-    _defineObject("sphereMap");
-    _defineObject("envAtlas");
+    _defineObject('cubeMap');
+    _defineObject('sphereMap');
+    _defineObject('envAtlas');
 
     // prefiltered cubemap getter
     const getterFunc = function () {
@@ -1132,7 +1128,7 @@ function _defineMaterialProps() {
 
     const empty = [null, null, null, null, null, null];
 
-    definePropInternal("prefilteredCubemaps", () => empty.slice(), setterFunc, getterFunc);
+    definePropInternal('prefilteredCubemaps', () => empty.slice(), setterFunc, getterFunc);
 }
 
 _defineMaterialProps();

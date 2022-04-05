@@ -96,7 +96,7 @@ class ModelHandler {
                 return p.parser.parse(data);
             }
         }
-        Debug.warn("pc.ModelHandler#open: No model parser found for: " + url);
+        Debug.warn('pc.ModelHandler#open: No model parser found for: ' + url);
         return null;
     }
 

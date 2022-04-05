@@ -54,10 +54,10 @@ class BundleHandler {
                 try {
                     self._untar(response, callback);
                 } catch (ex) {
-                    callback("Error loading bundle resource " + url.original + ": " + ex);
+                    callback('Error loading bundle resource ' + url.original + ': ' + ex);
                 }
             } else {
-                callback("Error loading bundle resource " + url.original + ": " + err);
+                callback('Error loading bundle resource ' + url.original + ': ' + err);
             }
         });
     }

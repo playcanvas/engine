@@ -70,7 +70,7 @@ class LightComponentSystem extends ComponentSystem {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
 
         if (data.enable) {
-            console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+            console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');
             data.enabled = data.enable;
         }
 
@@ -99,7 +99,7 @@ class LightComponentSystem extends ComponentSystem {
         const _props = _lightProps;
         for (let i = 0; i < _props.length; i++) {
             name = _props[i];
-            if (name === "light") continue;
+            if (name === 'light') continue;
             if (light[name] && light[name].clone) {
                 data[name] = light[name].clone();
             } else {

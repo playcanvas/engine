@@ -372,15 +372,29 @@ class Quat {
     /**
      * Sets a quaternion from Euler angles specified in XYZ order.
      *
-     * @param {number} ex - Angle to rotate around X axis in degrees.
-     * @param {number} ey - Angle to rotate around Y axis in degrees.
-     * @param {number} ez - Angle to rotate around Z axis in degrees.
+     * @param {number|Vec3} ex - Angle to rotate around X axis in degrees. If ex is a Vec3, the
+     * three angles will be read from it instead.
+     * @param {number} [ey] - Angle to rotate around Y axis in degrees.
+     * @param {number} [ez] - Angle to rotate around Z axis in degrees.
      * @returns {Quat} Self for chaining.
      * @example
+     * // Create a quaternion from 3 euler angles
      * var q = new pc.Quat();
      * q.setFromEulerAngles(45, 90, 180);
+     *
+     * // Create the same quaternion from a vector containing the same 3 euler angles
+     * var v = new pc.Vec3(45, 90, 180);
+     * var r = new pc.Quat();
+     * r.setFromEulerAngles(v);
      */
     setFromEulerAngles(ex, ey, ez) {
+        if (ex instanceof Vec3) {
+            const vec = ex;
+            ex = vec.x;
+            ey = vec.y;
+            ez = vec.z;
+        }
+
         const halfToRad = 0.5 * math.DEG_TO_RAD;
         ex *= halfToRad;
         ey *= halfToRad;

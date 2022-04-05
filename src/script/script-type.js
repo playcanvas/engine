@@ -179,7 +179,7 @@ class ScriptType extends EventHandler {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
         if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-        const match = ("" + constructorFn).match(funcNameRegex);
+        const match = ('' + constructorFn).match(funcNameRegex);
         return match ? match[1] : undefined;
     }
 

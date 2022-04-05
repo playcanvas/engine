@@ -914,11 +914,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalEulerAngles(angles);
      */
     setLocalEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (!this._dirtyLocal)
             this._dirtifyLocal();
@@ -1138,11 +1134,7 @@ class GraphNode extends EventHandler {
      * this.entity.setEulerAngles(angles);
      */
     setEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (this._parent !== null) {
             const parentRot = this._parent.getRotation();
@@ -1164,7 +1156,7 @@ class GraphNode extends EventHandler {
      */
     addChild(node) {
         if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
+            throw new Error('GraphNode is already parented');
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1215,7 +1207,7 @@ class GraphNode extends EventHandler {
      */
     insertChild(node, index) {
         if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
+            throw new Error('GraphNode is already parented');
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1232,10 +1224,10 @@ class GraphNode extends EventHandler {
      */
     _debugInsertChild(node) {
         if (this === node)
-            throw new Error("GraphNode cannot be a child of itself");
+            throw new Error('GraphNode cannot be a child of itself');
 
         if (this.isDescendantOf(node))
-            throw new Error("GraphNode cannot add an ancestor as a child");
+            throw new Error('GraphNode cannot add an ancestor as a child');
     }
     // #endif
 
@@ -1326,11 +1318,12 @@ class GraphNode extends EventHandler {
         // Clear parent
         child._parent = null;
 
+        // NOTE: see PR #4047 - this fix is removed for now as it breaks other things
         // notify the child hierarchy it has been removed from the parent,
         // which marks them as not enabled in hierarchy
-        if (child._enabledInHierarchy) {
-            child._notifyHierarchyStateChanged(child, false);
-        }
+        // if (child._enabledInHierarchy) {
+        //     child._notifyHierarchyStateChanged(child, false);
+        // }
 
         // alert children that they has been removed
         child._fireOnHierarchy('remove', 'removehierarchy', this);
@@ -1547,11 +1540,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotate(r);
      */
     rotate(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         if (this._parent === null) {
             this.localRotation.mul2(rotation, this.localRotation);
@@ -1586,11 +1575,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotateLocal(r);
      */
     rotateLocal(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         this.localRotation.mul(rotation);
 

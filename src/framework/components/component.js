@@ -43,8 +43,8 @@ class Component extends EventHandler {
             this.buildAccessors(this.system.schema);
         }
 
-        this.on("set", function (name, oldValue, newValue) {
-            this.fire("set_" + name, name, oldValue, newValue);
+        this.on('set', function (name, oldValue, newValue) {
+            this.fire('set_' + name, name, oldValue, newValue);
         });
 
         this.on('set_enabled', this.onSetEnabled, this);

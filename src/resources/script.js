@@ -34,7 +34,7 @@ class ScriptHandler {
 
     static _push(Type) {
         if (script.legacy && ScriptHandler._types.length > 0) {
-            console.assert("Script Ordering Error. Contact support@playcanvas.com");
+            console.assert('Script Ordering Error. Contact support@playcanvas.com');
         } else {
             ScriptHandler._types.push(Type);
         }
@@ -109,7 +109,7 @@ class ScriptHandler {
 
         let done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState === "loaded" || this.readyState === "complete"))) {
+            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }

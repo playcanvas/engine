@@ -79,7 +79,7 @@ class SpriteComponentSystem extends ComponentSystem {
             material.emissiveMap = texture;
             material.emissiveMapTint = true;
             material.opacityMap = texture;
-            material.opacityMapChannel = "a";
+            material.opacityMapChannel = 'a';
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;

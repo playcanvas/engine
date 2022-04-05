@@ -174,7 +174,7 @@ class MaterialHandler {
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset) {
 
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset);
+        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName);
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
@@ -235,7 +235,7 @@ class MaterialHandler {
 
         const material = materialAsset.resource;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         const TEXTURES = standardMaterialTextureParameters;
 
@@ -252,7 +252,7 @@ class MaterialHandler {
             const dataAssetId = data[name];
 
             const materialTexture = material[name];
-            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name, materialAsset);
+            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name);
             const dataValidated = data.validated;
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {

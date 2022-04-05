@@ -11,7 +11,7 @@ class Graph {
         this.avgTotal = 0;
         this.avgTimer = 0;
         this.avgCount = 0;
-        this.timingText = "";
+        this.timingText = '';
 
         this.texture = null;
         this.yOffset = 0;

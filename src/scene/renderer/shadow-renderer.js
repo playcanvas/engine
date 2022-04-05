@@ -1,5 +1,6 @@
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
+import { Vec4 } from '../../math/vec4.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
 
@@ -83,7 +84,7 @@ const visibleSceneAabb = new BoundingBox();
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
-const blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
+const blurScissorRect = new Vec4(1, 1, 0, 0);
 const opChanId = { r: 1, g: 2, b: 3, a: 4 };
 const center = new Vec3();
 const viewportMatrix = new Mat4();
@@ -108,15 +109,15 @@ class ShadowRenderer {
         this.lightTextureAtlas = lightTextureAtlas;
         const scope = this.device.scope;
 
-        this.polygonOffsetId = scope.resolve("polygonOffset");
+        this.polygonOffsetId = scope.resolve('polygonOffset');
         this.polygonOffset = new Float32Array(2);
 
         // VSM
-        this.sourceId = scope.resolve("source");
-        this.pixelOffsetId = scope.resolve("pixelOffset");
-        this.weightId = scope.resolve("weight[0]");
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, "#define GAUSS\n" + shaderChunks.blurVSMPS];
-        const packed = "#define PACKED\n";
+        this.sourceId = scope.resolve('source');
+        this.pixelOffsetId = scope.resolve('pixelOffset');
+        this.weightId = scope.resolve('weight[0]');
+        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, '#define GAUSS\n' + shaderChunks.blurVSMPS];
+        const packed = '#define PACKED\n';
         this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
 
         // cache for vsm blur shaders
@@ -140,7 +141,7 @@ class ShadowRenderer {
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
 
-        const shadowCam = LightCamera.create("ShadowCamera", type, face);
+        const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
         // don't clear the color buffer if rendering a depth map
         if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
@@ -579,13 +580,13 @@ class ShadowRenderer {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = "#define SAMPLES " + filterSize + "\n";
+            let blurFS = '#define SAMPLES ' + filterSize + '\n';
             if (isVsm8) {
                 blurFS += this.blurPackedVsmShaderCode[blurMode];
             } else {
                 blurFS += this.blurVsmShaderCode[blurMode];
             }
-            const blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
+            const blurShaderName = 'blurVsm' + blurMode + '' + filterSize + '' + isVsm8;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
 
             if (isVsm8) {
@@ -602,7 +603,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "VSM");
+        DebugGraphics.pushGpuMarker(device, 'VSM');
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;
