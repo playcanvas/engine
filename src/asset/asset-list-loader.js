@@ -21,41 +21,29 @@ class AssetListLoader extends EventHandler {
      */
     constructor(assetList, assetRegistry) {
         super();
-        this._assets = [];
+        this._assets = new Set();
         this._loadingAssets = new Set();
+        this._waitingAssets = new Set();
         this._registry = assetRegistry;
+        this._loading = false;
         this._loaded = false;
-        this._count = 0; // running count of successfully loaded assets
         this._failed = []; // list of assets that failed to load
 
-        this._waitingAssets = [];
-
-        if (assetList.length && assetList[0] instanceof Asset) {
-            assetList.forEach((asset, i, array) => {
-                // filter out duplicates
-                if (array.indexOf(asset) !== i) {
-                    return;
+        assetList.forEach((a) => {
+            if (a instanceof Asset) {
+                if (!a.registry) {
+                    a.registry = assetRegistry;
                 }
-                if (!asset.registry) {
-                    asset.registry = assetRegistry;
-                }
-                this._assets.push(asset);
-            });
-        } else {
-            // list of Asset IDs
-            assetList.forEach((assetId, i, array) => {
-                // filter out duplicates
-                if (array.indexOf(assetId) !== i) {
-                    return;
-                }
-                const asset = assetRegistry.get(assetList[i]);
+                this._assets.add(a);
+            } else {
+                const asset = assetRegistry.get(a);
                 if (asset) {
-                    this._assets.push(asset);
+                    this._assets.add(asset);
                 } else {
-                    this._waitForAsset(assetList[i]);
+                    this._waitForAsset(a);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -83,22 +71,21 @@ class AssetListLoader extends EventHandler {
      * @param {object} [scope] - Scope to use when calling callback.
      */
     load(done, scope) {
-        const l = this._assets.length;
-        let asset;
-
-        this._count = 0;
-        this._failed = [];
+        if (this._loading) {
+            // #if _DEBUG
+            console.debug("AssetListLoader: Load function called multiple times.");
+            // #endif
+            return;
+        }
+        this._loading = true;
         this._callback = done;
         this._scope = scope;
-        this._loaded = false;
 
         this._registry.on("load", this._onLoad, this);
         this._registry.on("error", this._onError, this);
 
         let loadingAssets = false;
-        for (let i = 0; i < l; i++) {
-            asset = this._assets[i];
-
+        this._assets.forEach((asset) => {
             // Track assets that are not loaded or are currently loading
             // as some assets may be loading by this call
             if (!asset.loaded) {
@@ -106,12 +93,12 @@ class AssetListLoader extends EventHandler {
                 this._loadingAssets.add(asset);
                 this._registry.add(asset);
             }
-        }
+        });
         this._loadingAssets.forEach((asset) => {
             this._registry.load(asset);
         });
-        if (!loadingAssets && this._waitingAssets.length === 0) {
-            this.fire("load", this._assets);
+        if (!loadingAssets && this._waitingAssets.size === 0) {
+            this.fire("load", Array.from(this._assets));
         }
     }
 
@@ -123,7 +110,7 @@ class AssetListLoader extends EventHandler {
      */
     ready(done, scope = this) {
         if (this._loaded) {
-            done.call(scope, this._assets);
+            done.call(scope, Array.from(this._assets));
         } else {
             this.once("load", function (assets) {
                 done.call(scope, assets);
@@ -138,7 +125,7 @@ class AssetListLoader extends EventHandler {
         this._registry.off("load", this._onLoad, this);
         this._registry.off("error", this._onError, this);
 
-        if (this._failed && this._failed.length) {
+        if (this._failed.length) {
             if (this._callback) {
                 this._callback.call(this._scope, "Failed to load some assets", this._failed);
             }
@@ -147,7 +134,7 @@ class AssetListLoader extends EventHandler {
             if (this._callback) {
                 this._callback.call(this._scope);
             }
-            this.fire("load", this._assets);
+            this.fire("load", Array.from(this._assets));
         }
     }
 
@@ -155,11 +142,11 @@ class AssetListLoader extends EventHandler {
     _onLoad(asset) {
         // check this is an asset we care about
         if (this._loadingAssets.has(asset)) {
-            this._count++;
             this.fire("progress", asset);
+            this._loadingAssets.delete(asset);
         }
 
-        if (this._count === this._loadingAssets.size) {
+        if (this._loadingAssets.size === 0) {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
@@ -173,11 +160,11 @@ class AssetListLoader extends EventHandler {
     _onError(err, asset) {
         // check this is an asset we care about
         if (this._loadingAssets.has(asset)) {
-            this._count++;
             this._failed.push(asset);
+            this._loadingAssets.delete(asset);
         }
 
-        if (this._count === this._loadingAssets.size) {
+        if (this._loadingAssets.size === 0) {
             // call next tick because we want
             // this to be fired after any other
             // asset load events
@@ -190,24 +177,17 @@ class AssetListLoader extends EventHandler {
     // called when a expected asset is added to the asset registry
     _onAddAsset(asset) {
         // remove from waiting list
-        const index = this._waitingAssets.indexOf(asset);
-        if (index >= 0) {
-            this._waitingAssets.splice(index, 1);
-        }
+        this._waitingAssets.delete(asset);
 
-        this._assets.push(asset);
-        const l = this._assets.length;
-        for (let i = 0; i < l; i++) {
-            asset = this._assets[i];
-            if (!asset.loaded) {
-                this._loadingAssets.add(asset);
-                this._registry.load(asset);
-            }
+        this._assets.add(asset);
+        if (!asset.loaded) {
+            this._loadingAssets.add(asset);
+            this._registry.load(asset);
         }
     }
 
     _waitForAsset(assetId) {
-        this._waitingAssets.push(assetId);
+        this._waitingAssets.add(assetId);
         this._registry.once('add:' + assetId, this._onAddAsset, this);
     }
 }

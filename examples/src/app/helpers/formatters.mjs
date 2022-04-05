@@ -74,6 +74,10 @@ const getEngineTypeFromClass = (text) => {
     return null;
 };
 
+const classIncludesMiniStats = (text) => {
+    return text.includes('_defineProperty(Example, "MINISTATS", true);');
+};
+
 const retrieveStaticObject = (text, name) => {
     const staticStart = `static ${name} = `;
     let start = text.indexOf(staticStart);
@@ -88,5 +92,6 @@ export default {
     getInnerFunctionText: getInnerFunctionText,
     getExampleClassFromTextFile: getExampleClassFromTextFile,
     getEngineTypeFromClass: getEngineTypeFromClass,
-    retrieveStaticObject: retrieveStaticObject
+    retrieveStaticObject: retrieveStaticObject,
+    classIncludesMiniStats: classIncludesMiniStats
 };

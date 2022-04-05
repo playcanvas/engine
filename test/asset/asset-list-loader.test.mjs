@@ -32,7 +32,7 @@ describe('AssetListLoader', function () {
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
             const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
-            expect(assetListLoader._assets[0].name).to.be.equal('model');
+            expect(assetListLoader._assets.has(assets[0])).to.equal(true);
         });
 
         it('stores multiple assets', function () {
@@ -41,8 +41,8 @@ describe('AssetListLoader', function () {
                 new Asset('styling', 'css', { url: `${assetPath}test.css` })
             ];
             const assetListLoader = new AssetListLoader(assets, app.assets);
-            expect(assetListLoader._assets[0].name).to.be.equal('model');
-            expect(assetListLoader._assets[1].name).to.be.equal('styling');
+            expect(assetListLoader._assets.has(assets[0])).to.equal(true);
+            expect(assetListLoader._assets.has(assets[1])).to.equal(true);
         });
 
         it('stores single copies of duplicated assets', function () {
@@ -50,16 +50,18 @@ describe('AssetListLoader', function () {
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
-            expect(assetListLoader._assets.length).to.be.equal(1);
+            expect(assetListLoader._assets.size).to.equal(1);
         });
 
         it('adds the supplied registry to any assets that do not have one', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
-            expect(assets[0].registry).to.be.equal(null);
+            expect(assets[0].registry).to.equal(null);
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
-            expect(assetListLoader._assets[0].registry).to.be.equal(app.assets);
+            assetListLoader._assets.forEach((asset) => {
+                expect(asset.registry).to.equal(app.assets);
+            });
         });
 
     });
@@ -269,6 +271,20 @@ describe('AssetListLoader', function () {
             assetListLoader.load();
             app.assets.add(assets[0]);
             app.assets.add(assets[1]);
+        });
+
+        it('can be called multiple times', function (done) {
+            const assets = [
+                new Asset('model', 'container', { url: `${assetPath}test.glb` }),
+                new Asset('styling', 'css', { url: `${assetPath}test.css` })
+            ];
+            const assetListLoader = new AssetListLoader(assets, app.assets);
+            assetListLoader.ready((assets) => {
+                expect(assets.length).to.equal(2);
+                done();
+            });
+            assetListLoader.load();
+            assetListLoader.load();
         });
 
     });

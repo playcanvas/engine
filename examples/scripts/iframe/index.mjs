@@ -50,7 +50,8 @@ function buildExample(category, filename) {
     }
     fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}/${filename.replace(".tsx", "")}.html`, loadHtmlTemplate({
         exampleClass: exampleClass,
-        enginePath: process.env.ENGINE_PATH || enginePath
+        enginePath: process.env.ENGINE_PATH || enginePath,
+        miniStats: !formatters.classIncludesMiniStats(exampleClass)
     }));
 }
 

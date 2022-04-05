@@ -92,7 +92,7 @@
                 }).observe(canvasContainerElement);
             }
 
-            if (location.pathname.indexOf('misc/mini-stats') === -1) {
+            if ({{miniStats}}) {
                 // set up miniStats
                 var miniStats = new pcx.MiniStats(app);
                 if (urlParams.get('miniStats') === 'false') {
