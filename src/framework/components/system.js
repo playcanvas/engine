@@ -5,7 +5,7 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
-/** @typedef {import('../app-base.js').Application} Application */
+/** @typedef {import('../app-base.js').AppBase} AppBase */
 /** @typedef {import('./component.js').Component} Component */
 /** @typedef {import('../entity.js').Entity} Entity */
 
@@ -19,7 +19,7 @@ class ComponentSystem extends EventHandler {
     /**
      * Create a new ComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
      */
     constructor(app) {
         super();

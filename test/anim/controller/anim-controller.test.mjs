@@ -2,7 +2,7 @@ import { AnimController } from '../../../src/anim/controller/anim-controller.js'
 import { Entity } from '../../../src/framework/entity.js';
 import { AnimComponentBinder } from '../../../src/framework/components/anim/component-binder.js';
 import { AnimEvaluator } from '../../../src/anim/evaluator/anim-evaluator.js';
-import { Application } from '../../../src/framework/app-base.js';
+import { Application } from '../../../src/framework/application.js';
 import { AnimTrack } from '../../../src/anim/evaluator/anim-track.js';
 import { AnimData } from '../../../src/anim/evaluator/anim-data.js';
 import { AnimCurve } from '../../../src/anim/evaluator/anim-curve.js';

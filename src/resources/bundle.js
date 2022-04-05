@@ -6,7 +6,7 @@ import { Bundle } from '../bundles/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -17,12 +17,20 @@ import { Untar, UntarWorker } from './untar.js';
  */
 class BundleHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "bundle";
+
+    /**
      * Create a new BundleHandler instance.
      *
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(assets) {
-        this._assets = assets;
+    constructor(app) {
+        this._assets = app.assets;
         this._worker = null;
         this.maxRetries = 0;
     }

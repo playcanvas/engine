@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { Application } from './app-base.js';
+import { AppBase } from './app-base.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
 /** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
@@ -44,7 +44,7 @@ const _enableList = [];
  * Component and ComponentSystem provide the logic to give an Entity a specific type of behavior.
  * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
  * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
- * and Components and are attached to the {@link Application}.
+ * and Components and are attached to the {@link AppBase}.
  *
  * @augments GraphNode
  */
@@ -218,7 +218,7 @@ class Entity extends GraphNode {
     c = {};
 
     /**
-     * @type {Application}
+     * @type {AppBase}
      * @private
      */
     _app;
@@ -250,7 +250,7 @@ class Entity extends GraphNode {
      * Create a new Entity.
      *
      * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
-     * @param {Application} [app] - The application the entity belongs to, default is the current application.
+     * @param {AppBase} [app] - The application the entity belongs to, default is the current application.
      * @example
      * var entity = new pc.Entity();
      *
@@ -281,10 +281,10 @@ class Entity extends GraphNode {
     constructor(name, app) {
         super(name);
 
-        if (name instanceof Application) app = name;
+        if (name instanceof AppBase) app = name;
 
         if (!app) {
-            app = Application.getApplication(); // get the current application
+            app = AppBase.getApplication(); // get the current application
             if (!app) {
                 throw new Error("Couldn't find current application");
             }

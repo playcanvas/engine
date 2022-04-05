@@ -3,6 +3,13 @@ import { http } from '../net/http.js';
 import { Template } from '../templates/template.js';
 
 class TemplateHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "template";
+
     constructor(app) {
         this._app = app;
         this.maxRetries = 0;

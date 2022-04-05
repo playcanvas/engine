@@ -11,7 +11,7 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 /** @typedef {import('../../entity.js').Entity} Entity */
 
 let ammoRayStart, ammoRayEnd;
@@ -295,7 +295,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Create a new RigidBodyComponentSystem.
      *
-     * @param {Application} app - The Application.
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
