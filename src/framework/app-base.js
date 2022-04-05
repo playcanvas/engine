@@ -78,6 +78,7 @@ import {
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
