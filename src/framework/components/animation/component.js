@@ -29,7 +29,7 @@ class AnimationComponent extends Component {
     _animations = {};
 
     /**
-     * @type {(number|Asset)[]}
+     * @type {Array.<number|Asset>}
      * @private
      */
     _assets = [];
@@ -150,7 +150,7 @@ class AnimationComponent extends Component {
     /**
      * The array of animation assets. Can also be an array of asset ids.
      *
-     * @type {(number|Asset)[]}
+     * @type {Array.<number|Asset>}
      */
     set assets(value) {
         const assets = this._assets;
