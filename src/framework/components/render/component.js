@@ -678,10 +678,10 @@ class RenderComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -704,10 +704,10 @@ class RenderComponent extends Component {
 
         this._cloneSkinInstances();
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.on("add", this.onLayerAdded, this);
-            scene.layers.on("remove", this.onLayerRemoved, this);
+            scene.layers.on('add', this.onLayerAdded, this);
+            scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -733,10 +733,10 @@ class RenderComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.off("add", this.onLayerAdded, this);
-            scene.layers.off("remove", this.onLayerRemoved, this);
+            scene.layers.off('add', this.onLayerAdded, this);
+            scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {

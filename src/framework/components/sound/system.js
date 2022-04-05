@@ -28,7 +28,7 @@ class SoundComponentSystem extends ComponentSystem {
     constructor(app, manager) {
         super(app);
 
-        this.id = "sound";
+        this.id = 'sound';
 
         this.ComponentType = SoundComponent;
         this.DataType = SoundComponentData;

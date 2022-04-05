@@ -1,9 +1,11 @@
 import { Application } from '../../src/framework/app-base.js';
 import { Asset } from '../../src/asset/asset.js';
+import { JsonHandler } from '../../src/resources/json.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 describe('I18n', function () {
 
@@ -16,6 +18,7 @@ describe('I18n', function () {
 
     afterEach(function () {
         app.destroy();
+        sinon.restore();
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {
@@ -580,9 +583,9 @@ describe('I18n', function () {
     });
 
     it.skip('assets not in asset registry get loaded after they are added to the registry', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
         app.i18n.assets = [asset];
@@ -597,9 +600,9 @@ describe('I18n', function () {
     });
 
     it.skip('assets in asset registry get loaded when passed to i18n', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
         app.assets.add(asset);
@@ -614,10 +617,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('assets already loaded are parsed when passed to i18n', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+    it('assets already loaded are parsed when passed to i18n', function (done) {
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         app.i18n.on('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
@@ -633,10 +636,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('translations are unloaded when the asset is unloaded', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+    it('translations are unloaded when the asset is unloaded', function (done) {
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -654,10 +657,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('translations are unloaded when the asset is removed', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+    it('translations are unloaded when the asset is removed', function (done) {
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -675,10 +678,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('translations are re-loaded when the asset is removed and then added again', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+    it('translations are re-loaded when the asset is removed and then added again', function (done) {
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
@@ -700,10 +703,10 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('translations are re-loaded when the contents of the asset change', function (done) {
-        // sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
-        //    callback(null, createTranslation('en-US', 'key', 'translation'));
-        // });
+    it('translations are re-loaded when the contents of the asset change', function (done) {
+        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 

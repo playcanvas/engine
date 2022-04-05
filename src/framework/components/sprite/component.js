@@ -507,10 +507,10 @@ class SpriteComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.on("set:layers", this._onLayersChanged, this);
+        scene.on('set:layers', this._onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.on("add", this._onLayerAdded, this);
-            scene.layers.on("remove", this._onLayerRemoved, this);
+            scene.layers.on('add', this._onLayerAdded, this);
+            scene.layers.on('remove', this._onLayerRemoved, this);
         }
 
         this._showModel();
@@ -526,10 +526,10 @@ class SpriteComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.off("set:layers", this._onLayersChanged, this);
+        scene.off('set:layers', this._onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.off("add", this._onLayerAdded, this);
-            scene.layers.off("remove", this._onLayerRemoved, this);
+            scene.layers.off('add', this._onLayerAdded, this);
+            scene.layers.off('remove', this._onLayerRemoved, this);
         }
 
         this.stop();
@@ -799,10 +799,10 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
             this._showModel();

@@ -273,15 +273,15 @@ class ParticleSystemComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
-        this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
-        this.on("set_meshAsset", this.onSetMeshAsset, this);
-        this.on("set_mesh", this.onSetMesh, this);
-        this.on("set_renderAsset", this.onSetRenderAsset, this);
-        this.on("set_loop", this.onSetLoop, this);
-        this.on("set_blendType", this.onSetBlendType, this);
-        this.on("set_depthSoftening", this.onSetDepthSoftening, this);
-        this.on("set_layers", this.onSetLayers, this);
+        this.on('set_colorMapAsset', this.onSetColorMapAsset, this);
+        this.on('set_normalMapAsset', this.onSetNormalMapAsset, this);
+        this.on('set_meshAsset', this.onSetMeshAsset, this);
+        this.on('set_mesh', this.onSetMesh, this);
+        this.on('set_renderAsset', this.onSetRenderAsset, this);
+        this.on('set_loop', this.onSetLoop, this);
+        this.on('set_blendType', this.onSetBlendType, this);
+        this.on('set_depthSoftening', this.onSetDepthSoftening, this);
+        this.on('set_layers', this.onSetLayers, this);
 
         SIMPLE_PROPERTIES.forEach((prop) => {
             this.on(`set_${prop}`, this.onSetSimpleProperty, this);
@@ -343,10 +343,10 @@ class ParticleSystemComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addMeshInstanceToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -419,7 +419,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindColorMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, (asset) => {
+                assets.once('add:' + newValue, (asset) => {
                     this._bindColorMapAsset(asset);
                 });
             }
@@ -485,7 +485,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindNormalMapAsset(asset);
             } else {
-                assets.once("add:" + newValue, (asset) => {
+                assets.once('add:' + newValue, (asset) => {
                     this._bindNormalMapAsset(asset);
                 });
             }
@@ -855,10 +855,10 @@ class ParticleSystemComponent extends Component {
             this.addMeshInstanceToLayers();
         }
 
-        this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled && data.depthSoftening) {
@@ -867,10 +867,10 @@ class ParticleSystemComponent extends Component {
     }
 
     onDisable() {
-        this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this.emitter) {

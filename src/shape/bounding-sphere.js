@@ -21,7 +21,7 @@ class BoundingSphere {
      * var sphere = new pc.BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
-        Debug.assert(!Object.isFrozen(center), `The constructor of 'BoundingSphere' does not accept a constant (frozen) object as a 'center' parameter`);
+        Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
 
         /**
          * Center of sphere.

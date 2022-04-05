@@ -60,7 +60,7 @@ class Ktx2Parser {
         // check magic header bits:  '«', 'K', 'T', 'X', ' ', '2', '0', '»', '\r', '\n', '\x1A', '\n'\
         const magic = [rs.readU32be(), rs.readU32be(), rs.readU32be()];
         if (magic[0] !== 0xAB4B5458 || magic[1] !== 0x203230BB || magic[2] !== 0x0D0A1A0A) {
-            Debug.warn("Invalid definition header found in KTX2 file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A");
+            Debug.warn('Invalid definition header found in KTX2 file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A');
             return null;
         }
 
@@ -100,7 +100,7 @@ class Ktx2Parser {
         // unpack data format descriptor
         const dfdTotalSize = rs.readU32();
         if (dfdTotalSize !== index.kvdByteOffset - index.dfdByteOffset) {
-            Debug.warn("Invalid file data encountered.");
+            Debug.warn('Invalid file data encountered.');
             return null;
         }
 

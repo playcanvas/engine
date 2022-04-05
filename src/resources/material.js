@@ -227,7 +227,7 @@ class MaterialHandler {
 
         const material = materialAsset.resource;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         const TEXTURES = standardMaterialTextureParameters;
 

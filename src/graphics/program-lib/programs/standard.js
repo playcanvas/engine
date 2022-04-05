@@ -105,6 +105,7 @@ const standard = {
             }
             return chan;
         }
+        return undefined;
     },
 
     _setMapTransform: function (codes, name, id, uv) {

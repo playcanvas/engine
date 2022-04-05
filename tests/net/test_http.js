@@ -15,45 +15,6 @@ describe('pc.Http', function () {
         sinon.restore();
     });
 
-    it('get() returns resource', function (done) {
-        pc.http.get('base/tests/test-assets/net/json_test.json', function (err, data) {
-            expect(err).to.equal(null);
-            expect(data).to.deep.equal({ test: "value" });
-            done();
-        });
-    });
-
-    it('get() does not retry if retry is false', function (done) {
-        sinon.spy(pc.http, 'request');
-        pc.http.get('/someurl.json', function (err, data) {
-            expect(err).to.equal(404);
-            expect(pc.http.request.callCount).to.equal(1);
-            done();
-        });
-    });
-
-    it('get() retries resource and returns 404 in the end if not found', function (done) {
-        sinon.spy(pc.http, 'request');
-        pc.http.get('/someurl.json', {
-            retry: true,
-            maxRetries: 2
-        }, function (err) {
-            expect(err).to.equal(404);
-            expect(pc.http.request.callCount).to.equal(3);
-            done();
-        });
-    });
-
-    it('get() retries resource 5 times by default', function (done) {
-        sinon.spy(pc.http, 'request');
-        pc.http.get('/someurl.json', {
-            retry: true
-        }, function (err) {
-            expect(pc.http.request.callCount).to.equal(6);
-            done();
-        });
-    });
-
     it('get() retries resource and returns result if eventually found', function (done) {
         sinon.spy(pc.http, 'request');
 

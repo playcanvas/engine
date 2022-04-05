@@ -389,7 +389,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     createPhysicalShape(entity, data) {
-        if (typeof Ammo === 'undefined') return;
+        if (typeof Ammo === 'undefined') return undefined;
 
         if (data.model || data.render) {
 
@@ -415,6 +415,8 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             return shape;
         }
+
+        return undefined;
     }
 
     recreatePhysicalShapes(component) {
@@ -446,7 +448,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             });
             assets.load(asset);
         } else {
-            assets.once("add:" + id, (asset) => {
+            assets.once('add:' + id, (asset) => {
                 asset.ready((asset) => {
                     data[property] = asset.resource;
                     this.doRecreatePhysicalShape(component);
@@ -578,7 +580,7 @@ class CollisionComponentSystem extends ComponentSystem {
     constructor(app) {
         super(app);
 
-        this.id = "collision";
+        this.id = 'collision';
 
         this.ComponentType = CollisionComponent;
         this.DataType = CollisionComponentData;

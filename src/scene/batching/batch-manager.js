@@ -142,8 +142,8 @@ class BatchManager {
         }
 
         if (this._batchGroups[id]) {
-            Debug.error(`batch group with id ${id} already exists`);
-            return;
+            Debug.error(`Batch group with id ${id} already exists.`);
+            return undefined;
         }
 
         const group = new BatchGroup(id, name, dynamic, maxAabbSize, layers);
@@ -160,7 +160,7 @@ class BatchManager {
      */
     removeGroup(id) {
         if (!this._batchGroups[id]) {
-            Debug.error(`batch group with id ${id} doesn't exist`);
+            Debug.error(`Batch group with id ${id} doesn't exist.`);
             return;
         }
 
@@ -694,8 +694,8 @@ class BatchManager {
         // #endif
 
         if (!this._init) {
-            const boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
-            this.transformVS = boneLimit + "#define DYNAMICBATCH\n" + shaderChunks.transformVS;
+            const boneLimit = '#define BONE_LIMIT ' + this.device.getBoneLimit() + '\n';
+            this.transformVS = boneLimit + '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
             this.skinTexVS = shaderChunks.skinBatchTexVS;
             this.skinConstVS = shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};

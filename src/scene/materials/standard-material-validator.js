@@ -80,7 +80,7 @@ class StandardMaterialValidator {
 
         const TYPES = standardMaterialParameterTypes;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         for (const key in data) {
             const type = TYPES[key];
@@ -91,8 +91,8 @@ class StandardMaterialValidator {
                 continue;
             }
 
-            if (type.startsWith("enum")) {
-                const enumType = type.split(":")[1];
+            if (type.startsWith('enum')) {
+                const enumType = type.split(':')[1];
                 if (this.enumValidators[enumType]) {
                     if (!this.enumValidators[enumType](data[key])) {
                         this.setInvalid(key, data);
@@ -163,7 +163,7 @@ class StandardMaterialValidator {
                 }
 
             } else {
-                console.error("Unknown material type: " + type);
+                console.error('Unknown material type: ' + type);
             }
         }
 

@@ -24,7 +24,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
     constructor(app, manager) {
         super(app);
 
-        this.id = "audiolistener";
+        this.id = 'audiolistener';
 
         this.ComponentType = AudioListenerComponent;
         this.DataType = AudioListenerComponentData;

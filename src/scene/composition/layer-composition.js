@@ -35,7 +35,7 @@ class LayerComposition extends EventHandler {
      * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
      * "Untitled" if not specified.
      */
-    constructor(name = "Untitled") {
+    constructor(name = 'Untitled') {
         super();
 
         this.name = name;
@@ -130,7 +130,7 @@ class LayerComposition extends EventHandler {
 
             // create cluster structure with no lights
             this._emptyWorldClusters = new WorldClusters(device);
-            this._emptyWorldClusters.name = "ClusterEmpty";
+            this._emptyWorldClusters.name = 'ClusterEmpty';
 
             // update it once to avoid doing it each frame
             this._emptyWorldClusters.update([], false, null);
@@ -544,7 +544,7 @@ class LayerComposition extends EventHandler {
                             clusters = new WorldClusters(device);
                         }
 
-                        clusters.name = "Cluster-" + this._worldClusters.length;
+                        clusters.name = 'Cluster-' + this._worldClusters.length;
                         this._worldClusters.push(clusters);
                     }
 
@@ -664,7 +664,7 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (this.logRenderActions) {
-            Debug.log("Render Actions for composition: " + this.name);
+            Debug.log('Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -673,22 +673,22 @@ class LayerComposition extends EventHandler {
                 const transparent = this.subLayerList[layerIndex];
                 const camera = layer.cameras[ra.cameraIndex];
                 const dirLightCount = ra.directionalLights.length;
-                const clear = (ra.clearColor ? "Color " : "..... ") + (ra.clearDepth ? "Depth " : "..... ") + (ra.clearStencil ? "Stencil" : ".......");
+                const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
                 Debug.log(i +
-                    (" Cam: " + (camera ? camera.entity.name : "-")).padEnd(22, " ") +
-                    (" Lay: " + layer.name).padEnd(22, " ") +
-                    (transparent ? " TRANSP" : " OPAQUE") +
-                    (enabled ? " ENABLED " : " DISABLED") +
-                    " Meshes: ", (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
-                    (" RT: " + (ra.renderTarget ? ra.renderTarget.name : "-")).padEnd(30, " ") +
-                    " Clear: " + clear +
-                    " Lights: (" + layer._clusteredLightsSet.size + "/" + layer._lightsSet.size + ")" +
-                    " " + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : "").padEnd(10, " ") +
-                    (ra.firstCameraUse ? " CAM-FIRST" : "") +
-                    (ra.lastCameraUse ? " CAM-LAST" : "") +
-                    (ra.triggerPostprocess ? " POSTPROCESS" : "") +
-                    (dirLightCount ? (" DirLights: " + dirLightCount) : "")
+                    (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
+                    (' Lay: ' + layer.name).padEnd(22, ' ') +
+                    (transparent ? ' TRANSP' : ' OPAQUE') +
+                    (enabled ? ' ENABLED ' : ' DISABLED') +
+                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
+                    (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
+                    ' Clear: ' + clear +
+                    ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
+                    ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
+                    (ra.firstCameraUse ? ' CAM-FIRST' : '') +
+                    (ra.lastCameraUse ? ' CAM-LAST' : '') +
+                    (ra.triggerPostprocess ? ' POSTPROCESS' : '') +
+                    (dirLightCount ? (' DirLights: ' + dirLightCount) : '')
                 );
             }
         }
@@ -697,7 +697,7 @@ class LayerComposition extends EventHandler {
 
     _isLayerAdded(layer) {
         if (this.layerList.indexOf(layer) >= 0) {
-            Debug.error("Layer is already added.");
+            Debug.error('Layer is already added.');
             return true;
         }
         return false;
@@ -706,7 +706,7 @@ class LayerComposition extends EventHandler {
     _isSublayerAdded(layer, transparent) {
         for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                Debug.error("Sublayer is already added.");
+                Debug.error('Sublayer is already added.');
                 return true;
             }
         }
@@ -732,7 +732,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -755,7 +755,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -778,7 +778,7 @@ class LayerComposition extends EventHandler {
             this._dirty = true;
             this._dirtyLights = true;
             this._dirtyCameras = true;
-            this.fire("remove", layer);
+            this.fire('remove', layer);
         }
 
         // update both orders
@@ -804,7 +804,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -827,7 +827,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -851,7 +851,7 @@ class LayerComposition extends EventHandler {
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
-                    this.fire("remove", layer); // no sublayers left
+                    this.fire('remove', layer); // no sublayers left
                 }
                 return;
             }
@@ -872,7 +872,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -894,7 +894,7 @@ class LayerComposition extends EventHandler {
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
-        this.fire("add", layer);
+        this.fire('add', layer);
     }
 
     /**
@@ -917,7 +917,7 @@ class LayerComposition extends EventHandler {
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
-                    this.fire("remove", layer); // no sublayers left
+                    this.fire('remove', layer); // no sublayers left
                 }
                 return;
             }

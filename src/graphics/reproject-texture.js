@@ -3,7 +3,7 @@ import {
     FILTER_NEAREST,
     TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_EQUIRECT, TEXTUREPROJECTION_CUBE, TEXTUREPROJECTION_NONE
+    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from './constants.js';
 import { Vec3 } from '../math/vec3.js';
 import { random } from '../math/random.js';
@@ -39,14 +39,13 @@ const getCoding = (texture) => {
 };
 
 const getProjectionName = (projection) => {
-    // default to equirect if not specified
-    if (projection === TEXTUREPROJECTION_NONE) {
-        projection = TEXTUREPROJECTION_EQUIRECT;
-    }
     switch (projection) {
-        case TEXTUREPROJECTION_CUBE: return "Cubemap";
-        case TEXTUREPROJECTION_EQUIRECT: return "Equirect";
-        case TEXTUREPROJECTION_OCTAHEDRAL: return "Octahedral";
+        case TEXTUREPROJECTION_CUBE:
+            return "Cubemap";
+        case TEXTUREPROJECTION_OCTAHEDRAL:
+            return "Octahedral";
+        default: // for anything else, assume equirect
+            return "Equirect";
     }
 };
 

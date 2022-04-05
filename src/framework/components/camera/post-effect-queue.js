@@ -316,7 +316,7 @@ class PostEffectQueue {
                     const len = this.effects.length;
                     if (len) {
 
-                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, "Postprocess");
+                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, 'Postprocess');
 
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];

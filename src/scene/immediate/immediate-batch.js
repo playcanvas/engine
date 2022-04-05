@@ -57,13 +57,17 @@ class ImmediateBatch {
     addLinesArrays(positions, color) {
 
         // positions
-        this.positions.push(...positions);
+        const destPos = this.positions;
+        for (let i = 0; i < positions.length; i += 3) {
+            destPos.push(positions[i], positions[i + 1], positions[i + 2]);
+        }
 
         // colors
         const destCol = this.colors;
         if (color.length) {
-            // multi colored line
-            destCol.push(...color);
+            for (let i = 0; i < color.length; i += 4) {
+                destCol.push(color[i], color[i + 1], color[i + 2], color[i + 3]);
+            }
         } else {
             // single colored line
             const count = positions.length / 3;
