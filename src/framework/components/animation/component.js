@@ -176,11 +176,13 @@ class AnimationComponent extends Component {
             }
         }
 
-        this._assets = value.map((value) => {
+        this._assets = value;
+
+        const assetIds = value.map((value) => {
             return (value instanceof Asset) ? value.id : value;
         });
 
-        this.loadAnimationAssets(this._assets);
+        this.loadAnimationAssets(assetIds);
     }
 
     get assets() {
