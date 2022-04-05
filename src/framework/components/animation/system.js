@@ -5,6 +5,7 @@ import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
 /** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../entity.js').Entity} Entity */
 
 const _schema = [
     'enabled'
@@ -35,6 +36,17 @@ class AnimationComponentSystem extends ComponentSystem {
         this.app.systems.on('update', this.onUpdate, this);
     }
 
+    /**
+     * Called during {@link ComponentSystem#addComponent} to initialize the component data in the
+     * store. This can be overridden by derived Component Systems and either called by the derived
+     * System or replaced entirely.
+     *
+     * @param {AnimationComponent} component - The component being initialized.
+     * @param {object} data - The data block used to initialize the component.
+     * @param {string[]|object[]} properties - The array of property descriptors for the component.
+     * A descriptor can be either a plain property name, or an object specifying the name and type.
+     * @ignore
+     */
     initializeComponentData(component, data, properties) {
         for (const property in data) {
             if (data.hasOwnProperty(property)) {
@@ -45,6 +57,14 @@ class AnimationComponentSystem extends ComponentSystem {
         super.initializeComponentData(component, data, _schema);
     }
 
+    /**
+     * Create a clone of component. This creates a copy of all component data variables.
+     *
+     * @param {Entity} entity - The entity to clone the component from.
+     * @param {Entity} clone - The entity to clone the component into.
+     * @returns {AnimationComponent} The newly cloned component.
+     * @ignore
+     */
     cloneComponent(entity, clone) {
         this.addComponent(clone, {});
 
@@ -54,7 +74,7 @@ class AnimationComponentSystem extends ComponentSystem {
         clone.animation.activate = entity.animation.activate;
         clone.animation.enabled = entity.animation.enabled;
 
-        const clonedAnimations = { };
+        const clonedAnimations = {};
         const animations = entity.animation.animations;
         for (const key in animations) {
             if (animations.hasOwnProperty(key)) {
@@ -63,7 +83,7 @@ class AnimationComponentSystem extends ComponentSystem {
         }
         clone.animation.animations = clonedAnimations;
 
-        const clonedAnimationsIndex = { };
+        const clonedAnimationsIndex = {};
         const animationsIndex = entity.animation.animationsIndex;
         for (const key in animationsIndex) {
             if (animationsIndex.hasOwnProperty(key)) {
@@ -75,10 +95,19 @@ class AnimationComponentSystem extends ComponentSystem {
         return clone.animation;
     }
 
+    /**
+     * @param {Entity} entity - The entity having its component removed.
+     * @param {AnimationComponent} component - The component being removed.
+     * @private
+     */
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
     }
 
+    /**
+     * @param {number} dt - The time delta since the last frame.
+     * @private
+     */
     onUpdate(dt) {
         const components = this.store;
 

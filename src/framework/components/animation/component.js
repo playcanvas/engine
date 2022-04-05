@@ -53,7 +53,8 @@ class AnimationComponent extends Component {
     model = null;
 
     /**
-     * Get the skeleton for the current model; unless model is from glTF/glb, then skeleton is null.
+     * Get the skeleton for the current model. If the model is loaded from glTF/glb, then the
+     * skeleton is null.
      *
      * @type {Skeleton|null}
      */
@@ -115,8 +116,8 @@ class AnimationComponent extends Component {
     activate = true;
 
     /**
-     * Speed multiplier for animation play back speed. 1 is playback at normal speed and 0 pauses
-     * the animation.
+     * Speed multiplier for animation play back. 1 is playback at normal speed and 0 pauses the
+     * animation.
      *
      * @type {number}
      */
@@ -133,7 +134,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get or Set dictionary of animations by name.
+     * Get or set dictionary of animations by name.
      *
      * @type {Object.<string, Animation>}
      */
@@ -190,7 +191,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get or Set the current time position (in seconds) of the animation.
+     * Get or set the current time position (in seconds) of the animation.
      *
      * @type {number}
      */
