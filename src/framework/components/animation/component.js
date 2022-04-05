@@ -34,10 +34,7 @@ class AnimationComponent extends Component {
      */
     _assets = [];
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     _loop = true;
 
     /**
@@ -90,36 +87,23 @@ class AnimationComponent extends Component {
      */
     currAnim = null;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     blend = 0;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
+    /** @private */
     blending = false;
 
-    /**
-     * @type {number}
-     * @private
-     */
+    /** @private */
     blendSpeed = 0;
 
     /**
      * If true the first animation asset will begin playing when the scene is loaded.
-     *
-     * @type {boolean}
      */
     activate = true;
 
     /**
      * Speed multiplier for animation play back. 1 is playback at normal speed and 0 pauses the
      * animation.
-     *
-     * @type {number}
      */
     speed = 1;
 
