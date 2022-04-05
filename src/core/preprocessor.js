@@ -38,7 +38,7 @@ class Preprocessor {
      * Run c-like proprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
-     * @returns {string} Returns preprocessed source code.
+     * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
     static run(source) {
 
