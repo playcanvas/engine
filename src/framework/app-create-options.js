@@ -6,8 +6,9 @@
 /** @typedef {import('../input/mouse.js').Mouse} Mouse */
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
 /** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
-/** @typedef {import('../scene/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
+/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 
 class AppCreateOptions {
     /**
@@ -83,9 +84,16 @@ class AppCreateOptions {
     /**
      * The lightmapper.
      *
-     * @type {Lightmapper}
+     * @type {typeof Lightmapper}
      */
     lightmapper;
+
+    /**
+     * The XrManager.
+     *
+     * @type {typeof XrManager}
+     */
+    xr;
 
     /**
      * The component systems the app requires.

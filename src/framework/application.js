@@ -59,6 +59,8 @@ import { TextHandler } from '../resources/text.js';
 import { TextureAtlasHandler } from '../resources/texture-atlas.js';
 import { TextureHandler } from '../resources/texture.js';
 
+import { XrManager } from '../xr/xr-manager.js';
+
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
@@ -134,6 +136,7 @@ import { TextureHandler } from '../resources/texture.js';
 
         createOptions.soundManager = new SoundManager(options);
         createOptions.lightmapper = Lightmapper;
+        createOptions.xr = XrManager;
 
         this.init(createOptions);
     }

@@ -48,7 +48,6 @@ import { ScriptRegistry } from '../script/script-registry.js';
 import { I18n } from '../i18n/i18n.js';
 
 import { VrManager } from '../vr/vr-manager.js';
-import { XrManager } from '../xr/xr-manager.js';
 
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';
@@ -76,8 +75,9 @@ import {
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../scene/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
+/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -522,7 +522,7 @@ class AppBase extends EventHandler {
          *     // VR is available
          * }
          */
-        this.xr = new XrManager(this);
+        this.xr = new createOptions.xr(this);
 
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
