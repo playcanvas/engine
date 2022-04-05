@@ -294,12 +294,12 @@ export const SHADOW_COUNT = 6;
  * @ignore
  */
 export const shadowTypeToString = {};
-shadowTypeToString[SHADOW_PCF3] = "PCF3";
-shadowTypeToString[SHADOW_VSM8] = "VSM8";
-shadowTypeToString[SHADOW_VSM16] = "VSM16";
-shadowTypeToString[SHADOW_VSM32] = "VSM32";
-shadowTypeToString[SHADOW_PCF5] = "PCF5";
-shadowTypeToString[SHADOW_PCF1] = "PCF1";
+shadowTypeToString[SHADOW_PCF3] = 'PCF3';
+shadowTypeToString[SHADOW_VSM8] = 'VSM8';
+shadowTypeToString[SHADOW_VSM16] = 'VSM16';
+shadowTypeToString[SHADOW_VSM32] = 'VSM32';
+shadowTypeToString[SHADOW_PCF5] = 'PCF5';
+shadowTypeToString[SHADOW_PCF1] = 'PCF1';
 
 /**
  * Box filter.

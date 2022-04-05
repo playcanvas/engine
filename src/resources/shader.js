@@ -1,7 +1,14 @@
 import { http } from '../net/http.js';
 
 class ShaderHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "shader";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 

@@ -433,10 +433,10 @@ class CameraComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -458,10 +458,10 @@ class CameraComponent extends Component {
 
         system.addCamera(this);
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.on("add", this.onLayerAdded, this);
-            layers.on("remove", this.onLayerRemoved, this);
+            layers.on('add', this.onLayerAdded, this);
+            layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -480,10 +480,10 @@ class CameraComponent extends Component {
 
         this.removeCameraFromLayers();
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.off("add", this.onLayerAdded, this);
-            layers.off("remove", this.onLayerRemoved, this);
+            layers.off('add', this.onLayerAdded, this);
+            layers.off('remove', this.onLayerRemoved, this);
         }
 
         system.removeCamera(this);
@@ -574,7 +574,7 @@ class CameraComponent extends Component {
         }
 
         if (!this.system.app.vr) {
-            callback("VrManager not created. Enable VR in project settings.");
+            callback('VrManager not created. Enable VR in project settings.');
             return;
         }
 
@@ -606,7 +606,7 @@ class CameraComponent extends Component {
                 callback();
             }
         } else {
-            callback("No pc.VrDisplay to present");
+            callback('No pc.VrDisplay to present');
         }
     }
 
@@ -638,7 +638,7 @@ class CameraComponent extends Component {
                 callback();
             }
         } else {
-            callback("Not presenting VR");
+            callback('Not presenting VR');
         }
     }
 
@@ -717,7 +717,7 @@ class CameraComponent extends Component {
      */
     endXr(callback) {
         if (!this._camera.xr) {
-            if (callback) callback(new Error("Camera is not in XR"));
+            if (callback) callback(new Error('Camera is not in XR'));
             return;
         }
 

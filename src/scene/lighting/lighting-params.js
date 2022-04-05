@@ -1,6 +1,6 @@
-import { Vec3 } from "../../math/vec3.js";
-import { math } from "../../math/math.js";
-import { SHADOW_PCF3 } from "../constants.js";
+import { Vec3 } from '../../math/vec3.js';
+import { math } from '../../math/math.js';
+import { SHADOW_PCF3 } from '../constants.js';
 
 class LightingParams {
     constructor(supportsAreaLights, maxTextureSize, dirtyLightsFnc) {

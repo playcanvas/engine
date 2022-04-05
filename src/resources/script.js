@@ -1,6 +1,6 @@
 import { script } from '../framework/script.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -12,9 +12,17 @@ import { script } from '../framework/script.js';
  */
 class ScriptHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "script";
+
+    /**
      * Create a new ScriptHandler instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
     constructor(app) {
         this._app = app;
@@ -26,7 +34,7 @@ class ScriptHandler {
 
     static _push(Type) {
         if (script.legacy && ScriptHandler._types.length > 0) {
-            console.assert("Script Ordering Error. Contact support@playcanvas.com");
+            console.assert('Script Ordering Error. Contact support@playcanvas.com');
         } else {
             ScriptHandler._types.push(Type);
         }
@@ -101,7 +109,7 @@ class ScriptHandler {
 
         let done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState === "loaded" || this.readyState === "complete"))) {
+            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }

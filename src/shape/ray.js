@@ -19,8 +19,8 @@ class Ray {
      * var ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
      */
     constructor(origin = new Vec3(), direction = new Vec3(0, 0, -1)) {
-        Debug.assert(!Object.isFrozen(origin), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'origin' parameter`);
-        Debug.assert(!Object.isFrozen(direction), `The constructor of 'Ray' does not accept a constant (frozen) object as a 'direction' parameter`);
+        Debug.assert(!Object.isFrozen(origin), 'The constructor of \'Ray\' does not accept a constant (frozen) object as a \'origin\' parameter');
+        Debug.assert(!Object.isFrozen(direction), 'The constructor of \'Ray\' does not accept a constant (frozen) object as a \'direction\' parameter');
 
         /**
          * The starting point of the ray.

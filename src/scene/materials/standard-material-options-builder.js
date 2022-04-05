@@ -66,8 +66,8 @@ class StandardMaterialOptionsBuilder {
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.pass = pass;
         options.alphaTest = stdMat.alphaTest > 0;
-        options.forceFragmentPrecision = stdMat.forceFragmentPrecision || "";
-        options.chunks = stdMat.chunks || "";
+        options.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';
+        options.chunks = stdMat.chunks || '';
         options.blendType = stdMat.blendType;
         options.forceUv1 = stdMat.forceUv1;
         options.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
@@ -176,7 +176,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateEnvOptions(options, device, stdMat, scene) {
-        options.fog = stdMat.useFog ? scene.fog : "none";
+        options.fog = stdMat.useFog ? scene.fog : 'none';
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
         options.useRgbm = (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
@@ -227,7 +227,7 @@ class StandardMaterialOptionsBuilder {
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
         options.lightMap = false;
-        options.lightMapChannel = "";
+        options.lightMapChannel = '';
         options.lightMapUv = 0;
         options.lightMapTransform = 0;
         options.lightMapWithoutAmbient = false;
@@ -239,7 +239,7 @@ class StandardMaterialOptionsBuilder {
             if ((objDefs & SHADERDEF_LM) !== 0) {
                 options.lightMapFormat = 1; // rgbm
                 options.lightMap = true;
-                options.lightMapChannel = "rgb";
+                options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
                 options.lightMapTransform = 0;
                 options.lightMapWithoutAmbient = !stdMat.lightMap;
@@ -278,29 +278,29 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
-        const mname = p + "Map";
-        const vname = p + "VertexColor";
-        const vcname = p + "VertexColorChannel";
-        const cname = mname + "Channel";
-        const tname = mname + "Transform";
-        const uname = mname + "Uv";
+        const mname = p + 'Map';
+        const vname = p + 'VertexColor';
+        const vcname = p + 'VertexColorChannel';
+        const cname = mname + 'Channel';
+        const tname = mname + 'Transform';
+        const uname = mname + 'Uv';
 
         // Avoid overriding previous lightMap properties
-        if (p !== "light") {
+        if (p !== 'light') {
             options[mname] = false;
-            options[cname] = "";
+            options[cname] = '';
             options[tname] = 0;
             options[uname] = 0;
         }
         options[vname] = false;
-        options[vcname] = "";
+        options[vcname] = '';
 
-        const isOpacity = p === "opacity";
+        const isOpacity = p === 'opacity';
         if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
-            return options;
+            return;
 
         if (!minimalOptions || isOpacity) {
-            if (p !== "height" && stdMat[vname]) {
+            if (p !== 'height' && stdMat[vname]) {
                 if (hasVcolor) {
                     options[vname] = stdMat[vname];
                     options[vcname] = stdMat[vcname];

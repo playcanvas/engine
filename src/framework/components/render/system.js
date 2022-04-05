@@ -10,7 +10,7 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
@@ -45,7 +45,8 @@ class RenderComponentSystem extends ComponentSystem {
     /**
      * Create a new RenderComponentSystem.
      *
-     * @param {Application} app - The Application.
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

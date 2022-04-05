@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    FUNC_ALWAYS, FUNC_LESSEQUAL,
+    FUNC_ALWAYS,
     SEMANTIC_ATTR,
     STENCILOP_KEEP
 } from '../../graphics/constants.js';
@@ -161,9 +161,9 @@ class ForwardRenderer {
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
-        this.ambientId = scope.resolve("light_globalAmbient");
-        this.exposureId = scope.resolve("exposure");
-        this.skyboxIntensityId = scope.resolve("skyboxIntensity");
+        this.ambientId = scope.resolve('light_globalAmbient');
+        this.exposureId = scope.resolve('exposure');
+        this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -193,7 +193,7 @@ class ForwardRenderer {
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
-        this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
+        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -528,31 +528,31 @@ class ForwardRenderer {
     }
 
     _resolveLight(scope, i) {
-        const light = "light" + i;
-        this.lightColorId[i] = scope.resolve(light + "_color");
+        const light = 'light' + i;
+        this.lightColorId[i] = scope.resolve(light + '_color');
         this.lightDir[i] = new Float32Array(3);
-        this.lightDirId[i] = scope.resolve(light + "_direction");
-        this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
-        this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
-        this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
-        this.lightRadiusId[i] = scope.resolve(light + "_radius");
+        this.lightDirId[i] = scope.resolve(light + '_direction');
+        this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
+        this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
+        this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
+        this.lightRadiusId[i] = scope.resolve(light + '_radius');
         this.lightPos[i] = new Float32Array(3);
-        this.lightPosId[i] = scope.resolve(light + "_position");
+        this.lightPosId[i] = scope.resolve(light + '_position');
         this.lightWidth[i] = new Float32Array(3);
-        this.lightWidthId[i] = scope.resolve(light + "_halfWidth");
+        this.lightWidthId[i] = scope.resolve(light + '_halfWidth');
         this.lightHeight[i] = new Float32Array(3);
-        this.lightHeightId[i] = scope.resolve(light + "_halfHeight");
-        this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
-        this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
-        this.lightCookieId[i] = scope.resolve(light + "_cookie");
-        this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
-        this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
-        this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
+        this.lightHeightId[i] = scope.resolve(light + '_halfHeight');
+        this.lightInAngleId[i] = scope.resolve(light + '_innerConeAngle');
+        this.lightOutAngleId[i] = scope.resolve(light + '_outerConeAngle');
+        this.lightCookieId[i] = scope.resolve(light + '_cookie');
+        this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
+        this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
+        this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
 
         // shadow cascades
-        this.shadowMatrixPaletteId[i] = scope.resolve(light + "_shadowMatrixPalette[0]");
-        this.shadowCascadeDistancesId[i] = scope.resolve(light + "_shadowCascadeDistances[0]");
-        this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
+        this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
+        this.shadowCascadeDistancesId[i] = scope.resolve(light + '_shadowCascadeDistances[0]');
+        this.shadowCascadeCountId[i] = scope.resolve(light + '_shadowCascadeCount');
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -1281,7 +1281,7 @@ class ForwardRenderer {
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
                         if (!drawCall.isStatic) {
-                            const variantKey = pass + "_" + objDefs + "_" + lightHash;
+                            const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
                                 this.updateShader(drawCall, objDefs, null, pass, sortedLights);
@@ -1377,7 +1377,7 @@ class ForwardRenderer {
                         device.setDepthFunc(FUNC_ALWAYS);
                         device.setDepthTest(true);
                     } else {
-                        device.setDepthFunc(FUNC_LESSEQUAL);
+                        device.setDepthFunc(material.depthFunc);
                         device.setDepthTest(material.depthTest);
                     }
 
@@ -1894,7 +1894,7 @@ class ForwardRenderer {
                 continue;
             }
 
-            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
             DebugGraphics.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER

@@ -123,11 +123,11 @@ class LightTextureAtlas {
     }
 
     allocateUniforms() {
-        this._shadowAtlasTextureId = this.device.scope.resolve("shadowAtlasTexture");
-        this._shadowAtlasParamsId = this.device.scope.resolve("shadowAtlasParams");
+        this._shadowAtlasTextureId = this.device.scope.resolve('shadowAtlasTexture');
+        this._shadowAtlasParamsId = this.device.scope.resolve('shadowAtlasParams');
         this._shadowAtlasParams = new Float32Array(2);
 
-        this._cookieAtlasTextureId = this.device.scope.resolve("cookieAtlasTexture");
+        this._cookieAtlasTextureId = this.device.scope.resolve('cookieAtlasTexture');
     }
 
     updateUniforms() {

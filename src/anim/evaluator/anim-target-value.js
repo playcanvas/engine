@@ -1,5 +1,7 @@
-import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
+import { Quat } from '../../math/quat.js';
+import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
+import { math } from '../../math/math.js';
 
 /**
  * Used to store and update the value of an animation target. This combines the values of multiple
@@ -11,6 +13,18 @@ class AnimTargetValue {
     static TYPE_QUAT = 'quaternion';
 
     static TYPE_VEC3 = 'vector3';
+
+    static q1 = new Quat();
+
+    static q2 = new Quat();
+
+    static q3 = new Quat();
+
+    static quatArr = [0, 0, 0, 1];
+
+    static vecArr = [0, 0, 0];
+
+    static IDENTITY_QUAT_ARR = [0, 0, 0, 1];
 
     /**
      * Create a new AnimTargetValue instance.
@@ -27,23 +41,37 @@ class AnimTargetValue {
         this.layerCounter = 0;
         this.valueType = type;
         this.dirty = true;
-        this.value = [0, 0, 0, 1];
+        this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
+        this.baseValue = null;
+        this.setter = null;
+    }
+
+    get _normalizeWeights() {
+        return this._component.normalizeWeights;
     }
 
     getWeight(index) {
         if (this.dirty) this.updateWeights();
-        if (this.totalWeight === 0 || !this.mask[index]) {
+        if (this._normalizeWeights && this.totalWeight === 0 || !this.mask[index]) {
             return 0;
+        } else if (this._normalizeWeights) {
+            return this.weights[index] / this.totalWeight;
         }
-        return this.weights[index] / this.totalWeight;
+        return math.clamp(this.weights[index], 0, 1);
+    }
+
+    _layerBlendType(index) {
+        return this._component.layers[index].blendType;
     }
 
     setMask(index, value) {
         this.mask[index] = value;
-        if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
-            this.mask = this.mask.fill(0, 0, index);
+        if (this._normalizeWeights) {
+            if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
+                this.mask = this.mask.fill(0, 0, index);
+            }
+            this.dirty = true;
         }
-        this.dirty = true;
     }
 
     updateWeights() {
@@ -58,16 +86,44 @@ class AnimTargetValue {
     updateValue(index, value) {
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            this.value[0] = 0;
-            this.value[1] = 0;
-            this.value[2] = 0;
-            this.value[3] = 1;
+            AnimEvaluator._set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);
+            if (!this._normalizeWeights) {
+                AnimEvaluator._blend(this.value, this.baseValue, 1, this.valueType);
+            }
         }
-        if (!this.mask[index]) return;
-        if (this.counter === 0) {
-            AnimEvaluator._set(this.value, value, this.valueType);
+        if (!this.mask[index] || this.getWeight(index) === 0) return;
+        if (this._layerBlendType(index) === ANIM_LAYER_ADDITIVE && !this._normalizeWeights) {
+            if (this.valueType === AnimTargetValue.TYPE_QUAT) {
+                // current value
+                const v = AnimTargetValue.q1.set(this.value[0], this.value[1], this.value[2], this.value[3]);
+                // additive value
+                const aV1 = AnimTargetValue.q2.set(this.baseValue[0], this.baseValue[1], this.baseValue[2], this.baseValue[3]);
+                const aV2 = AnimTargetValue.q3.set(value[0], value[1], value[2], value[3]);
+                const aV = aV1.invert().mul(aV2);
+                // scale additive value by it's weight
+                aV.slerp(Quat.IDENTITY, aV, this.getWeight(index));
+                // add the additive value onto the current value then set it to the targets value
+                v.mul(aV);
+                AnimTargetValue.quatArr[0] = v.x;
+                AnimTargetValue.quatArr[1] = v.y;
+                AnimTargetValue.quatArr[2] = v.z;
+                AnimTargetValue.quatArr[3] = v.w;
+                AnimEvaluator._set(this.value, AnimTargetValue.quatArr, this.valueType);
+            } else {
+                AnimTargetValue.vecArr[0] = value[0] - this.baseValue[0];
+                AnimTargetValue.vecArr[1] = value[1] - this.baseValue[1];
+                AnimTargetValue.vecArr[2] = value[2] - this.baseValue[2];
+                AnimEvaluator._blend(this.value, AnimTargetValue.vecArr, this.getWeight(index), this.valueType, true);
+            }
         } else {
             AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
+        }
+        if (this.setter) this.setter(this.value);
+    }
+
+    unbind() {
+        if (!this._normalizeWeights) {
+            this.setter(this.baseValue);
         }
     }
 }

@@ -11,7 +11,7 @@ const path = {
      *
      * @type {string}
      */
-    delimiter: "/",
+    delimiter: '/',
 
     /**
      * Join two or more sections of file path together, inserting a delimiter if needed.
@@ -33,7 +33,7 @@ const path = {
             const one = arguments[index];
             const two = arguments[index + 1];
             if (!isDefined(one) || !isDefined(two)) {
-                throw new Error("undefined argument to pc.path.join");
+                throw new Error('undefined argument to pc.path.join');
             }
             if (two[0] === path.delimiter) {
                 result = two;
@@ -147,9 +147,9 @@ const path = {
     getExtension: function (pathname) {
         const ext = pathname.split('?')[0].split('.').pop();
         if (ext !== pathname) {
-            return "." + ext;
+            return '.' + ext;
         }
-        return "";
+        return '';
     },
 
     /**
@@ -168,7 +168,7 @@ const path = {
      * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
      */
     isRelativePath: function (pathname) {
-        return pathname.charAt(0) !== "/" && pathname.match(/:\/\//) === null;
+        return pathname.charAt(0) !== '/' && pathname.match(/:\/\//) === null;
     },
 
     /**
@@ -183,30 +183,30 @@ const path = {
      * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
     extractPath: function (pathname) {
-        let result = "";
-        const parts = pathname.split("/");
+        let result = '';
+        const parts = pathname.split('/');
         let i = 0;
 
         if (parts.length > 1) {
             if (path.isRelativePath(pathname)) {
-                if (parts[0] === ".") {
+                if (parts[0] === '.') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : "/" + parts[i];
+                        result += (i === 0) ? parts[i] : '/' + parts[i];
 
                     }
-                } else if (parts[0] === "..") {
+                } else if (parts[0] === '..') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : "/" + parts[i];
+                        result += (i === 0) ? parts[i] : '/' + parts[i];
                     }
                 } else {
-                    result = ".";
+                    result = '.';
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += "/" + parts[i];
+                        result += '/' + parts[i];
                     }
                 }
             } else {
                 for (i = 0; i < parts.length - 1; ++i) {
-                    result += (i === 0) ? parts[i] : "/" + parts[i];
+                    result += (i === 0) ? parts[i] : '/' + parts[i];
                 }
             }
         }

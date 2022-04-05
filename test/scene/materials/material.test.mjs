@@ -1,4 +1,4 @@
-import { CULLFACE_BACK } from '../../../src/graphics/constants.js';
+import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 
@@ -16,6 +16,7 @@ describe('Material', function () {
         expect(material.cull).to.equal(CULLFACE_BACK);
         expect(material.depthBias).to.equal(0);
         expect(material.depthTest).to.equal(true);
+        expect(material.depthFunc).to.equal(FUNC_LESSEQUAL);
         expect(material.depthWrite).to.equal(true);
         expect(material.greenWrite).to.equal(true);
         expect(material.name).to.equal('Untitled');

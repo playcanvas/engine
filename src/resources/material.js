@@ -10,7 +10,7 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 const PLACEHOLDER_MAP = {
@@ -34,9 +34,17 @@ const PLACEHOLDER_MAP = {
  */
 class MaterialHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "material";
+
+    /**
      * Create a new MaterialHandler instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
     constructor(app) {
         this._assets = app.assets;
@@ -227,7 +235,7 @@ class MaterialHandler {
 
         const material = materialAsset.resource;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         const TEXTURES = standardMaterialTextureParameters;
 

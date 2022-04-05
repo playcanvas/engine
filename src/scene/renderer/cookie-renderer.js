@@ -59,26 +59,26 @@ class CookieRenderer {
             this[shader] = createShaderFromCode(this.device, textureBlitVertexShader, fragment, `cookie_renderer_${shader}`);
 
         if (!this.blitTextureId)
-            this.blitTextureId = this.device.scope.resolve("blitTexture");
+            this.blitTextureId = this.device.scope.resolve('blitTexture');
 
         if (!this.invViewProjId)
-            this.invViewProjId = this.device.scope.resolve("invViewProj");
+            this.invViewProjId = this.device.scope.resolve('invViewProj');
 
         return this[shader];
     }
 
     get shader2d() {
-        return this.getShader("blitShader2d", textureBlitFragmentShader);
+        return this.getShader('blitShader2d', textureBlitFragmentShader);
     }
 
     get shaderCube() {
-        return this.getShader("blitShaderCube", textureCubeBlitFragmentShader);
+        return this.getShader('blitShaderCube', textureCubeBlitFragmentShader);
     }
 
     static createTexture(device, resolution) {
 
         const texture = new Texture(device, {
-            name: "CookieAtlas",
+            name: 'CookieAtlas',
             width: resolution,
             height: resolution,
             format: PIXELFORMAT_R8_G8_B8_A8,

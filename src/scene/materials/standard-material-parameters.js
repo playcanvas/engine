@@ -166,6 +166,7 @@ const standardMaterialParameterTypes = {
     lightMapRotation: 'number',
 
     depthTest: 'boolean',
+    depthFunc: 'enum:depthFunc',
     depthWrite: 'boolean',
     depthBias: 'number',
     slopeDepthBias: 'number',

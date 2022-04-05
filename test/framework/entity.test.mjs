@@ -3,7 +3,7 @@ import { Color } from '../../src/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
-import { Application } from '../../src/framework/app-base.js';
+import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
 import { AudioSourceComponent } from '../../src/framework/components/audio-source/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
@@ -215,7 +215,7 @@ describe('Entity', function () {
             root.destroy();
         });
 
-        it("returns a deep clone of the entity's subtree, including all components", function () {
+        it('returns a deep clone of the entity\'s subtree, including all components', function () {
             const subtree1 = createSubtree();
             const subtree2 = cloneSubtree(subtree1);
 
@@ -270,7 +270,7 @@ describe('Entity', function () {
             expect(subtree1.a_a_b.getGuid()).to.not.equal(subtree2.a_a_b.getGuid());
         });
 
-        it("resolves entity property references that refer to entities within the duplicated subtree", function () {
+        it('resolves entity property references that refer to entities within the duplicated subtree', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: subtree1.a_a.getGuid(), myEntity2: subtree1.a_a_b.getGuid() });
             subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a.getGuid(), myEntity2: subtree1.a_b.getGuid() });
@@ -282,7 +282,7 @@ describe('Entity', function () {
             expect(subtree2.a_a_a.dummy.myEntity2).to.equal(subtree2.a_b.getGuid());
         });
 
-        it("resolves entity property references that refer to the cloned entity itself", function () {
+        it('resolves entity property references that refer to the cloned entity itself', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.getGuid() });
             subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.getGuid() });
@@ -292,7 +292,7 @@ describe('Entity', function () {
             expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it("does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree", function () {
+        it('does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree', function () {
             const root = new Entity('root', app);
             const sibling = new Entity('sibling', app);
 
@@ -307,7 +307,7 @@ describe('Entity', function () {
             expect(subtree2.a.dummy.myEntity2).to.equal(sibling.getGuid());
         });
 
-        it("ignores null and undefined entity property references", function () {
+        it('ignores null and undefined entity property references', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: null, myEntity2: undefined });
 
@@ -316,7 +316,7 @@ describe('Entity', function () {
             expect(subtree2.a.dummy.myEntity2).to.be.undefined;
         });
 
-        it("resolves entity script attributes that refer to entities within the duplicated subtree", function () {
+        it('resolves entity script attributes that refer to entities within the duplicated subtree', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -363,7 +363,7 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it("resolves entity script attributes that refer to entities within the duplicated subtree after preloading has finished", function () {
+        it('resolves entity script attributes that refer to entities within the duplicated subtree after preloading has finished', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -413,7 +413,7 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it("does not attempt to resolve entity script attributes that refer to entities outside of the duplicated subtree", function () {
+        it('does not attempt to resolve entity script attributes that refer to entities outside of the duplicated subtree', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -444,7 +444,7 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
         });
 
-        it("does not resolve entity script attributes that refer to entities within the duplicated subtree if app.useLegacyScriptAttributeCloning is true", function () {
+        it('does not resolve entity script attributes that refer to entities within the duplicated subtree if app.useLegacyScriptAttributeCloning is true', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });

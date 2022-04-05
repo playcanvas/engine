@@ -5,7 +5,7 @@ import { ComponentSystem } from '../system.js';
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';
@@ -28,7 +28,8 @@ class ScriptComponentSystem extends ComponentSystem {
     /**
      * Create a new ScriptComponentSystem.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

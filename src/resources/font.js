@@ -6,7 +6,7 @@ import { http } from '../net/http.js';
 import { Font } from '../font/font.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
@@ -39,12 +39,20 @@ function upgradeDataSchema(data) {
  */
 class FontHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "font";
+
+    /**
      * Create a new FontHandler instance.
      *
-     * @param {ResourceLoader} loader - The resource loader.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(loader) {
-        this._loader = loader;
+    constructor(app) {
+        this._loader = app.loader;
         this.maxRetries = 0;
     }
 
@@ -114,9 +122,9 @@ class FontHandler {
             };
 
             if (index === 0) {
-                loader.load(url, "texture", onLoaded);
+                loader.load(url, 'texture', onLoaded);
             } else {
-                loader.load(url.replace('.png', index + '.png'), "texture", onLoaded);
+                loader.load(url.replace('.png', index + '.png'), 'texture', onLoaded);
             }
         };
 

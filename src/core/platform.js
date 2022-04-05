@@ -47,8 +47,8 @@ if (typeof navigator !== 'undefined') {
                 return false;
             }
         });
-        window.addEventListener("testpassive", null, opts);
-        window.removeEventListener("testpassive", null, opts);
+        window.addEventListener('testpassive', null, opts);
+        window.removeEventListener('testpassive', null, opts);
     } catch (e) {}
 }
 

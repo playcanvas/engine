@@ -66,7 +66,7 @@ class HdrParser {
         // require magic
         const magic = readStream.readLine();
         if (!magic.startsWith('#?RADIANCE')) {
-            Debug.error("radiance header has invalid magic");
+            Debug.error('radiance header has invalid magic');
             return null;
         }
 
@@ -87,14 +87,14 @@ class HdrParser {
 
         // we require FORMAT variable
         if (!variables.hasOwnProperty('FORMAT')) {
-            Debug.error("radiance header missing FORMAT variable");
+            Debug.error('radiance header missing FORMAT variable');
             return null;
         }
 
         // read the resolution specifier
         const resolution = readStream.readLine().split(' ');
         if (resolution.length !== 4) {
-            Debug.error("radiance header has invalid resolution");
+            Debug.error('radiance header has invalid resolution');
             return null;
         }
 
@@ -144,7 +144,7 @@ class HdrParser {
 
             // sanity check it
             if ((rgbe[2] << 8) + rgbe[3] !== width) {
-                Debug.error("radiance has invalid scanline width");
+                Debug.error('radiance has invalid scanline width');
                 return null;
             }
 
@@ -157,7 +157,7 @@ class HdrParser {
                         // run of the same value
                         count -= 128;
                         if (x + count > width) {
-                            Debug.error("radiance has invalid scanline data");
+                            Debug.error('radiance has invalid scanline data');
                             return null;
                         }
                         value = readStream.readU8();
@@ -167,7 +167,7 @@ class HdrParser {
                     } else {
                         // non-run
                         if (count === 0 || x + count > width) {
-                            Debug.error("radiance has invalid scanline data");
+                            Debug.error('radiance has invalid scanline data');
                             return null;
                         }
                         for (i = 0; i < count; ++i) {

@@ -6,11 +6,11 @@ import { Component } from '../component.js';
 class ScriptLegacyComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
-        this.on("set_scripts", this.onSetScripts, this);
+        this.on('set_scripts', this.onSetScripts, this);
     }
 
     send(name, functionName) {
-        Debug.deprecated("ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
+        Debug.deprecated('ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/');
 
         const args = Array.prototype.slice.call(arguments, 2);
         const instances = this.entity.script.instances;
@@ -21,8 +21,8 @@ class ScriptLegacyComponent extends Component {
             if (fn) {
                 return fn.apply(instances[name].instance, args);
             }
-
         }
+        return undefined;
     }
 
     onEnable() {
@@ -109,7 +109,7 @@ class ScriptLegacyComponent extends Component {
     _loadFromCache(urls) {
         const cached = [];
 
-        const prefix = this.system.app._scriptPrefix || "";
+        const prefix = this.system.app._scriptPrefix || '';
         const regex = /^http(s)?:\/\//i;
 
         for (let i = 0, len = urls.length; i < len; i++) {
@@ -166,20 +166,20 @@ class ScriptLegacyComponent extends Component {
     _loadScripts(urls) {
         let count = urls.length;
 
-        const prefix = this.system.app._scriptPrefix || "";
+        const prefix = this.system.app._scriptPrefix || '';
 
         urls.forEach((url) => {
             let _url = null;
             let _unprefixed = null;
             // support absolute URLs (for now)
-            if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
+            if (url.toLowerCase().startsWith('http://') || url.toLowerCase().startsWith('https://')) {
                 _unprefixed = url;
                 _url = url;
             } else {
                 _unprefixed = url;
                 _url = path.join(prefix, url);
             }
-            this.system.app.loader.load(_url, "script", (err, ScriptType) => {
+            this.system.app.loader.load(_url, 'script', (err, ScriptType) => {
                 count--;
                 if (!err) {
                     // ScriptType is null if the script is not a PlayCanvas script

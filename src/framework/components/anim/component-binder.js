@@ -154,11 +154,18 @@ class AnimComponentBinder extends DefaultAnimBinder {
         const key = path[path.length - 1];
 
         // if the object has a setter function, use it
-        const setterFunc = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
-        if (obj[setterFunc]) {
-            const func = obj[setterFunc].bind(obj);
-            return function (values) {
-                func(packFunc(values));
+        const setterFuncName = 'set' + key.substring(0, 1).toUpperCase() + key.substring(1);
+        if (obj[setterFuncName]) {
+            // if the object has a setter function, use it
+            const getterFunc = obj['get' + key.substring(0, 1).toUpperCase() + key.substring(1)].bind(obj);
+            let baseValues = getterFunc();
+            baseValues = [baseValues.x, baseValues.y, baseValues.z, baseValues.w];
+            const setterFunc = obj[setterFuncName].bind(obj);
+            return {
+                set: (values) => {
+                    setterFunc(packFunc(values));
+                },
+                get: () => baseValues
             };
         }
 

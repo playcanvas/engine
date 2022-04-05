@@ -3,12 +3,12 @@ import { EventHandler } from '../core/event-handler.js';
 /* eslint-disable-next-line no-unused-vars */
 import { ScriptType } from './script-type.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Container for all {@link ScriptType}s that are available to this application. Note that
  * PlayCanvas scripts can access the Script Registry from inside the application with
- * {@link Application#scripts}.
+ * {@link AppBase#scripts}.
  *
  * @augments EventHandler
  */
@@ -16,7 +16,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Create a new ScriptRegistry instance.
      *
-     * @param {Application} app - Application to attach registry to.
+     * @param {AppBase} app - Application to attach registry to.
      */
     constructor(app) {
         super();

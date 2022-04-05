@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -21,7 +21,8 @@ class ScreenComponentSystem extends ComponentSystem {
     /**
      * Create a new ScreenComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -38,7 +39,7 @@ class ScreenComponentSystem extends ComponentSystem {
         // queue of callbacks
         this._drawOrderSyncQueue = new IndexedList();
 
-        this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.on('resizecanvas', this._onResize, this);
 
         this.app.systems.on('update', this._onUpdate, this);
 
@@ -76,7 +77,7 @@ class ScreenComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.off('resizecanvas', this._onResize, this);
         this.app.systems.off('update', this._onUpdate, this);
     }
 

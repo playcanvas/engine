@@ -5,7 +5,7 @@ import { ScriptComponent } from '../framework/components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
@@ -38,9 +38,9 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  */
 class ScriptType extends EventHandler {
     /**
-     * The {@link Application} that the instance of this type belongs to.
+     * The {@link AppBase} that the instance of this type belongs to.
      *
-     * @type {Application}
+     * @type {AppBase}
      */
     app;
 
@@ -88,7 +88,7 @@ class ScriptType extends EventHandler {
      * Create a new ScriptType instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {Application} args.app - The {@link Application} that is running the script.
+     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
      * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
      */
     constructor(args) {
@@ -142,7 +142,7 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @param {{entity: Entity, app: Application}} args - The entity and app.
+     * @param {{entity: Entity, app: AppBase}} args - The entity and app.
      * @private
      */
     initScriptType(args) {
@@ -179,7 +179,7 @@ class ScriptType extends EventHandler {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
         if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-        const match = ("" + constructorFn).match(funcNameRegex);
+        const match = ('' + constructorFn).match(funcNameRegex);
         return match ? match[1] : undefined;
     }
 

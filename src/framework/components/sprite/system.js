@@ -15,7 +15,7 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -28,7 +28,8 @@ class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -78,7 +79,7 @@ class SpriteComponentSystem extends ComponentSystem {
             material.emissiveMap = texture;
             material.emissiveMapTint = true;
             material.opacityMap = texture;
-            material.opacityMapChannel = "a";
+            material.opacityMapChannel = 'a';
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;

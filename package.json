@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.53.0-dev",
+  "version": "1.54.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -79,7 +79,7 @@
     "@rollup/pluginutils": "^4.2.0",
     "c8": "^7.10.0",
     "chai": "^4.3.6",
-    "eslint": "^8.11.0",
+    "eslint": "^8.12.0",
     "jsdoc": "^3.6.10",
     "jsdoc-tsimport-plugin": "^1.0.5",
     "karma": "^6.3.17",
@@ -94,7 +94,7 @@
     "rollup-plugin-visualizer": "^5.6.0",
     "serve": "^13.0.2",
     "sinon": "^13.0.1",
-    "typescript": "^4.6.2",
+    "typescript": "^4.6.3",
     "xhr2": "^0.2.1"
   },
   "scripts": {
