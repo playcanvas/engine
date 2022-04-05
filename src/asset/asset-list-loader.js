@@ -103,7 +103,7 @@ class AssetListLoader extends EventHandler {
     }
 
     /**
-     * Sets a callback which will be called when all assets in the list have been loaded or failed to load.
+     * Sets a callback which will be called when all assets in the list have been loaded.
      *
      * @param {Function} done - Callback called when all assets in the list are loaded.
      * @param {object} [scope] - Scope to use when calling callback.

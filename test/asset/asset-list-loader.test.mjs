@@ -287,6 +287,21 @@ describe('AssetListLoader', function () {
             assetListLoader.load();
         });
 
+        it('can fail gracefully', function (done) {
+            const assets = [
+                new Asset('model', 'container', { url: `${assetPath}test.glb` }),
+                new Asset('styling', 'css', { url: `${assetPath}test.css` })
+            ];
+            const assetListLoader = new AssetListLoader(assets, app.assets);
+            assetListLoader.load((err, failedItems) => {
+                expect(err).to.equal('Failed to load some assets');
+                expect(failedItems.length).to.equal(1);
+                expect(failedItems[0].name).to.equal('model');
+                done();
+            });
+            assetListLoader._onError(undefined, assets[0]);
+        });
+
     });
 
 });
