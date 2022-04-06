@@ -33,6 +33,9 @@ fs.readdirSync(`${MAIN_DIR}/src/examples/`).forEach(function (category) {
         exampleData[category][example].javaScriptFunction = Prettier.format(Babel.transform(exampleData[category][example].typeScriptFunction, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code, { parser: BabelParser.parse, tabWidth: 4 });
         exampleData[category][example].nameSlug = example;
         exampleData[category][example].categorySlug = category;
+        const files = formatters.retrieveStaticObject(exampleFileText, 'FILES');
+        // eslint-disable-next-line no-eval
+        if (files) exampleData[category][example].files = eval('(' + files + ')');
     });
 });
 

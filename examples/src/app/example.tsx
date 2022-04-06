@@ -81,6 +81,7 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     componentDidUpdate() {
         window.localStorage.removeItem(this.path);
+        delete (window as any).editedFiles;
         this.props.setFiles(this.defaultFiles);
     }
 

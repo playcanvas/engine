@@ -334,11 +334,11 @@ class ElementComponent extends Component {
             return;
 
         if (this.entity.enabled && this._batchGroupId >= 0) {
-            this.system.app.batcher.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
+            this.system.app.batcher?.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
         }
 
         if (this.entity.enabled && value >= 0) {
-            this.system.app.batcher.insert(BatchGroup.ELEMENT, value, this.entity);
+            this.system.app.batcher?.insert(BatchGroup.ELEMENT, value, this.entity);
         }
 
         if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
@@ -1394,7 +1394,7 @@ class ElementComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            this.system.app.batcher.insert(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
+            this.system.app.batcher?.insert(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
         }
 
         this.fire('enableelement');
@@ -1416,7 +1416,7 @@ class ElementComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            this.system.app.batcher.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
+            this.system.app.batcher?.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
         }
 
         this.fire('disableelement');

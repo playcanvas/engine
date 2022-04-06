@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';

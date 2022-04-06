@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class MeshMorphExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph';

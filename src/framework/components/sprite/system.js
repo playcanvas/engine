@@ -15,7 +15,7 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -28,7 +28,8 @@ class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

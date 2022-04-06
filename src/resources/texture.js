@@ -15,12 +15,10 @@ import { Ktx2Parser } from './parser/texture/ktx2.js';
 import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../asset/asset.js').Asset} Asset */
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
-/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -159,16 +157,25 @@ const _completePartialMipmapChain = function (texture) {
  */
 class TextureHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "texture";
+
+    /**
      * Create a new TextureHandler instance.
      *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {AssetRegistry} assets - The asset registry.
-     * @param {ResourceLoader} loader - The resource loader.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(device, assets, loader) {
+    constructor(app) {
+        const assets = app.assets;
+        const device = app.graphicsDevice;
+
         this._device = device;
         this._assets = assets;
-        this._loader = loader;
+        this._loader = app.loader;
 
         // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.

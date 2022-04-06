@@ -7,7 +7,7 @@ import { Texture } from '../../../graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 /** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
 let depthLayer;
@@ -28,7 +28,7 @@ class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      * @param {CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {

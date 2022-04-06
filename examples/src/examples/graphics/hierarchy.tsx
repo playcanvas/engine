@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class HierarchyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';

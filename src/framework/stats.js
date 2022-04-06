@@ -95,11 +95,12 @@ class ApplicationStats {
     }
 
     get lightmapper() {
-        return getApplication().lightmapper.stats;
+        return getApplication().lightmapper?.stats;
     }
 
     get batcher() {
-        return getApplication().batcher._stats;
+        const batcher = getApplication()._batcher;
+        return batcher ? batcher._stats : null;
     }
 }
 

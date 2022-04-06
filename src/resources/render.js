@@ -1,6 +1,6 @@
 import { Render } from '../scene/render.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the render asset
@@ -49,12 +49,20 @@ function onContainerAssetRemoved(containerAsset) {
  */
 class RenderHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "render";
+
+    /**
      * Create a new RenderHandler instance.
      *
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(assets) {
-        this._registry = assets;
+    constructor(app) {
+        this._registry = app.assets;
     }
 
     load(url, callback, asset) {

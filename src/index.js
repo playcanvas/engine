@@ -182,6 +182,7 @@ export { TextureAtlasHandler } from './resources/texture-atlas.js';
 // ASSETS
 export * from './asset/constants.js';
 export { Asset } from './asset/asset.js';
+export { AssetListLoader } from './asset/asset-list-loader.js';
 export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';
@@ -210,7 +211,8 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js'
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { app, Application } from './framework/app-base.js';
+export { app } from './framework/app-base.js';
+export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './anim/controller/constants.js';
@@ -286,10 +288,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
 export { Template } from './templates/template.js';
-
-// VR
-export { VrDisplay } from './vr/vr-display.js';
-export { VrManager } from './vr/vr-manager.js';
 
 // XR
 export * from './xr/constants.js';

@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
@@ -6,7 +7,7 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // checks if user is running IE
@@ -50,12 +51,22 @@ const toMIME = {
  */
 class AudioHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "audio";
+
+    /**
      * Create a new AudioHandler instance.
      *
-     * @param {SoundManager} manager - The sound manager.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(manager) {
-        this.manager = manager;
+    constructor(app) {
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+
         this.maxRetries = 0;
     }
 

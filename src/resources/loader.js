@@ -1,6 +1,6 @@
 /** @typedef {import('../asset/asset.js').Asset} Asset */
 /** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -19,7 +19,7 @@ class ResourceLoader {
     /**
      * Create a new ResourceLoader instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         this._handlers = {};
@@ -99,7 +99,7 @@ class ResourceLoader {
     load(url, type, callback, asset) {
         const handler = this._handlers[type];
         if (!handler) {
-            const err = 'No handler for asset type: ' + type;
+            const err = `No handler for asset type: '${type}' when loading [${url}]`;
             callback(err);
             return;
         }

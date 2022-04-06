@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
