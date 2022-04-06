@@ -47,8 +47,6 @@ import { ScriptRegistry } from '../script/script-registry.js';
 
 import { I18n } from '../i18n/i18n.js';
 
-import { VrManager } from '../vr/vr-manager.js';
-
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
@@ -1632,31 +1630,6 @@ class AppBase extends EventHandler {
             }
 
             onSkyboxChanged();
-        }
-    }
-
-    /**
-     * Create and assign a {@link VrManager} object to allow this application render in VR.
-     *
-     * @ignore
-     * @deprecated
-     */
-    enableVr() {
-        if (!this.vr) {
-            this.vr = new VrManager(this);
-        }
-    }
-
-    /**
-     * Destroy the {@link VrManager}.
-     *
-     * @ignore
-     * @deprecated
-     */
-    disableVr() {
-        if (this.vr) {
-            this.vr.destroy();
-            this.vr = null;
         }
     }
 
