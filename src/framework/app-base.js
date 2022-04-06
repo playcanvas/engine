@@ -73,6 +73,7 @@ import {
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 /** @typedef {import('../vr/vr-manager.js').VrManager} VrManager */
