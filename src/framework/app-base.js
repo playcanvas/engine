@@ -76,7 +76,6 @@ import {
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../vr/vr-manager.js').VrManager} VrManager */
 /** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
@@ -506,13 +505,6 @@ class AppBase extends EventHandler {
         this.elementInput = createOptions.elementInput || null;
         if (this.elementInput)
             this.elementInput.app = this;
-
-        /**
-         * @type {VrManager|null}
-         * @deprecated
-         * @ignore
-         */
-        this.vr = null;
 
         /**
          * The XR Manager that provides ability to start VR/AR sessions.
@@ -1174,8 +1166,6 @@ class AppBase extends EventHandler {
         this.frame++;
 
         this.graphicsDevice.updateClientRect();
-
-        if (this.vr) this.vr.poll();
 
         // #if _PROFILER
         this.stats.frame.updateStart = now();
@@ -2039,10 +2029,6 @@ class AppBase extends EventHandler {
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        if (this.vr) {
-            this.vr.destroy();
-            this.vr = null;
-        }
         this.xr.end();
 
         this.renderer.destroy();
@@ -2126,9 +2112,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.vr && application.vr.display) {
-            frameRequest = application.vr.display.requestAnimationFrame(application.tick);
-        } else if (application.xr.session) {
+        if (application.xr.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
             frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
@@ -2168,10 +2152,6 @@ const makeTick = function (_app) {
         _frameEndData.target = application;
 
         application.fire("frameend", _frameEndData);
-
-        if (application.vr && application.vr.display && application.vr.display.presenting) {
-            application.vr.display.submitFrame();
-        }
 
         application._inFrameUpdate = false;
 
