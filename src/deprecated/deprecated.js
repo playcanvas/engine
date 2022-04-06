@@ -115,8 +115,6 @@ import { basisInitialize } from '../resources/basis.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Asset } from '../asset/asset.js';
 
-import { VrManager } from '../vr/vr-manager.js';
-
 // CORE
 
 export const log = {
@@ -1073,16 +1071,7 @@ Application.prototype.renderLines = function (position, color, options) {
 };
 
 Application.prototype.enableVr = function () {
-    if (!this.vr) {
-        this.vr = new VrManager(this);
-    }
-};
-
-Application.prototype.disableVr = function () {
-    if (this.vr) {
-        this.vr.destroy();
-        this.vr = null;
-    }
+    Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
 };
 
 Object.defineProperty(CameraComponent.prototype, 'node', {
