@@ -74,7 +74,7 @@ import {
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
-/** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
+/** @typedef {import('./app-options.js').AppOptions} AppOptions */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 /** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
@@ -143,9 +143,9 @@ class AppBase extends EventHandler {
      * @param {Element} canvas - The canvas element.
      * @example
      * // Engine-only example: create the application manually
-     * var createOptions = new AppCreateOptions();
+     * var options = new AppOptions();
      * var app = new pc.AppBase(canvas);
-     * app.init(createOptions);
+     * app.init(options);
      *
      * // Start the application's main loop
      * app.start();
@@ -261,15 +261,15 @@ class AppBase extends EventHandler {
     /**
      * Initialize the app.
      *
-     * @param {AppCreateOptions} createOptions - Options specifying the init parameters for the app.
+     * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
      */
-    init(createOptions) {
+    init(appOptions) {
         /**
          * The graphics device used by the application.
          *
          * @type {GraphicsDevice}
          */
-        this.graphicsDevice = createOptions.graphicsDevice;
+        this.graphicsDevice = appOptions.graphicsDevice;
         Debug.assert(this.graphicsDevice, "The application cannot be created without a valid GraphicsDevice");
 
         this._initDefaultMaterial();
@@ -279,7 +279,7 @@ class AppBase extends EventHandler {
          * @type {SoundManager}
          * @private
          */
-        this._soundManager = createOptions.soundManager;
+        this._soundManager = appOptions.soundManager;
 
         /**
          * The resource loader.
@@ -329,7 +329,7 @@ class AppBase extends EventHandler {
          * var vehicleAssets = this.app.assets.findByTag('vehicle');
          */
         this.assets = new AssetRegistry(this.loader);
-        if (createOptions.assetPrefix) this.assets.prefix = createOptions.assetPrefix;
+        if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
 
         /**
          * @type {BundleRegistry}
@@ -346,7 +346,7 @@ class AppBase extends EventHandler {
          */
         this.enableBundles = (typeof TextDecoder !== 'undefined');
 
-        this.scriptsOrder = createOptions.scriptsOrder || [];
+        this.scriptsOrder = appOptions.scriptsOrder || [];
 
         /**
          * The application's script registry.
@@ -453,8 +453,8 @@ class AppBase extends EventHandler {
          * @type {Lightmapper}
          */
         this.lightmapper = null;
-        if (createOptions.lightmapper) {
-            this.lightmapper = new createOptions.lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
+        if (appOptions.lightmapper) {
+            this.lightmapper = new appOptions.lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
             this.once('prerender', this._firstBake, this);
         }
 
@@ -464,8 +464,8 @@ class AppBase extends EventHandler {
          * @type {BatchManager}
          */
         this._batcher = null;
-        if (createOptions.batchManager) {
-            this._batcher = new createOptions.batchManager(this.graphicsDevice, this.root, this.scene);
+        if (appOptions.batchManager) {
+            this._batcher = new appOptions.batchManager(this.graphicsDevice, this.root, this.scene);
             this.once('prerender', this._firstBatch, this);
         }
 
@@ -474,35 +474,35 @@ class AppBase extends EventHandler {
          *
          * @type {Keyboard}
          */
-        this.keyboard = createOptions.keyboard || null;
+        this.keyboard = appOptions.keyboard || null;
 
         /**
          * The mouse device.
          *
          * @type {Mouse}
          */
-        this.mouse = createOptions.mouse || null;
+        this.mouse = appOptions.mouse || null;
 
         /**
          * Used to get touch events input.
          *
          * @type {TouchDevice}
          */
-        this.touch = createOptions.touch || null;
+        this.touch = appOptions.touch || null;
 
         /**
          * Used to access GamePad input.
          *
          * @type {GamePads}
          */
-        this.gamepads = createOptions.gamepads || null;
+        this.gamepads = appOptions.gamepads || null;
 
         /**
          * Used to handle input for {@link ElementComponent}s.
          *
          * @type {ElementInput}
          */
-        this.elementInput = createOptions.elementInput || null;
+        this.elementInput = appOptions.elementInput || null;
         if (this.elementInput)
             this.elementInput.app = this;
 
@@ -516,7 +516,7 @@ class AppBase extends EventHandler {
          *     // VR is available
          * }
          */
-        this.xr = new createOptions.xr(this);
+        this.xr = new appOptions.xr(this);
 
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
@@ -537,14 +537,14 @@ class AppBase extends EventHandler {
          * @type {string}
          * @ignore
          */
-        this._scriptPrefix = createOptions.scriptPrefix || '';
+        this._scriptPrefix = appOptions.scriptPrefix || '';
 
         if (this.enableBundles) {
             this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
         // create and register all required resource handlers
-        createOptions.resourceHandlers.forEach((resourceHandler) => {
+        appOptions.resourceHandlers.forEach((resourceHandler) => {
             const handler = new resourceHandler(this);
             this.loader.addHandler(handler.handlerType, handler);
         });
@@ -585,7 +585,7 @@ class AppBase extends EventHandler {
         this.systems = new ComponentSystemRegistry();
 
         // create and register all required component systems
-        createOptions.componentSystems.forEach((componentSystem) => {
+        appOptions.componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 
