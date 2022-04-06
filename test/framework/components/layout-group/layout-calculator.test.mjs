@@ -1,7 +1,7 @@
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
 import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
-import { Application } from '../../../../src/framework/app-base.js';
+import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
 import { Vec2 } from '../../../../src/math/vec2.js';

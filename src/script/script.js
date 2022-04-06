@@ -4,7 +4,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { ScriptHandler } from '../resources/script.js';
 
 import { script } from '../framework/script.js';
-import { Application } from '../framework/app-base.js';
+import { AppBase } from '../framework/app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
@@ -31,9 +31,9 @@ const reservedScriptNames = new Set([
  * Note: There is a reserved list of names that cannot be used, such as list below as well as some
  * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
  * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
- * {@link Application}.
+ * {@link AppBase}.
  * @returns {Class<ScriptType>|null} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * Returns null if there was an error.
@@ -99,9 +99,9 @@ createScript.reservedAttributes = reservedAttributes;
  * list of names that cannot be used, such as list below as well as some starting from `_`
  * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
  * onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {Application} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to register the script type to. By default it will use `Application.getApplication()` to get
- * current {@link Application}.
+ * current {@link AppBase}.
  * @example
  * // define a ES6 script class
  * class PlayerController extends pc.ScriptType {
@@ -141,7 +141,7 @@ function registerScript(script, name, app) {
     script.__name = name;
 
     // add to scripts registry
-    const registry = app ? app.scripts : Application.getApplication().scripts;
+    const registry = app ? app.scripts : AppBase.getApplication().scripts;
     registry.add(script);
 
     ScriptHandler._push(script);

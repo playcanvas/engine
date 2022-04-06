@@ -1,4 +1,4 @@
-import { Application } from '../../src/framework/app-base.js';
+import { Application } from '../../src/framework/application.js';
 import { Asset } from '../../src/asset/asset.js';
 import { JsonHandler } from '../../src/resources/json.js';
 

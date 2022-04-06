@@ -14,7 +14,7 @@ import {
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -40,12 +40,20 @@ const regexFrame = /^data\.frames\.(\d+)$/;
  */
 class TextureAtlasHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "textureatlas";
+
+    /**
      * Create a new TextureAtlasHandler instance.
      *
-     * @param {ResourceLoader} loader - The resource loader.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(loader) {
-        this._loader = loader;
+    constructor(app) {
+        this._loader = app.loader;
         this.maxRetries = 0;
     }
 

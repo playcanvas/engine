@@ -1,4 +1,5 @@
 import { Channel3d } from '../../../audio/channel3d.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Entity } from '../../entity.js';
 
@@ -8,7 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { AudioSourceComponent } from './component.js';
 import { AudioSourceComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 /** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
 
 const _schema = [
@@ -39,10 +40,10 @@ class AudioSourceComponentSystem extends ComponentSystem {
     /**
      * Create a new AudioSourceComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
-     * @param {SoundManager} manager - A sound manager instance.
+     * @param {AppBase} app - The application managing this system.
+     * @hideconstructor
      */
-    constructor(app, manager) {
+    constructor(app) {
         super(app);
 
         this.id = 'audiosource';
@@ -52,7 +53,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        this.manager = manager;
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
 
         this.initialized = false;
 

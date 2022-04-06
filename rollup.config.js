@@ -136,6 +136,7 @@ const stripOptions = {
         'Debug.warn',
         'Debug.error',
         'Debug.log',
+        'Debug.trace',
         'DebugGraphics.pushGpuMarker',
         'DebugGraphics.popGpuMarker',
         'WorldClustersDebug.render'

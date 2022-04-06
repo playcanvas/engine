@@ -1,6 +1,6 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**
@@ -10,7 +10,7 @@ class Template {
     /**
      * Create a new Template instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} data - Asset data from the database.
      */
     constructor(app, data) {
