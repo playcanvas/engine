@@ -146,7 +146,7 @@ class AppBase extends EventHandler {
      * // Engine-only example: create the application manually
      * var createOptions = new AppCreateOptions();
      * var app = new pc.AppBase(canvas);
-     * app.init(options, createOptions);
+     * app.init(createOptions);
      *
      * // Start the application's main loop
      * app.start();
