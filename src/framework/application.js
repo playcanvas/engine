@@ -5,6 +5,7 @@ import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js'
 import { SoundManager } from '../sound/manager.js';
 
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
+import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
 import { AppCreateOptions } from './app-create-options.js';
@@ -136,6 +137,7 @@ import { XrManager } from '../xr/xr-manager.js';
 
         createOptions.soundManager = new SoundManager(options);
         createOptions.lightmapper = Lightmapper;
+        createOptions.batchManager = BatchManager;
         createOptions.xr = XrManager;
 
         this.init(createOptions);

@@ -419,10 +419,10 @@ class SpriteComponent extends Component {
         this._batchGroupId = value;
 
         if (this.entity.enabled && prev >= 0) {
-            this.system.app.batcher.remove(BatchGroup.SPRITE, prev, this.entity);
+            this.system.app.batcher?.remove(BatchGroup.SPRITE, prev, this.entity);
         }
         if (this.entity.enabled && value >= 0) {
-            this.system.app.batcher.insert(BatchGroup.SPRITE, value, this.entity);
+            this.system.app.batcher?.insert(BatchGroup.SPRITE, value, this.entity);
         } else {
             // re-add model to scene in case it was removed by batching
             if (prev >= 0) {
@@ -518,7 +518,7 @@ class SpriteComponent extends Component {
             this._tryAutoPlay();
 
         if (this._batchGroupId >= 0) {
-            app.batcher.insert(BatchGroup.SPRITE, this._batchGroupId, this.entity);
+            app.batcher?.insert(BatchGroup.SPRITE, this._batchGroupId, this.entity);
         }
     }
 
@@ -537,7 +537,7 @@ class SpriteComponent extends Component {
 
 
         if (this._batchGroupId >= 0) {
-            app.batcher.remove(BatchGroup.SPRITE, this._batchGroupId, this.entity);
+            app.batcher?.remove(BatchGroup.SPRITE, this._batchGroupId, this.entity);
         }
     }
 

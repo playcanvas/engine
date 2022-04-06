@@ -71,7 +71,7 @@ class ScreenComponent extends Component {
             e.element.drawOrder = i++;
 
             if (e.element._batchGroupId >= 0 && prevDrawOrder !== e.element.drawOrder) {
-                this.system.app.batcher.markGroupDirty(e.element._batchGroupId);
+                this.system.app.batcher?.markGroupDirty(e.element._batchGroupId);
             }
         }
 

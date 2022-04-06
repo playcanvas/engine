@@ -460,13 +460,15 @@ class AppBase extends EventHandler {
         }
 
         /**
-         * The application's batch manager. The batch manager is used to merge mesh instances in
-         * the scene, which reduces the overall number of draw calls, thereby boosting performance.
+         * The application's batch manager.
          *
          * @type {BatchManager}
          */
-        this.batcher = new BatchManager(this.graphicsDevice, this.root, this.scene);
-        this.once('prerender', this._firstBatch, this);
+        this._batcher = null;
+        if (createOptions.batchManager) {
+            this._batcher = new createOptions.batchManager(this.graphicsDevice, this.root, this.scene);
+            this.once('prerender', this._firstBatch, this);
+        }
 
         /**
          * The keyboard device.
@@ -661,6 +663,17 @@ class AppBase extends EventHandler {
      */
     get soundManager() {
         return this._soundManager;
+    }
+
+    /**
+     * The application's batch manager. The batch manager is used to merge mesh instances in
+     * the scene, which reduces the overall number of draw calls, thereby boosting performance.
+     *
+     * @type {BatchManager}
+     */
+    get batcher() {
+        Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
+        return this._batcher;
     }
 
     /**
@@ -899,9 +912,12 @@ class AppBase extends EventHandler {
 
         // add batch groups
         if (props.batchGroups) {
-            for (let i = 0, len = props.batchGroups.length; i < len; i++) {
-                const grp = props.batchGroups[i];
-                this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
+            const batcher = this.batcher;
+            if (batcher) {
+                for (let i = 0, len = props.batchGroups.length; i < len; i++) {
+                    const grp = props.batchGroups[i];
+                    batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
+                }
             }
         }
 
@@ -1196,7 +1212,10 @@ class AppBase extends EventHandler {
 
         this.fire('prerender');
         this.root.syncHierarchy();
-        this.batcher.updateAll();
+
+        if (this._batcher) {
+            this._batcher.updateAll();
+        }
 
         // #if _PROFILER
         ForwardRenderer._skipRenderCounter = 0;
@@ -2006,8 +2025,10 @@ class AppBase extends EventHandler {
         this.lightmapper?.destroy();
         this.lightmapper = null;
 
-        this.batcher.destroy();
-        this.batcher = null;
+        if (this._batcher) {
+            this._batcher.destroy();
+            this._batcher = null;
+        }
 
         this._entityIndex = {};
 

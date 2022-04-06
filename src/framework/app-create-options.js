@@ -7,6 +7,7 @@
 /** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
 /** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 
@@ -87,6 +88,13 @@ class AppCreateOptions {
      * @type {typeof Lightmapper}
      */
     lightmapper;
+
+    /**
+     * The BatchManager.
+     *
+     * @type {typeof BatchManager}
+     */
+    batchManager;
 
     /**
      * The XrManager.

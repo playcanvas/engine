@@ -890,7 +890,7 @@ class BatchManager {
     /**
      * Updates bounding boxes for all dynamic batches. Called automatically.
      *
-     * @private
+     * @ignore
      */
     updateAll() {
         // TODO: only call when needed. Applies to skinning matrices as well
