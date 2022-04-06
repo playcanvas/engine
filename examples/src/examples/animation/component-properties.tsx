@@ -162,7 +162,7 @@ class ComponentPropertiesExample {
                 ]
             };
 
-            const animClipHandler = new pc.AnimClipHandler();
+            const animClipHandler = new pc.AnimClipHandler(app);
             const animClipStaticLight = animClipHandler.open(undefined, animClipStaticLightData);
             const animClipFlashingLight = animClipHandler.open(undefined, animClipFlashingLightData);
 
