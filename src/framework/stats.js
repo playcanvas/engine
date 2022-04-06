@@ -99,7 +99,8 @@ class ApplicationStats {
     }
 
     get batcher() {
-        return getApplication().batcher._stats;
+        const batcher = getApplication()._batcher;
+        return batcher ? batcher._stats : null;
     }
 }
 

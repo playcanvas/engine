@@ -24,7 +24,6 @@ import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
-import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
@@ -46,9 +45,6 @@ import { BundleRegistry } from '../bundles/bundle-registry.js';
 import { ScriptRegistry } from '../script/script-registry.js';
 
 import { I18n } from '../i18n/i18n.js';
-
-import { VrManager } from '../vr/vr-manager.js';
-import { XrManager } from '../xr/xr-manager.js';
 
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';
@@ -76,8 +72,12 @@ import {
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../scene/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('../framework/app-create-options.js').AppCreateOptions} AppCreateOptions */
+/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
+/** @typedef {import('../vr/vr-manager.js').VrManager} VrManager */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -146,7 +146,7 @@ class AppBase extends EventHandler {
      * // Engine-only example: create the application manually
      * var createOptions = new AppCreateOptions();
      * var app = new pc.AppBase(canvas);
-     * app.init(options, createOptions);
+     * app.init(createOptions);
      *
      * // Start the application's main loop
      * app.start();
@@ -460,13 +460,15 @@ class AppBase extends EventHandler {
         }
 
         /**
-         * The application's batch manager. The batch manager is used to merge mesh instances in
-         * the scene, which reduces the overall number of draw calls, thereby boosting performance.
+         * The application's batch manager.
          *
          * @type {BatchManager}
          */
-        this.batcher = new BatchManager(this.graphicsDevice, this.root, this.scene);
-        this.once('prerender', this._firstBatch, this);
+        this._batcher = null;
+        if (createOptions.batchManager) {
+            this._batcher = new createOptions.batchManager(this.graphicsDevice, this.root, this.scene);
+            this.once('prerender', this._firstBatch, this);
+        }
 
         /**
          * The keyboard device.
@@ -522,7 +524,7 @@ class AppBase extends EventHandler {
          *     // VR is available
          * }
          */
-        this.xr = new XrManager(this);
+        this.xr = new createOptions.xr(this);
 
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
@@ -661,6 +663,17 @@ class AppBase extends EventHandler {
      */
     get soundManager() {
         return this._soundManager;
+    }
+
+    /**
+     * The application's batch manager. The batch manager is used to merge mesh instances in
+     * the scene, which reduces the overall number of draw calls, thereby boosting performance.
+     *
+     * @type {BatchManager}
+     */
+    get batcher() {
+        Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
+        return this._batcher;
     }
 
     /**
@@ -899,9 +912,12 @@ class AppBase extends EventHandler {
 
         // add batch groups
         if (props.batchGroups) {
-            for (let i = 0, len = props.batchGroups.length; i < len; i++) {
-                const grp = props.batchGroups[i];
-                this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
+            const batcher = this.batcher;
+            if (batcher) {
+                for (let i = 0, len = props.batchGroups.length; i < len; i++) {
+                    const grp = props.batchGroups[i];
+                    batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
+                }
             }
         }
 
@@ -1196,7 +1212,10 @@ class AppBase extends EventHandler {
 
         this.fire('prerender');
         this.root.syncHierarchy();
-        this.batcher.updateAll();
+
+        if (this._batcher) {
+            this._batcher.updateAll();
+        }
 
         // #if _PROFILER
         ForwardRenderer._skipRenderCounter = 0;
@@ -1634,31 +1653,6 @@ class AppBase extends EventHandler {
         }
     }
 
-    /**
-     * Create and assign a {@link VrManager} object to allow this application render in VR.
-     *
-     * @ignore
-     * @deprecated
-     */
-    enableVr() {
-        if (!this.vr) {
-            this.vr = new VrManager(this);
-        }
-    }
-
-    /**
-     * Destroy the {@link VrManager}.
-     *
-     * @ignore
-     * @deprecated
-     */
-    disableVr() {
-        if (this.vr) {
-            this.vr.destroy();
-            this.vr = null;
-        }
-    }
-
     /** @private */
     _firstBake() {
         if (this.lightmapper) {
@@ -2031,8 +2025,10 @@ class AppBase extends EventHandler {
         this.lightmapper?.destroy();
         this.lightmapper = null;
 
-        this.batcher.destroy();
-        this.batcher = null;
+        if (this._batcher) {
+            this._batcher.destroy();
+            this._batcher = null;
+        }
 
         this._entityIndex = {};
 

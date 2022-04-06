@@ -5,6 +5,7 @@ import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js'
 import { SoundManager } from '../sound/manager.js';
 
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
+import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
 import { AppCreateOptions } from './app-create-options.js';
@@ -58,6 +59,8 @@ import { TemplateHandler } from '../resources/template.js';
 import { TextHandler } from '../resources/text.js';
 import { TextureAtlasHandler } from '../resources/texture-atlas.js';
 import { TextureHandler } from '../resources/texture.js';
+
+import { XrManager } from '../xr/xr-manager.js';
 
 /** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../input/game-pads.js').GamePads} GamePads */
@@ -134,6 +137,8 @@ import { TextureHandler } from '../resources/texture.js';
 
         createOptions.soundManager = new SoundManager(options);
         createOptions.lightmapper = Lightmapper;
+        createOptions.batchManager = BatchManager;
+        createOptions.xr = XrManager;
 
         this.init(createOptions);
     }

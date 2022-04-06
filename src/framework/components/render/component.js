@@ -453,12 +453,11 @@ class RenderComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
 
-            const batcher = this.system.app.batcher;
             if (this.entity.enabled && this._batchGroupId >= 0) {
-                batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+                this.system.app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
             if (this.entity.enabled && value >= 0) {
-                batcher.insert(BatchGroup.RENDER, value, this.entity);
+                this.system.app.batcher?.insert(BatchGroup.RENDER, value, this.entity);
             }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
@@ -725,7 +724,7 @@ class RenderComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.insert(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            app.batcher?.insert(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
     }
 
@@ -740,7 +739,7 @@ class RenderComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
 
         this.removeFromLayers();
