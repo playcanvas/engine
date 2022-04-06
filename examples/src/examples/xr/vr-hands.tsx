@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class VrHandsExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Hands';

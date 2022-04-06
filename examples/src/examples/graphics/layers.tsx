@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class LayersExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Layers';

@@ -182,6 +182,7 @@ export { TextureAtlasHandler } from './resources/texture-atlas.js';
 // ASSETS
 export * from './asset/constants.js';
 export { Asset } from './asset/asset.js';
+export { AssetListLoader } from './asset/asset-list-loader.js';
 export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';

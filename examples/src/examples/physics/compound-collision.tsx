@@ -1,11 +1,13 @@
 import * as pc from '../../../../';
 
-
 class CompoundCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
 
     example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
+        // Create the application and start the update loop
+        const app = new pc.Application(canvas, {});
+
         if (wasmSupported()) {
             loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
         } else {
@@ -13,8 +15,6 @@ class CompoundCollisionExample {
         }
 
         function demo() {
-            // Create the application and start the update loop
-            const app = new pc.Application(canvas, {});
             app.start();
 
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
