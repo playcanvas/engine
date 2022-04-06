@@ -93,7 +93,8 @@ import { XrManager } from '../xr/xr-manager.js';
  * manually.
  *
  * @augments AppBase
- */class Application extends AppBase {
+ */
+class Application extends AppBase {
     /**
      * Create a new Application instance.
      *

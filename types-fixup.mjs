@@ -47,19 +47,6 @@ dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
 fs.writeFileSync(path, dts);
 
-const animationComponentProps = [
-    ['activate', 'boolean'],
-    ['assets', 'any[]'],
-    ['loop', 'boolean'],
-    ['skeleton', 'any'],
-    ['speed', 'number']
-];
-
-path = './types/framework/components/animation/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(animationComponentProps));
-fs.writeFileSync(path, dts);
-
 const buttonComponentProps = [
     ['active', 'boolean'],
     ['fadeDuration', 'number'],
