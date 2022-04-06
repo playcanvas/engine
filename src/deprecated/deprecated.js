@@ -1070,6 +1070,10 @@ Application.prototype.renderLines = function (position, color, options) {
     this._addLines(position, color, options);
 };
 
+Application.prototype.enableVr = function () {
+    Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
+};
+
 Object.defineProperty(CameraComponent.prototype, 'node', {
     get: function () {
         Debug.deprecated('pc.CameraComponent#node is deprecated. Use pc.CameraComponent#entity instead.');
