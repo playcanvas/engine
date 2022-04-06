@@ -19,6 +19,7 @@ fs.copyFileSync(`${MAIN_DIR}/./node_modules/url-search-params-polyfill/index.js`
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/promise-polyfill/dist/polyfill.min.js`, `${MAIN_DIR}/dist/build/promisePolyfill.js`);
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/whatwg-fetch/dist/fetch.umd.js`, `${MAIN_DIR}/dist/build/fetchPolyfill.js`);
 fs.copyFileSync(`${MAIN_DIR}/./node_modules/regenerator-runtime/runtime.js`, `${MAIN_DIR}/dist/build/regeneratorRuntimePolyfill.js`);
+fs.copyFileSync(`${MAIN_DIR}/lib/arrayFromPolyfill.js`, `${MAIN_DIR}/dist/build/arrayFromPolyfill.js`);
 
 function loadHtmlTemplate(data) {
     const html = fs.readFileSync(`${MAIN_DIR}/scripts/iframe/index.mustache`, "utf8");
