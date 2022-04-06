@@ -24,7 +24,6 @@ import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
-import { BatchManager } from '../scene/batching/batch-manager.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
