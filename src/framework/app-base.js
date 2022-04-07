@@ -516,7 +516,7 @@ class AppBase extends EventHandler {
          *     // VR is available
          * }
          */
-        this.xr = new appOptions.xr(this);
+        this.xr = appOptions.xr ? new appOptions.xr(this) : null;
 
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
@@ -1443,7 +1443,7 @@ class AppBase extends EventHandler {
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
-        if ((!this._allowResize) || (this.xr.active)) {
+        if ((!this._allowResize) || (this.xr?.active)) {
             return;
         }
 
@@ -2029,7 +2029,7 @@ class AppBase extends EventHandler {
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        this.xr.end();
+        this?.xr.end();
 
         this.renderer.destroy();
         this.renderer = null;
@@ -2112,7 +2112,7 @@ const makeTick = function (_app) {
         application._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.xr.session) {
+        if (application.xr?.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
             frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
@@ -2131,7 +2131,7 @@ const makeTick = function (_app) {
         application.fire("frameupdate", ms);
 
         if (frame) {
-            application.xr.update(frame);
+            application.xr?.update(frame);
             application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
