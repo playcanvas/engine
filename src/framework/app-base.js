@@ -516,10 +516,7 @@ class AppBase extends EventHandler {
          *     // VR is available
          * }
          */
-        this.xr = null;
-        if (appOptions.xr) {
-            this.xr = new appOptions.xr(this);
-        }
+        this.xr = appOptions.xr ? new appOptions.xr(this) : null;
 
         if (this.elementInput)
             this.elementInput.attachSelectEvents();
