@@ -118,6 +118,19 @@ class ContainerHandler {
         this.parsers = { };
     }
 
+    set maxRetries(value) {
+        this.glbParser.maxRetries = value;
+        for (const parser in this.parsers) {
+            if (this.parsers.hasOwnProperty(parser)) {
+                this.parsers[parser].maxRetries = value;
+            }
+        }
+    }
+
+    get maxRetries() {
+        return this.glbParser.maxRetries;
+    }
+
     /**
      * @param {string} url - The resource URL.
      * @returns {string} The URL with query parameters removed.

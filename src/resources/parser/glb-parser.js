@@ -2294,7 +2294,7 @@ class GlbParser {
         this._device = device;
         this._assets = assets;
         this._defaultMaterial = getDefaultMaterial(device);
-        this._maxRetries = maxRetries;
+        this.maxRetries = maxRetries;
     }
 
     _getUrlWithoutParams(url) {
@@ -2322,7 +2322,7 @@ class GlbParser {
                         }
                     });
             }
-        }, asset, this._maxRetries);
+        }, asset, this.maxRetries);
     }
 
     open(url, data, asset) {
