@@ -257,12 +257,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
-        if (typeof navigator !== 'undefined') {
-            const ua = navigator.userAgent;
-            if (ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'))) {
-                options.antialias = false;
-                Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
-            }
+        const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
+        this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
+        if (this.forceDisableMultisampling) {
+            options.antialias = false;
+            Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
         // Retrieve the WebGL context
@@ -882,7 +881,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
-        this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+        this.maxSamples = this.webgl2 &&!this.forceDisableMultisampling ? gl.getParameter(gl.MAX_SAMPLES) : 1;
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
