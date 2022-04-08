@@ -881,7 +881,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
-        this.maxSamples = this.webgl2 &&!this.forceDisableMultisampling ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+        this.maxSamples = this.webgl2 && !this.forceDisableMultisampling ? gl.getParameter(gl.MAX_SAMPLES) : 1;
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
