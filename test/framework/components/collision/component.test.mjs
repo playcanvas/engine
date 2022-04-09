@@ -75,18 +75,9 @@ describe('CollisionComponent', function () {
         btCylinderShapeX: function() {},
         btCylinderShape: function() {},
         btCylinderShapeZ: function() {},
-        btConeShapeX: function(radius, height) {
-            assertNum(radius); assertNum(height);
-            return btShape;
-        },
-        btConeShape: function(radius, height) {
-            assertNum(radius); assertNum(height);
-            return btShape;
-        },
-        btConeShapeZ: function(radius, height) {
-            assertNum(radius); assertNum(height);
-            return btShape;
-        },
+        btConeShapeX: function() {},
+        btConeShape: function() {},
+        btConeShapeZ: function() {},
         btCompoundShape: function() {
             return btShape;
         },
