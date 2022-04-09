@@ -37,7 +37,7 @@ class CollisionComponent extends Component {
     _radius = 0.5;
 
     /** @private */
-    _height = 1;
+    _height = 2;
 
     /** @private */
     _axis = 1;
