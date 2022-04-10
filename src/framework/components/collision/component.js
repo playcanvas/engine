@@ -272,7 +272,11 @@ class CollisionComponent extends Component {
     }
 
     set render(render) {
-        this.model = render;
+        if (this._initialized && this._type === 'mesh') {
+            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+        } else {
+            this._render = render;
+        }
     }
 
     get render() {
