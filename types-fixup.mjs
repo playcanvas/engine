@@ -104,20 +104,6 @@ dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
 fs.writeFileSync(path, dts);
 
-const collisionComponentProps = [
-    ['axis', 'number'],
-    ['halfExtents', 'Vec3'],
-    ['height', 'number'],
-    ['model', 'Model|null'],
-    ['radius', 'number'],
-    ['type', 'string']
-];
-
-path = './types/framework/components/collision/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
-fs.writeFileSync(path, dts);
-
 const elementComponentProps = [
     ['alignment', 'Vec2'],
     ['autoFitHeight', 'boolean'],
