@@ -92,7 +92,7 @@ class TextElement {
         this._entity = element.entity;
 
         // public
-        this._text = "";            // the original user-defined text
+        this._text = '';            // the original user-defined text
         this._symbols = [];         // array of visible symbols with unicode processing and markup removed
         this._colorPalette = [];    // per-symbol color palette
         this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
@@ -302,7 +302,7 @@ class TextElement {
 
         // handle null string
         if (this._symbols.length === 0) {
-            this._symbols = [" "];
+            this._symbols = [' '];
         }
 
         // extract markup
@@ -366,7 +366,7 @@ class TextElement {
                     // }
 
                     // convert hex color
-                    if (c.length === 7 && c[0] === "#") {
+                    if (c.length === 7 && c[0] === '#') {
                         const hex = c.substring(1).toLowerCase();
 
                         if (paletteMap.hasOwnProperty(hex)) {
@@ -469,7 +469,7 @@ class TextElement {
                                         });
 
                 const mi = new MeshInstance(mesh, this._material, this._node);
-                mi.name = "Text Element: " + this._entity.name;
+                mi.name = 'Text Element: ' + this._entity.name;
                 mi.castShadow = false;
                 mi.receiveShadow = false;
                 mi.cull = !screenSpace;
@@ -492,28 +492,28 @@ class TextElement {
                     this._colorUniform[1] = this._color.g;
                     this._colorUniform[2] = this._color.b;
                 }
-                mi.setParameter("material_emissive", this._colorUniform);
-                mi.setParameter("material_opacity", this._color.a);
-                mi.setParameter("font_sdfIntensity", this._font.intensity);
-                mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+                mi.setParameter('material_emissive', this._colorUniform);
+                mi.setParameter('material_opacity', this._color.a);
+                mi.setParameter('font_sdfIntensity', this._font.intensity);
+                mi.setParameter('font_pxrange', this._getPxRange(this._font));
+                mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
 
                 this._outlineColorUniform[0] = this._outlineColor.r;
                 this._outlineColorUniform[1] = this._outlineColor.g;
                 this._outlineColorUniform[2] = this._outlineColor.b;
                 this._outlineColorUniform[3] = this._outlineColor.a;
-                mi.setParameter("outline_color", this._outlineColorUniform);
-                mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                mi.setParameter('outline_color', this._outlineColorUniform);
+                mi.setParameter('outline_thickness', this._outlineThicknessScale * this._outlineThickness);
 
                 this._shadowColorUniform[0] = this._shadowColor.r;
                 this._shadowColorUniform[1] = this._shadowColor.g;
                 this._shadowColorUniform[2] = this._shadowColor.b;
                 this._shadowColorUniform[3] = this._shadowColor.a;
-                mi.setParameter("shadow_color", this._shadowColorUniform);
+                mi.setParameter('shadow_color', this._shadowColorUniform);
                 const ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
-                mi.setParameter("shadow_offset", this._shadowOffsetUniform);
+                mi.setParameter('shadow_offset', this._shadowOffsetUniform);
 
                 meshInfo.meshInstance = mi;
 
@@ -1098,9 +1098,9 @@ class TextElement {
 
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
-                    mi.setParameter("font_sdfIntensity", this._font.intensity);
-                    mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                    mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+                    mi.setParameter('font_sdfIntensity', this._font.intensity);
+                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
+                    mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
                 }
             }
         }
@@ -1113,13 +1113,13 @@ class TextElement {
     _setTextureParams(mi, texture) {
         if (this._font) {
             if (this._font.type === FONT_MSDF) {
-                mi.deleteParameter("texture_emissiveMap");
-                mi.deleteParameter("texture_opacityMap");
-                mi.setParameter("texture_msdfMap", texture);
+                mi.deleteParameter('texture_emissiveMap');
+                mi.deleteParameter('texture_opacityMap');
+                mi.setParameter('texture_msdfMap', texture);
             } else if (this._font.type === FONT_BITMAP) {
-                mi.deleteParameter("texture_msdfMap");
-                mi.setParameter("texture_emissiveMap", texture);
-                mi.setParameter("texture_opacityMap", texture);
+                mi.deleteParameter('texture_msdfMap');
+                mi.setParameter('texture_emissiveMap', texture);
+                mi.setParameter('texture_opacityMap', texture);
             }
         }
     }
@@ -1262,7 +1262,7 @@ class TextElement {
 
     set text(value) {
         this._i18nKey = null;
-        const str = value != null && value.toString() || "";
+        const str = value != null && value.toString() || '';
         this._setText(str);
     }
 
@@ -1296,7 +1296,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._color === value) {
-            console.warn("Setting element.color to itself will have no effect");
+            console.warn('Setting element.color to itself will have no effect');
         }
         // #endif
 
@@ -1471,9 +1471,9 @@ class TextElement {
                 // keep existing entry but set correct parameters to mesh instance
                 const mi = this._meshInfo[i].meshInstance;
                 if (mi) {
-                    mi.setParameter("font_sdfIntensity", this._font.intensity);
-                    mi.setParameter("font_pxrange", this._getPxRange(this._font));
-                    mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+                    mi.setParameter('font_sdfIntensity', this._font.intensity);
+                    mi.setParameter('font_pxrange', this._getPxRange(this._font));
+                    mi.setParameter('font_textureWidth', this._font.data.info.maps[i].width);
                     this._setTextureParams(mi, this._font.textures[i]);
                 }
             }
@@ -1622,7 +1622,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._outlineColor === value) {
-            console.warn("Setting element.outlineColor to itself will have no effect");
+            console.warn('Setting element.outlineColor to itself will have no effect');
         }
         // #endif
 
@@ -1646,7 +1646,7 @@ class TextElement {
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];
-                mi.setParameter("outline_color", this._outlineColorUniform);
+                mi.setParameter('outline_color', this._outlineColorUniform);
             }
         }
     }
@@ -1662,7 +1662,7 @@ class TextElement {
             if (this._model) {
                 for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     const mi = this._model.meshInstances[i];
-                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                    mi.setParameter('outline_thickness', this._outlineThicknessScale * this._outlineThickness);
                 }
             }
         }
@@ -1680,7 +1680,7 @@ class TextElement {
 
         // #if _DEBUG
         if (this._shadowColor === value) {
-            Debug.warn("Setting element.shadowColor to itself will have no effect");
+            Debug.warn('Setting element.shadowColor to itself will have no effect');
         }
         // #endif
 
@@ -1704,7 +1704,7 @@ class TextElement {
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];
-                mi.setParameter("shadow_color", this._shadowColorUniform);
+                mi.setParameter('shadow_color', this._shadowColorUniform);
             }
         }
     }
@@ -1727,7 +1727,7 @@ class TextElement {
                 this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
                 this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                 const mi = this._model.meshInstances[i];
-                mi.setParameter("shadow_offset", this._shadowOffsetUniform);
+                mi.setParameter('shadow_offset', this._shadowOffsetUniform);
             }
         }
     }

@@ -3,7 +3,7 @@ export default /* glsl */`
 uniform sampler2D texture_aoMap;
 #endif
 
-void applyAO() {
+void getAO() {
     dAo = 1.0;
 
     #ifdef MAPTEXTURE
@@ -13,7 +13,5 @@ void applyAO() {
     #ifdef MAPVERTEX
     dAo *= saturate(vVertexColor.$VC);
     #endif
-
-    dDiffuseLight *= dAo;
 }
 `;

@@ -49,7 +49,7 @@ class ScreenComponent extends Component {
 
         this._elements = new Set();
 
-        system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        system.app.graphicsDevice.on('resizecanvas', this._onResize, this);
     }
 
     /**
@@ -71,7 +71,7 @@ class ScreenComponent extends Component {
             e.element.drawOrder = i++;
 
             if (e.element._batchGroupId >= 0 && prevDrawOrder !== e.element.drawOrder) {
-                this.system.app.batcher.markGroupDirty(e.element._batchGroupId);
+                this.system.app.batcher?.markGroupDirty(e.element._batchGroupId);
             }
         }
 
@@ -145,7 +145,7 @@ class ScreenComponent extends Component {
     }
 
     onRemove() {
-        this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        this.system.app.graphicsDevice.off('resizecanvas', this._onResize, this);
         this.fire('remove');
 
         this._elements.forEach(element => element._onScreenRemove());
@@ -177,7 +177,7 @@ class ScreenComponent extends Component {
         if (!this.entity._dirtyLocal)
             this.entity._dirtifyLocal();
 
-        this.fire("set:resolution", this._resolution);
+        this.fire('set:resolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
@@ -200,7 +200,7 @@ class ScreenComponent extends Component {
         if (!this.entity._dirtyLocal)
             this.entity._dirtifyLocal();
 
-        this.fire("set:referenceresolution", this._resolution);
+        this.fire('set:referenceresolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
@@ -254,7 +254,7 @@ class ScreenComponent extends Component {
 
         this._scaleMode = value;
         this.resolution = this._resolution; // force update
-        this.fire("set:scalemode", this._scaleMode);
+        this.fire('set:scalemode', this._scaleMode);
     }
 
     get scaleMode() {
@@ -276,7 +276,7 @@ class ScreenComponent extends Component {
         if (!this.entity._dirtyLocal)
             this.entity._dirtifyLocal();
 
-        this.fire("set:scaleblend", this._scaleBlend);
+        this.fire('set:scaleblend', this._scaleBlend);
 
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }

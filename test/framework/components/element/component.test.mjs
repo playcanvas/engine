@@ -1,12 +1,12 @@
 import { LAYERID_UI } from '../../../../src/scene/constants.js';
-import { Application } from '../../../../src/framework/app-base.js';
+import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe("ElementComponent", function () {
+describe('ElementComponent', function () {
     let app;
 
     beforeEach(function () {
@@ -18,11 +18,11 @@ describe("ElementComponent", function () {
         app.destroy();
     });
 
-    describe("#constructor", function () {
+    describe('#constructor', function () {
 
         it('creates a default element component', function () {
             const e = new Entity();
-            e.addComponent("element");
+            e.addComponent('element');
 
             expect(e.element.alignment).to.equal(null);
             expect(e.element.anchor.x).to.equal(0);

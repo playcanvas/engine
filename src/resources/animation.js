@@ -17,7 +17,15 @@ import { GlbParser } from '../resources/parser/glb-parser.js';
  * @implements {ResourceHandler}
  */
 class AnimationHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animation";
+
+    /** @hideconstructor */
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -54,7 +62,7 @@ class AnimationHandler {
 
     open(url, data) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
-            const glbResources = GlbParser.parse("filename.glb", data, null);
+            const glbResources = GlbParser.parse('filename.glb', data, null);
             if (glbResources) {
                 const animations = glbResources.animations;
                 glbResources.destroy();
@@ -62,7 +70,7 @@ class AnimationHandler {
             }
             return null;
         }
-        return this["_parseAnimationV" + data.animation.version](data);
+        return this['_parseAnimationV' + data.animation.version](data);
     }
 
     patch(asset, assets) {

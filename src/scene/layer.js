@@ -571,7 +571,7 @@ class Layer {
             if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
-            Debug.warn("Trying to decrement layer counter below 0");
+            Debug.warn('Trying to decrement layer counter below 0');
             return;
         }
         this._refCounter--;
@@ -785,8 +785,8 @@ class Layer {
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
-            let str = "";
-            let strStatic = "";
+            let str = '';
+            let strStatic = '';
 
             for (let i = 0; i < this._lights.length; i++) {
                 if (this._lights[i].isStatic) {

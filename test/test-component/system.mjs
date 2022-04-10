@@ -4,7 +4,7 @@ import { ComponentSystem } from '../../src/framework/components/system.js';
 import { DummyComponent } from './component.mjs';
 import { DummyComponentData } from './data.mjs';
 
-var dummySchema = [
+const dummySchema = [
     'enabled',
     { name: 'myEntity1', type: 'entity' },
     { name: 'myEntity2', type: 'entity' }

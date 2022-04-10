@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class HelloWorldExample {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';

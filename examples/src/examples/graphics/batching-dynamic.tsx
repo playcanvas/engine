@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
@@ -98,7 +97,7 @@ class BatchingDynamicExample {
 
         // Set an update function on the app's update event
         let time = 0;
-        app.on("update", function (dt) {
+        app.on("update", function (dt: number) {
             time += dt;
 
             // move all entities along orbits

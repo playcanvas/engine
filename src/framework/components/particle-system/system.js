@@ -12,7 +12,7 @@ import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     'enabled',
@@ -89,7 +89,8 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     /**
      * Create a new ParticleSystemComponentSystem.
      *
-     * @param {Application} app - The Application.
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -189,7 +190,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
                 sourceProp = sourceProp.clone();
                 data[prop] = sourceProp;
-            } else if (prop === "layers") {
+            } else if (prop === 'layers') {
                 data.layers = source.layers.slice(0);
             } else {
                 if (sourceProp !== null && sourceProp !== undefined) {

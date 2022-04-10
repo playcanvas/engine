@@ -547,12 +547,11 @@ class ModelComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId === value) return;
 
-        const batcher = this.system.app.batcher;
         if (this.entity.enabled && this._batchGroupId >= 0) {
-            batcher.remove(BatchGroup.MODEL, this.batchGroupId, this.entity);
+            this.system.app.batcher?.remove(BatchGroup.MODEL, this.batchGroupId, this.entity);
         }
         if (this.entity.enabled && value >= 0) {
-            batcher.insert(BatchGroup.MODEL, value, this.entity);
+            this.system.app.batcher?.insert(BatchGroup.MODEL, value, this.entity);
         }
 
         if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
@@ -732,10 +731,10 @@ class ModelComponent extends Component {
      */
     onLayersChanged(oldComp, newComp) {
         this.addModelToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     /**
@@ -869,10 +868,10 @@ class ModelComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.on("add", this.onLayerAdded, this);
-            scene.layers.on("remove", this.onLayerRemoved, this);
+            scene.layers.on('add', this.onLayerAdded, this);
+            scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -912,7 +911,7 @@ class ModelComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.insert(BatchGroup.MODEL, this.batchGroupId, this.entity);
+            app.batcher?.insert(BatchGroup.MODEL, this.batchGroupId, this.entity);
         }
     }
 
@@ -920,14 +919,14 @@ class ModelComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.off("add", this.onLayerAdded, this);
-            scene.layers.off("remove", this.onLayerRemoved, this);
+            scene.layers.off('add', this.onLayerAdded, this);
+            scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.remove(BatchGroup.MODEL, this.batchGroupId, this.entity);
+            app.batcher?.remove(BatchGroup.MODEL, this.batchGroupId, this.entity);
         }
 
         if (this._model) {

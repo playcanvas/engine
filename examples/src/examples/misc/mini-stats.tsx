@@ -1,4 +1,3 @@
-// @ts-ignore: library file import
 import * as pc from '../../../../';
 
 
@@ -6,6 +5,7 @@ class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
     static ENGINE = 'PERFORMANCE';
+    static MINISTATS = true;
 
     example(canvas: HTMLCanvasElement, pcx: any): void {
         // Create the application and start the update loop
@@ -156,7 +156,7 @@ class MiniStatsExample {
         let adding = true;
         const step = 10, max = 2000;
         let entity: pc.GraphNode, vertexBuffer: pc.VertexBuffer, texture: { destroy: () => void; };
-        app.on("update", function (dt: any) {
+        app.on("update", function () {
 
             // execute some tasks multiple times per frame
             for (let i = 0; i < step; i++) {

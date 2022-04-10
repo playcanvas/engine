@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -29,7 +29,8 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {Application} app - The Application.
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -137,29 +138,6 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        if (this.app.vr) {
-            const components = this.store;
-
-            for (const id in components) {
-                const component = components[id];
-
-                if (component.data.enabled && component.entity.enabled) {
-                    const cameraComponent = component.entity.camera;
-                    const vrDisplay = cameraComponent.vrDisplay;
-                    if (vrDisplay) {
-                        // Change WebVR near/far planes based on the stereo camera
-                        vrDisplay.setClipPlanes(cameraComponent.nearClip, cameraComponent.farClip);
-
-                        // update camera node transform from VrDisplay
-                        if (component.entity) {
-                            component.entity.localTransform.copy(vrDisplay.combinedViewInv);
-                            component.entity._dirtyLocal = false;
-                            component.entity._dirtifyWorld();
-                        }
-                    }
-                }
-            }
-        }
     }
 
     onAppPrerender() {

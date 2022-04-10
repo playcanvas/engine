@@ -3,7 +3,7 @@
  *
  * @type {string}
  */
-export const SCALEMODE_NONE = "none";
+export const SCALEMODE_NONE = 'none';
 
 /**
  * Scale the {@link ScreenComponent} when the application's resolution is different than the
@@ -11,4 +11,4 @@ export const SCALEMODE_NONE = "none";
  *
  * @type {string}
  */
-export const SCALEMODE_BLEND = "blend";
+export const SCALEMODE_BLEND = 'blend';

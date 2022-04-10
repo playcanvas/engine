@@ -1,7 +1,14 @@
 import { http } from '../net/http.js';
 
 class TextHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "text";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 

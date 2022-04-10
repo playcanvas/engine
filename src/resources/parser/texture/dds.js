@@ -93,7 +93,7 @@ class DdsParser {
         }
 
         if (!format) {
-            Debug.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
+            Debug.error('This DDS pixel format is currently unsupported. Empty texture will be created instead.');
             texture = new Texture(device, {
                 width: 4,
                 height: 4,

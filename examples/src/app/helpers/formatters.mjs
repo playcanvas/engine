@@ -43,11 +43,6 @@ const getInnerFunctionText = (text) => {
         text = text.substring(text.indexOf("{") + 1);
     }
     text = text.substring(0, text.lastIndexOf("}"));
-    // strip the PlayCanvas app initialization
-    const indexOfAppCallStart = text.indexOf('const app');
-    const indexOfAppCallEnd = indexOfAppCallStart + text.substring(indexOfAppCallStart, text.length - 1).indexOf(';');
-    const appCall = text.substring(indexOfAppCallStart, indexOfAppCallEnd + 1);
-    text = text.replace(appCall, '');
     return text;
 };
 
@@ -64,17 +59,9 @@ const getExampleClassFromTextFile = (Babel, text) => {
         filename: `transformedScript.tsx`,
         presets: ["react", "typescript", "env"]
     }).code;
-    text = text.replace("example(canvas", "example(app, canvas");
     text = text.replace("wasmSupported(", "window.wasmSupported(");
     text = text.replace("loadWasmModuleAsync(", "window.loadWasmModuleAsync(");
     text = text.replace(/static\//g, '../../static/');
-
-    const indexOfAppCallStart = text.indexOf("var app");
-    const indexOfAppCallEnd =
-        indexOfAppCallStart +
-        text.substring(indexOfAppCallStart, text.length - 1).indexOf(";");
-    const appCall = text.substring(indexOfAppCallStart, indexOfAppCallEnd + 1);
-    text = text.replace(appCall, "");
     return text;
 };
 
@@ -87,9 +74,24 @@ const getEngineTypeFromClass = (text) => {
     return null;
 };
 
+const classIncludesMiniStats = (text) => {
+    return text.includes('_defineProperty(Example, "MINISTATS", true);');
+};
+
+const retrieveStaticObject = (text, name) => {
+    const staticStart = `static ${name} = `;
+    let start = text.indexOf(staticStart);
+    if (start < 0) return;
+    start += staticStart.length;
+    const end = findClosingBracketMatchIndex(text, start) + 1;
+    return text.substring(start, end);
+};
+
 export default {
     getTypeScriptFunctionFromText: getTypeScriptFunctionFromText,
     getInnerFunctionText: getInnerFunctionText,
     getExampleClassFromTextFile: getExampleClassFromTextFile,
-    getEngineTypeFromClass: getEngineTypeFromClass
+    getEngineTypeFromClass: getEngineTypeFromClass,
+    retrieveStaticObject: retrieveStaticObject,
+    classIncludesMiniStats: classIncludesMiniStats
 };

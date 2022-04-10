@@ -1,5 +1,5 @@
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { Application } from '../../../../src/framework/app-base.js';
+import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
@@ -9,7 +9,7 @@ import sinon from 'sinon';
 
 /** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
-describe("LayoutGroupComponent", function () {
+describe('LayoutGroupComponent', function () {
     /** @type {Application} */
     let app;
     /** @type {LayoutGroupComponentSystem} */
@@ -22,7 +22,7 @@ describe("LayoutGroupComponent", function () {
     let entity0_0_0;
 
     const buildLayoutGroupEntity = function (name) {
-        const entity = new Entity("myEntity" + name, app);
+        const entity = new Entity('myEntity' + name, app);
 
         app.systems.element.addComponent(entity, { type: ELEMENTTYPE_GROUP });
         app.systems.layoutgroup.addComponent(entity);
@@ -35,9 +35,9 @@ describe("LayoutGroupComponent", function () {
         app = new Application(canvas);
         system = app.systems.layoutgroup;
 
-        entity0 = buildLayoutGroupEntity("0");
-        entity0_0 = buildLayoutGroupEntity("0_0");
-        entity0_0_0 = buildLayoutGroupEntity("0_0_0");
+        entity0 = buildLayoutGroupEntity('0');
+        entity0_0 = buildLayoutGroupEntity('0_0');
+        entity0_0_0 = buildLayoutGroupEntity('0_0_0');
 
         app.root.addChild(entity0);
         entity0.addChild(entity0_0);
@@ -55,7 +55,7 @@ describe("LayoutGroupComponent", function () {
         app.destroy();
     });
 
-    it("reflows in ascending order of graph depth", function () {
+    it('reflows in ascending order of graph depth', function () {
         system.scheduleReflow(entity0_0.layoutgroup);
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0_0_0.layoutgroup);
@@ -70,7 +70,7 @@ describe("LayoutGroupComponent", function () {
         expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
     });
 
-    it("reflows additional groups that are pushed during the reflow", function () {
+    it('reflows additional groups that are pushed during the reflow', function () {
         system.scheduleReflow(entity0.layoutgroup);
 
         let done = false;
@@ -94,7 +94,7 @@ describe("LayoutGroupComponent", function () {
         expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
     });
 
-    it("does not allow the same group to be pushed to the queue twice", function () {
+    it('does not allow the same group to be pushed to the queue twice', function () {
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0.layoutgroup);
 
@@ -103,7 +103,7 @@ describe("LayoutGroupComponent", function () {
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
     });
 
-    it("bails if the maximum iteration count is reached", function () {
+    it('bails if the maximum iteration count is reached', function () {
         sinon.stub(console, 'warn');
 
         system.scheduleReflow(entity0.layoutgroup);

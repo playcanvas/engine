@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { DeviceCache } from '../../graphics/device-cache.js';
 
 // device cache storing default material
@@ -11,7 +12,9 @@ const defaultMaterialDeviceCache = new DeviceCache();
  * @ignore
  */
 function getDefaultMaterial(device) {
-    return defaultMaterialDeviceCache.get(device);
+    const material = defaultMaterialDeviceCache.get(device);
+    Debug.assert(material);
+    return material;
 }
 
 /**
@@ -22,6 +25,7 @@ function getDefaultMaterial(device) {
  * @ignore
  */
 function setDefaultMaterial(device, material) {
+    Debug.assert(material);
     defaultMaterialDeviceCache.get(device, () => {
         return material;
     });

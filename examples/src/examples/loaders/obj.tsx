@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
