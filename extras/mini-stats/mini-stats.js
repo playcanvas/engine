@@ -21,7 +21,7 @@ class MiniStats {
                 }
             }
         };
-        device.canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+        device.canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
 
         options = options || MiniStats.getDefaultOptions();
 
@@ -29,7 +29,7 @@ class MiniStats {
         const graphs = this.initGraphs(app, device, options);
 
         // extract words needed
-        let words = ["", "ms", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."];
+        let words = ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
 
         // graph names
         graphs.forEach((graph) => {
@@ -86,7 +86,7 @@ class MiniStats {
             }
         });
 
-        device.on("resizecanvas", () => {
+        device.on('resizecanvas', () => {
             this.updateDiv();
         });
 
@@ -155,16 +155,16 @@ class MiniStats {
             stats: [
                 {
                     // display name
-                    name: "Frame",
+                    name: 'Frame',
 
                     // path to data inside pc.Application.stats
-                    stats: ["frame.ms"],
+                    stats: ['frame.ms'],
 
                     // number of decimal places (defaults to none)
                     decimalPlaces: 1,
 
                     // units (defaults to "")
-                    unitsName: "ms",
+                    unitsName: 'ms',
 
                     // watermark - shown as a line on the graph, useful for displaying a budget
                     watermark: 33
@@ -172,8 +172,8 @@ class MiniStats {
 
                 // total number of draw calls
                 {
-                    name: "DrawCalls",
-                    stats: ["drawCalls.total"],
+                    name: 'DrawCalls',
+                    stats: ['drawCalls.total'],
                     watermark: 1000
                 }
             ]
@@ -323,10 +323,10 @@ class MiniStats {
 
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
-        this.div.style.left = rect.left + "px";
-        this.div.style.bottom = (window.innerHeight - rect.bottom) + "px";
-        this.div.style.width = this.width + "px";
-        this.div.style.height = this.overallHeight + "px";
+        this.div.style.left = rect.left + 'px';
+        this.div.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+        this.div.style.width = this.width + 'px';
+        this.div.style.height = this.overallHeight + 'px';
     }
 }
 

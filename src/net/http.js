@@ -19,22 +19,22 @@ import { math } from '../math/math.js';
  */
 class Http {
     static ContentType = {
-        FORM_URLENCODED: "application/x-www-form-urlencoded",
-        GIF: "image/gif",
-        JPEG: "image/jpeg",
-        DDS: "image/dds",
-        JSON: "application/json",
-        PNG: "image/png",
-        TEXT: "text/plain",
-        XML: "application/xml",
-        WAV: "audio/x-wav",
-        OGG: "audio/ogg",
-        MP3: "audio/mpeg",
-        MP4: "audio/mp4",
-        AAC: "audio/aac",
-        BIN: "application/octet-stream",
-        BASIS: "image/basis",
-        GLB: "model/gltf-binary"
+        FORM_URLENCODED: 'application/x-www-form-urlencoded',
+        GIF: 'image/gif',
+        JPEG: 'image/jpeg',
+        DDS: 'image/dds',
+        JSON: 'application/json',
+        PNG: 'image/png',
+        TEXT: 'text/plain',
+        XML: 'application/xml',
+        WAV: 'audio/x-wav',
+        OGG: 'audio/ogg',
+        MP3: 'audio/mpeg',
+        MP4: 'audio/mp4',
+        AAC: 'audio/aac',
+        BIN: 'application/octet-stream',
+        BASIS: 'image/basis',
+        GLB: 'model/gltf-binary'
     };
 
     static ResponseType = {
@@ -103,11 +103,11 @@ class Http {
      * @returns {XMLHttpRequest} The request object.
      */
     get(url, options, callback) {
-        if (typeof options === "function") {
+        if (typeof options === 'function') {
             callback = options;
             options = {};
         }
-        return this.request("GET", url, options, callback);
+        return this.request('GET', url, options, callback);
     }
 
     /**
@@ -157,12 +157,12 @@ class Http {
      * @returns {XMLHttpRequest} The request object.
      */
     post(url, data, options, callback) {
-        if (typeof options === "function") {
+        if (typeof options === 'function') {
             callback = options;
             options = {};
         }
         options.postdata = data;
-        return this.request("POST", url, options, callback);
+        return this.request('POST', url, options, callback);
     }
 
     /**
@@ -212,12 +212,12 @@ class Http {
      * @returns {XMLHttpRequest} The request object.
      */
     put(url, data, options, callback) {
-        if (typeof options === "function") {
+        if (typeof options === 'function') {
             callback = options;
             options = {};
         }
         options.postdata = data;
-        return this.request("PUT", url, options, callback);
+        return this.request('PUT', url, options, callback);
     }
 
     /**
@@ -263,11 +263,11 @@ class Http {
      * @returns {XMLHttpRequest} The request object.
      */
     del(url, options, callback) {
-        if (typeof options === "function") {
+        if (typeof options === 'function') {
             callback = options;
             options = {};
         }
-        return this.request("DELETE", url, options, callback);
+        return this.request('DELETE', url, options, callback);
     }
 
     /**
@@ -318,7 +318,7 @@ class Http {
         let uri, query, postdata;
         let errored = false;
 
-        if (typeof options === "function") {
+        if (typeof options === 'function') {
             callback = options;
             options = {};
         }
@@ -353,17 +353,17 @@ class Http {
                 postdata = options.postdata;
             } else if (options.postdata instanceof Object) {
                 // Now to work out how to encode the post data based on the headers
-                let contentType = options.headers["Content-Type"];
+                let contentType = options.headers['Content-Type'];
 
                 // If there is no type then default to form-encoded
                 if (contentType === undefined) {
-                    options.headers["Content-Type"] = Http.ContentType.FORM_URLENCODED;
-                    contentType = options.headers["Content-Type"];
+                    options.headers['Content-Type'] = Http.ContentType.FORM_URLENCODED;
+                    contentType = options.headers['Content-Type'];
                 }
                 switch (contentType) {
                     case Http.ContentType.FORM_URLENCODED: {
                         // Normal URL encoded form data
-                        postdata = "";
+                        postdata = '';
                         let bFirstItem = true;
 
                         // Loop round each entry in the map and encode them into the post data
@@ -372,7 +372,7 @@ class Http {
                                 if (bFirstItem) {
                                     bFirstItem = false;
                                 } else {
-                                    postdata += "&";
+                                    postdata += '&';
                                 }
 
                                 const encodedKey = encodeURIComponent(key);
@@ -385,7 +385,7 @@ class Http {
                     default:
                     case Http.ContentType.JSON:
                         if (contentType == null) {
-                            options.headers["Content-Type"] = Http.ContentType.JSON;
+                            options.headers['Content-Type'] = Http.ContentType.JSON;
                         }
                         postdata = JSON.stringify(options.postdata);
                         break;
@@ -401,9 +401,9 @@ class Http {
 
             uri = new URI(url);
             if (!uri.query) {
-                uri.query = "ts=" + timestamp;
+                uri.query = 'ts=' + timestamp;
             } else {
-                uri.query = uri.query + "&ts=" + timestamp;
+                uri.query = uri.query + '&ts=' + timestamp;
             }
             url = uri.toString();
         }
@@ -458,7 +458,7 @@ class Http {
             return Http.ResponseType.ARRAY_BUFFER;
         }
 
-        if (ext === ".xml") {
+        if (ext === '.xml') {
             return Http.ResponseType.DOCUMENT;
         }
 
@@ -518,15 +518,15 @@ class Http {
     _onSuccess(method, url, options, xhr) {
         let response;
         let contentType;
-        const header = xhr.getResponseHeader("Content-Type");
+        const header = xhr.getResponseHeader('Content-Type');
         if (header) {
             // Split up header into content type and parameter
-            const parts = header.split(";");
+            const parts = header.split(';');
             contentType = parts[0].trim();
         }
         try {
             // Check the content type to see if we want to parse it
-            if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
+            if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
             } else if (this._isBinaryContentType(contentType)) {

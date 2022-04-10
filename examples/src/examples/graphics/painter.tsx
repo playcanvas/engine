@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class PainterExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Painter';

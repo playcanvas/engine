@@ -24,12 +24,12 @@ const _schema = [
     'runInTools'
 ];
 
-const INITIALIZE = "initialize";
-const POST_INITIALIZE = "postInitialize";
-const UPDATE = "update";
-const POST_UPDATE = "postUpdate";
-const FIXED_UPDATE = "fixedUpdate";
-const TOOLS_UPDATE = "toolsUpdate";
+const INITIALIZE = 'initialize';
+const POST_INITIALIZE = 'postInitialize';
+const UPDATE = 'update';
+const POST_UPDATE = 'postUpdate';
+const FIXED_UPDATE = 'fixedUpdate';
+const TOOLS_UPDATE = 'toolsUpdate';
 const ON_ENABLE = 'onEnable';
 const ON_DISABLE = 'onDisable';
 
@@ -261,7 +261,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     broadcast(name, functionName) {
-        Debug.deprecated("ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
+        Debug.deprecated('ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/');
 
         const args = Array.prototype.slice.call(arguments, 2);
 
@@ -414,7 +414,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 const oldValue = attribute.value;
                 attribute.value = value;
                 self._convertAttributeValue(attribute);
-                instance.instance.fire("set", attribute.name, oldValue, attribute.value);
+                instance.instance.fire('set', attribute.name, oldValue, attribute.value);
             },
             configurable: true
         });

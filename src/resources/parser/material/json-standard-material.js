@@ -116,23 +116,23 @@ class JsonStandardMaterialParser {
         // list of properties that have been renamed in StandardMaterial
         // but may still exists in data in old format
         const RENAMED_PROPERTIES = [
-            ["bumpMapFactor", "bumpiness"],
+            ['bumpMapFactor', 'bumpiness'],
 
-            ["aoUvSet", "aoMapUv"],
+            ['aoUvSet', 'aoMapUv'],
 
-            ["aoMapVertexColor", "aoVertexColor"],
-            ["diffuseMapVertexColor", "diffuseVertexColor"],
-            ["emissiveMapVertexColor", "emissiveVertexColor"],
-            ["specularMapVertexColor", "specularVertexColor"],
-            ["metalnessMapVertexColor", "metalnessVertexColor"],
-            ["opacityMapVertexColor", "opacityVertexColor"],
-            ["glossMapVertexColor", "glossVertexColor"],
-            ["lightMapVertexColor", "lightVertexColor"],
+            ['aoMapVertexColor', 'aoVertexColor'],
+            ['diffuseMapVertexColor', 'diffuseVertexColor'],
+            ['emissiveMapVertexColor', 'emissiveVertexColor'],
+            ['specularMapVertexColor', 'specularVertexColor'],
+            ['metalnessMapVertexColor', 'metalnessVertexColor'],
+            ['opacityMapVertexColor', 'opacityVertexColor'],
+            ['glossMapVertexColor', 'glossVertexColor'],
+            ['lightMapVertexColor', 'lightVertexColor'],
 
-            ["diffuseMapTint", "diffuseTint"],
-            ["specularMapTint", "specularTint"],
-            ["emissiveMapTint", "emissiveTint"],
-            ["metalnessMapTint", "metalnessTint"]
+            ['diffuseMapTint', 'diffuseTint'],
+            ['specularMapTint', 'specularTint'],
+            ['emissiveMapTint', 'emissiveTint'],
+            ['metalnessMapTint', 'metalnessTint']
         ];
 
         // if an old property name exists without a new one,

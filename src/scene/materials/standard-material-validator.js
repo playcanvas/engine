@@ -1,6 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import {
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE
+    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
+    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL,
+    FUNC_GREATEREQUAL, FUNC_ALWAYS
 } from '../../graphics/constants.js';
 import { Texture } from '../../graphics/texture.js';
 
@@ -11,6 +13,7 @@ import {
     BLEND_MIN, BLEND_MAX,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
+
 import { standardMaterialParameterTypes } from './standard-material-parameters.js';
 
 class StandardMaterialValidator {
@@ -44,6 +47,16 @@ class StandardMaterialValidator {
                 BLEND_MIN,
                 BLEND_MAX
             ]),
+            depthFunc: this._createEnumValidator([
+                FUNC_NEVER,
+                FUNC_LESS,
+                FUNC_EQUAL,
+                FUNC_LESSEQUAL,
+                FUNC_GREATER,
+                FUNC_NOTEQUAL,
+                FUNC_GREATEREQUAL,
+                FUNC_ALWAYS
+            ]),
             shadingModel: this._createEnumValidator([
                 SPECULAR_PHONG,
                 SPECULAR_BLINN
@@ -67,7 +80,7 @@ class StandardMaterialValidator {
 
         const TYPES = standardMaterialParameterTypes;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         for (const key in data) {
             const type = TYPES[key];
@@ -78,8 +91,8 @@ class StandardMaterialValidator {
                 continue;
             }
 
-            if (type.startsWith("enum")) {
-                const enumType = type.split(":")[1];
+            if (type.startsWith('enum')) {
+                const enumType = type.split(':')[1];
                 if (this.enumValidators[enumType]) {
                     if (!this.enumValidators[enumType](data[key])) {
                         this.setInvalid(key, data);
@@ -150,7 +163,7 @@ class StandardMaterialValidator {
                 }
 
             } else {
-                console.error("Unknown material type: " + type);
+                console.error('Unknown material type: ' + type);
             }
         }
 

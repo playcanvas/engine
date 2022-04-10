@@ -61,7 +61,7 @@ export default /* glsl */`
 
     #endif
 
-    #if defined(CLUSTER_SHADOW_TYPE_PCF3) || defined(CLUSTER_SHADOW_TYPE_PCF5)
+    #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
     float getShadowOmniClusteredPCF3(sampler2D shadowMap, vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
 
@@ -80,7 +80,14 @@ export default /* glsl */`
 
     // we don't have PCF5 implementation for webgl1, use PCF3
     float getShadowOmniClusteredPCF5(sampler2D shadowMap, vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
-        return getShadowOmniClusteredPCF3(shadowMap, shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
+
+        float shadowTextureResolution = shadowParams.x;
+        vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
+
+        // pcf3
+        float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
+        dShadowCoord = vec3(uv, shadowZ);
+        return getShadowPCF3x3(shadowMap, shadowParams.xyz);
     }
 
     #endif
@@ -129,7 +136,7 @@ export default /* glsl */`
 
     #endif
 
-    #if defined(CLUSTER_SHADOW_TYPE_PCF3) || defined(CLUSTER_SHADOW_TYPE_PCF5)
+    #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
     float getShadowSpotClusteredPCF3(sampler2D shadowMap, vec4 shadowParams) {
         return getShadowSpotPCF3x3(shadowMap, shadowParams);
@@ -141,7 +148,7 @@ export default /* glsl */`
 
     // we don't have PCF5 implementation for webgl1, use PCF3
     float getShadowSpotClusteredPCF5(sampler2D shadowMap, vec4 shadowParams) {
-        return getShadowSpotClusteredPCF3(shadowMap, shadowParams);
+        return getShadowSpotPCF3x3(shadowMap, shadowParams);
     }
 
     #endif

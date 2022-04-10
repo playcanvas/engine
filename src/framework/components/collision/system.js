@@ -17,7 +17,7 @@ import { CollisionConeSystemImpl } from './shapes/cone.js';
 import { CollisionMeshSystemImpl } from './shapes/mesh.js';
 import { CollisionCompoundSystemImpl } from './shapes/compound.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const mat4 = new Mat4();
 const vec3 = new Vec3();
@@ -47,7 +47,8 @@ class CollisionComponentSystem extends ComponentSystem {
     /**
      * Creates a new CollisionComponentSystem instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);

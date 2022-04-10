@@ -66,7 +66,7 @@ class GlbContainerResource {
 
     instantiateModelEntity(options) {
         const entity = new Entity();
-        entity.addComponent("model", Object.assign({ type: "asset", asset: this.model }, options));
+        entity.addComponent('model', Object.assign({ type: 'asset', asset: this.model }, options));
         return entity;
     }
 
@@ -155,8 +155,8 @@ class GlbContainerResource {
 
             // create render components for mesh instances
             if (attachedMi) {
-                entity.addComponent("render", Object.assign({
-                    type: "asset",
+                entity.addComponent('render', Object.assign({
+                    type: 'asset',
                     meshInstances: attachedMi,
                     rootBone: root
                 }, options));
@@ -187,7 +187,7 @@ class GlbContainerResource {
         });
 
         // return the scene hierarchy created from scene clones
-        return GlbContainerResource.createSceneHierarchy(sceneClones, "Entity");
+        return GlbContainerResource.createSceneHierarchy(sceneClones, 'Entity');
     }
 
     // helper function to create a single hierarchy from an array of nodes
@@ -246,7 +246,7 @@ class GlbContainerResource {
         }
 
         // node hierarchy for the model
-        model.graph = GlbContainerResource.createSceneHierarchy(glb.scenes, "GraphNode");
+        model.graph = GlbContainerResource.createSceneHierarchy(glb.scenes, 'GraphNode');
 
         // create mesh instance for meshes on nodes that are part of hierarchy
         for (let i = 0; i < glb.nodes.length; i++) {

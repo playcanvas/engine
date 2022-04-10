@@ -120,7 +120,7 @@ class Light {
         this._cookie = null; // light cookie texture (2D for spot, cubemap for omni)
         this.cookieIntensity = 1;
         this._cookieFalloff = true;
-        this._cookieChannel = "rgb";
+        this._cookieChannel = 'rgb';
         this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
         this._cookieTransformUniform = new Float32Array(4);
         this._cookieOffset = null; // 2d position offset (spot only)

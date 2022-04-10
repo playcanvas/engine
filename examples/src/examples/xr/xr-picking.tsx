@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class XrPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';

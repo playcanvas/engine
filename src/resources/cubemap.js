@@ -6,10 +6,8 @@ import {
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
@@ -18,16 +16,22 @@ import { Texture } from '../graphics/texture.js';
  */
 class CubemapHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "cubemap";
+
+    /**
      * Create a new CubemapHandler instance.
      *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {AssetRegistry} assets - The asset registry.
-     * @param {ResourceLoader} loader - The resource loader.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(device, assets, loader) {
-        this._device = device;
-        this._registry = assets;
-        this._loader = loader;
+    constructor(app) {
+        this._device = app.graphicsDevice;
+        this._registry = app.assets;
+        this._loader = app.loader;
     }
 
     load(url, callback, asset) {
@@ -75,7 +79,7 @@ class CubemapHandler {
     // test whether two assets ids are the same
     compareAssetIds(assetIdA, assetIdB) {
         if (assetIdA && assetIdB) {
-            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
+            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === 'string') {
                 return assetIdA === assetIdB;           // id or url
             }
             // else {
@@ -300,17 +304,17 @@ class CubemapHandler {
                         if (texAsset) {
                             processTexAsset(index, texAsset);
                         } else {
-                            onError(index, "failed to find dependent cubemap asset=" + assetId_);
+                            onError(index, 'failed to find dependent cubemap asset=' + assetId_);
                         }
                     }.bind(null, i, assetId));
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
-                const file = (typeof assetId === "string") ? {
+                const file = (typeof assetId === 'string') ? {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new Asset(cubemapAsset.name + "_part_" + i, "texture", file);
+                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
                 registry.add(texAsset);
                 registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));

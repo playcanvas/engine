@@ -119,7 +119,7 @@ class SoundSlot extends EventHandler {
         // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
         if (!this.isLoaded && !this._hasAsset()) {
             Debug.warn(`Trying to play SoundSlot ${this.name} but it is not loaded and doesn't have an asset.`);
-            return;
+            return undefined;
         }
 
         const instance = this._createInstance();

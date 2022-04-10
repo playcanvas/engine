@@ -70,8 +70,9 @@ class Asset extends EventHandler {
      * field or null if hash was set (e.g from using {@link AssetRegistry#loadFromUrl}).
      * @param {ArrayBuffer} [file.contents] - Optional file contents. This is faster than wrapping
      * the data in a (base64 encoded) blob. Currently only used by container assets.
-     * @param {object} [data] - JSON object with additional data about the asset. (e.g. for texture
-     * and model assets) or contains the asset data itself (e.g. in the case of materials).
+     * @param {object|string} [data] - JSON object or string with additional data about the asset.
+     * (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of
+     * materials).
      * @param {object} [options] - The asset handler options. For container options see
      * {@link ContainerHandler}.
      * @param {boolean} [options.crossOrigin] - For use with texture resources. For
@@ -466,7 +467,7 @@ class Asset extends EventHandler {
         if (this.resource) {
             callback.call(scope, this);
         } else {
-            this.once("load", function (asset) {
+            this.once('load', function (asset) {
                 callback.call(scope, asset);
             });
         }

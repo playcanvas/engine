@@ -10,7 +10,7 @@ import { BoundingSphere } from '../../shape/bounding-sphere.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    FUNC_ALWAYS, FUNC_LESSEQUAL,
+    FUNC_ALWAYS,
     SEMANTIC_ATTR,
     STENCILOP_KEEP
 } from '../../graphics/constants.js';
@@ -24,7 +24,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, VIEW_LEFT, VIEW_RIGHT, SHADOWUPDATE_THISFRAME
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -47,18 +47,6 @@ let projMat;
 const flipYMat = new Mat4().setScale(1, -1, 1);
 const flippedViewProjMat = new Mat4();
 const flippedSkyboxProjMat = new Mat4();
-
-const viewInvL = new Mat4();
-const viewInvR = new Mat4();
-const viewL = new Mat4();
-const viewR = new Mat4();
-const viewPosL = new Vec3();
-const viewPosR = new Vec3();
-let projL, projR;
-const viewMat3L = new Mat3();
-const viewMat3R = new Mat3();
-const viewProjMatL = new Mat4();
-const viewProjMatR = new Mat4();
 
 const worldMatX = new Vec3();
 const worldMatY = new Vec3();
@@ -161,9 +149,9 @@ class ForwardRenderer {
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
 
-        this.ambientId = scope.resolve("light_globalAmbient");
-        this.exposureId = scope.resolve("exposure");
-        this.skyboxIntensityId = scope.resolve("skyboxIntensity");
+        this.ambientId = scope.resolve('light_globalAmbient');
+        this.exposureId = scope.resolve('exposure');
+        this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -193,7 +181,7 @@ class ForwardRenderer {
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
-        this.twoSidedLightingNegScaleFactorId = scope.resolve("twoSidedLightingNegScaleFactor");
+        this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -266,19 +254,7 @@ class ForwardRenderer {
     }
 
     updateCameraFrustum(camera) {
-        if (camera.vrDisplay && camera.vrDisplay.presenting) {
-            projMat = camera.vrDisplay.combinedProj;
-            const parent = camera._node.parent;
-            if (parent) {
-                viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
-            } else {
-                viewMat.copy(camera.vrDisplay.combinedView);
-            }
-            viewInvMat.copy(viewMat).invert();
-            this.viewInvId.setValue(viewInvMat.data);
-            viewProjMat.mul2(projMat, viewMat);
-            camera.frustum.setFromMat4(viewProjMat);
-        } else if (camera.xr && camera.xr.views.length) {
+        if (camera.xr && camera.xr.views.length) {
             // calculate frustum based on XR view
             const view = camera.xr.views[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);
@@ -307,76 +283,9 @@ class ForwardRenderer {
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
     setCamera(camera, target, clear) {
-        const vrDisplay = camera.vrDisplay;
         let transform;
 
-        if (vrDisplay && vrDisplay.presenting) {
-            // Projection LR
-            projL = vrDisplay.leftProj;
-            projR = vrDisplay.rightProj;
-            projMat = vrDisplay.combinedProj;
-            if (camera.calculateProjection) {
-                camera.calculateProjection(projL, VIEW_LEFT);
-                camera.calculateProjection(projR, VIEW_RIGHT);
-                camera.calculateProjection(projMat, VIEW_CENTER);
-            }
-
-            if (camera.calculateTransform) {
-                camera.calculateTransform(viewInvL, VIEW_LEFT);
-                camera.calculateTransform(viewInvR, VIEW_RIGHT);
-                camera.calculateTransform(viewInvMat, VIEW_CENTER);
-                viewL.copy(viewInvL).invert();
-                viewR.copy(viewInvR).invert();
-                viewMat.copy(viewInvMat).invert();
-            } else {
-                const parent = camera._node.parent;
-                if (parent) {
-                    transform = parent.getWorldTransform();
-
-                    // ViewInverse LR (parent)
-                    viewInvL.mul2(transform, vrDisplay.leftViewInv);
-                    viewInvR.mul2(transform, vrDisplay.rightViewInv);
-
-                    // View LR (parent)
-                    viewL.copy(viewInvL).invert();
-                    viewR.copy(viewInvR).invert();
-
-                    // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
-                } else {
-                    // ViewInverse LR
-                    viewInvL.copy(vrDisplay.leftViewInv);
-                    viewInvR.copy(vrDisplay.rightViewInv);
-
-                    // View LR
-                    viewL.copy(vrDisplay.leftView);
-                    viewR.copy(vrDisplay.rightView);
-
-                    // Combined view
-                    viewMat.copy(vrDisplay.combinedView);
-                }
-            }
-
-            // View 3x3 LR
-            viewMat3L.setFromMat4(viewL);
-            viewMat3R.setFromMat4(viewR);
-
-            // ViewProjection LR
-            viewProjMatL.mul2(projL, viewL);
-            viewProjMatR.mul2(projR, viewR);
-
-            // View Position LR
-            viewPosL.x = viewInvL.data[12];
-            viewPosL.y = viewInvL.data[13];
-            viewPosL.z = viewInvL.data[14];
-
-            viewPosR.x = viewInvR.data[12];
-            viewPosR.y = viewInvR.data[13];
-            viewPosR.z = viewInvR.data[14];
-
-            viewProjMat.mul2(projMat, viewMat);
-            camera.frustum.setFromMat4(viewProjMat);
-        } else if (camera.xr && camera.xr.session) {
+        if (camera.xr && camera.xr.session) {
             const parent = camera._node.parent;
             if (parent) transform = parent.getWorldTransform();
 
@@ -528,31 +437,31 @@ class ForwardRenderer {
     }
 
     _resolveLight(scope, i) {
-        const light = "light" + i;
-        this.lightColorId[i] = scope.resolve(light + "_color");
+        const light = 'light' + i;
+        this.lightColorId[i] = scope.resolve(light + '_color');
         this.lightDir[i] = new Float32Array(3);
-        this.lightDirId[i] = scope.resolve(light + "_direction");
-        this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
-        this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
-        this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
-        this.lightRadiusId[i] = scope.resolve(light + "_radius");
+        this.lightDirId[i] = scope.resolve(light + '_direction');
+        this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
+        this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
+        this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
+        this.lightRadiusId[i] = scope.resolve(light + '_radius');
         this.lightPos[i] = new Float32Array(3);
-        this.lightPosId[i] = scope.resolve(light + "_position");
+        this.lightPosId[i] = scope.resolve(light + '_position');
         this.lightWidth[i] = new Float32Array(3);
-        this.lightWidthId[i] = scope.resolve(light + "_halfWidth");
+        this.lightWidthId[i] = scope.resolve(light + '_halfWidth');
         this.lightHeight[i] = new Float32Array(3);
-        this.lightHeightId[i] = scope.resolve(light + "_halfHeight");
-        this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
-        this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
-        this.lightCookieId[i] = scope.resolve(light + "_cookie");
-        this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
-        this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
-        this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
+        this.lightHeightId[i] = scope.resolve(light + '_halfHeight');
+        this.lightInAngleId[i] = scope.resolve(light + '_innerConeAngle');
+        this.lightOutAngleId[i] = scope.resolve(light + '_outerConeAngle');
+        this.lightCookieId[i] = scope.resolve(light + '_cookie');
+        this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
+        this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
+        this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
 
         // shadow cascades
-        this.shadowMatrixPaletteId[i] = scope.resolve(light + "_shadowMatrixPalette[0]");
-        this.shadowCascadeDistancesId[i] = scope.resolve(light + "_shadowCascadeDistances[0]");
-        this.shadowCascadeCountId[i] = scope.resolve(light + "_shadowCascadeCount");
+        this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
+        this.shadowCascadeDistancesId[i] = scope.resolve(light + '_shadowCascadeDistances[0]');
+        this.shadowCascadeCountId[i] = scope.resolve(light + '_shadowCascadeCount');
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -1281,7 +1190,7 @@ class ForwardRenderer {
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
                         if (!drawCall.isStatic) {
-                            const variantKey = pass + "_" + objDefs + "_" + lightHash;
+                            const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
                                 this.updateShader(drawCall, objDefs, null, pass, sortedLights);
@@ -1311,9 +1220,7 @@ class ForwardRenderer {
     renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
         const device = this.device;
         const scene = this.scene;
-        const vrDisplay = camera.vrDisplay;
         const passFlag = 1 << pass;
-        const halfWidth = device.width * 0.5;
 
         // #if _PROFILER
         const forwardStartTime = now();
@@ -1377,7 +1284,7 @@ class ForwardRenderer {
                         device.setDepthFunc(FUNC_ALWAYS);
                         device.setDepthTest(true);
                     } else {
-                        device.setDepthFunc(FUNC_LESSEQUAL);
+                        device.setDepthFunc(material.depthFunc);
                         device.setDepthTest(material.depthTest);
                     }
 
@@ -1443,33 +1350,7 @@ class ForwardRenderer {
                     drawCallback(drawCall, i);
                 }
 
-                if (vrDisplay && vrDisplay.presenting) {
-                    // Left
-                    device.setViewport(0, 0, halfWidth, device.height);
-                    this.projId.setValue(projL.data);
-                    this.projSkyboxId.setValue(projL.data);
-                    this.viewInvId.setValue(viewInvL.data);
-                    this.viewId.setValue(viewL.data);
-                    this.viewId3.setValue(viewMat3L.data);
-                    this.viewProjId.setValue(viewProjMatL.data);
-                    this.dispatchViewPos(viewPosL);
-
-                    this.drawInstance(device, drawCall, mesh, style, true);
-                    this._forwardDrawCalls++;
-
-                    // Right
-                    device.setViewport(halfWidth, 0, halfWidth, device.height);
-                    this.projId.setValue(projR.data);
-                    this.projSkyboxId.setValue(projR.data);
-                    this.viewInvId.setValue(viewInvR.data);
-                    this.viewId.setValue(viewR.data);
-                    this.viewId3.setValue(viewMat3R.data);
-                    this.viewProjId.setValue(viewProjMatR.data);
-                    this.dispatchViewPos(viewPosR);
-
-                    this.drawInstance2(device, drawCall, mesh, style);
-                    this._forwardDrawCalls++;
-                } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                if (camera.xr && camera.xr.session && camera.xr.views.length) {
                     const views = camera.xr.views;
 
                     for (let v = 0; v < views.length; v++) {
@@ -1894,7 +1775,7 @@ class ForwardRenderer {
                 continue;
             }
 
-            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : "noname");
+            DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
             DebugGraphics.pushGpuMarker(this.device, layer.name);
 
             // #if _PROFILER

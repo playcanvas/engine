@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';

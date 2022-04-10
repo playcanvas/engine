@@ -12,7 +12,7 @@ class Trigger {
     /**
      * Create a new Trigger instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @param {Component} component - The component for which the trigger will be created.
      */
     constructor(app, component) {

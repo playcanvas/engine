@@ -73,7 +73,7 @@ class Render2d {
         this.shader = pc.shaderChunks.createShaderFromCode(device,
                                                            vertexShader,
                                                            fragmentShader,
-                                                           "mini-stats");
+                                                           'mini-stats');
         this.buffer = new pc.VertexBuffer(device, format, maxQuads * 4, pc.BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
 
@@ -87,13 +87,13 @@ class Render2d {
         // colors
         const setupColor = (name, value) => {
             this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
-            this[name + "Id"] = device.scope.resolve(name);
+            this[name + 'Id'] = device.scope.resolve(name);
         };
-        setupColor("col0", colors.graph0);
-        setupColor("col1", colors.graph1);
-        setupColor("col2", colors.graph2);
-        setupColor("watermark", colors.watermark);
-        setupColor("background", colors.background);
+        setupColor('col0', colors.graph0);
+        setupColor('col1', colors.graph1);
+        setupColor('col2', colors.graph2);
+        setupColor('watermark', colors.watermark);
+        setupColor('background', colors.background);
 
         this.watermarkSizeId = device.scope.resolve('watermarkSize');
         this.clrId = device.scope.resolve('clr');

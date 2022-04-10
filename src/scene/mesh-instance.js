@@ -574,7 +574,7 @@ class MeshInstance {
     }
 
     // shader uniform names for lightmaps
-    static lightmapParamNames = ["texture_lightMap", "texture_dirLightMap"];
+    static lightmapParamNames = ['texture_lightMap', 'texture_dirLightMap'];
 
     // generates wireframes for an array of mesh instances
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {

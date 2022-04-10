@@ -31,8 +31,7 @@ const properties = [
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'vrDisplay', readonly: false }
+    { name: 'scissorRect', readonly: false }
 ];
 
 /**
@@ -41,13 +40,6 @@ const properties = [
  * @callback CalculateMatrixCallback
  * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
- */
-
-/**
- * Callback used by {@link CameraComponent#enterVr} and {@link CameraComponent#exitVr}.
- *
- * @callback VrCameraCallback
- * @param {string|null} err - On success it is null on failure it is the error message.
  */
 
 /**
@@ -433,10 +425,10 @@ class CameraComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -458,10 +450,10 @@ class CameraComponent extends Component {
 
         system.addCamera(this);
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.on("add", this.onLayerAdded, this);
-            layers.on("remove", this.onLayerRemoved, this);
+            layers.on('add', this.onLayerAdded, this);
+            layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -480,10 +472,10 @@ class CameraComponent extends Component {
 
         this.removeCameraFromLayers();
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.off("add", this.onLayerAdded, this);
-            layers.off("remove", this.onLayerRemoved, this);
+            layers.off('add', this.onLayerAdded, this);
+            layers.off('remove', this.onLayerRemoved, this);
         }
 
         system.removeCamera(this);
@@ -525,122 +517,6 @@ class CameraComponent extends Component {
      * @private
      */
     frameEnd() {}
-
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {VrCameraCallback} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @variation 2
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
-     * {@link VrManager#display} as the default.
-     * @param {VrCameraCallback} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err). On success it returns null on
-     * failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    enterVr(display, callback) {
-        if ((display instanceof Function) && !callback) {
-            callback = display;
-            display = null;
-        }
-
-        if (!this.system.app.vr) {
-            callback("VrManager not created. Enable VR in project settings.");
-            return;
-        }
-
-        if (!display) {
-            display = this.system.app.vr.display;
-        }
-
-        if (display) {
-            const self = this;
-            if (display.capabilities.canPresent) {
-                // try and present
-                display.requestPresent(function (err) {
-                    if (!err) {
-                        self.vrDisplay = display;
-                        // camera component uses internal 'before' event
-                        // this means display nulled before anyone other
-                        // code gets to update
-                        self.vrDisplay.once('beforepresentchange', function (display) {
-                            if (!display.presenting) {
-                                self.vrDisplay = null;
-                            }
-                        });
-                    }
-                    callback(err);
-                });
-            } else {
-                // mono rendering
-                self.vrDisplay = display;
-                callback();
-            }
-        } else {
-            callback("No pc.VrDisplay to present");
-        }
-    }
-
-    /**
-     * Attempt to stop presenting this camera.
-     *
-     * @param {VrCameraCallback} callback - Function called once to indicate success of failure.
-     * The callback takes one argument (err). On success it returns null on failure it returns the
-     * error message.
-     * @example
-     * this.entity.camera.exitVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // exited successfully
-     *     }
-     * });
-     * @private
-     * @deprecated
-     */
-    exitVr(callback) {
-        if (this.vrDisplay) {
-            if (this.vrDisplay.capabilities.canPresent) {
-                const display = this.vrDisplay;
-                this.vrDisplay = null;
-                display.exitPresent(callback);
-            } else {
-                this.vrDisplay = null;
-                callback();
-            }
-        } else {
-            callback("Not presenting VR");
-        }
-    }
 
     /**
      * Attempt to start XR session with this camera.
@@ -717,7 +593,7 @@ class CameraComponent extends Component {
      */
     endXr(callback) {
         if (!this._camera.xr) {
-            if (callback) callback(new Error("Camera is not in XR"));
+            if (callback) callback(new Error('Camera is not in XR'));
             return;
         }
 

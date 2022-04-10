@@ -486,16 +486,23 @@ describe('Quat', function () {
             it('sets the quaternion from ' + x + '°, ' + y + '°, ' + z + '°', function () {
                 const q1 = new Quat();
                 const q2 = new Quat();
+                const q3 = new Quat();
                 const m = new Mat4();
 
                 q1.setFromEulerAngles(x, y, z);
                 m.setFromEulerAngles(x, y, z);
                 q2.setFromMat4(m);
+                q3.setFromEulerAngles(new Vec3(x, y, z));
 
                 expect(q1.x).to.be.closeTo(q2.x, 0.0001);
                 expect(q1.y).to.be.closeTo(q2.y, 0.0001);
                 expect(q1.z).to.be.closeTo(q2.z, 0.0001);
                 expect(q1.w).to.be.closeTo(q2.w, 0.0001);
+
+                expect(q3.x).to.be.closeTo(q2.x, 0.0001);
+                expect(q3.y).to.be.closeTo(q2.y, 0.0001);
+                expect(q3.z).to.be.closeTo(q2.z, 0.0001);
+                expect(q3.w).to.be.closeTo(q2.w, 0.0001);
             });
         });
 

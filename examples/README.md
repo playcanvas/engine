@@ -15,7 +15,7 @@ npm install
 ```
 Now run the following two commands in two separate terminals:
 ```
-npm run build:watch
+npm run watch
 ```
 and
 ```

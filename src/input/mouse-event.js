@@ -30,7 +30,7 @@ class MouseEvent {
 
         if (event) {
             if (event instanceof MouseEvent) {
-                throw Error("Expected MouseEvent");
+                throw Error('Expected MouseEvent');
             }
             coords = mouse._getTargetCoords(event);
         } else {
