@@ -60,7 +60,7 @@ uniform float amount;
 void main(void)
 {
     vec4 color = texture2D(uDiffuseMap, vUv0);
-    vec3 roloc = vec3(1.0 - color.r, 1.0 - color.g, 1.0 - color.b);
+    vec3 roloc = 1.0 - color.rgb;
     gl_FragColor = vec4(mix(color.rgb, roloc, amount), color.a);
 }`
     };
