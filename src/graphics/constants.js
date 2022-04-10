@@ -99,28 +99,28 @@ export const BLENDMODE_ONE_MINUS_DST_ALPHA = 10;
 
 /**
  * Multiplies all colors by a constant color.
- * 
+ *
  * @type {number}
  */
 export const BLENDMODE_CONSTANT_COLOR = 11;
 
 /**
  * Multiplies all colors by 1 minus a constant color.
- * 
+ *
  * @type {number}
  */
 export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = 12;
 
 /**
  * Multiplies all colors by a constant alpha value.
- * 
+ *
  * @type {number}
  */
 export const BLENDMODE_CONSTANT_ALPHA = 13;
 
 /**
  * Multiplies all colors by 1 minus a constant alpha value.
- * 
+ *
  * @type {number}
  */
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = 14;

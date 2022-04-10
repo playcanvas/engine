@@ -2470,7 +2470,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.gl.blendColor(r, g, b, a);
             c.set(r, g, b, a);
         }
-    }   
+    }
 
     /**
      * Controls how triangles are culled based on their face direction. The default cull mode is
