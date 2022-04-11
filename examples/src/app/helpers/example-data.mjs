@@ -36,25 +36,14 @@ Object.keys(exampleData).forEach((categorySlug) => {
                 type: 'typescript'
             }
         ];
-        if (example.load) {
-            let children = example.load().props.children;
-            if (!Array.isArray(children)) {
-                children = [children];
-            }
-            children.forEach((child) => {
-                if (child.props.type === 'shader') {
-                    files.push({
-                        name: child.props.name,
-                        text: child.props.data,
-                        type: 'shader'
-                    });
-                } else if (child.props.type === 'json') {
-                    files.push({
-                        name: child.props.name,
-                        text: JSON.stringify(child.props.data, null, 4),
-                        type: 'json'
-                    });
-                }
+        const extraFiles = exampleData[categorySlug][exampleSlug].files;
+        if (extraFiles) {
+            Object.keys(extraFiles).forEach((fileName) => {
+                files.push({
+                    name: fileName,
+                    text: extraFiles[fileName],
+                    type: 'text'
+                });
             });
         }
         paths[`/${categorySlug}/${exampleSlug}`] = {

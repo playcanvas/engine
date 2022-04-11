@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';

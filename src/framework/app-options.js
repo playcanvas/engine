@@ -11,7 +11,7 @@
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 
-class AppCreateOptions {
+class AppOptions {
     /**
      * Input handler for {@link ElementComponent}s.
      *
@@ -118,4 +118,4 @@ class AppCreateOptions {
     resourceHandlers = [];
 }
 
-export { AppCreateOptions };
+export { AppOptions };

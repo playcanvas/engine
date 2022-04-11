@@ -61,6 +61,12 @@ const CodeEditor = (props: CodeEditorProps) => {
             exampleFunction = files[0].text;
         }
         window.localStorage.setItem(window.location.hash.replace('#', ''), formatters.getInnerFunctionText(exampleFunction));
+        if (files.length > 2) {
+            (window as any).editedFiles = {};
+            files.slice(2).forEach((f) => {
+                (window as any).editedFiles[f.name] = f.text;
+            });
+        }
     };
 
     const onValidate = (markers: Array<any>) => {

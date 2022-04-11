@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class ShapesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shapes';

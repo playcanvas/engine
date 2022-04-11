@@ -8,7 +8,7 @@ import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
-import { AppCreateOptions } from './app-create-options.js';
+import { AppOptions } from './app-options.js';
 import { script } from './script.js';
 import { AnimationComponentSystem } from './components/animation/system.js';
 import { AnimComponentSystem } from './components/anim/system.js';
@@ -93,7 +93,8 @@ import { XrManager } from '../xr/xr-manager.js';
  * manually.
  *
  * @augments AppBase
- */class Application extends AppBase {
+ */
+class Application extends AppBase {
     /**
      * Create a new Application instance.
      *
@@ -119,28 +120,28 @@ import { XrManager } from '../xr/xr-manager.js';
     constructor(canvas, options = {}) {
         super(canvas);
 
-        const createOptions = new AppCreateOptions();
+        const appOptions = new AppOptions();
 
-        createOptions.graphicsDevice = this.createDevice(canvas, options);
-        this.addComponentSystems(createOptions);
-        this.addResourceHandles(createOptions);
+        appOptions.graphicsDevice = this.createDevice(canvas, options);
+        this.addComponentSystems(appOptions);
+        this.addResourceHandles(appOptions);
 
-        createOptions.elementInput = options.elementInput;
-        createOptions.keyboard = options.keyboard;
-        createOptions.mouse = options.mouse;
-        createOptions.touch = options.touch;
-        createOptions.gamepads = options.gamepads;
+        appOptions.elementInput = options.elementInput;
+        appOptions.keyboard = options.keyboard;
+        appOptions.mouse = options.mouse;
+        appOptions.touch = options.touch;
+        appOptions.gamepads = options.gamepads;
 
-        createOptions.scriptPrefix = options.scriptPrefix;
-        createOptions.assetPrefix = options.assetPrefix;
-        createOptions.scriptsOrder = options.scriptsOrder;
+        appOptions.scriptPrefix = options.scriptPrefix;
+        appOptions.assetPrefix = options.assetPrefix;
+        appOptions.scriptsOrder = options.scriptsOrder;
 
-        createOptions.soundManager = new SoundManager(options);
-        createOptions.lightmapper = Lightmapper;
-        createOptions.batchManager = BatchManager;
-        createOptions.xr = XrManager;
+        appOptions.soundManager = new SoundManager(options);
+        appOptions.lightmapper = Lightmapper;
+        appOptions.batchManager = BatchManager;
+        appOptions.xr = XrManager;
 
-        this.init(createOptions);
+        this.init(appOptions);
     }
 
     createDevice(canvas, options) {
@@ -156,8 +157,8 @@ import { XrManager } from '../xr/xr-manager.js';
         return new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);
     }
 
-    addComponentSystems(createOptions) {
-        createOptions.componentSystems = [
+    addComponentSystems(appOptions) {
+        appOptions.componentSystems = [
             RigidBodyComponentSystem,
             CollisionComponentSystem,
             JointComponentSystem,
@@ -184,8 +185,8 @@ import { XrManager } from '../xr/xr-manager.js';
         ];
     }
 
-    addResourceHandles(createOptions) {
-        createOptions.resourceHandlers = [
+    addResourceHandles(appOptions) {
+        appOptions.resourceHandlers = [
             RenderHandler,
             AnimationHandler,
             AnimClipHandler,

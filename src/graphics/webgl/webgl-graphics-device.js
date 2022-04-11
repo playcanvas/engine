@@ -35,6 +35,7 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { Color } from '../../math/color.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -257,12 +258,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
-        if (typeof navigator !== 'undefined') {
-            const ua = navigator.userAgent;
-            if (ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'))) {
-                options.antialias = false;
-                Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
-            }
+        const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
+        this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
+        if (this.forceDisableMultisampling) {
+            options.antialias = false;
+            Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
         // Retrieve the WebGL context
@@ -339,7 +339,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.SRC_ALPHA_SATURATE,
             gl.ONE_MINUS_SRC_ALPHA,
             gl.DST_ALPHA,
-            gl.ONE_MINUS_DST_ALPHA
+            gl.ONE_MINUS_DST_ALPHA,
+            gl.CONSTANT_COLOR,
+            gl.ONE_MINUS_CONSTANT_COLOR,
+            gl.CONSTANT_ALPHA,
+            gl.ONE_MINUS_CONSTANT_ALPHA
         ];
 
         this.glComparison = [
@@ -882,7 +886,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
         this.samples = gl.getParameter(gl.SAMPLES);
-        this.maxSamples = this.webgl2 ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+        this.maxSamples = this.webgl2 && !this.forceDisableMultisampling ? gl.getParameter(gl.MAX_SAMPLES) : 1;
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
@@ -915,6 +919,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.separateAlphaEquation = false;
         gl.blendFunc(gl.ONE, gl.ZERO);
         gl.blendEquation(gl.FUNC_ADD);
+
+        this.blendColor = new Color(0, 0, 0, 0);
+        gl.blendColor(0, 0, 0, 0);
 
         this.writeRed = true;
         this.writeGreen = true;
@@ -964,10 +971,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.clearDepth = 1;
         gl.clearDepth(1);
 
-        this.clearRed = 0;
-        this.clearBlue = 0;
-        this.clearGreen = 0;
-        this.clearAlpha = 0;
+        this.clearColor = new Color(0, 0, 0, 0);
         gl.clearColor(0, 0, 0, 0);
 
         this.clearStencil = 0;
@@ -1880,12 +1884,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     setClearColor(r, g, b, a) {
-        if ((r !== this.clearRed) || (g !== this.clearGreen) || (b !== this.clearBlue) || (a !== this.clearAlpha)) {
+        const c = this.clearColor;
+        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
             this.gl.clearColor(r, g, b, a);
-            this.clearRed = r;
-            this.clearGreen = g;
-            this.clearBlue = b;
-            this.clearAlpha = a;
+            this.clearColor.set(r, g, b, a);
         }
     }
 
@@ -2356,6 +2358,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
      * - {@link BLENDMODE_DST_ALPHA}
      * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * - {@link BLENDMODE_CONSTANT_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_COLOR}
+     * - {@link BLENDMODE_CONSTANT_ALPHA}
+     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_ALPHA}
      *
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
@@ -2446,6 +2452,23 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.blendEquation = blendEquation;
             this.blendAlphaEquation = blendAlphaEquation;
             this.separateAlphaEquation = true;
+        }
+    }
+
+    /**
+     * Set the source and destination blending factors.
+     *
+     * @param {number} r - The red component in the range of 0 to 1. Default value is 0.
+     * @param {number} g - The green component in the range of 0 to 1. Default value is 0.
+     * @param {number} b - The blue component in the range of 0 to 1. Default value is 0.
+     * @param {number} a - The alpha component in the range of 0 to 1. Default value is 0.
+     * @ignore
+     */
+    setBlendColor(r, g, b, a) {
+        const c = this.blendColor;
+        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+            this.gl.blendColor(r, g, b, a);
+            c.set(r, g, b, a);
         }
     }
 

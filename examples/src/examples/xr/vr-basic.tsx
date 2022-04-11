@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class VrBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Basic';
