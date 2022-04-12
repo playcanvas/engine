@@ -161,7 +161,7 @@ class EnvLighting {
 
         // generate mipmaps
         const rect = new Vec4(0, 0, 512 * s, 256 * s);
-        const levels = calcLevels(512);
+        const levels = calcLevels(256) - calcLevels(4);
         for (let i = 0; i < levels; ++i) {
             reprojectTexture(source, result, {
                 numSamples: 1,
