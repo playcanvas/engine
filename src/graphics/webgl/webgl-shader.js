@@ -299,7 +299,7 @@ class WebglShader {
      *
      * @param {string} src - The shader source code.
      * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
-     * @returns {Array} An array where the first element is the 10 lines of code around the first
+     * @returns {[string, {message?: string, line?: number, source?: string}]} A tuple where the first element is the 10 lines of code around the first
      * detected error, and the second element an object storing the error messsage, line number and
      * complete shader source.
      * @private
