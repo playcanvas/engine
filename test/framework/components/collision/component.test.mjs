@@ -1,6 +1,6 @@
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
-import { Application } from '../../../../src/framework/app-base.js';
+import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Vec3 } from '../../../../src/math/vec3.js';
 
