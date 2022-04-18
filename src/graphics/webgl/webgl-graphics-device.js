@@ -1119,7 +1119,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Binds the specified framebuffer object.
      *
-     * @param {WebGLFramebuffer} fb - The framebuffer to bind.
+     * @param {WebGLFramebuffer | null} fb - The framebuffer to bind.
      * @ignore
      */
     setFramebuffer(fb) {
