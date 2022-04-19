@@ -770,7 +770,7 @@ class ElementComponent extends Component {
             }
         } else {
             if (this._useInput === true) {
-                console.warn('Elements will not get any input events because this.system.app.elementInput is not created');
+                Debug.warn('Elements will not get any input events because this.system.app.elementInput is not created');
             }
         }
 
