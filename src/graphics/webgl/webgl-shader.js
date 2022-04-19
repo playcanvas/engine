@@ -35,7 +35,6 @@ class WebglShader {
      */
     destroy(shader) {
         /** @type {WebglGraphicsDevice} */
-        // @ts-ignore
         const device = shader.device;
         const idx = device.shaders.indexOf(shader);
         if (idx !== -1) {
