@@ -456,7 +456,7 @@ class AnimComponent extends Component {
         const assetId = this._stateGraphAsset;
         this.removeStateGraph();
         if (assetId) {
-            const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
+            const stateGraph = this.system.app.assets.get(assetId).resource;
             this.loadStateGraph(stateGraph);
         }
     }
