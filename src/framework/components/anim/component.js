@@ -452,15 +452,6 @@ class AnimComponent extends Component {
         this._targets = {};
     }
 
-    resetStateGraph() {
-        const assetId = this._stateGraphAsset;
-        this.removeStateGraph();
-        if (assetId) {
-            const stateGraph = this.system.app.assets.get(assetId).resource;
-            this.loadStateGraph(stateGraph);
-        }
-    }
-
     /**
      * Reset all of the components layers and parameters to their initial states. If a layer was
      * playing before it will continue playing.
