@@ -342,13 +342,9 @@ class ModelComponent extends Component {
             if (this.entity.animation)
                 this.entity.animation.setModel(this._model);
 
-            // Update any animation component
+            // Update any anim component
             if (this.entity.anim) {
-                if (this.entity.anim.playing) {
-                    this.entity.anim.rebind();
-                } else {
-                    this.entity.anim.resetStateGraph();
-                }
+                this.entity.anim.rebind();
             }
             // trigger event handler to load mapping
             // for new model
