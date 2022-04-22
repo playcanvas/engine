@@ -69,6 +69,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 const img = source._levels[0][face];
 
                 const tex = new Texture(device, {
+                    name: 'prefiltered-cube',
                     cubemap: false,
                     type: TEXTURETYPE_DEFAULT,
                     format: source.format,
@@ -76,11 +77,11 @@ function shFromCubemap(device, source, dontFlipX) {
                     height: cubeSize,
                     mipmaps: false
                 });
-                tex.name = 'prefiltered-cube';
                 tex._levels[0] = img;
                 tex.upload();
 
                 const tex2 = new Texture(device, {
+                    name: 'prefiltered-cube',
                     cubemap: false,
                     type: TEXTURETYPE_DEFAULT,
                     format: source.format,
@@ -88,7 +89,6 @@ function shFromCubemap(device, source, dontFlipX) {
                     height: cubeSize,
                     mipmaps: false
                 });
-                tex2.name = 'prefiltered-cube';
 
                 const targ = new RenderTarget({
                     colorBuffer: tex2,

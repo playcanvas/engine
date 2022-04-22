@@ -228,6 +228,16 @@ class XrManager extends EventHandler {
     }
 
     /**
+     * Destroys the XrManager instance.
+     *
+     * @ignore
+     */
+    destroy() {
+        this.depthSensing.destroy();
+        this.depthSensing = null;
+    }
+
+    /**
      * @event
      * @name XrManager#available
      * @description Fired when availability of specific XR type is changed.

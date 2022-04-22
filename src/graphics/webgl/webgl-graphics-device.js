@@ -115,10 +115,10 @@ function testTextureFloatHighPrecision(device) {
         height: 1,
         mipmaps: false,
         minFilter: FILTER_NEAREST,
-        magFilter: FILTER_NEAREST
+        magFilter: FILTER_NEAREST,
+        name: 'testFHP'
     };
     const tex1 = new Texture(device, textureOptions);
-    tex1.name = 'testFHP';
     const targ1 = new RenderTarget({
         colorBuffer: tex1,
         depth: false
@@ -127,7 +127,6 @@ function testTextureFloatHighPrecision(device) {
 
     textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
     const tex2 = new Texture(device, textureOptions);
-    tex2.name = 'testFHP';
     const targ2 = new RenderTarget({
         colorBuffer: tex2,
         depth: false
