@@ -948,6 +948,11 @@ class ElementInput {
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
 
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layers.indexOf(v) !== -1)) {
+                continue;
+            }
+
             if (element.screen && element.screen.screen.screenSpace) {
                 if (rayScreen === undefined) {
                     rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
@@ -998,6 +1003,11 @@ class ElementInput {
 
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
+
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layers.indexOf(v) !== -1)) {
+                continue;
+            }
 
             if (!element.screen || !element.screen.screen.screenSpace) {
                 if (this._checkElement(rayA, element, false) >= 0) {
