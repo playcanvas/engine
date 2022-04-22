@@ -177,6 +177,10 @@ class ElementComponentSystem extends ComponentSystem {
             component.useInput = data.useInput;
         }
 
+        if (data.preserveAspect !== undefined) {
+            component.preserveAspect = data.preserveAspect;
+        }
+
         component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
         if (data.layers && Array.isArray(data.layers)) {
@@ -315,6 +319,7 @@ class ElementComponentSystem extends ComponentSystem {
             fontAsset: source.fontAsset,
             font: source.font,
             useInput: source.useInput,
+            preserveAspect: source.preserveAspect,
             batchGroupId: source.batchGroupId,
             mask: source.mask,
             outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
