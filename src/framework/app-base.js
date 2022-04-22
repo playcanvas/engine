@@ -2089,7 +2089,7 @@ const makeTick = function (_app) {
     const application = _app;
     let frameRequest;
     /**
-     * @param {number} [timestamp]
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
      * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
