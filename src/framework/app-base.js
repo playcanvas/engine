@@ -2081,7 +2081,7 @@ const _frameEndData = {};
 /**
  * Callback used by {@link AppBase#start} and itself to request
  * the rendering of a new animation frame.
- * 
+ *
  * @callback MakeTickCallback
  * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
  * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
