@@ -3,6 +3,10 @@ export default /* glsl */`
 uniform vec4 uScreenSize;
 #endif
 
+#ifdef SCREENSPACE
+uniform float projectionFlipY;
+#endif
+
 #ifdef MORPHING
 uniform vec4 morph_weights_a;
 uniform vec4 morph_weights_b;
@@ -95,6 +99,7 @@ vec4 getPosition() {
     #else
     #ifdef SCREENSPACE
     screenPos = posW;
+    screenPos.y *= projectionFlipY;
     #else
     screenPos = matrix_viewProjection * posW;
     #endif
