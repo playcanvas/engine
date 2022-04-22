@@ -2079,10 +2079,21 @@ class AppBase extends EventHandler {
 const _frameEndData = {};
 
 /**
+ * Callback used by {@link AppBase#start} and itself to request
+ * the rendering of a new animation frame.
+ * 
+ * @callback MakeTickCallback
+ * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+ * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+ * @returns {void}
+ * @ignore
+ */
+
+/**
  * Create tick function to be wrapped in closure.
  *
  * @param {AppBase} _app - The application.
- * @returns {(timestamp?: number, frame?: any) => void} The tick function.
+ * @returns {MakeTickCallback} The tick function.
  * @private
  */
 const makeTick = function (_app) {
