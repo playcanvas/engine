@@ -460,11 +460,11 @@ class ImageElement {
         let w = element.calculatedWidth;
         let h = element.calculatedHeight;
 
-        if (element.preserveAspect != ELEMENT_IMAGE_ASPECT_NONE && this._targetAspectRatio > 0) {
+        if (element.preserveAspect !== ELEMENT_IMAGE_ASPECT_NONE && this._targetAspectRatio > 0) {
             const actualRatio = element.calculatedWidth / element.calculatedHeight;
             // check which coordinate must change in order to preserve the source aspect ratio
-            if ((element.preserveAspect == ELEMENT_IMAGE_ASPECT_CONTAIN && actualRatio > this._targetAspectRatio) ||
-                (element.preserveAspect == ELEMENT_IMAGE_ASPECT_COVER && actualRatio < this._targetAspectRatio)) {
+            if ((element.preserveAspect === ELEMENT_IMAGE_ASPECT_CONTAIN && actualRatio > this._targetAspectRatio) ||
+                (element.preserveAspect === ELEMENT_IMAGE_ASPECT_COVER && actualRatio < this._targetAspectRatio)) {
                 // use 'height' to re-calculate width
                 w = element.calculatedHeight * this._targetAspectRatio;
             } else {
@@ -617,7 +617,7 @@ class ImageElement {
 
             // re-calculate aspect ratio from sprite frame
             const frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
-            if (frameData) {
+            if (frameData?.rect.w > 0) {
                 this._targetAspectRatio = frameData.rect.z / frameData.rect.w;
             }
         }
@@ -1094,7 +1094,7 @@ class ImageElement {
             const newAspectRatio = this._texture.width / this._texture.height;
             if (newAspectRatio != this._targetAspectRatio) {
                 this._targetAspectRatio = newAspectRatio;
-                if (this._element.preserveAspect != ELEMENT_IMAGE_ASPECT_NONE) {
+                if (this._element.preserveAspect !== ELEMENT_IMAGE_ASPECT_NONE) {
                     this.refreshMesh();
                 }
             }
@@ -1107,7 +1107,7 @@ class ImageElement {
             // this is needed in order to properly reset the mesh to 'stretch' across the entire element bounds
             // when resetting the texture
             this._targetAspectRatio = -1;
-            if (this._element.preserveAspect != ELEMENT_IMAGE_ASPECT_NONE) {
+            if (this._element.preserveAspect !== ELEMENT_IMAGE_ASPECT_NONE) {
                 this.refreshMesh();
             }
         }

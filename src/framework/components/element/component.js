@@ -103,7 +103,7 @@ const matD = new Mat4();
  * textWidth. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoHeight Automatically set the height of the component to be the same as
  * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {number} preserveAspect Sets how the content should be resized in order to preserve
+ * @property {string} preserveAspect Sets how the content should be resized in order to preserve
  * the aspect ratio of the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
@@ -790,7 +790,7 @@ class ElementComponent extends Component {
      * Sets how the content should be resized in order to preserve the aspect ratio of the source texture or sprite.
      * Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {number}
+     * @type {string}
      */
     set preserveAspect(value) {
         this._preserveAspect = value;
