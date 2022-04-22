@@ -278,9 +278,9 @@ class Morph extends RefCountedObject {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: name
         });
-        texture.name = name;
 
         if (pixelData) {
             texture.lock().set(pixelData);

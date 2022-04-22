@@ -67,9 +67,9 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
         minFilter: mipFilter,
         magFilter: mipFilter,
         addressU: ADDRESS_CLAMP_TO_EDGE,
-        addressV: ADDRESS_CLAMP_TO_EDGE
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        name: 'ParticleSystemTexture'
     });
-    texture.name = 'PSTexture';
 
     const pixels = texture.lock();
 

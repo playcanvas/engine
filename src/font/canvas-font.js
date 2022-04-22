@@ -306,9 +306,9 @@ class CanvasFont extends EventHandler {
 
                         const texture = new Texture(this.app.graphicsDevice, {
                             format: PIXELFORMAT_R8_G8_B8_A8,
-                            mipmaps: true
+                            mipmaps: true,
+                            name: 'font-atlas'
                         });
-                        texture.name = 'font-atlas';
                         texture.setSource(canvas);
                         texture.minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
                         texture.magFilter = FILTER_LINEAR;
