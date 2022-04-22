@@ -40,7 +40,6 @@ import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { Render } from '../../scene/render.js';
 
 import { Entity } from '../../framework/entity.js';
