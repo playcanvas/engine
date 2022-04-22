@@ -2085,7 +2085,6 @@ const _frameEndData = {};
  * @callback MakeTickCallback
  * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
  * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
- * @returns {void}
  * @ignore
  */
 
