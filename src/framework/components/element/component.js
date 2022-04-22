@@ -787,7 +787,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     *
+     * Sets how the content should be resized in order to preserve the aspect ratio of the source texture or sprite.
+     * Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {number}
      */

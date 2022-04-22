@@ -1172,7 +1172,7 @@ describe('pc.ImageElement', function () {
         expect(copy.element.sprite).to.equal(e.element.sprite);
     });
 
-    it('Setting texture ', function () {
+    it('Setting texture and changing the aspectRatio setting changes the mesh', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
