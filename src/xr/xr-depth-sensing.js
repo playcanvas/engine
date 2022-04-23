@@ -149,13 +149,20 @@ class XrDepthSensing extends EventHandler {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
             minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR
+            magFilter: FILTER_LINEAR,
+            name: 'XRDepthSensing'
         });
 
         if (this.supported) {
             this._manager.on('start', this._onSessionStart, this);
             this._manager.on('end', this._onSessionEnd, this);
         }
+    }
+
+    /** @ignore */
+    destroy() {
+        this._texture.destroy();
+        this._texture = null;
     }
 
     /**

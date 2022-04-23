@@ -2030,6 +2030,7 @@ class AppBase extends EventHandler {
         this.defaultLayerWorld = null;
 
         this?.xr.end();
+        this?.xr.destroy();
 
         this.renderer.destroy();
         this.renderer = null;

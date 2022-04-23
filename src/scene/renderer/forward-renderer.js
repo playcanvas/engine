@@ -122,6 +122,7 @@ class ForwardRenderer {
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
         this.viewProjId = scope.resolve('matrix_viewProjection');
+        this.flipYId = scope.resolve('projectionFlipY');
         this.viewPos = new Float32Array(3);
         this.viewPosId = scope.resolve('view_position');
         this.nearClipId = scope.resolve('camera_near');
@@ -352,6 +353,8 @@ class ForwardRenderer {
                 this.viewProjId.setValue(viewProjMat.data);
                 this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
             }
+
+            this.flipYId.setValue(target?.flipY ? -1 : 1);
 
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());

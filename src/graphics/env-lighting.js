@@ -145,6 +145,7 @@ class EnvLighting {
         DebugGraphics.pushGpuMarker(device, "genAtlas");
 
         const result = options?.target || new Texture(device, {
+            name: 'envAtlas',
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
@@ -233,6 +234,7 @@ class EnvLighting {
         DebugGraphics.pushGpuMarker(device, "genPrefilteredAtlas");
 
         const result = options?.target || new Texture(device, {
+            name: 'envPrefilteredAtlas',
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,

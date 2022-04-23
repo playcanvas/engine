@@ -66,11 +66,11 @@ class SpriteComponentSystem extends ComponentSystem {
             const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                name: 'sprite'
             });
             const pixels = new Uint8Array(texture.lock());
             pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
-            texture.name = 'sprite';
             texture.unlock();
 
             const material = new StandardMaterial();

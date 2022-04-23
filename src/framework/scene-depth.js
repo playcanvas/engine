@@ -40,9 +40,9 @@ class SceneDepth {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: name
         });
-        texture.name = name;
 
         // assign it to scope to expose it to shaders
         device.scope.resolve("uDepthMap").setValue(texture);
