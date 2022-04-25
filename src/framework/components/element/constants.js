@@ -20,22 +20,24 @@ export const ELEMENTTYPE_IMAGE = 'image';
 export const ELEMENTTYPE_TEXT = 'text';
 
 /**
- * Disable Aspect Ratio content resizing.
+ * Fit the content to the exact Element's bounding box.
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_ASPECT_NONE = 'none';
+export const ELEMENT_IMAGE_FIT_STRETCH = 'stretch';
 
 /**
- * Resize the content to fit within the Element's bounding box.
+ * Fit the content within the Element's bounding box while
+ * preserving its Aspect Ratio.
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_ASPECT_CONTAIN = 'contain';
+export const ELEMENT_IMAGE_FIT_CONTAIN = 'contain';
 
 /**
- * Resize the content to cover the entire Element's bounding box.
+ * Fit the content to cover the entire Element's bounding box while
+ * preserving its Aspect Ratio.
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_ASPECT_COVER = 'cover';
+export const ELEMENT_IMAGE_FIT_COVER = 'cover';

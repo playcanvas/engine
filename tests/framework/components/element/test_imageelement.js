@@ -1046,20 +1046,6 @@ describe('pc.ImageElement', function () {
         expect(e.element.texture).to.be.equal(texture);
     });
 
-    it('Setting texture on image element sets target aspect ratio', function () {
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image',
-            textureAsset: assets.texture.id
-        });
-
-        var texture = new pc.Texture(app.graphicsDevice);
-
-        e.element.texture = texture;
-
-        expect(e.element._image._targetAspectRatio).to.be.equal(1);
-    });
-
     it('Setting texture on image element clears sprite asset', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
@@ -1172,7 +1158,7 @@ describe('pc.ImageElement', function () {
         expect(copy.element.sprite).to.equal(e.element.sprite);
     });
 
-    it('Setting texture and changing the aspectRatio setting changes the mesh', function () {
+    it('Setting texture and changing the fitMode setting changes the mesh', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -1189,7 +1175,7 @@ describe('pc.ImageElement', function () {
         expect(e.element._image._targetAspectRatio).to.be.equal(1); // setting texture sets target aspect ratio
 
         // no aspect ratio fitting
-        expect(e.element.preserveAspect).to.equal(pc.ELEMENT_IMAGE_ASPECT_NONE);
+        expect(e.element.fitMode).to.equal(pc.ELEMENT_IMAGE_FIT_STRETCH);
         expect(e.element._image.mesh.aabb.center.x).to.equal(25);
         expect(e.element._image.mesh.aabb.center.y).to.equal(12.5);
         expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(25);
@@ -1197,7 +1183,7 @@ describe('pc.ImageElement', function () {
 
         // change aspect ratio should trigger _updateMesh
         var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-        e.element.preserveAspect = pc.ELEMENT_IMAGE_ASPECT_CONTAIN;
+        e.element.fitMode = pc.ELEMENT_IMAGE_FIT_CONTAIN;
         expect(spy.calledOnce).to.equal(true);
 
         expect(e.element._image.mesh.aabb.center.x).to.equal(12.5);

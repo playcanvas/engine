@@ -15,7 +15,7 @@ import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 
-import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, ELEMENT_IMAGE_ASPECT_NONE } from './constants.js';
+import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, ELEMENT_IMAGE_FIT_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
@@ -103,8 +103,8 @@ const matD = new Mat4();
  * textWidth. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoHeight Automatically set the height of the component to be the same as
  * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {string} preserveAspect Sets how the content should be resized in order to preserve
- * the aspect ratio of the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
+ * @property {string} fitMode Set how the content should be fitted and preserve the aspect ratio of
+ * the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
  * @property {Font} font The font used for rendering the text. Only works for
@@ -243,8 +243,8 @@ class ElementComponent extends Component {
 
         this._drawOrder = 0;
 
-        // aspect ratio
-        this._preserveAspect = ELEMENT_IMAGE_ASPECT_NONE;
+        // Fit mode
+        this._fitMode = ELEMENT_IMAGE_FIT_STRETCH;
 
         // input related
         this._useInput = false;
@@ -787,21 +787,21 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets how the content should be resized in order to preserve the aspect ratio of the source texture or sprite.
+     * Set how the content should be fitted and preserve the aspect ratio of the source texture or sprite.
      * Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {string}
      */
-    set preserveAspect(value) {
-        this._preserveAspect = value;
+    set fitMode(value) {
+        this._fitMode = value;
         this._calculateSize(true, true);
         if (this._image) {
             this._image.refreshMesh();
         }
     }
 
-    get preserveAspect() {
-        return this._preserveAspect;
+    get fitMode() {
+        return this._fitMode;
     }
 
     /**
