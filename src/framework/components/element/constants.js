@@ -24,7 +24,7 @@ export const ELEMENTTYPE_TEXT = 'text';
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_FIT_STRETCH = 'stretch';
+export const FITMODE_STRETCH = 'stretch';
 
 /**
  * Fit the content within the Element's bounding box while
@@ -32,7 +32,7 @@ export const ELEMENT_IMAGE_FIT_STRETCH = 'stretch';
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_FIT_CONTAIN = 'contain';
+export const FITMODE_CONTAIN = 'contain';
 
 /**
  * Fit the content to cover the entire Element's bounding box while
@@ -40,4 +40,4 @@ export const ELEMENT_IMAGE_FIT_CONTAIN = 'contain';
  *
  * @type {string}
  */
-export const ELEMENT_IMAGE_FIT_COVER = 'cover';
+export const FITMODE_COVER = 'cover';

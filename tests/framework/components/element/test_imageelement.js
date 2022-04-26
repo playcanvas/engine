@@ -1175,7 +1175,7 @@ describe('pc.ImageElement', function () {
         expect(e.element._image._targetAspectRatio).to.be.equal(1); // setting texture sets target aspect ratio
 
         // no aspect ratio fitting
-        expect(e.element.fitMode).to.equal(pc.ELEMENT_IMAGE_FIT_STRETCH);
+        expect(e.element.fitMode).to.equal(pc.FITMODE_STRETCH);
         expect(e.element._image.mesh.aabb.center.x).to.equal(25);
         expect(e.element._image.mesh.aabb.center.y).to.equal(12.5);
         expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(25);
@@ -1183,7 +1183,7 @@ describe('pc.ImageElement', function () {
 
         // change aspect ratio should trigger _updateMesh
         var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-        e.element.fitMode = pc.ELEMENT_IMAGE_FIT_CONTAIN;
+        e.element.fitMode = pc.FITMODE_CONTAIN;
         expect(spy.calledOnce).to.equal(true);
 
         expect(e.element._image.mesh.aabb.center.x).to.equal(12.5);

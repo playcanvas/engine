@@ -27,7 +27,7 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
-import { ELEMENT_IMAGE_FIT_STRETCH, ELEMENT_IMAGE_FIT_CONTAIN, ELEMENT_IMAGE_FIT_COVER } from './constants.js';
+import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
 import { Asset } from '../../../asset/asset.js';
 
@@ -460,11 +460,11 @@ class ImageElement {
         let w = element.calculatedWidth;
         let h = element.calculatedHeight;
 
-        if (element.fitMode !== ELEMENT_IMAGE_FIT_STRETCH && this._targetAspectRatio > 0) {
+        if (element.fitMode !== FITMODE_STRETCH && this._targetAspectRatio > 0) {
             const actualRatio = element.calculatedWidth / element.calculatedHeight;
             // check which coordinate must change in order to preserve the source aspect ratio
-            if ((element.fitMode === ELEMENT_IMAGE_FIT_CONTAIN && actualRatio > this._targetAspectRatio) ||
-                (element.fitMode === ELEMENT_IMAGE_FIT_COVER && actualRatio < this._targetAspectRatio)) {
+            if ((element.fitMode === FITMODE_CONTAIN && actualRatio > this._targetAspectRatio) ||
+                (element.fitMode === FITMODE_COVER && actualRatio < this._targetAspectRatio)) {
                 // use 'height' to re-calculate width
                 w = element.calculatedHeight * this._targetAspectRatio;
             } else {
@@ -1094,7 +1094,7 @@ class ImageElement {
             const newAspectRatio = this._texture.width / this._texture.height;
             if (newAspectRatio != this._targetAspectRatio) {
                 this._targetAspectRatio = newAspectRatio;
-                if (this._element.fitMode !== ELEMENT_IMAGE_FIT_STRETCH) {
+                if (this._element.fitMode !== FITMODE_STRETCH) {
                     this.refreshMesh();
                 }
             }
@@ -1107,7 +1107,7 @@ class ImageElement {
             // this is needed in order to properly reset the mesh to 'stretch' across the entire element bounds
             // when resetting the texture
             this._targetAspectRatio = -1;
-            if (this._element.fitMode !== ELEMENT_IMAGE_FIT_STRETCH) {
+            if (this._element.fitMode !== FITMODE_STRETCH) {
                 this.refreshMesh();
             }
         }

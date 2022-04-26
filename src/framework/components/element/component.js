@@ -15,7 +15,7 @@ import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 
-import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, ELEMENT_IMAGE_FIT_STRETCH } from './constants.js';
+import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
@@ -244,7 +244,7 @@ class ElementComponent extends Component {
         this._drawOrder = 0;
 
         // Fit mode
-        this._fitMode = ELEMENT_IMAGE_FIT_STRETCH;
+        this._fitMode = FITMODE_STRETCH;
 
         // input related
         this._useInput = false;
