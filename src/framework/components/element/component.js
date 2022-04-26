@@ -788,7 +788,11 @@ class ElementComponent extends Component {
 
     /**
      * Set how the content should be fitted and preserve the aspect ratio of the source texture or sprite.
-     * Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Only works for {@link ELEMENTTYPE_IMAGE} types. Can be:
+     *
+     * - {@link FITMODE_STRETCH}: Fit the content exactly to Element's bounding box.
+     * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while preserving its Aspect Ratio.
+     * - {@link FITMODE_COVER}: Fit the content to cover the entire Element's bounding box while preserving its Aspect Ratio.
      *
      * @type {string}
      */

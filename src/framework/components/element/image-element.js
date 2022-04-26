@@ -601,7 +601,7 @@ class ImageElement {
     // if the sprite is 9-sliced or the default mesh from the
     // image element and calls _updateMesh or sets meshDirty to true
     // if the component is currently being initialized. Also updates
-    // aspect ratio. /We need to call _updateSprite every time
+    // aspect ratio. We need to call _updateSprite every time
     // something related to the sprite asset changes
     _updateSprite() {
         let nineSlice = false;
