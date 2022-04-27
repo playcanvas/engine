@@ -3,8 +3,8 @@ uniform sampler2D texture_lightMap;
 uniform sampler2D texture_dirLightMap;
 
 void addLightMap() {
-    vec3 color = $texture2DSAMPLE(texture_lightMap, $UV).$CH;
-    vec3 dir = texture2D(texture_dirLightMap, $UV).xyz;
+    vec3 color = $texture2DSAMPLE(texture_lightMap, $UV, textureBias).$CH;
+    vec3 dir = texture2D(texture_dirLightMap, $UV, textureBias).xyz;
     if (dot(dir, vec3(1.0)) < 0.00001) {
         dDiffuseLight += color;
     } else {

@@ -23,7 +23,7 @@ vec3 getEmission() {
     #endif
 
     #ifdef MAPTEXTURE
-    emission *= $texture2DSAMPLE(texture_emissiveMap, $UV).$CH;
+    emission *= $texture2DSAMPLE(texture_emissiveMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
