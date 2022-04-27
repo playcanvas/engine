@@ -1423,10 +1423,10 @@ const standard = {
             }
 
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
+        }
 
-            if (useAo) {
-                code += "  getAO();\n";
-            }
+        if (useAo) {
+            code += "  getAO();\n";
         }
 
         if (addAmbient) {
