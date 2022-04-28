@@ -110,9 +110,9 @@ class ShadowMap {
             minFilter: filter,
             magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMap2D'
         });
-        texture.name = 'ShadowMap2D';
 
         let target = null;
         if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2)) {
@@ -149,9 +149,9 @@ class ShadowMap {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMapCube'
         });
-        cubemap.name = 'ShadowMapCube';
 
         const targets = [];
         for (let i = 0; i < 6; i++) {

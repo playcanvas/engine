@@ -38,9 +38,9 @@ class AreaLightLuts {
             type: TEXTURETYPE_DEFAULT,
             magFilter: FILTER_LINEAR,
             minFilter: FILTER_NEAREST,
-            anisotropy: 1
+            anisotropy: 1,
+            name: `AreaLightLUT${postfix}`
         });
-        tex.name = `AreaLightLUT${postfix}`;
         return tex;
     }
 

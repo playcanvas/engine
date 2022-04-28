@@ -46,8 +46,12 @@ class ElementComponentSystem extends ComponentSystem {
         this._rtlReorder = null;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new Texture(app.graphicsDevice, { width: 1, height: 1, format: PIXELFORMAT_R8_G8_B8_A8 });
-        this._defaultTexture.name = 'element-system';
+        this._defaultTexture = new Texture(app.graphicsDevice, {
+            width: 1,
+            height: 1,
+            format: PIXELFORMAT_R8_G8_B8_A8,
+            name: 'element-system'
+        });
         const pixels = this._defaultTexture.lock();
         const pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;

@@ -162,9 +162,9 @@ class Picker {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'pick'
         });
-        colorBuffer.name = 'pick';
 
         this.renderTarget = new RenderTarget({
             colorBuffer: colorBuffer,
