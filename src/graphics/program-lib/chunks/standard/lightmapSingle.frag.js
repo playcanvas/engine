@@ -7,7 +7,7 @@ void getLightMap() {
     dLightmap = vec3(1.0);
 
     #ifdef MAPTEXTURE
-    dLightmap *= $texture2DSAMPLE(texture_lightMap, $UV).$CH;
+    dLightmap *= $texture2DSAMPLE(texture_lightMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
