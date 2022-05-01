@@ -1658,8 +1658,8 @@ class AppBase extends EventHandler {
     /**
      * Provide an opportunity to modify the timestamp supplied by requestAnimationFrame.
      *
-     * @param {number} timestamp - The timestamp supplied by requestAnimationFrame.
-     * @returns {number} The modified timestamp.
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @returns {number|undefined} The modified timestamp.
      * @ignore
      */
     _processTimestamp(timestamp) {
@@ -2080,16 +2080,29 @@ class AppBase extends EventHandler {
 const _frameEndData = {};
 
 /**
+ * Callback used by {@link AppBase#start} and itself to request
+ * the rendering of a new animation frame.
+ *
+ * @callback MakeTickCallback
+ * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+ * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+ * @ignore
+ */
+
+/**
  * Create tick function to be wrapped in closure.
  *
  * @param {AppBase} _app - The application.
- * @returns {Function} The tick function.
+ * @returns {MakeTickCallback} The tick function.
  * @private
  */
 const makeTick = function (_app) {
     const application = _app;
     let frameRequest;
-
+    /**
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     */
     return function (timestamp, frame) {
         if (!application.graphicsDevice)
             return;
