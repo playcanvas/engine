@@ -1659,7 +1659,7 @@ class AppBase extends EventHandler {
      * Provide an opportunity to modify the timestamp supplied by requestAnimationFrame.
      *
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @returns {number | undefined} The modified timestamp.
+     * @returns {number|undefined} The modified timestamp.
      * @ignore
      */
     _processTimestamp(timestamp) {
