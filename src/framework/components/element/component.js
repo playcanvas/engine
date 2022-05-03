@@ -15,7 +15,7 @@ import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 
-import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
+import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
@@ -103,6 +103,8 @@ const matD = new Mat4();
  * textWidth. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoHeight Automatically set the height of the component to be the same as
  * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
+ * @property {string} fitMode Set how the content should be fitted and preserve the aspect ratio of
+ * the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
  * @property {Font} font The font used for rendering the text. Only works for
@@ -240,6 +242,9 @@ class ElementComponent extends Component {
         this._group = null;
 
         this._drawOrder = 0;
+
+        // Fit mode
+        this._fitMode = FITMODE_STRETCH;
 
         // input related
         this._useInput = false;
@@ -779,6 +784,28 @@ class ElementComponent extends Component {
 
     get useInput() {
         return this._useInput;
+    }
+
+    /**
+     * Set how the content should be fitted and preserve the aspect ratio of the source texture or sprite.
+     * Only works for {@link ELEMENTTYPE_IMAGE} types. Can be:
+     *
+     * - {@link FITMODE_STRETCH}: Fit the content exactly to Element's bounding box.
+     * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while preserving its Aspect Ratio.
+     * - {@link FITMODE_COVER}: Fit the content to cover the entire Element's bounding box while preserving its Aspect Ratio.
+     *
+     * @type {string}
+     */
+    set fitMode(value) {
+        this._fitMode = value;
+        this._calculateSize(true, true);
+        if (this._image) {
+            this._image.refreshMesh();
+        }
+    }
+
+    get fitMode() {
+        return this._fitMode;
     }
 
     /**

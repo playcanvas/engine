@@ -40,7 +40,6 @@ import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { Render } from '../../scene/render.js';
 
 import { Entity } from '../../framework/entity.js';
@@ -568,7 +567,7 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
     const numPoints = outputGeometry.num_points();
 
     // helper function to decode data stream with id to TypedArray of appropriate type
-    const extractDracoAttributeInfo = function (uniqueId) {
+    const extractDracoAttributeInfo = function (uniqueId, semantic) {
         const attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
         const numValues = numPoints * attribute.num_components();
         const dracoFormat = attribute.data_type();
@@ -610,7 +609,9 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
             numComponents: attribute.num_components(),
             componentSizeInBytes: componentSizeInBytes,
             storageType: storageType,
-            normalized: attribute.normalized()
+
+            // there are glb files around where 8bit colors are missing normalized flag
+            normalized: (semantic === SEMANTIC_COLOR && storageType === TYPE_UINT8) ? true : attribute.normalized()
         };
     };
 
@@ -620,7 +621,7 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
     for (const attrib in attributes) {
         if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
             const semantic = gltfToEngineSemanticMap[attrib];
-            const attributeInfo = extractDracoAttributeInfo(attributes[attrib]);
+            const attributeInfo = extractDracoAttributeInfo(attributes[attrib], semantic);
 
             // store the info we'll need to copy this data into the vertex buffer
             const size = attributeInfo.numComponents * attributeInfo.componentSizeInBytes;
@@ -2293,7 +2294,9 @@ class GlbParser {
     constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
-        this._defaultMaterial = getDefaultMaterial(device);
+        this._defaultMaterial = createMaterial({
+            name: 'defaultGlbMaterial'
+        }, []);
         this.maxRetries = maxRetries;
     }
 

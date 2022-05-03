@@ -89,7 +89,7 @@ const standard = {
         if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
         } else if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
-            expression = "nineSlicedUv, -1000.0";
+            expression = "nineSlicedUv";
         } else {
             if (transformId === 0) {
                 expression = "vUv" + uvChannel;
