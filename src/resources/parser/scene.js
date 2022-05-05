@@ -1,6 +1,7 @@
 import { Entity } from '../../framework/entity.js';
 
 import { CompressUtils } from '../../compress/compress-utils.js';
+import { Debug } from "../../core/debug.js";
 import { Decompress } from '../../compress/decompress.js';
 
 class SceneParser {
@@ -110,6 +111,14 @@ class SceneParser {
         // Open all children and add them to the node
         len = entityData.children.length;
         const children = entity._children;
+
+        // If the data mis matches the entities created, attempt
+        // to recover
+        if (len !== children.length) {
+            Debug.warn('Scene entity data mismatch with created entities');
+            len = children.length;
+        }
+
         for (let i = 0; i < len; i++) {
             children[i] = this._openComponentData(children[i], entities);
         }

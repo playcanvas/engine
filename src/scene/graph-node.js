@@ -1,3 +1,4 @@
+import { Debug } from "../core/debug.js";
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
 
@@ -1155,8 +1156,10 @@ class GraphNode extends EventHandler {
      * this.entity.addChild(e);
      */
     addChild(node) {
-        if (node._parent !== null)
-            throw new Error('GraphNode is already parented');
+        if (node._parent !== null) {
+            Debug.warn(`GraphNode '${node.name}' is already parented`);
+            return;
+        }
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1206,8 +1209,10 @@ class GraphNode extends EventHandler {
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-        if (node._parent !== null)
-            throw new Error('GraphNode is already parented');
+        if (node._parent !== null) {
+            Debug.warn('GraphNode is already parented');
+            return;
+        }
 
         // #if _DEBUG
         this._debugInsertChild(node);
@@ -1224,10 +1229,10 @@ class GraphNode extends EventHandler {
      */
     _debugInsertChild(node) {
         if (this === node)
-            throw new Error('GraphNode cannot be a child of itself');
+            throw new Error(`GraphNode '${node.name}' cannot be a child of itself`);
 
         if (this.isDescendantOf(node))
-            throw new Error('GraphNode cannot add an ancestor as a child');
+            throw new Error(`GraphNode '${node.name}' cannot add an ancestor as a child`);
     }
     // #endif
 
