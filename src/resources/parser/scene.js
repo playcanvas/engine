@@ -114,9 +114,16 @@ class SceneParser {
 
         // If the data mis matches the entities created, attempt
         // to recover
-        if (len !== children.length) {
+        let entityChildrenCount = 0;
+        for (let i = 0; i < children.length; i++) {
+            if (children[i] instanceof Entity) {
+                ++entityChildrenCount;
+            }
+        }
+
+        if (len !== entityChildrenCount) {
             Debug.warn('Scene entity data mismatch with created entities');
-            len = children.length;
+            len = entityChildrenCount;
         }
 
         for (let i = 0; i < len; i++) {
