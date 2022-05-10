@@ -95,7 +95,7 @@ const initialize = (moduleName, module) => {
  * Callback used by {@link Module#getInstance}.
  *
  * @callback ModuleInstanceCallback
- * @param {string} error - If the instance failed to load, this should give a description of the error.
+ * @param {string} error - If the instance fails to load this will contain a description of the error.
  * @param {any} moduleInstance - The module instance.
  */
 
@@ -114,7 +114,7 @@ class Module {
         const module = getModule(moduleName);
         module.config = config;
         if (module.callbacks.length > 0) {
-            // kick off module initialize immediately if there are pending getInstance requests
+            // start module initialize immediately since there are pending getInstance requests
             initialize(moduleName, module);
         }
     }
