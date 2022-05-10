@@ -713,7 +713,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
 
                 // access DracoDecoderModule
-                const decoderModule = dracoDecoderInstance;
+                const decoderModule = dracoDecoderInstance || window.DracoDecoderModule;
                 if (decoderModule) {
                     const extDraco = extensions.KHR_draco_mesh_compression;
                     if (extDraco.hasOwnProperty('attributes')) {
