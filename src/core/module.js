@@ -34,10 +34,11 @@ const loadScript = (url, callback) => {
 
 // load a wasm module
 const loadWasm = (moduleName, config, callback) => {
-    if (wasmSupported() && config.glueUrl && config.wasmUrl) {
-        loadScript(config.glueUrl, (err) => {
+    const loadUrl = (wasmSupported() && config.glueUrl && config.wasmUrl) ? config.glueUrl : config.fallbackUrl;
+    if (loadUrl) {
+        loadScript(loadUrl, (err) => {
             if (err) {
-                callback(err);
+                callback(err, null);
             } else {
                 window[moduleName]({
                     locateFile: () => config.wasmUrl
@@ -46,10 +47,8 @@ const loadWasm = (moduleName, config, callback) => {
                 });
             }
         });
-    } else if (config.fallbackUrl) {
-        loadScript(config.fallbackUrl, callback);
     } else {
-        callback('No supported wasm modules found.');
+        callback('No supported wasm modules found.', null);
     }
 };
 
@@ -59,9 +58,10 @@ const getModule = (() => {
     return (name) => {
         if (!modules.hasOwnProperty(name)) {
             modules[name] = {
-                lazyConfig: null,
+                config: null,
                 initializing: false,
                 instance: null,
+                error: null,
                 callbacks: []
             };
         }
@@ -69,16 +69,39 @@ const getModule = (() => {
     };
 })();
 
+const initialize = (moduleName, module) => {
+    if (module.initializing) {
+        return;
+    }
+
+    const config = module.config;
+
+    if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
+        module.initializing = true;
+        loadWasm(moduleName, config, (err, instance) => {
+            if (err) {
+                console.error(`failed to initialize module=${moduleName} error=${err}`);
+            }
+            module.error = err;
+            module.instance = instance;
+            module.callbacks.forEach(callback => {
+                callback(err, instance);
+            });
+        });
+    }
+};
+
 /**
  * Callback used by {@link Module#getInstance}.
  *
  * @callback ModuleInstanceCallback
+ * @param {string} error - If the instance failed to load, this should give a description of the error.
  * @param {any} moduleInstance - The module instance.
  */
 
 class Module {
     /**
-     * Initialize a wasm module
+     * Set a module's URL configuration.
      *
      * @param {string} moduleName - Name of the module.
      * @param {object} [config] - The configuration object.
@@ -86,35 +109,13 @@ class Module {
      * @param {string} [config.wasmUrl] - URL of the wasm script.
      * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules
      * aren't supported.
-     * @param {boolean} [config.lazyInit] - Wait for first access request before initializing the module
-     * (default is false). Otherwise initialize the module immediately.
      */
-    static initialize(moduleName, config) {
+    static setConfig(moduleName, config) {
         const module = getModule(moduleName);
-
-        if (module.initializing) {
-            return;
-        }
-
-        if (!config) {
-            config = module.lazyConfig || {};
-        } else if (config.lazyInit) {
-            module.lazyConfig = config;
-            return;
-        }
-
-        if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
-            module.initializing = true;
-            loadWasm(moduleName, config, (err, instance) => {
-                if (err) {
-                    console.error(`failed to initialize ${moduleName} module: ${err}`);
-                } else {
-                    module.instance = instance;
-                    module.callbacks.forEach(callback => {
-                        callback(instance);
-                    });
-                }
-            });
+        module.config = config;
+        if (module.callbacks.length > 0) {
+            // kick off module initialize immediately if there are pending getInstance requests
+            initialize(moduleName, module);
         }
     }
 
@@ -129,13 +130,14 @@ class Module {
     static getInstance(moduleName, callback) {
         const module = getModule(moduleName);
 
-        if (module.instance) {
-            callback(module.instance);
+        if (module.instance || module.error) {
+            callback(module.error, module.instance);
         } else {
-            if (!module.initializing) {
-                Module.initialize(moduleName);
-            }
             module.callbacks.push(callback);
+            if (module.config) {
+                // config has been provided, kick off module initialize
+                initialize(moduleName, module);
+            }
         }
     }
 }

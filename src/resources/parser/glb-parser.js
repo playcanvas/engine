@@ -2082,7 +2082,7 @@ const parseGltf = function (gltfChunk, callback) {
     // check required extensions
     const extensionsRequired = gltf?.extensionsRequired || [];
     if (!dracoDecoderInstance && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
-        Module.getInstance('DracoDecoderModule', (instance) => {
+        Module.getInstance('DracoDecoderModule', (err, instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);
         });
