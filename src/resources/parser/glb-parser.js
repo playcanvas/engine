@@ -54,6 +54,11 @@ import { Asset } from '../../asset/asset.js';
 
 import { GlbContainerResource } from './glb-container-resource.js';
 
+import { Module } from '../../core/module.js';
+
+// instance of the draco decoder
+let dracoDecoderInstance = null;
+
 // resources loaded from GLB file that the parser returns
 class GlbResources {
     constructor(gltf) {
@@ -708,7 +713,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
 
                 // access DracoDecoderModule
-                const decoderModule = window.DracoDecoderModule;
+                const decoderModule = dracoDecoderInstance;
                 if (decoderModule) {
                     const extDraco = extensions.KHR_draco_mesh_compression;
                     if (extDraco.hasOwnProperty('attributes')) {
@@ -2074,7 +2079,16 @@ const parseGltf = function (gltfChunk, callback) {
         return;
     }
 
-    callback(null, gltf);
+    // check required extensions
+    const extensionsRequired = gltf?.extensionsRequired || [];
+    if (!dracoDecoderInstance && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
+        Module.getInstance('DracoDecoderModule', (instance) => {
+            dracoDecoderInstance = instance;
+            callback(null, gltf);
+        });
+    } else {
+        callback(null, gltf);
+    }
 };
 
 // parse glb data, returns the gltf and binary chunk
