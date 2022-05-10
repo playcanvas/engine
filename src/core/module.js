@@ -40,7 +40,10 @@ const loadWasm = (moduleName, config, callback) => {
                 callback(err, null);
             } else {
                 window[moduleName]({
-                    locateFile: () => config.wasmUrl
+                    locateFile: () => config.wasmUrl,
+                    onAbort: () => {
+                        callback('wasm module aborted.');
+                    }
                 }).then((instance) => {
                     callback(null, instance);
                 });
@@ -60,7 +63,6 @@ const getModule = (() => {
                 config: null,
                 initializing: false,
                 instance: null,
-                error: null,
                 callbacks: []
             };
         }
@@ -79,22 +81,32 @@ const initialize = (moduleName, module) => {
         module.initializing = true;
         loadWasm(moduleName, config, (err, instance) => {
             if (err) {
-                console.error(`failed to initialize module=${moduleName} error=${err}`);
+                if (config.errorHandler) {
+                    config.errorHandler(err);
+                } else {
+                    console.error(`failed to initialize module=${moduleName} error=${err}`);
+                }
+            } else {
+                module.instance = instance;
+                module.callbacks.forEach((callback) => {
+                    callback(instance);
+                });
             }
-            module.error = err;
-            module.instance = instance;
-            module.callbacks.forEach((callback) => {
-                callback(err, instance);
-            });
         });
     }
 };
 
 /**
+ * Callback used by {@link Module#setConfig}.
+ *
+ * @callback ModuleErrorCallback
+ * @param {string} error - If the instance fails to load this will contain a description of the error.
+ */
+
+/**
  * Callback used by {@link Module#getInstance}.
  *
  * @callback ModuleInstanceCallback
- * @param {string} error - If the instance fails to load this will contain a description of the error.
  * @param {any} moduleInstance - The module instance.
  */
 
@@ -108,6 +120,8 @@ class Module {
      * @param {string} [config.wasmUrl] - URL of the wasm script.
      * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules
      * aren't supported.
+     * @param {ModuleErrorCallback} [config.errorHandler] - Function to be called if the module fails
+     * to download.
      */
     static setConfig(moduleName, config) {
         const module = getModule(moduleName);
@@ -129,8 +143,8 @@ class Module {
     static getInstance(moduleName, callback) {
         const module = getModule(moduleName);
 
-        if (module.instance || module.error) {
-            callback(module.error, module.instance);
+        if (module.instance) {
+            callback(module.instance);
         } else {
             module.callbacks.push(callback);
             if (module.config) {
