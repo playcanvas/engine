@@ -248,6 +248,7 @@ class Texture {
         // Mip levels
         this._invalid = false;
         this._lockedLevel = -1;
+        this._lockMode = TEXTURELOCK_WRITE;
         if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
@@ -778,6 +779,7 @@ class Texture {
         }
 
         this._lockedLevel = options.level;
+        this._lockMode = options.mode;
 
         if (this._levels[options.level] === null) {
             switch (this._format) {
@@ -940,9 +942,12 @@ class Texture {
             Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
 
-        // Upload the new pixel data
-        this.upload();
+        // Upload the new pixel data if lock mode is write
+        if (this._lockMode === TEXTURELOCK_WRITE) {
+            this.upload();
+        }
         this._lockedLevel = -1;
+        this._lockMode = TEXTURELOCK_WRITE;
     }
 
     /**
