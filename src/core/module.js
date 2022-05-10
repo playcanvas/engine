@@ -1,4 +1,3 @@
-
 // returns true if the running host supports wasm modules (all browsers except IE)
 const wasmSupported = () => {
     let supported = null;
@@ -84,7 +83,7 @@ const initialize = (moduleName, module) => {
             }
             module.error = err;
             module.instance = instance;
-            module.callbacks.forEach(callback => {
+            module.callbacks.forEach((callback) => {
                 callback(err, instance);
             });
         });
@@ -121,7 +120,7 @@ class Module {
 
     /**
      * Get a module instance. The instance will be created if necessary and returned
-     * in the first parameter to callback.
+     * in the second parameter to callback.
      *
      * @param {string} moduleName - Name of the module.
      * @param {ModuleInstanceCallback} callback - The function called when the instance is
