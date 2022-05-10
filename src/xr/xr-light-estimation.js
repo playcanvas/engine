@@ -227,6 +227,7 @@ class XrLightEstimation extends EventHandler {
      * session.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;
@@ -236,6 +237,7 @@ class XrLightEstimation extends EventHandler {
      * True if estimated light information is available.
      *
      * @type {boolean}
+     * @readonly
      * @example
      * if (app.xr.lightEstimation.available) {
      *     entity.light.intensity = app.xr.lightEstimation.intensity;
@@ -250,6 +252,7 @@ class XrLightEstimation extends EventHandler {
      * is not available.
      *
      * @type {number|null}
+     * @readonly
      */
     get intensity() {
         return this._available ? this._intensity : null;
@@ -260,6 +263,7 @@ class XrLightEstimation extends EventHandler {
      * not available.
      *
      * @type {Color|null}
+     * @readonly
      */
     get color() {
         return this._available ? this._color : null;
@@ -270,6 +274,7 @@ class XrLightEstimation extends EventHandler {
      * not available.
      *
      * @type {Quat|null}
+     * @readonly
      */
     get rotation() {
         return this._available ? this._rotation : null;
@@ -280,6 +285,7 @@ class XrLightEstimation extends EventHandler {
      * light. Or null if data is not available.
      *
      * @type {Float32Array|null}
+     * @readonly
      * @ignore
      */
     get sphericalHarmonics() {

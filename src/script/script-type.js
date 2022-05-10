@@ -187,6 +187,7 @@ class ScriptType extends EventHandler {
      * Name of a Script Type.
      *
      * @type {string|null}
+     * @readonly
      */
     static get scriptName() {
         return this.__name;
@@ -196,6 +197,7 @@ class ScriptType extends EventHandler {
      * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
      *
      * @type {ScriptAttributes}
+     * @readonly
      * @example
      * var PlayerController = pc.createScript('playerController');
      *

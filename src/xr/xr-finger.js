@@ -46,6 +46,7 @@ class XrFinger {
      * Index of a finger, numeration is: thumb, index, middle, ring, little.
      *
      * @type {number}
+     * @readonly
      */
     get index() {
         return this._index;
@@ -55,6 +56,7 @@ class XrFinger {
      * Hand that finger relates to.
      *
      * @type {XrHand}
+     * @readonly
      */
     get hand() {
         return this._hand;
@@ -65,6 +67,7 @@ class XrFinger {
      * to the tip of a finger.
      *
      * @type {XrJoint[]}
+     * @readonly
      */
     get joints() {
         return this._joints;
@@ -74,6 +77,7 @@ class XrFinger {
      * Tip of a finger, or null if not available.
      *
      * @type {XrJoint|null}
+     * @readonly
      */
     get tip() {
         return this._tip;

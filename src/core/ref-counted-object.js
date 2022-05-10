@@ -28,6 +28,7 @@ class RefCountedObject {
      * The current reference count.
      *
      * @type {number}
+     * @readonly
      */
     get refCount() {
         return this._refCount;

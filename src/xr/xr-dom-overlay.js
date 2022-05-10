@@ -60,6 +60,7 @@ class XrDomOverlay {
      * True if DOM Overlay is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;
@@ -70,6 +71,7 @@ class XrDomOverlay {
      * valid WebXR session and if a valid root element is provided.
      *
      * @type {boolean}
+     * @readonly
      */
     get available() {
         return this._supported && this._manager.active && this._manager._session.domOverlayState !== null;
@@ -88,6 +90,7 @@ class XrDomOverlay {
      * consistently, appearing similar to a helmet heads-up display.
      *
      * @type {string|null}
+     * @readonly
      */
     get state() {
         if (!this._supported || !this._manager.active || !this._manager._session.domOverlayState)

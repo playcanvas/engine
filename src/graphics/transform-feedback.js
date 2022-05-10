@@ -173,6 +173,7 @@ class TransformFeedback {
      * The current input buffer.
      *
      * @type {VertexBuffer}
+     * @readonly
      */
     get inputBuffer() {
         return this._inputBuffer;
@@ -182,6 +183,7 @@ class TransformFeedback {
      * The current output buffer.
      *
      * @type {VertexBuffer}
+     * @readonly
      */
     get outputBuffer() {
         return this._outputBuffer;

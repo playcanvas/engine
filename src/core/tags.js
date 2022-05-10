@@ -232,6 +232,7 @@ class Tags extends EventHandler {
      * Number of tags in set.
      *
      * @type {number}
+     * @readonly
      */
     get size() {
         return this._list.length;

@@ -29,6 +29,7 @@ class AnimCurve {
      * The list of paths which identify targets of this curve.
      *
      * @type {string[]}
+     * @readonly
      */
     get paths() {
         return this._paths;
@@ -38,6 +39,7 @@ class AnimCurve {
      * The index of the AnimTrack input which contains the key data for this curve.
      *
      * @type {number}
+     * @readonly
      */
     get input() {
         return this._input;
@@ -47,6 +49,7 @@ class AnimCurve {
      * The index of the AnimTrack input which contains the key data for this curve.
      *
      * @type {number}
+     * @readonly
      */
     get output() {
         return this._output;
@@ -56,6 +59,7 @@ class AnimCurve {
      * The interpolation method used by this curve.
      *
      * @type {number}
+     * @readonly
      */
     get interpolation() {
         return this._interpolation;

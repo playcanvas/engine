@@ -2657,6 +2657,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Width of the back buffer in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get width() {
         return this.gl.drawingBufferWidth || this.canvas.width;
@@ -2666,6 +2667,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Height of the back buffer in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get height() {
         return this.gl.drawingBufferHeight || this.canvas.height;
@@ -2693,6 +2695,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Check if high precision floating-point textures are supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get textureFloatHighPrecision() {
         if (this._textureFloatHighPrecision === undefined) {
@@ -2705,6 +2708,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Check if texture with half float format can be updated with data.
      *
      * @type {boolean}
+     * @readonly
      */
     get textureHalfFloatUpdatable() {
         if (this._textureHalfFloatUpdatable === undefined) {

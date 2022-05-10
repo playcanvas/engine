@@ -95,6 +95,7 @@ class XrTrackedImage extends EventHandler {
      * Image that is used for tracking.
      *
      * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
+     * @readonly
      */
     get image() {
         return this._image;
@@ -119,6 +120,7 @@ class XrTrackedImage extends EventHandler {
      * the underlying AR system.
      *
      * @type {boolean}
+     * @readonly
      */
     get trackable() {
         return this._trackable;
@@ -129,6 +131,7 @@ class XrTrackedImage extends EventHandler {
      * system.
      *
      * @type {boolean}
+     * @readonly
      */
     get tracking() {
         return this._tracking;
@@ -140,6 +143,7 @@ class XrTrackedImage extends EventHandler {
      * the previously known transformation assuming the tracked image has not moved.
      *
      * @type {boolean}
+     * @readonly
      */
     get emulated() {
         return this._emulated;

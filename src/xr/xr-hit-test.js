@@ -313,6 +313,7 @@ class XrHitTest extends EventHandler {
      * True if AR Hit Test is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;

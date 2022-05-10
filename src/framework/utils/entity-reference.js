@@ -414,6 +414,7 @@ class EntityReference extends EventHandler {
      * A reference to the entity, if present.
      *
      * @type {Entity}
+     * @readonly
      */
     get entity() {
         return this._entity;

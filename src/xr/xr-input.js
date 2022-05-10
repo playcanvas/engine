@@ -281,6 +281,7 @@ class XrInput extends EventHandler {
      * List of active {@link XrInputSource} instances.
      *
      * @type {XrInputSource[]}
+     * @readonly
      */
     get inputSources() {
         return this._inputSources;

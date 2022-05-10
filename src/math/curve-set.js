@@ -62,6 +62,7 @@ class CurveSet {
      * The number of curves in the curve set.
      *
      * @type {number}
+     * @readonly
      */
     get length() {
         return this.curves.length;

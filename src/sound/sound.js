@@ -34,6 +34,7 @@ class Sound {
      * Gets the duration of the sound. If the sound is not loaded it returns 0.
      *
      * @type {number}
+     * @readonly
      */
     get duration() {
         let duration = 0;

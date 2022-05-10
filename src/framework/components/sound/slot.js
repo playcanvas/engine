@@ -520,6 +520,7 @@ class SoundSlot extends EventHandler {
      * Returns true if the asset of the slot is loaded.
      *
      * @type {boolean}
+     * @readonly
      */
     get isLoaded() {
         if (this._hasAsset()) {
@@ -536,6 +537,7 @@ class SoundSlot extends EventHandler {
      * Returns true if the slot is currently paused.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPaused() {
         const instances = this.instances;
@@ -555,6 +557,7 @@ class SoundSlot extends EventHandler {
      * Returns true if the slot is currently playing.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPlaying() {
         const instances = this.instances;
@@ -570,6 +573,7 @@ class SoundSlot extends EventHandler {
      * Returns true if the slot is currently stopped.
      *
      * @type {boolean}
+     * @readonly
      */
     get isStopped() {
         const instances = this.instances;

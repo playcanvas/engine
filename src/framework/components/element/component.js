@@ -423,6 +423,7 @@ class ElementComponent extends Component {
      * components.
      *
      * @type {Vec2[]}
+     * @readonly
      */
     get canvasCorners() {
         if (!this._canvasCornersDirty || !this.screen || !this.screen.screen.screenSpace)
@@ -569,6 +570,7 @@ class ElementComponent extends Component {
      * Get the entity that is currently masking this element.
      *
      * @type {Entity}
+     * @readonly
      * @private
      */
     get maskedBy() {
@@ -647,6 +649,7 @@ class ElementComponent extends Component {
      * left corners of the component relative to its parent {@link ScreenComponent}.
      *
      * @type {Vec3[]}
+     * @readonly
      */
     get screenCorners() {
         if (!this._cornersDirty || !this.screen)
@@ -684,6 +687,7 @@ class ElementComponent extends Component {
      * The width of the text rendered by the component. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
+     * @readonly
      */
     get textWidth() {
         return this._text ? this._text.width : 0;
@@ -693,6 +697,7 @@ class ElementComponent extends Component {
      * The height of the text rendered by the component. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
+     * @readonly
      */
     get textHeight() {
         return this._text ? this._text.height : 0;

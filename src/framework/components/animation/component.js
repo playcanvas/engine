@@ -215,6 +215,7 @@ class AnimationComponent extends Component {
      * Get the duration in seconds of the current animation.
      *
      * @type {number}
+     * @readonly
      */
     get duration() {
         return this.animations[this.currAnim].duration;

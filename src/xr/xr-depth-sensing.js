@@ -337,6 +337,7 @@ class XrDepthSensing extends EventHandler {
      * True if Depth Sensing is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return platform.browser && !!window.XRDepthInformation;
@@ -346,6 +347,7 @@ class XrDepthSensing extends EventHandler {
      * True if depth sensing information is available.
      *
      * @type {boolean}
+     * @readonly
      * @example
      * if (app.xr.depthSensing.available) {
      *     var depth = app.xr.depthSensing.getDepth(x, y);
@@ -359,6 +361,7 @@ class XrDepthSensing extends EventHandler {
      * Whether the usage is CPU or GPU.
      *
      * @type {string}
+     * @readonly
      * @ignore
      */
     get usage() {
@@ -369,6 +372,7 @@ class XrDepthSensing extends EventHandler {
      * The depth sensing data format.
      *
      * @type {string}
+     * @readonly
      * @ignore
      */
     get dataFormat() {
@@ -379,6 +383,7 @@ class XrDepthSensing extends EventHandler {
      * Width of depth texture or 0 if not available.
      *
      * @type {number}
+     * @readonly
      */
     get width() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
@@ -389,6 +394,7 @@ class XrDepthSensing extends EventHandler {
      * Height of depth texture or 0 if not available.
      *
      * @type {number}
+     * @readonly
      */
     get height() {
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
@@ -402,6 +408,7 @@ class XrDepthSensing extends EventHandler {
      * be normalized using {@link XrDepthSensing#uvMatrix}.
      *
      * @type {Texture}
+     * @readonly
      * @example
      * material.diffuseMap = depthSensing.texture;
      * @example
@@ -439,6 +446,7 @@ class XrDepthSensing extends EventHandler {
      * It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
      *
      * @type {Mat4}
+     * @readonly
      * @example
      * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
      */
@@ -450,6 +458,7 @@ class XrDepthSensing extends EventHandler {
      * Multiply this coefficient number by raw depth value to get depth in meters.
      *
      * @type {number}
+     * @readonly
      * @example
      * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
      */

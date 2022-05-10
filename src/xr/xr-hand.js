@@ -262,6 +262,7 @@ class XrHand extends EventHandler {
      * List of fingers of a hand.
      *
      * @type {XrFinger[]}
+     * @readonly
      */
     get fingers() {
         return this._fingers;
@@ -271,6 +272,7 @@ class XrHand extends EventHandler {
      * List of joints of hand.
      *
      * @type {XrJoint[]}
+     * @readonly
      */
     get joints() {
         return this._joints;
@@ -280,6 +282,7 @@ class XrHand extends EventHandler {
      * List of joints that are fingertips.
      *
      * @type {XrJoint[]}
+     * @readonly
      */
     get tips() {
         return this._tips;
@@ -289,6 +292,7 @@ class XrHand extends EventHandler {
      * Wrist of a hand, or null if it is not available by WebXR underlying system.
      *
      * @type {XrJoint|null}
+     * @readonly
      */
     get wrist() {
         return this._wrist;
@@ -298,6 +302,7 @@ class XrHand extends EventHandler {
      * True if tracking is available, otherwise tracking might be lost.
      *
      * @type {boolean}
+     * @readonly
      */
     get tracking() {
         return this._tracking;

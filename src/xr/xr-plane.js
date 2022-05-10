@@ -138,6 +138,7 @@ class XrPlane extends EventHandler {
      * Unique identifier of a plane.
      *
      * @type {number}
+     * @readonly
      */
     get id() {
         return this._id;
@@ -147,6 +148,7 @@ class XrPlane extends EventHandler {
      * Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
      *
      * @type {string|null}
+     * @readonly
      */
     get orientation() {
         return this._orientation;
@@ -157,6 +159,7 @@ class XrPlane extends EventHandler {
      * that defines a local point of a plane's polygon.
      *
      * @type {object[]}
+     * @readonly
      * @example
      * // prepare reusable objects
      * var vecA = new pc.Vec3();

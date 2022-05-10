@@ -170,6 +170,7 @@ class XrInputSource extends EventHandler {
      * reconnected will not share this ID.
      *
      * @type {number}
+     * @readonly
      */
     get id() {
         return this._id;
@@ -179,6 +180,7 @@ class XrInputSource extends EventHandler {
      * XRInputSource object that is associated with this input source.
      *
      * @type {object}
+     * @readonly
      */
     get inputSource() {
         return this._xrInputSource;
@@ -198,6 +200,7 @@ class XrInputSource extends EventHandler {
      * is using their hands or the held device for pointing.
      *
      * @type {string}
+     * @readonly
      */
     get targetRayMode() {
         return this._xrInputSource.targetRayMode;
@@ -212,6 +215,7 @@ class XrInputSource extends EventHandler {
      * hand.
      *
      * @type {string}
+     * @readonly
      */
     get handedness() {
         return this._xrInputSource.handedness;
@@ -222,6 +226,7 @@ class XrInputSource extends EventHandler {
      * of the input source.
      *
      * @type {string[]}
+     * @readonly
      */
     get profiles() {
         return this._xrInputSource.profiles;
@@ -232,6 +237,7 @@ class XrInputSource extends EventHandler {
      * be used to position and rotate virtual joysticks based on it.
      *
      * @type {boolean}
+     * @readonly
      */
     get grip() {
         return this._grip;
@@ -242,6 +248,7 @@ class XrInputSource extends EventHandler {
      * null.
      *
      * @type {XrHand|null}
+     * @readonly
      */
     get hand() {
         return this._hand;
@@ -252,6 +259,7 @@ class XrInputSource extends EventHandler {
      * access to its states.
      *
      * @type {Gamepad|null}
+     * @readonly
      */
     get gamepad() {
         return this._xrInputSource.gamepad || null;
@@ -261,6 +269,7 @@ class XrInputSource extends EventHandler {
      * True if input source is in active primary action between selectstart and selectend events.
      *
      * @type {boolean}
+     * @readonly
      */
     get selecting() {
         return this._selecting;
@@ -270,6 +279,7 @@ class XrInputSource extends EventHandler {
      * True if input source is in active squeeze action between squeezestart and squeezeend events.
      *
      * @type {boolean}
+     * @readonly
      */
     get squeezing() {
         return this._squeezing;
@@ -299,6 +309,7 @@ class XrInputSource extends EventHandler {
      * component at which this input source is hovering, or null if not hovering over any element.
      *
      * @type {Entity|null}
+     * @readonly
      */
     get elementEntity() {
         return this._elementEntity;
@@ -308,6 +319,7 @@ class XrInputSource extends EventHandler {
      * List of active {@link XrHitTestSource} instances created by this input source.
      *
      * @type {XrHitTestSource[]}
+     * @readonly
      */
     get hitTestSources() {
         return this._hitTestSources;

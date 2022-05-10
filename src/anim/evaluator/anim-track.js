@@ -32,6 +32,7 @@ class AnimTrack {
      * Gets the name of the AnimTrack.
      *
      * @type {string}
+     * @readonly
      */
     get name() {
         return this._name;
@@ -41,6 +42,7 @@ class AnimTrack {
      * Gets the duration of the AnimTrack.
      *
      * @type {number}
+     * @readonly
      */
     get duration() {
         return this._duration;
@@ -50,6 +52,7 @@ class AnimTrack {
      * Gets the list of curve key data contained in the AnimTrack.
      *
      * @type {AnimData[]}
+     * @readonly
      */
     get inputs() {
         return this._inputs;
@@ -59,6 +62,7 @@ class AnimTrack {
      * Gets the list of curve values contained in the AnimTrack.
      *
      * @type {AnimData[]}
+     * @readonly
      */
     get outputs() {
         return this._outputs;
@@ -68,6 +72,7 @@ class AnimTrack {
      * Gets the list of curves contained in the AnimTrack.
      *
      * @type {AnimCurve[]}
+     * @readonly
      */
     get curves() {
         return this._curves;

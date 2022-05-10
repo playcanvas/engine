@@ -169,6 +169,7 @@ class CameraComponent extends Component {
      * Queries the camera component's underlying Camera instance.
      *
      * @type {Camera}
+     * @readonly
      * @private
      */
     get camera() {
@@ -238,6 +239,7 @@ class CameraComponent extends Component {
      * Queries the camera's frustum shape.
      *
      * @type {Frustum}
+     * @readonly
      */
     get frustum() {
         return this._camera.frustum;
@@ -305,6 +307,7 @@ class CameraComponent extends Component {
      * Queries the camera's projection matrix.
      *
      * @type {Mat4}
+     * @readonly
      */
     get projectionMatrix() {
         return this._camera.projectionMatrix;
@@ -344,6 +347,7 @@ class CameraComponent extends Component {
      * Queries the camera's view matrix.
      *
      * @type {Mat4}
+     * @readonly
      */
     get viewMatrix() {
         return this._camera.viewMatrix;

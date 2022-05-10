@@ -189,6 +189,7 @@ class Sprite extends EventHandler {
      * An array that contains a mesh for each frame.
      *
      * @type {Mesh[]}
+     * @readonly
      */
     get meshes() {
         return this._meshes;

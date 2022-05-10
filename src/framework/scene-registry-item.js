@@ -30,6 +30,7 @@ class SceneRegistryItem {
      * Returns true if the scene data has loaded.
      *
      * @type {boolean}
+     * @readonly
      */
     get loaded() {
         return !!this.data;
@@ -39,6 +40,7 @@ class SceneRegistryItem {
      * Returns true if the scene data is still being loaded.
      *
      * @type {boolean}
+     * @readonly
      */
     get loading() {
         return this._loading;

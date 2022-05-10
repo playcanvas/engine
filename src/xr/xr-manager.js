@@ -767,6 +767,7 @@ class XrManager extends EventHandler {
      * True if XR is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;
@@ -776,6 +777,7 @@ class XrManager extends EventHandler {
      * True if XR session is running.
      *
      * @type {boolean}
+     * @readonly
      */
     get active() {
         return !!this._session;
@@ -786,6 +788,7 @@ class XrManager extends EventHandler {
      * XRTYPE_*.
      *
      * @type {string|null}
+     * @readonly
      */
     get type() {
         return this._type;
@@ -796,6 +799,7 @@ class XrManager extends EventHandler {
      * running. Can be any of XRSPACE_*.
      *
      * @type {string|null}
+     * @readonly
      */
     get spaceType() {
         return this._spaceType;
@@ -805,6 +809,7 @@ class XrManager extends EventHandler {
      * Provides access to XRSession of WebXR.
      *
      * @type {object|null}
+     * @readonly
      */
     get session() {
         return this._session;
@@ -814,6 +819,7 @@ class XrManager extends EventHandler {
      * Active camera for which XR session is running or null.
      *
      * @type {Entity|null}
+     * @readonly
      */
     get camera() {
         return this._camera ? this._camera.entity : null;
@@ -824,6 +830,7 @@ class XrManager extends EventHandler {
      * the primary focus. Can be 'hidden', 'visible' or 'visible-blurred'.
      *
      * @type {string}
+     * @readonly
      * @ignore
      */
     get visibilityState() {

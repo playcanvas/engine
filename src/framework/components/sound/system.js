@@ -68,6 +68,7 @@ class SoundComponentSystem extends ComponentSystem {
      * Returns null if the device does not support the Web Audio API.
      *
      * @type {AudioContext|null}
+     * @readonly
      */
     get context() {
         if (!hasAudioContext()) {

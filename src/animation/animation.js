@@ -71,6 +71,7 @@ class Animation {
      * A read-only property to get array of animation nodes.
      *
      * @type {Node[]}
+     * @readonly
      */
     get nodes() {
         return this._nodes;

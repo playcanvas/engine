@@ -49,6 +49,7 @@ class SpriteAnimationClip extends EventHandler {
      * The total duration of the animation in seconds.
      *
      * @type {number}
+     * @readonly
      */
     get duration() {
         if (this._sprite) {
@@ -79,6 +80,7 @@ class SpriteAnimationClip extends EventHandler {
      * Whether the animation is currently paused.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPaused() {
         return this._paused;
@@ -88,6 +90,7 @@ class SpriteAnimationClip extends EventHandler {
      * Whether the animation is currently playing.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPlaying() {
         return this._playing;

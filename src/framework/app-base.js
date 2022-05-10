@@ -651,6 +651,7 @@ class AppBase extends EventHandler {
 
     /**
      * @type {SoundManager}
+     * @readonly
      * @ignore
      */
     get soundManager() {
@@ -662,6 +663,7 @@ class AppBase extends EventHandler {
      * the scene, which reduces the overall number of draw calls, thereby boosting performance.
      *
      * @type {BatchManager}
+     * @readonly
      */
     get batcher() {
         Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
@@ -677,6 +679,7 @@ class AppBase extends EventHandler {
      * maintaining the aspect ratio.
      *
      * @type {string}
+     * @readonly
      */
     get fillMode() {
         return this._fillMode;
@@ -690,6 +693,7 @@ class AppBase extends EventHandler {
      * - {@link RESOLUTION_FIXED}: resolution of canvas will be fixed.
      *
      * @type {string}
+     * @readonly
      */
     get resolutionMode() {
         return this._resolutionMode;

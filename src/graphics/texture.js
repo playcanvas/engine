@@ -518,6 +518,7 @@ class Texture {
      * The width of the texture in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get width() {
         return this._width;
@@ -527,6 +528,7 @@ class Texture {
      * The height of the texture in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get height() {
         return this._height;
@@ -536,6 +538,7 @@ class Texture {
      * The number of depth slices in a 3D texture (WebGL2 only).
      *
      * @type {number}
+     * @readonly
      */
     get depth() {
         return this._depth;
@@ -570,6 +573,7 @@ class Texture {
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
      * @type {number}
+     * @readonly
      */
     get format() {
         return this._format;
@@ -579,6 +583,7 @@ class Texture {
      * Returns true if this texture is a cube map and false otherwise.
      *
      * @type {boolean}
+     * @readonly
      */
     get cubemap() {
         return this._cubemap;
@@ -593,6 +598,7 @@ class Texture {
      * Returns true if this texture is a 3D volume and false otherwise.
      *
      * @type {boolean}
+     * @readonly
      */
     get volume() {
         return this._volume;
@@ -631,6 +637,7 @@ class Texture {
      * Returns true if all dimensions of the texture are power of two, and false otherwise.
      *
      * @type {boolean}
+     * @readonly
      */
     get pot() {
         return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);

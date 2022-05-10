@@ -186,6 +186,7 @@ class XrImageTracking extends EventHandler {
      * True if Image Tracking is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;
@@ -196,6 +197,7 @@ class XrImageTracking extends EventHandler {
      * for the AR session or there was an error processing the provided images.
      *
      * @type {boolean}
+     * @readonly
      */
     get available() {
         return this._available;
@@ -205,6 +207,7 @@ class XrImageTracking extends EventHandler {
      * List of {@link XrTrackedImage} that contain tracking information.
      *
      * @type {XrTrackedImage[]}
+     * @readonly
      */
     get images() {
         return this._images;

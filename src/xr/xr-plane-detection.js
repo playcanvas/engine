@@ -175,6 +175,7 @@ class XrPlaneDetection extends EventHandler {
      * True if Plane Detection is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     get supported() {
         return this._supported;
@@ -185,6 +186,7 @@ class XrPlaneDetection extends EventHandler {
      * session.
      *
      * @type {boolean}
+     * @readonly
      */
     get available() {
         return this._available;
@@ -195,6 +197,7 @@ class XrPlaneDetection extends EventHandler {
      * plane detection is not available.
      *
      * @type {XrPlane[]|null}
+     * @readonly
      */
     get planes() {
         return this._planes;

@@ -55,6 +55,7 @@ class MorphTarget {
      * The name of the morph target.
      *
      * @type {string}
+     * @readonly
      */
     get name() {
         return this._name;
@@ -64,6 +65,7 @@ class MorphTarget {
      * The default weight of the morph target.
      *
      * @type {number}
+     * @readonly
      */
     get defaultWeight() {
         return this._defaultWeight;

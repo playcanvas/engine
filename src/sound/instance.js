@@ -317,6 +317,7 @@ class SoundInstance extends EventHandler {
      * Returns true if the instance is currently paused.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPaused() {
         return this._state === STATE_PAUSED;
@@ -326,6 +327,7 @@ class SoundInstance extends EventHandler {
      * Returns true if the instance is currently playing.
      *
      * @type {boolean}
+     * @readonly
      */
     get isPlaying() {
         return this._state === STATE_PLAYING;
@@ -335,6 +337,7 @@ class SoundInstance extends EventHandler {
      * Returns true if the instance is currently stopped.
      *
      * @type {boolean}
+     * @readonly
      */
     get isStopped() {
         return this._state === STATE_STOPPED;
@@ -344,6 +347,7 @@ class SoundInstance extends EventHandler {
      * Returns true if the instance is currently suspended because the window is not focused.
      *
      * @type {boolean}
+     * @readonly
      */
     get isSuspended() {
         return this._suspended;

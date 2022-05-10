@@ -236,6 +236,7 @@ class GraphNode extends EventHandler {
      * The normalized local space X-axis vector of the graph node in world space.
      *
      * @type {Vec3}
+     * @readonly
      */
     get right() {
         if (!this._right) {
@@ -248,6 +249,7 @@ class GraphNode extends EventHandler {
      * The normalized local space Y-axis vector of the graph node in world space.
      *
      * @type {Vec3}
+     * @readonly
      */
     get up() {
         if (!this._up) {
@@ -260,6 +262,7 @@ class GraphNode extends EventHandler {
      * The normalized local space negative Z-axis vector of the graph node in world space.
      *
      * @type {Vec3}
+     * @readonly
      */
     get forward() {
         if (!this._forward) {
@@ -298,6 +301,7 @@ class GraphNode extends EventHandler {
      * A read-only property to get a parent graph node.
      *
      * @type {GraphNode|null}
+     * @readonly
      */
     get parent() {
         return this._parent;
@@ -307,6 +311,7 @@ class GraphNode extends EventHandler {
      * A read-only property to get the path of the graph node relative to the root of the hierarchy.
      *
      * @type {string}
+     * @readonly
      */
     get path() {
         let node = this._parent;
@@ -326,6 +331,7 @@ class GraphNode extends EventHandler {
      * A read-only property to get highest graph node from current node.
      *
      * @type {GraphNode}
+     * @readonly
      */
     get root() {
         let result = this;
@@ -339,6 +345,7 @@ class GraphNode extends EventHandler {
      * A read-only property to get the children of this graph node.
      *
      * @type {GraphNode[]}
+     * @readonly
      */
     get children() {
         return this._children;
@@ -350,6 +357,7 @@ class GraphNode extends EventHandler {
      * is not recalculated when a node is simply removed from the graph.
      *
      * @type {number}
+     * @readonly
      */
     get graphDepth() {
         return this._graphDepth;

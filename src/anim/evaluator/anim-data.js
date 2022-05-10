@@ -21,6 +21,7 @@ class AnimData {
      * Gets the number of components that make up an element.
      *
      * @type {number}
+     * @readonly
      */
     get components() {
         return this._components;
@@ -30,6 +31,7 @@ class AnimData {
      * Gets the data.
      *
      * @type {Float32Array|number[]}
+     * @readonly
      */
     get data() {
         return this._data;

@@ -26,6 +26,7 @@ class AnimEvaluator {
      * The list of animation clips.
      *
      * @type {AnimClip[]}
+     * @readonly
      */
     get clips() {
         return this._clips;

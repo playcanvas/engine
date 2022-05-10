@@ -93,6 +93,7 @@ class SoundManager extends EventHandler {
      * Get the Web Audio API context.
      *
      * @type {AudioContext}
+     * @readonly
      * @ignore
      */
     get context() {

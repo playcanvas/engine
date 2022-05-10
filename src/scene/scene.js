@@ -259,6 +259,7 @@ class Scene extends EventHandler {
      * Returns the default layer used by the immediate drawing functions.
      *
      * @type {Layer}
+     * @readonly
      * @private
      */
     get defaultDrawLayer() {

@@ -66,6 +66,7 @@ class Curve {
      * Get the number of keys in the curve.
      *
      * @type {number}
+     * @readonly
      */
     get length() {
         return this.keys.length;

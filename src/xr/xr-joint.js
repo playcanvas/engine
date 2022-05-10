@@ -182,6 +182,7 @@ class XrJoint {
      * the finger.
      *
      * @type {number}
+     * @readonly
      */
     get index() {
         return this._index;
@@ -191,6 +192,7 @@ class XrJoint {
      * Hand that joint relates to.
      *
      * @type {XrHand}
+     * @readonly
      */
     get hand() {
         return this._hand;
@@ -200,6 +202,7 @@ class XrJoint {
      * Finger that joint relates to.
      *
      * @type {XrFinger|null}
+     * @readonly
      */
     get finger() {
         return this._finger;
@@ -209,6 +212,7 @@ class XrJoint {
      * True if joint is a wrist.
      *
      * @type {boolean}
+     * @readonly
      */
     get wrist() {
         return this._wrist;
@@ -218,6 +222,7 @@ class XrJoint {
      * True if joint is a tip of a finger.
      *
      * @type {boolean}
+     * @readonly
      */
     get tip() {
         return this._tip;
@@ -227,6 +232,7 @@ class XrJoint {
      * The radius of a joint, which is a distance from joint to the edge of a skin.
      *
      * @type {number}
+     * @readonly
      */
     get radius() {
         return this._radius || 0.005;

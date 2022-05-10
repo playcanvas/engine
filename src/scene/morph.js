@@ -227,6 +227,7 @@ class Morph extends RefCountedObject {
      * The array of morph targets.
      *
      * @type {MorphTarget[]}
+     * @readonly
      */
     get targets() {
         return this._targets;

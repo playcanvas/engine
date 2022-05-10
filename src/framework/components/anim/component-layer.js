@@ -39,6 +39,7 @@ class AnimComponentLayer {
      * Returns the name of the layer.
      *
      * @type {string}
+     * @readonly
      */
     get name() {
         return this._name;
@@ -62,6 +63,7 @@ class AnimComponentLayer {
      * animation tracks.
      *
      * @type {string}
+     * @readonly
      */
     get playable() {
         return this._controller.playable;
@@ -71,6 +73,7 @@ class AnimComponentLayer {
      * Returns the currently active state name.
      *
      * @type {string}
+     * @readonly
      */
     get activeState() {
         return this._controller.activeStateName;
@@ -80,6 +83,7 @@ class AnimComponentLayer {
      * Returns the previously active state name.
      *
      * @type {string}
+     * @readonly
      */
     get previousState() {
         return this._controller.previousStateName;
@@ -90,6 +94,7 @@ class AnimComponentLayer {
      * duration. Looped animations will return values greater than 1.
      *
      * @type {number}
+     * @readonly
      */
     get activeStateProgress() {
         return this._controller.activeStateProgress;
@@ -99,6 +104,7 @@ class AnimComponentLayer {
      * Returns the currently active states duration.
      *
      * @type {number}
+     * @readonly
      */
     get activeStateDuration() {
         return this._controller.activeStateDuration;
@@ -128,6 +134,7 @@ class AnimComponentLayer {
      * Returns whether the anim component layer is currently transitioning between states.
      *
      * @type {boolean}
+     * @readonly
      */
     get transitioning() {
         return this._controller.transitioning;
@@ -138,6 +145,7 @@ class AnimComponentLayer {
      * Otherwise returns null.
      *
      * @type {number|null}
+     * @readonly
      */
     get transitionProgress() {
         if (this.transitioning) {
@@ -150,6 +158,7 @@ class AnimComponentLayer {
      * Lists all available states in this layers state graph.
      *
      * @type {string[]}
+     * @readonly
      */
     get states() {
         return this._controller.states;

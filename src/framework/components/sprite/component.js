@@ -314,6 +314,7 @@ class SpriteComponent extends Component {
      * The current clip being played.
      *
      * @type {SpriteAnimationClip}
+     * @readonly
      */
     get currentClip() {
         return this._currentClip;

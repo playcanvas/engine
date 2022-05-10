@@ -126,6 +126,7 @@ class Listener {
      * Get the listener.
      *
      * @type {AudioListener|null}
+     * @readonly
      */
     get listener() {
         const context = this._manager.context;

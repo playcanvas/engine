@@ -197,6 +197,7 @@ class AnimComponent extends Component {
      * Returns the animation layers available in this anim component.
      *
      * @type {AnimComponentLayer[]}
+     * @readonly
      */
     get layers() {
         return this._layers;
@@ -230,6 +231,7 @@ class AnimComponent extends Component {
      * Returns whether all component layers are currently playable.
      *
      * @type {boolean}
+     * @readonly
      */
     get playable() {
         for (let i = 0; i < this._layers.length; i++) {
@@ -244,6 +246,7 @@ class AnimComponent extends Component {
      * Returns the base layer of the state graph.
      *
      * @type {AnimComponentLayer|null}
+     * @readonly
      */
     get baseLayer() {
         if (this._layers.length > 0) {

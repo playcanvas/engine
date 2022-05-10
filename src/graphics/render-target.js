@@ -247,6 +247,7 @@ class RenderTarget {
      * Color buffer set up on the render target.
      *
      * @type {Texture}
+     * @readonly
      */
     get colorBuffer() {
         return this._colorBuffer;
@@ -257,6 +258,7 @@ class RenderTarget {
      * constructor. Not available if depth property was used instead.
      *
      * @type {Texture}
+     * @readonly
      */
     get depthBuffer() {
         return this._depthBuffer;
@@ -274,6 +276,7 @@ class RenderTarget {
      * - {@link CUBEFACE_NEGZ}
      *
      * @type {number}
+     * @readonly
      */
     get face() {
         return this._face;
@@ -283,6 +286,7 @@ class RenderTarget {
      * Width of the render target in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get width() {
         return this._colorBuffer ? this._colorBuffer.width : this._depthBuffer.width;
@@ -292,6 +296,7 @@ class RenderTarget {
      * Height of the render target in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get height() {
         return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;

@@ -533,6 +533,7 @@ class Layer {
      * Returns lights used by clustered lighting in a set.
      *
      * @type {Set<Light>}
+     * @readonly
      * @ignore
      */
     get clusteredLightsSet() {

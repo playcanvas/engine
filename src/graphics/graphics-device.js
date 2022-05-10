@@ -297,6 +297,7 @@ class GraphicsDevice extends EventHandler {
      * Width of the back buffer in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get width() {
         Debug.error("GraphicsDevice.width is not implemented on current device.");
@@ -307,6 +308,7 @@ class GraphicsDevice extends EventHandler {
      * Height of the back buffer in pixels.
      *
      * @type {number}
+     * @readonly
      */
     get height() {
         Debug.error("GraphicsDevice.height is not implemented on current device.");

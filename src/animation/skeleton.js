@@ -114,6 +114,7 @@ class Skeleton {
      * Read-only property that returns number of nodes of a skeleton.
      *
      * @type {number}
+     * @readonly
      */
     get numNodes() {
         return this._interpolatedKeys.length;

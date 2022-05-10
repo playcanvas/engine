@@ -104,6 +104,7 @@ class Component extends EventHandler {
      * individual properties as modifying this data directly will not fire 'set' events.
      *
      * @type {*}
+     * @readonly
      * @ignore
      */
     get data() {
