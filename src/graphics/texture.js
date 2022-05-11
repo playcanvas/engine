@@ -13,7 +13,6 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
-    TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
@@ -248,7 +247,6 @@ class Texture {
         // Mip levels
         this._invalid = false;
         this._lockedLevel = -1;
-        this._lockMode = TEXTURELOCK_WRITE;
         if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
@@ -759,10 +757,6 @@ class Texture {
      * to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face
      * to lock.
-     * @param {number} [options.mode] - The lock mode. Can be:
-     * - {@link TEXTURELOCK_READ}
-     * - {@link TEXTURELOCK_WRITE}
-     * Defaults to {@link TEXTURELOCK_WRITE}.
      * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of
      * the locked mip level.
      */
@@ -774,12 +768,8 @@ class Texture {
         if (options.face === undefined) {
             options.face = 0;
         }
-        if (options.mode === undefined) {
-            options.mode = TEXTURELOCK_WRITE;
-        }
 
         this._lockedLevel = options.level;
-        this._lockMode = options.mode;
 
         if (this._levels[options.level] === null) {
             switch (this._format) {
@@ -827,11 +817,11 @@ class Texture {
     }
 
     /**
-     * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
-     * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     * Set the pixel data of the texture from a canvas, image, video DOM element, or a typed array. If the texture is
+     * a cubemap, the supplied source must be an array of 6 canvases, images, videos or typed arrays.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
-     * canvas, image or video element, or an array of 6 canvas, image or video elements.
+     * @param {Uint8Array|Uint16Array|Float32Array|HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|Uint8Array[]|Uint16Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
+     * canvas, image element, video element or typed array, or an array of 6 canvas elements, image elements, video elements or typed arrays.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
@@ -927,7 +917,7 @@ class Texture {
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
-     * @returns {HTMLImageElement} The source image of this texture. Can be null if source not
+     * @returns {Uint8Array|Uint16Array|Float32Array|HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|Uint8Array[]|Uint16Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} The source data for this texture. Can be null if source not
      * assigned for specific image level.
      */
     getSource(mipLevel = 0) {
@@ -942,12 +932,8 @@ class Texture {
             Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
         }
 
-        // Upload the new pixel data if lock mode is write
-        if (this._lockMode === TEXTURELOCK_WRITE) {
-            this.upload();
-        }
+        this.upload();
         this._lockedLevel = -1;
-        this._lockMode = TEXTURELOCK_WRITE;
     }
 
     /**

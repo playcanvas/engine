@@ -950,20 +950,6 @@ export const STENCILOP_DECREMENTWRAP = 6;
 export const STENCILOP_INVERT = 7;
 
 /**
- * Read only. Any changes to the locked mip level's pixels will not update the texture.
- *
- * @type {number}
- */
-export const TEXTURELOCK_READ = 1;
-
-/**
- * Write only. The contents of the specified mip level will be entirely replaced.
- *
- * @type {number}
- */
-export const TEXTURELOCK_WRITE = 2;
-
-/**
  * Texture is a default type.
  *
  * @type {string}
