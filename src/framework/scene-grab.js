@@ -149,7 +149,7 @@ class SceneGrab {
                         self.releaseRenderTarget(this.colorRenderTarget);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, device, this.colorFormat, false, true, false);
                     }
-    
+
                     // copy color from the current render target
                     DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
 
