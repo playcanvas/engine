@@ -6,12 +6,12 @@
  */
 class Debug {
     /**
-     * Set storing already logged deprecated messages, to only print each unique message one time.
+     * Set storing already logged messages, to only print each unique message one time.
      *
      * @type {Set<string>}
      * @private
      */
-    static _deprecatedMessages = new Set();
+    static _loggedMessages = new Set();
 
     /**
      * Set storing names of enabled trace channels
@@ -44,8 +44,8 @@ class Debug {
      * @param {string} message - The message to log.
      */
     static deprecated(message) {
-        if (!Debug._deprecatedMessages.has(message)) {
-            Debug._deprecatedMessages.add(message);
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
             console.warn('DEPRECATED: ' + message);
         }
     }
@@ -72,6 +72,18 @@ class Debug {
     }
 
     /**
+     * Info message logged no more than once.
+     *
+     * @param {string} message - The message to log.
+     */
+    static logOnce(message) {
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
+            console.log(message);
+        }
+    }
+
+    /**
      * Warning message.
      *
      * @param {...*} args - The values to be written to the log.
@@ -81,12 +93,36 @@ class Debug {
     }
 
     /**
+     * Warning message logged no more than once.
+     *
+     * @param {string} message - The message to log.
+     */
+    static warnOnce(message) {
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
+            console.warn(message);
+        }
+    }
+
+    /**
      * Error message.
      *
      * @param {...*} args - The values to be written to the log.
      */
     static error(...args) {
         console.error(...args);
+    }
+
+    /**
+     * Error message logged no more than once.
+     *
+     * @param {string} message - The message to log.
+     */
+    static errorOnce(message) {
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
+            console.error(message);
+        }
     }
 
     /**
