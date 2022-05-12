@@ -26,9 +26,9 @@ void main(void)
         'shader.frag': `
 precision mediump float;
 
-// use the special texture_grabPass texture, which is a built-in texture. Each time this texture is used
+// use the special uSceneColorMap texture, which is a built-in texture. Each time this texture is used
 // for rendering, the engine will copy color framebuffer to it which represents already rendered scene
-uniform sampler2D texture_grabPass;
+uniform sampler2D uSceneColorMap;
 
 // normal map providing offsets
 uniform sampler2D uOffsetMap;
@@ -61,9 +61,9 @@ void main(void)
     // get background pixel color with distorted offset
     #ifdef GL2
         // only webgl2 (and webgl1 extension - not handled here) supports reading specified mipmap
-        vec3 grabColor = texture2D(texture_grabPass, grabUv + offset, mipmap).rgb;
+        vec3 grabColor = texture2D(uSceneColorMap, grabUv + offset, mipmap).rgb;
     #else
-        vec3 grabColor = texture2D(texture_grabPass, grabUv + offset).rgb;
+        vec3 grabColor = texture2D(uSceneColorMap, grabUv + offset).rgb;
     #endif
 
     // brighten the refracted texture a little bit
@@ -101,11 +101,11 @@ void main(void)
 
             app.scene.toneMapping = pc.TONEMAP_ACES;
 
-            // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
-            // Set up front to back sorting for those meshes - so when we get to render the glass,
-            // object behind it would be rendered already
-            const immediateLayer = app.scene.layers.getLayerByName("Immediate");
-            immediateLayer.opaqueSortMode = pc.SORTMODE_BACK2FRONT;
+            // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+            // Move the depth layer to take place after World and Skydome layers, to capture both of them.
+            const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+            app.scene.layers.remove(depthLayer);
+            app.scene.layers.insertOpaque(depthLayer, 2);
 
             // helper function to create a primitive with shape type, position, scale, color
             function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
@@ -121,8 +121,7 @@ void main(void)
                 const primitive = new pc.Entity();
                 primitive.addComponent('render', {
                     type: primitiveType,
-                    material: material,
-                    layers: [immediateLayer.id]
+                    material: material
                 });
 
                 // set position and scale and add it to scene
@@ -154,6 +153,9 @@ void main(void)
             camera.setLocalPosition(0, 10, 20);
             camera.lookAt(pc.Vec3.ZERO);
 
+            // enable the camera to render the scene's color map.
+            camera.camera.requestSceneColorMap(true);
+
             // create a primitive which uses refraction shader to distort the view behind it
             const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
             glass.render.castShadows = false;
@@ -181,7 +183,10 @@ void main(void)
             // set roughness map
             refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
 
-            // refractionMaterial.update();
+            // transparency
+            refractionMaterial.blendType = pc.BLEND_NORMAL;
+            refractionMaterial.update();
+
             app.start();
 
             // update things each frame

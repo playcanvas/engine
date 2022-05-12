@@ -338,9 +338,10 @@ class Layer {
          * @type {Layer}
          */
         this.layerReference = options.layerReference; // should use the same camera
+
         /**
          * @type {InstanceList}
-         * @private
+         * @ignore
          */
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
@@ -548,7 +549,7 @@ class Layer {
      * when visible and {@link Layer.decrementCounter} if invisible. In such case the reflection
      * texture won't be updated, when there is nothing to use it, saving performance.
      *
-     * @private
+     * @ignore
      */
     incrementCounter() {
         if (this._refCounter === 0) {
@@ -563,7 +564,7 @@ class Layer {
      * disable the layer and call {@link Layer.onDisable}. See {@link Layer#incrementCounter} for
      * more details.
      *
-     * @private
+     * @ignore
      */
     decrementCounter() {
         if (this._refCounter === 1) {

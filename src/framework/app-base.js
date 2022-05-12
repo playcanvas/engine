@@ -51,7 +51,7 @@ import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { SceneDepth } from './scene-depth.js';
+import { SceneGrab } from './scene-grab.js';
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
@@ -381,8 +381,8 @@ class AppBase extends EventHandler {
             id: LAYERID_WORLD
         });
 
-        this.sceneDepth = new SceneDepth(this);
-        this.defaultLayerDepth = this.sceneDepth.layer;
+        this.sceneGrab = new SceneGrab(this);
+        this.defaultLayerDepth = this.sceneGrab.layer;
 
         this.defaultLayerSkybox = new Layer({
             enabled: true,
@@ -423,7 +423,7 @@ class AppBase extends EventHandler {
                 layer = list[i];
                 switch (layer.id) {
                     case LAYERID_DEPTH:
-                        self.sceneDepth.patch(layer);
+                        self.sceneGrab.patch(layer);
                         break;
                     case LAYERID_UI:
                         layer.passThrough = self.defaultLayerUi.passThrough;
