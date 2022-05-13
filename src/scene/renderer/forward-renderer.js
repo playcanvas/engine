@@ -37,6 +37,8 @@ import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../layer.js').Layer} Layer */
 
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -178,7 +180,6 @@ class ForwardRenderer {
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
 
-        this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
@@ -955,8 +956,6 @@ class ForwardRenderer {
     renderShadows(lights, camera) {
 
         const isClustered = this.scene.clusteredLightingEnabled;
-        const device = this.device;
-        device.grabPassAvailable = false;
 
         // #if _PROFILER
         const shadowMapStartTime = now();
@@ -980,8 +979,6 @@ class ForwardRenderer {
 
             this._shadowRenderer.render(light, camera);
         }
-
-        device.grabPassAvailable = true;
 
         // #if _PROFILER
         this._shadowMapTime += now() - shadowMapStartTime;
@@ -1620,12 +1617,14 @@ class ForwardRenderer {
 
             // layer
             const layerIndex = renderAction.layerIndex;
+            /** @type {Layer} */
             const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             const transparent = comp.subLayerList[layerIndex];
 
             // camera
             const cameraPass = renderAction.cameraIndex;
+            /** @type {CameraComponent} */
             const camera = layer.cameras[cameraPass];
 
             if (camera) {
