@@ -269,11 +269,17 @@ class PostEffectQueue {
 
     _requestDepthMap() {
         if (!depthLayer) depthLayer = this.app.scene.layers.getLayerById(LAYERID_DEPTH);
-        if (depthLayer) depthLayer.incrementCounter();
+        if (depthLayer) {
+            depthLayer.incrementCounter();
+            this.camera.requestSceneDepthMap(true);
+        }
     }
 
     _releaseDepthMap() {
-        if (depthLayer) depthLayer.decrementCounter();
+        if (depthLayer) {
+            depthLayer.decrementCounter();
+            this.camera.requestSceneDepthMap(false);
+        }
     }
 
     /**

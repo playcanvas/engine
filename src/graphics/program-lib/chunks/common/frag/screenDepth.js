@@ -1,5 +1,5 @@
 export default /* glsl */`
-uniform highp sampler2D uDepthMap;
+uniform highp sampler2D uSceneDepthMap;
 
 #ifndef SCREENSIZE
 #define SCREENSIZE
@@ -34,9 +34,9 @@ float unpackFloat(vec4 rgbaDepth) {
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {
     #ifdef GL2
-    return linearizeDepth(texture2D(uDepthMap, uv).r) * camera_params.y;
+    return linearizeDepth(texture2D(uSceneDepthMap, uv).r) * camera_params.y;
     #else
-    return unpackFloat(texture2D(uDepthMap, uv)) * camera_params.y;
+    return unpackFloat(texture2D(uSceneDepthMap, uv)) * camera_params.y;
     #endif
 }
 
