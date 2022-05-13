@@ -19,15 +19,19 @@ import { Layer } from '../scene/layer.js';
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
 
-// Internal class abstracting the access to the depth and color texture of the scene.
-// color frame buffer is copied to a texture
-// For webgl 2 devices, the depth buffer is copied to a texture
-// for webgl 1 devices, the scene's depth is rendered to a separate RGBA texture
-//
-// TODO: implement mipmapped color buffer support for WebGL 1 as well, which requires
-// the texture to be a power of two, by first downscaling the captured framebuffer
-// texture to smaller power of 2 texture, and then generate mipmaps and use it for rendering
-// TODO: or even better, implement blur filter to have smoother lower levels
+/**
+ * Internal class abstracting the access to the depth and color texture of the scene.
+ * color frame buffer is copied to a texture
+ * For webgl 2 devices, the depth buffer is copied to a texture
+ * for webgl 1 devices, the scene's depth is rendered to a separate RGBA texture
+ *
+ * TODO: implement mipmapped color buffer support for WebGL 1 as well, which requires
+ * the texture to be a power of two, by first downscaling the captured framebuffer
+ * texture to smaller power of 2 texture, and then generate mipmaps and use it for rendering
+ * TODO: or even better, implement blur filter to have smoother lower levels
+ *
+ * @ignore
+ */
 class SceneGrab {
     constructor(application) {
         this.application = application;
@@ -56,7 +60,7 @@ class SceneGrab {
         // allocate texture that will store the depth
         const texture = new Texture(device, {
             name,
-            format: format,
+            format,
             width: device.width,
             height: device.height,
             mipmaps,
