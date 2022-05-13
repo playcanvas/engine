@@ -1,15 +1,17 @@
-import { ASPECT_AUTO, LAYERID_UI } from '../../../scene/constants.js';
+import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 
 import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
+import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../../math/color.js').Color} Color */
 /** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../../../scene/layer.js').Layer} Layer */
 /** @typedef {import('../../../shape/frustum.js').Frustum} Frustum */
 /** @typedef {import('../../../xr/xr-manager.js').XrErrorCallback} XrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
@@ -145,6 +147,22 @@ class CameraComponent extends Component {
     onPostRender = null;
 
     /**
+     * A counter of requests of depth map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneDepthMap = 0;
+
+    /**
+     * A counter of requests of color map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneColorMap = 0;
+
+    /**
      * Create a new CameraComponent instance.
      *
      * @param {CameraComponentSystem} system - The ComponentSystem that created this Component.
@@ -169,7 +187,7 @@ class CameraComponent extends Component {
      * Queries the camera component's underlying Camera instance.
      *
      * @type {Camera}
-     * @private
+     * @ignore
      */
     get camera() {
         return this._camera;
@@ -232,6 +250,62 @@ class CameraComponent extends Component {
 
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
+    }
+
+    // based on the value, the depth layer's enable counter is incremented or decremented
+    _enableDepthLayer(value) {
+        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
+        if (hasDepthLayer) {
+
+            /** @type {Layer} */
+            const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
+
+            if (value) {
+                depthLayer?.incrementCounter();
+            } else {
+                depthLayer?.decrementCounter();
+            }
+        } else if (value) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene color map. Note that this call
+     * is accummulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneColorMap(enabled) {
+        this._renderSceneColorMap += enabled ? 1 : -1;
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    get renderSceneColorMap() {
+        return this._renderSceneColorMap > 0;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene depth map. Note that this call
+     * is accummulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneDepthMap(enabled) {
+        this._renderSceneDepthMap += enabled ? 1 : -1;
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    get renderSceneDepthMap() {
+        return this._renderSceneDepthMap > 0;
     }
 
     /**
@@ -503,7 +577,7 @@ class CameraComponent extends Component {
      *
      * @param {RenderTarget} rt - Render target to which rendering will be performed. Will affect
      * camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
-     * @private
+     * @ignore
      */
     frameBegin(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
@@ -514,7 +588,7 @@ class CameraComponent extends Component {
     /**
      * End rendering the frame for this camera.
      *
-     * @private
+     * @ignore
      */
     frameEnd() {}
 
