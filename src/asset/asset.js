@@ -464,7 +464,12 @@ class Asset extends EventHandler {
     ready(callback, scope) {
         scope = scope || this;
 
-        if (this.resource) {
+        // If cubemap asset doesn't need to load the faces, then resource is null as it references
+        // resources[0] that stores the faces. We need to check if the prefiltered assets are
+        // loaded instead
+        const assetLoaded = this.resource || (this.type === "cubemap" && !this.loadFaces && this.resources.length > 0);
+
+        if (assetLoaded) {
             callback.call(scope, this);
         } else {
             this.once('load', function (asset) {
