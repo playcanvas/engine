@@ -155,10 +155,10 @@ class GeometryVertexStream {
  *
  * Follow these links for more complex examples showing the functionality.
  *
- * - {@link http://playcanvas.github.io/#graphics/mesh-decals.html}
- * - {@link http://playcanvas.github.io/#graphics/mesh-deformation.html}
- * - {@link http://playcanvas.github.io/#graphics/mesh-generation.html}
- * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation.html}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-decals}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-deformation}
+ * - {@link http://playcanvas.github.io/#graphics/mesh-generation}
+ * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation}
  *
  * ### Update Vertex and Index buffers
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
