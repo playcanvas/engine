@@ -122,7 +122,7 @@ describe('GraphNode', function () {
     });
 
     describe('#root', function () {
-        
+
         it('returns itself for root node', function () {
             const root = new GraphNode('root');
             expect(root.root).to.equal(root);
