@@ -121,6 +121,31 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#root', function () {
+        
+        it('returns itself for root node', function () {
+            const root = new GraphNode('root');
+            expect(root.root).to.equal(root);
+        });
+
+        it('returns root node for child node', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            root.addChild(child);
+            expect(child.root).to.equal(root);
+        });
+
+        it('returns root node for grandchild node', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            const grandchild = new GraphNode('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+            expect(grandchild.root).to.equal(root);
+        });
+
+    });
+
     describe('#tags', function () {
 
         it('should be empty by default', function () {
@@ -333,6 +358,48 @@ describe('GraphNode', function () {
             root.addChild(child);
             const result = root.findByTag('not-found');
             expect(result).to.be.an('array').with.lengthOf(0);
+        });
+
+    });
+
+    describe('#findOne()', function () {
+
+        it('finds a node by property', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = root.findOne('name', 'Untitled');
+            expect(res).to.equal(root);
+
+            res = root.findOne('name', 'Child');
+            expect(res).to.equal(child);
+
+            res = root.findOne('name', 'Not Found');
+            expect(res).to.be.null;
+        });
+
+        it('finds a node by filter function', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = root.findOne(function (node) {
+                return node.name === 'Untitled';
+            });
+            expect(res).to.equal(root);
+
+            res = root.findOne(function (node) {
+                return node.name === 'Child';
+            });
+            expect(res).to.equal(child);
+
+            res = root.findOne(function (node) {
+                return node.name === 'Not Found';
+            });
+            expect(res).to.be.null;
         });
 
     });
