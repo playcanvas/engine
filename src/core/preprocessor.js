@@ -4,19 +4,19 @@ import { Debug } from './debug.js';
 const TRACEID = 'Preprocessor';
 
 // accepted keywords
-const KEYWORD = /([ ]*)+#(ifn?def|if|endif|else|elif|define|undef)/g;
+const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef)/g;
 
 // #define EXPRESSION
-const DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
+const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #undef EXPRESSION
-const UNDEF = /undef[ ]+([^\n]+)\r?(?:\n|$)/g;
+const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
-const IF = /(ifdef|ifndef|if)[ ]*([^\r\n]+)\r?\n/g;
+const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION
-const ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?(?:\n|$)/g;
+const ENDIF = /(endif|else|elif)([ \t]+[^\r\n]+)?\r?(?:\n|$)/g;
 
 // identifier
 const IDENTIFIER = /([\w-]+)/;
@@ -83,7 +83,7 @@ class Preprocessor {
         let match;
         while ((match = KEYWORD.exec(source)) !== null) {
 
-            const keyword = match[2];
+            const keyword = match[1];
             switch (keyword) {
                 case 'define': {
 
