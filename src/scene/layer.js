@@ -13,7 +13,6 @@ import { Material } from './materials/material.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
-/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('./light.js').Light} Light */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
@@ -175,7 +174,9 @@ class Layer {
          */
         this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
 
-        this.renderTarget = options.renderTarget;
+        if (options.renderTarget) {
+            this.renderTarget = options.renderTarget;
+        }
 
         /**
          * A type of shader to use during rendering. Possible values are:
@@ -269,8 +270,7 @@ class Layer {
         this.onPostCull = options.onPostCull;
         /**
          * Custom function that is called after this layer is rendered. Useful to revert changes
-         * made in {@link Layer#onPreRender} or performing some processing on
-         * {@link Layer#renderTarget}. This function is called after the last occurrence of this
+         * made in {@link Layer#onPreRender}. This function is called after the last occurrence of this
          * layer in {@link LayerComposition}. It will receive camera index as the only argument.
          * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
          * with this index.

@@ -381,7 +381,10 @@ class ForwardRenderer {
     }
 
     clearView(camera, target, clear, forceWrite, options) {
+
         const device = this.device;
+        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEW');
+
         device.setRenderTarget(target);
         device.updateBegin();
 
@@ -424,6 +427,8 @@ class ForwardRenderer {
                 stencil: camera._clearStencil
             });
         }
+
+        DebugGraphics.popGpuMarker(device);
     }
 
     dispatchGlobalLights(scene) {
