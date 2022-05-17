@@ -67,6 +67,7 @@ class RenderToTextureExample {
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
             const renderTarget = new pc.RenderTarget({
+                name: `RT`,
                 colorBuffer: texture,
                 depth: true,
                 flipY: true,
