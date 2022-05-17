@@ -278,7 +278,7 @@ const standard = {
             // emission
             decl += "vec3 dEmission;\n";
             code += this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveFormat);
-            func += "dEmission = getEmission();\n";
+            func += "getEmission();\n";
 
             // clearcoat
             if (options.clearCoat > 0) {
