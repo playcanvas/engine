@@ -344,7 +344,6 @@ function createTorus(device, opts) {
     const options = {
         normals: normals,
         uvs: uvs,
-        uvs1: uvs,
         indices: indices
     };
 
@@ -1040,11 +1039,6 @@ function getShapePrimitive(device, type) {
             case 'sphere':
                 mesh = createSphere(device, { radius: 0.5 });
                 area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
-                break;
-
-            case 'torus':
-                mesh = createTorus(device, { tubeRadius: 0.2, ringRadius: 0.3 });
-                area = { x: Math.PI * 0.5 * 0.5 - Math.PI * 0.1 * 0.1, y: 0.4, z: 0.4, uv: 1 };
                 break;
 
             default:
