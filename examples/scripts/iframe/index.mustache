@@ -66,12 +66,16 @@
         function loadEngine(callback) {
             const enginePath = urlParams && urlParams.get('use_local_engine') || "{{{enginePath}}}";
 
-            const script = document.createElement('script');
-            script.setAttribute('src', enginePath);
-            script.onload = function() {
-                callback();
-            };
-            document.head.appendChild(script);
+            fetch(enginePath)
+                .then(function(response) { return response.text() })
+                .then(function(data) {
+                    var module = {
+                        exports: {}
+                    };
+                    window.pc = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
+                    window.top.pc = window.pc;
+                    callback();
+                });
         }
 
         function setupApplication(app) {
