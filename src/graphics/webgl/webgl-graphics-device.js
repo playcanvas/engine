@@ -1242,6 +1242,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateBegin() {
+        DebugGraphics.pushGpuMarker(this, `UPDATE-BEGIN`);
+
         this.boundVao = null;
 
         // clear texture units once a frame on desktop safari
@@ -1266,6 +1268,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else {
             this.setFramebuffer(this.defaultFramebuffer);
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**
@@ -1274,6 +1278,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateEnd() {
+
+        DebugGraphics.pushGpuMarker(this, `UPDATE-END`);
+
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
@@ -1300,6 +1307,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 target.resolve();
             }
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**

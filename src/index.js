@@ -26,6 +26,7 @@ export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { Debug } from './core/debug.js';
 
 // NET
 export { http, Http } from './net/http.js';
