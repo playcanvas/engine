@@ -261,7 +261,7 @@ const standard = {
                 decl += "float dGlossiness;\n";
                 code += this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks);
                 code += this._addMap("gloss", "glossPS", options, litShader.chunks);
-                func += "getSpecularity();\n"
+                func += "getSpecularity();\n";
                 func += "getGlossiness();\n";
             } else {
                 decl += "vec3 dSpecularity = vec3(0.0);\n";
@@ -270,7 +270,7 @@ const standard = {
 
             // ao
             if (options.aoMap || options.aoVertexColor) {
-                decl += "float dAo;\n"
+                decl += "float dAo;\n";
                 code += this._addMap("ao", "aoPS", options, litShader.chunks);
                 func += "getAO();\n";
             }

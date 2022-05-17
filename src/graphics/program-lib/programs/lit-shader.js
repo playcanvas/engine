@@ -8,12 +8,12 @@ import {
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {
-    BLEND_ADDITIVEALPHA, BLEND_NONE, BLEND_NORMAL, BLEND_PREMULTIPLIED,
+    BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
+    SHADER_DEPTH, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
     SPECOCC_AO,
     SPECULAR_PHONG,
@@ -42,7 +42,7 @@ const builtinVaryings = {
     vBinormalW: "vec3",
     vObjectSpaceUpW: "vec3",
     vUv0: "vec2",
-    vUv1: "vec2",
+    vUv1: "vec2"
 };
 
 const decodeTable = {
@@ -175,9 +175,7 @@ class LitShader {
         return codes;
     }
 
-    /**
-     * Add "Base" Code section to fragment shader.
-     */
+    // Add "Base" Code section to fragment shader.
     _fsGetBaseCode() {
         const options = this.options;
         const chunks = this.chunks;
@@ -190,9 +188,7 @@ class LitShader {
         return result;
     }
 
-    /**
-     * Add "Start" Code section to fragment shader.
-     */
+    // Add "Start" Code section to fragment shader.
     _fsGetStartCode(code, device, chunks, options) {
         let result = chunks.startPS;
         if (options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -532,8 +528,8 @@ class LitShader {
     }
 
     _fsGetPickPassCode() {
-        const options = this.options;
-        const chunks = this.chunks;
+        // const options = this.options;
+        // const chunks = this.chunks;
 
         let code = this._fsGetBeginCode();
         code += "uniform vec4 uColor;\n";
@@ -559,7 +555,7 @@ class LitShader {
     }
 
     _fsGetDepthPassCode() {
-        const options = this.options;
+        // const options = this.options;
         const chunks = this.chunks;
 
         let code = this._fsGetBeginCode();
@@ -1082,7 +1078,7 @@ class LitShader {
         // if (options.alphaTest) {
         //     code += chunks.alphaTestPS;
         // }
- 
+
         if (options.msdf) {
             code += chunks.msdfPS;
         }
@@ -1294,9 +1290,9 @@ class LitShader {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                code += "    #ifdef CLEARCOAT\n"
+                code += "    #ifdef CLEARCOAT\n";
                 code += "    ccReflection.rgb *= ccSpecularity;\n";
-                code += "    #endif\n"
+                code += "    #endif\n";
                 code += "    dReflection.rgb *= dSpecularity;\n";
                 code += "    dSpecularLight *= dSpecularity;\n";
 
