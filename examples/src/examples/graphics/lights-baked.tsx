@@ -15,27 +15,10 @@ class LightsBakedExample {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // All render component primitive shape types
-        const funcs = [
-            pc.createBox,
-            pc.createCone,
-            pc.createCylinder,
-            pc.createSphere,
-            pc.createCapsule,
-            pc.createTorus
-        ];
-
-        const material = new pc.StandardMaterial();
-        material.useLighting = true;
-        material.shadingModel = pc.SPECULAR_BLINN;
-        material.useMetalness = true;
-        material.metalness = 0.7;
-        material.diffuse.set(1, 1, 1);
-        material.metalness = 0.7;
-        material.shininess = 50;
+        const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
 
         for (let i = 0; i < 40; i++) {
-            const func = funcs[Math.floor(Math.random() * funcs.length)];
-            const meshInstance = new pc.MeshInstance(func(app.graphicsDevice), material);
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
 
             // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
             const entity = new pc.Entity();
@@ -43,8 +26,7 @@ class LightsBakedExample {
                 castShadows: false,
                 castShadowsLightmap: true,
                 lightmapped: true,
-                meshInstances: [meshInstance],
-                material: material
+                type: shape
             });
             app.root.addChild(entity);
 
