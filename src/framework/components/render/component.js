@@ -196,6 +196,7 @@ class RenderComponent extends Component {
      * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
      * - "plane": The component will render a plane (1 unit in each dimension)
      * - "sphere": The component will render a sphere (radius 0.5)
+     * - "torus": The component will render a torus (tubeRadius: 0.2, ringRadius: 0.3)
      *
      * @type {string}
      */
