@@ -228,7 +228,7 @@ const target_debug = {
         format: 'umd',
         indent: '\t',
         name: 'pc',
-        sourcemap: true
+        sourcemap: 'inline'
     },
     plugins: [
         jscc({
