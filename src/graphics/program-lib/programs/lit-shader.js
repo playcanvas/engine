@@ -1572,7 +1572,7 @@ class LitShader {
         // if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
         if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
-        if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
+        // if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         // if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
