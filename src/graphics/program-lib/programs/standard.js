@@ -176,7 +176,6 @@ const standard = {
     createShaderDefinition: function (device, options) {
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
-            options.specularAntialias = false;
             options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
@@ -230,16 +229,12 @@ const standard = {
                     }
                 }
 
-                if (options.normalMap) {
-                    decl += "vec3 dNormalMap;\n";
-
-                    // normal detail is assumed by the normal chunk
-                    code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
-
-                    const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
-                    code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
-                    func += "getNormal();\n";
-                }
+                decl += "vec3 dNormalW;\n";
+                code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
+                // const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                // code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
+                code += this._addMap("normal", "normalMapPS", options, litShader.chunks);
+                func += "getNormal();\n";
             }
 
             // albedo
@@ -280,7 +275,7 @@ const standard = {
             if (options.clearCoat > 0) {
                 decl += "float ccSpecularity;\n";
                 decl += "float ccGlossiness;\n";
-                decl += "vec3 ccNormalMap;\n";
+                decl += "vec3 ccNormalW;\n";
 
                 code += this._addMap("clearCoat", "clearCoatPS", options, litShader.chunks);
                 code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, litShader.chunks);

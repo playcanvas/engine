@@ -69,6 +69,39 @@ class ImgParser {
             format: format
         });
         texture.setSource(data);
+
+        // const w = data.width;
+        // const h = data.height;
+
+        // // convert to pixels
+        // const canvas = document.createElement('canvas');
+        // canvas.width = w;
+        // canvas.height = h;
+        // const context = canvas.getContext('2d');
+        // context.drawImage(data, 0, 0, w, h, 0, 0, w, h);
+
+        // const imageData = context.getImageData(0, 0, w, h).data;
+        // for (let i = 0; i < w * h; ++i) {
+
+        //     let r = imageData[i * 4 + 0] / 255 * 2.0 - 1.0;
+        //     let g = imageData[i * 4 + 1] / 255 * 2.0 - 1.0;
+        //     let b = imageData[i * 4 + 2] / 255 * 2.0 - 1.0;
+
+        //     const len = Math.sqrt(r * r + g * g + b * b);
+
+        //     r /= len;
+        //     g /= len;
+        //     b /= len;
+
+        //     imageData[i * 4 + 0] = Math.max(0, Math.min(255, Math.floor((r + 1.0) / 2 * 256)));
+        //     imageData[i * 4 + 1] = Math.max(0, Math.min(255, Math.floor((g + 1.0) / 2 * 256)));
+        //     imageData[i * 4 + 2] = Math.max(0, Math.min(255, Math.floor((b + 1.0) / 2 * 256)));
+        // }
+
+        // texture._levels[0] = imageData;
+
+        // texture.setSource(imageData.data);
+
         return texture;
     }
 

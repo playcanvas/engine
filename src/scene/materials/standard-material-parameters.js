@@ -45,7 +45,6 @@ const standardMaterialParameterTypes = {
     specularMapTiling: 'vec2',
     specularMapOffset: 'vec2',
     specularMapRotation: 'number',
-    specularAntialias: 'boolean',
     occludeSpecular: 'enum:occludeSpecular',
 
     useMetalness: 'boolean',

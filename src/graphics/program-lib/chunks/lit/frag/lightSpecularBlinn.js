@@ -5,7 +5,6 @@ float calcLightSpecular(float tGlossiness, vec3 tNormalW) {
     float nh = max( dot( h, tNormalW ), 0.0 );
 
     float specPow = exp2(tGlossiness * 11.0); // glossiness is linear, power is not; 0 - 2048
-    specPow = antiAliasGlossiness(specPow);
 
     // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
     specPow = max(specPow, 0.0001);

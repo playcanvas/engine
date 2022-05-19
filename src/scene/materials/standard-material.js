@@ -336,8 +336,6 @@ let _params = new Set();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with
- * specular.
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
  * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
  * disable it in case when all reflection comes only from a few light sources, and you don't use an
@@ -385,7 +383,6 @@ let _params = new Set();
  * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
  * for the list of possible values.
  * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
- * - specularAntialias: the value of {@link StandardMaterial#specularAntialias}.
  * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
  * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
  * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
@@ -1046,7 +1043,6 @@ function _defineMaterialProps() {
     _defineFlag('specularTint', false);
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
-    _defineFlag('specularAntialias', false);
     _defineFlag('useMetalness', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);

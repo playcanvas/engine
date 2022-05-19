@@ -848,10 +848,10 @@ class LitShader {
         //     }
         // }
 
-        if (this.needsNormal && !options.normalMap) {
-            // frontend didn't supply normal
-            code += chunks.normalVertexPS;
-        }
+        // if (this.needsNormal && !options.normalMap) {
+        //     // frontend didn't supply normal
+        //     code += chunks.normalVertexPS;
+        // }
 
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
@@ -887,12 +887,6 @@ class LitShader {
         // code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            if (options.specularAntialias) {
-                code += chunks.specularAaToksvigPS;
-            } else {
-                code += chunks.specularAaNonePS;
-            }
-
             // const specularPropName = options.useMetalness ? "metalness" : "specular";
             // code += this._addMap(specularPropName, specularPropName + "PS", options, chunks);
             // code += this._addMap("gloss", "glossPS", options, chunks);
@@ -1203,30 +1197,21 @@ class LitShader {
 
         // transform tangent space normals to world space
         if (this.needsNormal) {
-            if (options.normalMap) {
-                if (options.normalizeNormalMap) {
-                    code += "    dNormalW = normalize(dTBN * dNormalMap);\n";
-                } else {
-                    code += "    dNormalW = dTBN * dNormalMap;\n";
-                }
-            } else {
-                code += "    dNormalW = normalize(dVertexNormalW);\n";
-            }
+            // if (options.normalMap) {
+            //     if (options.normalizeNormalMap) {
+            //         code += "    dNormalW = normalize(dTBN * dNormalMap);\n";
+            //     } else {
+            //         code += "    dNormalW = dTBN * dNormalMap;\n";
+            //     }
+            // } else {
+            //     code += "    dNormalW = normalize(dVertexNormalW);\n";
+            // }
 
             if (options.useSpecular) {
                 code += "    getReflDir();\n";
             }
 
             if (options.clearCoat > 0) {
-                if (hasTBN) {
-                    if (options.normalizeNormalMap) {
-                        code += "    ccNormalW = normalize(dTBN * ccNormalMap);\n";
-                    } else {
-                        code += "    ccNormalW = dTBN * ccNormalMap;\n";
-                    }
-                } else {
-                    code += "    ccNormalW = dVertexNormalW;\n";
-                }
                 code += "    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));\n";
             }
         }
@@ -1563,7 +1548,7 @@ class LitShader {
         if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
         // if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";
         // if (code.includes("dEmission")) structCode += "vec3 dEmission;\n";
-        if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
+        // if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
         if (code.includes("dVertexNormalW")) structCode += "vec3 dVertexNormalW;\n";
         if (code.includes("dTangentW")) structCode += "vec3 dTangentW;\n";
         if (code.includes("dBinormalW")) structCode += "vec3 dBinormalW;\n";

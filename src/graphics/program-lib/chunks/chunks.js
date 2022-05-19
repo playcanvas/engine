@@ -83,7 +83,6 @@ import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalInstancedVS from './lit/vert/normalInstanced.js';
 import normalMapPS from './standard/frag/normalMap.js';
 import normalSkinnedVS from './lit/vert/normalSkinned.js';
-import normalVertexPS from './lit/frag/normalVertex.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
@@ -164,8 +163,6 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
-import specularAaNonePS from './lit/frag/specularAaNone.js';
-import specularAaToksvigPS from './lit/frag/specularAaToksvig.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
@@ -283,7 +280,6 @@ const shaderChunks = {
     normalInstancedVS,
     normalMapPS,
     normalSkinnedVS,
-    normalVertexPS,
     normalXYPS,
     normalXYZPS,
     opacityPS,
@@ -364,8 +360,6 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
-    specularAaNonePS,
-    specularAaToksvigPS,
     spotPS,
     startPS,
     startVS,
