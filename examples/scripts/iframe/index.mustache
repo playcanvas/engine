@@ -69,6 +69,7 @@
             const script = document.createElement('script');
             script.setAttribute('src', enginePath);
             script.onload = function() {
+                window.top.pc = window.pc;
                 callback();
             };
             document.head.appendChild(script);
