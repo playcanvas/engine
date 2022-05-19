@@ -237,11 +237,7 @@ const standard = {
                     code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
 
                     const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
-                    if (options.normalizeNormalMap) {
-                        code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
-                    } else {
-                        code += litShader.chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
-                    }
+                    code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                     func += "getNormal();\n";
                 }
             }

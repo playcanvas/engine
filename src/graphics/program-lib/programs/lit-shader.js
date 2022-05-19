@@ -887,12 +887,8 @@ class LitShader {
         // code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            if (options.specularAntialias && options.normalMap) {
-                if (options.normalizeNormalMap && this.needsNormal) {
-                    code += chunks.specularAaToksvigPS;
-                } else {
-                    code += chunks.specularAaToksvigFastPS;
-                }
+            if (options.specularAntialias) {
+                code += chunks.specularAaToksvigPS;
             } else {
                 code += chunks.specularAaNonePS;
             }
@@ -1208,7 +1204,13 @@ class LitShader {
         // transform tangent space normals to world space
         if (this.needsNormal) {
             if (options.normalMap) {
-                code += "    dNormalW = dTBN * dNormalMap;\n";
+                if (options.normalizeNormalMap) {
+                    code += "    dNormalW = normalize(dTBN * dNormalMap);\n";
+                } else {
+                    code += "    dNormalW = dTBN * dNormalMap;\n";
+                }
+            } else {
+                code += "    dNormalW = normalize(dVertexNormalW);\n";
             }
 
             if (options.useSpecular) {
@@ -1217,7 +1219,11 @@ class LitShader {
 
             if (options.clearCoat > 0) {
                 if (hasTBN) {
-                    code += "    ccNormalW = dTBN * ccNormalMap;\n";
+                    if (options.normalizeNormalMap) {
+                        code += "    ccNormalW = normalize(dTBN * ccNormalMap);\n";
+                    } else {
+                        code += "    ccNormalW = dTBN * ccNormalMap;\n";
+                    }
                 } else {
                     code += "    ccNormalW = dVertexNormalW;\n";
                 }
