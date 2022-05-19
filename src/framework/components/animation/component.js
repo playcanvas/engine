@@ -98,12 +98,16 @@ class AnimationComponent extends Component {
 
     /**
      * If true the first animation asset will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
      */
     activate = true;
 
     /**
      * Speed multiplier for animation play back. 1 is playback at normal speed and 0 pauses the
      * animation.
+     *
+     * @type {number}
      */
     speed = 1;
 
