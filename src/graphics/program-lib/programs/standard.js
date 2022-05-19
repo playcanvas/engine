@@ -231,8 +231,6 @@ const standard = {
 
                 decl += "vec3 dNormalW;\n";
                 code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
-                // const transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
-                // code += litShader.chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 code += this._addMap("normal", "normalMapPS", options, litShader.chunks);
                 func += "getNormal();\n";
             }
