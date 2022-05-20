@@ -5,7 +5,7 @@ class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Wobble';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 attribute vec3 aPosition;
 attribute vec2 aUv0;
 
@@ -23,7 +23,7 @@ void main(void)
     vUv0 = aUv0;
     gl_Position = matrix_viewProjection * pos;
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision mediump float;
 
 uniform sampler2D uDiffuseMap;
