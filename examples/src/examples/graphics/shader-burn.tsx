@@ -5,7 +5,7 @@ class ShaderBurnExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Burn';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 attribute vec3 aPosition;
 attribute vec2 aUv0;
 
@@ -19,7 +19,7 @@ void main(void)
     vUv0 = aUv0;
     gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision mediump float;
 
 varying vec2 vUv0;

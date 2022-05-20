@@ -5,7 +5,7 @@ class ShaderToonExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Toon';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position, normal and texture coordinates
 attribute vec4 aPosition;
 attribute vec3 aNormal;
@@ -45,7 +45,7 @@ void main(void)
     // Transform the geometry
     gl_Position = modelViewProj * aPosition;
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision mediump float;
 uniform sampler2D uTexture;
 varying float vertOutTexCoord;
