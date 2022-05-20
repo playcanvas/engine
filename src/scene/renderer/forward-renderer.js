@@ -419,7 +419,7 @@ class ForwardRenderer {
         if (renderAction) {
 
             const device = this.device;
-            Debug.assert(viewCount === 1, "This code doe snot handle the viewCount yet");
+            Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
             while (renderAction.viewBindGroups.length < viewCount) {
                 const ub = new UniformBuffer(device, this.viewUniformFormat);
