@@ -378,17 +378,17 @@ describe('CollisionComponent', function () {
             return btTriangleMesh;
         });
 
-        const bvhStub = sinon.stub(Ammo, 'btBvhTriangleMeshShape').callsFake((triMesh, useQuantizedAabbCompression) => {            
+        const bvhStub = sinon.stub(Ammo, 'btBvhTriangleMeshShape').callsFake((triMesh, useQuantizedAabbCompression) => {
             expect(triMesh).to.equal(btTriangleMesh);
             expect(useQuantizedAabbCompression).to.be.true;
             return btShape;
         });
-        
+
         const assetPath = 'http://localhost:3000/test/test-assets/';
-        
+
         app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
             const render = asset.resource.renders[0].resource;
-            entity.addComponent('collision', { 
+            entity.addComponent('collision', {
                 type: 'mesh',
                 render: render
             });
