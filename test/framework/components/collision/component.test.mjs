@@ -54,9 +54,19 @@ describe('CollisionComponent', function () {
             return btVector3;
         }
     };
+    const btTriangleMesh = {
+        addTriangle: (v1, v2, v3, bool) => {
+            expect(v1).to.equal(btVector3);
+            expect(v2).to.equal(btVector3);
+            expect(v3).to.equal(btVector3);
+            expect(bool).to.be.true;
+        }
+    };
     const btShape = {
         calculateLocalInertia: () => {},
-        setLocalScaling: () => {},
+        setLocalScaling: (scale) => {
+            expect(scale).to.equal(btVector3);
+        },
         addChildShape: () => {},
         getChildShape: () => {
             return btShape;
@@ -364,46 +374,29 @@ describe('CollisionComponent', function () {
 
     it('should create a mesh trigger when correct options provided', function (done) {
         // Test case specific override
-        const stub = sinon.stub(Ammo, 'btBvhTriangleMeshShape').callsFake((radius, height) => {
-            assertNum(radius); assertNum(height);
-            return btShape;
+        const triStub = sinon.stub(Ammo, 'btTriangleMesh').callsFake(() => {
+            return btTriangleMesh;
         });
 
-        entity.addComponent('collision', { type: 'mesh' });
-
-        const component = entity.collision;
+        const bvhStub = sinon.stub(Ammo, 'btBvhTriangleMeshShape').callsFake((triMesh, useQuantizedAabbCompression) => {            
+            expect(triMesh).to.equal(btTriangleMesh);
+            expect(useQuantizedAabbCompression).to.be.true;
+            return btShape;
+        });
+        
         const assetPath = 'http://localhost:3000/test/test-assets/';
-
+        
         app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
-            component.renderAsset = asset;
-            expect(component.type).to.equal('mesh');
-            expect(stub.callCount).to.equal(1);
+            const render = asset.resource.renders[0].resource;
+            entity.addComponent('collision', { 
+                type: 'mesh',
+                render: render
+            });
+            expect(entity.collision.type).to.equal('mesh');
+            expect(triStub.callCount).to.equal(1);
+            expect(bvhStub.callCount).to.equal(1);
             expect(entity.trigger).to.be.an('object');
             done();
         });
     });
-
-    it('should create a compound trigger when correct options provided', function () {
-        entity.addComponent('collision', { type: 'compound' });
-
-        // Fake Ammo's reponse that a compound body has 1 child
-        sinon.stub(btShape, 'getNumChildShapes').callsFake(() => {
-            return 1;
-        });
-
-        // When the engine asks Ammo for a child ID, respond with an id '0'
-        sinon.stub(entity.collision, '_getCompoundChildShapeIndex').callsFake((shape) => {
-            return 0;
-        });
-
-        const child = new Entity('Compound Child');
-        child.addComponent('collision');
-        entity.addChild(child);
-
-        expect(entity.collision.type).to.equal('compound');
-        expect(entity.children.length).to.equal(1);
-        expect(entity.children[0].collision.type).to.equal('box');
-        expect(entity.children[0].trigger).to.be.an('object');
-    });
-
 });
