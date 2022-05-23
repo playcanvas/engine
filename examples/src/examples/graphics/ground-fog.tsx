@@ -1,15 +1,8 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class GroundFogExample {

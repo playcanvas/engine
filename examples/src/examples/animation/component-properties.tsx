@@ -1,8 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Button from '@playcanvas/pcui/Button/component';
+import { Button } from '@playcanvas/pcui/react';
 
 class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
