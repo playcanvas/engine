@@ -14,8 +14,8 @@ import {
     SEMANTIC_ATTR,
     STENCILOP_KEEP,
     UNIFORMTYPE_MAT4,
-    SHADER_STAGE_VERTEX, SHADER_STAGE_FRAGMENT,
-    BIND_GROUP_VIEW
+    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
+    BINDGROUP_VIEW
 } from '../../graphics/constants.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { UniformBuffer } from '../../graphics/uniform-buffer.js';
@@ -295,7 +295,7 @@ class ForwardRenderer {
 
     initViewBindGroupFormat() {
 
-        if (this.device.supportsUniformBuffer && !this.viewUniformFormat) {
+        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat([
@@ -304,7 +304,7 @@ class ForwardRenderer {
 
             // format of the view bind group - contains single uniform buffer, and some textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindBufferFormat('view', SHADER_STAGE_VERTEX | SHADER_STAGE_FRAGMENT)
+                new BindBufferFormat('view', SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
             ]);
         }
@@ -408,7 +408,7 @@ class ForwardRenderer {
 
         this.clearView(camera, target, clear, false);
 
-        if (this.device.supportsUniformBuffer) {
+        if (this.device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(renderAction, viewCount);
         }
     }
@@ -438,7 +438,7 @@ class ForwardRenderer {
             bg.update();
 
             // TODO; this needs to be moved to drawInstance functions to handle XR
-            device.setBindGroup(BIND_GROUP_VIEW, bg);
+            device.setBindGroup(BINDGROUP_VIEW, bg);
         }
     }
 

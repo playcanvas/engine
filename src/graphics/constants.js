@@ -1101,14 +1101,13 @@ export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
 
 // (bit-flags) shader stages for resource visibility on the GPU
-export const SHADER_STAGE_VERTEX = 1;
-export const SHADER_STAGE_FRAGMENT = 2;
-export const SHADER_STAGE_COMPUTE = 4;
+export const SHADERSTAGE_VERTEX = 1;
+export const SHADERSTAGE_FRAGMENT = 2;
+export const SHADERSTAGE_COMPUTE = 4;
 
 // indices of commonly used bind groups
-export const BIND_GROUP_VIEW = 0;
-// export const BIND_GROUP_MATERIAL = 1;
-export const BIND_GROUP_MESH = 1;
+export const BINDGROUP_VIEW = 0;
+export const BINDGROUP_MESH = 1;
 
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];

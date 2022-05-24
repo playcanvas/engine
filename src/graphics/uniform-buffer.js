@@ -39,10 +39,8 @@ class UniformBuffer {
 
         // // stop tracking the vertex buffer
         const device = this.device;
-        // const idx = device.buffers.indexOf(this);
-        // if (idx !== -1) {
-        //     device.buffers.splice(idx, 1);
-        // }
+
+        // TODO: remove the buffer from the list on the device (lost context handling)
 
         this.impl.destroy(device);
 

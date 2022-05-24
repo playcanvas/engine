@@ -88,7 +88,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      * @ignore
      */
-    supportsUniformBuffer = false;
+    supportsUniformBuffers = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
