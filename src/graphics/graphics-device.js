@@ -83,6 +83,14 @@ class GraphicsDevice extends EventHandler {
     supportsInstancing;
 
     /**
+     * True if the device supports uniform buffers.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    supportsUniformBuffers = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}

@@ -122,6 +122,10 @@ class LayerComposition extends EventHandler {
             cluster.destroy();
         });
         this._worldClusters = null;
+
+        // render actions
+        this._renderActions.forEach(ra => ra.destroy());
+        this._renderActions = null;
     }
 
     // returns an empty light cluster object to be used when no lights are used
@@ -379,6 +383,10 @@ class LayerComposition extends EventHandler {
                 }
             }
 
+            // destroy unused render actions
+            for (let i = renderActionCount; i < this._renderActions.length; i++) {
+                this._renderActions[i].destroy();
+            }
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions

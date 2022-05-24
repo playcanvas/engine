@@ -12,9 +12,16 @@ import {
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FUNC_ALWAYS,
     SEMANTIC_ATTR,
-    STENCILOP_KEEP
+    STENCILOP_KEEP,
+    UNIFORMTYPE_MAT4,
+    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
+    BINDGROUP_VIEW
 } from '../../graphics/constants.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
+import { UniformBuffer } from '../../graphics/uniform-buffer.js';
+import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
+import { BindGroupFormat, BindBufferFormat } from '../../graphics/bind-group-format.js';
+import { BindGroup } from '../../graphics/bind-group.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
@@ -189,6 +196,9 @@ class ForwardRenderer {
         this.ambientColor = new Float32Array(3);
 
         this.cameraParams = new Float32Array(4);
+
+        this.viewUniformFormat = null;
+        this.viewBindGroupFormat = null;
     }
 
     destroy() {
@@ -283,16 +293,35 @@ class ForwardRenderer {
         camera.frustum.setFromMat4(viewProjMat);
     }
 
+    initViewBindGroupFormat() {
+
+        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
+
+            // format of the view uniform buffer
+            this.viewUniformFormat = new UniformBufferFormat([
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
+            ]);
+
+            // format of the view bind group - contains single uniform buffer, and some textures
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+                new BindBufferFormat('view', SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+            ], [
+            ]);
+        }
+    }
+
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    setCamera(camera, target, clear) {
+    setCamera(renderAction, camera, target, clear) {
         let transform;
 
+        let viewCount = 1;
         if (camera.xr && camera.xr.session) {
             const parent = camera._node.parent;
             if (parent) transform = parent.getWorldTransform();
 
             const views = camera.xr.views;
-            for (let v = 0; v < views.length; v++) {
+            viewCount = views.length;
+            for (let v = 0; v < viewCount; v++) {
                 const view = views[v];
 
                 if (parent) {
@@ -378,6 +407,39 @@ class ForwardRenderer {
         this.cameraParamsId.setValue(this.cameraParams);
 
         this.clearView(camera, target, clear, false);
+
+        if (this.device.supportsUniformBuffers) {
+            this.setupViewUniformBuffers(renderAction, viewCount);
+        }
+    }
+
+    setupViewUniformBuffers(renderAction, viewCount) {
+
+        Debug.assert(renderAction, "RenderAction cannot be null");
+        if (renderAction) {
+
+            const device = this.device;
+            Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+
+            while (renderAction.viewBindGroups.length < viewCount) {
+                const ub = new UniformBuffer(device, this.viewUniformFormat);
+                renderAction.viewUniformBuffers.push(ub);
+
+                const bg = new BindGroup(device, this.viewBindGroupFormat);
+                renderAction.viewBindGroups.push(bg);
+            }
+
+            const ub = renderAction.viewUniformBuffers[0];
+            ub.set("matrix_viewProjection", this.viewProjId.value);
+            ub.update();
+
+            const bg = renderAction.viewBindGroups[0];
+            bg.setUniformBuffer('view', ub);
+            bg.update();
+
+            // TODO; this needs to be moved to drawInstance functions to handle XR
+            device.setBindGroup(BINDGROUP_VIEW, bg);
+        }
     }
 
     clearView(camera, target, clear, forceWrite, options) {
@@ -1454,7 +1516,17 @@ class ForwardRenderer {
         }
     }
 
-    beginLayers(comp) {
+    beginCamera(renderAction, camera) {
+
+        camera.frameBegin(renderAction.renderTarget);
+
+        // callback on the camera component before rendering with this camera for the first time during the frame
+        if (renderAction.firstCameraUse && camera.onPreRender) {
+            camera.onPreRender();
+        }
+    }
+
+    beginComposition(comp) {
 
         const len = comp.layerList.length;
         for (let i = 0; i < len; i++) {
@@ -1705,10 +1777,12 @@ class ForwardRenderer {
         const device = this.device;
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
+        this.initViewBindGroupFormat();
+
         // update the skybox, since this might change _meshInstances
         this.scene._updateSkybox(this.device);
 
-        this.beginLayers(comp);
+        this.beginComposition(comp);
 
         // #if _PROFILER
         const layerCompositionUpdateTime = now();
@@ -1790,12 +1864,7 @@ class ForwardRenderer {
             // #endif
 
             if (camera) {
-                camera.frameBegin(renderAction.renderTarget);
-
-                // callback on the camera component before rendering with this camera for the first time during the frame
-                if (renderAction.firstCameraUse && camera.onPreRender) {
-                    camera.onPreRender();
-                }
+                this.beginCamera(renderAction, camera);
             }
 
             // Call prerender callback if there's one
@@ -1854,7 +1923,7 @@ class ForwardRenderer {
                 this.scene._activeCamera = camera.camera;
 
                 // Set camera shader constants, viewport, scissor, render target
-                this.setCamera(camera.camera, renderAction.renderTarget);
+                this.setCamera(renderAction, camera.camera, renderAction.renderTarget);
 
                 // upload clustered lights uniforms
                 if (clusteredLightingEnabled && renderAction.lightClusters) {
