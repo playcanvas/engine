@@ -45,7 +45,6 @@ class LightsExample {
         </>;
     }
 
-    // @ts-ignore: override class function$
     example(canvas: HTMLCanvasElement, data:any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
@@ -170,7 +169,6 @@ class LightsExample {
                     assets.xmas_posz.id, assets.xmas_negz.id
                 ]
             });
-            // @ts-ignore engine-tsd
             cubemapAsset.loadFaces = true;
             app.assets.add(cubemapAsset);
 

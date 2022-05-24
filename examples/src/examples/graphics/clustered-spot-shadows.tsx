@@ -1,5 +1,4 @@
 import React from 'react';
-// @ts-ignore: library file import
 import * as pc from '../../../../';
 
 import { BindingTwoWay } from '@playcanvas/pcui';
@@ -99,28 +98,22 @@ class ClusteredSpotShadowsExample {
             app.scene.setSkybox(assets.cubemap.resources);
 
             // enabled clustered lighting. This is a temporary API and will change in the future
-            // @ts-ignore engine-tsd
             app.scene.clusteredLightingEnabled = true;
 
-            // adjust default clustered lighting parameters to handle many lights:
-            // @ts-ignore
+            // adjust default clustered lighting parameters to handle many lights
             const lighting = app.scene.lighting;
 
-            // 1) subdivide space with lights into this many cells:
-            // @ts-ignore engine-tsd
+            // 1) subdivide space with lights into this many cells
             lighting.cells = new pc.Vec3(12, 4, 12);
 
-            // 2) and allow this many lights per cell:
-            // @ts-ignore engine-tsd
+            // 2) and allow this many lights per cell
             const maxLights = 24;
             lighting.maxLightsPerCell = maxLights;
 
             // enable clustered shadows (it's enabled by default as well)
-            // @ts-ignore engine-tsd
             lighting.shadowsEnabled = true;
 
             // enable clustered cookies
-            // @ts-ignore engine-tsd
             lighting.cookiesEnabled = true;
 
             // resolution of the shadow and cookie atlas

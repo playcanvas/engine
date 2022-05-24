@@ -4,8 +4,6 @@ class SpineboyExample {
     static CATEGORY = 'Misc';
     static NAME = 'Spineboy';
 
-
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         const app = new pc.Application(canvas, {});

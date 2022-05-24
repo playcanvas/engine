@@ -71,27 +71,21 @@ class ClusteredOmniShadowsExample {
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
             // enabled clustered lighting. This is a temporary API and will change in the future
-            // @ts-ignore engine-tsd
             app.scene.clusteredLightingEnabled = true;
 
-            // adjust default clustered lighting parameters to handle many lights:
-            // @ts-ignore
+            // adjust default clustered lighting parameters to handle many lights
             const lighting = app.scene.lighting;
 
-            // 1) subdivide space with lights into this many cells:
-            // @ts-ignore engine-tsd
+            // 1) subdivide space with lights into this many cells
             lighting.cells = new pc.Vec3(16, 12, 16);
 
-            // 2) and allow this many lights per cell:
-            // @ts-ignore engine-tsd
+            // 2) and allow this many lights per cell
             lighting.maxLightsPerCell = 12;
 
             // enable clustered shadows (it's enabled by default as well)
-            // @ts-ignore engine-tsd
             lighting.shadowsEnabled = true;
 
             // enable clustered cookies
-            // @ts-ignore engine-tsd
             lighting.cookiesEnabled = true;
 
             // resolution of the shadow and cookie atlas
@@ -163,7 +157,6 @@ class ClusteredOmniShadowsExample {
                     assets.xmas_posz.id, assets.xmas_negz.id
                 ]
             });
-            // @ts-ignore engine-tsd
             cubemapAsset.loadFaces = true;
             app.assets.add(cubemapAsset);
 
