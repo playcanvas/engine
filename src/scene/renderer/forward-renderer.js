@@ -1516,17 +1516,7 @@ class ForwardRenderer {
         }
     }
 
-    beginCamera(renderAction, camera) {
-
-        camera.frameBegin(renderAction.renderTarget);
-
-        // callback on the camera component before rendering with this camera for the first time during the frame
-        if (renderAction.firstCameraUse && camera.onPreRender) {
-            camera.onPreRender();
-        }
-    }
-
-    beginComposition(comp) {
+    beginLayers(comp) {
 
         const len = comp.layerList.length;
         for (let i = 0; i < len; i++) {
@@ -1782,7 +1772,7 @@ class ForwardRenderer {
         // update the skybox, since this might change _meshInstances
         this.scene._updateSkybox(this.device);
 
-        this.beginComposition(comp);
+        this.beginLayers(comp);
 
         // #if _PROFILER
         const layerCompositionUpdateTime = now();
@@ -1864,7 +1854,12 @@ class ForwardRenderer {
             // #endif
 
             if (camera) {
-                this.beginCamera(renderAction, camera);
+                camera.frameBegin(renderAction.renderTarget);
+
+                // callback on the camera component before rendering with this camera for the first time during the frame
+                if (renderAction.firstCameraUse && camera.onPreRender) {
+                    camera.onPreRender();
+                }
             }
 
             // Call prerender callback if there's one
