@@ -301,7 +301,8 @@ class Picker {
         this.mapping.length = 0;
 
         // render
-        this.app.renderer.renderComposition(this.layerComp);
+        this.app.renderer.buildFrameGraph(this.app.frameGraph, this.layerComp);
+        this.app.frameGraph.render();
     }
 
     updateCamera(srcCamera) {

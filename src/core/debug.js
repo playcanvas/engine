@@ -1,8 +1,28 @@
 /**
- * Internal debug system - logs, assets and similar. Note that the functions only execute in the
- * debug build, and are stripped out in other builds.
+ * Logs a frame number.
  *
- * @ignore
+ * @type {string}
+ */
+export const TRACEID_RENDER_FRAME = 'RenderFrame';
+
+/**
+ * Logs a render target resolve operations.
+ *
+ * @type {string}
+ */
+export const TRACEID_RT_RESOLVE = 'RT-Resolve';
+
+/**
+ * Logs a render passes.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_PASS = 'RenderPass';
+
+/**
+ * Engine debug log system. Note that the logging only executes in the
+ * debug build of the engine, and is stripped out in other builds. It allows
+ * you to monitor logs from various engine systems.
  */
 class Debug {
     /**
@@ -24,7 +44,10 @@ class Debug {
     /**
      * Enable or disable trace channel
      *
-     * @param {string} channel - Name of the trace channel
+     * @param {string} channel - Name of the trace channel. Can be
+     *
+     * - {@link TRACEID_RENDER_FRAME}
+     *
      * @param {boolean} enabled - new enabled state for it
      */
     static setTrace(channel, enabled = true) {
@@ -42,6 +65,7 @@ class Debug {
      * Deprecated warning message.
      *
      * @param {string} message - The message to log.
+     * @ignore
      */
     static deprecated(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -55,6 +79,7 @@ class Debug {
      *
      * @param {boolean|object} assertion - The assertion to check.
      * @param {...*} args - The values to be written to the log.
+     * @ignore
      */
     static assert(assertion, ...args) {
         if (!assertion) {
@@ -66,6 +91,7 @@ class Debug {
      * Info message.
      *
      * @param {...*} args - The values to be written to the log.
+     * @ignore
      */
     static log(...args) {
         console.log(...args);
@@ -87,6 +113,7 @@ class Debug {
      * Warning message.
      *
      * @param {...*} args - The values to be written to the log.
+     * @ignore
      */
     static warn(...args) {
         console.warn(...args);
@@ -108,6 +135,7 @@ class Debug {
      * Error message.
      *
      * @param {...*} args - The values to be written to the log.
+     * @ignore
      */
     static error(...args) {
         console.error(...args);
@@ -130,6 +158,7 @@ class Debug {
      *
      * @param {string} channel - The trace channel
      * @param {...*} args - The values to be written to the log.
+     * @ignore
      */
     static trace(channel, ...args) {
         if (Debug._traceChannels.has(channel)) {

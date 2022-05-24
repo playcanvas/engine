@@ -100,7 +100,12 @@ class LayerComposition extends EventHandler {
          */
         this.cameras = [];
 
-        // the actual rendering sequence, generated based on layers and cameras
+        /**
+         * The actual rendering sequence, generated based on layers and cameras
+         *
+         * @type {RenderAction[]}
+         * @ignore
+         */
         this._renderActions = [];
 
         // all currently created light clusters, that need to be updated before rendering
@@ -577,6 +582,7 @@ class LayerComposition extends EventHandler {
     addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
 
         // try and reuse object, otherwise allocate new
+        /** @type {RenderAction} */
         let renderAction = renderActions[renderActionIndex];
         if (!renderAction) {
             renderAction = renderActions[renderActionIndex] = new RenderAction();

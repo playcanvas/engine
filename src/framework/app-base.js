@@ -6,7 +6,7 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Debug } from '../core/debug.js';
+import { Debug, TRACEID_RENDER_PASS, TRACEID_RENDER_FRAME, TRACEID_RT_RESOLVE } from '../core/debug.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -25,6 +25,7 @@ import {
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
+import { FrameGraph } from '../scene/frame-graph.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
@@ -446,6 +447,14 @@ class AppBase extends EventHandler {
          */
         this.renderer = new ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
+
+        /**
+         * The frame graph.
+         *
+         * @type {FrameGraph}
+         * @ignore
+         */
+        this.frameGraph = new FrameGraph();
 
         /**
          * The run-time lightmapper.
@@ -1210,7 +1219,10 @@ class AppBase extends EventHandler {
         // #if _PROFILER
         ForwardRenderer._skipRenderCounter = 0;
         // #endif
-        this.renderer.renderComposition(this.scene.layers);
+
+        this.renderer.buildFrameGraph(this.frameGraph, this.scene.layers);
+        this.frameGraph.render();
+
         this.fire('postrender');
 
         // #if _PROFILER
@@ -2154,6 +2166,22 @@ const makeTick = function (_app) {
         application.update(dt);
 
         application.fire("framerender");
+
+
+
+
+        // !!!!!!!!!!!!! these lines needs to be removed !!!!!!!!!!
+        // (and likely imports of the constants)
+        const logThisFrame = (application.frame % 100) === 0;
+        Debug.setTrace(TRACEID_RENDER_FRAME, logThisFrame);
+        Debug.setTrace(TRACEID_RT_RESOLVE, logThisFrame);
+        Debug.setTrace(TRACEID_RENDER_PASS, logThisFrame);
+
+
+
+
+
+        Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
         if (application.autoRender || application.renderNextFrame) {
             application.updateCanvasSize();

@@ -128,7 +128,7 @@ class CameraComponent extends Component {
      * Custom function that is called when postprocessing should execute.
      *
      * @type {Function}
-     * @private
+     * @ignore
      */
     onPostprocessing = null;
 
@@ -567,30 +567,24 @@ class CameraComponent extends Component {
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
-        const src = rt ? rt : this.system.app.graphicsDevice;
-        const rect = this.rect;
-        return (src.width * rect.z) / (src.height * rect.w);
+        const device = this.system.app.graphicsDevice;
+        const width = rt ? rt.width : device.width;
+        const height = rt ? rt.height : device.height;
+        return (width * this.rect.z) / (height * this.rect.w);
     }
 
     /**
-     * Start rendering the frame for this camera.
+     * Prepare the camera for frame rendering.
      *
      * @param {RenderTarget} rt - Render target to which rendering will be performed. Will affect
      * camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore
      */
-    frameBegin(rt) {
+    frameUpdate(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
             this.aspectRatio = this.calculateAspectRatio(rt);
         }
     }
-
-    /**
-     * End rendering the frame for this camera.
-     *
-     * @ignore
-     */
-    frameEnd() {}
 
     /**
      * Attempt to start XR session with this camera.

@@ -66,6 +66,10 @@ class RenderAction {
         this.viewBindGroups.length = 0;
     }
 
+    get hasDirectionalShadowLights() {
+        return this.directionalLights.length > 0;
+    }
+
     // prepares render action for re-use
     reset() {
         this.lightClusters = null;
