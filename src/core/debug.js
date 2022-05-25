@@ -47,6 +47,7 @@ class Debug {
      * @param {string} channel - Name of the trace channel. Can be
      *
      * - {@link TRACEID_RENDER_FRAME}
+     * - {@link TRACEID_RENDER_PASS}
      *
      * @param {boolean} enabled - new enabled state for it
      */

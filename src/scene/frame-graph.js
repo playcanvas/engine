@@ -2,6 +2,11 @@ import { Debug, TRACEID_RENDER_PASS } from '../core/debug.js';
 
 /** @typedef {import('./render-pass.js').RenderPass} RenderPass */
 
+/**
+ * A frame graph represents a single rendering frame as a sequence of render passes.
+ *
+ * @ignore
+ */
 class FrameGraph {
     /** @type {RenderPass[]} */
     renderPasses = [];
