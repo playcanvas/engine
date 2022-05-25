@@ -280,7 +280,6 @@ class LightsBakedAOExample {
                     app.lightmapper.bake(null, bakeType);
 
                     // update stats with the bake duration
-                    // @ts-ignore engine-tsd
                     data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
                 }
             });

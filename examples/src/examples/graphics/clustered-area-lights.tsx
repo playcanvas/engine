@@ -54,27 +54,19 @@ class AreaLightsExample {
             app.scene.toneMapping = pc.TONEMAP_ACES;
 
             // enabled clustered lighting. This is a temporary API and will change in the future
-            // @ts-ignore engine-tsd
             app.scene.clusteredLightingEnabled = true;
 
-            // adjust default clustered lighting parameters to handle many lights:
-            // @ts-ignore
+            // adjust default clustered lighting parameters to handle many lights
             const lighting = app.scene.lighting;
 
-            // 1) subdivide space with lights into this many cells:
-            // @ts-ignore engine-tsd
+            // 1) subdivide space with lights into this many cells
             lighting.cells = new pc.Vec3(30, 2, 30);
 
-            // 2) and allow this many lights per cell:
-            // @ts-ignore engine-tsd
+            // 2) and allow this many lights per cell
             lighting.maxLightsPerCell = 20;
 
-            // @ts-ignore engine-tsd
             lighting.areaLightsEnabled = true;
-
-            // @ts-ignore engine-tsd
             lighting.shadowsEnabled = false;
-
 
             // pure black material - used on back side of light objects
             const blackMaterial = new pc.StandardMaterial();

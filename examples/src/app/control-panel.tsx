@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// @ts-ignore: library file import
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 
@@ -21,7 +20,6 @@ const ControlPanel = (props: any) => {
         document.getElementById('paramButton').classList.toggle('selected');
         document.getElementById('codeButton').classList.toggle('selected');
         const controls = document.getElementById('controlPanel-controls');
-        // @ts-ignore
         controls.classList.remove('pcui-hidden');
     };
     const onClickCodeTab = () => {
@@ -36,7 +34,6 @@ const ControlPanel = (props: any) => {
         document.getElementById('paramButton').classList.toggle('selected');
         document.getElementById('codeButton').classList.toggle('selected');
         const controls = document.getElementById('controlPanel-controls');
-        // @ts-ignore
         controls.classList.add('pcui-hidden');
     };
 
