@@ -140,6 +140,7 @@ const stripOptions = {
         'Debug.log',
         'Debug.logOnce',
         'Debug.trace',
+        'DebugHelper.setName',
         'DebugGraphics.pushGpuMarker',
         'DebugGraphics.popGpuMarker',
         'WorldClustersDebug.render'

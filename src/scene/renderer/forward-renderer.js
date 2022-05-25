@@ -1,5 +1,5 @@
 import { now } from '../../core/time.js';
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
@@ -31,7 +31,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, SHADOWUPDATE_THISFRAME
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -1812,17 +1812,19 @@ class ForwardRenderer {
             // update shadow / cookie atlas allocation for the visible lights
             this.updateLightTextureAtlas(layerComposition);
 
-            frameGraph.add(new RenderPass('ClusteredCookies', null, () => {
+            const renderPass = new RenderPass(null, () => {
                 // render cookies for all local visible lights
                 if (this.scene.lighting.cookiesEnabled) {
                     this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
                     this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
                 }
-            }));
+            });
+            DebugHelper.setName(renderPass, 'ClusteredCookies');
+            frameGraph.add(renderPass);
         }
 
-        // pre-pass
-        frameGraph.add(new RenderPass('LocalShadowMaps', null, () => {
+        // local shadows
+        const renderPass = new RenderPass(null, () => {
 
             // render shadows for all local visible lights - these shadow maps are shared by all cameras
             if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
@@ -1834,7 +1836,9 @@ class ForwardRenderer {
             if (clusteredLightingEnabled) {
                 this.updateClusters(layerComposition);
             }
-        }));
+        });
+        DebugHelper.setName(renderPass, 'LocalShadowMaps');
+        frameGraph.add(renderPass);
 
         // main passes
         let startIndex = 0;
@@ -1847,12 +1851,16 @@ class ForwardRenderer {
             const renderAction = renderActions[i];
             const layer = layerComposition.layerList[renderAction.layerIndex];
             const camera = layer.cameras[renderAction.cameraIndex];
+            const isDepthLayer = layer.id === LAYERID_DEPTH;
+            const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
             // directional shadows get re-rendered for each camera
             if (renderAction.hasDirectionalShadowLights && camera) {
-                frameGraph.add(new RenderPass(`DirShadowMap`, null, () => {
+                const renderPass = new RenderPass(null, () => {
                     this.renderPassDirectionalShadows(renderAction, layerComposition);
-                }));
+                });
+                DebugHelper.setName(renderPass, `DirShadowMap`);
+                frameGraph.add(renderPass);
             }
 
             // start of block of render actions rendering to the same render target
@@ -1862,20 +1870,30 @@ class ForwardRenderer {
                 renderTarget = renderAction.renderTarget;
             }
 
-            // end of the block
+            // info about the next render action
             const nextRenderAction = renderActions[i + 1];
-            if (!nextRenderAction || nextRenderAction.renderTarget != renderTarget || nextRenderAction.hasDirectionalShadowLights) {
+            const isNextLayerDepth = nextRenderAction ? layerComposition.layerList[nextRenderAction.layerIndex].id === LAYERID_DEPTH : false;
+            const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
+            // end of the block using the same render target
+            if (!nextRenderAction || nextRenderAction.renderTarget != renderTarget ||
+                nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
+
+                // render the render actions in the range
                 const range = { start: startIndex, end: i };
-                frameGraph.add(new RenderPass(`LayerComposition ${startIndex}-${i}`, renderTarget, () => {
+                const renderPass = new RenderPass(renderTarget, () => {
                     this.renderPassRenderActions(layerComposition, range);
-                }));
+                });
+                DebugHelper.setName(renderPass, `${isGrabPass ? 'SceneGrab' : 'RenderAction'} ${startIndex}-${i}`);
+                frameGraph.add(renderPass);
 
                 // postprocessing
                 if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                    frameGraph.add(new RenderPass(`Postprocess`, null, () => {
+                    const renderPass = new RenderPass(null, () => {
                         this.renderPassPostprocessing(renderAction, layerComposition);
-                    }));
+                    });
+                    DebugHelper.setName(renderPass, `Postprocess`);
+                    frameGraph.add(renderPass);
                 }
 
                 newStart = true;
