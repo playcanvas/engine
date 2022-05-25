@@ -6,7 +6,7 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Debug, TRACEID_RENDER_PASS, TRACEID_RENDER_FRAME, TRACEID_RT_RESOLVE } from '../core/debug.js';
+import { Debug, TRACEID_RENDER_FRAME } from '../core/debug.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -2166,20 +2166,6 @@ const makeTick = function (_app) {
         application.update(dt);
 
         application.fire("framerender");
-
-
-
-
-        // !!!!!!!!!!!!! these lines needs to be removed !!!!!!!!!!
-        // (and likely imports of the constants)
-        const logThisFrame = (application.frame % 100) === 0;
-        Debug.setTrace(TRACEID_RENDER_FRAME, logThisFrame);
-        Debug.setTrace(TRACEID_RT_RESOLVE, logThisFrame);
-        Debug.setTrace(TRACEID_RENDER_PASS, logThisFrame);
-
-
-
-
 
         Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
