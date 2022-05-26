@@ -1201,8 +1201,8 @@ class AppBase extends EventHandler {
 
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
-     * rendered by the application's {@link ForwardRenderer}. This function is called internally in
-     * the application's main loop and does not need to be called explicitly.
+     * rendered. This function is called internally in the application's main loop and does not
+     * need to be called explicitly.
      */
     render() {
         // #if _PROFILER

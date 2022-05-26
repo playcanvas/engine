@@ -84,6 +84,8 @@ const _tempMaterialSet = new Set();
 
 /**
  * The forward renderer renders {@link Scene}s.
+ *
+ * @ignore
  */
 class ForwardRenderer {
     /** @type {boolean} */
