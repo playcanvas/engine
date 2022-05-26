@@ -1,6 +1,8 @@
 import { Debug, TRACEID_RENDER_PASS } from '../core/debug.js';
+import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 /** @typedef {import('./render-pass.js').RenderPass} RenderPass */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
@@ -10,6 +12,15 @@ import { Debug, TRACEID_RENDER_PASS } from '../core/debug.js';
 class FrameGraph {
     /** @type {RenderPass[]} */
     renderPasses = [];
+
+    /**
+     * Create a new FrameGraph instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     */
+    constructor(graphicsDevice) {
+        this.device = graphicsDevice;
+    }
 
     /**
      * Add a render pass to the frame.
@@ -32,7 +43,13 @@ class FrameGraph {
     render() {
         const renderPasses = this.renderPasses;
         for (let i = 0; i < renderPasses.length; i++) {
-            renderPasses[i].execute();
+            const renderPass = renderPasses[i];
+
+            DebugGraphics.pushGpuMarker(this.device, `Pass:${renderPass.name}`);
+
+            renderPass.execute();
+
+            DebugGraphics.popGpuMarker(this.device);
         }
     }
 }

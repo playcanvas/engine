@@ -322,8 +322,6 @@ class PostEffectQueue {
                     const len = this.effects.length;
                     if (len) {
 
-                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, 'Postprocess');
-
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
 
@@ -343,8 +341,6 @@ class PostEffectQueue {
                             fx.effect.render(fx.inputTarget, destTarget, rect);
                             DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                         }
-
-                        DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                     }
                 }
             };
