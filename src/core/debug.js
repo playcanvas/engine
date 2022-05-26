@@ -44,7 +44,7 @@ class Debug {
     /**
      * Enable or disable trace channel
      *
-     * @param {string} channel - Name of the trace channel. Can be
+     * @param {string} channel - Name of the trace channel. Can be:
      *
      * - {@link TRACEID_RENDER_FRAME}
      * - {@link TRACEID_RENDER_PASS}
