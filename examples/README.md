@@ -129,14 +129,27 @@ By default, the examples app uses the local version of the playcanvas engine loc
 
 ## Deployment
 
-Build the latest engine using `npm run build` in the engine directory.
+1) **Build the latest engine** by running the following in the `/engine` directory:
+```
+npm install
+npm run build
+npm run build:types
+```
 
-Build the latest examples browser using `npm run build` followed by `npm run serve` in the examples directory. Ensure the examples browser is now correctly running on [http://localhost:5000](). This server is required to be active for the following step.
+2) **Build the examples browser and launch the server** by running the following in the `/engine/examples` directory:
+```
+npm install
+npm run build
+npm run serve
+```
 
-Run `npm run thumbnails` to create the thumbnails directory for browser. This may take a while depending on the number of new examples or if this is first time it has been run locally.
+3) **Generate thumbnails** by first ensuring the examples browser is running on [http://localhost:5000]() then running the following command. This step will create the thumbnails directory for the browser and may take a while depending on the number of new examples or if this is first time it has been run locally.
+```
+npm run build:thumbnails
+```
 
-Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository and submit a PR with the changes. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
+4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
 
-Run `git commit -m "Update to Engine 1.XX.X"` in the `playcanvas.github.io` repo
+5) Run `git commit -m "Update to Engine 1.XX.X"` in the `playcanvas.github.io` repo
 
-Create a PR for this new commit
+6) Create a PR for this new commit

@@ -678,7 +678,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createRenderTargetImpl(renderTarget) {
-        return new WebglRenderTarget(renderTarget);
+        return new WebglRenderTarget();
     }
 
     // #if _DEBUG

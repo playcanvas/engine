@@ -175,11 +175,29 @@ let mixedCase = 1;
 // Function are usually variables so should be mixedCase
 // (unless they are class constructors)
 let myFunction = function () { };
+let myFunction = () => { };
 
 // Constants should be ALL_CAPITALS separated by underscores.
 // Note, ES5 doesn't support constants,
 // so this is just convention.
 const THIS_IS_CONSTANT = "well, kind of";
+
+// Enum constants follow similar rules as normal constants. In general,
+// the enum consists of the type, and its values.
+// In other languages, this is implemented as
+// enum CubeFace {
+//     PosX: 0,
+//     PosY: 1
+// }
+// Due to the lack of native enum support by JavaScript, the enums are
+// represented by constants. The constant name contains the enum name without
+// the underscores, followed by the values with optional underscores as
+// needed to improve the readibility. This is one possible implementation:
+const CUBEFACE_POSX = 0;
+const CUBEFACE_POSY = 1;
+// and this is also acceptable
+const CUBEFACE_POS_X = 0;
+const CUBEFACE_POS_Y = 1;
 
 // Private variables should start with a leading underscore.
 // Note, you should attempt to make private variables actually private using

@@ -70,6 +70,7 @@ CubemapRenderer.prototype.initialize = function () {
 
         // render target, connected to cubemap texture face
         var renderTarget = new pc.RenderTarget({
+            name: 'CubemapRenderer-Face' + i,
             colorBuffer: this.cubeMap,
             depth: this.depth,
             face: i,

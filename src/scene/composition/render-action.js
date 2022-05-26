@@ -2,6 +2,9 @@ import {
     LIGHTTYPE_DIRECTIONAL
 } from '../constants.js';
 
+/** @typedef {import('../../graphics/uniform-buffer.js').UniformBuffer} UniformBuffer */
+/** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
+
 // class representing an entry in the final order of rendering of cameras and layers in the engine
 // this is populated at runtime based on LayerComposition
 class RenderAction {
@@ -44,6 +47,27 @@ class RenderAction {
 
         // and also the same directional lights, stored as indices into LayerComposition._lights
         this.directionalLightsIndices = [];
+
+        // an array of view uniform buffers (the number of these corresponds to the number of views when XR is used)
+        /** @type {Array<UniformBuffer>} */
+        this.viewUniformBuffers = [];
+
+        // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
+        /** @type {Array<BindGroup>} */
+        this.viewBindGroups = [];
+    }
+
+    // releases GPU resources
+    destroy() {
+        this.viewUniformBuffers.forEach(ub => ub.destroy());
+        this.viewUniformBuffers.length = 0;
+
+        this.viewBindGroups.forEach(bg => bg.destroy());
+        this.viewBindGroups.length = 0;
+    }
+
+    get hasDirectionalShadowLights() {
+        return this.directionalLights.length > 0;
     }
 
     // prepares render action for re-use

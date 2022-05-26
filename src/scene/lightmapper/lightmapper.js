@@ -1075,7 +1075,7 @@ class Lightmapper {
                         this.renderer.updateShaders(rcv);
 
                         // ping-ponging output
-                        this.renderer.setCamera(this.camera, tempRT, true);
+                        this.renderer.setCamera(null, this.camera, tempRT, true);
 
                         if (pass === PASS_DIR) {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
@@ -1090,6 +1090,8 @@ class Lightmapper {
                         this.renderer._shadowMapTime = 0;
 
                         this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+
+                        device.updateEnd();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;
