@@ -1930,20 +1930,6 @@ class ForwardRenderer {
     }
 
     /**
-     * Render pass representing the layer composition's render actions in the specified range.
-     *
-     * @param {LayerComposition} comp - the layer composition to render.
-     * @ignore
-     */
-    renderPassRenderActions(comp, range) {
-
-        const renderActions = comp._renderActions;
-        for (let i = range.start; i <= range.end; i++) {
-            this.renderRenderAction(comp, renderActions[i]);
-        }
-    }
-
-    /**
      * Render pass for directional shadow maps of the camera.
      *
      * @param {RenderAction} renderAction - The render action.
@@ -1967,6 +1953,20 @@ class ForwardRenderer {
 
         // trigger postprocessing for camera
         camera.onPostprocessing();
+    }
+
+    /**
+     * Render pass representing the layer composition's render actions in the specified range.
+     *
+     * @param {LayerComposition} comp - the layer composition to render.
+     * @ignore
+     */
+    renderPassRenderActions(comp, range) {
+
+        const renderActions = comp._renderActions;
+        for (let i = range.start; i <= range.end; i++) {
+            this.renderRenderAction(comp, renderActions[i]);
+        }
     }
 
     renderRenderAction(comp, renderAction) {
