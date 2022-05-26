@@ -24,6 +24,6 @@ defineProtoFunc(String, 'includes', function(search, start) {
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
 defineProtoFunc(String, 'startsWith', function(search, rawPos) {
-    const pos = rawPos > 0 ? rawPos|0 : 0;
+    var pos = rawPos > 0 ? rawPos|0 : 0;
     return this.substring(pos, pos + search.length) === search;
 });
