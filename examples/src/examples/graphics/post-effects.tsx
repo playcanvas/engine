@@ -284,8 +284,8 @@ class PostEffectsExample {
                 // - it's a negative distance between the camera and the focus sphere
                 camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-                // display the depth texture if bokeh is enabled
-                if (camera.script.bokeh.enabled) {
+                // display the depth texture if it was rendered
+                if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
                     // @ts-ignore engine-tsd
                     app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
                 }

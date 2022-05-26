@@ -1091,6 +1091,8 @@ class Lightmapper {
 
                         this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
 
+                        device.updateEnd();
+
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;
                         this.stats.forwardTime += this.renderer._forwardTime;
