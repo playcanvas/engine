@@ -189,8 +189,8 @@ const THIS_IS_CONSTANT = "well, kind of";
 //     PosX: 0,
 //     PosY: 1
 // }
-// Due to the lack of native enum support by java script, the enums are
-// represented by constants. The constant contains the enum type without
+// Due to the lack of native enum support by JavaScript, the enums are
+// represented by constants. The constant name contains the enum name without
 // the underscores, followed by the values with optional underscores as
 // needed to improve the readibility. This is one possible implementation:
 const CUBEFACE_POSX = 0;
