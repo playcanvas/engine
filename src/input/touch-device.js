@@ -1,3 +1,5 @@
+import { platform } from '../core/platform.js';
+
 import { EventHandler } from '../core/event-handler.js';
 
 import { TouchEvent } from './touch-event.js';
@@ -40,10 +42,11 @@ class TouchDevice extends EventHandler {
 
         this._element = element;
 
-        this._element.addEventListener('touchstart', this._startHandler, false);
-        this._element.addEventListener('touchend', this._endHandler, false);
-        this._element.addEventListener('touchmove', this._moveHandler, false);
-        this._element.addEventListener('touchcancel', this._cancelHandler, false);
+        const opts = platform.passiveEvents ? { passive: true } : false;
+        this._element.addEventListener('touchstart', this._startHandler, opts);
+        this._element.addEventListener('touchend', this._endHandler, opts);
+        this._element.addEventListener('touchmove', this._moveHandler, opts);
+        this._element.addEventListener('touchcancel', this._cancelHandler, opts);
     }
 
     /**
