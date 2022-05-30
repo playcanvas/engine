@@ -290,24 +290,19 @@ export default (args) => {
     if (envTarget === 'types') {
         targets.push(target_types);
     } else {
-        const unmatchedTargets = [];
-
         ['release', 'debug', 'profiler', 'min'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
-                if (envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
+                if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
                     targets.push(buildTarget(t, m));
-                } else {
-                    unmatchedTargets.push(buildTarget(t, m));
                 }
             });
         });
 
-        if (targets.length === 0) {
+        if (envTarget === null) {
             // no targets specified, build them all
-            targets = unmatchedTargets.concat(target_extras);
+            targets = targets.concat(target_extras);
         }
     }
 
     return targets;
 };
-
