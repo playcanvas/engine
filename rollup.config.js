@@ -129,157 +129,125 @@ const moduleOptions = {
     ]
 };
 
-const stripOptions = {
-    functions: [
-        'Debug.assert',
-        'Debug.deprecated',
-        'Debug.warn',
-        'Debug.warnOnce',
-        'Debug.error',
-        'Debug.errorOnce',
-        'Debug.log',
-        'Debug.logOnce',
-        'Debug.trace',
-        'DebugHelper.setName',
-        'DebugGraphics.pushGpuMarker',
-        'DebugGraphics.popGpuMarker',
-        'WorldClustersDebug.render'
-    ]
-};
+const stripFunctions = [
+    'Debug.assert',
+    'Debug.deprecated',
+    'Debug.warn',
+    'Debug.warnOnce',
+    'Debug.error',
+    'Debug.errorOnce',
+    'Debug.log',
+    'Debug.logOnce',
+    'Debug.trace',
+    'DebugHelper.setName',
+    'DebugGraphics.pushGpuMarker',
+    'DebugGraphics.popGpuMarker',
+    'WorldClustersDebug.render'
+];
 
-const target_release_es5 = {
-    input: 'src/index.js',
-    output: [
-        {
-            banner: getBanner(''),
-            file: 'build/playcanvas.js',
-            format: 'umd',
-            indent: '\t',
-            name: 'pc'
-        },
-        {
-            banner: getBanner(''),
-            file: 'build/playcanvas.min.js',
-            format: 'umd',
-            indent: '\t',
-            name: 'pc',
-            plugins: [
-                terser()
-            ]
-        }
-    ],
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        strip(stripOptions),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
+// buildType is: 'debug', 'release', 'profile', 'min'
+// moduleFormat is: 'es5', 'es6'
+function buildTarget(buildType, moduleFormat) {
+    const banner = {
+        debug: ' (DEBUG PROFILER)',
+        release: '',
+        profile: ' (PROFILER)'
+    };
 
-if (process.env.treemap) {
-    const visualizerPlugin = visualizer({
-        brotliSize: true,
-        gzipSize: true
-    });
-    target_release_es5.output[1].plugins.push(visualizerPlugin);
-}
+    const outputPlugins = {
+        release: [],
+        min: [
+            terser()
+        ]
+    };
 
-const target_release_es6 = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.mjs',
-        format: 'es',
+    if (process.env.treemap) {
+        outputPlugins.min.push(visualizer({
+            brotliSize: true,
+            gzipSize: true
+        }));
+    }
+
+    const outputFile = {
+        debug: 'build/playcanvas.dbg',
+        release: 'build/playcanvas',
+        profile: 'build/playcanvas.prf',
+        min: 'build/playcanvas.min'
+    };
+
+    const outputExtension = {
+        es5: '.js',
+        es6: '.mjs'
+    };
+
+    const outputFormat = {
+        es5: 'umd',
+        es6: 'es'
+    };
+
+    const outputOptions = {
+        banner: getBanner(banner[buildType] || banner.release),
+        plugins: outputPlugins[buildType || outputPlugins.release],
+        file: `${outputFile[buildType]}${outputExtension[moduleFormat]}`,
+        format: outputFormat[moduleFormat],
         indent: '\t',
         name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        strip(stripOptions),
-        babel(moduleOptions),
-        spacesToTabs()
-    ]
-};
+    };
 
-const target_debug = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (DEBUG PROFILER)'),
-        file: 'build/playcanvas.dbg.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
+    const jsccOptions = {
+        debug: {
             values: {
                 _DEBUG: 1,
                 _PROFILER: 1
             },
             keepLines: true
-        }),
-        shaderChunks(false),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
-
-const target_profiler = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (PROFILER)'),
-        file: 'build/playcanvas.prf.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
+        },
+        release: {
+            values: { }
+        },
+        profile: {
             values: {
                 _PROFILER: 1
             },
             keepLines: true
-        }),
-        shaderChunks(false),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        strip(stripOptions),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
+        }
+    };
+
+    const stripOptions = {
+        debug: {
+            functions: []
+        },
+        release: {
+            functions: stripFunctions
+        }
+    };
+
+    const babelOptions = {
+        es5: es5Options,
+        es6: moduleOptions
+    };
+
+    const result = {
+        input: 'src/index.js',
+        output: outputOptions,
+        plugins: [
+            jscc(jsccOptions[buildType] || jsccOptions.release),
+            shaderChunks(buildType === 'release' || buildType === 'min'),
+            replace({
+                values: {
+                    __REVISION__: revision,
+                    __CURRENT_SDK_VERSION__: version
+                },
+                preventAssignment: true
+            }),
+            strip(stripOptions[buildType] || stripOptions.release),
+            babel(babelOptions[moduleFormat] || babelOptions[es5Format]),
+            spacesToTabs()
+        ]
+    };
+
+    return result;
+}
 
 function scriptTarget(name, input, output) {
     return {
@@ -319,18 +287,19 @@ let targets;
 
 if (process.env.target) { // Build a specific target
     switch (process.env.target.toLowerCase()) {
-        case 'es5':      targets = [target_release_es5]; break;
-        case 'es6':      targets = [target_release_es6]; break;
-        case 'debug':    targets = [target_debug]; break;
-        case 'profiler': targets = [target_profiler]; break;
+        case 'es5':      targets = [buildTarget('release', 'es5'), buildTarget('min', 'es5')]; break;
+        case 'debug':    targets = [buildTarget('debug', 'es5')]; break;
+        case 'profiler': targets = [buildTarget('profile', 'es5')]; break;
+        case 'es6':      targets = [buildTarget('release', 'es6')]; break;
         case 'types':    targets = [target_types]; break;
     }
 } else { // Build all targets
     targets = [
-        target_release_es5,
-        target_release_es6,
-        target_debug,
-        target_profiler,
+        buildTarget('release', 'es5'),
+        buildTarget('min', 'es5'),
+        buildTarget('release', 'es6'),
+        buildTarget('debug', 'es5'),
+        buildTarget('profile', 'es5'),
         ...target_extras
     ];
 }
