@@ -288,11 +288,13 @@ let targets;
 if (process.env.target) { // Build a specific target
     switch (process.env.target.toLowerCase()) {
         case 'es5':      targets = [buildTarget('release', 'es5'), buildTarget('min', 'es5')]; break;
+        case 'es6':      targets = [buildTarget('release', 'es6')]; break;
         case 'debug':    targets = [buildTarget('debug', 'es5')]; break;
         case 'profiler': targets = [buildTarget('profile', 'es5')]; break;
-        case 'es6':      targets = [buildTarget('release', 'es6')]; break;
         case 'types':    targets = [target_types]; break;
     }
+} else if (process.env.buildType && process.env.buildFormat) {
+    targets = [buildTarget(process.env.buildType, process.env.buildFormat)];
 } else { // Build all targets
     targets = [
         buildTarget('release', 'es5'),
