@@ -185,12 +185,18 @@ function buildTarget(buildType, moduleFormat) {
         es6: 'es'
     };
 
+    const sourceMap = {
+        debug: 'inline',
+        release: null
+    }
+
     const outputOptions = {
         banner: getBanner(banner[buildType] || banner.release),
         plugins: outputPlugins[buildType || outputPlugins.release],
         file: `${outputFile[buildType]}${outputExtension[moduleFormat]}`,
         format: outputFormat[moduleFormat],
         indent: '\t',
+        sourcemap: sourceMap[buildType] || sourceMap.release,
         name: 'pc'
     };
 
