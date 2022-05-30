@@ -227,7 +227,7 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions
     };
 
-    const result = {
+    return {
         input: 'src/index.js',
         output: outputOptions,
         plugins: [
@@ -245,8 +245,6 @@ function buildTarget(buildType, moduleFormat) {
             spacesToTabs()
         ]
     };
-
-    return result;
 }
 
 function scriptTarget(name, input, output) {
