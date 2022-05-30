@@ -145,13 +145,13 @@ const stripFunctions = [
     'WorldClustersDebug.render'
 ];
 
-// buildType is: 'debug', 'release', 'profile', 'min'
+// buildType is: 'debug', 'release', 'profiler', 'min'
 // moduleFormat is: 'es5', 'es6'
 function buildTarget(buildType, moduleFormat) {
     const banner = {
         debug: ' (DEBUG PROFILER)',
         release: '',
-        profile: ' (PROFILER)'
+        profiler: ' (PROFILER)'
     };
 
     const outputPlugins = {
@@ -171,7 +171,7 @@ function buildTarget(buildType, moduleFormat) {
     const outputFile = {
         debug: 'build/playcanvas.dbg',
         release: 'build/playcanvas',
-        profile: 'build/playcanvas.prf',
+        profiler: 'build/playcanvas.prf',
         min: 'build/playcanvas.min'
     };
 
@@ -205,7 +205,7 @@ function buildTarget(buildType, moduleFormat) {
         release: {
             values: { }
         },
-        profile: {
+        profiler: {
             values: {
                 _PROFILER: 1
             },
@@ -283,27 +283,31 @@ const target_types = {
     ]
 };
 
-let targets;
+export default (args) => {
+    let targets = [];
 
-if (process.env.target) { // Build a specific target
-    switch (process.env.target.toLowerCase()) {
-        case 'es5':      targets = [buildTarget('release', 'es5'), buildTarget('min', 'es5')]; break;
-        case 'es6':      targets = [buildTarget('release', 'es6')]; break;
-        case 'debug':    targets = [buildTarget('debug', 'es5')]; break;
-        case 'profiler': targets = [buildTarget('profile', 'es5')]; break;
-        case 'types':    targets = [target_types]; break;
+    const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+    if (envTarget === 'types') {
+        targets.push(target_types);
+    } else {
+        const unmatchedTargets = [];
+
+        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
+            ['es5', 'es6'].forEach((m) => {
+                if (envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
+                    targets.push(buildTarget(t, m));
+                } else {
+                    unmatchedTargets.push(buildTarget(t, m));
+                }
+            });
+        });
+
+        if (targets.length === 0) {
+            // no targets specified, build them all
+            targets = unmatchedTargets.concat(target_extras);
+        }
     }
-} else if (process.env.buildType && process.env.buildFormat) {
-    targets = [buildTarget(process.env.buildType, process.env.buildFormat)];
-} else { // Build all targets
-    targets = [
-        buildTarget('release', 'es5'),
-        buildTarget('min', 'es5'),
-        buildTarget('release', 'es6'),
-        buildTarget('debug', 'es5'),
-        buildTarget('profile', 'es5'),
-        ...target_extras
-    ];
-}
 
-export default targets;
+    return targets;
+};
+

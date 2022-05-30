@@ -99,6 +99,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
     "build:dts": "tsc src/index.js --outDir types --allowJs --declaration --emitDeclarationOnly",
     "build:es5": "rollup -c --environment target:es5",
@@ -108,6 +109,7 @@
     "build:types": "npm run build:dts && node types-fixup.mjs && rollup -c --environment target:types && node types-undollar.mjs",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run build:types",
+    "watch:release": "npm run build:release -- -w",
     "watch:debug": "npm run build:debug -- -w",
     "watch:es5": "npm run build:es5 -- -w",
     "watch:es6": "npm run build:es6 -- -w",
