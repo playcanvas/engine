@@ -34,15 +34,16 @@ const ie = (function () {
     return false;
 })();
 
-const toMIME = {
-    '.ogg': 'audio/ogg',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/x-wav',
-    '.mp4a': 'audio/mp4',
-    '.m4a': 'audio/mp4',
-    '.mp4': 'audio/mp4',
-    '.aac': 'audio/aac'
-};
+const supportedExtensions = [
+    '.ogg',
+    '.mp3',
+    '.wav',
+    '.mp4a',
+    '.m4a',
+    '.mp4',
+    '.aac',
+    '.opus'
+];
 
 /**
  * Resource handler used for loading {@link Sound} resources.
@@ -73,7 +74,7 @@ class AudioHandler {
     _isSupported(url) {
         const ext = path.getExtension(url);
 
-        if (toMIME[ext]) {
+        if (supportedExtensions.includes(ext)) {
             return true;
         }
         return false;
