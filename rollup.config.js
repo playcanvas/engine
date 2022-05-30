@@ -241,7 +241,7 @@ function buildTarget(buildType, moduleFormat) {
                 preventAssignment: true
             }),
             strip(stripOptions[buildType] || stripOptions.release),
-            babel(babelOptions[moduleFormat] || babelOptions[es5Format]),
+            babel(babelOptions[moduleFormat]),
             spacesToTabs()
         ]
     };
