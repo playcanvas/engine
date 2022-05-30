@@ -220,7 +220,7 @@ class Preprocessor {
 
         if (error) {
             Debug.error("Failed to preprocess shader: ", { source: originalSource });
-            return null;
+            return originalSource;
         }
 
         return source;
