@@ -219,7 +219,7 @@ class Preprocessor {
         }
 
         if (error) {
-            Debug.error("Failed to preprocess shader: ", { source: originalSource });
+            console.warn("Failed to preprocess shader: ", { source: originalSource });
             return originalSource;
         }
 
