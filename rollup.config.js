@@ -188,7 +188,7 @@ function buildTarget(buildType, moduleFormat) {
     const sourceMap = {
         debug: 'inline',
         release: null
-    }
+    };
 
     const outputOptions = {
         banner: getBanner(banner[buildType] || banner.release),
