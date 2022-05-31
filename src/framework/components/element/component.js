@@ -1654,6 +1654,12 @@ class ElementComponent extends Component {
 
         return false;
     }
+
+    _dirtyBatch() {
+        if (this.batchGroupId !== -1) {
+            this.system.app.batcher?.markGroupDirty(this.batchGroupId);
+        }
+    }
 }
 
 function _define(name) {
@@ -1668,8 +1674,16 @@ function _define(name) {
         },
         set: function (value) {
             if (this._text) {
+                if (this._text[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._text[name] = value;
             } else if (this._image) {
+                if (this._image[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._image[name] = value;
             }
         }
