@@ -1667,10 +1667,18 @@ function _define(name) {
             return null;
         },
         set: function (value) {
-            if (this._text) {
-                this._text[name] = value;
-            } else if (this._image) {
-                this._image[name] = value;
+            if (this._text && this._text[name] !== value ||
+                this._image && this._image[name] !== value) {
+
+                if (this._text) {
+                    this._text[name] = value;
+                } else if (this._image) {
+                    this._image[name] = value;
+                }
+
+                if (this.batchGroupId !== -1 && this.system.app.batcher) {
+                    this.system.app.batcher.markGroupDirty(this.batchGroupId);
+                }
             }
         }
     });
