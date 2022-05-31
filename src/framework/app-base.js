@@ -1220,14 +1220,20 @@ class AppBase extends EventHandler {
         ForwardRenderer._skipRenderCounter = 0;
         // #endif
 
-        this.renderer.buildFrameGraph(this.frameGraph, this.scene.layers);
-        this.frameGraph.render();
+        // render the scene composition
+        this.renderComposition(this.scene.layers);
 
         this.fire('postrender');
 
         // #if _PROFILER
         this.stats.frame.renderTime = now() - this.stats.frame.renderStart;
         // #endif
+    }
+
+    // render a layer composition
+    renderComposition(layerComposition) {
+        this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
+        this.frameGraph.render();
     }
 
     /**
