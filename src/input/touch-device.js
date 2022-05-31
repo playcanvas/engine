@@ -1,5 +1,4 @@
 import { platform } from '../core/platform.js';
-
 import { EventHandler } from '../core/event-handler.js';
 
 import { TouchEvent } from './touch-event.js';
