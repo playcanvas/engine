@@ -124,10 +124,10 @@ function UntarScope(isWorker) {
         const headers = asciiDecoder.decode(headersDataView);
         this._bytesRead += 512;
 
-        let name = headers.substr(0, 100).replace(/\0/g, '');
-        const ustarFormat = headers.substr(257, 6);
-        const size = parseInt(headers.substr(124, 12), 8);
-        const type = headers.substr(156, 1);
+        let name = headers.substring(0, 100).replace(/\0/g, '');
+        const ustarFormat = headers.substring(257, 263);
+        const size = parseInt(headers.substring(124, 136), 8);
+        const type = headers.substring(156, 157);
         const start = this._bytesRead;
         let url = null;
 
@@ -171,7 +171,7 @@ function UntarScope(isWorker) {
         }
 
         if (ustarFormat.indexOf('ustar') !== -1) {
-            const namePrefix = headers.substr(345, 155).replace(/\0/g, '');
+            const namePrefix = headers.substring(345, 500).replace(/\0/g, '');
 
             if (namePrefix.length > 0) {
                 name = namePrefix.trim() + name.trim();
