@@ -42,7 +42,7 @@ function collectAttribs(vsCode) {
         if (found > 0 && vsCode[found - 1] === "/") break;
         const endOfLine = vsCode.indexOf(';', found);
         const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
-        const attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
+        const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
 
         const semantic = attrib2Semantic[attribName];
         if (semantic !== undefined) {
