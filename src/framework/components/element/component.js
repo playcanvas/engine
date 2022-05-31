@@ -1654,6 +1654,12 @@ class ElementComponent extends Component {
 
         return false;
     }
+
+    _dirtyBatch() {
+        if (this.batchGroupId !== -1) {
+            this.system.app.batcher?.markGroupDirty(this.batchGroupId);
+        }
+    }
 }
 
 function _define(name) {
@@ -1667,18 +1673,12 @@ function _define(name) {
             return null;
         },
         set: function (value) {
-            if (this._text && this._text[name] !== value ||
-                this._image && this._image[name] !== value) {
-
-                if (this._text) {
-                    this._text[name] = value;
-                } else if (this._image) {
-                    this._image[name] = value;
-                }
-
-                if (this.batchGroupId !== -1 && this.system.app.batcher) {
-                    this.system.app.batcher.markGroupDirty(this.batchGroupId);
-                }
+            if (this._text && this._text[name] !== value) {
+                this._text[name] = value;
+                this._dirtyBatch();
+            } else if (this._image && this._image[name] !== value) {
+                this._image[name] = value;
+                this._dirtyBatch();
             }
         }
     });
