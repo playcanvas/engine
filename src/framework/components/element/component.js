@@ -1673,12 +1673,18 @@ function _define(name) {
             return null;
         },
         set: function (value) {
-            if (this._text && this._text[name] !== value) {
+            if (this._text) {
+                if (this._text[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._text[name] = value;
-                this._dirtyBatch();
-            } else if (this._image && this._image[name] !== value) {
+            } else if (this._image) {
+                if (this._image[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._image[name] = value;
-                this._dirtyBatch();
             }
         }
     });
