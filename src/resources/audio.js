@@ -74,10 +74,7 @@ class AudioHandler {
     _isSupported(url) {
         const ext = path.getExtension(url);
 
-        if (supportedExtensions.indexOf(ext) > -1) {
-            return true;
-        }
-        return false;
+        return supportedExtensions.indexOf(ext) > -1;
     }
 
     load(url, callback) {
