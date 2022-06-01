@@ -77,7 +77,6 @@
     "@playcanvas/eslint-config": "^1.1.1",
     "@playcanvas/jsdoc-template": "^1.0.25",
     "@rollup/plugin-babel": "^5.3.1",
-    "@rollup/plugin-replace": "^4.0.0",
     "@rollup/plugin-strip": "^2.1.0",
     "@rollup/pluginutils": "^4.2.1",
     "c8": "^7.11.3",
