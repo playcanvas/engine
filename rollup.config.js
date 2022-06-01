@@ -1,5 +1,4 @@
 import babel from '@rollup/plugin-babel';
-import replace from '@rollup/plugin-replace';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
 import dts from 'rollup-plugin-dts';
@@ -26,14 +25,14 @@ function getBanner(config) {
     ].join('\n');
 }
 
-function spacesToTabs() {
+function spacesToTabs(enable) {
     const filter = createFilter([
         '**/*.js'
     ], []);
 
     return {
         transform(code, id) {
-            if (!filter(id)) return undefined;
+            if (!enable || !filter(id)) return undefined;
             return {
                 code: code.replace(/ {2}/g, '\t'),
                 map: null
@@ -42,7 +41,7 @@ function spacesToTabs() {
     };
 }
 
-function shaderChunks(removeComments) {
+function shaderChunks(enable) {
     const filter = createFilter([
         '**/*.vert.js',
         '**/*.frag.js'
@@ -50,7 +49,7 @@ function shaderChunks(removeComments) {
 
     return {
         transform(code, id) {
-            if (!filter(id)) return undefined;
+            if (!enable || !filter(id)) return undefined;
 
             code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
 
@@ -60,19 +59,17 @@ function shaderChunks(removeComments) {
                 // 4 spaces to tabs
                 glsl = glsl.replace(/ {4}/g, '\t');
 
-                if (removeComments) {
-                    // Remove comments
-                    glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+                // Remove comments
+                glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
-                    // Trim all whitespace from line endings
-                    glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
+                // Trim all whitespace from line endings
+                glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
 
-                    // Restore final new line
-                    glsl += '\n';
+                // Restore final new line
+                glsl += '\n';
 
-                    // Comment removal can leave an empty line so condense 2 or more to 1
-                    glsl = glsl.replace(/\n{2,}/g, '\n');
-                }
+                // Comment removal can leave an empty line so condense 2 or more to 1
+                glsl = glsl.replace(/\n{2,}/g, '\n');
 
                 // Remove new line character at the start of the string
                 if (glsl.length > 1 && glsl[0] === '\n') {
@@ -200,22 +197,27 @@ function buildTarget(buildType, moduleFormat) {
         name: 'pc'
     };
 
+    const sdkVersion = {
+        _CURRENT_SDK_VERSION: version,
+        _CURRENT_SDK_REVISION: revision,
+    };
+
     const jsccOptions = {
         debug: {
-            values: {
+            values: { ...sdkVersion, ...{
                 _DEBUG: 1,
                 _PROFILER: 1
-            },
-            keepLines: true
+            }},
+            keepLines: true,
+            sourcemap: 'inline'
         },
         release: {
-            values: { }
+            values: sdkVersion
         },
         profiler: {
-            values: {
+            values: { ...sdkVersion, ...{
                 _PROFILER: 1
-            },
-            keepLines: true
+            }}
         }
     };
 
@@ -238,17 +240,10 @@ function buildTarget(buildType, moduleFormat) {
         output: outputOptions,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
-            shaderChunks(buildType === 'release' || buildType === 'min'),
-            replace({
-                values: {
-                    __REVISION__: revision,
-                    __CURRENT_SDK_VERSION__: version
-                },
-                preventAssignment: true
-            }),
+            shaderChunks(buildType !== 'debug'),
             strip(stripOptions[buildType] || stripOptions.release),
             babel(babelOptions[moduleFormat]),
-            spacesToTabs()
+            spacesToTabs(buildType !== 'debug')
         ]
     };
 }
