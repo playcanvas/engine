@@ -323,7 +323,8 @@ class ForwardRenderer {
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-    setCamera(renderAction, camera, target, clear) {
+    setCamera(camera, target, clear, renderAction = null) {
+
         let transform;
 
         let viewCount = 1;
@@ -2058,7 +2059,7 @@ class ForwardRenderer {
             this.scene._activeCamera = camera.camera;
 
             // Set camera shader constants, viewport, scissor, render target
-            this.setCamera(renderAction, camera.camera, renderAction.renderTarget);
+            this.setCamera(camera.camera, renderAction.renderTarget, false, renderAction);
 
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
