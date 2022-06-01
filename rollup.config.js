@@ -199,15 +199,18 @@ function buildTarget(buildType, moduleFormat) {
 
     const sdkVersion = {
         _CURRENT_SDK_VERSION: version,
-        _CURRENT_SDK_REVISION: revision,
+        _CURRENT_SDK_REVISION: revision
     };
 
     const jsccOptions = {
         debug: {
-            values: { ...sdkVersion, ...{
-                _DEBUG: 1,
-                _PROFILER: 1
-            }},
+            values: {
+                ...sdkVersion,
+                ...{
+                    _DEBUG: 1,
+                    _PROFILER: 1
+                }
+            },
             keepLines: true,
             sourcemap: 'inline'
         },
@@ -215,9 +218,12 @@ function buildTarget(buildType, moduleFormat) {
             values: sdkVersion
         },
         profiler: {
-            values: { ...sdkVersion, ...{
-                _PROFILER: 1
-            }}
+            values: {
+                ...sdkVersion,
+                ...{
+                    _PROFILER: 1
+                }
+            }
         }
     };
 
