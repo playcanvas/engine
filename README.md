@@ -125,7 +125,9 @@ Now you can run various build options:
 
 | Command               | Description                               | Outputs                          |
 |-----------------------|-------------------------------------------|----------------------------------|
-| `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
+| `npm run build`       | Build release, min, debug and profiler engines | `build\playcanvas[.min/.dbg/.prf].[mjs/js]` |
+| `npm run build:es5`   | Build release, min, debug and profiler engines for es5 only | `build\playcanvas[.min/.dbg/.prf].js` |
+| `npm run build:release` | Build release engine for es5 and es6 | `build\playcanvas.[mjs/js]` |
 | `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
 | `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
 
