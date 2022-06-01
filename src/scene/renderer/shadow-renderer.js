@@ -549,7 +549,7 @@ class ShadowRenderer {
 
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
-                forwardRenderer.setCamera(null, shadowCam, shadowCam.renderTarget, true);
+                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true);
 
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);
