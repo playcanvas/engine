@@ -548,6 +548,11 @@ Object.defineProperty(Batch.prototype, 'model', {
     }
 });
 
+ForwardRenderer.prototype.renderComposition = function (comp) {
+    Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
+    getApplication().renderComposition(comp);
+};
+
 MeshInstance.prototype.syncAabb = function () {
     Debug.deprecated('pc.MeshInstance#syncAabb is deprecated.');
 };
