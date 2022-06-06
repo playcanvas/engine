@@ -70,7 +70,7 @@ class MultiViewExample {
                 attributes: {
                     inertiaFactor: 0.2,
                     focusEntity: app.root,
-                    distanceMax: 1200,
+                    distanceMax: 300,
                     frameOnStart: false
                 }
             });
@@ -83,8 +83,8 @@ class MultiViewExample {
                 type: "directional",
                 color: pc.Color.WHITE,
                 intensity: 2,
-                range: 300,
-                shadowDistance: 300,
+                range: 500,
+                shadowDistance: 500,
                 castShadows: true,
                 shadowBias: 0.2,
                 normalOffsetBias: 0.05
