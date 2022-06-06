@@ -105,6 +105,9 @@ class MultiViewExample {
                 // orbit camera left around
                 cameraLeft.setLocalPosition(100 * Math.sin(time * 0.2), 35, 100 * Math.cos(time * 0.2));
                 cameraLeft.lookAt(pc.Vec3.ZERO);
+
+                // zoom in and out the orthographic camera
+                cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;
             });
         });
     }
