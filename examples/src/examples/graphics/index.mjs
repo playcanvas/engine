@@ -27,6 +27,7 @@ import MeshMorphExample from "./mesh-morph";
 import ModelAssetExample from "./model-asset";
 import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
+import MultiViewExample from "./multi-view";
 import PainterExample from "./painter";
 import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
@@ -78,6 +79,7 @@ export {
     ModelAssetExample,
     ModelOutlineExample,
     ModelTexturedBoxExample,
+    MultiViewExample,
     PainterExample,
     ParticlesAnimIndexExample,
     ParticlesRandomSpritesExample,
