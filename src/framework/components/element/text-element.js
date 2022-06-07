@@ -56,7 +56,7 @@ class MeshInfo {
  * @param {MeshInfo} [meshInfo] - An object that specifies optional inputs for the function as follows:
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  */
- function createTextMesh(device, meshInfo) {
+function createTextMesh(device, meshInfo) {
     const mesh = new Mesh(device);
 
     mesh.setPositions(meshInfo.positions);
