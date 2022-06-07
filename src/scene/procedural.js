@@ -3,8 +3,7 @@ import { Vec3 } from '../math/vec3.js';
 import { Debug } from '../core/debug.js';
 
 import {
-    SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT,
-    SEMANTIC_BLENDINDICES,
+    SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
     TYPE_UINT8
 } from '../graphics/constants.js';
 
