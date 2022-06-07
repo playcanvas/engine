@@ -673,7 +673,7 @@ class TextElement {
                 mi.setParameter('shadow_color', this._shadowColorUniform);
                 if (this._symbolShadowParams) {
                     this._shadowOffsetUniform[0] = 0;
-                    this._shadowOffsetUniform[0] = 0;
+                    this._shadowOffsetUniform[1] = 0;
                 } else {
                     const ratio = -this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
