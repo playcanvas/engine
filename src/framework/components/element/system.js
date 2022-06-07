@@ -76,7 +76,7 @@ class ElementComponentSystem extends ComponentSystem {
         this.defaultScreenSpaceImageMaskMaterial = null;
 
         // text element materials created on demand by getTextElementMaterial()
-        this._defaultMaterials = {};
+        this._defaultTextMaterials = {};
 
         this.defaultImageMaterials = [];
 
@@ -340,7 +340,7 @@ class ElementComponentSystem extends ComponentSystem {
                           (msdf && (1 << 1)) |
                  (textAttibutes && (1 << 2));
 
-        let material = this._defaultMaterials[hash];
+        let material = this._defaultTextMaterials[hash];
 
         if (material) {
             return material;
@@ -385,7 +385,7 @@ class ElementComponentSystem extends ComponentSystem {
         material.emissiveVertexColor = true;
         material.update();
 
-        this._defaultMaterials[hash] = material;
+        this._defaultTextMaterials[hash] = material;
 
         return material;
     }
