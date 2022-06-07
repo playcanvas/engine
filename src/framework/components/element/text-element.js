@@ -320,7 +320,7 @@ class TextElement {
         if (this._enableMarkup) {
             const results = Markup.evaluate(this._symbols);
             this._symbols = results.symbols;
-            tags = results.tags || [];
+            tags = results.tags;
         }
 
         // handle LTR vs RTL ordering
