@@ -415,7 +415,7 @@ class TextElement {
                 Math.round(this._shadowColor.b * 255),
                 Math.round(this._shadowColor.a * 255),
                 Math.round(this._shadowOffset.x * this._shadowOffsetScale * 255),
-                Math.round(this._shadowOffset.y * this._shadowOffsetScale * 255)
+                Math.round(-this._shadowOffset.y * this._shadowOffsetScale * 255)
             ];
 
             this._symbolColors = [];
