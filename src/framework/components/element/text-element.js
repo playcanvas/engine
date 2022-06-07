@@ -20,8 +20,6 @@ import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
 
 import { Markup } from './markup.js';
 
-/** @typedef {import('../../../../src/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 class MeshInfo {
     constructor() {
         // number of symbols
@@ -49,23 +47,11 @@ class MeshInfo {
     }
 }
 
-
 /**
  * Creates a new text mesh object from the supplied vertex information and topology.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
- * @param {object} [meshInfo] - An object that specifies optional inputs for the function as follows:
- * @param {number[]} [meshInfo.positions] - An array of 3-dimensional vertex positions.
- * @param {number[]} [meshInfo.normals] - An array of 3-dimensional vertex normals.
- * @param {number[]} [meshInfo.tangents] - An array of 3-dimensional vertex tangents.
- * @param {number[]} [meshInfo.colors] - An array of 4-dimensional vertex colors where each component
- * is an integer in the range 0 to 255.
- * @param {number[]} [meshInfo.uvs] - An array of 2-dimensional vertex texture coordinates.
- * @param {number[]} [meshInfo.outlines] - An array of packed outline parameters of a text.
- * Parameters: (color.r + color.g * 256, color.b + color.a * 256, thickness).
- * @param {number[]} [meshInfo.shadows] - An array of packed shadow parameters of a text.
- * Parameters: (color.r + color.g * 256, color.b + color.a * 256, offset.x + offset.y * 256).
- * @param {number[]} [meshInfo.indices] - An array of triangle indices.
+ * @param {object} device - The graphics device used to manage the mesh.
+ * @param {MeshInfo} [meshInfo] - An object that specifies optional inputs for the function as follows:
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  */
 function createTextMesh(device, meshInfo) {
