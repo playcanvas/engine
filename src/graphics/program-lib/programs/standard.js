@@ -648,7 +648,7 @@ const standard = {
             attributes.vertex_outlineParameters = SEMANTIC_ATTR8;
             attributes.vertex_shadowParameters = SEMANTIC_ATTR9;
 
-            codeBody += "   unpackMsdfParams();\n";
+            codeBody += "    unpackMsdfParams();\n";
 
             code += chunks.msdfVS;
         }
