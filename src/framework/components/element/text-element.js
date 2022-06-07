@@ -7,19 +7,20 @@ import { Vec2 } from '../../../math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9 } from '../../../graphics/constants.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../graphics/constants.js';
 import { VertexIterator } from '../../../graphics/vertex-iterator.js';
-
-import { createMesh } from '../../../scene/procedural.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
+import { Mesh } from '../../../scene/mesh.js';
 
 import { LocalizedAsset } from '../../../asset/asset-localized.js';
 
 import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
 
 import { Markup } from './markup.js';
+
+/** @typedef {import('../../../../src/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 class MeshInfo {
     constructor() {
@@ -46,6 +47,34 @@ class MeshInfo {
         // pc.MeshInstance created from this MeshInfo
         this.meshInstance = null;
     }
+}
+
+/**
+ * Creates a new text mesh object from the supplied vertex information and topology.
+ *
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {MeshInfo} [meshInfo] - An object that specifies optional inputs for the function as follows:
+ * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
+ */
+ function createTextMesh(device, meshInfo) {
+    const mesh = new Mesh(device);
+
+    mesh.setPositions(meshInfo.positions);
+
+    mesh.setNormals(meshInfo.normals);
+
+    mesh.setColors32(meshInfo.colors);
+
+    mesh.setUvs(0, meshInfo.uvs);
+
+    mesh.setIndices(meshInfo.indices);
+
+    mesh.setVertexStream(SEMANTIC_ATTR8, meshInfo.outlines, 3, undefined, TYPE_FLOAT32, false);
+
+    mesh.setVertexStream(SEMANTIC_ATTR9, meshInfo.shadows, 3, undefined, TYPE_FLOAT32, false);
+
+    mesh.update();
+    return mesh;
 }
 
 const LINE_BREAK_CHAR = /^[\r\n]$/;
@@ -449,7 +478,7 @@ class TextElement {
                         Number.isNaN(color.r) ||
                         Number.isNaN(color.g) ||
                         Number.isNaN(color.b) ||
-                        Number.isNaN(color.b)
+                        Number.isNaN(color.a)
                     ) {
                         color = this._outlineColor;
                     }
@@ -615,17 +644,7 @@ class TextElement {
                     meshInfo.normals[v * 4 * 3 + 11] = -1;
                 }
 
-                const mesh = createMesh(this._system.app.graphicsDevice,
-                                        meshInfo.positions,
-                                        {
-                                            uvs: meshInfo.uvs,
-                                            normals: meshInfo.normals,
-                                            colors: meshInfo.colors,
-                                            indices: meshInfo.indices,
-                                            outlines: meshInfo.outlines,
-                                            shadows: meshInfo.shadows
-                                        });
-
+                const mesh = createTextMesh(this._system.app.graphicsDevice, meshInfo);
 
                 const mi = new MeshInstance(mesh, this._material, this._node);
                 mi.name = 'Text Element: ' + this._entity.name;

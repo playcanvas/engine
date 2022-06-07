@@ -3,9 +3,9 @@ import { Vec3 } from '../math/vec3.js';
 import { Debug } from '../core/debug.js';
 
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT,
     SEMANTIC_BLENDINDICES,
-    TYPE_UINT8, TYPE_FLOAT32
+    TYPE_UINT8
 } from '../graphics/constants.js';
 
 import { Mesh } from './mesh.js';
@@ -224,8 +224,6 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
  * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
- * @param {number[]} [opts.outlines] - An array of outline parameters of a text.
- * @param {number[]} [opts.shadows] - An array of shadow parameters of a text.
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
@@ -271,14 +269,6 @@ function createMesh(device, positions, opts) {
 
         if (opts.indices) {
             mesh.setIndices(opts.indices);
-        }
-
-        if (opts.outlines) {
-            mesh.setVertexStream(SEMANTIC_ATTR8, opts.outlines, 3, undefined, TYPE_FLOAT32, false);
-        }
-
-        if (opts.shadows) {
-            mesh.setVertexStream(SEMANTIC_ATTR9, opts.shadows, 3, undefined, TYPE_FLOAT32, false);
         }
     }
 
