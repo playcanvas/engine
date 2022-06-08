@@ -53,6 +53,7 @@ class MeshInfo {
  * @param {object} device - The graphics device used to manage the mesh.
  * @param {MeshInfo} [meshInfo] - An object that specifies optional inputs for the function as follows:
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
+ * @ignore
  */
 function createTextMesh(device, meshInfo) {
     const mesh = new Mesh(device);
