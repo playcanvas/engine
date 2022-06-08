@@ -9,6 +9,7 @@ export default /* glsl */`
 //
 // When filtering:
 // NUM_SAMPLES - number of samples
+// NUM_SAMPLES_SQRT - sqrt of number of samples
 //
 // SUPPORTS_TEXLOD - whether supports texlod is supported
 
@@ -273,11 +274,6 @@ vec4 reproject() {
         vec2 sph = toSpherical(TARGET_FUNC());
         vec2 sphu = dFdx(sph);
         vec2 sphv = dFdy(sph);
-
-        // TODO: check this declaration works on old devices.
-        // might need to be placed globally or be made a #define
-        const float NUM_SAMPLES_SQRT = sqrt(float(NUM_SAMPLES));
-
         vec3 result = vec3(0.0);
         for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
             for (float v = 0.0; v < NUM_SAMPLES_SQRT; ++v) {

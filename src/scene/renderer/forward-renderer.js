@@ -1854,6 +1854,12 @@ class ForwardRenderer {
             const renderAction = renderActions[i];
             const layer = layerComposition.layerList[renderAction.layerIndex];
             const camera = layer.cameras[renderAction.cameraIndex];
+
+            // skip disabled layers
+            if (!renderAction.isLayerEnabled(layerComposition)) {
+                continue;
+            }
+
             const isDepthLayer = layer.id === LAYERID_DEPTH;
             const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
@@ -1873,13 +1879,19 @@ class ForwardRenderer {
                 renderTarget = renderAction.renderTarget;
             }
 
+            // find the next enabled render action
+            let nextIndex = i + 1;
+            while (renderActions[nextIndex] && !renderActions[nextIndex].isLayerEnabled(layerComposition)) {
+                nextIndex++;
+            }
+
             // info about the next render action
-            const nextRenderAction = renderActions[i + 1];
+            const nextRenderAction = renderActions[nextIndex];
             const isNextLayerDepth = nextRenderAction ? layerComposition.layerList[nextRenderAction.layerIndex].id === LAYERID_DEPTH : false;
             const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
             // end of the block using the same render target
-            if (!nextRenderAction || nextRenderAction.renderTarget != renderTarget ||
+            if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
                 nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
 
                 // render the render actions in the range
@@ -1985,7 +1997,7 @@ class ForwardRenderer {
         const cameraPass = renderAction.cameraIndex;
         const camera = layer.cameras[cameraPass];
 
-        if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) {
+        if (!renderAction.isLayerEnabled(comp)) {
             return;
         }
 

@@ -644,6 +644,15 @@ const standard = {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
+        if (options.msdf && options.msdfTextAttribute) {
+            attributes.vertex_outlineParameters = SEMANTIC_ATTR8;
+            attributes.vertex_shadowParameters = SEMANTIC_ATTR9;
+
+            codeBody += "    unpackMsdfParams();\n";
+
+            code += chunks.msdfVS;
+        }
+
         // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
 
@@ -1282,6 +1291,9 @@ const standard = {
         }
 
         if (options.msdf) {
+            if (!options.msdfTextAttribute) {
+                code += "\n#define UNIFORM_TEXT_PARAMETERS";
+            }
             code += chunks.msdfPS;
         }
 
