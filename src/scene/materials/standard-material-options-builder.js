@@ -161,6 +161,7 @@ class StandardMaterialOptionsBuilder {
         options.useMetalness = stdMat.useMetalness;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
+        options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility

@@ -195,6 +195,7 @@ const standardMaterialParameterTypes = {
     // msdfMapUv
     // msdfMapTiling
     // msdfMapOffset
+    // msdfTextAttribute
     // msdfVertexColor
     // msdfVertexColorChannel
 };

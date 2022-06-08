@@ -1063,6 +1063,7 @@ function _defineMaterialProps() {
     _defineFlag('pixelSnap', false);
     _defineFlag('twoSidedLighting', false);
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
+    _defineFlag('msdfTextAttribute', false);
 
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);

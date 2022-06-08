@@ -78,6 +78,7 @@ import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import ltc from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
+import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalInstancedVS from './lit/vert/normalInstanced.js';
@@ -275,6 +276,7 @@ const shaderChunks = {
     ltc,
     metalnessPS,
     msdfPS,
+    msdfVS,
     normalVS,
     normalDetailMapPS,
     normalInstancedVS,
