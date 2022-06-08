@@ -537,34 +537,19 @@ class LitShader {
     }
 
     _fsGetPickPassCode() {
-        // const options = this.options;
-        // const chunks = this.chunks;
-
         let code = this._fsGetBeginCode();
         code += "uniform vec4 uColor;\n";
         code += this.varyings;
-        // if (options.alphaTest) {
-        //     code += "uniform float textureBias;";
-        //     code += "float dAlpha;\n";
-        //     code += this._addMap("opacity", "opacityPS", options, chunks);
-        //     code += chunks.alphaTestPS;
-        // }
         code += this.frontendDecl;
         code += this.frontendCode;
         code += begin();
-        // if (options.alphaTest) {
-        //     code += "   getOpacity();\n";
-        //     code += "   alphaTest(dAlpha);\n";
-        // }
         code += this.frontendFunc;
         code += "    gl_FragColor = uColor;\n";
         code += end();
-
         return code;
     }
 
     _fsGetDepthPassCode() {
-        // const options = this.options;
         const chunks = this.chunks;
 
         let code = this._fsGetBeginCode();
@@ -572,19 +557,9 @@ class LitShader {
         code += 'varying float vDepth;\n';
         code += this.varyings;
         code += chunks.packDepthPS;
-        // if (options.alphaTest) {
-        //     code += "uniform float textureBias;";
-        //     code += "float dAlpha;\n";
-        //     code += this._addMap("opacity", "opacityPS", options, chunks);
-        //     code += chunks.alphaTestPS;
-        // }
         code += this.frontendDecl;
         code += this.frontendCode;
         code += begin();
-        // if (options.alphaTest) {
-        //     code += "   getOpacity();\n";
-        //     code += "   alphaTest(dAlpha);\n";
-        // }
         code += this.frontendFunc;
         code += "    gl_FragColor = packFloat(vDepth);\n";
         code += end();
@@ -625,12 +600,6 @@ class LitShader {
         }
 
         code += varyings;
-        // if (options.alphaTest) {
-        //     code += "uniform float textureBias;";
-        //     code += "float dAlpha;\n";
-        //     code += this._addMap("opacity", "opacityPS", options, chunks);
-        //     code += chunks.alphaTestPS;
-        // }
         code += this.frontendDecl;
         code += this.frontendCode;
 
@@ -647,10 +616,6 @@ class LitShader {
 
         code += begin();
 
-        // if (options.alphaTest) {
-        //     code += "   getOpacity();\n";
-        //     code += "   alphaTest(dAlpha);\n";
-        // }
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
@@ -834,34 +799,6 @@ class LitShader {
             }
         }
 
-        // if (this.needsNormal) {
-        //     // if normalMap is disabled, then so is normalDetailMap
-        //     if (options.normalMap || options.clearCoatNormalMap) {
-        //         // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
-        //         // code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
-
-        //         if (!options.hasTangents) {
-        //             // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
-        //             // const baseName = options.normalMap ? "normalMap" : "clearCoatNormalMap";
-        //             // const uv = this._getUvSourceExpression(`${baseName}Transform`, `${baseName}Uv`, options);
-        //             // tbn = tbn.replace(/\$UV/g, uv);
-        //         }
-        //         code += tbn;
-        //     } else if (options.enableGGXSpecular && !options.heightMap) {
-        //         code += chunks.normalVertexPS;
-        //         code += chunks.TBNObjectSpacePS;
-        //     }
-
-        //     if (!options.normalMap && (!(options.enableGGXSpecular && !options.heightMap))) {
-        //         code += chunks.normalVertexPS;
-        //     }
-        // }
-
-        // if (this.needsNormal && !options.normalMap) {
-        //     // frontend didn't supply normal
-        //     code += chunks.normalVertexPS;
-        // }
-
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
@@ -886,39 +823,11 @@ class LitShader {
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
-        // if (options.diffuseDetail) {
-        //     code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, chunks);
-        // }
-        // code += this._addMap("diffuse", "diffusePS", options, chunks);
-        // if (options.blendType !== BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
-        //     code += this._addMap("opacity", "opacityPS", options, chunks);
-        // }
-        // code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
-
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            // const specularPropName = options.useMetalness ? "metalness" : "specular";
-            // code += this._addMap(specularPropName, specularPropName + "PS", options, chunks);
-            // code += this._addMap("gloss", "glossPS", options, chunks);
-
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
         }
-
-        // if (options.clearCoat > 0) {
-        //     code += this._addMap("clearCoat", "clearCoatPS", options, chunks);
-        //     code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, chunks);
-        //     code += this._addMap("clearCoatNormal", "clearCoatNormalPS", options, chunks);
-        // }
-
-        // if (options.heightMap) {
-        //     if (!options.normalMap) {
-        //         const transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
-        //         if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
-        //         code += tbn;
-        //     }
-        //     code += this._addMap("height", "parallaxPS", options, chunks);
-        // }
 
         const useAo = options.aoMap || options.aoVertexColor;
 
@@ -1053,13 +962,6 @@ class LitShader {
 
         const addAmbient = (!options.lightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
 
-        // let addAmbient = true;
-        // if (options.lightMap || options.lightVertexColor) {
-        //     // const lightmapChunkPropName = (options.dirLightMap && options.useSpecular) ? 'lightmapDirPS' : 'lightmapSinglePS';
-        //     // code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
-        //     addAmbient = options.lightMapWithoutAmbient;
-        // }
-
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
@@ -1073,10 +975,6 @@ class LitShader {
         if (options.ambientTint && !useOldAmbient) {
             code += "uniform vec3 material_ambient;\n";
         }
-
-        // if (options.alphaTest) {
-        //     code += chunks.alphaTestPS;
-        // }
 
         if (options.msdf) {
             if (!options.msdfTextAttribute) {
@@ -1151,22 +1049,6 @@ class LitShader {
             }
         }
 
-        // let opacityParallax = false;
-        // if (options.blendType === BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
-        //     code += "   dAlpha = 1.0;\n";
-        // } else {
-        //     if (options.heightMap && options.opacityMap) {
-        //         opacityParallax = true;
-        //     } else {
-        //         code += "   getOpacity();\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
-        //         if (options.alphaTest) {
-        //             code += "   alphaTest(dAlpha);\n";
-        //         }
-        //     }
-        // }
-
-        // let getGlossinessCalled = false;
-
         if (this.needsNormal) {
             code += "    getViewDir();\n";
             if (!options.normalMap) {
@@ -1175,25 +1057,6 @@ class LitShader {
             if (hasTBN) {
                 code += "    getTBN();\n";
             }
-            // if (options.heightMap) {
-            //     code += "   getParallax();\n";
-            // }
-
-            // if (opacityParallax) {
-            //     code += "   getOpacity();\n"; // if there's parallax, calculate opacity after it, to properly distort
-            //     if (options.alphaTest) {
-            //         code += "   alphaTest(dAlpha);\n";
-            //     }
-            // }
-
-            // code += "   getNormal();\n";
-            // if (options.useSpecular) {
-            //     if (this.lighting && options.enableGGXSpecular) {
-            //         code += "   getGlossiness();\n";
-            //         getGlossinessCalled = true;
-            //     }
-            //     code += "   getReflDir();\n";
-            // }
         }
 
         // invoke frontend functions
@@ -1201,16 +1064,6 @@ class LitShader {
 
         // transform tangent space normals to world space
         if (this.needsNormal) {
-            // if (options.normalMap) {
-            //     if (options.normalizeNormalMap) {
-            //         code += "    dNormalW = normalize(dTBN * dNormalMap);\n";
-            //     } else {
-            //         code += "    dNormalW = dTBN * dNormalMap;\n";
-            //     }
-            // } else {
-            //     code += "    dNormalW = normalize(dVertexNormalW);\n";
-            // }
-
             if (options.useSpecular) {
                 code += "    getReflDir();\n";
             }
@@ -1220,18 +1073,7 @@ class LitShader {
             }
         }
 
-        // code += "   getAlbedo();\n";
-
-        // if (options.clearCoat > 0) {
-        //     code += "   getClearCoat();\n";
-        //     code += "   getClearCoatGlossiness();\n";
-        //     code += "   getClearCoatNormal();\n";
-        // }
-
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            // code += "   getSpecularity();\n";
-            // if (!getGlossinessCalled) code += "   getGlossiness();\n";
-
             // this is needed to allow custom area light fresnel calculations
             if (hasAreaLights) {
                 code += "    #ifdef AREA_LIGHTS\n";
@@ -1245,10 +1087,6 @@ class LitShader {
             if (options.fresnelModel > 0) {
                 code += "    getFresnel();\n";
             }
-
-            // if (useAo) {
-            //     code += "  getAO();\n";
-            // }
         }
 
         if (addAmbient) {
@@ -1550,9 +1388,6 @@ class LitShader {
         let structCode = "";
         if (code.includes("dReflection")) structCode += "vec4 dReflection;\n";
         if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
-        // if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";
-        // if (code.includes("dEmission")) structCode += "vec3 dEmission;\n";
-        // if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
         if (code.includes("dVertexNormalW")) structCode += "vec3 dVertexNormalW;\n";
         if (code.includes("dTangentW")) structCode += "vec3 dTangentW;\n";
         if (code.includes("dBinormalW")) structCode += "vec3 dBinormalW;\n";
@@ -1564,24 +1399,15 @@ class LitShader {
         if (code.includes("dLightDirW")) structCode += "vec3 dLightDirW;\n";
         if (code.includes("dLightPosW")) structCode += "vec3 dLightPosW;\n";
         if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
-        // if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
-        // if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
         if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
-        // if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
-        // if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
-        // if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
         if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
-        // if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
         if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
-        // if (code.includes("ccNormalW")) structCode += "vec3 ccNormalW;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
-        // if (code.includes("ccSpecularity")) structCode += "float ccSpecularity;\n";
         if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
-        // if (code.includes("ccGlossiness")) structCode += "float ccGlossiness;\n";
 
         const result = this._fsGetBeginCode() +
             this.varyings +
