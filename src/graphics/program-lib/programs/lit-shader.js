@@ -1134,18 +1134,10 @@ class LitShader {
         code += this._fsGetStartCode(code, device, chunks, options);
 
         if (this.needsNormal) {
-            if (!options.hasTangents && device.extStandardDerivatives && !options.fastTbn) {
-                if (options.twoSidedLighting) {
-                    code += "    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
-                } else {
-                    code += "    dVertexNormalW = normalize(vNormalW);\n";
-                }
+            if (options.twoSidedLighting) {
+                code += "    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);\n";
             } else {
-                if (options.twoSidedLighting) {
-                    code += "    dVertexNormalW = gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor;\n";
-                } else {
-                    code += "    dVertexNormalW = vNormalW;\n";
-                }
+                code += "    dVertexNormalW = normalize(vNormalW);\n";
             }
 
             if ((options.heightMap || options.normalMap) && options.hasTangents) {
