@@ -4,9 +4,14 @@ import {
 
 /** @typedef {import('../../graphics/uniform-buffer.js').UniformBuffer} UniformBuffer */
 /** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
+/** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
 
-// class representing an entry in the final order of rendering of cameras and layers in the engine
-// this is populated at runtime based on LayerComposition
+/**
+ * Class representing an entry in the final order of rendering of cameras and layers in the engine
+ * this is populated at runtime based on LayerComposition
+ *
+ * @ignore
+ */
 class RenderAction {
     constructor() {
 
@@ -76,6 +81,15 @@ class RenderAction {
         this.directionalLightsSet.clear();
         this.directionalLights.length = 0;
         this.directionalLightsIndices.length = 0;
+    }
+
+    /**
+     * @param {LayerComposition} layerComposition - The layer composition.
+     * @returns {boolean} - True if the layer / sublayer referenced by the render action is enabled
+     */
+    isLayerEnabled(layerComposition) {
+        const layer = layerComposition.layerList[this.layerIndex];
+        return layer.enabled && layerComposition.subLayerEnabled[this.layerIndex];
     }
 
     // store directional lights that are needed for this camera based on layers it renders
