@@ -342,7 +342,10 @@ class TextElement {
         if (this._enableMarkup) {
             const results = Markup.evaluate(this._symbols);
             this._symbols = results.symbols;
-            tags = results.tags;
+            // NOTE: if results.tags is null, we assign [] to increase
+            // probability of batching. So, if a user want to use as less
+            // WebGL buffers memory as possible they can just disable markups.
+            tags = results.tags || [];
         }
 
         // handle LTR vs RTL ordering
@@ -373,15 +376,15 @@ class TextElement {
 
         const getColorThicknessHash = (color, thickness) => {
             return `${color.toString(true).toLowerCase()}:${
-                Math.round(thickness * this._outlineThicknessScale * 255)
+                thickness.toFixed(2)
             }`;
         };
 
         const getColorOffsetHash = (color, offset) => {
             return `${color.toString(true).toLowerCase()}:${
-                Math.round(offset.x * this._shadowOffsetScale * 255)
+                offset.x.toFixed(2)
             }:${
-                Math.round(offset.y * this._shadowOffsetScale * 255)
+                offset.y.toFixed(2)
             }`;
         };
 
@@ -402,15 +405,15 @@ class TextElement {
                 Math.round(this._outlineColor.g * 255),
                 Math.round(this._outlineColor.b * 255),
                 Math.round(this._outlineColor.a * 255),
-                Math.round(this._outlineThickness * this._outlineThicknessScale * 255)
+                Math.round(this._outlineThickness * 255)
             ];
             this._shadowPalette = [
                 Math.round(this._shadowColor.r * 255),
                 Math.round(this._shadowColor.g * 255),
                 Math.round(this._shadowColor.b * 255),
                 Math.round(this._shadowColor.a * 255),
-                Math.round(this._shadowOffset.x * this._shadowOffsetScale * 255),
-                Math.round(-this._shadowOffset.y * this._shadowOffsetScale * 255)
+                Math.round(this._shadowOffset.x * 127),
+                Math.round(this._shadowOffset.y * 127)
             ];
 
             this._symbolColors = [];
@@ -463,8 +466,15 @@ class TextElement {
                 let outline = 0;
 
                 // get markup outline
-                if (tag && tag.outline && (tag.outline.attributes.color || tag.outline.attributes.thickness)) {
-                    let color = colorTmp.fromString(tag.outline.attributes.color);
+                if (
+                    tag &&
+                    tag.outline &&
+                    (tag.outline.attributes.color || tag.outline.attributes.thickness)
+                ) {
+                    let color = tag.outline.attributes.color ?
+                        colorTmp.fromString(tag.outline.attributes.color) :
+                        this._outlineColor;
+
                     let thickness = Number(tag.outline.attributes.thickness);
 
                     if (
@@ -495,7 +505,7 @@ class TextElement {
                             Math.round(color.g * 255),
                             Math.round(color.b * 255),
                             Math.round(color.a * 255),
-                            Math.round(thickness * this._outlineThicknessScale * 255)
+                            Math.round(thickness * 255)
                         );
                     }
                 }
@@ -511,7 +521,10 @@ class TextElement {
                     tag.shadow.attributes.offsetX ||
                     tag.shadow.attributes.offsetY
                 )) {
-                    let color = colorTmp.fromString(tag.shadow.attributes.color);
+                    let color = tag.shadow.attributes.color ?
+                        colorTmp.fromString(tag.shadow.attributes.color) :
+                        this._shadowColor;
+
                     const off = Number(tag.shadow.attributes.offset);
                     const offX = Number(tag.shadow.attributes.offsetX);
                     const offY = Number(tag.shadow.attributes.offsetY);
@@ -526,15 +539,19 @@ class TextElement {
                     }
 
                     const offset = vec2Tmp.set(
-                        Number.isNaN(offX || off) ?
-                            this._shadowOffset.x :
-                            offX || off,
-                        -(Number.isNaN(offY || off) ?
-                            this._shadowOffset.y :
-                            offY || off)
+                        !Number.isNaN(offX) ?
+                            offX :
+                            !Number.isNaN(off) ?
+                                off :
+                                this._shadowOffset.x,
+                        !Number.isNaN(offY) ?
+                            offY :
+                            !Number.isNaN(off) ?
+                                off :
+                                this._shadowOffset.y
                     );
 
-                    const shadowHash = getColorThicknessHash(color, offset);
+                    const shadowHash = getColorOffsetHash(color, offset);
 
                     if (shadowPaletteMap.hasOwnProperty(shadowHash)) {
                         // shadow parameters is already in the palette
@@ -549,8 +566,8 @@ class TextElement {
                             Math.round(color.g * 255),
                             Math.round(color.b * 255),
                             Math.round(color.a * 255),
-                            Math.round(offset.x * this._shadowOffsetScale * 255),
-                            Math.round(offset.y * this._shadowOffsetScale * 255)
+                            Math.round(offset.x * 127),
+                            Math.round(offset.y * 127)
                         );
                     }
                 }
@@ -934,11 +951,10 @@ class TextElement {
             let outline_color_ba = 255 + 255 * 256;
             let outline_thickness = 0;
 
-
             // per-vertex shadow parameters
             let shadow_color_rg = 255 + 255 * 256;
             let shadow_color_ba = 255 + 255 * 256;
-            let shadow_offset_xy = 0;
+            let shadow_offset_xy = 127 + 127 * 256;
 
             // In left-to-right mode we loop through the symbols from start to end.
             // In right-to-left mode we loop through the symbols from end to the beginning
@@ -1021,7 +1037,11 @@ class TextElement {
 
                 const isWhitespace = WHITESPACE_CHAR.test(char);
 
-                const meshInfo = this._meshInfo[(data && data.map) || 0];
+
+                const meshInfoId = (data && data.map) || 0;
+                const ratio = -this._font.data.info.maps[meshInfoId].width /
+                    this._font.data.info.maps[meshInfoId].height;
+                const meshInfo = this._meshInfo[meshInfoId];
 
                 const candidateLineWidth = _x + this._spacing * advance;
 
@@ -1216,8 +1236,8 @@ class TextElement {
                         this._shadowPalette[shadowIdx + 1] * 256;
                     shadow_color_ba = this._shadowPalette[shadowIdx + 2] +
                         this._shadowPalette[shadowIdx + 3] * 256;
-                    shadow_offset_xy = this._shadowPalette[shadowIdx + 4] +
-                        this._shadowPalette[shadowIdx + 5] * 256;
+                    shadow_offset_xy = (this._shadowPalette[shadowIdx + 4] + 127) +
+                        Math.round(ratio * this._shadowPalette[shadowIdx + 5] + 127) * 256;
                 }
 
                 meshInfo.shadows[quad * 4 * 3 + 0] = shadow_color_rg;
@@ -2153,6 +2173,26 @@ class TextElement {
         }
         return this._symbolColors.map(function (c) {
             return this._colorPalette.slice(c * 3, c * 3 + 3);
+        }, this);
+    }
+
+    // NOTE: it is used only for tests
+    get symbolOutlineParams() {
+        if (this._symbolOutlineParams === null) {
+            return null;
+        }
+        return this._symbolOutlineParams.map(function (paramId) {
+            return this._outlinePalette.slice(paramId * 5, paramId * 5 + 5);
+        }, this);
+    }
+
+    // NOTE: it is used only for tests
+    get symbolShadowParams() {
+        if (this._symbolShadowParams === null) {
+            return null;
+        }
+        return this._symbolShadowParams.map(function (paramId) {
+            return this._shadowPalette.slice(paramId * 6, paramId * 6 + 6);
         }, this);
     }
 
