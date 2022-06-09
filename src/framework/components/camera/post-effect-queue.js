@@ -10,8 +10,6 @@ import { LAYERID_DEPTH } from '../../../scene/constants.js';
 /** @typedef {import('../../app-base.js').AppBase} AppBase */
 /** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
-let depthLayer;
-
 class PostEffect {
     constructor(effect, inputTarget) {
         this.effect = effect;
@@ -268,12 +266,19 @@ class PostEffectQueue {
     }
 
     _requestDepthMap() {
-        if (!depthLayer) depthLayer = this.app.scene.layers.getLayerById(LAYERID_DEPTH);
-        if (depthLayer) depthLayer.incrementCounter();
+        const depthLayer = this.app.scene.layers.getLayerById(LAYERID_DEPTH);
+        if (depthLayer) {
+            depthLayer.incrementCounter();
+            this.camera.requestSceneDepthMap(true);
+        }
     }
 
     _releaseDepthMap() {
-        if (depthLayer) depthLayer.decrementCounter();
+        const depthLayer = this.app.scene.layers.getLayerById(LAYERID_DEPTH);
+        if (depthLayer) {
+            depthLayer.decrementCounter();
+            this.camera.requestSceneDepthMap(false);
+        }
     }
 
     /**
@@ -316,8 +321,6 @@ class PostEffectQueue {
                     const len = this.effects.length;
                     if (len) {
 
-                        DebugGraphics.pushGpuMarker(this.app.graphicsDevice, 'Postprocess');
-
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
 
@@ -337,8 +340,6 @@ class PostEffectQueue {
                             fx.effect.render(fx.inputTarget, destTarget, rect);
                             DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                         }
-
-                        DebugGraphics.popGpuMarker(this.app.graphicsDevice);
                     }
                 }
             };

@@ -15,7 +15,7 @@ class LightsBakedExample {
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // All render component primitive shape types
-        const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+        const shapes = ["box", "cone", "cylinder", "sphere", "capsule", "torus"];
 
         for (let i = 0; i < 40; i++) {
             const shape = shapes[Math.floor(Math.random() * shapes.length)];

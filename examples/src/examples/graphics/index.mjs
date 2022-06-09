@@ -7,6 +7,7 @@ import ClusteredLightingExample from "./clustered-lighting";
 import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
 import ClusteredSpotShadowsExample from "./clustered-spot-shadows";
 import GrabPassExample from "./grab-pass";
+import GroundFogExample from "./ground-fog";
 import HardwareInstancingExample from "./hardware-instancing";
 import HierarchyExample from "./hierarchy";
 import LayersExample from "./layers";
@@ -26,6 +27,7 @@ import MeshMorphExample from "./mesh-morph";
 import ModelAssetExample from "./model-asset";
 import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
+import MultiViewExample from "./multi-view";
 import PainterExample from "./painter";
 import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
@@ -57,6 +59,7 @@ export {
     ClusteredOmniShadowsExample,
     ClusteredSpotShadowsExample,
     GrabPassExample,
+    GroundFogExample,
     HardwareInstancingExample,
     HierarchyExample,
     LayersExample,
@@ -76,6 +79,7 @@ export {
     ModelAssetExample,
     ModelOutlineExample,
     ModelTexturedBoxExample,
+    MultiViewExample,
     PainterExample,
     ParticlesAnimIndexExample,
     ParticlesRandomSpritesExample,

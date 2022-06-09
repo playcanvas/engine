@@ -241,7 +241,7 @@ class Scene extends EventHandler {
          * shaders that reference global settings.
          *
          * @type {boolean}
-         * @private
+         * @ignore
          */
         this.updateShaders = true;
 

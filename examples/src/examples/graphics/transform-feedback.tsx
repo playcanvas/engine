@@ -5,7 +5,7 @@ class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Transform Feedback';
     static FILES = {
-        'shaderFeedback.vert': `
+        'shaderFeedback.vert': /* glsl */`
 // vertex shader used to move particles during transform-feedback simulation step
 
 // input and output is vec4, containing position in .xyz and lifetime in .w
@@ -54,7 +54,7 @@ void main(void) {
     // write out updated particle
     out_vertex_position = vec4(pos, liveTime);
 }`,
-        'shaderCloud.vert': `
+        'shaderCloud.vert': /* glsl */`
 // vertex shader used to render point sprite particles
 
 // Attributes per vertex: position
@@ -77,7 +77,7 @@ void main(void)
     // color depends on position of particle
     outColor = vec4(worldPosition.y * 0.25, 0.1, worldPosition.z * 0.2, 1);
 }`,
-        'shaderCloud.frag': `
+        'shaderCloud.frag': /* glsl */`
 // fragment shader used to render point sprite particles
 precision mediump float;
 varying vec4 outColor;

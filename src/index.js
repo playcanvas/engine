@@ -27,6 +27,7 @@ export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { Debug } from './core/debug.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -57,6 +58,7 @@ export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
+export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';

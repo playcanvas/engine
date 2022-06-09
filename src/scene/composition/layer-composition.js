@@ -100,7 +100,12 @@ class LayerComposition extends EventHandler {
          */
         this.cameras = [];
 
-        // the actual rendering sequence, generated based on layers and cameras
+        /**
+         * The actual rendering sequence, generated based on layers and cameras
+         *
+         * @type {RenderAction[]}
+         * @ignore
+         */
         this._renderActions = [];
 
         // all currently created light clusters, that need to be updated before rendering
@@ -122,6 +127,10 @@ class LayerComposition extends EventHandler {
             cluster.destroy();
         });
         this._worldClusters = null;
+
+        // render actions
+        this._renderActions.forEach(ra => ra.destroy());
+        this._renderActions = null;
     }
 
     // returns an empty light cluster object to be used when no lights are used
@@ -379,6 +388,10 @@ class LayerComposition extends EventHandler {
                 }
             }
 
+            // destroy unused render actions
+            for (let i = renderActionCount; i < this._renderActions.length; i++) {
+                this._renderActions[i].destroy();
+            }
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
@@ -569,6 +582,7 @@ class LayerComposition extends EventHandler {
     addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
 
         // try and reuse object, otherwise allocate new
+        /** @type {RenderAction} */
         let renderAction = renderActions[renderActionIndex];
         if (!renderAction) {
             renderAction = renderActions[renderActionIndex] = new RenderAction();

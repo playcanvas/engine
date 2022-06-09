@@ -80,12 +80,12 @@ const matD = new Mat4();
  * ```
  *
  * Relevant 'Engine-only' examples:
- * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
- * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
- * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
- * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
- * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
- * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
+ * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic)
+ * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline)
+ * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow)
+ * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup)
+ * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap)
+ * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter)
  *
  * @property {Color} color The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color
  * of the text for {@link ELEMENTTYPE_TEXT} types.
@@ -1654,6 +1654,12 @@ class ElementComponent extends Component {
 
         return false;
     }
+
+    _dirtyBatch() {
+        if (this.batchGroupId !== -1) {
+            this.system.app.batcher?.markGroupDirty(this.batchGroupId);
+        }
+    }
 }
 
 function _define(name) {
@@ -1668,8 +1674,16 @@ function _define(name) {
         },
         set: function (value) {
             if (this._text) {
+                if (this._text[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._text[name] = value;
             } else if (this._image) {
+                if (this._image[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._image[name] = value;
             }
         }

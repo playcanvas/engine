@@ -1,17 +1,8 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import SliderInput from '@playcanvas/pcui/SliderInput/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class PostEffectsExample {
@@ -293,8 +284,8 @@ class PostEffectsExample {
                 // - it's a negative distance between the camera and the focus sphere
                 camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-                // display the depth texture if bokeh is enabled
-                if (camera.script.bokeh.enabled) {
+                // display the depth texture if it was rendered
+                if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
                     // @ts-ignore engine-tsd
                     app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
                 }

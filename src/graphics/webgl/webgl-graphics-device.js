@@ -28,7 +28,7 @@ import { drawQuadWithShader } from '../simple-post-effect.js';
 import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
-import { GrabPass } from '../grab-pass.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
@@ -229,6 +229,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super(canvas);
 
         this.defaultFramebuffer = null;
+
+        // true if the default framebuffer has alpha
+        this.defaultFramebufferAlpha = options.alpha;
 
         this.updateClientRect();
 
@@ -622,12 +625,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._spectorCurrentMarker = "";
         // #endif
 
-        // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
-        this.grabPassAvailable = true;
-
-        this.grabPass = new GrabPass(this, options.alpha);
-        this.grabPass.create();
-
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
@@ -643,8 +640,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     destroy() {
         super.destroy();
         const gl = this.gl;
-
-        this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {
             gl.deleteTransformFeedback(this.feedback);
@@ -683,7 +678,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createRenderTargetImpl(renderTarget) {
-        return new WebglRenderTarget(renderTarget);
+        return new WebglRenderTarget();
     }
 
     // #if _DEBUG
@@ -1034,9 +1029,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
-        // grab pass
-        this.grabPass.destroy();
-
         // release textures
         for (const texture of this.textures) {
             texture.loseContext();
@@ -1075,8 +1067,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
-
-        this.grabPass.create();
     }
 
     /**
@@ -1132,7 +1122,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Copies source render target into destination render target. Mostly used by post-effects.
      *
-     * @param {RenderTarget} source - The source render target.
+     * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
      * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
@@ -1152,7 +1142,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     Debug.error("Can't copy empty color buffer to backbuffer");
                     return false;
                 }
-            } else {
+            } else if (source) {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
                     Debug.error("Can't copy color buffer, because one of the render targets doesn't have it");
@@ -1164,16 +1154,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         }
-        if (depth) {
-            if (!source._depthBuffer || !dest._depthBuffer) {
-                Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
-                return false;
-            }
-            if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                Debug.error("Can't copy render targets of different depth formats");
-                return false;
+        if (depth && source) {
+            if (!source._depth) {   // when depth is automatic, we cannot test the buffer nor its format
+                if (!source._depthBuffer || !dest._depthBuffer) {
+                    Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                    return false;
+                }
+                if (source._depthBuffer._format !== dest._depthBuffer._format) {
+                    Debug.error("Can't copy render targets of different depth formats");
+                    return false;
+                }
             }
         }
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
         if (this.webgl2 && dest) {
             const prevRt = this.renderTarget;
@@ -1194,6 +1188,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.constantTexSource.setValue(source._colorBuffer);
             drawQuadWithShader(this, dest, shader);
         }
+
+        DebugGraphics.popGpuMarker(this);
 
         return true;
     }
@@ -1246,6 +1242,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateBegin() {
+        DebugGraphics.pushGpuMarker(this, `UPDATE-BEGIN`);
+
         this.boundVao = null;
 
         // clear texture units once a frame on desktop safari
@@ -1270,6 +1268,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else {
             this.setFramebuffer(this.defaultFramebuffer);
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**
@@ -1278,6 +1278,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * {@link GraphicsDevice#updateEnd} must not be nested.
      */
     updateEnd() {
+
+        DebugGraphics.pushGpuMarker(this, `UPDATE-END`);
+
         const gl = this.gl;
 
         // unbind VAO from device to protect it from being changed
@@ -1304,6 +1307,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 target.resolve();
             }
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**
@@ -1468,10 +1473,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (!texture.impl._glTexture)
             texture.impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPass.texture) {
+        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
+
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
@@ -1480,11 +1486,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 texture._parameterFlags = 0;
             }
 
-            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
-            // (for example when rendering to shadow map), in which case previous content is used
-            const processed = (texture === this.grabPass.texture) && this.grabPass.prepareTexture();
-
-            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
@@ -1666,6 +1668,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             sampler = samplers[i];
             samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
+
+                // #if _DEBUG
+                const samplerName = sampler.scopeId.name;
+                if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
+                }
+                if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                }
+                // #endif
+
                 continue; // Because unset constants shouldn't raise random errors
             }
 

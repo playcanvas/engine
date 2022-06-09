@@ -2,6 +2,7 @@ import fs from 'fs';
 import Handlebars from 'handlebars';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import readDirectoryNames from '../../src/app/helpers/read-dir-names.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,9 +17,7 @@ function loadHtmlTemplate(data) {
 
 const categoriesList = [];
 
-let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
-categories = categories.filter(c => c !== 'index.mjs');
-categories.forEach((category) => {
+readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach((category) => {
     const dir = `${MAIN_DIR}/dist/${category}`;
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);

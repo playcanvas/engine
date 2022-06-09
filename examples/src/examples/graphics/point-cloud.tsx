@@ -5,7 +5,7 @@ class PointCloudExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Point Cloud';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -41,7 +41,7 @@ void main(void)
     // color mixes red and yellow based on intensity
     outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision lowp float;
 varying vec4 outColor;
 

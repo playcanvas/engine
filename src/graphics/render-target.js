@@ -112,7 +112,7 @@ class RenderTarget {
         }
 
         // device, from one of the buffers
-        this._device = this._colorBuffer?.device || this._depthBuffer?.device;
+        this._device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
         Debug.assert(this._device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
 
         this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
@@ -285,7 +285,7 @@ class RenderTarget {
      * @type {number}
      */
     get width() {
-        return this._colorBuffer ? this._colorBuffer.width : this._depthBuffer.width;
+        return this._colorBuffer?.width || this._depthBuffer?.width || this._device.width;
     }
 
     /**
@@ -294,7 +294,7 @@ class RenderTarget {
      * @type {number}
      */
     get height() {
-        return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
+        return this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
     }
 }
 

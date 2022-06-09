@@ -4,6 +4,7 @@ import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
+import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';
@@ -119,6 +120,8 @@ class Picker {
         // backup active render target
         const origRenderTarget = device.renderTarget;
 
+        DebugGraphics.pushGpuMarker(device, 'PICKER');
+
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this.renderTarget);
         device.updateBegin();
@@ -130,6 +133,8 @@ class Picker {
 
         // Restore render target
         device.setRenderTarget(origRenderTarget);
+
+        DebugGraphics.popGpuMarker(device);
 
         const mapping = this.mapping;
         for (let i = 0; i < width * height; i++) {
@@ -296,7 +301,7 @@ class Picker {
         this.mapping.length = 0;
 
         // render
-        this.app.renderer.renderComposition(this.layerComp);
+        this.app.renderComposition(this.layerComp);
     }
 
     updateCamera(srcCamera) {
