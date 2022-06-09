@@ -16,7 +16,8 @@
     "watch": "npm run build:example:data && npm run build:directory && npm run build:iframes && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:iframes": "nodemon -e js,mjs,json,tsx --watch ../build --watch ./src/examples --watch ../scripts --exec npm run build:iframes",
     "watch:iframes:debug": "ENGINE_PATH=/build/playcanvas.dbg.js npm run watch:iframes",
-    "watch:iframes:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch:iframes"
+    "watch:iframes:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch:iframes",
+    "develop": "cross-env ENGINE_PATH=/build/playcanvas.dbg.js concurrently --kill-others \"npm run watch:iframes:debug\" \"npm run serve\""
   },
   "eslintConfig": {
     "root": true,
