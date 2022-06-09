@@ -6,8 +6,8 @@ import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { execSync } from 'child_process';
 
-const execSync = require('child_process').execSync;
 let revision;
 try {
     revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -206,13 +206,10 @@ function buildTarget(buildType, moduleFormat) {
         debug: {
             values: {
                 ...sdkVersion,
-                ...{
-                    _DEBUG: 1,
-                    _PROFILER: 1
-                }
+                _DEBUG: 1,
+                _PROFILER: 1
             },
-            keepLines: true,
-            sourcemap: 'inline'
+            keepLines: true
         },
         release: {
             values: sdkVersion
@@ -220,9 +217,7 @@ function buildTarget(buildType, moduleFormat) {
         profiler: {
             values: {
                 ...sdkVersion,
-                ...{
-                    _PROFILER: 1
-                }
+                _PROFILER: 1
             }
         }
     };
