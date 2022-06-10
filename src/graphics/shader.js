@@ -1,5 +1,7 @@
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
+import { EventHandler } from '../core/event-handler.js';
+
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's
  * graphics processor. The shader is generated from a shader definition. This shader definition
@@ -9,6 +11,10 @@
  * attributes specified in the vertex shader code.
  */
 class Shader {
+    // #if _DEBUG
+    static debugEvents = new EventHandler();
+    // #endif
+
     /**
      * Creates a new Shader instance.
      *

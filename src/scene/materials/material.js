@@ -15,6 +15,7 @@ import {
 } from '../constants.js';
 import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
+import { materialRegistry } from './material-registry.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 
@@ -120,6 +121,10 @@ class Material {
     constructor() {
         this.name = 'Untitled';
         this.id = id++;
+
+        // #if _DEBUG
+        materialRegistry.add(this);
+        // #endif
 
         this._shader = null;
         this.variants = {};
@@ -494,6 +499,10 @@ class Material {
                 Debug.warn('pc.Material: MeshInstance mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
+
+        // #if _DEBUG
+        materialRegistry.add(this);
+        // #endif
     }
 
     // registers mesh instance as referencing the material

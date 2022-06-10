@@ -2,11 +2,11 @@ import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 
+import { Shader } from '../shader.js';
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
 /** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../shader.js').Shader} Shader */
 
 /**
  * A WebGL implementation of the Shader.
@@ -204,6 +204,7 @@ class WebglShader {
 
             // #if _DEBUG
             console.error(message, definition);
+            Shader.debugEvents.fire('linkError', shader);
             // #else
             console.error(message);
             // #endif
@@ -283,6 +284,7 @@ class WebglShader {
             // #if _DEBUG
             error.shader = shader;
             console.error(message, error);
+            Shader.debugEvents.fire('compileError', shader);
             // #else
             console.error(message);
             // #endif
