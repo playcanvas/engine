@@ -35,7 +35,7 @@ class MultiViewExample {
             app.root.addChild(boardEntity);
 
             // Create left camera
-            const cameraLeft = new pc.Entity();
+            const cameraLeft = new pc.Entity('LeftCamera');
             cameraLeft.addComponent("camera", {
                 farClip: 500,
                 rect: new pc.Vec4(0, 0, 0.5, 0.5)
@@ -43,7 +43,7 @@ class MultiViewExample {
             app.root.addChild(cameraLeft);
 
             // Create right orthographic camera
-            const cameraRight = new pc.Entity();
+            const cameraRight = new pc.Entity('RightCamera');
             cameraRight.addComponent("camera", {
                 farClip: 500,
                 rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
@@ -55,7 +55,7 @@ class MultiViewExample {
             app.root.addChild(cameraRight);
 
             // Create top camera
-            const cameraTop = new pc.Entity();
+            const cameraTop = new pc.Entity('TopCamera');
             cameraTop.addComponent("camera", {
                 farClip: 500,
                 rect: new pc.Vec4(0, 0.5, 1, 0.5)

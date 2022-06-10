@@ -51,7 +51,7 @@ class ModelOutlineExample {
                 width: app.graphicsDevice.width,
                 height: app.graphicsDevice.height,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                mipmaps: true,
+                mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR
             });
