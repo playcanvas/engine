@@ -75,7 +75,12 @@ class GraphicsDevice extends EventHandler {
      */
     precision;
 
-    /** @type {RenderTarget} */
+    /**
+     * Currently active render target.
+     *
+     * @type {RenderTarget}
+     * @ignore
+     */
     renderTarget = null;
 
     /** @type {boolean} */
