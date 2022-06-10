@@ -1339,7 +1339,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // generate mimaps
+            // generate mipmaps
             if (renderPass.colorOps.mipmaps) {
                 const colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
