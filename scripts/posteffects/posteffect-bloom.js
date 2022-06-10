@@ -1,5 +1,5 @@
 // --------------- POST EFFECT DEFINITION --------------- //
-var SAMPLE_COUNT = 15;
+var SAMPLE_COUNT = 32;
 
 function computeGaussian(n, theta) {
     return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
@@ -203,6 +203,14 @@ function BloomEffect(graphicsDevice) {
     // Uniforms
     this.sampleWeights = new Float32Array(SAMPLE_COUNT);
     this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
+
+
+
+
+
+
+
+    this.hdr = true;
 }
 
 BloomEffect.prototype = Object.create(pc.PostEffect.prototype);

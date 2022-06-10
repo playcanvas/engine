@@ -10,6 +10,7 @@ import GrabPassExample from "./grab-pass";
 import GroundFogExample from "./ground-fog";
 import HardwareInstancingExample from "./hardware-instancing";
 import HierarchyExample from "./hierarchy";
+import HdrExample from "./hdr";
 import LayersExample from "./layers";
 import LightsBakedAOExample from "./lights-baked-a-o";
 import LightsBakedExample from "./lights-baked";
@@ -61,6 +62,7 @@ export {
     GrabPassExample,
     GroundFogExample,
     HardwareInstancingExample,
+    HdrExample,
     HierarchyExample,
     LayersExample,
     LightsBakedAOExample,
