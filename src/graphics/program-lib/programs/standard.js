@@ -172,16 +172,78 @@ const standard = {
         return subCode.replace(/\$/g, "");
     },
 
+    _correctChannel: function(p, chan, _matTex2D) {
+        if (_matTex2D[p] > 0) {
+            if (_matTex2D[p] < chan.length) {
+                return chan.substring(0, _matTex2D[p]);
+            } else if (_matTex2D[p] > chan.length) {
+                let str = chan;
+                const chr = str.charAt(str.length - 1);
+                const addLen = _matTex2D[p] - str.length;
+                for (let i = 0; i < addLen; i++) str += chr;
+                return str;
+            }
+            return chan;
+        }
+    },
+
     /** @type { Function } */
     createShaderDefinition: function (device, options) {
+        const litShader = new LitShader(device, options);
+
+        // generate vertex shader
+        const useUv = [];
+        const useUnmodifiedUv = [];
+        const mapTransforms = [];
+        const maxUvSets = 2;
+
+        const uvs = [];
+
+        for (const p in _matTex2D) {
+            const mname = p + "Map";
+
+            if (options[p + "VertexColor"]) {
+                const cname = p + "VertexColorChannel";
+                options[cname] = this._correctChannel(p, options[cname], _matTex2D);
+            }
+
+            if (options[mname]) {
+                const cname = mname + "Channel";
+                const tname = mname + "Transform";
+                const uname = mname + "Uv";
+
+                options[uname] = Math.min(options[uname], maxUvSets - 1);
+                options[cname] = this._correctChannel(p, options[cname], _matTex2D);
+
+                const uvSet = options[uname];
+                useUv[uvSet] = true;
+                useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
+
+                // create map transforms
+                if (options[tname]) {
+                    mapTransforms.push({
+                        name: p,
+                        id: options[tname],
+                        uv: options[uname]
+                    });
+                }
+            }
+        }
+
+        if (options.forceUv1) {
+            useUv[1] = true;
+            useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+        }
+
+        litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
+
+        // handle fragment shader
         if (options.shadingModel === SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
-
-        const litShader = new LitShader(device, options);
 
         let decl = "";
         let code = "";
@@ -306,13 +368,12 @@ const standard = {
             }
         }
 
-        decl = `//-------- frontend begin\n${decl}//-------- frontend end\n`;
-        code = `//-------- frontend begin\n${code}//-------- frontend end\n`;
-        func = `//-------- frontend begin\n${func}//-------- frontend end\n`;
+        decl = `//-------- frontend decl begin\n${decl}//-------- frontend decl end\n`;
+        code = `//-------- frontend code begin\n${code}//-------- frontend code end\n`;
+        func = `//-------- frontend func begin\n${func}//-------- frontend func end\n`;
         func = `\n${func.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
-
-        litShader.generateVertexShader(_matTex2D);
         litShader.generateFragmentShader(decl, code, func, lightingUv);
+
         return litShader.getDefinition();
     }
 };
