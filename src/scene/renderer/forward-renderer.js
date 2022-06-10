@@ -1986,7 +1986,7 @@ class ForwardRenderer {
         if (!isGrabPass) {
 
             renderPass.init(renderTarget);
-            renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;;
+            renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
             // if camera rendering covers the full viewport
             if (renderPass.fullSizeClearRect) {
