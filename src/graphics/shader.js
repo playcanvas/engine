@@ -1,6 +1,6 @@
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 import { EventHandler } from '../core/event-handler.js';
+
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's

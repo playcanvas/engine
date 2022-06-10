@@ -3,8 +3,8 @@ import { Shader } from '../../graphics/shader.js';
 class MaterialRegistry {
     constructor() {
         this.materials = new Set();
-        Shader.debugEvents.on('compileError', (shader) => this.reportEffectedMaterials(shader));
-        Shader.debugEvents.on('linkError', (shader) => this.reportEffectedMaterials(shader));
+        Shader.debugEvents.on('compileError', shader => this.reportEffectedMaterials(shader));
+        Shader.debugEvents.on('linkError', shader => this.reportEffectedMaterials(shader));
     }
 
     add(material) {
