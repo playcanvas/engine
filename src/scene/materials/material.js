@@ -15,7 +15,10 @@ import {
 } from '../constants.js';
 import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
+
+// #if _DEBUG
 import { materialRegistry } from './material-registry.js';
+// #endif
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 
@@ -501,7 +504,7 @@ class Material {
         }
 
         // #if _DEBUG
-        materialRegistry.add(this);
+        materialRegistry.remove(this);
         // #endif
     }
 
