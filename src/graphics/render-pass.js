@@ -113,7 +113,7 @@ class RenderPass {
     /**
      * If true, this pass might use dynamically rendered cubemaps. Use for a case where rendering to cubemap
      * faces is interleaved with rendering to shadows, to avoid generating cubemap mipmaps. This will likely
-     * be retired modified when render target dependency tracking gets implemented.
+     * be retired when render target dependency tracking gets implemented.
      *
      * @type {boolean}
      */
