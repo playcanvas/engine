@@ -1309,26 +1309,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (target) {
 
             // invalidate buffers to stop them being written to on tiled architextures
-            invalidateAttachments.length = 0;
-            const gl = this.gl;
+            if (this.webgl2) {
+                invalidateAttachments.length = 0;
+                const gl = this.gl;
 
-            // invalidate color only if we don't need to resolve it
-            if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
-                invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
-            }
-            if (!renderPass.depthStencilOps.storeDepth) {
-                invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
-            }
-            if (!renderPass.depthStencilOps.storeStencil) {
-                invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
-            }
+                // invalidate color only if we don't need to resolve it
+                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
+                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                }
+                if (!renderPass.depthStencilOps.storeDepth) {
+                    invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
+                }
+                if (!renderPass.depthStencilOps.storeStencil) {
+                    invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                }
 
-            if (invalidateAttachments.length > 0) {
+                if (invalidateAttachments.length > 0) {
 
-                // invalidate the whole buffer
-                // TODO: we could handle viewport invalidation as well
-                if (renderPass.fullSizeClearRect) {
-                    gl.invalidateFramebuffer(gl.DRAW_FRAMEBUFFER, invalidateAttachments);
+                    // invalidate the whole buffer
+                    // TODO: we could handle viewport invalidation as well
+                    if (renderPass.fullSizeClearRect) {
+                        gl.invalidateFramebuffer(gl.DRAW_FRAMEBUFFER, invalidateAttachments);
+                    }
                 }
             }
 
