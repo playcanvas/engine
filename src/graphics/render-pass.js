@@ -61,7 +61,7 @@ class DepthStencilAttachmentOps {
     clearDepth = false;
 
     /**
-     * True if the stencil  attachment should be cleared before rendering, false to preserve
+     * True if the stencil attachment should be cleared before rendering, false to preserve
      * the existing content.
      */
     clearStencil = false;
