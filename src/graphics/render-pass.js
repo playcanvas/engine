@@ -120,7 +120,7 @@ class RenderPass {
     requiresCubemaps = true;
 
     /**
-     * True if the render pass uses full viewport / scissor for the rendering into the render target.
+     * True if the render pass uses the full viewport / scissor for rendering into the render target.
      *
      * @type {boolean}
      */
