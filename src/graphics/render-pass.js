@@ -151,21 +151,21 @@ class RenderPass {
         this.renderTarget = renderTarget || null;
 
         // allocate ops only when render target is used
-        if (this.renderTarget !== undefined) {
-            this.colorOps = new ColorAttachmentOps();
-            this.depthStencilOps = new DepthStencilAttachmentOps();
+        this.colorOps = new ColorAttachmentOps();
+        this.depthStencilOps = new DepthStencilAttachmentOps();
 
-            // defaults depend on multisampling
-            this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
-            if (this.samples === 1) {
-                this.colorOps.store = true;
-                this.colorOps.resolve = false;
-            }
+        // defaults depend on multisampling
+        this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
 
-            // if render target needs mipmaps
-            if (this.renderTarget?.colorBuffer?.mipmaps) {
-                this.colorOps.mipmaps = true;
-            }
+        // if rendering to single-sampled buffer, this buffer needs to be stored
+        if (this.samples === 1) {
+            this.colorOps.store = true;
+            this.colorOps.resolve = false;
+        }
+
+        // if render target needs mipmaps
+        if (this.renderTarget?.colorBuffer?.mipmaps) {
+            this.colorOps.mipmaps = true;
         }
     }
 
