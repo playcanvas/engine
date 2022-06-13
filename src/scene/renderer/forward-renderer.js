@@ -4,6 +4,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat3 } from '../../math/mat3.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Vec3 } from '../../math/vec3.js';
+import { Color } from '../../math/color.js';
 
 import { BoundingSphere } from '../../shape/bounding-sphere.js';
 
@@ -43,7 +44,6 @@ import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-import { Color } from '../../index.js';
 
 /** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
