@@ -50,7 +50,7 @@ class DepthStencilAttachmentOps {
     clearDepthValue = 1;
 
     /**
-     * A scencil value used to clear the stencil attachment when the clear is enabled.
+     * A stencil value used to clear the stencil attachment when the clear is enabled.
      */
     clearStencilValue = 0;
 
