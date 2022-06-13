@@ -68,9 +68,7 @@ class Camera {
     get fullSizeClearRect() {
 
         const rect = this._scissorRectClear ? this.scissorRect : this._rect;
-        if (rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1)
-            return true;
-        return false;
+        return rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1;
     }
 
     set aspectRatio(newValue) {
