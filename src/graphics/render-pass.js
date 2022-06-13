@@ -20,7 +20,7 @@ class ColorAttachmentOps {
      * True if the attachment needs to be stored after the render pass. False
      * if it can be discarded.
      * Note: This relates to the surface that is getting rendered to, and can be either
-     * single or multi-sampled. Further, it multi-sampled surface is used, the resolve
+     * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve
      * flag further specifies if this gets resolved to a single-sampled surface. This
      * behaviour matches WebGPU specification.
      *
