@@ -1,6 +1,5 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_R8_G8_B8
 } from '../graphics/constants.js';
@@ -40,7 +39,6 @@ class SceneGrab {
         this.device = application.graphicsDevice;
 
         // create depth layer
-        this.clearOptions = null;
         this.layer = null;
 
         // color buffer format
@@ -193,12 +191,6 @@ class SceneGrab {
         const app = this.application;
         const self = this;
 
-        this.clearOptions = {
-            color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
-            depth: 1.0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
-
         // WebGL 1 depth layer renders the same objects as in World, but with RGBA-encoded depth shader to get depth
         this.layer = new Layer({
             enabled: false,
@@ -322,10 +314,6 @@ class SceneGrab {
 
                     DebugGraphics.popGpuMarker(device);
                 }
-
-                // set up clear for the depth rendering
-                this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
             },
 
             onDrawCall: function () {
@@ -341,11 +329,6 @@ class SceneGrab {
                     // just clear the list of visible objects to avoid keeping references
                     const visibleObjects = this.instances.visibleOpaque[cameraPass];
                     visibleObjects.length = 0;
-                }
-
-                // restore the depth clear settings
-                if (this.depthRenderTarget) {
-                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
                 }
             }
         });

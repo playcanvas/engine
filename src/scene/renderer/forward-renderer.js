@@ -43,6 +43,7 @@ import { StaticMeshes } from './static-meshes.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
+import { Color } from '../../index.js';
 
 /** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
 /** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -68,6 +69,7 @@ const worldMatX = new Vec3();
 const worldMatY = new Vec3();
 const worldMatZ = new Vec3();
 
+const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 const tempSphere = new BoundingSphere();
 const boneTextureSize = [0, 0, 0, 0];
 let boneTexture, instancingData, modelMatrix, normalMatrix;
@@ -1983,13 +1985,23 @@ class ForwardRenderer {
         const startLayer = layerComposition.layerList[startRenderAction.layerIndex];
         const camera = startLayer.cameras[startRenderAction.cameraIndex];
 
-        if (!isGrabPass) {
+        // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
+        const isWebgl1DepthGrabPass = isGrabPass && !this.device.webgl2 && camera.renderSceneDepthMap;
+        const isRealPass = !isGrabPass || isWebgl1DepthGrabPass;
+
+        if (isRealPass) {
 
             renderPass.init(renderTarget);
             renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
-            // if camera rendering covers the full viewport
-            if (renderPass.fullSizeClearRect) {
+            if (isWebgl1DepthGrabPass) {
+
+                // webgl1 depth rendering clear values
+                renderPass.setClearColor(webgl1DepthClearColor);
+                renderPass.setClearDepth(1.0);
+
+            } else if (renderPass.fullSizeClearRect) { // if camera rendering covers the full viewport
+
                 if (startRenderAction.clearColor) {
                     renderPass.setClearColor(camera.camera.clearColor);
                 }
