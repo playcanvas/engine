@@ -22,7 +22,7 @@ class ColorAttachmentOps {
      * Note: This relates to the surface that is getting rendered to, and can be either
      * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve
      * flag further specifies if this gets resolved to a single-sampled surface. This
-     * behaviour matches WebGPU specification.
+     * behavior matches the WebGPU specification.
      *
      * @type {boolean}
      */
