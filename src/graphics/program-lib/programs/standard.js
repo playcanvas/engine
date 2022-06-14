@@ -15,13 +15,14 @@ import {
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
+    SHADER_DEPTH, SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
 } from '../../../scene/constants.js';
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
+import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -292,7 +293,7 @@ const standard = {
             return '#define PICK_PASS\n';
         } else if (pass === SHADER_DEPTH) {
             return '#define DEPTH_PASS\n';
-        } else if (pass >= SHADER_SHADOW && pass <= 17) {
+        } else if (ShaderPass.isShadow(pass)) {
             return '#define SHADOW_PASS\n';
         }
         return '';
@@ -370,10 +371,8 @@ const standard = {
 
     _buildShadowPassFragmentCode: function (code, device, chunks, options, varyings) {
 
-        const smode = options.pass - SHADER_SHADOW;
-        const numShadowModes = SHADOW_COUNT;
-        const lightType = Math.floor(smode / numShadowModes);
-        const shadowType = smode - lightType * numShadowModes;
+        const lightType = ShaderPass.toLightType(options.pass);
+        const shadowType = ShaderPass.toShadowType(options.pass);
 
         if (device.extStandardDerivatives && !device.webgl2) {
             code += 'uniform vec2 polygonOffset;\n';
@@ -476,7 +475,7 @@ const standard = {
 
         const reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        const shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
+        const shadowPass = ShaderPass.isShadow(options.pass);
         const needsNormal = lighting || reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
                             (options.clusteredLightingEnabled && !shadowPass) || options.clearCoatNormalMap;
 
