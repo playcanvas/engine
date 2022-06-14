@@ -43,7 +43,7 @@ class ShaderPass {
     }
 
     /**
-     * Returns a shader pass for specified light and shadow types.
+     * Returns a shader pass for specified light and shadow type.
      *
      * @param {number} lightType - A light type.
      * @param {number} shadowType - A shadow type.
