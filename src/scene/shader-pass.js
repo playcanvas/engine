@@ -8,7 +8,7 @@ import { SHADER_SHADOW, SHADOW_COUNT, LIGHTTYPE_COUNT } from './constants.js';
  */
 class ShaderPass {
     /**
-     * Rturns true if the shader pass is a shadow shader pass.
+     * Returns true if the shader pass is a shadow shader pass.
      *
      * @param {number} pass - The shader pass.
      * @returns {boolean} - True if the pass is a shadow shader pass.
