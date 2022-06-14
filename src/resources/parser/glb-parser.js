@@ -1297,7 +1297,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 };
 
 // create the anim structure
-const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes) {
+const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes) {
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
@@ -1310,13 +1310,13 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         'CUBICSPLINE': INTERPOLATION_CUBIC
     };
 
+    // Input map and output maps reference data by sampler input/output key.
     const inputMap = { };
-    const inputs = [];
-
     const outputMap = { };
-    const outputs = [];
-
-    const curves = [];
+    // The curve map stores temporary curve data by sampler index. Each curves input/output value will be resolved to an inputs/outputs array index after all samplers have been processed.
+    // Curves and outputs that are deleted from their maps will not be included in the final AnimTrack
+    const curveMap = { };
+    let outputCounter = 1;
 
     let i;
 
@@ -1326,14 +1326,12 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
         // get input data
         if (!inputMap.hasOwnProperty(sampler.input)) {
-            inputMap[sampler.input] = inputs.length;
-            inputs.push(createAnimData(gltfAccessors[sampler.input]));
+            inputMap[sampler.input] = createAnimData(gltfAccessors[sampler.input]);
         }
 
         // get output data
         if (!outputMap.hasOwnProperty(sampler.output)) {
-            outputMap[sampler.output] = outputs.length;
-            outputs.push(createAnimData(gltfAccessors[sampler.output]));
+            outputMap[sampler.output] = createAnimData(gltfAccessors[sampler.output]);
         }
 
         const interpolation =
@@ -1342,11 +1340,14 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 interpMap[sampler.interpolation] : INTERPOLATION_LINEAR;
 
         // create curve
-        curves.push(new AnimCurve(
-            [],
-            inputMap[sampler.input],
-            outputMap[sampler.output],
-            interpolation));
+        const curve = {
+            paths: [],
+            input: sampler.input,
+            output: sampler.output,
+            interpolation: interpolation
+        };
+
+        curveMap[i] = curve;
     }
 
     const quatArrays = [];
@@ -1354,8 +1355,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     const transformSchema = {
         'translation': 'localPosition',
         'rotation': 'localRotation',
-        'scale': 'localScale',
-        'weights': 'weights'
+        'scale': 'localScale'
     };
 
     const constructNodePath = (node) => {
@@ -1367,29 +1367,103 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return path;
     };
 
+    const retrieveWeightName = (nodeName, weightIndex) => {
+        if (!meshes) return weightIndex;
+        for (let i = 0; i < meshes.length; i++) {
+            const mesh = meshes[i];
+            if (mesh.name === nodeName && mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
+                return mesh.extras.targetNames[weightIndex];
+            }
+        }
+        return weightIndex;
+    };
+
     // convert anim channels
     for (i = 0; i < gltfAnimation.channels.length; ++i) {
         const channel = gltfAnimation.channels[i];
         const target = channel.target;
-        const curve = curves[channel.sampler];
+        const curve = curveMap[channel.sampler];
 
         const node = nodes[target.node];
         const entityPath = constructNodePath(node);
-        curve._paths.push({
+
+        if (target.path.startsWith('weights')) {
+            // create a curve for each morph target weight present in the animation data
+            const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
+            const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
+
+            for (let j = 0; j < morphTargetCount; j++) {
+                const morphTargetOutput = new Float32Array(keyframeCount);
+                // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
+                for (let k = 0; k < keyframeCount; k++) {
+                    morphTargetOutput[k] = outputMap[curve.output].data[k * morphTargetCount + j];
+                }
+                const output = new AnimData(1, morphTargetOutput);
+                // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
+                outputMap[-outputCounter] = output;
+                const morphCurve = {
+                    paths: [{
+                        entityPath: entityPath,
+                        component: 'graph',
+                        propertyPath: [`weight.${retrieveWeightName(node.name, j)}`]
+                    }],
+                    // each morph target curve input can use the same sampler.input from the channel they were all in
+                    input: curve.input,
+                    // but each morph target curve should reference it's individual output that was just created
+                    output: -outputCounter,
+                    interpolation: curve.interpolation
+                };
+                outputCounter++;
+                // add the morph target curve to the curveMap
+                curveMap[`morphCurve-${i}-${j}`] = morphCurve;
+            }
+            // after all morph targets in this curve have been included in the curveMap, this curve and it's output data can be deleted
+            delete curveMap[channel.sampler];
+            delete outputMap[curve.output];
+            continue;
+        }
+
+        curve.paths.push({
             entityPath: entityPath,
             component: 'graph',
             propertyPath: [transformSchema[target.path]]
         });
+    }
+
+    const inputs = [];
+    const outputs = [];
+    const curves = [];
+
+    // Add each input in the map to the final inputs array. The inputMap should now reference the index of input in the inputs array instead of the input itself.
+    for (i = 0; i < Object.keys(inputMap).length; i++) {
+        const inputKey = Object.keys(inputMap)[i];
+        const input = inputMap[inputKey];
+        inputs.push(input);
+        inputMap[inputKey] = inputs.length - 1;
+    }
+    // Add each output in the map to the final outputs array. The outputMap should now reference the index of output in the outputs array instead of the output itself.
+    for (i = 0; i < Object.keys(outputMap).length; i++) {
+        const outputKey = Object.keys(outputMap)[i];
+        const output = outputMap[outputKey];
+        outputs.push(output);
+        outputMap[outputKey] = outputs.length - 1;
+    }
+    // Create an AnimCurve for each curve object in the curveMap. Each curve object's input value should be resolved to the index of the input in the
+    // inputs arrays using the inputMap. Likewise for output values.
+    for (i = 0; i < Object.keys(curveMap).length; i++) {
+        const curveKey = Object.keys(curveMap)[i]
+        const curveData = curveMap[curveKey];
+        curves.push(new AnimCurve(
+            curveData.paths,
+            inputMap[curveData.input],
+            outputMap[curveData.output],
+            curveData.interpolation
+        ))
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
-        if (target.path.startsWith('rotation') && curve.interpolation !== INTERPOLATION_CUBIC) {
-            quatArrays.push(curve.output);
-        } else if (target.path.startsWith('weights')) {
-            // it's a bit strange, but morph target animations implicitly assume there are n output
-            // values when there are n morph targets. here we set the number of components explicitly
-            // on the output curve data.
-            outputs[curve.output]._components = outputs[curve.output].data.length / inputs[curve.input].data.length;
+        if (curveData.paths[0].propertyPath[0] === 'localRotation' && curveData.interpolation !== INTERPOLATION_CUBIC) {
+            quatArrays.push(curves[curves.length-1].output);
         }
     }
 
@@ -1611,7 +1685,7 @@ const createAnimations = function (gltf, nodes, bufferViews, options) {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes);
+        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes);
         if (postprocess) {
             postprocess(gltfAnimation, animation);
         }
