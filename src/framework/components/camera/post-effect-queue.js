@@ -127,14 +127,11 @@ class PostEffectQueue {
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
-        const useStencil =  this.app.graphicsDevice.supportsStencil;
-        const samples = useDepth ? device.samples : 1;
-
         return new RenderTarget({
             colorBuffer: colorBuffer,
             depth: useDepth,
-            stencil: useStencil,
-            samples: samples
+            stencil: useDepth && this.app.graphicsDevice.supportsStencil,
+            samples: useDepth ? device.samples : 1
         });
     }
 

@@ -6,18 +6,40 @@
 export const TRACEID_RENDER_FRAME = 'RenderFrame';
 
 /**
- * Logs a render target resolve operations.
- *
- * @type {string}
- */
-export const TRACEID_RT_RESOLVE = 'RT-Resolve';
-
-/**
- * Logs a render passes.
+ * Logs basic information about generated render passes.
  *
  * @type {string}
  */
 export const TRACEID_RENDER_PASS = 'RenderPass';
+
+/**
+ * Logs additional detail for render passes.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_PASS_DETAIL = 'RenderPassDetail';
+
+/**
+ * Logs render actions created by the layer composition. Only executes when the
+ * layer composition changes.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_ACTION = 'RenderAction';
+
+/**
+ * Logs the allocation of render targets.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_TARGET_ALLOC = 'RenderTargetAlloc';
+
+/**
+ * Logs the allocation of textures.
+ *
+ * @type {string}
+ */
+export const TRACEID_TEXTURE_ALLOC = 'TextureAlloc';
 
 /**
  * Engine debug log system. Note that the logging only executes in the
@@ -48,6 +70,10 @@ class Debug {
      *
      * - {@link TRACEID_RENDER_FRAME}
      * - {@link TRACEID_RENDER_PASS}
+     * - {@link TRACEID_RENDER_PASS_DETAIL}
+     * - {@link TRACEID_RENDER_ACTION}
+     * - {@link TRACEID_RENDER_TARGET_ALLOC}
+     * - {@link TRACEID_TEXTURE_ALLOC}
      *
      * @param {boolean} enabled - new enabled state for it
      */
@@ -60,6 +86,16 @@ class Debug {
             Debug._traceChannels.delete(channel);
         }
         // #endif
+    }
+
+    /**
+     * Test if the trace channel is enabled.
+     *
+     * @param {string} channel - Name of the trace channnel.
+     * @returns {boolean} - True if the trace channel is enabled.
+     */
+    static getTrace(channel) {
+        return Debug._traceChannels.has(channel);
     }
 
     /**
@@ -163,7 +199,7 @@ class Debug {
      */
     static trace(channel, ...args) {
         if (Debug._traceChannels.has(channel)) {
-            console.log(`[${channel}] `, ...args);
+            console.log(`${channel.padEnd(20, ' ')}|`, ...args);
         }
     }
 }

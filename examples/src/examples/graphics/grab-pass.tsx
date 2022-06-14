@@ -145,7 +145,7 @@ class GrabPassExample {
             }
 
             // Create the camera, which renders entities
-            const camera = new pc.Entity();
+            const camera = new pc.Entity("SceneCamera");
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.2, 0.2, 0.2)
             });

@@ -25,6 +25,9 @@ import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { Frustum } from '../../shape/frustum.js';
 
+/** @typedef {import('./forward-renderer.js').ForwardRenderer} ForwardRenderer */
+/** @typedef {import('../lighting/light-texture-atlas.js').LightTextureAtlas} LightTextureAtlas */
+
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
     new Vec3(), new Vec3(), new Vec3(), new Vec3()
@@ -102,11 +105,23 @@ function getDepthKey(meshInstance) {
     return x + y;
 }
 
+/**
+ * @ignore
+ */
 class ShadowRenderer {
+    /**
+     * @param {ForwardRenderer} forwardRenderer - The forward renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
+     */
     constructor(forwardRenderer, lightTextureAtlas) {
         this.device = forwardRenderer.device;
+
+        /** @type {ForwardRenderer} */
         this.forwardRenderer = forwardRenderer;
+
+        /** @type {LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
+
         const scope = this.device.scope;
 
         this.polygonOffsetId = scope.resolve('polygonOffset');

@@ -76,6 +76,17 @@ class GraphicsDevice extends EventHandler {
     precision;
 
     /**
+     * Currently active render target.
+     *
+     * @type {RenderTarget}
+     * @ignore
+     */
+    renderTarget = null;
+
+    /** @type {boolean} */
+    insideRenderPass = false;
+
+    /**
      * True if hardware instancing is supported.
      *
      * @type {boolean}
