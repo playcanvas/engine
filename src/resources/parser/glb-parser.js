@@ -1310,7 +1310,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         'CUBICSPLINE': INTERPOLATION_CUBIC
     };
 
-    // Input map and output maps reference data by sampler input/output key.
+    // Input and output maps reference data by sampler input/output key.
     const inputMap = { };
     const outputMap = { };
     // The curve map stores temporary curve data by sampler index. Each curves input/output value will be resolved to an inputs/outputs array index after all samplers have been processed.
@@ -1451,19 +1451,19 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     // Create an AnimCurve for each curve object in the curveMap. Each curve object's input value should be resolved to the index of the input in the
     // inputs arrays using the inputMap. Likewise for output values.
     for (i = 0; i < Object.keys(curveMap).length; i++) {
-        const curveKey = Object.keys(curveMap)[i]
+        const curveKey = Object.keys(curveMap)[i];
         const curveData = curveMap[curveKey];
         curves.push(new AnimCurve(
             curveData.paths,
             inputMap[curveData.input],
             outputMap[curveData.output],
             curveData.interpolation
-        ))
+        ));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
         if (curveData.paths[0].propertyPath[0] === 'localRotation' && curveData.interpolation !== INTERPOLATION_CUBIC) {
-            quatArrays.push(curves[curves.length-1].output);
+            quatArrays.push(curves[curves.length - 1].output);
         }
     }
 
