@@ -1409,7 +1409,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                     }],
                     // each morph target curve input can use the same sampler.input from the channel they were all in
                     input: curve.input,
-                    // but each morph target curve should reference it's individual output that was just created
+                    // but each morph target curve should reference its individual output that was just created
                     output: -outputCounter,
                     interpolation: curve.interpolation
                 };
@@ -1417,7 +1417,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 // add the morph target curve to the curveMap
                 curveMap[`morphCurve-${i}-${j}`] = morphCurve;
             }
-            // after all morph targets in this curve have been included in the curveMap, this curve and it's output data can be deleted
+            // after all morph targets in this curve have been included in the curveMap, this curve and its output data can be deleted
             delete curveMap[channel.sampler];
             delete outputMap[curve.output];
             continue;
