@@ -1409,7 +1409,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                     }],
                     // each morph target curve input can use the same sampler.input from the channel they were all in
                     input: curve.input,
-                    // but each morph target curve should reference it's individual output that was just created
+                    // but each morph target curve should reference its individual output that was just created
                     output: -outputCounter,
                     interpolation: curve.interpolation
                 };
