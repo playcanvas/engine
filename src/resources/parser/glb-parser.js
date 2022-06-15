@@ -1435,18 +1435,18 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     const curves = [];
 
     // Add each input in the map to the final inputs array. The inputMap should now reference the index of input in the inputs array instead of the input itself.
-    for (let inputKey in inputMap) {
+    for (const inputKey in inputMap) {
         inputs.push(inputMap[inputKey]);
         inputMap[inputKey] = inputs.length - 1;
     }
     // Add each output in the map to the final outputs array. The outputMap should now reference the index of output in the outputs array instead of the output itself.
-    for (let outputKey in outputMap) {
+    for (const outputKey in outputMap) {
         outputs.push(outputMap[outputKey]);
         outputMap[outputKey] = outputs.length - 1;
     }
     // Create an AnimCurve for each curve object in the curveMap. Each curve object's input value should be resolved to the index of the input in the
     // inputs arrays using the inputMap. Likewise for output values.
-    for (let curveKey in curveMap) {
+    for (const curveKey in curveMap) {
         const curveData = curveMap[curveKey];
         curves.push(new AnimCurve(
             curveData.paths,

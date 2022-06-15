@@ -175,11 +175,11 @@ class MorphInstance {
     }
 
     _getWeightIndex(key) {
-            const index = this._weightMap.get(key);
-            if (index) {
-                return this._weights[index];
-            }
-            Debug.error('Attempting to retrieve a morph target weight using a key that doesn\'t exist.');
+        const index = this._weightMap.get(key);
+        if (index) {
+            return this._weights[index];
+        }
+        Debug.error('Attempting to retrieve a morph target weight using a key that doesn\'t exist.');
     }
 
     /**
