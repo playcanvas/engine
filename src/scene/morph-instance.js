@@ -3,6 +3,7 @@ import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { Debug } from '../core/debug.js';
 
 import { Morph } from './morph.js';
 
@@ -48,10 +49,10 @@ class MorphInstance {
 
         // weights
         this._weights = [];
-        this._weightLookup = {};
+        this._weightMap = new Map();
         for (let v = 0; v < morph._targets.length; v++) {
             const target = morph._targets[v];
-            this._weightLookup[target.name] = v;
+            this._weightMap.set(target.name, v);
             this.setWeight(v, target.defaultWeight);
         }
 
@@ -176,23 +177,41 @@ class MorphInstance {
     /**
      * Gets current weight of the specified morph target.
      *
-     * @param {number} index - An index of morph target.
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @returns {number} Weight.
      */
-    getWeight(index) {
-        return this._weights[index];
+    getWeight(key) {
+        if (typeof key === 'string') {
+            const index = this._weightMap.get(key);
+            if (Number.isInteger(index)) {
+                return this._weights[index];
+            } else {
+                Debug.error('Attempting to get a morph target weight using a key that doesn\'t exist.');
+            }
+        } else {
+            return this._weights[key];
+        }
     }
 
     /**
      * Sets weight of the specified morph target.
      *
-     * @param {number|string} key - An identifier for the morph target. Either the weight index or the weight name
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @param {number} weight - Weight.
      */
     setWeight(key, weight) {
-        const index = typeof key === 'string' ? this._weightLookup[key] : key;
-        this._weights[index] = weight;
-        this._dirty = true;
+        if (typeof key === 'string') {
+            const index = this._weightMap.get(key);
+            if (Number.isInteger(index)) {
+                this._weights[index] = weight;
+                this._dirty = true;
+            } else {
+                Debug.error('Attempting to set a morph target weight using a key that doesn\'t exist.');
+            }
+        } else {
+            this._weights[key] = weight;
+            this._dirty = true;
+        }
     }
 
     /**

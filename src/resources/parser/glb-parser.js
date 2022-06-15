@@ -1433,25 +1433,29 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     const inputs = [];
     const outputs = [];
     const curves = [];
+    let keys;
 
     // Add each input in the map to the final inputs array. The inputMap should now reference the index of input in the inputs array instead of the input itself.
-    for (i = 0; i < Object.keys(inputMap).length; i++) {
-        const inputKey = Object.keys(inputMap)[i];
+    keys = Object.keys(inputMap);
+    for (i = 0; i < keys.length; i++) {
+        const inputKey = keys[i];
         const input = inputMap[inputKey];
         inputs.push(input);
         inputMap[inputKey] = inputs.length - 1;
     }
     // Add each output in the map to the final outputs array. The outputMap should now reference the index of output in the outputs array instead of the output itself.
-    for (i = 0; i < Object.keys(outputMap).length; i++) {
-        const outputKey = Object.keys(outputMap)[i];
+    keys = Object.keys(outputMap);
+    for (i = 0; i < keys.length; i++) {
+        const outputKey = keys[i];
         const output = outputMap[outputKey];
         outputs.push(output);
         outputMap[outputKey] = outputs.length - 1;
     }
     // Create an AnimCurve for each curve object in the curveMap. Each curve object's input value should be resolved to the index of the input in the
     // inputs arrays using the inputMap. Likewise for output values.
-    for (i = 0; i < Object.keys(curveMap).length; i++) {
-        const curveKey = Object.keys(curveMap)[i];
+    keys = Object.keys(curveMap);
+    for (i = 0; i < keys.length; i++) {
+        const curveKey = keys[i];
         const curveData = curveMap[curveKey];
         curves.push(new AnimCurve(
             curveData.paths,
