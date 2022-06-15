@@ -207,17 +207,19 @@ class Layer {
          * @type {boolean}
          * @private
          */
-        this._clearColorBuffer = options.clearColorBuffer ? options.clearColorBuffer : false;
+        this._clearColorBuffer = !!options.clearColorBuffer;
+
         /**
          * @type {boolean}
          * @private
          */
-        this._clearDepthBuffer = options.clearDepthBuffer ? options.clearDepthBuffer : false;
+        this._clearDepthBuffer = !!options.clearDepthBuffer;
+
         /**
          * @type {boolean}
          * @private
          */
-        this._clearStencilBuffer = options.clearStencilBuffer ? options.clearStencilBuffer : false;
+        this._clearStencilBuffer = !!options.clearStencilBuffer;
 
         /**
          * Custom function that is called before visibility culling is performed for this layer.
@@ -478,14 +480,6 @@ class Layer {
 
     get enabled() {
         return this._enabled;
-    }
-
-    set clearColor(val) {
-        this._clearColor.copy(val);
-    }
-
-    get clearColor() {
-        return this._clearColor;
     }
 
     /**

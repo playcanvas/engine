@@ -13,13 +13,14 @@ import {
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_COUNT,
+    SHADER_DEPTH, SHADER_FORWARDHDR, SHADER_PICK,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
 } from '../../../scene/constants.js';
 import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
+import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
 
@@ -102,7 +103,7 @@ class LitShader {
         this.lighting = (options.lights.length > 0) || !!options.dirLightMap || !!options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        this.shadowPass = options.pass >= SHADER_SHADOW && options.pass <= 17;
+        this.shadowPass = ShaderPass.isShadow(options.pass);
         this.needsNormal = this.lighting || this.reflections || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
                             (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMap;
 
@@ -525,10 +526,8 @@ class LitShader {
         const chunks = this.chunks;
         const varyings = this.varyings;
 
-        const smode = options.pass - SHADER_SHADOW;
-        const numShadowModes = SHADOW_COUNT;
-        const lightType = Math.floor(smode / numShadowModes);
-        const shadowType = smode - lightType * numShadowModes;
+        const lightType = ShaderPass.toLightType(options.pass);
+        const shadowType = ShaderPass.toShadowType(options.pass);
 
         let code = this._fsGetBeginCode();
 

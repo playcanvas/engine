@@ -454,7 +454,7 @@ class AppBase extends EventHandler {
          * @type {FrameGraph}
          * @ignore
          */
-        this.frameGraph = new FrameGraph(this.graphicsDevice);
+        this.frameGraph = new FrameGraph();
 
         /**
          * The run-time lightmapper.

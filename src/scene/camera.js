@@ -62,6 +62,15 @@ class Camera {
         this.frustum = new Frustum();
     }
 
+    /**
+     * True if the camera clears the full render target. (viewport / scissor are full size)
+     */
+    get fullSizeClearRect() {
+
+        const rect = this._scissorRectClear ? this.scissorRect : this._rect;
+        return rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1;
+    }
+
     set aspectRatio(newValue) {
         if (this._aspectRatio !== newValue) {
             this._aspectRatio = newValue;

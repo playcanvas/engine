@@ -195,6 +195,9 @@ export const LIGHTTYPE_POINT = LIGHTTYPE_OMNI;
  */
 export const LIGHTTYPE_SPOT = 2;
 
+// private - the number of light types
+export const LIGHTTYPE_COUNT = 3;
+
 /**
  * Infinitesimally small point light source shape.
  *
@@ -644,23 +647,33 @@ export const SHADER_FORWARDHDR = 1;
  */
 export const SHADER_DEPTH = 2;
 
-// next are undocumented
-export const SHADER_SHADOW = 3; // PCF3
-// 4 = VSM8,
-// 5 = VSM16,
-// 6 = VSM32,
-// 7 = PCF5,
-// 8 = PCF3 POINT
-// 9 = VSM8 POINT,
-// 10 = VSM16 POINT,
-// 11 = VSM32 POINT,
-// 12 = PCF5 POINT
-// 13 = PCF3 SPOT
-// 14 = VSM8 SPOT,
-// 15 = VSM16 SPOT,
-// 16 = VSM32 SPOT,
-// 17 = PCF5 SPOT
-export const SHADER_PICK = 18;
+// shader pass used by the Picker class to render mesh ID
+export const SHADER_PICK = 3;
+
+// next shader pass constants are undocumented - see ShaderPass class
+export const SHADER_SHADOW = 4; // start of shadow related pass constants
+// 4 = PCF3 DIR
+// 5 = VSM8 DIR
+// 6 = VSM16 DIR
+// 7 = VSM32 DIR
+// 8 = PCF5 DIR
+// 9 = PCF1 DIR
+
+// 10 = PCF3 OMNI
+// 11 = VSM8 OMNI
+// 12 = VSM16 OMNI
+// 13 = VSM32 OMNI
+// 14 = PCF5 OMNI
+// 15 = PCF1 OMNI
+
+// 16 = PCF3 SPOT
+// 17 = VSM8 SPOT
+// 18 = VSM16 SPOT
+// 19 = VSM32 SPOT
+// 20 = PCF5 SPOT
+// 21 = PCF1 SPOT
+
+// Note: the Editor is using constant 24 for its internal purpose
 
 /**
  * This mode renders a sprite as a simple quad.

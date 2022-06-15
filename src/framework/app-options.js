@@ -85,21 +85,21 @@ class AppOptions {
     /**
      * The lightmapper.
      *
-     * @type {typeof Lightmapper}
+     * @type {Lightmapper}
      */
     lightmapper;
 
     /**
      * The BatchManager.
      *
-     * @type {typeof BatchManager}
+     * @type {BatchManager}
      */
     batchManager;
 
     /**
      * The XrManager.
      *
-     * @type {typeof XrManager}
+     * @type {XrManager}
      */
     xr;
 

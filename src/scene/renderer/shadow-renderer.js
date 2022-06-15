@@ -10,7 +10,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32, SHADOW_COUNT,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
@@ -24,6 +24,12 @@ import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { Frustum } from '../../shape/frustum.js';
+import { ShaderPass } from '../shader-pass.js';
+
+/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('../light.js').Light} Light */
+/** @typedef {import('./forward-renderer.js').ForwardRenderer} ForwardRenderer */
+/** @typedef {import('../lighting/light-texture-atlas.js').LightTextureAtlas} LightTextureAtlas */
 
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
@@ -102,11 +108,23 @@ function getDepthKey(meshInstance) {
     return x + y;
 }
 
+/**
+ * @ignore
+ */
 class ShadowRenderer {
+    /**
+     * @param {ForwardRenderer} forwardRenderer - The forward renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
+     */
     constructor(forwardRenderer, lightTextureAtlas) {
         this.device = forwardRenderer.device;
+
+        /** @type {ForwardRenderer} */
         this.forwardRenderer = forwardRenderer;
+
+        /** @type {LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
+
         const scope = this.device.scope;
 
         this.polygonOffsetId = scope.resolve('polygonOffset');
@@ -451,15 +469,18 @@ class ShadowRenderer {
         }
     }
 
+    /**
+     * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
+     * @param {Light} light - The light.
+     */
     submitCasters(visibleCasters, light) {
 
         const device = this.device;
         const forwardRenderer = this.forwardRenderer;
-        const shadowPass = 1 << SHADER_SHADOW;
+        const passFlags = 1 << SHADER_SHADOW;
 
         // Sort shadow casters
-        const shadowType = light._shadowType;
-        const smode = shadowType + light._type * SHADOW_COUNT;
+        const shadowPass = ShaderPass.getShadow(light._type, light._shadowType);
 
         // Render
         const count = visibleCasters.length;
@@ -485,14 +506,14 @@ class ShadowRenderer {
                 material.setParameters(device);
 
                 // Uniforms II (shadow): meshInstance overrides
-                meshInstance.setParameters(device, shadowPass);
+                meshInstance.setParameters(device, passFlags);
             }
 
             // set shader
-            let shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+            let shadowShader = meshInstance._shader[shadowPass];
             if (!shadowShader) {
-                forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, SHADER_SHADOW + smode);
-                shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+                forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, shadowPass);
+                shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
             device.setShader(shadowShader);
