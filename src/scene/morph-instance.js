@@ -174,6 +174,14 @@ class MorphInstance {
         return clone;
     }
 
+    _getWeightIndex(key) {
+            const index = this._weightMap.get(key);
+            if (index) {
+                return this._weights[index];
+            }
+            Debug.error('Attempting to retrieve a morph target weight using a key that doesn\'t exist.');
+    }
+
     /**
      * Gets current weight of the specified morph target.
      *
@@ -182,11 +190,7 @@ class MorphInstance {
      */
     getWeight(key) {
         if (typeof key === 'string') {
-            const index = this._weightMap.get(key);
-            if (Number.isInteger(index)) {
-                return this._weights[index];
-            }
-            Debug.error('Attempting to get a morph target weight using a key that doesn\'t exist.');
+            return this._getWeightIndex(key);
         } else {
             return this._weights[key];
         }
@@ -199,15 +203,13 @@ class MorphInstance {
      * @param {number} weight - Weight.
      */
     setWeight(key, weight) {
+        let index;
         if (typeof key === 'string') {
-            const index = this._weightMap.get(key);
-            if (Number.isInteger(index)) {
-                this._weights[index] = weight;
-                this._dirty = true;
-            } else {
-                Debug.error('Attempting to set a morph target weight using a key that doesn\'t exist.');
-            }
+            index = this._getWeightIndex(key);
         } else {
+            index = key;
+        }
+        if (Number.isFinite(this._weights[key])) {
             this._weights[key] = weight;
             this._dirty = true;
         }
