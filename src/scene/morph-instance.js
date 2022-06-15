@@ -189,11 +189,13 @@ class MorphInstance {
      * @returns {number} Weight.
      */
     getWeight(key) {
+        let index;
         if (typeof key === 'string') {
-            return this._getWeightIndex(key);
+            this._getWeightIndex(key);
         } else {
-            return this._weights[key];
+            index = key;
         }
+        return this._weights[index];
     }
 
     /**
