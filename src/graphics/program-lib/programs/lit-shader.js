@@ -126,7 +126,7 @@ class LitShader {
             return '#define PICK_PASS\n';
         } else if (pass === SHADER_DEPTH) {
             return '#define DEPTH_PASS\n';
-        } else if (pass >= SHADER_SHADOW && pass <= 17) {
+        } else if (ShaderPass.isShadow(pass)) {
             return '#define SHADOW_PASS\n';
         }
         return '';

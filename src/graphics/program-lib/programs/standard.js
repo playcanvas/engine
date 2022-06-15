@@ -172,7 +172,7 @@ const standard = {
         return subCode.replace(/\$/g, "");
     },
 
-    _correctChannel: function(p, chan, _matTex2D) {
+    _correctChannel: function (p, chan, _matTex2D) {
         if (_matTex2D[p] > 0) {
             if (_matTex2D[p] < chan.length) {
                 return chan.substring(0, _matTex2D[p]);
@@ -196,8 +196,6 @@ const standard = {
         const useUnmodifiedUv = [];
         const mapTransforms = [];
         const maxUvSets = 2;
-
-        const uvs = [];
 
         for (const p in _matTex2D) {
             const mname = p + "Map";
