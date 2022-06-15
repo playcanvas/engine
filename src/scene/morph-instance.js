@@ -185,9 +185,8 @@ class MorphInstance {
             const index = this._weightMap.get(key);
             if (Number.isInteger(index)) {
                 return this._weights[index];
-            } else {
-                Debug.error('Attempting to get a morph target weight using a key that doesn\'t exist.');
             }
+            Debug.error('Attempting to get a morph target weight using a key that doesn\'t exist.');
         } else {
             return this._weights[key];
         }
