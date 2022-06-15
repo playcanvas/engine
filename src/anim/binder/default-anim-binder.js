@@ -84,7 +84,7 @@ class DefaultAnimBinder {
                     for (let i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
                             const morphInstance = meshInstances[i].morphInstance;
-                            const func = function (value) {
+                            const func = (value) => {
                                 morphInstance.setWeight(weightName, value[0]);
                             };
                             return DefaultAnimBinder.createAnimTarget(func, 'number', 1, node, `weight.${weightName}`);
