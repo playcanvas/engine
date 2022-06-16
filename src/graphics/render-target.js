@@ -1,6 +1,6 @@
 import { Debug, TRACEID_RENDER_TARGET_ALLOC } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
-
+import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
 /** @typedef {import('./texture.js').Texture} Texture */
@@ -229,8 +229,10 @@ class RenderTarget {
      * depth buffer.
      */
     resolve(color = true, depth = !!this._depthBuffer) {
-        if (this._device) {
+        if (this._device && this._samples > 1) {
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
             this.impl.resolve(this._device, this, color, depth);
+            DebugGraphics.popGpuMarker(this._device);
         }
     }
 
@@ -252,7 +254,12 @@ class RenderTarget {
                 return false;
             }
         }
-        return this._device.copyRenderTarget(source, this, color, depth);
+
+        DebugGraphics.pushGpuMarker(this._device, `COPY-RT:${source.name}->${this.name}`);
+        const success = this._device.copyRenderTarget(source, this, color, depth);
+        DebugGraphics.popGpuMarker(this._device);
+
+        return success;
     }
 
     /**
