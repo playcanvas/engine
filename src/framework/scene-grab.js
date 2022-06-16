@@ -142,7 +142,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
@@ -230,7 +230,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
 
@@ -284,7 +284,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
@@ -323,7 +323,7 @@ class SceneGrab {
             onPostRenderOpaque: function (cameraPass) {
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
                     // just clear the list of visible objects to avoid keeping references
