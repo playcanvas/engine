@@ -326,7 +326,7 @@ class ForwardRenderer {
         }
     }
 
-    setCameraUniforms(camera, target) {
+    setCameraUniforms(camera, target, renderAction) {
 
         let transform;
 
@@ -422,7 +422,9 @@ class ForwardRenderer {
         this.cameraParams[3] = (1 + f / n) * 0.5;
         this.cameraParamsId.setValue(this.cameraParams);
 
-        return viewCount;
+        if (this.device.supportsUniformBuffers) {
+            this.setupViewUniformBuffers(renderAction, viewCount);
+        }
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
@@ -430,12 +432,8 @@ class ForwardRenderer {
     // when the functionality moves to the render passes.
     setCamera(camera, target, clear, renderAction = null) {
 
-        const viewCount = this.setCameraUniforms(camera, target);
+        this.setCameraUniforms(camera, target, renderAction);
         this.clearView(camera, target, clear, false);
-
-        if (this.device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(renderAction, viewCount);
-        }
     }
 
     setupViewUniformBuffers(renderAction, viewCount) {
@@ -2167,7 +2165,7 @@ class ForwardRenderer {
             // Set the not very clever global variable which is only useful when there's just one camera
             this.scene._activeCamera = camera.camera;
 
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget);
+            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
 
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
