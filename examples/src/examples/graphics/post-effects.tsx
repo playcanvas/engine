@@ -69,6 +69,9 @@ class PostEffectsExample {
                 <LabelGroup text='brightness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
                 </LabelGroup>
+                <LabelGroup text='downscale'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.downscale' }} min={1} max={4} step={1}/>
+                </LabelGroup>
             </Panel>
             <Panel headerText='POST-PROCESS UI [KEY_6]'>
                 <LabelGroup text='enabled'>
