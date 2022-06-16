@@ -122,7 +122,7 @@ class AnimTargetValue {
     }
 
     unbind() {
-        if (!this._normalizeWeights) {
+        if (this.setter) {
             this.setter(this.baseValue);
         }
     }
