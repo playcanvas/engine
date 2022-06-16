@@ -425,8 +425,6 @@ class ForwardRenderer {
         if (this.device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(renderAction, viewCount);
         }
-
-        return viewCount;
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
@@ -434,7 +432,7 @@ class ForwardRenderer {
     // when the functionality moves to the render passes.
     setCamera(camera, target, clear, renderAction = null) {
 
-        const viewCount = this.setCameraUniforms(camera, target, renderAction);
+        this.setCameraUniforms(camera, target, renderAction);
         this.clearView(camera, target, clear, false);
     }
 
