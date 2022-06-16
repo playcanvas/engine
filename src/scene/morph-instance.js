@@ -204,10 +204,9 @@ class MorphInstance {
      */
     setWeight(key, weight) {
         const index = this._getWeightIndex(key);
-        if (index >= 0 && index < this._weights.length) {
-            this._weights[index] = weight;
-            this._dirty = true;
-        }
+        Debug.assert(index >= 0 && index < this._weights.length);
+        this._weights[index] = weight;
+        this._dirty = true;
     }
 
     /**
