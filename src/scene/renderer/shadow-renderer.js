@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';

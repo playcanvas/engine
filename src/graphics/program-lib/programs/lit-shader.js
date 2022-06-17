@@ -784,12 +784,15 @@ class LitShader {
 
         if (useAo) {
             code += chunks.aoDiffuseOccPS;
-            if (options.occludeSpecular) {
-                if (options.occludeSpecular === SPECOCC_AO) {
+            switch (options.occludeSpecular) {
+                case SPECOCC_AO:
                     code += options.occludeSpecularFloat ? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
-                } else if (options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
+                    break;
+                case SPECOCC_GLOSSDEPENDENT:
                     code += options.occludeSpecularFloat ? chunks.aoSpecOccPS : chunks.aoSpecOccConstPS;
-                }
+                    break;
+                default:
+                    break;
             }
         }
 
