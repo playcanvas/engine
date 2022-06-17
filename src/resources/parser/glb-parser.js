@@ -1378,6 +1378,39 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return weightIndex;
     };
 
+    // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
+    // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
+    const createMorphTargetCurves = (curve, node, entityPath) => {
+        const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
+        const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
+
+        for (let j = 0; j < morphTargetCount; j++) {
+            const morphTargetOutput = new Float32Array(keyframeCount);
+            // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
+            for (let k = 0; k < keyframeCount; k++) {
+                morphTargetOutput[k] = outputMap[curve.output].data[k * morphTargetCount + j];
+            }
+            const output = new AnimData(1, morphTargetOutput);
+            // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
+            outputMap[-outputCounter] = output;
+            const morphCurve = {
+                paths: [{
+                    entityPath: entityPath,
+                    component: 'graph',
+                    propertyPath: [`weight.${retrieveWeightName(node.name, j)}`]
+                }],
+                // each morph target curve input can use the same sampler.input from the channel they were all in
+                input: curve.input,
+                // but each morph target curve should reference its individual output that was just created
+                output: -outputCounter,
+                interpolation: curve.interpolation
+            };
+            outputCounter++;
+            // add the morph target curve to the curveMap
+            curveMap[`morphCurve-${i}-${j}`] = morphCurve;
+        }
+    };
+
     // convert anim channels
     for (i = 0; i < gltfAnimation.channels.length; ++i) {
         const channel = gltfAnimation.channels[i];
@@ -1388,46 +1421,18 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const entityPath = constructNodePath(node);
 
         if (target.path.startsWith('weights')) {
-            // create a curve for each morph target weight present in the animation data
-            const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
-            const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
-
-            for (let j = 0; j < morphTargetCount; j++) {
-                const morphTargetOutput = new Float32Array(keyframeCount);
-                // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
-                for (let k = 0; k < keyframeCount; k++) {
-                    morphTargetOutput[k] = outputMap[curve.output].data[k * morphTargetCount + j];
-                }
-                const output = new AnimData(1, morphTargetOutput);
-                // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
-                outputMap[-outputCounter] = output;
-                const morphCurve = {
-                    paths: [{
-                        entityPath: entityPath,
-                        component: 'graph',
-                        propertyPath: [`weight.${retrieveWeightName(node.name, j)}`]
-                    }],
-                    // each morph target curve input can use the same sampler.input from the channel they were all in
-                    input: curve.input,
-                    // but each morph target curve should reference its individual output that was just created
-                    output: -outputCounter,
-                    interpolation: curve.interpolation
-                };
-                outputCounter++;
-                // add the morph target curve to the curveMap
-                curveMap[`morphCurve-${i}-${j}`] = morphCurve;
-            }
+            createMorphTargetCurves(curve, node, entityPath);
             // after all morph targets in this curve have been included in the curveMap, this curve and its output data can be deleted
             delete curveMap[channel.sampler];
             delete outputMap[curve.output];
-            continue;
+        } else {
+            curve.paths.push({
+                entityPath: entityPath,
+                component: 'graph',
+                propertyPath: [transformSchema[target.path]]
+            });
         }
 
-        curve.paths.push({
-            entityPath: entityPath,
-            component: 'graph',
-            propertyPath: [transformSchema[target.path]]
-        });
     }
 
     const inputs = [];
