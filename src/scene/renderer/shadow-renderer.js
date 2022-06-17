@@ -516,7 +516,9 @@ class ShadowRenderer {
                 shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
-            device.setShader(shadowShader);
+            if (!shadowShader.failed && !device.setShader(shadowShader)) {
+                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
+            }
 
             // set buffers
             forwardRenderer.setVertexBuffers(device, mesh);
