@@ -18,6 +18,10 @@ import { Layer } from '../scene/layer.js';
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
 
+// uniform names (first is current name, second one is deprecated name for compatibility)
+const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
+const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
+
 /**
  * Internal class abstracting the access to the depth and color texture of the scene.
  * color frame buffer is copied to a texture
@@ -53,10 +57,17 @@ class SceneGrab {
         }
     }
 
+    setupUniform(device, depth, buffer) {
+
+        // assign it to scopes to expose it to shaders
+        const names = depth ? _depthUniformNames : _colorUniformNames;
+        names.forEach(name => device.scope.resolve(name).setValue(buffer));
+    }
+
     allocateTexture(device, name, format, isDepth, mipmaps) {
 
         // allocate texture that will store the depth
-        const texture = new Texture(device, {
+        return new Texture(device, {
             name,
             format,
             width: device.width,
@@ -67,20 +78,15 @@ class SceneGrab {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-
-        return texture;
     }
 
     allocateRenderTarget(renderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
 
         // texture / uniform names: new one (first), as well as old one  (second) for compatibility
-        const names = isDepthUniforms ? ['uSceneDepthMap', 'uDepthMap'] : ['uSceneColorMap', 'texture_grabPass'];
+        const names = isDepthUniforms ? _depthUniformNames : _colorUniformNames;
 
         // allocate texture buffer
         const buffer = this.allocateTexture(device, names[0], format, isDepth, mipmaps);
-
-        // assign it to scopes to expose it to shaders
-        names.forEach(name => device.scope.resolve(name).setValue(buffer));
 
         if (renderTarget) {
 
@@ -164,6 +170,9 @@ class SceneGrab {
                     device.gl.generateMipmap(colorBuffer.impl._glTarget);
 
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, false, colorBuffer);
                 }
 
                 if (camera.renderSceneDepthMap) {
@@ -178,6 +187,9 @@ class SceneGrab {
                     DebugGraphics.pushGpuMarker(device, 'GRAB-DEPTH');
                     device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, true, this.depthRenderTarget.depthBuffer);
                 }
             },
 
@@ -313,6 +325,14 @@ class SceneGrab {
                     colorBuffer._needsMipmapsUpload = false;
 
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, false, colorBuffer);
+                }
+
+                if (camera.renderSceneDepthMap) {
+                    // assign unifrom
+                    self.setupUniform(device, true, this.depthRenderTarget.colorBuffer);
                 }
             },
 
