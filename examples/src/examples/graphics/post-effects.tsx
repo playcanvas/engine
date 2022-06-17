@@ -2,7 +2,7 @@ import React from 'react';
 import * as pc from '../../../../';
 
 import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class PostEffectsExample {
@@ -70,7 +70,7 @@ class PostEffectsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
                 </LabelGroup>
                 <LabelGroup text='downscale'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.downscale' }} min={1} max={4} step={1}/>
+                    <SelectInput options={[{ v: 1, t: 'None' }, { v: 2, t: '50%' }, { v: '4', t: '25%' }]} binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.downscale' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='POST-PROCESS UI [KEY_6]'>
@@ -185,7 +185,8 @@ class PostEffectsExample {
                     enabled: true,
                     radius: 5,
                     samples: 16,
-                    brightness: 0
+                    brightness: 0,
+                    downscale: 1
                 },
                 bloom: {
                     enabled: true,
