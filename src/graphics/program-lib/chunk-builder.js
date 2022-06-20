@@ -1,9 +1,7 @@
 // helper class for combining shader chunks together
 // ensures every chunk ends with a new line otherwise shaders can be ill-formed
 class ChunkBuilder {
-    constructor() {
-        this.code = '';
-    }
+    code = '';
 
     append(...chunks) {
         chunks.forEach((chunk) => {
@@ -14,6 +12,6 @@ class ChunkBuilder {
             }
         });
     }
-};
+}
 
 export { ChunkBuilder };
