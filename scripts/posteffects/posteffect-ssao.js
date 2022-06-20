@@ -20,6 +20,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     var vshader = [
         (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
         graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
+        "attribute vec2 aPosition;",
         "",
         "varying vec2 vUv0;",
         "",
@@ -377,16 +378,22 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.samples = 20;
     this.downscale = 1.0;
 
-    this.resize();
+    this.resize(null);
 }
 
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
-SSAOEffect.prototype.resize = function () {
+SSAOEffect.prototype.resize = function (target) {
 
-    var width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
-    var height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
+    var width, height;
+    if (target == null) {
+        width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
+        height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
+    } else {
+        width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
+        height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
+    }
 
     // If no change, skip resize
     if (width == this.width && height == this.height)
