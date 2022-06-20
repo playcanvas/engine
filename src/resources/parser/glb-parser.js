@@ -31,7 +31,7 @@ import { VertexFormat } from '../../graphics/vertex-format.js';
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
-    ASPECT_MANUAL, ASPECT_AUTO
+    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -962,7 +962,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         '',
         '    dGlossiness += 0.0000001;',
         '}'
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const specularChunk = [
         '#ifdef MAPCOLOR',
@@ -989,7 +989,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         '        dSpecularity *= saturate(vVertexColor.$VC);',
         '    #endif',
         '}'
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const clearCoatGlossChunk = [
         '#ifdef MAPFLOAT',
@@ -1019,7 +1019,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         '',
         '    ccGlossiness += 0.0000001;',
         '}'
-    ].join('\n');
+    ].join('\n') + '\n';
 
     const zeros = [0, 0];
     const ones = [1, 1];
@@ -1054,7 +1054,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     const material = new StandardMaterial();
 
     // glTF doesn't define how to occlude specular
-    material.occludeSpecular = true;
+    material.occludeSpecular = SPECOCC_AO;
 
     material.diffuseTint = true;
     material.diffuseVertexColor = true;

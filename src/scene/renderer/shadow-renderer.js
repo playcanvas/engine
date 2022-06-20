@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
@@ -516,7 +518,9 @@ class ShadowRenderer {
                 shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
-            device.setShader(shadowShader);
+            if (!shadowShader.failed && !device.setShader(shadowShader)) {
+                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
+            }
 
             // set buffers
             forwardRenderer.setVertexBuffers(device, mesh);

@@ -1383,7 +1383,7 @@ class ForwardRenderer {
 
                     const shader = drawCall._shader[pass];
                     if (!shader.failed && !device.setShader(shader)) {
-                        Debug.error(`Error in material "${material.name}" with flags ${objDefs}`);
+                        Debug.error(`Error compiling shader for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                     }
 
                     // Uniforms I: material

@@ -427,7 +427,6 @@ const standardMaterialProps = [
     ['shadingModel', 'number'],
     ['shininess', 'number'],
     ['specular', 'Color'],
-    ['specularAntialias', 'boolean'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],
     ['specularMapOffset', 'Vec2'],

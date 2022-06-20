@@ -68,9 +68,10 @@ import glossPS from './standard/frag/gloss.js';
 import instancingVS from './lit/vert/instancing.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
-import lightmapDirPS from './lit/frag/lightmapDir.js';
-import lightmapSinglePS from './lit/frag/lightmapSingle.js';
-import lightmapSingleVertPS from './lit/frag/lightmapSingleVert.js';
+import lightmapAddPS from './lit/frag/lightmapAdd.js';
+import lightmapDirAddPS from './lit/frag/lightmapDirAdd.js';
+import lightmapDirPS from './standard/frag/lightmapDir.js';
+import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
@@ -82,9 +83,7 @@ import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalInstancedVS from './lit/vert/normalInstanced.js';
 import normalMapPS from './standard/frag/normalMap.js';
-import normalMapFastPS from './standard/frag/normalMapFast.js';
 import normalSkinnedVS from './lit/vert/normalSkinned.js';
-import normalVertexPS from './lit/frag/normalVertex.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
@@ -165,9 +164,6 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
-import specularAaNonePS from './lit/frag/specularAaNone.js';
-import specularAaToksvigPS from './lit/frag/specularAaToksvig.js';
-import specularAaToksvigFastPS from './lit/frag/specularAaToksvigFast.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
@@ -270,9 +266,10 @@ const shaderChunks = {
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,
+    lightmapAddPS,
+    lightmapDirAddPS,
     lightmapDirPS,
     lightmapSinglePS,
-    lightmapSingleVertPS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSpecularPhongPS,
@@ -284,9 +281,7 @@ const shaderChunks = {
     normalDetailMapPS,
     normalInstancedVS,
     normalMapPS,
-    normalMapFastPS,
     normalSkinnedVS,
-    normalVertexPS,
     normalXYPS,
     normalXYZPS,
     opacityPS,
@@ -367,9 +362,6 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
-    specularAaNonePS,
-    specularAaToksvigPS,
-    specularAaToksvigFastPS,
     spotPS,
     startPS,
     startVS,
