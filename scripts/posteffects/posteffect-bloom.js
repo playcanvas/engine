@@ -229,7 +229,7 @@ BloomEffect.prototype.resize = function (target) {
 
         this.targets.push(bloomTarget);
     }
-}
+};
 
 Object.assign(BloomEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
