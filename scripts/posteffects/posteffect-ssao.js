@@ -17,23 +17,25 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.ssaoScript = ssaoScript;
     this.needsDepthBuffer = true;
 
+    var vshader = [
+        (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
+        graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
+        graphicsDevice.webgl2 ? "" : "attribute vec2 aPosition;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main(void)",
+        "{",
+        graphicsDevice.webgl2 ? "    vUv0 = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);" : "   vUv0 = (aPosition.xy + 1.0) * 0.5;",
+        graphicsDevice.webgl2 ? "    gl_Position = vec4(vUv0 * 2.0f - 1.0f, 0.0f, 1.0f);" : "    gl_Position = vec4(aPosition, 0.0, 1.0);",
+        "}"
+    ].join("\n");
+
     this.ssaoShader = new pc.Shader(graphicsDevice, {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -267,19 +269,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -362,19 +352,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
