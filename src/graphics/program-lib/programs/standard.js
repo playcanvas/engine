@@ -12,6 +12,24 @@ import { LitShader } from './lit-shader.js';
 
 const _matTex2D = [];
 
+// helper class for combining shader chunks together
+// ensures every chunk ends with a new line otherwise shaders can be ill-formed
+class ChunkBuilder {
+    constructor() {
+        this.code = '';
+    }
+
+    append(...chunks) {
+        chunks.forEach((chunk) => {
+            if (chunk.endsWith('\n')) {
+                this.code += chunk;
+            } else {
+                this.code += chunk + '\n';
+            }
+        });
+    }
+};
+
 const standard = {
     // Shared Standard Material option structures
     optionsContext: {},
@@ -243,13 +261,13 @@ const standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        let decl = "";
-        let code = "";
-        let func = "";
+        const decl = new ChunkBuilder();
+        const code = new ChunkBuilder();
+        const func = new ChunkBuilder();
         let lightingUv = "";
 
         // global texture bias for standard textures
-        decl += "uniform float textureBias;\n";
+        decl.append("uniform float textureBias;");
 
         if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR) {
             // parallax
@@ -259,28 +277,28 @@ const standard = {
                 //     if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
                 //     code += tbn;
                 // }
-                code += this._addMap("height", "parallaxPS", options, litShader.chunks);
-                func += "getParallax();\n";
+                code.append(this._addMap("height", "parallaxPS", options, litShader.chunks));
+                func.append("getParallax();");
             }
 
             // opacity
             if (options.blendType !== BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
-                decl += "float dAlpha;\n";
-                code += this._addMap("opacity", "opacityPS", options, litShader.chunks);
-                func += "getOpacity();\n";
+                decl.append("float dAlpha;");
+                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks));
+                func.append("getOpacity();");
                 if (options.alphaTest) {
-                    code += litShader.chunks.alphaTestPS;
-                    func += "alphaTest(dAlpha);\n";
+                    code.append(litShader.chunks.alphaTestPS);
+                    func.append("alphaTest(dAlpha);");
                 }
             } else {
-                decl += "float dAlpha = 1.0;\n";
+                decl.append("float dAlpha = 1.0;");
             }
 
             // normal
             if (litShader.needsNormal) {
                 if (options.normalMap || options.clearCoatNormalMap) {
                     // TODO: let each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently decide which unpackNormal to use.
-                    code += options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS;
+                    code.append(options.packedNormal ? litShader.chunks.normalXYPS : litShader.chunks.normalXYZPS);
 
                     if (!options.hasTangents) {
                         // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
@@ -289,88 +307,91 @@ const standard = {
                     }
                 }
 
-                decl += "vec3 dNormalW;\n";
-                code += this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks);
-                code += this._addMap("normal", "normalMapPS", options, litShader.chunks);
-                func += "getNormal();\n";
+                decl.append("vec3 dNormalW;");
+                code.append(this._addMap("normalDetail", "normalDetailMapPS", options, litShader.chunks));
+                code.append(this._addMap("normal", "normalMapPS", options, litShader.chunks));
+                func.append("getNormal();");
             }
 
             // albedo
-            decl += "vec3 dAlbedo;\n";
+            decl.append("vec3 dAlbedo;");
             if (options.diffuseDetail) {
-                code += this._addMap("diffuseDetail", "diffuseDetailMapPS", options, litShader.chunks);
+                code.append(this._addMap("diffuseDetail", "diffuseDetailMapPS", options, litShader.chunks));
             }
-            code += this._addMap("diffuse", "diffusePS", options, litShader.chunks);
-            func += "getAlbedo();\n";
+            code.append(this._addMap("diffuse", "diffusePS", options, litShader.chunks));
+            func.append("getAlbedo();");
 
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 const specularPropName = options.useMetalness ? "metalness" : "specular";
-                decl += "vec3 dSpecularity;\n";
-                decl += "float dGlossiness;\n";
-                code += this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks);
-                code += this._addMap("gloss", "glossPS", options, litShader.chunks);
-                func += "getSpecularity();\n";
-                func += "getGlossiness();\n";
+                decl.append("vec3 dSpecularity;");
+                decl.append("float dGlossiness;");
+                code.append(this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks));
+                code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
+                func.append("getSpecularity();");
+                func.append("getGlossiness();");
             } else {
-                decl += "vec3 dSpecularity = vec3(0.0);\n";
-                decl += "float dGlossiness = 0.0;\n";
+                decl.append("vec3 dSpecularity = vec3(0.0);");
+                decl.append("float dGlossiness = 0.0;");
             }
 
             // ao
             if (options.aoMap || options.aoVertexColor) {
-                decl += "float dAo;\n";
-                code += this._addMap("ao", "aoPS", options, litShader.chunks);
-                func += "getAO();\n";
+                decl.append("float dAo;");
+                code.append(this._addMap("ao", "aoPS", options, litShader.chunks));
+                func.append("getAO();");
             }
 
             // emission
-            decl += "vec3 dEmission;\n";
-            code += this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveFormat);
-            func += "getEmission();\n";
+            decl.append("vec3 dEmission;");
+            code.append(this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveFormat));
+            func.append("getEmission();");
 
             // clearcoat
             if (options.clearCoat > 0) {
-                decl += "float ccSpecularity;\n";
-                decl += "float ccGlossiness;\n";
-                decl += "vec3 ccNormalW;\n";
+                decl.append("float ccSpecularity;");
+                decl.append("float ccGlossiness;");
+                decl.append("vec3 ccNormalW;");
 
-                code += this._addMap("clearCoat", "clearCoatPS", options, litShader.chunks);
-                code += this._addMap("clearCoatGloss", "clearCoatGlossPS", options, litShader.chunks);
-                code += this._addMap("clearCoatNormal", "clearCoatNormalPS", options, litShader.chunks);
+                code.append(this._addMap("clearCoat", "clearCoatPS", options, litShader.chunks));
+                code.append(this._addMap("clearCoatGloss", "clearCoatGlossPS", options, litShader.chunks));
+                code.append(this._addMap("clearCoatNormal", "clearCoatNormalPS", options, litShader.chunks));
 
-                func += "getClearCoat();\n";
-                func += "getClearCoatGlossiness();\n";
-                func += "getClearCoatNormal();\n";
+                func.append("getClearCoat();");
+                func.append("getClearCoatGlossiness();");
+                func.append("getClearCoatNormal();");
             }
 
             // lightmap
             if (options.lightMap || options.lightVertexColor) {
                 const lightmapDir = (options.dirLightMap && options.useSpecular);
                 const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
-                decl += "vec3 dLightmap;\n";
+                decl.append("vec3 dLightmap;");
                 if (lightmapDir) {
-                    decl += "vec3 dLightmapDir;\n";
+                    decl.append("vec3 dLightmapDir;");
                 }
-                code += this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapFormat);
-                func += "getLightMap();\n";
+                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapFormat));
+                func.append("getLightMap();");
             }
         } else {
             // all other passes require only opacity
             if (options.alphaTest) {
-                decl += "float dAlpha;\n";
-                code += this._addMap("opacity", "opacityPS", options, litShader.chunks);
-                code += litShader.chunks.alphaTestPS;
-                func += "getOpacity();\n";
-                func += "alphaTest(dAlpha);\n";
+                decl.append("float dAlpha;");
+                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks));
+                code.append(litShader.chunks.alphaTestPS);
+                func.append("getOpacity();");
+                func.append("alphaTest(dAlpha);");
             }
         }
 
-        decl = `//-------- frontend decl begin\n${decl}//-------- frontend decl end\n`;
-        code = `//-------- frontend code begin\n${code}//-------- frontend code end\n`;
-        func = `//-------- frontend func begin\n${func}//-------- frontend func end\n`;
-        func = `\n${func.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
-        litShader.generateFragmentShader(decl, code, func, lightingUv);
+        // decl.append('//-------- frontend decl begin', decl.code, '//-------- frontend decl end');
+        // code.append('//-------- frontend code begin', code.code, '//-------- frontend code end');
+        // func.append('//-------- frontend func begin\n${func}//-------- frontend func end\n`;
+
+        // format func
+        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
+
+        litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
 
         return litShader.getDefinition();
     }
