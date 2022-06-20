@@ -7,28 +7,11 @@ import {
 } from '../../../scene/constants.js';
 
 import { LitShader } from './lit-shader.js';
+import { ChunkBuilder } from '../chunk-builder.js';
 
 /** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const _matTex2D = [];
-
-// helper class for combining shader chunks together
-// ensures every chunk ends with a new line otherwise shaders can be ill-formed
-class ChunkBuilder {
-    constructor() {
-        this.code = '';
-    }
-
-    append(...chunks) {
-        chunks.forEach((chunk) => {
-            if (chunk.endsWith('\n')) {
-                this.code += chunk;
-            } else {
-                this.code += chunk + '\n';
-            }
-        });
-    }
-};
 
 const standard = {
     // Shared Standard Material option structures
