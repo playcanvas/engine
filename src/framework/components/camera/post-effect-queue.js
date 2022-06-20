@@ -64,14 +64,6 @@ class PostEffectQueue {
 
         this.renderTargetScale = 1;
 
-        /**
-         * The time in milliseconds since the last resize.
-         *
-         * @type {number}
-         * @private
-         */
-        this.resizeLast = 0;
-
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
@@ -369,8 +361,6 @@ class PostEffectQueue {
     }
 
     resizeRenderTargets() {
-
-        this.resizeLast = now();
 
         const rect = this.camera.rect;
         const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
