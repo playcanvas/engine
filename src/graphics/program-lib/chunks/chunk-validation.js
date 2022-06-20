@@ -23,7 +23,7 @@ const chunkVersions = {
     lightSpecularBlinnPS: CHUNKAPI_1_54,
     lightSpecularPhongPS: CHUNKAPI_1_54,
     normalVertexPS: CHUNKAPI_1_54,
-    startPS: CHUNKAPI_1_54,
+    startPS: CHUNKAPI_1_54
 };
 
 // removed
