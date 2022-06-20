@@ -54,7 +54,7 @@ import { Asset } from '../../asset/asset.js';
 
 import { GlbContainerResource } from './glb-container-resource.js';
 
-import { Module } from '../../core/module.js';
+import { WasmModule } from '../../core/wasm-module.js';
 
 // instance of the draco decoder
 let dracoDecoderInstance = null;
@@ -2134,7 +2134,7 @@ const parseGltf = function (gltfChunk, callback) {
     // check required extensions
     const extensionsRequired = gltf?.extensionsRequired || [];
     if (!dracoDecoderInstance && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
-        Module.getInstance('DracoDecoderModule', (instance) => {
+        WasmModule.getInstance('DracoDecoderModule', (instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);
         });

@@ -110,7 +110,7 @@ const initialize = (moduleName, module) => {
  * @param {any} moduleInstance - The module instance.
  */
 
-class Module {
+class WasmModule {
     /**
      * Set a module's URL configuration.
      *
@@ -156,5 +156,5 @@ class Module {
 }
 
 export {
-    Module
+    WasmModule
 };
