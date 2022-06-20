@@ -101,8 +101,9 @@ class RenderCubemapExample {
             // add camera component to shiny ball - this defines camera properties for cubemap rendering
             shinyBall.addComponent('camera', {
 
-                // optimization - no need to clear as all pixels get overwritten
-                clearColorBuffer: false,
+                // optimization - clear the surface even though all pixels are overwritten,
+                // as this has performance benefits on tiled architectures
+                clearColorBuffer: true,
 
                 // cubemap camera will render objects on world layer and also skybox
                 layers: [worldLayer.id, skyboxLayer.id],

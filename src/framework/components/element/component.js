@@ -131,7 +131,22 @@ const matD = new Mat4();
  * @property {Vec2} alignment The horizontal and vertical alignment of the text. Values range from
  * 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for
  * {@link ELEMENTTYPE_TEXT} types.
- * @property {string} text The text to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+ * @property {string} text The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To
+ * override certain text styling properties on a per-character basis, the text can optionally
+ * include markup tags contained within square brackets. Supported tags are:
+ *
+ * - `color` - override the element's `color` property. Examples:
+ *   - `[color="#ff0000"]red text[/color]`
+ *   - `[color="#00ff00"]green text[/color]`
+ *   - `[color="#0000ff"]blue text[/color]`
+ * - `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
+ *   - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+ * - `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
+ *   - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+ *   - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+ *
+ * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
+ * true.
  * @property {string} key The localization key to use to get the localized text from
  * {@link Application#i18n}. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} textureAsset The id of the texture asset to render. Only works for
@@ -158,8 +173,7 @@ const matD = new Mat4();
  * @property {boolean} unicodeConverter Convert unicode characters using a function registered by
  * `app.systems.element.registerUnicodeConverter`.
  * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for
- * {@link ELEMENTTYPE_TEXT} types. The only supported tag is `[color]` with a hex color value. e.g.
- * `[color="#ff0000"]red text[/color]`
+ * {@link ELEMENTTYPE_TEXT} types. Defaults to false.
  * @property {number} rangeStart Index of the first character to render. Only works for
  * {@link ELEMENTTYPE_TEXT} types.
  * @property {number} rangeEnd Index of the last character to render. Only works for

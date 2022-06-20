@@ -10,16 +10,17 @@ uniform sampler2D texture_diffuseMap;
 void getAlbedo() {
     dAlbedo = vec3(1.0);
 
-    #ifdef MAPCOLOR
+#ifdef MAPCOLOR
     dAlbedo *= material_diffuse.rgb;
-    #endif
+#endif
 
-    #ifdef MAPTEXTURE
-    dAlbedo *= gammaCorrectInput(addAlbedoDetail(texture2D(texture_diffuseMap, $UV, textureBias).$CH));
-    #endif
+#ifdef MAPTEXTURE
+    vec3 albedoBase = gammaCorrectInput(texture2D(texture_diffuseMap, $UV, textureBias).$CH);
+    dAlbedo *= addAlbedoDetail(albedoBase);
+#endif
 
-    #ifdef MAPVERTEX
+#ifdef MAPVERTEX
     dAlbedo *= gammaCorrectInput(saturate(vVertexColor.$VC));
-    #endif
+#endif
 }
 `;

@@ -40,6 +40,9 @@ import { Color } from '../../math/color.js';
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
 /** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
+
+const invalidateAttachments = [];
 
 function testRenderable(gl, pixelFormat) {
     let result = true;
@@ -1236,13 +1239,134 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Start a render pass.
+     *
+     * @param {RenderPass} renderPass - The render pass to start.
+     * @ignore
+     */
+    startPass(renderPass) {
+
+        DebugGraphics.pushGpuMarker(this, `START-PASS`);
+
+        // set up render target
+        this.setRenderTarget(renderPass.renderTarget);
+        this.updateBegin();
+
+        // clear the render target
+        const colorOps = renderPass.colorOps;
+        const depthStencilOps = renderPass.depthStencilOps;
+        if (colorOps.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+
+            // the pass always clears full target
+            const rt = renderPass.renderTarget;
+            const width = rt ? rt.width : this.width;
+            const height = rt ? rt.height : this.height;
+            this.setViewport(0, 0, width, height);
+            this.setScissor(0, 0, width, height);
+
+            let clearFlags = 0;
+            const clearOptions = {};
+
+            if (colorOps.clear) {
+                clearFlags |= CLEARFLAG_COLOR;
+                clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
+            }
+
+            if (depthStencilOps.clearDepth) {
+                clearFlags |= CLEARFLAG_DEPTH;
+                clearOptions.depth = depthStencilOps.clearDepthValue;
+            }
+
+            if (depthStencilOps.clearStencil) {
+                clearFlags |= CLEARFLAG_STENCIL;
+                clearOptions.stencil = depthStencilOps.clearStencilValue;
+            }
+
+            // clear it
+            clearOptions.flags = clearFlags;
+            this.clear(clearOptions);
+        }
+
+        Debug.assert(!this.insideRenderPass);
+        this.insideRenderPass = true;
+
+        DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
+     * End a render pass.
+     *
+     * @param {RenderPass} renderPass - The render pass to end.
+     * @ignore
+     */
+    endPass(renderPass) {
+
+        DebugGraphics.pushGpuMarker(this, `END-PASS`);
+
+        this.unbindVertexArray();
+
+        const target = this.renderTarget;
+        if (target) {
+
+            // invalidate buffers to stop them being written to on tiled architextures
+            if (this.webgl2) {
+                invalidateAttachments.length = 0;
+                const gl = this.gl;
+
+                // invalidate color only if we don't need to resolve it
+                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
+                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                }
+                if (!renderPass.depthStencilOps.storeDepth) {
+                    invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
+                }
+                if (!renderPass.depthStencilOps.storeStencil) {
+                    invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                }
+
+                if (invalidateAttachments.length > 0) {
+
+                    // invalidate the whole buffer
+                    // TODO: we could handle viewport invalidation as well
+                    if (renderPass.fullSizeClearRect) {
+                        gl.invalidateFramebuffer(gl.DRAW_FRAMEBUFFER, invalidateAttachments);
+                    }
+                }
+            }
+
+            // resolve the color buffer
+            if (renderPass.colorOps.resolve) {
+                if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
+                    target.resolve(true, false);
+                }
+            }
+
+            // generate mipmaps
+            if (renderPass.colorOps.mipmaps) {
+                const colorBuffer = target._colorBuffer;
+                if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+                    this.activeTexture(this.maxCombinedTextures - 1);
+                    this.bindTexture(colorBuffer);
+                    this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                }
+            }
+        }
+
+        this.insideRenderPass = false;
+
+        DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
      * Marks the beginning of a block of rendering. Internally, this function binds the render
      * target currently set on the device. This function should be matched with a call to
      * {@link GraphicsDevice#updateEnd}. Calls to {@link GraphicsDevice#updateBegin} and
      * {@link GraphicsDevice#updateEnd} must not be nested.
+     *
+     * @ignore
      */
     updateBegin() {
-        DebugGraphics.pushGpuMarker(this, `UPDATE-BEGIN`);
+        DebugGraphics.pushGpuMarker(this, 'UPDATE-BEGIN');
 
         this.boundVao = null;
 
@@ -1261,7 +1385,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Create a new WebGL frame buffer object
             if (!target.impl._glFrameBuffer) {
                 this.initRenderTarget(target);
-
             } else {
                 this.setFramebuffer(target.impl._glFrameBuffer);
             }
@@ -1276,18 +1399,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Marks the end of a block of rendering. This function should be called after a matching call
      * to {@link GraphicsDevice#updateBegin}. Calls to {@link GraphicsDevice#updateBegin} and
      * {@link GraphicsDevice#updateEnd} must not be nested.
+     *
+     * @ignore
      */
     updateEnd() {
 
         DebugGraphics.pushGpuMarker(this, `UPDATE-END`);
 
-        const gl = this.gl;
-
-        // unbind VAO from device to protect it from being changed
-        if (this.boundVao) {
-            this.boundVao = null;
-            this.gl.bindVertexArray(null);
-        }
+        this.unbindVertexArray();
 
         // Unset the render target
         const target = this.renderTarget;
@@ -1299,7 +1418,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // updating each face!
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
-                gl.generateMipmap(colorBuffer.impl._glTarget);
+                this.gl.generateMipmap(colorBuffer.impl._glTarget);
             }
 
             // Resolve MSAA if needed
@@ -1576,6 +1695,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return vao;
     }
 
+    unbindVertexArray() {
+        // unbind VAO from device to protect it from being changed
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
+    }
+
     setBuffers() {
         const gl = this.gl;
         let vao;
@@ -1827,15 +1954,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (flags & CLEARFLAG_COLOR) {
                 const color = (options.color == undefined) ? defaultOptions.color : options.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
+                this.setColorWrite(true, true, true, true);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
                 const depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
                 this.setClearDepth(depth);
-                if (!this.depthWrite) {
-                    gl.depthMask(true);
-                }
+                this.setDepthWrite(true);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
@@ -1846,12 +1972,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             // Clear the frame buffer
             gl.clear(this.glClearFlag[flags]);
-
-            if (flags & CLEARFLAG_DEPTH) {
-                if (!this.depthWrite) {
-                    gl.depthMask(false);
-                }
-            }
         }
     }
 

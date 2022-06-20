@@ -183,7 +183,7 @@ class Picker {
         this.cameraEntity.camera.renderTarget = null;
 
         if (this._renderTarget) {
-            this._renderTarget._colorBuffer.destroy();
+            this._renderTarget.destroyTextureBuffers();
             this._renderTarget.destroy();
             this._renderTarget = null;
         }

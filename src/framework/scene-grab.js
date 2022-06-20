@@ -1,6 +1,5 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_R8_G8_B8
 } from '../graphics/constants.js';
@@ -18,6 +17,10 @@ import { Layer } from '../scene/layer.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
+
+// uniform names (first is current name, second one is deprecated name for compatibility)
+const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
+const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
 
 /**
  * Internal class abstracting the access to the depth and color texture of the scene.
@@ -40,7 +43,6 @@ class SceneGrab {
         this.device = application.graphicsDevice;
 
         // create depth layer
-        this.clearOptions = null;
         this.layer = null;
 
         // color buffer format
@@ -55,10 +57,17 @@ class SceneGrab {
         }
     }
 
+    setupUniform(device, depth, buffer) {
+
+        // assign it to scopes to expose it to shaders
+        const names = depth ? _depthUniformNames : _colorUniformNames;
+        names.forEach(name => device.scope.resolve(name).setValue(buffer));
+    }
+
     allocateTexture(device, name, format, isDepth, mipmaps) {
 
         // allocate texture that will store the depth
-        const texture = new Texture(device, {
+        return new Texture(device, {
             name,
             format,
             width: device.width,
@@ -69,20 +78,15 @@ class SceneGrab {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-
-        return texture;
     }
 
     allocateRenderTarget(renderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
 
         // texture / uniform names: new one (first), as well as old one  (second) for compatibility
-        const names = isDepthUniforms ? ['uSceneDepthMap', 'uDepthMap'] : ['uSceneColorMap', 'texture_grabPass'];
+        const names = isDepthUniforms ? _depthUniformNames : _colorUniformNames;
 
         // allocate texture buffer
         const buffer = this.allocateTexture(device, names[0], format, isDepth, mipmaps);
-
-        // assign it to scopes to expose it to shaders
-        names.forEach(name => device.scope.resolve(name).setValue(buffer));
 
         if (renderTarget) {
 
@@ -144,7 +148,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
@@ -166,6 +170,9 @@ class SceneGrab {
                     device.gl.generateMipmap(colorBuffer.impl._glTarget);
 
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, false, colorBuffer);
                 }
 
                 if (camera.renderSceneDepthMap) {
@@ -180,6 +187,9 @@ class SceneGrab {
                     DebugGraphics.pushGpuMarker(device, 'GRAB-DEPTH');
                     device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, true, this.depthRenderTarget.depthBuffer);
                 }
             },
 
@@ -192,12 +202,6 @@ class SceneGrab {
 
         const app = this.application;
         const self = this;
-
-        this.clearOptions = {
-            color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
-            depth: 1.0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
 
         // WebGL 1 depth layer renders the same objects as in World, but with RGBA-encoded depth shader to get depth
         this.layer = new Layer({
@@ -238,7 +242,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
 
@@ -292,7 +296,7 @@ class SceneGrab {
                 const device = app.graphicsDevice;
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
@@ -321,11 +325,15 @@ class SceneGrab {
                     colorBuffer._needsMipmapsUpload = false;
 
                     DebugGraphics.popGpuMarker(device);
+
+                    // assign unifrom
+                    self.setupUniform(device, false, colorBuffer);
                 }
 
-                // set up clear for the depth rendering
-                this.oldClear = this.cameras[cameraPass].camera._clearOptions;
-                this.cameras[cameraPass].camera._clearOptions = self.clearOptions;
+                if (camera.renderSceneDepthMap) {
+                    // assign unifrom
+                    self.setupUniform(device, true, this.depthRenderTarget.colorBuffer);
+                }
             },
 
             onDrawCall: function () {
@@ -335,17 +343,12 @@ class SceneGrab {
             onPostRenderOpaque: function (cameraPass) {
 
                 /** @type {CameraComponent} */
-                const camera = app.scene.layers.cameras[cameraPass];
+                const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
                     // just clear the list of visible objects to avoid keeping references
                     const visibleObjects = this.instances.visibleOpaque[cameraPass];
                     visibleObjects.length = 0;
-                }
-
-                // restore the depth clear settings
-                if (this.depthRenderTarget) {
-                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
                 }
             }
         });

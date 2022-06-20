@@ -38,7 +38,9 @@ float getLightSpecular() {
     return calcLightSpecular(dGlossiness, dNormalW);
 }
 
+#ifdef CLEARCOAT
 float getLightSpecularCC() {
     return calcLightSpecular(ccGlossiness, ccNormalW);
 }
+#endif
 `;

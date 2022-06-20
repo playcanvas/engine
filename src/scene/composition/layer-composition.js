@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, TRACEID_RENDER_ACTION } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';
@@ -39,9 +39,6 @@ class LayerComposition extends EventHandler {
         super();
 
         this.name = name;
-
-        // enable logging
-        this.logRenderActions = false;
 
         /**
          * A read-only array of {@link Layer} sorted in the order they will be rendered.
@@ -590,6 +587,7 @@ class LayerComposition extends EventHandler {
 
         // render target from the camera takes precedence over the render target from the layer
         let rt = layer.renderTarget;
+        /** @type {CameraComponent} */
         const camera = layer.cameras[cameraIndex];
         if (camera && camera.renderTarget) {
             if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
@@ -614,9 +612,9 @@ class LayerComposition extends EventHandler {
         let clearStencil = needsClear ? camera.clearStencilBuffer : false;
 
         // clear buffers if requested by the layer
-        clearColor |= layer.clearColorBuffer;
-        clearDepth |= layer.clearDepthBuffer;
-        clearStencil |= layer.clearStencilBuffer;
+        clearColor ||= layer.clearColorBuffer;
+        clearDepth ||= layer.clearDepthBuffer;
+        clearStencil ||= layer.clearStencilBuffer;
 
         // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
         // don't render them to render target anymore
@@ -677,8 +675,8 @@ class LayerComposition extends EventHandler {
     _logRenderActions() {
 
         // #if _DEBUG
-        if (this.logRenderActions) {
-            Debug.log('Render Actions for composition: ' + this.name);
+        if (Debug.getTrace(TRACEID_RENDER_ACTION)) {
+            Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -689,12 +687,12 @@ class LayerComposition extends EventHandler {
                 const dirLightCount = ra.directionalLights.length;
                 const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
-                Debug.log(i +
+                Debug.trace(TRACEID_RENDER_ACTION, i +
                     (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
                     (' Lay: ' + layer.name).padEnd(22, ' ') +
                     (transparent ? ' TRANSP' : ' OPAQUE') +
                     (enabled ? ' ENABLED ' : ' DISABLED') +
-                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
+                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length).toString().padStart(4) +
                     (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
                     ' Clear: ' + clear +
                     ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +

@@ -17,6 +17,7 @@ import { GraphNode } from './graph-node.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../graphics/shader.js').Shader} Shader */
 /** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
 /** @typedef {import('../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
@@ -117,6 +118,13 @@ class MeshInstance {
         }
 
         this._key = [0, 0];
+
+        /**
+         * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
+         *
+         * @type {Array<Shader>}
+         * @ignore
+         */
         this._shader = [null, null, null];
 
         this.isStatic = false;

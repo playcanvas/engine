@@ -1,6 +1,6 @@
-import { Debug } from '../core/debug.js';
+import { Debug, TRACEID_RENDER_TARGET_ALLOC } from '../core/debug.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
-
+import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
 /** @typedef {import('./texture.js').Texture} Texture */
@@ -9,6 +9,8 @@ const defaultOptions = {
     depth: true,
     face: 0
 };
+
+let id = 0;
 
 /**
  * A render target is a rectangular rendering surface.
@@ -68,6 +70,8 @@ class RenderTarget {
      * camera.renderTarget = null;
      */
     constructor(options) {
+        this.id = id++;
+
         const _arg2 = arguments[1];
         const _arg3 = arguments[2];
 
@@ -135,12 +139,20 @@ class RenderTarget {
 
         // device specific implementation
         this.impl = this._device.createRenderTargetImpl(this);
+
+        Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} samples: ${this.samples} ` +
+            `${this.colorBuffer ? '[Color]' : ''}` +
+            `${this.depth ? '[Depth]' : ''}` +
+            `${this.stencil ? '[Stencil]' : ''}` +
+            `[Face:${this.face}]`);
     }
 
     /**
      * Frees resources associated with this render target.
      */
     destroy() {
+
+        Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
         const device = this._device;
         if (device) {
@@ -217,8 +229,10 @@ class RenderTarget {
      * depth buffer.
      */
     resolve(color = true, depth = !!this._depthBuffer) {
-        if (this._device) {
+        if (this._device && this._samples > 1) {
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
             this.impl.resolve(this._device, this, color, depth);
+            DebugGraphics.popGpuMarker(this._device);
         }
     }
 
@@ -240,7 +254,39 @@ class RenderTarget {
                 return false;
             }
         }
-        return this._device.copyRenderTarget(source, this, color, depth);
+
+        DebugGraphics.pushGpuMarker(this._device, `COPY-RT:${source.name}->${this.name}`);
+        const success = this._device.copyRenderTarget(source, this, color, depth);
+        DebugGraphics.popGpuMarker(this._device);
+
+        return success;
+    }
+
+    /**
+     * Number of antialiasing samples the render target uses.
+     *
+     * @type {number}
+     */
+    get samples() {
+        return this._samples;
+    }
+
+    /**
+     * True if the render target contains the depth attachment.
+     *
+     * @type {boolean}
+     */
+    get depth() {
+        return this._depth;
+    }
+
+    /**
+     * True if the render target contains the stencil attachment.
+     *
+     * @type {boolean}
+     */
+    get stencil() {
+        return this._stencil;
     }
 
     /**
