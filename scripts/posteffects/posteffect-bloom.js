@@ -171,12 +171,47 @@ function BloomEffect(graphicsDevice) {
         fshader: bloomCombineFrag
     });
 
+    // Effect defaults
+    this.bloomThreshold = 0.25;
+    this.blurAmount = 4;
+    this.bloomIntensity = 1.25;
+
+    // Uniforms
+    this.sampleWeights = new Float32Array(SAMPLE_COUNT);
+    this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
+
+    this.resize(null);
+}
+
+BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
+BloomEffect.prototype.constructor = BloomEffect;
+
+BloomEffect.prototype.resize = function (target) {
+
+    var width, height;
+    if (target == null) {
+        width = this.device.width;
+        height = this.device.height;
+    } else {
+        width = target.colorBuffer.width;
+        height = target.colorBuffer.height;
+    }
+
+    if (width == this.width && height == this.height)
+        return;
+
+    if (this.targets) {
+        for (let i = 0; i < this.targets.length; i++) {
+            this.targets[i].destroyFrameBuffers();
+            this.targets[i].destroyTextureBuffers();
+            this.targets[i].destroy();
+        }
+    }
+
     // Render targets
-    var width = graphicsDevice.width;
-    var height = graphicsDevice.height;
     this.targets = [];
     for (var i = 0; i < 2; i++) {
-        var colorBuffer = new pc.Texture(graphicsDevice, {
+        var colorBuffer = new pc.Texture(this.device, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
             height: height >> 1,
@@ -187,26 +222,14 @@ function BloomEffect(graphicsDevice) {
         colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'pe-bloom';
-        var target = new pc.RenderTarget({
+        var bloomTarget = new pc.RenderTarget({
             colorBuffer: colorBuffer,
             depth: false
         });
 
-        this.targets.push(target);
+        this.targets.push(bloomTarget);
     }
-
-    // Effect defaults
-    this.bloomThreshold = 0.25;
-    this.blurAmount = 4;
-    this.bloomIntensity = 1.25;
-
-    // Uniforms
-    this.sampleWeights = new Float32Array(SAMPLE_COUNT);
-    this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
 }
-
-BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
-BloomEffect.prototype.constructor = BloomEffect;
 
 Object.assign(BloomEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
