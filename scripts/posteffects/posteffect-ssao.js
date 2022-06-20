@@ -554,12 +554,7 @@ SSAO.prototype.initialize = function () {
         if (!this.enabled) return;
         this.effect.resize();
     });
-
-    this.app.graphicsDevice.on('resizecanvas', () => {
-        if (!this.enabled) return;
-        this.effect.resize();
-    });
-
+    
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
     });
