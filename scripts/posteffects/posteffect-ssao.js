@@ -387,7 +387,7 @@ SSAOEffect.prototype.constructor = SSAOEffect;
 SSAOEffect.prototype.resize = function (target) {
 
     var width, height;
-    if (target == null) {
+    if (target === null) {
         width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
         height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
     } else {
@@ -396,7 +396,7 @@ SSAOEffect.prototype.resize = function (target) {
     }
 
     // If no change, skip resize
-    if (width == this.width && height == this.height)
+    if (width === this.width && height === this.height)
         return;
 
     // Render targets

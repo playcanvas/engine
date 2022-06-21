@@ -189,7 +189,7 @@ BloomEffect.prototype.constructor = BloomEffect;
 BloomEffect.prototype.resize = function (target) {
 
     var width, height;
-    if (target == null) {
+    if (target === null) {
         width = this.device.width;
         height = this.device.height;
     } else {
@@ -197,11 +197,11 @@ BloomEffect.prototype.resize = function (target) {
         height = target.colorBuffer.height;
     }
 
-    if (width == this.width && height == this.height)
+    if (width === this.width && height === this.height)
         return;
 
     if (this.targets) {
-        for (let i = 0; i < this.targets.length; i++) {
+        for (var i = 0; i < this.targets.length; i++) {
             this.targets[i].destroyFrameBuffers();
             this.targets[i].destroyTextureBuffers();
             this.targets[i].destroy();
