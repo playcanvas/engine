@@ -1,6 +1,6 @@
 This file contains a brief summary of changes made to chunks in the PlayCanvas Engine.
 
-## v1.54
+## v1.55
 
 `clearCoatNormalPS`
 - refrain from generating world CC reflection, now done on the backend instead
