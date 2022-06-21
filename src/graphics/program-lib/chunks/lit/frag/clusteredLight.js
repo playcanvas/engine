@@ -93,9 +93,6 @@ struct ClusterLightData {
     // channel mask - one of the channels has 1, the others are 0
     vec4 cookieChannelMask;
 
-    // shadow intensity
-    float shadowIntensity;
-
     // light mask
     float mask;
 };
@@ -290,7 +287,6 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     vec4 cookieA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_A);
     clusterLightData.cookieIntensity = cookieA.x;
     clusterLightData.cookieRgb = cookieA.y;
-    clusterLightData.shadowIntensity = cookieA.z;
 
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
@@ -408,26 +404,25 @@ void evaluateLight(ClusterLightData light) {
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                            dAtten *= getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                            dAtten *= getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                            dAtten *= getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
                         #endif
-                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
+
                     } else {
 
                         // omni shadow
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            dAtten *= getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            dAtten *= getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            dAtten *= getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
-                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
                     }
                 }
 

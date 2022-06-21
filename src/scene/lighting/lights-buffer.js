@@ -22,7 +22,7 @@ const TextureIndex8 = {
     COLOR_B: 2,                 // color.b, color.b, useCookie, lightMask
     SPOT_ANGLES: 3,             // spotInner, spotInner, spotOuter, spotOuter
     SHADOW_BIAS: 4,             // bias, bias, normalBias, normalBias
-    COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, shadowIntensity, -
+    COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
     COOKIE_B: 6,                // cookieChannelMask.xyzw
 
     // leave in-between
@@ -344,7 +344,6 @@ class LightsBuffer {
         const isRgb = light._cookieChannel === 'rgb';
         data8[index + 0] = Math.floor(light.cookieIntensity * 255);
         data8[index + 1] = isRgb ? 255 : 0;
-        data8[index + 2] = Math.floor(light.shadowIntensity * 255);
         // we have two unused bytes here
 
         if (!isRgb) {
