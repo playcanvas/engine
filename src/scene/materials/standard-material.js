@@ -10,10 +10,11 @@ import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
     FRESNEL_SCHLICK,
-    SHADER_FORWARDHDR, SHADER_PICK,
+    SHADER_DEPTH, SHADER_PICK,
     SPECOCC_AO,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
+import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
@@ -710,7 +711,7 @@ class StandardMaterial extends Material {
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)

@@ -16,6 +16,7 @@ import LightsBakedExample from "./lights-baked";
 import LightsExample from "./lights";
 import LinesExample from "./lines";
 import MaterialAnisotropicExample from "./material-anisotropic";
+import MaterialBasicExample from "./material-basic";
 import MaterialClearCoatExample from "./material-clear-coat";
 import MaterialPhysicalExample from "./material-physical";
 import MaterialTranslucentSpecularExample from "./material-translucent-specular";
@@ -68,6 +69,7 @@ export {
     LightsExample,
     LinesExample,
     MaterialAnisotropicExample,
+    MaterialBasicExample,
     MaterialClearCoatExample,
     MaterialPhysicalExample,
     MaterialTranslucentSpecularExample,

@@ -5,7 +5,7 @@ import { Texture } from '../../../graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST,
+    FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_RGBE
 } from '../../../graphics/constants.js';
@@ -43,7 +43,7 @@ class HdrParser {
             // #endif
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            minFilter: FILTER_NEAREST_MIPMAP_NEAREST,
+            minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             width: textureData.width,
             height: textureData.height,
