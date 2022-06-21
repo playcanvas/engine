@@ -43,7 +43,7 @@ class HdrParser {
             // #endif
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            minFilter: FILTER_NEAREST_MIPMAP_NEAREST,
+            minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             width: textureData.width,
             height: textureData.height,
