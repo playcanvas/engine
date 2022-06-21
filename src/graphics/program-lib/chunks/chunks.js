@@ -42,6 +42,7 @@ import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
 import dilatePS from './lightmapper/frag/dilate.js';
 import bilateralDeNoisePS from './lightmapper/frag/bilateralDeNoise.js';
 import emissivePS from './standard/frag/emissive.js';
+import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
 import endVS from './lit/vert/end.js';
 import envConstPS from './common/frag/envConst.js';
@@ -144,7 +145,6 @@ import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
 import refractionPS from './lit/frag/refraction.js';
 import reprojectPS from './common/frag/reproject.js';
-import rgbmPS from './common/frag/rgbm.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
 import shadowCommonPS from './lit/frag/shadowCommon.js';
@@ -164,6 +164,7 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
+import sphericalPS from './common/frag/spherical.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
@@ -240,6 +241,7 @@ const shaderChunks = {
     bilateralDeNoisePS,
     decodePS,
     emissivePS,
+    encodePS,
     endPS,
     endVS,
     envConstPS,
@@ -342,7 +344,6 @@ const shaderChunks = {
     reflectionSphereLowPS,
     refractionPS,
     reprojectPS,
-    rgbmPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowCommonPS,
@@ -362,6 +363,7 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
+    sphericalPS,
     spotPS,
     startPS,
     startVS,

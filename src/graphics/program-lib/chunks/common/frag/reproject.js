@@ -1,3 +1,6 @@
+import decode from './decode.js';
+import encode from './encode.js';
+
 export default /* glsl */`
 // This shader requires the following #DEFINEs:
 //
@@ -49,58 +52,8 @@ float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
-//-- supported codings
-
-vec3 decodeLinear(vec4 source) {
-    return source.rgb;
-}
-
-vec4 encodeLinear(vec3 source) {
-    return vec4(source, 1.0);
-}
-
-vec3 decodeGamma(vec4 source) {
-    return pow(source.xyz, vec3(2.2));
-}
-
-vec4 encodeGamma(vec3 source) {
-    return vec4(pow(source + 0.0000001, vec3(1.0 / 2.2)), 1.0);
-}
-
-vec3 decodeRGBM(vec4 rgbm) {
-    vec3 color = (8.0 * rgbm.a) * rgbm.rgb;
-    return color * color;
-}
-
-vec4 encodeRGBM(vec3 source) { // modified RGBM
-    vec4 result;
-    result.rgb = pow(source.rgb, vec3(0.5));
-    result.rgb *= 1.0 / 8.0;
-
-    result.a = saturate( max( max( result.r, result.g ), max( result.b, 1.0 / 255.0 ) ) );
-    result.a = ceil(result.a * 255.0) / 255.0;
-
-    result.rgb /= result.a;
-    return result;
-}
-
-vec3 decodeRGBE(vec4 source) {
-    if (source.a == 0.0) {
-        return vec3(0.0, 0.0, 0.0);
-    } else {
-        return source.xyz * pow(2.0, source.w * 255.0 - 128.0);
-    }
-}
-
-vec4 encodeRGBE(vec3 source) {
-    float maxVal = max(source.x, max(source.y, source.z));
-    if (maxVal < 1e-32) {
-        return vec4(0, 0, 0, 0);
-    } else {
-        float e = ceil(log2(maxVal));
-        return vec4(source / pow(2.0, e), (e + 128.0) / 255.0);
-    }
-}
+${decode}
+${encode}
 
 //-- supported projections
 

@@ -6,6 +6,7 @@ import {
     PIXELFORMAT_R8_G8_B8_A8
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
+import { ChunkUtils } from '../chunk-utils.js';
 
 import {
     BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -44,12 +45,6 @@ const builtinVaryings = {
     vObjectSpaceUpW: "vec3",
     vUv0: "vec2",
     vUv1: "vec2"
-};
-
-const decodeTable = {
-    'rgbm': 'decodeRGBM',
-    'rgbe': 'decodeRGBE',
-    'linear': 'decodeLinear'
 };
 
 class LitShader {
@@ -234,10 +229,6 @@ class LitShader {
             default:
                 return '';
         }
-    }
-
-    _decodeFunc(textureFormat) {
-        return decodeTable[textureFormat] || 'decodeGamma';
     }
 
     generateVertexShader(useUv, useUnmodifiedUv, mapTransforms) {
@@ -756,10 +747,7 @@ class LitShader {
 
         // FIXME: only add decode when needed
         code += chunks.decodePS;
-
-        if (options.useRgbm) {
-            code += chunks.rgbmPS;
-        }
+        code += chunks.sphericalPS;
 
         // frontend
         code += this.frontendCode;
@@ -797,13 +785,14 @@ class LitShader {
         }
 
         if (options.reflectionSource === 'envAtlas') {
-            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+            code += chunks.atlasPS;
+            code += chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'cubeMap') {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
-            code += chunks.reflectionCubePS.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+            code += chunks.reflectionCubePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'sphereMap') {
             const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            code += scode.replace(/\$DECODE/g, this._decodeFunc(options.reflectionEncoding));
+            code += scode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
         }
 
         if (this.reflections) {
@@ -920,7 +909,7 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
-                code += chunks.ambientEnvPS.replace(/\$DECODE/g, this._decodeFunc(options.ambientEncoding));
+                code += chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
             }

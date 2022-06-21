@@ -7,7 +7,7 @@ import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 import { math } from '../math/math.js';
 
-import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
+import { CULLFACE_FRONT } from '../graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, GAMMA_SRGB, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
@@ -677,8 +677,7 @@ class Scene extends EventHandler {
             if (skyboxTex.cubemap) {
                 this.shader = library.getProgram('skybox', {
                     type: 'cubemap',
-                    rgbm: skyboxTex.type === TEXTURETYPE_RGBM,
-                    hdr: (skyboxTex.type === TEXTURETYPE_RGBM || skyboxTex.format === PIXELFORMAT_RGBA32F),
+                    encoding: skyboxTex.encoding,
                     useIntensity: scene.skyboxIntensity !== 1,
                     mip: skyboxTex.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: skyboxTex.fixCubemapSeams,
