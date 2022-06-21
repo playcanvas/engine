@@ -17,23 +17,25 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.ssaoScript = ssaoScript;
     this.needsDepthBuffer = true;
 
+    var vshader = [
+        (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
+        graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
+        "attribute vec2 aPosition;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main(void)",
+        "{",
+        "   vUv0 = (aPosition.xy + 1.0) * 0.5;",
+        "   gl_Position = vec4(aPosition, 0.0, 1.0);",
+        "}"
+    ].join("\n");
+
     this.ssaoShader = new pc.Shader(graphicsDevice, {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -267,19 +269,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -362,19 +352,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -400,19 +378,25 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.samples = 20;
     this.downscale = 1.0;
 
-    this.resize();
+    this.resize(null);
 }
 
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
-SSAOEffect.prototype.resize = function () {
+SSAOEffect.prototype.resize = function (target) {
 
-    var width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
-    var height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
+    var width, height;
+    if (target === null) {
+        width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
+        height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
+    } else {
+        width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
+        height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
+    }
 
     // If no change, skip resize
-    if (width == this.width && height == this.height)
+    if (width === this.width && height === this.height)
         return;
 
     // Render targets
@@ -573,11 +557,6 @@ SSAO.prototype.initialize = function () {
     });
 
     this.on('attr:downscale', () => {
-        if (!this.enabled) return;
-        this.effect.resize();
-    });
-
-    this.app.graphicsDevice.on('resizecanvas', () => {
         if (!this.enabled) return;
         this.effect.resize();
     });
