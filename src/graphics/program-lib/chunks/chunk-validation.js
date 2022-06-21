@@ -1,29 +1,29 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_54 } from '../../constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55 } from '../../constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
 const chunkVersions = {
     // frontend
     aoPS: CHUNKAPI_1_51,
-    clearCoatNormalPS: CHUNKAPI_1_54,
-    diffusePS: CHUNKAPI_1_54,
-    diffuseDetailMapPS: CHUNKAPI_1_54,
-    emissivePS: CHUNKAPI_1_54,
-    lightmapDirPS: CHUNKAPI_1_54,
-    lightmapSinglePS: CHUNKAPI_1_54,
-    normalMapPS: CHUNKAPI_1_54,
-    normalDetailMapPS: CHUNKAPI_1_54,
+    clearCoatNormalPS: CHUNKAPI_1_55,
+    diffusePS: CHUNKAPI_1_55,
+    diffuseDetailMapPS: CHUNKAPI_1_55,
+    emissivePS: CHUNKAPI_1_55,
+    lightmapDirPS: CHUNKAPI_1_55,
+    lightmapSinglePS: CHUNKAPI_1_55,
+    normalMapPS: CHUNKAPI_1_55,
+    normalDetailMapPS: CHUNKAPI_1_55,
 
     // backend
-    clusteredLightPS: CHUNKAPI_1_54,
-    endPS: CHUNKAPI_1_54,
-    lightmapAddPS: CHUNKAPI_1_54,
-    lightmapDirAddPS: CHUNKAPI_1_54,
-    lightSpecularAnisoGGXPS: CHUNKAPI_1_54,
-    lightSpecularBlinnPS: CHUNKAPI_1_54,
-    lightSpecularPhongPS: CHUNKAPI_1_54,
-    normalVertexPS: CHUNKAPI_1_54,
-    startPS: CHUNKAPI_1_54
+    clusteredLightPS: CHUNKAPI_1_55,
+    endPS: CHUNKAPI_1_55,
+    lightmapAddPS: CHUNKAPI_1_55,
+    lightmapDirAddPS: CHUNKAPI_1_55,
+    lightSpecularAnisoGGXPS: CHUNKAPI_1_55,
+    lightSpecularBlinnPS: CHUNKAPI_1_55,
+    lightSpecularPhongPS: CHUNKAPI_1_55,
+    normalVertexPS: CHUNKAPI_1_55,
+    startPS: CHUNKAPI_1_55
 };
 
 // removed
@@ -37,11 +37,11 @@ const removedChunks = {
     reflectionPrefilteredCubePS: CHUNKAPI_1_51,
     reflectionPrefilteredCubeLodPS: CHUNKAPI_1_51,
 
-    lightmapSingleVertPS: CHUNKAPI_1_54,
-    normalMapFastPS: CHUNKAPI_1_54,
-    specularAaNonePS: CHUNKAPI_1_54,
-    specularAaToksvigPS: CHUNKAPI_1_54,
-    specularAaToksvigFastPS: CHUNKAPI_1_54
+    lightmapSingleVertPS: CHUNKAPI_1_55,
+    normalMapFastPS: CHUNKAPI_1_55,
+    specularAaNonePS: CHUNKAPI_1_55,
+    specularAaToksvigPS: CHUNKAPI_1_55,
+    specularAaToksvigFastPS: CHUNKAPI_1_55
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
@@ -53,8 +53,6 @@ const semverLess = (a, b) => {
 
 // validate user chunks
 const validateUserChunks = (userChunks) => {
-    const result = { };
-
     const userAPIVersion = userChunks.APIVersion;
     for (const chunkName in userChunks) {
         if (chunkName === 'APIVersion') {
@@ -75,11 +73,8 @@ const validateUserChunks = (userChunks) => {
             if (chunkIsOutdated) {
                 Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API.`);
             }
-
-            result[chunkName] = userChunks[chunkName];
         }
     }
-    return result;
 };
 
 export {

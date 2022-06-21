@@ -1176,4 +1176,4 @@ semanticToLocation[SEMANTIC_ATTR15] = 15;
  * @type {string}
  */
 export const CHUNKAPI_1_51 = '1.51';
-export const CHUNKAPI_1_54 = '1.54';
+export const CHUNKAPI_1_55 = '1.55';

@@ -66,7 +66,11 @@ class LitShader {
         if (options.chunks) {
             this.chunks = {};
 
-            const userChunks = validateUserChunks(options.chunks);
+            const userChunks = options.chunks;
+
+            // #if _DEBUG
+            validateUserChunks(options.chunks);
+            // #endif
 
             for (const chunkName in shaderChunks) {
                 if (userChunks[chunkName]) {
