@@ -5,7 +5,7 @@ import { Texture } from '../../../graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST,
+    FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_RGBE
 } from '../../../graphics/constants.js';
