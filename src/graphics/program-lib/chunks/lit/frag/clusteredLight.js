@@ -55,8 +55,8 @@ struct ClusterLightData {
     // light follow mode
     float falloffMode;
 
-    // 1.0 if the light is shadow casting
-    float castShadows;
+    // 0.0 if the light doesn't cast shadows
+    float shadowIntensity;
 
     // shadow bias values
     float shadowBias;
@@ -105,7 +105,7 @@ struct ClusterLightData {
 mat4 lightProjectionMatrix;
 
 // macros for light properties
-#define isClusteredLightCastShadow(light) ( light.castShadows > 0.5 )
+#define isClusteredLightCastShadow(light) ( light.shadowIntensity > 0.0 )
 #define isClusteredLightCookie(light) (light.cookie > 0.5 )
 #define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
 #define isClusteredLightSpot(light) ( light.type > 0.5 )
@@ -160,7 +160,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
     clusterLightData.type = lightInfo.x;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
-    clusterLightData.castShadows = lightInfo.w;
+    clusterLightData.shadowIntensity = lightInfo.w;
 
     // color
     vec4 colorA = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COLOR_A);
@@ -404,12 +404,13 @@ void evaluateLight(ClusterLightData light) {
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            dAtten *= getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            dAtten *= getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            dAtten *= getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
                         #endif
+                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
 
                     } else {
 
@@ -417,12 +418,13 @@ void evaluateLight(ClusterLightData light) {
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            dAtten *= getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            dAtten *= getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            dAtten *= getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
+                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
                     }
                 }
 
