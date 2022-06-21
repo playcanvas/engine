@@ -6,7 +6,7 @@ class FirstPersonExample {
     static NAME = 'First Person';
 
 
-    example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {
@@ -24,11 +24,13 @@ class FirstPersonExample {
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
         assetListLoader.load(() => {
 
-            if (wasmSupported()) {
-                loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', run);
-            } else {
-                loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', run);
-            }
+            pc.WasmModule.setConfig('Ammo', {
+                glueUrl: '/static/lib/ammo/ammo.wasm.js',
+                wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+                fallbackUrl: '/static/lib/ammo/ammo.js'
+            });
+
+            pc.WasmModule.getInstance('Ammo', run);
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
