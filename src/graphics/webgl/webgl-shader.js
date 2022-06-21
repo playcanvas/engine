@@ -5,7 +5,7 @@ import { Preprocessor } from '../../core/preprocessor.js';
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
-/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
 
 /**
@@ -34,6 +34,7 @@ class WebglShader {
      * @param {Shader} shader - The shader to free.
      */
     destroy(shader) {
+        /** @type {WebglGraphicsDevice} */
         const device = shader.device;
         const idx = device.shaders.indexOf(shader);
         if (idx !== -1) {
@@ -50,7 +51,7 @@ class WebglShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
@@ -60,7 +61,7 @@ class WebglShader {
     /**
      * Compile and link a shader program.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to compile.
      */
     compileAndLink(device, shader) {
@@ -173,7 +174,7 @@ class WebglShader {
     /**
      * Extract attribute and uniform information from a successfully linked shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
@@ -265,7 +266,7 @@ class WebglShader {
     /**
      * Check the compilation status of a shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to query.
      * @param {WebGLShader} glShader - The WebGL shader.
      * @param {string} source - The shader source code.
@@ -297,7 +298,7 @@ class WebglShader {
      *
      * @param {string} src - The shader source code.
      * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
-     * @returns {Array} An array where the first element is the 10 lines of code around the first
+     * @returns {[string, {message?: string, line?: number, source?: string}]} A tuple where the first element is the 10 lines of code around the first
      * detected error, and the second element an object storing the error messsage, line number and
      * complete shader source.
      * @private
