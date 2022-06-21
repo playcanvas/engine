@@ -128,6 +128,7 @@ const moduleOptions = {
 
 const stripFunctions = [
     'Debug.assert',
+    'Debug.call',
     'Debug.deprecated',
     'Debug.warn',
     'Debug.warnOnce',

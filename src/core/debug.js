@@ -125,6 +125,15 @@ class Debug {
     }
 
     /**
+     * Executes a function in debug mode only.
+     *
+     * @param {Function} func - Function to call.
+     */
+    static call(func) {
+        func();
+    }
+
+    /**
      * Info message.
      *
      * @param {...*} args - The values to be written to the log.
