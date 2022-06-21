@@ -22,6 +22,7 @@ class BakeLightAmbient extends BakeLight {
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
             shadowDistance: 1,  // this is updated during shadow map rendering
+            shadowIntensity: 1,
             shadowResolution: 2048,
             shadowType: SHADOW_PCF3,
             color: Color.WHITE,
