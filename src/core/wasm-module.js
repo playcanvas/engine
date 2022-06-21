@@ -1,100 +1,101 @@
-// returns true if the running host supports wasm modules (all browsers except IE)
-const wasmSupported = () => {
-    let supported = null;
+class Impl {
+    static modules = {};
 
-    if (supported === null) {
-        supported = (() => {
-            try {
-                if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-                    const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                    if (module instanceof WebAssembly.Module)
-                        return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-                }
-            } catch (e) { }
-            return false;
-        })();
-    }
+    // returns true if the running host supports wasm modules (all browsers except IE)
+    static wasmSupported() {
+        let supported = null;
 
-    return supported;
-};
-
-// load a script
-const loadScript = (url, callback) => {
-    const s = document.createElement('script');
-    s.setAttribute('src', url);
-    s.onload = () => {
-        callback(null);
-    };
-    s.onerror = () => {
-        callback(`Failed to load script='${url}'`);
-    };
-    document.body.appendChild(s);
-};
-
-// load a wasm module
-const loadWasm = (moduleName, config, callback) => {
-    const loadUrl = (wasmSupported() && config.glueUrl && config.wasmUrl) ? config.glueUrl : config.fallbackUrl;
-    if (loadUrl) {
-        loadScript(loadUrl, (err) => {
-            if (err) {
-                callback(err, null);
-            } else {
-                window[moduleName]({
-                    locateFile: () => config.wasmUrl,
-                    onAbort: () => {
-                        callback('wasm module aborted.');
+        if (supported === null) {
+            supported = (() => {
+                try {
+                    if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+                        const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+                        if (module instanceof WebAssembly.Module)
+                            return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
                     }
-                }).then((instance) => {
-                    callback(null, instance);
-                });
-            }
-        });
-    } else {
-        callback('No supported wasm modules found.', null);
-    }
-};
+                } catch (e) { }
+                return false;
+            })();
+        }
 
-// get state object for the named module
-const getModule = (() => {
-    const modules = {};
-    return (name) => {
-        if (!modules.hasOwnProperty(name)) {
-            modules[name] = {
+        return supported;
+    }
+
+    // load a script
+    static loadScript(url, callback) {
+        const s = document.createElement('script');
+        s.setAttribute('src', url);
+        s.onload = () => {
+            callback(null);
+        };
+        s.onerror = () => {
+            callback(`Failed to load script='${url}'`);
+        };
+        document.body.appendChild(s);
+    }
+
+    // load a wasm module
+    static loadWasm(moduleName, config, callback) {
+        const loadUrl = (Impl.wasmSupported() && config.glueUrl && config.wasmUrl) ? config.glueUrl : config.fallbackUrl;
+        if (loadUrl) {
+            Impl.loadScript(loadUrl, (err) => {
+                if (err) {
+                    callback(err, null);
+                } else {
+                    window[moduleName]({
+                        locateFile: () => config.wasmUrl,
+                        onAbort: () => {
+                            callback('wasm module aborted.');
+                        }
+                    }).then((instance) => {
+                        callback(null, instance);
+                    });
+                }
+            });
+        } else {
+            callback('No supported wasm modules found.', null);
+        }
+    }
+
+    // get state object for the named module
+    static getModule(name) {
+        if (!Impl.modules.hasOwnProperty(name)) {
+            Impl.modules[name] = {
                 config: null,
                 initializing: false,
                 instance: null,
                 callbacks: []
             };
         }
-        return modules[name];
-    };
-})();
-
-const initialize = (moduleName, module) => {
-    if (module.initializing) {
-        return;
+        return Impl.modules[name];
     }
 
-    const config = module.config;
+    static initialize(moduleName, module) {
+        if (module.initializing) {
+            return;
+        }
 
-    if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
-        module.initializing = true;
-        loadWasm(moduleName, config, (err, instance) => {
-            if (err) {
-                if (config.errorHandler) {
-                    config.errorHandler(err);
+        const config = module.config;
+
+        if (config.glueUrl || config.wasmUrl || config.fallbackUrl) {
+            module.initializing = true;
+            Impl.loadWasm(moduleName, config, (err, instance) => {
+                if (err) {
+                    if (config.errorHandler) {
+                        config.errorHandler(err);
+                    } else {
+                        console.error(`failed to initialize module=${moduleName} error=${err}`);
+                    }
                 } else {
-                    console.error(`failed to initialize module=${moduleName} error=${err}`);
+                    module.instance = instance;
+                    module.callbacks.forEach((callback) => {
+                        callback(instance);
+                    });
                 }
-            } else {
-                module.instance = instance;
-                module.callbacks.forEach((callback) => {
-                    callback(instance);
-                });
-            }
-        });
+            });
+        }
     }
-};
+}
 
 /**
  * Callback used by {@link Module#setConfig}.
@@ -110,9 +111,12 @@ const initialize = (moduleName, module) => {
  * @param {any} moduleInstance - The module instance.
  */
 
+/**
+ * A pure static utility class which supports immediate and lazy loading of wasm modules.
+ */
 class WasmModule {
     /**
-     * Set a module's URL configuration.
+     * Set a wasm module's configuration.
      *
      * @param {string} moduleName - Name of the module.
      * @param {object} [config] - The configuration object.
@@ -124,16 +128,16 @@ class WasmModule {
      * to download.
      */
     static setConfig(moduleName, config) {
-        const module = getModule(moduleName);
+        const module = Impl.getModule(moduleName);
         module.config = config;
         if (module.callbacks.length > 0) {
             // start module initialize immediately since there are pending getInstance requests
-            initialize(moduleName, module);
+            Impl.initialize(moduleName, module);
         }
     }
 
     /**
-     * Get a module instance. The instance will be created if necessary and returned
+     * Get a wasm module instance. The instance will be created if necessary and returned
      * in the second parameter to callback.
      *
      * @param {string} moduleName - Name of the module.
@@ -141,7 +145,7 @@ class WasmModule {
      * available.
      */
     static getInstance(moduleName, callback) {
-        const module = getModule(moduleName);
+        const module = Impl.getModule(moduleName);
 
         if (module.instance) {
             callback(module.instance);
@@ -149,7 +153,7 @@ class WasmModule {
             module.callbacks.push(callback);
             if (module.config) {
                 // config has been provided, kick off module initialize
-                initialize(moduleName, module);
+                Impl.initialize(moduleName, module);
             }
         }
     }
