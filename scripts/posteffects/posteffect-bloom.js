@@ -200,8 +200,9 @@ BloomEffect.prototype.resize = function (target) {
     if (width === this.width && height === this.height)
         return;
 
+    var i;
     if (this.targets) {
-        for (var i = 0; i < this.targets.length; i++) {
+        for (i = 0; i < this.targets.length; i++) {
             this.targets[i].destroyFrameBuffers();
             this.targets[i].destroyTextureBuffers();
             this.targets[i].destroy();
@@ -210,7 +211,7 @@ BloomEffect.prototype.resize = function (target) {
 
     // Render targets
     this.targets = [];
-    for (var i = 0; i < 2; i++) {
+    for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
