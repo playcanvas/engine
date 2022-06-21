@@ -69,7 +69,7 @@ const _lightPropsDefault = [];
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
- * @property {number} shadowIntensity The intensity of the shadow darkening, 1 being shadows are entirely black.
+ * @property {number} shadowIntensity The intensity of the shadow darkening, 1 being shadows are entirely black. 
  * Defaults to 1.
  * @property {number} shadowResolution The size of the texture used for the shadow map. Valid sizes
  * are 64, 128, 256, 512, 1024, 2048. Defaults to 1024.
