@@ -684,6 +684,7 @@ class LitShader {
             }
             if (light.castShadows && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                code += "uniform float light" + i + "_shadowIntensity;\n";
 
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1209,14 +1210,16 @@ class LitShader {
                             if (light._normalOffsetBias) {
                                 code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
-                            code += "    dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                            code += "    float shadow = getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                            code += "    dAtten *= mix(1.0f, shadow, light" + i + "_shadowIntensity);\n";
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
                             code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "    dAtten *= getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
+                            code += "    float shadow = getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
+                            code += "    dAtten *= mix(1.0f, shadow, light" + i + "_shadowIntensity);\n";
                         }
                     }
                 }
