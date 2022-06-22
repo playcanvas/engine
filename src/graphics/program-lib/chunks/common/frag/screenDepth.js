@@ -13,13 +13,13 @@ uniform mat4 matrix_view;
 
 #ifndef CAMERAPLANES
 #define CAMERAPLANES
-uniform vec4 camera_params; // 1 / camera_far,      camera_far,     (1 - f / n) / 2,        (1 + f / n) / 2
+uniform vec4 camera_params; // 1 / camera_far,      camera_far,     camera_near,        _
 #endif
 
 #ifdef GL2
 float linearizeDepth(float z) {
     z = z * 2.0 - 1.0;
-    return 1.0 / (camera_params.z * z + camera_params.w);
+    return camera_params.z * camera_params.y / (camera_params.y + z * (camera_params.z - camera_params.y));
 }
 #else
 #ifndef UNPACKFLOAT

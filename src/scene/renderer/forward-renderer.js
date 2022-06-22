@@ -419,8 +419,8 @@ class ForwardRenderer {
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
-        this.cameraParams[2] = (1 - f / n) * 0.5;
-        this.cameraParams[3] = (1 + f / n) * 0.5;
+        this.cameraParams[2] = n;
+        this.cameraParams[3] = 0.0;
         this.cameraParamsId.setValue(this.cameraParams);
 
         if (this.device.supportsUniformBuffers) {
