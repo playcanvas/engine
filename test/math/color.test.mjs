@@ -52,7 +52,7 @@ describe('Color', function () {
             expect(c2.a).to.equal(0.4);
         });
 
-        it("cloning an extending class should keep its class prototype", function () {
+        it('cloning an extending class should keep its class prototype', function () {
             class UserColor extends Color {}
             const a = new UserColor();
             const b = a.clone();
