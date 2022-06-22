@@ -19,7 +19,7 @@ uniform vec4 camera_params; // 1 / camera_far,      camera_far,     camera_near,
 #ifdef GL2
 float linearizeDepth(float z) {
     z = z * 2.0 - 1.0;
-    return camera_params.z * camera_params.y / (camera_params.y + z * (camera_params.z - camera_params.y));
+    return (camera_params.z * camera_params.y) / (camera_params.y + z * (camera_params.z - camera_params.y));
 }
 #else
 #ifndef UNPACKFLOAT
