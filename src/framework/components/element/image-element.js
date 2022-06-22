@@ -206,7 +206,7 @@ class ImageRenderable {
         const element = this._element;
 
         let visibleFn = null;
-        if (cull && element._isScreenCulled()) {
+        if (cull && element._isScreenSpace()) {
             visibleFn = function (camera) {
                 return element.isVisibleForCamera(camera);
             };
@@ -385,7 +385,8 @@ class ImageElement {
         }
 
         if (this._renderable) {
-            this._renderable.setCull(true); // culling is now always true (screenspace culled by isCulled, worldspace by frustum)
+            // culling is always true for non-screenspace (frustrum is used); for screenspace, use the 'cull' property
+            this._renderable.setCull(!this._element._isScreenSpace() || this._element._isScreenCulled());
             this._renderable.setMaterial(this._material);
             this._renderable.setScreenSpace(screenSpace);
             this._renderable.setLayer(screenSpace ? LAYER_HUD : LAYER_WORLD);
