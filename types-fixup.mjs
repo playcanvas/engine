@@ -178,6 +178,7 @@ const lightComponentProps = [
     ['range', 'number'],
     ['shadowBias', 'number'],
     ['shadowDistance', 'number'],
+    ['shadowIntensity', 'number'],
     ['shadowResolution', 'number'],
     ['shadowType', 'number'],
     ['shadowUpdateMode', 'number'],
