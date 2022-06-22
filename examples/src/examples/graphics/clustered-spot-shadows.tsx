@@ -43,6 +43,9 @@ class ClusteredSpotShadowsExample {
                 <LabelGroup text='Static'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.static' }} value={data.get('settings.static')}/>
                 </LabelGroup>
+                <LabelGroup text='Shadow Intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowIntensity' }} min={0} max={1} value={data.get('settings.shadowIntensity')}/>
+                </LabelGroup>
                 <Button text='Add Light' onClick={() => data.emit('add')}/>
                 <Button text='Remove Light' onClick={() => data.emit('remove')}/>
                 <LabelGroup text='Light Count'>
@@ -85,6 +88,7 @@ class ClusteredSpotShadowsExample {
                 shadowType: pc.SHADOW_PCF3,      // shadow filter type
                 shadowsEnabled: true,
                 cookiesEnabled: true,
+                shadowIntensity: 1,
                 numLights: 0,
                 debug: false,
                 debugAtlas: false,
@@ -291,7 +295,10 @@ class ClusteredSpotShadowsExample {
 
                     // show debug atlas
                     debugAtlas = value;
-
+                } else if (pathArray[1] === 'shadowIntensity') {
+                    for (let i = 0; i < spotLightList.length; i++) {
+                        spotLightList[i].light.shadowIntensity = value;
+                    }
                 } else {
                     // @ts-ignore
                     lighting[pathArray[1]] = value;
