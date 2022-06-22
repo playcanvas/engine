@@ -265,6 +265,7 @@ class ResourceLoader {
         if (this._cache[url + type]) {
             return this._cache[url + type];
         }
+        return undefined;
     }
 
     /**

@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
+import { math } from '../../../math/math.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
 /** @typedef {import('../../../asset/asset.js').Asset} Asset */
@@ -18,14 +19,20 @@ class AnimComponentLayer {
      * @param {AnimComponent} component - The component that this layer is a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
+     * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized using the total weight of all layers.
      */
-    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
+    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE, normalizedWeight = true) {
         this._name = name;
         this._controller = controller;
         this._component = component;
         this._weight = weight;
         this._blendType = blendType;
+        this._normalizedWeight = normalizedWeight;
         this._mask = null;
+        this._blendTime = 0;
+        this._blendTimeElapsed = 0;
+        this._startingWeight = 0;
+        this._targetWeight = 0;
     }
 
     /**
@@ -166,7 +173,9 @@ class AnimComponentLayer {
     set blendType(value) {
         if (value !== this._blendType) {
             this._blendType = value;
-            this._component.rebind();
+            if (this._controller.normalizeWeights) {
+                this._component.rebind();
+            }
         }
     }
 
@@ -233,7 +242,33 @@ class AnimComponentLayer {
     }
 
     update(dt) {
+        if (this._blendTime) {
+            if (this._blendTimeElapsed < this._blendTime) {
+                this.weight = math.lerp(this._startingWeight, this._targetWeight, this._blendTimeElapsed / this._blendTime);
+                this._blendTimeElapsed += dt;
+            } else {
+                this.weight = this._targetWeight;
+                this._blendTime = 0;
+                this._blendTimeElapsed = 0;
+                this._startingWeight = 0;
+                this._targetWeight = 0;
+            }
+        }
         this._controller.update(dt);
+    }
+
+
+    /**
+     * Blend from the current weight value to the provided weight value over a given amount of time.
+     *
+     * @param {number} weight - The new weight value to blend to.
+     * @param {number} time - The duration of the blend in seconds.
+     */
+    blendToWeight(weight, time) {
+        this._startingWeight = this.weight;
+        this._targetWeight = weight;
+        this._blendTime = Math.max(0, time);
+        this._blendTimeElapsed = 0;
     }
 
     /**

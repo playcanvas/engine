@@ -21,7 +21,7 @@ class Debug {
     static deprecated(message) {
         if (!Debug._deprecatedMessages.has(message)) {
             Debug._deprecatedMessages.add(message);
-            console.warn("DEPRECATED: " + message);
+            console.warn('DEPRECATED: ' + message);
         }
     }
 
@@ -33,7 +33,7 @@ class Debug {
      */
     static assert(assertion, ...args) {
         if (!assertion) {
-            console.error("ASSERT FAILED: ", ...args);
+            console.error('ASSERT FAILED: ', ...args);
         }
     }
 

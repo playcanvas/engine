@@ -172,13 +172,7 @@ class Mat3 {
      * console.log(m.toString());
      */
     toString() {
-        let t = '[';
-        for (let i = 0; i < 9; i++) {
-            t += this.data[i];
-            t += (i !== 8) ? ', ' : '';
-        }
-        t += ']';
-        return t;
+        return '[' + this.data.join(', ') + ']';
     }
 
     /**

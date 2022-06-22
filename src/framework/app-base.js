@@ -1471,11 +1471,11 @@ class Application extends EventHandler {
      * @returns {object} A object containing the values calculated to use as width and height.
      */
     resizeCanvas(width, height) {
-        if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
+        if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
 
         // prevent resizing when in XR session
         if (this.xr && this.xr.session)
-            return;
+            return undefined;
 
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;

@@ -96,10 +96,10 @@ class Mouse extends EventHandler {
         this._attached = true;
 
         const opts = platform.passiveEvents ? { passive: false } : false;
-        window.addEventListener("mouseup", this._upHandler, opts);
-        window.addEventListener("mousedown", this._downHandler, opts);
-        window.addEventListener("mousemove", this._moveHandler, opts);
-        window.addEventListener("wheel", this._wheelHandler, opts);
+        window.addEventListener('mouseup', this._upHandler, opts);
+        window.addEventListener('mousedown', this._downHandler, opts);
+        window.addEventListener('mousemove', this._moveHandler, opts);
+        window.addEventListener('wheel', this._wheelHandler, opts);
     }
 
     /**
@@ -111,10 +111,10 @@ class Mouse extends EventHandler {
         this._target = null;
 
         const opts = platform.passiveEvents ? { passive: false } : false;
-        window.removeEventListener("mouseup", this._upHandler, opts);
-        window.removeEventListener("mousedown", this._downHandler, opts);
-        window.removeEventListener("mousemove", this._moveHandler, opts);
-        window.removeEventListener("wheel", this._wheelHandler, opts);
+        window.removeEventListener('mouseup', this._upHandler, opts);
+        window.removeEventListener('mousedown', this._downHandler, opts);
+        window.removeEventListener('mousemove', this._moveHandler, opts);
+        window.removeEventListener('wheel', this._wheelHandler, opts);
     }
 
     /**
@@ -122,7 +122,7 @@ class Mouse extends EventHandler {
      */
     disableContextMenu() {
         if (!this._target) return;
-        this._target.addEventListener("contextmenu", this._contextMenuHandler);
+        this._target.addEventListener('contextmenu', this._contextMenuHandler);
     }
 
     /**
@@ -131,7 +131,7 @@ class Mouse extends EventHandler {
      */
     enableContextMenu() {
         if (!this._target) return;
-        this._target.removeEventListener("contextmenu", this._contextMenuHandler);
+        this._target.removeEventListener('contextmenu', this._contextMenuHandler);
     }
 
     /**

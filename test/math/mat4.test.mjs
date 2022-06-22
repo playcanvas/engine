@@ -5,7 +5,7 @@ import { Vec4 } from '../../src/math/vec4.js';
 
 import { expect } from 'chai';
 
-describe("Mat4", function () {
+describe('Mat4', function () {
 
     describe('#data', function () {
 
