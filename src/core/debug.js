@@ -125,6 +125,16 @@ class Debug {
     }
 
     /**
+     * Executes a function in debug mode only.
+     *
+     * @param {Function} func - Function to call.
+     * @ignore
+     */
+    static call(func) {
+        func();
+    }
+
+    /**
      * Info message.
      *
      * @param {...*} args - The values to be written to the log.
@@ -138,6 +148,7 @@ class Debug {
      * Info message logged no more than once.
      *
      * @param {string} message - The message to log.
+     * @ignore
      */
     static logOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -160,6 +171,7 @@ class Debug {
      * Warning message logged no more than once.
      *
      * @param {string} message - The message to log.
+     * @ignore
      */
     static warnOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -182,6 +194,7 @@ class Debug {
      * Error message logged no more than once.
      *
      * @param {string} message - The message to log.
+     * @ignore
      */
     static errorOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
