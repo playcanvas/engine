@@ -124,16 +124,16 @@ function UntarScope(isWorker) {
         const headers = asciiDecoder.decode(headersDataView);
         this._bytesRead += 512;
 
-        let name = headers.substr(0, 100).replace(/\0/g, '');
-        const ustarFormat = headers.substr(257, 6);
-        const size = parseInt(headers.substr(124, 12), 8);
-        const type = headers.substr(156, 1);
+        let name = headers.substring(0, 100).replace(/\0/g, '');
+        const ustarFormat = headers.substring(257, 263);
+        const size = parseInt(headers.substring(124, 136), 8);
+        const type = headers.substring(156, 157);
         const start = this._bytesRead;
         let url = null;
 
         let normalFile = false;
         switch (type) {
-            case "0": case "": // Normal file
+            case '0': case '': // Normal file
                 // do not create blob URL if we are in a worker
                 // because if the worker is destroyed it will also destroy the blob URLs
                 normalFile = true;
@@ -142,19 +142,19 @@ function UntarScope(isWorker) {
                     url = URL.createObjectURL(blob);
                 }
                 break;
-            case "g": // Global PAX header
+            case 'g': // Global PAX header
                 this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                 break;
-            case "x": // PAX header
+            case 'x': // PAX header
                 this._paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                 break;
-            case "1": // Link to another file already archived
-            case "2": // Symbolic link
-            case "3": // Character special device
-            case "4": // Block special device
-            case "5": // Directory
-            case "6": // FIFO special file
-            case "7": // Reserved
+            case '1': // Link to another file already archived
+            case '2': // Symbolic link
+            case '3': // Character special device
+            case '4': // Block special device
+            case '5': // Directory
+            case '6': // FIFO special file
+            case '7': // Reserved
             default: // Unknown file type
         }
 
@@ -170,8 +170,8 @@ function UntarScope(isWorker) {
             return null;
         }
 
-        if (ustarFormat.indexOf("ustar") !== -1) {
-            const namePrefix = headers.substr(345, 155).replace(/\0/g, '');
+        if (ustarFormat.indexOf('ustar') !== -1) {
+            const namePrefix = headers.substring(345, 500).replace(/\0/g, '');
 
             if (namePrefix.length > 0) {
                 name = namePrefix.trim() + name.trim();

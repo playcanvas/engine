@@ -1,62 +1,55 @@
 import React from 'react';
 import * as pc from '../../../../';
-import { AssetLoader, ScriptLoader } from '../../app/helpers/loader';
+import { ScriptLoader } from '../../app/helpers/loader';
 
-
-// custom point cloud rendering vertex shader
-const vshader = `
-    // Attributes per vertex: position
-    attribute vec4 aPosition;
-    attribute vec4 aColor;
-
-    uniform mat4   matrix_viewProjection;
-    uniform mat4   matrix_model;
-
-    // Color to fragment program
-    varying vec4 outColor;
-
-    void main(void)
-    {
-        mat4 modelViewProj = matrix_viewProjection * matrix_model;
-        gl_Position = modelViewProj * aPosition;
-
-        gl_PointSize = 1.5;
-        outColor = aColor;
-    }
-`;
-
-// custom point cloud rendering fragment shader
-const fshader = `
-    precision lowp float;
-    varying vec4 outColor;
-
-    void main(void)
-    {
-        // just output color supplied by vertex shader
-        gl_FragColor = outColor;
-    }
-`;
 
 class LoadersGlExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Loaders.gl';
+    static FILES = {
+        'shader.vert': /* glsl */`
+// Attributes per vertex: position
+attribute vec4 aPosition;
+attribute vec4 aColor;
+
+uniform mat4   matrix_viewProjection;
+uniform mat4   matrix_model;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    mat4 modelViewProj = matrix_viewProjection * matrix_model;
+    gl_Position = modelViewProj * aPosition;
+
+    gl_PointSize = 1.5;
+    outColor = aColor;
+}`,
+        'shader.frag': /* glsl */`
+precision lowp float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // just output color supplied by vertex shader
+    gl_FragColor = outColor;
+}`
+    };
 
     load() {
         return <>
-            <AssetLoader name='shader.vert' type='shader' data={vshader} />
-            <AssetLoader name='shader.frag' type='shader' data={fshader} />
             <ScriptLoader name='CORE' url='https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js' />
             <ScriptLoader name='DRACO' url='https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js' />
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
         // This example uses draco point cloud loader library from https://loaders.gl/
         // Note that many additional formats are supported by the library and can be used.
 
         // Create the app
         const app = new pc.Application(canvas, {});
-
         async function loadModel(url:string) {
 
             // load the url using the draco format loader
@@ -87,8 +80,8 @@ class LoadersGlExample {
                     aPosition: pc.SEMANTIC_POSITION,
                     aColor: pc.SEMANTIC_COLOR
                 },
-                vshader: assets['shader.vert'].data,
-                fshader: assets['shader.frag'].data
+                vshader: files['shader.vert'],
+                fshader: files['shader.frag']
             };
             const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 

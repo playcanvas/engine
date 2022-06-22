@@ -50,8 +50,8 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  *
  * Relevant 'Engine-only' examples:
  *
- * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
- * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
+ * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes)
+ * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle)
  *
  * @augments Component
  */

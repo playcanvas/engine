@@ -241,7 +241,7 @@ class Scene extends EventHandler {
          * shaders that reference global settings.
          *
          * @type {boolean}
-         * @private
+         * @ignore
          */
         this.updateShaders = true;
 
@@ -299,7 +299,7 @@ class Scene extends EventHandler {
     set clusteredLightingEnabled(value) {
 
         if (this._clusteredLightingEnabled && !value) {
-            console.error("Turning off enabled clustered lighting is not currently supported");
+            console.error('Turning off enabled clustered lighting is not currently supported');
             return;
         }
 
@@ -397,7 +397,7 @@ class Scene extends EventHandler {
     set layers(layers) {
         const prev = this._layers;
         this._layers = layers;
-        this.fire("set:layers", prev, layers);
+        this.fire('set:layers', prev, layers);
     }
 
     get layers() {
@@ -699,10 +699,10 @@ class Scene extends EventHandler {
         material.updateShader();
 
         if (skyboxTex.cubemap) {
-            material.setParameter("texture_cubeMap", skyboxTex);
+            material.setParameter('texture_cubeMap', skyboxTex);
         } else {
-            material.setParameter("texture_envAtlas", skyboxTex);
-            material.setParameter("mipLevel", this._skyboxMip);
+            material.setParameter('texture_envAtlas', skyboxTex);
+            material.setParameter('mipLevel', this._skyboxMip);
         }
 
         if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
@@ -710,9 +710,9 @@ class Scene extends EventHandler {
             if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
             this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
             this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
-            material.setParameter("cubeMapRotationMatrix", this._skyboxRotationMat3.data);
+            material.setParameter('cubeMapRotationMatrix', this._skyboxRotationMat3.data);
         } else {
-            material.setParameter("cubeMapRotationMatrix", Mat3.IDENTITY.data);
+            material.setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
         }
 
         material.cull = CULLFACE_FRONT;
@@ -720,7 +720,7 @@ class Scene extends EventHandler {
 
         const skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
-            const node = new GraphNode("Skybox");
+            const node = new GraphNode('Skybox');
             const mesh = createBox(device);
             const meshInstance = new MeshInstance(mesh, material, node);
             meshInstance.cull = false;
@@ -737,7 +737,7 @@ class Scene extends EventHandler {
             skyLayer.addMeshInstances(model.meshInstances);
             this.skyLayer = skyLayer;
 
-            this.fire("set:skybox", skyboxTex);
+            this.fire('set:skybox', skyboxTex);
         }
     }
 

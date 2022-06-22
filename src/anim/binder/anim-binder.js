@@ -49,10 +49,10 @@ class AnimBinder {
     /**
      * Converts a locator array into its string version.
      *
-     * @param {string|Array} entityPath - The entity location in the scene defined as an array or
+     * @param {string|string[]} entityPath - The entity location in the scene defined as an array or
      * string path.
      * @param {string} component - The component of the entity the property is located under.
-     * @param {string|Array} propertyPath - The property location in the entity defined as an array
+     * @param {string|string[]} propertyPath - The property location in the entity defined as an array
      * or string path.
      * @returns {string} The locator encoded as a string.
      * @example

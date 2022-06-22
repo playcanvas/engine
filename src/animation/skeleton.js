@@ -2,6 +2,7 @@ import { Debug } from '../core/debug.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
 
+/** @typedef {import('./animation.js').Animation} Animation */
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 
 class InterpolatedKey {

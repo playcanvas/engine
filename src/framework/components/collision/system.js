@@ -16,7 +16,7 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const mat4 = new Mat4();
 const vec3 = new Vec3();
@@ -448,7 +448,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             });
             assets.load(asset);
         } else {
-            assets.once("add:" + id, (asset) => {
+            assets.once('add:' + id, (asset) => {
                 asset.ready((asset) => {
                     data[property] = asset.resource;
                     this.doRecreatePhysicalShape(component);
@@ -575,12 +575,13 @@ class CollisionComponentSystem extends ComponentSystem {
     /**
      * Creates a new CollisionComponentSystem instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
 
-        this.id = "collision";
+        this.id = 'collision';
 
         this.ComponentType = CollisionComponent;
         this.DataType = CollisionComponentData;

@@ -13,7 +13,6 @@ import { Material } from './materials/material.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
-/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('./light.js').Light} Light */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
@@ -175,7 +174,9 @@ class Layer {
          */
         this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
 
-        this.renderTarget = options.renderTarget;
+        if (options.renderTarget) {
+            this.renderTarget = options.renderTarget;
+        }
 
         /**
          * A type of shader to use during rendering. Possible values are:
@@ -206,17 +207,19 @@ class Layer {
          * @type {boolean}
          * @private
          */
-        this._clearColorBuffer = options.clearColorBuffer ? options.clearColorBuffer : false;
+        this._clearColorBuffer = !!options.clearColorBuffer;
+
         /**
          * @type {boolean}
          * @private
          */
-        this._clearDepthBuffer = options.clearDepthBuffer ? options.clearDepthBuffer : false;
+        this._clearDepthBuffer = !!options.clearDepthBuffer;
+
         /**
          * @type {boolean}
          * @private
          */
-        this._clearStencilBuffer = options.clearStencilBuffer ? options.clearStencilBuffer : false;
+        this._clearStencilBuffer = !!options.clearStencilBuffer;
 
         /**
          * Custom function that is called before visibility culling is performed for this layer.
@@ -269,8 +272,7 @@ class Layer {
         this.onPostCull = options.onPostCull;
         /**
          * Custom function that is called after this layer is rendered. Useful to revert changes
-         * made in {@link Layer#onPreRender} or performing some processing on
-         * {@link Layer#renderTarget}. This function is called after the last occurrence of this
+         * made in {@link Layer#onPreRender}. This function is called after the last occurrence of this
          * layer in {@link LayerComposition}. It will receive camera index as the only argument.
          * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
          * with this index.
@@ -338,9 +340,10 @@ class Layer {
          * @type {Layer}
          */
         this.layerReference = options.layerReference; // should use the same camera
+
         /**
          * @type {InstanceList}
-         * @private
+         * @ignore
          */
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
@@ -479,14 +482,6 @@ class Layer {
         return this._enabled;
     }
 
-    set clearColor(val) {
-        this._clearColor.copy(val);
-    }
-
-    get clearColor() {
-        return this._clearColor;
-    }
-
     /**
      * If true, the camera will clear the color buffer when it renders this layer.
      *
@@ -548,7 +543,7 @@ class Layer {
      * when visible and {@link Layer.decrementCounter} if invisible. In such case the reflection
      * texture won't be updated, when there is nothing to use it, saving performance.
      *
-     * @private
+     * @ignore
      */
     incrementCounter() {
         if (this._refCounter === 0) {
@@ -563,7 +558,7 @@ class Layer {
      * disable the layer and call {@link Layer.onDisable}. See {@link Layer#incrementCounter} for
      * more details.
      *
-     * @private
+     * @ignore
      */
     decrementCounter() {
         if (this._refCounter === 1) {
@@ -571,7 +566,7 @@ class Layer {
             if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
-            Debug.warn("Trying to decrement layer counter below 0");
+            Debug.warn('Trying to decrement layer counter below 0');
             return;
         }
         this._refCounter--;
@@ -785,8 +780,8 @@ class Layer {
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
-            let str = "";
-            let strStatic = "";
+            let str = '';
+            let strStatic = '';
 
             for (let i = 0; i < this._lights.length; i++) {
                 if (this._lights[i].isStatic) {

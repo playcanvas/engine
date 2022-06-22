@@ -154,10 +154,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
         const key = path[path.length - 1];
 
         // if the object has a setter function, use it
-        const setterFuncName = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
+        const setterFuncName = 'set' + key.substring(0, 1).toUpperCase() + key.substring(1);
         if (obj[setterFuncName]) {
             // if the object has a setter function, use it
-            const getterFunc = obj["get" + key.substring(0, 1).toUpperCase() + key.substring(1)].bind(obj);
+            const getterFunc = obj['get' + key.substring(0, 1).toUpperCase() + key.substring(1)].bind(obj);
             let baseValues = getterFunc();
             baseValues = [baseValues.x, baseValues.y, baseValues.z, baseValues.w];
             const setterFunc = obj[setterFuncName].bind(obj);
@@ -198,8 +198,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
     _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetPath) {
 
-        if (this.handlers && propertyHierarchy[0] === 'weights') {
-            return this.handlers.weights(propertyComponent);
+        if (this.handlers && propertyHierarchy[0].startsWith('weight.')) {
+            return this.handlers.weight(propertyComponent, propertyHierarchy[0].replace('weight.', ''));
         } else if (this.handlers && propertyHierarchy[0] === 'material' && propertyHierarchy.length === 2) {
             const materialPropertyName = propertyHierarchy[1];
             // if the property name ends in Map then we're binding a material texture

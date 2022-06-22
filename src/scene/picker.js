@@ -4,6 +4,7 @@ import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
+import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';
@@ -15,7 +16,7 @@ import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
 import { Debug } from '../core/debug.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('./scene.js').Scene} Scene */
@@ -39,14 +40,14 @@ class Picker {
     /**
      * Create a new Picker instance.
      *
-     * @param {Application} app - The application managing this picker instance.
+     * @param {AppBase} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
-            Debug.deprecated("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
+            Debug.deprecated('pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.');
         }
 
         this.app = app;
@@ -99,7 +100,7 @@ class Picker {
         const device = this.device;
 
         if (typeof x === 'object') {
-            Debug.deprecated("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
+            Debug.deprecated('Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
             const rect = x;
             x = rect.x;
@@ -119,6 +120,8 @@ class Picker {
         // backup active render target
         const origRenderTarget = device.renderTarget;
 
+        DebugGraphics.pushGpuMarker(device, 'PICKER');
+
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this.renderTarget);
         device.updateBegin();
@@ -130,6 +133,8 @@ class Picker {
 
         // Restore render target
         device.setRenderTarget(origRenderTarget);
+
+        DebugGraphics.popGpuMarker(device);
 
         const mapping = this.mapping;
         for (let i = 0; i < width * height; i++) {
@@ -162,9 +167,9 @@ class Picker {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'pick'
         });
-        colorBuffer.name = 'pick';
 
         this.renderTarget = new RenderTarget({
             colorBuffer: colorBuffer,
@@ -178,7 +183,7 @@ class Picker {
         this.cameraEntity.camera.renderTarget = null;
 
         if (this._renderTarget) {
-            this._renderTarget._colorBuffer.destroy();
+            this._renderTarget.destroyTextureBuffers();
             this._renderTarget.destroy();
             this._renderTarget = null;
         }
@@ -192,11 +197,11 @@ class Picker {
 
         // camera
         this.cameraEntity = new Entity();
-        this.cameraEntity.addComponent("camera");
+        this.cameraEntity.addComponent('camera');
 
         // layer all meshes rendered for picking at added to
         this.layer = new Layer({
-            name: "Picker",
+            name: 'Picker',
             shaderPass: SHADER_PICK,
             opaqueSortMode: SORTMODE_NONE,
 
@@ -215,7 +220,7 @@ class Picker {
         this.layer.addCamera(this.cameraEntity.camera);
 
         // composition
-        this.layerComp = new LayerComposition("picker");
+        this.layerComp = new LayerComposition('picker');
         this.layerComp.pushOpaque(this.layer);
     }
 
@@ -233,7 +238,7 @@ class Picker {
 
         // handle deprecated arguments
         if (camera instanceof Camera) {
-            Debug.deprecated("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+            Debug.deprecated('pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.');
 
             // Get the camera component
             camera = camera.node.camera;
@@ -296,14 +301,14 @@ class Picker {
         this.mapping.length = 0;
 
         // render
-        this.app.renderer.renderComposition(this.layerComp);
+        this.app.renderComposition(this.layerComp);
     }
 
     updateCamera(srcCamera) {
 
         // copy transform
         this.cameraEntity.copy(srcCamera.entity);
-        this.cameraEntity.name = "PickerCamera";
+        this.cameraEntity.name = 'PickerCamera';
 
         // copy camera component properties - which overwrites few properties we change to what is needed later
         const destCamera = this.cameraEntity.camera;

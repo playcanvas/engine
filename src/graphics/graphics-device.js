@@ -76,11 +76,30 @@ class GraphicsDevice extends EventHandler {
     precision;
 
     /**
+     * Currently active render target.
+     *
+     * @type {RenderTarget}
+     * @ignore
+     */
+    renderTarget = null;
+
+    /** @type {boolean} */
+    insideRenderPass = false;
+
+    /**
      * True if hardware instancing is supported.
      *
      * @type {boolean}
      */
     supportsInstancing;
+
+    /**
+     * True if the device supports uniform buffers.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    supportsUniformBuffers = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.

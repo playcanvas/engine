@@ -1,7 +1,7 @@
 import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from './parser/scene.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -11,9 +11,17 @@ import { SceneParser } from './parser/scene.js';
  */
 class SceneHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "scene";
+
+    /**
      * Create a new SceneHandler instance.
      *
-     * @param {Application} app - The running {@link Application}.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
     constructor(app) {
         this._app = app;

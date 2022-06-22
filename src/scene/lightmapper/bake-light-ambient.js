@@ -11,9 +11,9 @@ const _tempPoint = new Vec3();
 class BakeLightAmbient extends BakeLight {
     constructor(scene) {
 
-        const lightEntity = new Entity("AmbientLight");
-        lightEntity.addComponent("light", {
-            type: "directional",
+        const lightEntity = new Entity('AmbientLight');
+        lightEntity.addComponent('light', {
+            type: 'directional',
             affectDynamic: true,
             affectLightmapped: false,
             bake: true,

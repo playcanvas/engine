@@ -88,7 +88,7 @@ class Lightmapper {
         this.passMaterials = [];
         this.ambientAOMaterial = null;
 
-        this.fog = "";
+        this.fog = '';
         this.ambientLight = new Color();
 
         // dictionary of spare render targets with color buffer for each used size
@@ -132,7 +132,7 @@ class Lightmapper {
             this.lightmapFilters = new LightmapFilters(device);
 
             // shader related
-            this.constantBakeDir = device.scope.resolve("bakeDir");
+            this.constantBakeDir = device.scope.resolve('bakeDir');
             this.materials = [];
 
             // small black texture
@@ -140,9 +140,9 @@ class Lightmapper {
                 width: 4,
                 height: 4,
                 format: PIXELFORMAT_R8_G8_B8_A8,
-                type: TEXTURETYPE_RGBM
+                type: TEXTURETYPE_RGBM,
+                name: 'lightmapBlack'
             });
-            this.blackTex.name = 'lightmapBlack';
 
             // incref black texture in the cache to avoid it being destroyed
             LightmapCache.incRef(this.blackTex);
@@ -181,7 +181,7 @@ class Lightmapper {
             lightingParams.maxLightsPerCell = 4;
 
             this.worldClusters = new WorldClusters(device);
-            this.worldClusters.name = "ClusterLightmapper";
+            this.worldClusters.name = 'ClusterLightmapper';
         }
     }
 
@@ -224,7 +224,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.transformVS = "#define UV1LAYOUT\n" + shaderChunks.transformVS; // draw UV1
+        material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
             let bakeLmEndChunk = shaderChunks.bakeLmEndPS; // encode to RGBM
@@ -244,14 +244,14 @@ class Lightmapper {
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = shaderChunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
+            material.chunks.basePS = shaderChunks.basePS + '\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n';
             material.chunks.endPS = shaderChunks.bakeDirLmEndPS;
         }
 
         // avoid writing unrelated things to alpha
-        material.chunks.outputAlphaPS = "\n";
-        material.chunks.outputAlphaOpaquePS = "\n";
-        material.chunks.outputAlphaPremulPS = "\n";
+        material.chunks.outputAlphaPS = '\n';
+        material.chunks.outputAlphaOpaquePS = '\n';
+        material.chunks.outputAlphaPremulPS = '\n';
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();
@@ -282,7 +282,7 @@ class Lightmapper {
 
     createTexture(size, type, name) {
 
-        const tex = new Texture(this.device, {
+        return new Texture(this.device, {
             // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
             // #endif
@@ -294,11 +294,9 @@ class Lightmapper {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: name
         });
-        tex.name = name;
-
-        return tex;
     }
 
     // recursively walk the hierarchy of nodes starting at the specified node
@@ -556,7 +554,7 @@ class Lightmapper {
 
         }
 
-        DebugGraphics.pushGpuMarker(this.device, "LMBake");
+        DebugGraphics.pushGpuMarker(this.device, 'LMBake');
 
         // bake nodes
         if (bakeNodes.length > 0) {
@@ -614,7 +612,7 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_lightmap_" + i));
+                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_lightmap_' + i));
                 LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
@@ -624,7 +622,7 @@ class Lightmapper {
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ("lightmapper_temp_lightmap_" + size));
+                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_temp_lightmap_' + size));
                 LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,
@@ -987,7 +985,7 @@ class Lightmapper {
             // direction baking is not currently compatible with virtual lights, as we end up with no valid direction in lights penumbra
             if (passCount > 1 && numVirtualLights > 1 && bakeLight.light.bakeDir) {
                 numVirtualLights = 1;
-                Debug.warn("Lightmapper's BAKE_COLORDIR mode is not compatible with Light's bakeNumSamples larger than one. Forcing it to one.");
+                Debug.warn('Lightmapper\'s BAKE_COLORDIR mode is not compatible with Light\'s bakeNumSamples larger than one. Forcing it to one.');
             }
 
             for (let virtualLightIndex = 0; virtualLightIndex < numVirtualLights; virtualLightIndex++) {
@@ -1092,6 +1090,8 @@ class Lightmapper {
                         this.renderer._shadowMapTime = 0;
 
                         this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+
+                        device.updateEnd();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;

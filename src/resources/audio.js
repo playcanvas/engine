@@ -1,4 +1,5 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
@@ -6,7 +7,7 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
 
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // checks if user is running IE
@@ -33,15 +34,16 @@ const ie = (function () {
     return false;
 })();
 
-const toMIME = {
-    '.ogg': 'audio/ogg',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/x-wav',
-    '.mp4a': 'audio/mp4',
-    '.m4a': 'audio/mp4',
-    '.mp4': 'audio/mp4',
-    '.aac': 'audio/aac'
-};
+const supportedExtensions = [
+    '.ogg',
+    '.mp3',
+    '.wav',
+    '.mp4a',
+    '.m4a',
+    '.mp4',
+    '.aac',
+    '.opus'
+];
 
 /**
  * Resource handler used for loading {@link Sound} resources.
@@ -50,22 +52,29 @@ const toMIME = {
  */
 class AudioHandler {
     /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "audio";
+
+    /**
      * Create a new AudioHandler instance.
      *
-     * @param {SoundManager} manager - The sound manager.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
      */
-    constructor(manager) {
-        this.manager = manager;
+    constructor(app) {
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+
         this.maxRetries = 0;
     }
 
     _isSupported(url) {
         const ext = path.getExtension(url);
 
-        if (toMIME[ext]) {
-            return true;
-        }
-        return false;
+        return supportedExtensions.indexOf(ext) > -1;
     }
 
     load(url, callback) {
@@ -154,7 +163,7 @@ class AudioHandler {
             } catch (e) {
                 // Some windows platforms will report Audio as available, then throw an exception when
                 // the object is created.
-                error("No support for Audio element");
+                error('No support for Audio element');
                 return;
             }
 

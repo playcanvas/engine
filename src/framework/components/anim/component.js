@@ -13,7 +13,7 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
 import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
-import { Entity } from "../../entity.js";
+import { Entity } from '../../entity.js';
 
 /** @typedef {import('./system.js').AnimComponentSystem} AnimComponentSystem */
 
@@ -106,7 +106,7 @@ class AnimComponent extends Component {
      */
     set normalizeWeights(value) {
         this._normalizeWeights = value;
-        this.resetStateGraph();
+        this.unbind();
     }
 
     get normalizeWeights() {
@@ -318,8 +318,8 @@ class AnimComponent extends Component {
         if (layer) return layer;
         const states = [
             {
-                "name": "START",
-                "speed": 1
+                'name': 'START',
+                'speed': 1
             }
         ];
         const transitions = [];
@@ -447,19 +447,9 @@ class AnimComponent extends Component {
         this._layerIndices = {};
         this._parameters = {};
         this._playing = false;
-        Object.keys(this._targets).forEach((targetKey) => {
-            this._targets[targetKey].unbind();
-        });
+        this.unbind();
         // clear all targets from previous binding
         this._targets = {};
-    }
-
-    resetStateGraph() {
-        this.removeStateGraph();
-        if (this.stateGraphAsset) {
-            const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
-            this.loadStateGraph(stateGraph);
-        }
     }
 
     /**
@@ -472,6 +462,14 @@ class AnimComponent extends Component {
             const layerPlaying = this._layers[i].playing;
             this._layers[i].reset();
             this._layers[i].playing = layerPlaying;
+        }
+    }
+
+    unbind() {
+        if (!this._normalizeWeights) {
+            Object.keys(this._targets).forEach((targetKey) => {
+                this._targets[targetKey].unbind();
+            });
         }
     }
 
@@ -501,30 +499,30 @@ class AnimComponent extends Component {
     addAnimationState(nodeName, animTrack, speed = 1, loop = true, layerName = 'Base') {
         if (!this._stateGraph) {
             this.loadStateGraph(new AnimStateGraph({
-                "layers": [
+                'layers': [
                     {
-                        "name": layerName,
-                        "states": [
+                        'name': layerName,
+                        'states': [
                             {
-                                "name": "START",
-                                "speed": 1
+                                'name': 'START',
+                                'speed': 1
                             },
                             {
-                                "name": nodeName,
-                                "speed": speed,
-                                "loop": loop,
-                                "defaultState": true
+                                'name': nodeName,
+                                'speed': speed,
+                                'loop': loop,
+                                'defaultState': true
                             }
                         ],
-                        "transitions": [
+                        'transitions': [
                             {
-                                "from": 'START',
-                                "to": nodeName
+                                'from': 'START',
+                                'to': nodeName
                             }
                         ]
                     }
                 ],
-                "parameters": {}
+                'parameters': {}
             }));
         }
         const layer = this.findAnimationLayer(layerName);
@@ -558,30 +556,30 @@ class AnimComponent extends Component {
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
         if (!this._stateGraph && nodePath.indexOf('.') === -1) {
             this.loadStateGraph(new AnimStateGraph({
-                "layers": [
+                'layers': [
                     {
-                        "name": "Base",
-                        "states": [
+                        'name': 'Base',
+                        'states': [
                             {
-                                "name": "START",
-                                "speed": 1
+                                'name': 'START',
+                                'speed': 1
                             },
                             {
-                                "name": nodePath,
-                                "speed": speed,
-                                "loop": loop,
-                                "defaultState": true
+                                'name': nodePath,
+                                'speed': speed,
+                                'loop': loop,
+                                'defaultState': true
                             }
                         ],
-                        "transitions": [
+                        'transitions': [
                             {
-                                "from": 'START',
-                                "to": nodePath
+                                'from': 'START',
+                                'to': nodePath
                             }
                         ]
                     }
                 ],
-                "parameters": {}
+                'parameters': {}
             }));
             this.baseLayer.assignAnimation(nodePath, animTrack);
             return;

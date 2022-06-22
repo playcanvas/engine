@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
-// @ts-ignore: library file import
-import Container from '@playcanvas/pcui/Container/component';
-// @ts-ignore: library file import
-import Spinner from '@playcanvas/pcui/Spinner/component';
+import { Container, Spinner } from '@playcanvas/pcui/react';
 import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
 // @ts-ignore: library file import
@@ -81,6 +78,7 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     componentDidUpdate() {
         window.localStorage.removeItem(this.path);
+        delete (window as any).editedFiles;
         this.props.setFiles(this.defaultFiles);
     }
 

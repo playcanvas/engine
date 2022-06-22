@@ -694,8 +694,8 @@ class BatchManager {
         // #endif
 
         if (!this._init) {
-            const boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
-            this.transformVS = boneLimit + "#define DYNAMICBATCH\n" + shaderChunks.transformVS;
+            const boneLimit = '#define BONE_LIMIT ' + this.device.getBoneLimit() + '\n';
+            this.transformVS = boneLimit + '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
             this.skinTexVS = shaderChunks.skinBatchTexVS;
             this.skinConstVS = shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
@@ -890,7 +890,7 @@ class BatchManager {
     /**
      * Updates bounding boxes for all dynamic batches. Called automatically.
      *
-     * @private
+     * @ignore
      */
     updateAll() {
         // TODO: only call when needed. Applies to skinning matrices as well

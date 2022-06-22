@@ -5,7 +5,7 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
-/** @typedef {import('../app-base.js').Application} Application */
+/** @typedef {import('../app-base.js').AppBase} AppBase */
 /** @typedef {import('./component.js').Component} Component */
 /** @typedef {import('../entity.js').Entity} Entity */
 
@@ -19,7 +19,7 @@ class ComponentSystem extends EventHandler {
     /**
      * Create a new ComponentSystem instance.
      *
-     * @param {Application} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
      */
     constructor(app) {
         super();
@@ -106,7 +106,7 @@ class ComponentSystem extends EventHandler {
      *
      * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.
-     * @param {string[]|object[]} properties - The array of property descriptors for the component.
+     * @param {Array<string | {name: string, type: string}>} properties - The array of property descriptors for the component.
      * A descriptor can be either a plain property name, or an object specifying the name and type.
      * @ignore
      */

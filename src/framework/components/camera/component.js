@@ -1,15 +1,17 @@
-import { ASPECT_AUTO, LAYERID_UI } from '../../../scene/constants.js';
+import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 
 import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
+import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../../math/color.js').Color} Color */
 /** @typedef {import('../../../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../../../scene/layer.js').Layer} Layer */
 /** @typedef {import('../../../shape/frustum.js').Frustum} Frustum */
 /** @typedef {import('../../../xr/xr-manager.js').XrErrorCallback} XrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
@@ -31,8 +33,7 @@ const properties = [
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'vrDisplay', readonly: false }
+    { name: 'scissorRect', readonly: false }
 ];
 
 /**
@@ -41,13 +42,6 @@ const properties = [
  * @callback CalculateMatrixCallback
  * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
- */
-
-/**
- * Callback used by {@link CameraComponent#enterVr} and {@link CameraComponent#exitVr}.
- *
- * @callback VrCameraCallback
- * @param {string|null} err - On success it is null on failure it is the error message.
  */
 
 /**
@@ -134,7 +128,7 @@ class CameraComponent extends Component {
      * Custom function that is called when postprocessing should execute.
      *
      * @type {Function}
-     * @private
+     * @ignore
      */
     onPostprocessing = null;
 
@@ -151,6 +145,22 @@ class CameraComponent extends Component {
      * @type {Function}
      */
     onPostRender = null;
+
+    /**
+     * A counter of requests of depth map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneDepthMap = 0;
+
+    /**
+     * A counter of requests of color map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneColorMap = 0;
 
     /**
      * Create a new CameraComponent instance.
@@ -177,7 +187,7 @@ class CameraComponent extends Component {
      * Queries the camera component's underlying Camera instance.
      *
      * @type {Camera}
-     * @private
+     * @ignore
      */
     get camera() {
         return this._camera;
@@ -240,6 +250,62 @@ class CameraComponent extends Component {
 
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
+    }
+
+    // based on the value, the depth layer's enable counter is incremented or decremented
+    _enableDepthLayer(value) {
+        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
+        if (hasDepthLayer) {
+
+            /** @type {Layer} */
+            const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
+
+            if (value) {
+                depthLayer?.incrementCounter();
+            } else {
+                depthLayer?.decrementCounter();
+            }
+        } else if (value) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene color map. Note that this call
+     * is accummulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneColorMap(enabled) {
+        this._renderSceneColorMap += enabled ? 1 : -1;
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    get renderSceneColorMap() {
+        return this._renderSceneColorMap > 0;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene depth map. Note that this call
+     * is accummulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneDepthMap(enabled) {
+        this._renderSceneDepthMap += enabled ? 1 : -1;
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    get renderSceneDepthMap() {
+        return this._renderSceneDepthMap > 0;
     }
 
     /**
@@ -433,10 +499,10 @@ class CameraComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -458,10 +524,10 @@ class CameraComponent extends Component {
 
         system.addCamera(this);
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.on("add", this.onLayerAdded, this);
-            layers.on("remove", this.onLayerRemoved, this);
+            layers.on('add', this.onLayerAdded, this);
+            layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -480,10 +546,10 @@ class CameraComponent extends Component {
 
         this.removeCameraFromLayers();
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.off("add", this.onLayerAdded, this);
-            layers.off("remove", this.onLayerRemoved, this);
+            layers.off('add', this.onLayerAdded, this);
+            layers.off('remove', this.onLayerRemoved, this);
         }
 
         system.removeCamera(this);
@@ -501,144 +567,22 @@ class CameraComponent extends Component {
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
-        const src = rt ? rt : this.system.app.graphicsDevice;
-        const rect = this.rect;
-        return (src.width * rect.z) / (src.height * rect.w);
+        const device = this.system.app.graphicsDevice;
+        const width = rt ? rt.width : device.width;
+        const height = rt ? rt.height : device.height;
+        return (width * this.rect.z) / (height * this.rect.w);
     }
 
     /**
-     * Start rendering the frame for this camera.
+     * Prepare the camera for frame rendering.
      *
      * @param {RenderTarget} rt - Render target to which rendering will be performed. Will affect
      * camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
-     * @private
+     * @ignore
      */
-    frameBegin(rt) {
+    frameUpdate(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
             this.aspectRatio = this.calculateAspectRatio(rt);
-        }
-    }
-
-    /**
-     * End rendering the frame for this camera.
-     *
-     * @private
-     */
-    frameEnd() {}
-
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {VrCameraCallback} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @variation 2
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
-     * {@link VrManager#display} as the default.
-     * @param {VrCameraCallback} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err). On success it returns null on
-     * failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    enterVr(display, callback) {
-        if ((display instanceof Function) && !callback) {
-            callback = display;
-            display = null;
-        }
-
-        if (!this.system.app.vr) {
-            callback("VrManager not created. Enable VR in project settings.");
-            return;
-        }
-
-        if (!display) {
-            display = this.system.app.vr.display;
-        }
-
-        if (display) {
-            const self = this;
-            if (display.capabilities.canPresent) {
-                // try and present
-                display.requestPresent(function (err) {
-                    if (!err) {
-                        self.vrDisplay = display;
-                        // camera component uses internal 'before' event
-                        // this means display nulled before anyone other
-                        // code gets to update
-                        self.vrDisplay.once('beforepresentchange', function (display) {
-                            if (!display.presenting) {
-                                self.vrDisplay = null;
-                            }
-                        });
-                    }
-                    callback(err);
-                });
-            } else {
-                // mono rendering
-                self.vrDisplay = display;
-                callback();
-            }
-        } else {
-            callback("No pc.VrDisplay to present");
-        }
-    }
-
-    /**
-     * Attempt to stop presenting this camera.
-     *
-     * @param {VrCameraCallback} callback - Function called once to indicate success of failure.
-     * The callback takes one argument (err). On success it returns null on failure it returns the
-     * error message.
-     * @example
-     * this.entity.camera.exitVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // exited successfully
-     *     }
-     * });
-     * @private
-     * @deprecated
-     */
-    exitVr(callback) {
-        if (this.vrDisplay) {
-            if (this.vrDisplay.capabilities.canPresent) {
-                const display = this.vrDisplay;
-                this.vrDisplay = null;
-                display.exitPresent(callback);
-            } else {
-                this.vrDisplay = null;
-                callback();
-            }
-        } else {
-            callback("Not presenting VR");
         }
     }
 
@@ -717,7 +661,7 @@ class CameraComponent extends Component {
      */
     endXr(callback) {
         if (!this._camera.xr) {
-            if (callback) callback(new Error("Camera is not in XR"));
+            if (callback) callback(new Error('Camera is not in XR'));
             return;
         }
 

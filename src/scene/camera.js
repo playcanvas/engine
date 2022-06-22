@@ -50,7 +50,6 @@ class Camera {
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
-        this._vrDisplay = null;
 
         this._projMat = new Mat4();
         this._projMatDirty = true;
@@ -61,6 +60,15 @@ class Camera {
         this._viewProjMatDirty = true;
 
         this.frustum = new Frustum();
+    }
+
+    /**
+     * True if the camera clears the full render target. (viewport / scissor are full size)
+     */
+    get fullSizeClearRect() {
+
+        const rect = this._scissorRectClear ? this.scissorRect : this._rect;
+        return rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1;
     }
 
     set aspectRatio(newValue) {
@@ -302,17 +310,6 @@ class Camera {
         return this._viewMat;
     }
 
-    set vrDisplay(newValue) {
-        this._vrDisplay = newValue;
-        if (newValue) {
-            newValue._camera = this;
-        }
-    }
-
-    get vrDisplay() {
-        return this._vrDisplay;
-    }
-
     /**
      * Creates a duplicate of the camera.
      *
@@ -353,7 +350,6 @@ class Camera {
         this.rect = other.rect;
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
-        this.vrDisplay = other.vrDisplay;
         return this;
     }
 

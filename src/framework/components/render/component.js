@@ -196,6 +196,7 @@ class RenderComponent extends Component {
      * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
      * - "plane": The component will render a plane (1 unit in each dimension)
      * - "sphere": The component will render a sphere (radius 0.5)
+     * - "torus": The component will render a torus (tubeRadius: 0.2, ringRadius: 0.3)
      *
      * @type {string}
      */
@@ -453,12 +454,11 @@ class RenderComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
 
-            const batcher = this.system.app.batcher;
             if (this.entity.enabled && this._batchGroupId >= 0) {
-                batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+                this.system.app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
             if (this.entity.enabled && value >= 0) {
-                batcher.insert(BatchGroup.RENDER, value, this.entity);
+                this.system.app.batcher?.insert(BatchGroup.RENDER, value, this.entity);
             }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
@@ -678,10 +678,10 @@ class RenderComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -704,10 +704,10 @@ class RenderComponent extends Component {
 
         this._cloneSkinInstances();
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.on("add", this.onLayerAdded, this);
-            scene.layers.on("remove", this.onLayerRemoved, this);
+            scene.layers.on('add', this.onLayerAdded, this);
+            scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -725,7 +725,7 @@ class RenderComponent extends Component {
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.insert(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            app.batcher?.insert(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
     }
 
@@ -733,14 +733,14 @@ class RenderComponent extends Component {
         const app = this.system.app;
         const scene = app.scene;
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (scene.layers) {
-            scene.layers.off("add", this.onLayerAdded, this);
-            scene.layers.off("remove", this.onLayerRemoved, this);
+            scene.layers.off('add', this.onLayerAdded, this);
+            scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {
-            app.batcher.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
+            app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
         }
 
         this.removeFromLayers();

@@ -3,7 +3,7 @@ import { Color } from '../../src/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
-import { Application } from '../../src/framework/app-base.js';
+import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
 import { AudioSourceComponent } from '../../src/framework/components/audio-source/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';

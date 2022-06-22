@@ -120,7 +120,7 @@ class Light {
         this._cookie = null; // light cookie texture (2D for spot, cubemap for omni)
         this.cookieIntensity = 1;
         this._cookieFalloff = true;
-        this._cookieChannel = "rgb";
+        this._cookieChannel = 'rgb';
         this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
         this._cookieTransformUniform = new Float32Array(4);
         this._cookieOffset = null; // 2d position offset (spot only)
@@ -160,6 +160,7 @@ class Light {
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
         this.shadowBias = -0.0005;
+        this.shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this._isVsm = false;
@@ -591,6 +592,7 @@ class Light {
         clone.normalOffsetBias = this._normalOffsetBias;
         clone.shadowResolution = this._shadowResolution;
         clone.shadowDistance = this.shadowDistance;
+        clone.shadowIntensity = this.shadowIntensity;
 
         // Cookies properties
         // clone.cookie = this._cookie;

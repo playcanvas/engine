@@ -16,7 +16,7 @@ class ShaderInput {
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader input.
      * @param {string} name - The name of the shader input.
      * @param {number} type - The type of the shader input.
-     * @param {number} locationId - The location id of the shader input.
+     * @param {number | WebGLUniformLocation} locationId - The location id of the shader input.
      */
     constructor(graphicsDevice, name, type, locationId) {
         // Set the shader attribute location
@@ -29,7 +29,7 @@ class ShaderInput {
         this.version = new Version();
 
         // custom data type for arrays
-        if (name.substr(name.length - 3) === "[0]") {
+        if (name.substring(name.length - 3) === "[0]") {
             switch (type) {
                 case UNIFORMTYPE_FLOAT: type = UNIFORMTYPE_FLOATARRAY; break;
                 case UNIFORMTYPE_VEC2: type = UNIFORMTYPE_VEC2ARRAY; break;

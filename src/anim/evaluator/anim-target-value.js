@@ -41,7 +41,7 @@ class AnimTargetValue {
         this.layerCounter = 0;
         this.valueType = type;
         this.dirty = true;
-        this.value = [0, 0, 0, 1];
+        this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
         this.baseValue = null;
         this.setter = null;
     }
@@ -118,11 +118,11 @@ class AnimTargetValue {
         } else {
             AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
         }
-        this.setter(this.value);
+        if (this.setter) this.setter(this.value);
     }
 
     unbind() {
-        if (!this._normalizeWeights) {
+        if (this.setter) {
             this.setter(this.baseValue);
         }
     }

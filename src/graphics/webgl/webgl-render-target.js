@@ -69,7 +69,7 @@ class WebglRenderTarget {
         }
 
         const depthBuffer = target._depthBuffer;
-        if (depthBuffer && device.webgl2) {
+        if (depthBuffer) {
             // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
             if (!depthBuffer.impl._glTexture) {
                 // Clamp the render buffer size to the maximum supported by the device

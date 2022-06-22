@@ -3,6 +3,7 @@ import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { Debug } from '../core/debug.js';
 
 import { Morph } from './morph.js';
 
@@ -48,8 +49,11 @@ class MorphInstance {
 
         // weights
         this._weights = [];
+        this._weightMap = new Map();
         for (let v = 0; v < morph._targets.length; v++) {
-            this.setWeight(v, morph._targets[v].defaultWeight);
+            const target = morph._targets[v];
+            this._weightMap.set(target.name, v);
+            this.setWeight(v, target.defaultWeight);
         }
 
         // temporary array of targets with non-zero weight
@@ -79,11 +83,11 @@ class MorphInstance {
             };
 
             if (morph.morphPositions) {
-                this.rtPositions = createRT("MorphRTPos", "texturePositions");
+                this.rtPositions = createRT('MorphRTPos', 'texturePositions');
             }
 
             if (morph.morphNormals) {
-                this.rtNormals = createRT("MorphRTNrm", "textureNormals");
+                this.rtNormals = createRT('MorphRTNrm', 'textureNormals');
             }
 
             // texture params
@@ -92,10 +96,10 @@ class MorphInstance {
 
             // resolve possible texture names
             for (let i = 0; i < this.maxSubmitCount; i++) {
-                this["morphBlendTex" + i] = this.device.scope.resolve("morphBlendTex" + i);
+                this['morphBlendTex' + i] = this.device.scope.resolve('morphBlendTex' + i);
             }
 
-            this.morphFactor = this.device.scope.resolve("morphFactor[0]");
+            this.morphFactor = this.device.scope.resolve('morphFactor[0]');
 
             // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
             this.zeroTextures = false;
@@ -170,23 +174,37 @@ class MorphInstance {
         return clone;
     }
 
+    _getWeightIndex(key) {
+        if (typeof key === 'string') {
+            const index = this._weightMap.get(key);
+            if (index === undefined) {
+                Debug.error(`Cannot find morph target with name: ${key}.`);
+            }
+            return index;
+        }
+        return key;
+    }
+
     /**
      * Gets current weight of the specified morph target.
      *
-     * @param {number} index - An index of morph target.
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @returns {number} Weight.
      */
-    getWeight(index) {
+    getWeight(key) {
+        const index = this._getWeightIndex(key);
         return this._weights[index];
     }
 
     /**
      * Sets weight of the specified morph target.
      *
-     * @param {number} index - An index of morph target.
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @param {number} weight - Weight.
      */
-    setWeight(index, weight) {
+    setWeight(key, weight) {
+        const index = this._getWeightIndex(key);
+        Debug.assert(index >= 0 && index < this._weights.length);
         this._weights[index] = weight;
         this._dirty = true;
     }
@@ -238,7 +256,7 @@ class MorphInstance {
         // if shader is not in cache, generate one
         if (!shader) {
             const fs = this._getFragmentShader(count);
-            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, "textureMorph" + count);
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, 'textureMorph' + count);
             this.shaderCache[count] = shader;
         }
 
@@ -277,7 +295,7 @@ class MorphInstance {
             if (tex) {
 
                 // texture
-                this["morphBlendTex" + usedCount].setValue(tex);
+                this['morphBlendTex' + usedCount].setValue(tex);
 
                 // weight
                 this._shaderMorphWeights[usedCount] = activeTarget.weight;
@@ -303,7 +321,7 @@ class MorphInstance {
 
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "MorphUpdate");
+        DebugGraphics.pushGpuMarker(device, 'MorphUpdate');
 
         // update textures if active targets, or no active targets and textures need to be cleared
         if (this._activeTargets.length > 0 || !this.zeroTextures) {

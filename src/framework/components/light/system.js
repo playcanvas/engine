@@ -9,7 +9,7 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
@@ -27,7 +27,8 @@ class LightComponentSystem extends ComponentSystem {
     /**
      * Create a new LightComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -69,7 +70,7 @@ class LightComponentSystem extends ComponentSystem {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
 
         if (data.enable) {
-            console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+            console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');
             data.enabled = data.enable;
         }
 
@@ -98,7 +99,7 @@ class LightComponentSystem extends ComponentSystem {
         const _props = _lightProps;
         for (let i = 0; i < _props.length; i++) {
             name = _props[i];
-            if (name === "light") continue;
+            if (name === 'light') continue;
             if (light[name] && light[name].clone) {
                 data[name] = light[name].clone();
             } else {

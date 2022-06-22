@@ -4,8 +4,8 @@
  * @description Root namespace for the PlayCanvas Engine.
  */
 
-const version = '__CURRENT_SDK_VERSION__';
-const revision = '__REVISION__';
+const version = '$_CURRENT_SDK_VERSION';
+const revision = '$_CURRENT_SDK_REVISION';
 const config = { };
 const common = { };
 const apps = { }; // Storage for the applications using the PlayCanvas Engine

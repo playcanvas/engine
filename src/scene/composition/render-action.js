@@ -2,8 +2,16 @@ import {
     LIGHTTYPE_DIRECTIONAL
 } from '../constants.js';
 
-// class representing an entry in the final order of rendering of cameras and layers in the engine
-// this is populated at runtime based on LayerComposition
+/** @typedef {import('../../graphics/uniform-buffer.js').UniformBuffer} UniformBuffer */
+/** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
+/** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
+
+/**
+ * Class representing an entry in the final order of rendering of cameras and layers in the engine
+ * this is populated at runtime based on LayerComposition
+ *
+ * @ignore
+ */
 class RenderAction {
     constructor() {
 
@@ -44,6 +52,27 @@ class RenderAction {
 
         // and also the same directional lights, stored as indices into LayerComposition._lights
         this.directionalLightsIndices = [];
+
+        // an array of view uniform buffers (the number of these corresponds to the number of views when XR is used)
+        /** @type {Array<UniformBuffer>} */
+        this.viewUniformBuffers = [];
+
+        // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
+        /** @type {Array<BindGroup>} */
+        this.viewBindGroups = [];
+    }
+
+    // releases GPU resources
+    destroy() {
+        this.viewUniformBuffers.forEach(ub => ub.destroy());
+        this.viewUniformBuffers.length = 0;
+
+        this.viewBindGroups.forEach(bg => bg.destroy());
+        this.viewBindGroups.length = 0;
+    }
+
+    get hasDirectionalShadowLights() {
+        return this.directionalLights.length > 0;
     }
 
     // prepares render action for re-use
@@ -52,6 +81,15 @@ class RenderAction {
         this.directionalLightsSet.clear();
         this.directionalLights.length = 0;
         this.directionalLightsIndices.length = 0;
+    }
+
+    /**
+     * @param {LayerComposition} layerComposition - The layer composition.
+     * @returns {boolean} - True if the layer / sublayer referenced by the render action is enabled
+     */
+    isLayerEnabled(layerComposition) {
+        const layer = layerComposition.layerList[this.layerIndex];
+        return layer.enabled && layerComposition.subLayerEnabled[this.layerIndex];
     }
 
     // store directional lights that are needed for this camera based on layers it renders

@@ -5,7 +5,7 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 
-/** @typedef {import('./app-base.js').Application} Application */
+/** @typedef {import('./app-base.js').AppBase} AppBase */
 /** @typedef {import('./entity.js').Entity} Entity */
 
 /**
@@ -41,13 +41,13 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
  * Container for storing and loading of scenes. An instance of the registry is created on the
- * {@link Application} object as {@link Application#scenes}.
+ * {@link AppBase} object as {@link AppBase#scenes}.
  */
 class SceneRegistry {
     /**
      * Create a new SceneRegistry instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         this._app = app;
@@ -349,7 +349,7 @@ class SceneRegistry {
 
     /**
      * Load the scene hierarchy and scene settings. This is an internal method used by the
-     * {@link Application}.
+     * {@link AppBase}.
      *
      * @param {string} url - The URL of the scene file.
      * @param {LoadSceneCallback} callback - The function called after the settings are

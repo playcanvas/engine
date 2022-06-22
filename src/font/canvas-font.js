@@ -10,7 +10,7 @@ import {
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
@@ -25,7 +25,7 @@ class CanvasFont extends EventHandler {
     /**
      * Create a new CanvasFont instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} options - The font options.
      * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
      * Defaults to 'Arial'.
@@ -306,9 +306,9 @@ class CanvasFont extends EventHandler {
 
                         const texture = new Texture(this.app.graphicsDevice, {
                             format: PIXELFORMAT_R8_G8_B8_A8,
-                            mipmaps: true
+                            mipmaps: true,
+                            name: 'font-atlas'
                         });
-                        texture.name = 'font-atlas';
                         texture.setSource(canvas);
                         texture.minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
                         texture.magFilter = FILTER_LINEAR;

@@ -17,7 +17,7 @@ import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 
 /** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../framework/app-base.js').Application} Application */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 
 /**
@@ -34,7 +34,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  */
 class XrManager extends EventHandler {
     /**
-     * @type {Application}
+     * @type {AppBase}
      * @ignore
      */
     app;
@@ -193,7 +193,7 @@ class XrManager extends EventHandler {
     /**
      * Create a new XrManager instance.
      *
-     * @param {Application} app - The main application.
+     * @param {AppBase} app - The main application.
      * @hideconstructor
      */
     constructor(app) {
@@ -225,6 +225,16 @@ class XrManager extends EventHandler {
             });
             this._deviceAvailabilityCheck();
         }
+    }
+
+    /**
+     * Destroys the XrManager instance.
+     *
+     * @ignore
+     */
+    destroy() {
+        this.depthSensing.destroy();
+        this.depthSensing = null;
     }
 
     /**

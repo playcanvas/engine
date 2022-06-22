@@ -1,10 +1,11 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
+import { Preprocessor } from '../../core/preprocessor.js';
 
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
-/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
 
 /**
@@ -33,6 +34,7 @@ class WebglShader {
      * @param {Shader} shader - The shader to free.
      */
     destroy(shader) {
+        /** @type {WebglGraphicsDevice} */
         const device = shader.device;
         const idx = device.shaders.indexOf(shader);
         if (idx !== -1) {
@@ -49,7 +51,7 @@ class WebglShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
@@ -59,13 +61,17 @@ class WebglShader {
     /**
      * Compile and link a shader program.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to compile.
      */
     compileAndLink(device, shader) {
         const definition = shader.definition;
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
+
+        // resolve ifdefs
+        definition.vshader = Preprocessor.run(definition.vshader);
+        definition.fshader = Preprocessor.run(definition.fshader);
 
         const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
         const glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
@@ -168,7 +174,7 @@ class WebglShader {
     /**
      * Extract attribute and uniform information from a successfully linked shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
@@ -260,7 +266,7 @@ class WebglShader {
     /**
      * Check the compilation status of a shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to query.
      * @param {WebGLShader} glShader - The WebGL shader.
      * @param {string} source - The shader source code.
@@ -292,39 +298,39 @@ class WebglShader {
      *
      * @param {string} src - The shader source code.
      * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
-     * @returns {Array} An array where the first element is the 10 lines of code around the first
+     * @returns {[string, {message?: string, line?: number, source?: string}]} A tuple where the first element is the 10 lines of code around the first
      * detected error, and the second element an object storing the error messsage, line number and
      * complete shader source.
      * @private
      */
     _processError(src, infoLog) {
-        if (!src)
-            return "";
-
-        const lines = src.split('\n');
         const error = { };
         let code = '';
-        let from = 0;
-        let to = lines.length;
 
-        // if error is in the code, only show nearby lines instead of whole shader code
-        if (infoLog && infoLog.startsWith('ERROR:')) {
-            const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
-            if (match) {
-                error.message = match[3];
-                error.line = parseInt(match[2], 10);
+        if (src) {
+            const lines = src.split('\n');
+            let from = 0;
+            let to = lines.length;
 
-                from = Math.max(0, error.line - 6);
-                to = Math.min(lines.length, error.line + 5);
+            // if error is in the code, only show nearby lines instead of whole shader code
+            if (infoLog && infoLog.startsWith('ERROR:')) {
+                const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+                if (match) {
+                    error.message = match[3];
+                    error.line = parseInt(match[2], 10);
+
+                    from = Math.max(0, error.line - 6);
+                    to = Math.min(lines.length, error.line + 5);
+                }
             }
-        }
 
-        // Chrome reports shader errors on lines indexed from 1
-        for (let i = from; i < to; i++) {
-            code += (i + 1) + ":\t" + lines[i] + '\n';
-        }
+            // Chrome reports shader errors on lines indexed from 1
+            for (let i = from; i < to; i++) {
+                code += (i + 1) + ":\t" + lines[i] + '\n';
+            }
 
-        error.source = src;
+            error.source = src;
+        }
 
         return [code, error];
     }

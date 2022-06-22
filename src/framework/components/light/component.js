@@ -69,6 +69,8 @@ const _lightPropsDefault = [];
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
+ * @property {number} shadowIntensity The intensity of the shadow darkening, 1 being shadows are entirely black.
+ * Defaults to 1.
  * @property {number} shadowResolution The size of the texture used for the shadow map. Valid sizes
  * are 64, 128, 256, 512, 1024, 2048. Defaults to 1024.
  * @property {number} shadowBias The depth bias for tuning the appearance of the shadow mapping
@@ -191,10 +193,10 @@ class LightComponent extends Component {
         if (this.enabled && this.entity.enabled) {
             this.addLightToLayers();
         }
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -283,10 +285,10 @@ class LightComponent extends Component {
     onEnable() {
         this.light.enabled = true;
 
-        this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -300,10 +302,10 @@ class LightComponent extends Component {
     onDisable() {
         this.light.enabled = false;
 
-        this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
         if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-            this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
+            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
         }
 
         this.removeLightFromLayers();
@@ -342,77 +344,80 @@ function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
 }
 
 function _defineProps() {
-    _defineProperty("enabled", true, function (newValue, oldValue) {
+    _defineProperty('enabled', true, function (newValue, oldValue) {
         this.onSetEnabled(null, oldValue, newValue);
     });
-    _defineProperty("light", null);
-    _defineProperty("type", 'directional', function (newValue, oldValue) {
+    _defineProperty('light', null);
+    _defineProperty('type', 'directional', function (newValue, oldValue) {
         this.system.changeType(this, oldValue, newValue);
         // refresh light properties because changing the type does not reset the
         // light properties
         this.refreshProperties();
     });
-    _defineProperty("color", new Color(1, 1, 1), function (newValue, oldValue) {
+    _defineProperty('color', new Color(1, 1, 1), function (newValue, oldValue) {
         this.light.setColor(newValue);
     }, true);
-    _defineProperty("intensity", 1, function (newValue, oldValue) {
+    _defineProperty('intensity', 1, function (newValue, oldValue) {
         this.light.intensity = newValue;
     });
-    _defineProperty("shape", LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
+    _defineProperty('shape', LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
     });
-    _defineProperty("castShadows", false, function (newValue, oldValue) {
+    _defineProperty('castShadows', false, function (newValue, oldValue) {
         this.light.castShadows = newValue;
     });
-    _defineProperty("shadowDistance", 40, function (newValue, oldValue) {
+    _defineProperty('shadowDistance', 40, function (newValue, oldValue) {
         this.light.shadowDistance = newValue;
     });
-    _defineProperty("shadowResolution", 1024, function (newValue, oldValue) {
+    _defineProperty('shadowIntensity', 1, function (newValue, oldValue) {
+        this.light.shadowIntensity = newValue;
+    });
+    _defineProperty('shadowResolution', 1024, function (newValue, oldValue) {
         this.light.shadowResolution = newValue;
     });
-    _defineProperty("shadowBias", 0.05, function (newValue, oldValue) {
+    _defineProperty('shadowBias', 0.05, function (newValue, oldValue) {
         this.light.shadowBias = -0.01 * math.clamp(newValue, 0, 1);
     });
-    _defineProperty("numCascades", 1, function (newValue, oldValue) {
+    _defineProperty('numCascades', 1, function (newValue, oldValue) {
         this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
     });
-    _defineProperty("bakeNumSamples", 1, function (newValue, oldValue) {
+    _defineProperty('bakeNumSamples', 1, function (newValue, oldValue) {
         this.light.bakeNumSamples = math.clamp(Math.floor(newValue), 1, 255);
     });
-    _defineProperty("bakeArea", 0, function (newValue, oldValue) {
+    _defineProperty('bakeArea', 0, function (newValue, oldValue) {
         this.light.bakeArea = math.clamp(newValue, 0, 180);
     });
-    _defineProperty("cascadeDistribution", 0.5, function (newValue, oldValue) {
+    _defineProperty('cascadeDistribution', 0.5, function (newValue, oldValue) {
         this.light.cascadeDistribution = math.clamp(newValue, 0, 1);
     });
-    _defineProperty("normalOffsetBias", 0, function (newValue, oldValue) {
+    _defineProperty('normalOffsetBias', 0, function (newValue, oldValue) {
         this.light.normalOffsetBias = math.clamp(newValue, 0, 1);
     });
-    _defineProperty("range", 10, function (newValue, oldValue) {
+    _defineProperty('range', 10, function (newValue, oldValue) {
         this.light.attenuationEnd = newValue;
     });
-    _defineProperty("innerConeAngle", 40, function (newValue, oldValue) {
+    _defineProperty('innerConeAngle', 40, function (newValue, oldValue) {
         this.light.innerConeAngle = newValue;
     });
-    _defineProperty("outerConeAngle", 45, function (newValue, oldValue) {
+    _defineProperty('outerConeAngle', 45, function (newValue, oldValue) {
         this.light.outerConeAngle = newValue;
     });
-    _defineProperty("falloffMode", LIGHTFALLOFF_LINEAR, function (newValue, oldValue) {
+    _defineProperty('falloffMode', LIGHTFALLOFF_LINEAR, function (newValue, oldValue) {
         this.light.falloffMode = newValue;
     });
-    _defineProperty("shadowType", SHADOW_PCF3, function (newValue, oldValue) {
+    _defineProperty('shadowType', SHADOW_PCF3, function (newValue, oldValue) {
         this.light.shadowType = newValue;
     });
-    _defineProperty("vsmBlurSize", 11, function (newValue, oldValue) {
+    _defineProperty('vsmBlurSize', 11, function (newValue, oldValue) {
         this.light.vsmBlurSize = newValue;
     });
-    _defineProperty("vsmBlurMode", BLUR_GAUSSIAN, function (newValue, oldValue) {
+    _defineProperty('vsmBlurMode', BLUR_GAUSSIAN, function (newValue, oldValue) {
         this.light.vsmBlurMode = newValue;
     });
-    _defineProperty("vsmBias", 0.01 * 0.25, function (newValue, oldValue) {
+    _defineProperty('vsmBias', 0.01 * 0.25, function (newValue, oldValue) {
         this.light.vsmBias = math.clamp(newValue, 0, 1);
     });
-    _defineProperty("cookieAsset", null, function (newValue, oldValue) {
+    _defineProperty('cookieAsset', null, function (newValue, oldValue) {
         if (this._cookieAssetId && ((newValue instanceof Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId))
             return;
 
@@ -434,19 +439,19 @@ function _defineProps() {
             }
         }
     });
-    _defineProperty("cookie", null, function (newValue, oldValue) {
+    _defineProperty('cookie', null, function (newValue, oldValue) {
         this.light.cookie = newValue;
     });
-    _defineProperty("cookieIntensity", 1, function (newValue, oldValue) {
+    _defineProperty('cookieIntensity', 1, function (newValue, oldValue) {
         this.light.cookieIntensity = math.clamp(newValue, 0, 1);
     });
-    _defineProperty("cookieFalloff", true, function (newValue, oldValue) {
+    _defineProperty('cookieFalloff', true, function (newValue, oldValue) {
         this.light.cookieFalloff = newValue;
     });
-    _defineProperty("cookieChannel", "rgb", function (newValue, oldValue) {
+    _defineProperty('cookieChannel', 'rgb', function (newValue, oldValue) {
         this.light.cookieChannel = newValue;
     });
-    _defineProperty("cookieAngle", 0, function (newValue, oldValue) {
+    _defineProperty('cookieAngle', 0, function (newValue, oldValue) {
         if (newValue !== 0 || this.cookieScale !== null) {
             if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
             let scx = 1;
@@ -463,7 +468,7 @@ function _defineProps() {
             this.light.cookieTransform = null;
         }
     });
-    _defineProperty("cookieScale", null, function (newValue, oldValue) {
+    _defineProperty('cookieScale', null, function (newValue, oldValue) {
         if (newValue !== null || this.cookieAngle !== 0) {
             if (!this._cookieMatrix) this._cookieMatrix = new Vec4();
             const scx = newValue.x;
@@ -476,16 +481,16 @@ function _defineProps() {
             this.light.cookieTransform = null;
         }
     }, true);
-    _defineProperty("cookieOffset", null, function (newValue, oldValue) {
+    _defineProperty('cookieOffset', null, function (newValue, oldValue) {
         this.light.cookieOffset = newValue;
     }, true);
-    _defineProperty("shadowUpdateMode", SHADOWUPDATE_REALTIME, function (newValue, oldValue) {
+    _defineProperty('shadowUpdateMode', SHADOWUPDATE_REALTIME, function (newValue, oldValue) {
         this.light.shadowUpdateMode = newValue;
     }, true);
-    _defineProperty("mask", 1, function (newValue, oldValue) {
+    _defineProperty('mask', 1, function (newValue, oldValue) {
         this.light.mask = newValue;
     });
-    _defineProperty("affectDynamic", true, function (newValue, oldValue) {
+    _defineProperty('affectDynamic', true, function (newValue, oldValue) {
         if (newValue) {
             this.light.mask |= MASK_AFFECT_DYNAMIC;
         } else {
@@ -493,7 +498,7 @@ function _defineProps() {
         }
         this.light.layersDirty();
     });
-    _defineProperty("affectLightmapped", false, function (newValue, oldValue) {
+    _defineProperty('affectLightmapped', false, function (newValue, oldValue) {
         if (newValue) {
             this.light.mask |= MASK_AFFECT_LIGHTMAPPED;
             if (this.bake) this.light.mask &= ~MASK_BAKE;
@@ -502,7 +507,7 @@ function _defineProps() {
             if (this.bake) this.light.mask |= MASK_BAKE;
         }
     });
-    _defineProperty("bake", false, function (newValue, oldValue) {
+    _defineProperty('bake', false, function (newValue, oldValue) {
         if (newValue) {
             this.light.mask |= MASK_BAKE;
             if (this.affectLightmapped) this.light.mask &= ~MASK_AFFECT_LIGHTMAPPED;
@@ -512,13 +517,13 @@ function _defineProps() {
         }
         this.light.layersDirty();
     });
-    _defineProperty("bakeDir", true, function (newValue, oldValue) {
+    _defineProperty('bakeDir', true, function (newValue, oldValue) {
         this.light.bakeDir = newValue;
     });
-    _defineProperty("isStatic", false, function (newValue, oldValue) {
+    _defineProperty('isStatic', false, function (newValue, oldValue) {
         this.light.isStatic = newValue;
     });
-    _defineProperty("layers", [LAYERID_WORLD], function (newValue, oldValue) {
+    _defineProperty('layers', [LAYERID_WORLD], function (newValue, oldValue) {
         for (let i = 0; i < oldValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;

@@ -69,10 +69,10 @@ class SkinInstance {
                 format: PIXELFORMAT_RGBA32F,
                 mipmaps: false,
                 minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST
+                magFilter: FILTER_NEAREST,
+                name: 'skin'
             });
 
-            this.boneTexture.name = 'skin';
             this.matrixPalette = this.boneTexture.lock();
 
         } else {

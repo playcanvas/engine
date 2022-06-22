@@ -1,9 +1,11 @@
-import React from 'react';
 import * as pc from '../../../../';
-import { AssetLoader } from '../../app/helpers/loader';
 
 
-const vshader = `
+class ShaderToonExample {
+    static CATEGORY = 'Graphics';
+    static NAME = 'Shader Toon';
+    static FILES = {
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position, normal and texture coordinates
 attribute vec4 aPosition;
 attribute vec3 aNormal;
@@ -42,9 +44,8 @@ void main(void)
 
     // Transform the geometry
     gl_Position = modelViewProj * aPosition;
-}`;
-
-const fshader = `
+}`,
+        'shader.frag': /* glsl */`
 precision mediump float;
 uniform sampler2D uTexture;
 varying float vertOutTexCoord;
@@ -57,93 +58,91 @@ void main(void)
     vec4 color = vec4(0.5, 0.47, 0.43, 1.0);
     gl_FragColor = color * vec4(v, v, v, 1.0);
 }
-`;
+`
+    };
 
-class ShaderToonExample {
-    static CATEGORY = 'Graphics';
-    static NAME = 'Shader Toon';
 
-    load() {
-        return <>
-            <AssetLoader name='statue' type='container' url='/static/assets/models/statue.glb' />
-            <AssetLoader name='shader.vert' type='shader' data={vshader} />
-            <AssetLoader name='shader.frag' type='shader' data={fshader} />
-        </>;
-    }
-
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
-        camera.translate(0, 7, 24);
-
-        // Create an Entity with a omni light component and a sphere model component.
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(1, 1, 1),
-            radius: 10
-        });
-        light.translate(0, 1, 0);
-
-        // Add entities into scene hierarchy
-        app.root.addChild(camera);
-        app.root.addChild(light);
-
-        app.start();
-
-        // Create the shader definition and shader from the vertex and fragment shaders
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION,
-                aNormal: pc.SEMANTIC_NORMAL,
-                aUv: pc.SEMANTIC_TEXCOORD0
-            },
-            vshader: assets['shader.vert'].data,
-            fshader: assets['shader.frag'].data
+        const assets = {
+            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
         };
-        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
-        // Create a new material with the new shader
-        const material = new pc.Material();
-        material.shader = shader;
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-        // create a hierarchy of entities with render components, representing the statue model
-        const entity = assets.statue.resource.instantiateRenderEntity();
-        app.root.addChild(entity);
+            app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // Set the new material on all meshes in the model, and use original texture from the model on the new material
-        let originalTexture:pc.Texture = null;
-        const renders: Array<pc.RenderComponent> = entity.findComponents("render");
-        renders.forEach((render) => {
-            const meshInstances = render.meshInstances;
-            for (let i = 0; i < meshInstances.length; i++) {
-                const meshInstance = meshInstances[i];
-                if (!originalTexture) {
-                    const originalMaterial = meshInstance.material as pc.StandardMaterial;
-                    originalTexture = originalMaterial.diffuseMap;
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5)
+            });
+            camera.translate(0, 7, 24);
+
+            // Create an Entity with a omni light component and a sphere model component.
+            const light = new pc.Entity();
+            light.addComponent("light", {
+                type: "omni",
+                color: new pc.Color(1, 1, 1),
+                radius: 10
+            });
+            light.translate(0, 1, 0);
+
+            // Add entities into scene hierarchy
+            app.root.addChild(camera);
+            app.root.addChild(light);
+
+            app.start();
+
+            // Create the shader definition and shader from the vertex and fragment shaders
+            const shaderDefinition = {
+                attributes: {
+                    aPosition: pc.SEMANTIC_POSITION,
+                    aNormal: pc.SEMANTIC_NORMAL,
+                    aUv: pc.SEMANTIC_TEXCOORD0
+                },
+                vshader: files['shader.vert'],
+                fshader: files['shader.frag']
+            };
+            const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+
+            // Create a new material with the new shader
+            const material = new pc.Material();
+            material.shader = shader;
+
+            // create a hierarchy of entities with render components, representing the statue model
+            const entity = assets.statue.resource.instantiateRenderEntity();
+            app.root.addChild(entity);
+
+            // Set the new material on all meshes in the model, and use original texture from the model on the new material
+            let originalTexture:pc.Texture = null;
+            const renders: Array<pc.RenderComponent> = entity.findComponents("render");
+            renders.forEach((render) => {
+                const meshInstances = render.meshInstances;
+                for (let i = 0; i < meshInstances.length; i++) {
+                    const meshInstance = meshInstances[i];
+                    if (!originalTexture) {
+                        const originalMaterial = meshInstance.material as pc.StandardMaterial;
+                        originalTexture = originalMaterial.diffuseMap;
+                    }
+                    meshInstance.material = material;
                 }
-                meshInstance.material = material;
-            }
-        });
+            });
 
-        // material parameters
-        const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
-        material.setParameter('uLightPos', lightPosArray);
-        material.setParameter('uTexture', originalTexture);
-        material.update();
+            // material parameters
+            const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
+            material.setParameter('uLightPos', lightPosArray);
+            material.setParameter('uTexture', originalTexture);
+            material.update();
 
-        // rotate the statue
-        app.on("update", function (dt) {
-            entity.rotate(0, 60 * dt, 0);
+            // rotate the statue
+            app.on("update", function (dt) {
+                entity.rotate(0, 60 * dt, 0);
+            });
         });
     }
 }

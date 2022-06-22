@@ -114,7 +114,7 @@ const basic = {
         if (options.fog) {
             code += fogCode(options.fog);
         }
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += shaderChunks.alphaTestPS;
         }
 
@@ -137,7 +137,7 @@ const basic = {
             code += '    gl_FragColor *= texture2D(texture_diffuseMap, vUv0);\n';
         }
 
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 

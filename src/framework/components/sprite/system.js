@@ -15,7 +15,7 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').Application} Application */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -28,7 +28,8 @@ class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {Application} app - The application.
+     * @param {AppBase} app - The application.
+     * @hideconstructor
      */
     constructor(app) {
         super(app);
@@ -65,20 +66,20 @@ class SpriteComponentSystem extends ComponentSystem {
             const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                name: 'sprite'
             });
             const pixels = new Uint8Array(texture.lock());
             pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
-            texture.name = 'sprite';
             texture.unlock();
 
             const material = new StandardMaterial();
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
             material.emissiveMap = texture;
-            material.emissiveMapTint = true;
+            material.emissiveTint = true;
             material.opacityMap = texture;
-            material.opacityMapChannel = "a";
+            material.opacityMapChannel = 'a';
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;

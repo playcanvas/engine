@@ -1,24 +1,31 @@
-import { Application } from '../../src/framework/app-base.js';
+import { Application } from '../../src/framework/application.js';
 import { Asset } from '../../src/asset/asset.js';
 import { AssetRegistry } from '../../src/asset/asset-registry.js';
 import { GlbContainerResource } from '../../src/resources/parser/glb-container-resource.js';
 import { ResourceLoader } from '../../src/resources/loader.js';
+import { http, Http } from '../../src/net/http.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 describe('AssetRegistry', function () {
 
     let app;
+    let retryDelay;
 
     beforeEach(function () {
+        retryDelay = Http.retryDelay;
+        Http.retryDelay = 1;
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas);
     });
 
     afterEach(function () {
         app.destroy();
+        Http.retryDelay = retryDelay;
+        sinon.restore();
     });
 
     describe('#constructor', function () {
@@ -174,6 +181,15 @@ describe('AssetRegistry', function () {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(GlbContainerResource);
+                done();
+            });
+        });
+
+        it('supports retry loading of container assets', function (done) {
+            sinon.spy(http, 'request');
+            app.loader.enableRetry(2);
+            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', function (err, asset) {
+                expect(http.request.callCount).to.equal(3);
                 done();
             });
         });

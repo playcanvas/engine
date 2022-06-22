@@ -1,21 +1,21 @@
 import * as pc from '../../../../';
 
-
 class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 
-    example(canvas: HTMLCanvasElement, assets: any, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement, assets: any): void {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
 
-        // load the draco decoder
-        if (wasmSupported()) {
-            loadWasmModuleAsync('DracoDecoderModule', '/static/lib/draco/draco.wasm.js', '/static/lib/draco/draco.wasm.wasm', demo);
-        } else {
-            loadWasmModuleAsync('DracoDecoderModule', '/static/lib/draco/draco.js', '', demo);
-        }
+        pc.WasmModule.setConfig('DracoDecoderModule', {
+            glueUrl: '/static/lib/draco/draco.wasm.js',
+            wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+            fallbackUrl: '/static/lib/draco/draco.js'
+        });
+
+        pc.WasmModule.getInstance('DracoDecoderModule', demo);
 
         function demo() {
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);

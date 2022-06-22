@@ -1,0 +1,41 @@
+# This file normalizes line endings stored in the repo to LF (Unix/Git).
+# Contributors are still able to use their native line endings locally.
+# More info here: https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings
+
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Explicitly declare text files to be normalized on checkin
+# and converted back to native line endings on checkout.
+*.js text
+*.json text
+*.mjs text
+*.cjs text
+*.jsx text
+*.ts text
+*.txt text
+*.tsx text
+*.md text
+*.html text
+*.gltf text
+*.glsl text
+*.css text
+*.mustache text
+*.obj text
+*.atlas text
+*.yaml text
+*.babelrc text
+
+# Denote all files that are truly binary and should therefore not be modified.
+*.png binary
+*.jpg binary
+*.glb binary
+*.fbx binary
+*.wasm binary
+*.basis binary
+*.bin binary
+*.dds binary
+*.drc binary
+*.mp3 binary
+*.mp4 binary
+*.gz binary

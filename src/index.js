@@ -21,11 +21,13 @@ export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
+export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { Debug } from './core/debug.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -56,6 +58,7 @@ export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
+export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
 export { programlib } from './graphics/program-lib/program-lib.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
@@ -182,6 +185,7 @@ export { TextureAtlasHandler } from './resources/texture-atlas.js';
 // ASSETS
 export * from './asset/constants.js';
 export { Asset } from './asset/asset.js';
+export { AssetListLoader } from './asset/asset-list-loader.js';
 export { AssetReference } from './asset/asset-reference.js';
 export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';
@@ -210,7 +214,8 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js'
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { app, Application } from './framework/app-base.js';
+export { AppBase, app } from './framework/app-base.js';
+export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export * from './anim/controller/constants.js';
@@ -286,10 +291,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
 export { Template } from './templates/template.js';
-
-// VR
-export { VrDisplay } from './vr/vr-display.js';
-export { VrManager } from './vr/vr-manager.js';
 
 // XR
 export * from './xr/constants.js';

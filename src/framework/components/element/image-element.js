@@ -27,6 +27,8 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
+import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
+
 import { Asset } from '../../../asset/asset.js';
 
 // #if _DEBUG
@@ -204,7 +206,7 @@ class ImageRenderable {
         const element = this._element;
 
         let visibleFn = null;
-        if (cull && element._isScreenCulled()) {
+        if (cull && element._isScreenSpace()) {
             visibleFn = function (camera) {
                 return element.isVisibleForCamera(camera);
             };
@@ -273,6 +275,7 @@ class ImageElement {
         this._sprite = null;
         this._spriteFrame = 0;
         this._pixelsPerUnit = null;
+        this._targetAspectRatio = -1; // will be set when assigning textures
 
         this._rect = new Vec4(0, 0, 1, 1); // x, y, w, h
 
@@ -382,7 +385,8 @@ class ImageElement {
         }
 
         if (this._renderable) {
-            this._renderable.setCull(true); // culling is now always true (screenspace culled by isCulled, worldspace by frustum)
+            // culling is always true for non-screenspace (frustrum is used); for screenspace, use the 'cull' property
+            this._renderable.setCull(!this._element._isScreenSpace() || this._element._isScreenCulled());
             this._renderable.setMaterial(this._material);
             this._renderable.setScreenSpace(screenSpace);
             this._renderable.setLayer(screenSpace ? LAYER_HUD : LAYER_WORLD);
@@ -454,8 +458,21 @@ class ImageElement {
 
     _updateMesh(mesh) {
         const element = this._element;
-        const w = element.calculatedWidth;
-        const h = element.calculatedHeight;
+        let w = element.calculatedWidth;
+        let h = element.calculatedHeight;
+
+        if (element.fitMode !== FITMODE_STRETCH && this._targetAspectRatio > 0) {
+            const actualRatio = element.calculatedWidth / element.calculatedHeight;
+            // check which coordinate must change in order to preserve the source aspect ratio
+            if ((element.fitMode === FITMODE_CONTAIN && actualRatio > this._targetAspectRatio) ||
+                (element.fitMode === FITMODE_COVER && actualRatio < this._targetAspectRatio)) {
+                // use 'height' to re-calculate width
+                w = element.calculatedHeight * this._targetAspectRatio;
+            } else {
+                // use 'width' to re-calculate height
+                h = element.calculatedWidth / this._targetAspectRatio;
+            }
+        }
 
         // update material
         const screenSpace = element._isScreenSpace();
@@ -584,21 +601,35 @@ class ImageElement {
     // Gets the mesh from the sprite asset
     // if the sprite is 9-sliced or the default mesh from the
     // image element and calls _updateMesh or sets meshDirty to true
-    // if the component is currently being initialized. We need to call
-    // _updateSprite every time something related to the sprite asset changes
+    // if the component is currently being initialized. Also updates
+    // aspect ratio. We need to call _updateSprite every time
+    // something related to the sprite asset changes
     _updateSprite() {
         let nineSlice = false;
         let mesh = null;
 
-        // take mesh from sprite
+        // reset target aspect ratio
+        this._targetAspectRatio = -1;
+
         if (this._sprite && this._sprite.atlas) {
+            // take mesh from sprite
             mesh = this._sprite.meshes[this.spriteFrame];
             nineSlice = this._sprite.renderMode === SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === SPRITE_RENDERMODE_TILED;
+
+            // re-calculate aspect ratio from sprite frame
+            const frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
+            if (frameData?.rect.w > 0) {
+                this._targetAspectRatio = frameData.rect.z / frameData.rect.w;
+            }
         }
 
         // if we use 9 slicing then use that mesh otherwise keep using the default mesh
         this.mesh = nineSlice ? mesh : this._defaultMesh;
 
+        this.refreshMesh();
+    }
+
+    refreshMesh() {
         if (this.mesh) {
             if (!this._element._beingInitialized) {
                 this._updateMesh(this.mesh);
@@ -639,9 +670,9 @@ class ImageElement {
     _bindMaterialAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onMaterialLoad, this);
-        asset.on("change", this._onMaterialChange, this);
-        asset.on("remove", this._onMaterialRemove, this);
+        asset.on('load', this._onMaterialLoad, this);
+        asset.on('change', this._onMaterialChange, this);
+        asset.on('remove', this._onMaterialRemove, this);
 
         if (asset.resource) {
             this._onMaterialLoad(asset);
@@ -651,9 +682,9 @@ class ImageElement {
     }
 
     _unbindMaterialAsset(asset) {
-        asset.off("load", this._onMaterialLoad, this);
-        asset.off("change", this._onMaterialChange, this);
-        asset.off("remove", this._onMaterialRemove, this);
+        asset.off('load', this._onMaterialLoad, this);
+        asset.off('change', this._onMaterialChange, this);
+        asset.off('remove', this._onMaterialRemove, this);
     }
 
     _onMaterialChange() {
@@ -674,9 +705,9 @@ class ImageElement {
     _bindTextureAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onTextureLoad, this);
-        asset.on("change", this._onTextureChange, this);
-        asset.on("remove", this._onTextureRemove, this);
+        asset.on('load', this._onTextureLoad, this);
+        asset.on('change', this._onTextureChange, this);
+        asset.on('remove', this._onTextureRemove, this);
 
         if (asset.resource) {
             this._onTextureLoad(asset);
@@ -686,9 +717,9 @@ class ImageElement {
     }
 
     _unbindTextureAsset(asset) {
-        asset.off("load", this._onTextureLoad, this);
-        asset.off("change", this._onTextureChange, this);
-        asset.off("remove", this._onTextureRemove, this);
+        asset.off('load', this._onTextureLoad, this);
+        asset.off('change', this._onTextureChange, this);
+        asset.off('remove', this._onTextureRemove, this);
     }
 
     _onTextureLoad(asset) {
@@ -715,9 +746,9 @@ class ImageElement {
     _bindSpriteAsset(asset) {
         if (!this._entity.enabled) return; // don't bind until element is enabled
 
-        asset.on("load", this._onSpriteAssetLoad, this);
-        asset.on("change", this._onSpriteAssetChange, this);
-        asset.on("remove", this._onSpriteAssetRemove, this);
+        asset.on('load', this._onSpriteAssetLoad, this);
+        asset.on('change', this._onSpriteAssetChange, this);
+        asset.on('remove', this._onSpriteAssetRemove, this);
 
         if (asset.resource) {
             this._onSpriteAssetLoad(asset);
@@ -727,12 +758,12 @@ class ImageElement {
     }
 
     _unbindSpriteAsset(asset) {
-        asset.off("load", this._onSpriteAssetLoad, this);
-        asset.off("change", this._onSpriteAssetChange, this);
-        asset.off("remove", this._onSpriteAssetRemove, this);
+        asset.off('load', this._onSpriteAssetLoad, this);
+        asset.off('change', this._onSpriteAssetChange, this);
+        asset.off('remove', this._onSpriteAssetRemove, this);
 
         if (asset.data.textureAtlasAsset) {
-            this._system.app.assets.off("load:" + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            this._system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
         }
     }
 
@@ -877,7 +908,7 @@ class ImageElement {
 
         // #if _DEBUG
         if (this._color === value) {
-            Debug.warn("Setting element.color to itself will have no effect");
+            Debug.warn('Setting element.color to itself will have no effect');
         }
         // #endif
 
@@ -1007,9 +1038,9 @@ class ImageElement {
                 assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
                 const _prev = assets.get(this._materialAsset);
                 if (_prev) {
-                    _prev.off("load", this._onMaterialLoad, this);
-                    _prev.off("change", this._onMaterialChange, this);
-                    _prev.off("remove", this._onMaterialRemove, this);
+                    _prev.off('load', this._onMaterialLoad, this);
+                    _prev.off('change', this._onMaterialChange, this);
+                    _prev.off('remove', this._onMaterialRemove, this);
                 }
             }
 
@@ -1052,17 +1083,34 @@ class ImageElement {
             }
 
             // default texture just uses emissive and opacity maps
-            this._renderable.setParameter("texture_emissiveMap", this._texture);
-            this._renderable.setParameter("texture_opacityMap", this._texture);
+            this._renderable.setParameter('texture_emissiveMap', this._texture);
+            this._renderable.setParameter('texture_opacityMap', this._texture);
             this._colorUniform[0] = this._color.r;
             this._colorUniform[1] = this._color.g;
             this._colorUniform[2] = this._color.b;
-            this._renderable.setParameter("material_emissive", this._colorUniform);
-            this._renderable.setParameter("material_opacity", this._color.a);
+            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._renderable.setParameter('material_opacity', this._color.a);
+
+            // if texture's aspect ratio changed and the element needs to preserve aspect ratio, refresh the mesh
+            const newAspectRatio = this._texture.width / this._texture.height;
+            if (newAspectRatio != this._targetAspectRatio) {
+                this._targetAspectRatio = newAspectRatio;
+                if (this._element.fitMode !== FITMODE_STRETCH) {
+                    this.refreshMesh();
+                }
+            }
         } else {
             // clear texture params
-            this._renderable.deleteParameter("texture_emissiveMap");
-            this._renderable.deleteParameter("texture_opacityMap");
+            this._renderable.deleteParameter('texture_emissiveMap');
+            this._renderable.deleteParameter('texture_opacityMap');
+
+            // reset target aspect ratio and refresh mesh if there is an aspect ratio setting
+            // this is needed in order to properly reset the mesh to 'stretch' across the entire element bounds
+            // when resetting the texture
+            this._targetAspectRatio = -1;
+            if (this._element.fitMode !== FITMODE_STRETCH) {
+                this.refreshMesh();
+            }
         }
     }
 
@@ -1083,9 +1131,9 @@ class ImageElement {
                 assets.off('add:' + this._textureAsset, this._onTextureAdded, this);
                 const _prev = assets.get(this._textureAsset);
                 if (_prev) {
-                    _prev.off("load", this._onTextureLoad, this);
-                    _prev.off("change", this._onTextureChange, this);
-                    _prev.off("remove", this._onTextureRemove, this);
+                    _prev.off('load', this._onTextureLoad, this);
+                    _prev.off('change', this._onTextureChange, this);
+                    _prev.off('remove', this._onTextureRemove, this);
                 }
             }
 
@@ -1175,12 +1223,12 @@ class ImageElement {
 
         if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
             // default texture just uses emissive and opacity maps
-            this._renderable.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-            this._renderable.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+            this._renderable.setParameter('texture_emissiveMap', this._sprite.atlas.texture);
+            this._renderable.setParameter('texture_opacityMap', this._sprite.atlas.texture);
         } else {
             // clear texture params
-            this._renderable.deleteParameter("texture_emissiveMap");
-            this._renderable.deleteParameter("texture_opacityMap");
+            this._renderable.deleteParameter('texture_emissiveMap');
+            this._renderable.deleteParameter('texture_opacityMap');
         }
 
         // clamp frame
