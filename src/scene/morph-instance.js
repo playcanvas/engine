@@ -52,7 +52,9 @@ class MorphInstance {
         this._weightMap = new Map();
         for (let v = 0; v < morph._targets.length; v++) {
             const target = morph._targets[v];
-            this._weightMap.set(target.name, v);
+            if (target.name) {
+                this._weightMap.set(target.name, v);
+            }
             this.setWeight(v, target.defaultWeight);
         }
 
@@ -204,7 +206,7 @@ class MorphInstance {
      */
     setWeight(key, weight) {
         const index = this._getWeightIndex(key);
-        Debug.assert(index >= 0 && index < this._weights.length);
+        Debug.assert(index >= 0 && index < this.morph._targets.length);
         this._weights[index] = weight;
         this._dirty = true;
     }
