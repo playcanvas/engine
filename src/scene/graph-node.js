@@ -1149,6 +1149,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Add a new child to the child list and update the parent value of the child node.
+     * If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The new child to add.
      * @example
@@ -1163,6 +1164,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Add a child to this node, maintaining the child's transform in world space.
+     * If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The child to add.
      * @example
@@ -1186,7 +1188,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Insert a new child to the child list at the specified index and update the parent value of
-     * the child node.
+     * the child node. If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The new child to insert.
      * @param {number} index - The index in the child list of the parent where the new node will be
@@ -1203,20 +1205,20 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Prepares node for being inserted to a parent node.
+     * Prepares node for being inserted to a parent node, and removes it from the previous parent.
      *
      * @param {GraphNode} node - The node being inserted.
      * @private
      */
     _prepareInsertChild(node) {
 
-        Debug.assert(!node._parent, `GraphNode ${node?.name} is already parented`);
+        // remove it from the existing parent
+        if (node._parent) {
+            node._parent.removeChild(node);
+        }
+
         Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
         Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);
-
-        // remove it from existing parent
-        if (node._parent)
-            node._parent.removeChild(node);
     }
 
     /**
