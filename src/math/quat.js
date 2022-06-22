@@ -61,7 +61,7 @@ class Quat {
      * console.log("The result of the cloning is: " + q.toString());
      */
     clone() {
-        /** @type {*} */
+        /** @type {this} */
         const cstr = this.constructor;
         return new cstr(this.x, this.y, this.z, this.w);
     }

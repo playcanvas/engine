@@ -33,7 +33,7 @@ class Mat3 {
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
-        /** @type {*} */
+        /** @type {this} */
         const cstr = this.constructor;
         return new cstr().copy(this);
     }

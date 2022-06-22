@@ -608,7 +608,6 @@ class Entity extends GraphNode {
      */
     _cloneRecursively(duplicatedIdsMap) {
         /** @type {this} */
-        // @ts-ignore
         const clone = new this.constructor(this._app);
         super._cloneInternal(clone);
 

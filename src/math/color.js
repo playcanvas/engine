@@ -54,7 +54,7 @@ class Color {
      * @returns {this} A duplicate color object.
      */
     clone() {
-        /** @type {*} */
+        /** @type {this} */
         const cstr = this.constructor;
         return new cstr(this.r, this.g, this.b, this.a);
     }

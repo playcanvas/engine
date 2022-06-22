@@ -127,7 +127,6 @@ class CurveSet {
      */
     clone() {
         /** @type {this} */
-        // @ts-ignore
         const result = new this.constructor();
 
         result.curves = [];

@@ -151,7 +151,6 @@ class Curve {
      */
     clone() {
         /** @type {this} */
-        // @ts-ignore
         const result = new this.constructor();
         result.keys = extend(result.keys, this.keys);
         result.type = this.type;
