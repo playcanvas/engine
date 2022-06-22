@@ -73,7 +73,7 @@ class LitShader {
             // #endif
 
             for (const chunkName in shaderChunks) {
-                if (userChunks[chunkName]) {
+                if (userChunks.hasOwnProperty('chunkName')) {
                     const chunk = userChunks[chunkName];
                     for (const a in builtinAttributes) {
                         if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
