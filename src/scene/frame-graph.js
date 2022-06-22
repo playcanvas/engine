@@ -1,4 +1,5 @@
-import { Debug, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/debug.js';
+import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
+import { Debug } from '../core/debug.js';
 
 /** @typedef {import('../graphics/render-pass.js').RenderPass} RenderPass */
 /** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */

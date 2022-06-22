@@ -1,4 +1,5 @@
-import { Debug, TRACEID_RENDER_ACTION } from '../../core/debug.js';
+import { TRACEID_RENDER_ACTION } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';

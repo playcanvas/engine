@@ -1,4 +1,5 @@
-import { Debug, TRACEID_TEXTURE_ALLOC } from '../core/debug.js';
+import { Debug } from '../core/debug.js';
+import { TRACEID_TEXTURE_ALLOC } from '../core/constants.js';
 import { math } from '../math/math.js';
 
 import {
