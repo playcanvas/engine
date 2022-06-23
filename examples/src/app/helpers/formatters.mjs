@@ -59,8 +59,6 @@ const getExampleClassFromTextFile = (Babel, text) => {
         filename: `transformedScript.tsx`,
         presets: ["react", "typescript", "env"]
     }).code;
-    text = text.replace("wasmSupported(", "window.wasmSupported(");
-    text = text.replace("loadWasmModuleAsync(", "window.loadWasmModuleAsync(");
     text = text.replace(/static\//g, '../../static/');
     return text;
 };

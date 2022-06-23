@@ -19,15 +19,17 @@ class LocomotionExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement, data: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', run);
-        } else {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', run);
-        }
+        pc.WasmModule.setConfig('Ammo', {
+            glueUrl: '/static/lib/ammo/ammo.wasm.js',
+            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+            fallbackUrl: '/static/lib/ammo/ammo.js'
+        });
+
+        pc.WasmModule.getInstance('Ammo', run);
 
         function run() {
 

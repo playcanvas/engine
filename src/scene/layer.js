@@ -444,6 +444,16 @@ class Layer {
     }
 
     /**
+     * True if the layer contains omni or spot lights
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasClusteredLights() {
+        return this._clusteredLightsSet.size > 0;
+    }
+
+    /**
      * @type {RenderTarget}
      * @ignore
      */

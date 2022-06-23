@@ -33,7 +33,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH, PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -184,6 +184,7 @@ class ForwardRenderer {
         this.lightShadowMapId = [];
         this.lightShadowMatrixId = [];
         this.lightShadowParamsId = [];
+        this.lightShadowIntensity = [];
         this.lightRadiusId = [];
         this.lightPos = [];
         this.lightPosId = [];
@@ -418,8 +419,9 @@ class ForwardRenderer {
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
-        this.cameraParams[2] = (1 - f / n) * 0.5;
-        this.cameraParams[3] = (1 + f / n) * 0.5;
+        this.cameraParams[2] = n;
+        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+
         this.cameraParamsId.setValue(this.cameraParams);
 
         if (this.device.supportsUniformBuffers) {
@@ -578,6 +580,7 @@ class ForwardRenderer {
         this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
         this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
         this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
+        this.lightShadowIntensity[i] = scope.resolve(light + '_shadowIntensity');
         this.lightRadiusId[i] = scope.resolve(light + '_radius');
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + '_position');
@@ -658,6 +661,7 @@ class ForwardRenderer {
                 this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+                this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const params = directional._shadowRenderParams;
                 params.length = 3;
@@ -719,6 +723,7 @@ class ForwardRenderer {
             params[2] = biases.bias;
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
+            this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
         }
         if (omni._cookie) {
             this.lightCookieId[cnt].setValue(omni._cookie);
@@ -773,6 +778,7 @@ class ForwardRenderer {
             params[2] = biases.bias;
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
+            this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
         }
 
         if (spot._cookie) {

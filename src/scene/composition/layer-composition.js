@@ -493,22 +493,26 @@ class LayerComposition extends EventHandler {
     }
 
     // find existing light cluster that is compatible with specified layer
-    findCompatibleCluster(layer, renderActionCount) {
+    findCompatibleCluster(layer, renderActionCount, emptyWorldClusters) {
 
         // check already set up render actions
         for (let i = 0; i < renderActionCount; i++) {
             const ra = this._renderActions[i];
             const raLayer = this.layerList[ra.layerIndex];
 
-            // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
-            if (layer === raLayer) {
-                return ra.lightClusters;
-            }
+            // only reuse clusters if not empty
+            if (ra.lightClusters !== emptyWorldClusters) {
 
-            if (ra.lightClusters) {
-                // if the layer has exactly the same set of lights, use the same cluster
-                if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
+                // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
+                if (layer === raLayer) {
                     return ra.lightClusters;
+                }
+
+                if (ra.lightClusters) {
+                    // if the layer has exactly the same set of lights, use the same cluster
+                    if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
+                        return ra.lightClusters;
+                    }
                 }
             }
         }
@@ -523,6 +527,9 @@ class LayerComposition extends EventHandler {
         // reuse previously allocated clusters
         tempClusterArray.push(...this._worldClusters);
 
+        // the cluster with no lights
+        const emptyWorldClusters = this.getEmptyWorldClusters(device);
+
         // start with no clusters
         this._worldClusters.length = 0;
 
@@ -533,7 +540,7 @@ class LayerComposition extends EventHandler {
             const layer = this.layerList[ra.layerIndex];
 
             // if the layer has lights used by clusters
-            if (layer._clusteredLightsSet.size) {
+            if (layer.hasClusteredLights) {
 
                 // and if the layer has meshes
                 const transparent = this.subLayerList[ra.layerIndex];
@@ -541,7 +548,7 @@ class LayerComposition extends EventHandler {
                 if (meshInstances.length) {
 
                     // reuse cluster that was already set up and is compatible
-                    let clusters = this.findCompatibleCluster(layer, i);
+                    let clusters = this.findCompatibleCluster(layer, i, emptyWorldClusters);
                     if (!clusters) {
 
                         // use already allocated cluster from before
@@ -564,7 +571,7 @@ class LayerComposition extends EventHandler {
 
             // no clustered lights, use the cluster with no lights
             if (!ra.lightClusters) {
-                ra.lightClusters = this.getEmptyWorldClusters(device);
+                ra.lightClusters = emptyWorldClusters;
             }
         }
 

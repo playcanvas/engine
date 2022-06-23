@@ -1,5 +1,3 @@
-import { now } from '../../../core/time.js';
-
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
 import { DebugGraphics } from '../../../graphics/debug-graphics.js';
 import { RenderTarget } from '../../../graphics/render-target.js';
@@ -63,22 +61,6 @@ class PostEffectQueue {
         this.depthTarget = null;
 
         this.renderTargetScale = 1;
-        /**
-         * @type {number|null}
-         * @private
-         */
-        this.resizeTimeout = null;
-        /**
-         * The time in milliseconds since the last resize.
-         *
-         * @type {number}
-         * @private
-         */
-        this.resizeLast = 0;
-
-        this._resizeTimeoutCallback = () => {
-            this.resizeRenderTargets();
-        };
 
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
@@ -373,28 +355,10 @@ class PostEffectQueue {
         const device = this.app.graphicsDevice;
         this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
 
-        // avoid resizing the render targets too often by using a timeout
-        if (this.resizeTimeout)
-            return;
-
-        // Note: this should be reviewed, as this would make postprocessing incorrect for a few frames
-        // until the resize takes place
-        if ((now() - this.resizeLast) > 100) {
-            // allow resizing immediately if haven't been resized recently
-            this.resizeRenderTargets();
-        } else {
-            // target to maximum at 10 resizes a second
-            this.resizeTimeout = setTimeout(this._resizeTimeoutCallback, 100);
-        }
+        this.resizeRenderTargets();
     }
 
     resizeRenderTargets() {
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-            this.resizeTimeout = null;
-        }
-
-        this.resizeLast = now();
 
         const rect = this.camera.rect;
         const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
@@ -404,6 +368,8 @@ class PostEffectQueue {
 
         for (let i = 0, len = effects.length; i < len; i++) {
             const fx = effects[i];
+            if (fx.effect.resize !== undefined)
+                fx.effect.resize(fx.inputTarget);
             if (fx.inputTarget.width !== desiredWidth ||
                 fx.inputTarget.height !== desiredHeight)  {
                 this._resizeOffscreenTarget(fx.inputTarget);
