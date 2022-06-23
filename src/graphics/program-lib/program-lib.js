@@ -9,7 +9,7 @@ const programlib = {
     precisionCode: precisionCode,
     skinCode: skinCode,
     tonemapCode: tonemapCode,
-    versionCode: versionCode,
+    versionCode: versionCode
 };
 
 export { programlib };
