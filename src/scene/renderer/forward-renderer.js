@@ -420,11 +420,7 @@ class ForwardRenderer {
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
         this.cameraParams[2] = n;
-        if (camera.projection == PROJECTION_ORTHOGRAPHIC) {
-            this.cameraParams[3] = 1;
-        } else {
-            this.cameraParams[3] = 0;
-        }
+        this.cameraParams[3] = camera.projection == PROJECTION_ORTHOGRAPHIC ? 1 : 0;
 
         this.cameraParamsId.setValue(this.cameraParams);
 
