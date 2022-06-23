@@ -308,7 +308,7 @@ class AppBase extends EventHandler {
         /**
          * Stores all entities that have been created for this app by guid.
          *
-         * @type {Object.<string, Entity>}
+         * @type {Object<string, Entity>}
          * @ignore
          */
         this._entityIndex = {};

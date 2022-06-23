@@ -11,7 +11,7 @@ class IndexedList {
     _list = [];
 
     /**
-     * @type {Object.<string, number>}
+     * @type {Object<string, number>}
      * @private
      */
     _index = {};

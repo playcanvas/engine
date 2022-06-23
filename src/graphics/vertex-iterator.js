@@ -236,7 +236,7 @@ class VertexIterator {
         /**
          * The vertex buffer elements.
          *
-         * @type {Object.<string, VertexIteratorAccessor>}
+         * @type {Object<string, VertexIteratorAccessor>}
          */
         this.element = {};
 

@@ -226,7 +226,7 @@ class DebugHelper {
     /**
      * Set a name to the name property of the object. Executes only in the debug build.
      *
-     * @param {Object} object - The object to assign the name to.
+     * @param {object} object - The object to assign the name to.
      * @param {string} name - The name to assign.
      */
     static setName(object, name) {
