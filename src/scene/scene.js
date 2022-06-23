@@ -218,7 +218,7 @@ class Scene extends EventHandler {
         this._lightmapFilterSmoothness = 0.2;
 
         // clustered lighting
-        this._clusteredLightingEnabled = false;
+        this._clusteredLightingEnabled = true;
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
             this._layers._dirtyLights = true;
         });
@@ -298,8 +298,8 @@ class Scene extends EventHandler {
 
     set clusteredLightingEnabled(value) {
 
-        if (this._clusteredLightingEnabled && !value) {
-            console.error('Turning off enabled clustered lighting is not currently supported');
+        if (!this._clusteredLightingEnabled && value) {
+            console.error('Turning on disabled clustered lighting is not currently supported');
             return;
         }
 
