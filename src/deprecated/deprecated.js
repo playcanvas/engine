@@ -1352,4 +1352,3 @@ export class AssetListLoader extends EventHandler {
         this._registry.once('add:' + assetId, this._onAddAsset, this);
     }
 }
-
