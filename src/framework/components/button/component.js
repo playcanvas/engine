@@ -466,7 +466,7 @@ class ButtonComponent extends Component {
         if (!color3.equals(this._imageReference.entity.element.color))
             this._imageReference.entity.element.color = color3;
 
-        if (this._imageReference.entity.element.opacity != tintColor.a)
+        if (this._imageReference.entity.element.opacity !== tintColor.a)
             this._imageReference.entity.element.opacity = tintColor.a;
 
         this._isApplyingTint = false;
@@ -480,7 +480,7 @@ class ButtonComponent extends Component {
         const color = this._imageReference.entity.element.color;
         const opacity = this._imageReference.entity.element.opacity;
 
-        if (color3.equals(color) && tintColor.a == opacity)
+        if (color3.equals(color) && tintColor.a === opacity)
             return;
 
         this._tweenInfo = {

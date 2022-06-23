@@ -1946,27 +1946,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const defaultOptions = this.defaultClearOptions;
         options = options || defaultOptions;
 
-        const flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
+        const flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
         if (flags !== 0) {
             const gl = this.gl;
 
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
-                const color = (options.color == undefined) ? defaultOptions.color : options.color;
+                const color = (options.color === undefined) ? defaultOptions.color : options.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
                 this.setColorWrite(true, true, true, true);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
-                const depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
+                const depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
                 this.setClearDepth(depth);
                 this.setDepthWrite(true);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
-                const stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
+                const stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
                 this.setClearStencil(stencil);
             }
 

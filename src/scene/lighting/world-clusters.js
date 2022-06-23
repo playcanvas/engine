@@ -427,7 +427,7 @@ class WorldClusters {
             const reportLimit = 5;
             if (this.reportCount < reportLimit) {
                 console.warn('Too many lights in light cluster ' + this.name + ', please adjust parameters.' +
-                (this.reportCount == reportLimit - 1 ? ' Giving up on reporting it.' : ''));
+                (this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''));
                 this.reportCount++;
             }
         }
