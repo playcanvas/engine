@@ -2,7 +2,6 @@ import { EventHandler } from '../core/event-handler.js';
 import { platform } from '../core/platform.js';
 
 import { ScopeSpace } from './scope-space.js';
-import { programlib } from './program-lib/program-lib.js';
 import { ProgramLibrary } from './program-library.js';
 
 import {
@@ -172,9 +171,8 @@ class GraphicsDevice extends EventHandler {
         // Create the ScopeNamespace for shader attributes and variables
         this.scope = new ScopeSpace("Device");
 
+        // Create the program library instance
         this.programLib = new ProgramLibrary(this);
-        for (const generator in programlib)
-            this.programLib.register(generator, programlib[generator]);
     }
 
     destroy() {

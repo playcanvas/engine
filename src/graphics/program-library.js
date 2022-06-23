@@ -3,8 +3,9 @@ import { version, revision } from '../core/core.js';
 
 import { Shader } from './shader.js';
 
-import { SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
+import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { ShaderPass } from '../scene/shader-pass.js';
 
 // Public interface
 class ProgramLibrary {
@@ -19,11 +20,12 @@ class ProgramLibrary {
         this._programsCollection = [];
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
+
         const m = new StandardMaterial();
         m.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, device, {}, m, null, [], SHADER_FORWARD, null, null);
+            this._defaultStdMatOption, {}, m, null, [], SHADER_FORWARD, null);
         m.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, device, {}, m, null, [], SHADER_SHADOW, null, null);
+            this._defaultStdMatOptionMin, {}, m, null, [], SHADER_SHADOW, null);
     }
 
     register(name, generator) {
@@ -145,7 +147,7 @@ class ProgramLibrary {
     }
 
     _getDefaultStdMatOptions(pass) {
-        return (pass > SHADER_FORWARDHDR && pass <= SHADER_PICK) ?
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass)) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 
