@@ -33,7 +33,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH, PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -420,7 +420,12 @@ class ForwardRenderer {
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
         this.cameraParams[2] = n;
-        this.cameraParams[3] = 0.0;
+        if (camera.projection == PROJECTION_ORTHOGRAPHIC) {
+            this.cameraParams[3] = 1;
+        } else {
+            this.cameraParams[3] = 0;
+        }
+
         this.cameraParamsId.setValue(this.cameraParams);
 
         if (this.device.supportsUniformBuffers) {
