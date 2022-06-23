@@ -44,15 +44,15 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateEnvOptions(options, device, stdMat, scene);
+        this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
@@ -175,7 +175,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
     }
 
-    _updateEnvOptions(options, device, stdMat, scene) {
+    _updateEnvOptions(options, stdMat, scene) {
         options.fog = stdMat.useFog ? scene.fog : 'none';
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
