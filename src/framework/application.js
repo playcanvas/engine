@@ -2,11 +2,6 @@ import { platform } from '../core/platform.js';
 
 import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
-import { basic } from '../graphics/program-lib/programs/basic.js';
-import { particle } from '../graphics/program-lib/programs/particle.js';
-import { skybox } from '../graphics/program-lib/programs/skybox.js';
-import { standard } from '../graphics/program-lib/programs/standard.js';
-
 import { SoundManager } from '../sound/manager.js';
 
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
@@ -159,15 +154,7 @@ class Application extends AppBase {
         }
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
-        const device = new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);
-
-        // register shader programs
-        device.programLib.register('basic', basic);
-        device.programLib.register('particle', particle);
-        device.programLib.register('skybox', skybox);
-        device.programLib.register('standard', standard);
-
-        return device;
+        return new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);
     }
 
     addComponentSystems(appOptions) {
