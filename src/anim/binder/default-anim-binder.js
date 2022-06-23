@@ -78,24 +78,17 @@ class DefaultAnimBinder {
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localScale');
             },
 
-            'weights': function (node) {
+            'weight': function (node, weightName) {
                 const meshInstances = findMeshInstances(node);
                 if (meshInstances) {
-                    const morphInstances = [];
                     for (let i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
-                            morphInstances.push(meshInstances[i].morphInstance);
+                            const morphInstance = meshInstances[i].morphInstance;
+                            const func = (value) => {
+                                morphInstance.setWeight(weightName, value[0]);
+                            };
+                            return DefaultAnimBinder.createAnimTarget(func, 'number', 1, node, `weight.${weightName}`);
                         }
-                    }
-                    if (morphInstances.length > 0) {
-                        const func = function (value) {
-                            for (let i = 0; i < value.length; ++i) {
-                                for (let j = 0; j < morphInstances.length; j++) {
-                                    morphInstances[j].setWeight(i, value[i]);
-                                }
-                            }
-                        };
-                        return DefaultAnimBinder.createAnimTarget(func, 'vector', morphInstances[0].morph._targets.length, node, 'weights');
                     }
                 }
 

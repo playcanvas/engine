@@ -552,19 +552,17 @@ class Entity extends GraphNode {
         if (this._parent)
             this._parent.removeChild(this);
 
+        // recursively destroy all children
         const children = this._children;
-        let child = children.shift();
-        while (child) {
+        while (children.length) {
+
+            // remove a child from the array and disconnect it from the parent
+            const child = children.pop();
+            child._parent = null;
+
             if (child instanceof Entity) {
                 child.destroy();
             }
-
-            // make sure child._parent is null because
-            // we have removed it from the children array before calling
-            // destroy on it
-            child._parent = null;
-
-            child = children.shift();
         }
 
         // fire destroy event

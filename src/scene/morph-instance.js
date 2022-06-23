@@ -3,6 +3,7 @@ import { createShaderFromCode } from '../graphics/program-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { Debug } from '../core/debug.js';
 
 import { Morph } from './morph.js';
 
@@ -48,8 +49,13 @@ class MorphInstance {
 
         // weights
         this._weights = [];
+        this._weightMap = new Map();
         for (let v = 0; v < morph._targets.length; v++) {
-            this.setWeight(v, morph._targets[v].defaultWeight);
+            const target = morph._targets[v];
+            if (target.name) {
+                this._weightMap.set(target.name, v);
+            }
+            this.setWeight(v, target.defaultWeight);
         }
 
         // temporary array of targets with non-zero weight
@@ -170,23 +176,37 @@ class MorphInstance {
         return clone;
     }
 
+    _getWeightIndex(key) {
+        if (typeof key === 'string') {
+            const index = this._weightMap.get(key);
+            if (index === undefined) {
+                Debug.error(`Cannot find morph target with name: ${key}.`);
+            }
+            return index;
+        }
+        return key;
+    }
+
     /**
      * Gets current weight of the specified morph target.
      *
-     * @param {number} index - An index of morph target.
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @returns {number} Weight.
      */
-    getWeight(index) {
+    getWeight(key) {
+        const index = this._getWeightIndex(key);
         return this._weights[index];
     }
 
     /**
      * Sets weight of the specified morph target.
      *
-     * @param {number} index - An index of morph target.
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
      * @param {number} weight - Weight.
      */
-    setWeight(index, weight) {
+    setWeight(key, weight) {
+        const index = this._getWeightIndex(key);
+        Debug.assert(index >= 0 && index < this.morph._targets.length);
         this._weights[index] = weight;
         this._dirty = true;
     }

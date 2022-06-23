@@ -85,7 +85,7 @@ class RigidBodyComponent extends Component {
     static onLibraryLoaded() {
 
         // Lazily create shared variable
-        if (typeof Ammo !== 'undefined' && !ammoTransform) {
+        if (typeof Ammo !== 'undefined') {
             ammoTransform = new Ammo.btTransform();
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();

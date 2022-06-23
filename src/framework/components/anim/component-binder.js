@@ -198,8 +198,8 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
     _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetPath) {
 
-        if (this.handlers && propertyHierarchy[0] === 'weights') {
-            return this.handlers.weights(propertyComponent);
+        if (this.handlers && propertyHierarchy[0].startsWith('weight.')) {
+            return this.handlers.weight(propertyComponent, propertyHierarchy[0].replace('weight.', ''));
         } else if (this.handlers && propertyHierarchy[0] === 'material' && propertyHierarchy.length === 2) {
             const materialPropertyName = propertyHierarchy[1];
             // if the property name ends in Map then we're binding a material texture
