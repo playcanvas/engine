@@ -30,7 +30,7 @@ const attrib2Semantic = {
  * Extract the attributes specified in a vertex shader.
  *
  * @param {string} vsCode - The vertex shader code.
- * @returns {Object.<string, string>} The attribute name to semantic map.
+ * @returns {Object<string, string>} The attribute name to semantic map.
  * @ignore
  */
 function collectAttribs(vsCode) {

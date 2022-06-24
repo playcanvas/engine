@@ -88,7 +88,7 @@ class SpriteComponent extends Component {
         /**
          * Dictionary of sprite animation clips.
          *
-         * @type {Object.<string, SpriteAnimationClip>}
+         * @type {Object<string, SpriteAnimationClip>}
          * @private
          */
         this._clips = {};
@@ -252,7 +252,7 @@ class SpriteComponent extends Component {
     /**
      * A dictionary that contains {@link SpriteAnimationClip}s.
      *
-     * @type {Object.<string, SpriteAnimationClip>}
+     * @type {Object<string, SpriteAnimationClip>}
      */
     set clips(value) {
         // if value is null remove all clips
