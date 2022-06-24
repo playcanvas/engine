@@ -236,7 +236,11 @@ class XrHitTest extends EventHandler {
 
         let xrRay;
         const offsetRay = options.offsetRay;
-        if (offsetRay) xrRay = new XRRay(new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z), new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z));
+        if (offsetRay) {
+            const origin = new DOMPoint(offsetRay.origin.x, offsetRay.origin.y, offsetRay.origin.z, 1.0);
+            const direction = new DOMPoint(offsetRay.direction.x, offsetRay.direction.y, offsetRay.direction.z, 0.0);
+            xrRay = new XRRay(origin, direction);
+        }
 
         const callback = options.callback;
 
