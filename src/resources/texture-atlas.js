@@ -114,6 +114,11 @@ class TextureAtlasHandler {
     }
 
     patch(asset, assets) {
+        // during editor update the underlying texture is temporarily null. just return in that case.
+        if (!asset.resource) {
+            return;
+        }
+
         if (asset.resource.__data) {
             // engine-only, so copy temporary asset data from texture atlas into asset and delete temp property
             if (asset.resource.__data.minfilter !== undefined) asset.data.minfilter = asset.resource.__data.minfilter;
