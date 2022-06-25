@@ -51,6 +51,46 @@ class SoundComponent extends Component {
     }
 
     /**
+     * Fired when a sound instance starts playing.
+     *
+     * @event SoundComponent#play
+     * @param {SoundSlot} slot - The slot whose instance started playing.
+     * @param {SoundInstance} instance - The instance that started playing.
+     */
+
+    /**
+     * Fired when a sound instance is paused.
+     *
+     * @event SoundComponent#pause
+     * @param {SoundSlot} slot - The slot whose instance was paused.
+     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
+     */
+
+    /**
+     * Fired when a sound instance is resumed.
+     *
+     * @event SoundComponent#resume
+     * @param {SoundSlot} slot - The slot whose instance was resumed.
+     * @param {SoundInstance} instance - The instance that was resumed.
+     */
+
+    /**
+     * Fired when a sound instance is stopped.
+     *
+     * @event SoundComponent#stop
+     * @param {SoundSlot} slot - The slot whose instance was stopped.
+     * @param {SoundInstance} instance - The instance that was stopped.
+     */
+
+    /**
+     * Fired when a sound instance stops playing because it reached its ending.
+     *
+     * @event SoundComponent#end
+     * @param {SoundSlot} slot - The slot whose instance ended.
+     * @param {SoundInstance} instance - The instance that ended.
+     */
+
+    /**
      * Update the specified property on all sound instances.
      *
      * @param {string} property - The name of the SoundInstance property to update.
@@ -492,47 +532,5 @@ class SoundComponent extends Component {
         }
     }
 }
-
-// Events Documentation
-
-/**
- * @event
- * @name SoundComponent#play
- * @description Fired when a sound instance starts playing.
- * @param {SoundSlot} slot - The slot whose instance started playing.
- * @param {SoundInstance} instance - The instance that started playing.
- */
-
-/**
- * @event
- * @name SoundComponent#pause
- * @description Fired when a sound instance is paused.
- * @param {SoundSlot} slot - The slot whose instance was paused.
- * @param {SoundInstance} instance - The instance that was paused created to play the sound.
- */
-
-/**
- * @event
- * @name SoundComponent#resume
- * @description Fired when a sound instance is resumed..
- * @param {SoundSlot} slot - The slot whose instance was resumed.
- * @param {SoundInstance} instance - The instance that was resumed.
- */
-
-/**
- * @event
- * @name SoundComponent#stop
- * @description Fired when a sound instance is stopped.
- * @param {SoundSlot} slot - The slot whose instance was stopped.
- * @param {SoundInstance} instance - The instance that was stopped.
- */
-
-/**
- * @event
- * @name SoundComponent#end
- * @description Fired when a sound instance stops playing because it reached its ending.
- * @param {SoundSlot} slot - The slot whose instance ended.
- * @param {SoundInstance} instance - The instance that ended.
- */
 
 export { SoundComponent };

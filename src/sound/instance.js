@@ -238,6 +238,36 @@ class SoundInstance extends EventHandler {
     }
 
     /**
+     * Fired when the instance starts playing its source.
+     *
+     * @event SoundInstance#play
+     */
+
+    /**
+     * Fired when the instance is paused.
+     *
+     * @event SoundInstance#pause
+     */
+
+    /**
+     * Fired when the instance is resumed.
+     *
+     * @event SoundInstance#resume
+     */
+
+    /**
+     * Fired when the instance is stopped.
+     *
+     * @event SoundInstance#stop
+     */
+
+    /**
+     * Fired when the sound currently played by the instance ends.
+     *
+     * @event SoundInstance#end
+     */
+
+    /**
      * Gets or sets the current time of the sound that is playing. If the value provided is bigger
      * than the duration of the instance it will wrap from the beginning.
      *
@@ -1101,37 +1131,5 @@ if (!hasAudioContext()) {
         }
     });
 }
-
-// Events Documentation
-
-/**
- * @event
- * @name SoundInstance#play
- * @description Fired when the instance starts playing its source.
- */
-
-/**
- * @event
- * @name SoundInstance#pause
- * @description Fired when the instance is paused.
- */
-
-/**
- * @event
- * @name SoundInstance#resume
- * @description Fired when the instance is resumed.
- */
-
-/**
- * @event
- * @name SoundInstance#stop
- * @description Fired when the instance is stopped.
- */
-
-/**
- * @event
- * @name SoundInstance#end
- * @description Fired when the sound currently played by the instance ends.
- */
 
 export { SoundInstance };

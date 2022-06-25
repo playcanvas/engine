@@ -697,9 +697,9 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
 }
 
 /**
- * @event
- * @name Entity#destroy
- * @description Fired after the entity is destroyed.
+ * Fired after the entity is destroyed.
+ *
+ * @event Entity#destroy
  * @param {Entity} entity - The entity that was destroyed.
  * @example
  * entity.on("destroy", function (e) {

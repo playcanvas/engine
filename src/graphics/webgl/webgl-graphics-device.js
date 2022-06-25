@@ -160,14 +160,6 @@ function testTextureFloatHighPrecision(device) {
 }
 
 /**
- * @event
- * @name GraphicsDevice#resizecanvas
- * @description The 'resizecanvas' event is fired when the canvas is resized.
- * @param {number} width - The new width of the canvas in pixels.
- * @param {number} height - The new height of the canvas in pixels.
- */
-
-/**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
  * specific canvas HTML element. It is valid to have more than one canvas element per page and

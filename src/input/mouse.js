@@ -4,35 +4,6 @@ import { EventHandler } from '../core/event-handler.js';
 import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
-// Events Documentation
-/**
- * @event
- * @name Mouse#mousemove
- * @description Fired when the mouse is moved.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @event
- * @name Mouse#mousedown
- * @description Fired when a mouse button is pressed.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @event
- * @name Mouse#mouseup
- * @description Fired when a mouse button is released.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @event
- * @name Mouse#mousewheel
- * @description Fired when a mouse wheel is moved.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
 /**
  * Callback used by {@link Mouse#enablePointerLock} and {@link Application#disablePointerLock}.
  *
@@ -74,6 +45,34 @@ class Mouse extends EventHandler {
 
         this.attach(element);
     }
+
+    /**
+     * Fired when the mouse is moved.
+     *
+     * @event Mouse#mousemove
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse button is pressed.
+     *
+     * @event Mouse#mousedown
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse button is released.
+     *
+     * @event Mouse#mouseup
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse wheel is moved.
+     *
+     * @event Mouse#mousewheel
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
 
     /**
      * Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
