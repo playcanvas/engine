@@ -159,28 +159,23 @@ class XrDepthSensing extends EventHandler {
         }
     }
 
-    /** @ignore */
-    destroy() {
-        this._texture.destroy();
-        this._texture = null;
-    }
-
     /**
-     * @event
-     * @name XrDepthSensing#available
-     * @description Fired when depth sensing data becomes available.
+     * Fired when depth sensing data becomes available.
+     *
+     * @event XrDepthSensing#available
      */
 
     /**
-     * @event
-     * @name XrDepthSensing#unavailable
-     * @description Fired when depth sensing data becomes unavailable.
+     * Fired when depth sensing data becomes unavailable.
+     *
+     * @event XrDepthSensing#unavailable
      */
 
     /**
-     * @event
-     * @name XrDepthSensing#resize
-     * @description Fired when the depth sensing texture been resized. The {@link XrDepthSensing#uvMatrix} needs to be updated for relevant shaders.
+     * Fired when the depth sensing texture been resized. The {@link XrDepthSensing#uvMatrix} needs
+     * to be updated for relevant shaders.
+     *
+     * @event XrDepthSensing#resize
      * @param {number} width - The new width of the depth texture in pixels.
      * @param {number} height - The new height of the depth texture in pixels.
      * @example
@@ -188,6 +183,12 @@ class XrDepthSensing extends EventHandler {
      *     material.setParameter('matrix_depth_uv', depthSensing.uvMatrix);
      * });
      */
+
+    /** @ignore */
+    destroy() {
+        this._texture.destroy();
+        this._texture = null;
+    }
 
     /** @private */
     _onSessionStart() {

@@ -543,118 +543,119 @@ function toColor3(color4) {
 }
 
 /**
- * @event
- * @name ButtonComponent#mousedown
- * @description Fired when the mouse is pressed while the cursor is on the component.
+ * Fired when the mouse is pressed while the cursor is on the component.
+ *
+ * @event ButtonComponent#mousedown
  * @param {ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseup
- * @description Fired when the mouse is released while the cursor is on the component.
+ * Fired when the mouse is released while the cursor is on the component.
+ *
+ * @event ButtonComponent#mouseup
  * @param {ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseenter
- * @description Fired when the mouse cursor enters the component.
+ * Fired when the mouse cursor enters the component.
+ *
+ * @event ButtonComponent#mouseenter
  * @param {ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseleave
- * @description Fired when the mouse cursor leaves the component.
+ * Fired when the mouse cursor leaves the component.
+ *
+ * @event ButtonComponent#mouseleave
  * @param {ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#click
- * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
+ * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
+ * the component.
+ *
+ * @event ButtonComponent#click
  * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchstart
- * @description Fired when a touch starts on the component.
+ * Fired when a touch starts on the component.
+ *
+ * @event ButtonComponent#touchstart
  * @param {ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchend
- * @description Fired when a touch ends on the component.
+ * Fired when a touch ends on the component.
+ *
+ * @event ButtonComponent#touchend
  * @param {ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchcancel
- * @description Fired when a touch is canceled on the component.
+ * Fired when a touch is canceled on the component.
+ *
+ * @event ButtonComponent#touchcancel
  * @param {ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchleave
- * @description Fired when a touch leaves the component.
+ * Fired when a touch leaves the component.
+ *
+ * @event ButtonComponent#touchleave
  * @param {ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectstart
- * @description Fired when a xr select starts on the component.
+ * Fired when a xr select starts on the component.
+ *
+ * @event ButtonComponent#selectstart
  * @param {ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectend
- * @description Fired when a xr select ends on the component.
+ * Fired when a xr select ends on the component.
+ *
+ * @event ButtonComponent#selectend
  * @param {ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectenter
- * @description Fired when a xr select now hovering over the component.
+ * Fired when a xr select now hovering over the component.
+ *
+ * @event ButtonComponent#selectenter
  * @param {ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectleave
- * @description Fired when a xr select not hovering over the component.
+ * Fired when a xr select not hovering over the component.
+ *
+ * @event ButtonComponent#selectleave
  * @param {ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#hoverstart
- * @description Fired when the button changes state to be hovered.
+ * Fired when the button changes state to be hovered.
+ *
+ * @event ButtonComponent#hoverstart
  */
 
 /**
- * @event
- * @name ButtonComponent#hoverend
- * @description Fired when the button changes state to be not hovered.
+ * Fired when the button changes state to be not hovered.
+ *
+ * @event ButtonComponent#hoverend
  */
 
 /**
- * @event
- * @name ButtonComponent#pressedstart
- * @description Fired when the button changes state to be pressed.
+ * Fired when the button changes state to be pressed.
+ *
+ * @event ButtonComponent#pressedstart
  */
 
 /**
- * @event
- * @name ButtonComponent#pressedend
- * @description Fired when the button changes state to be not pressed.
+ * Fired when the button changes state to be not pressed.
+ *
+ * @event ButtonComponent#pressedend
  */
 
 export { ButtonComponent };

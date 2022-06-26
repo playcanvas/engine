@@ -97,6 +97,101 @@ class ScriptType extends EventHandler {
     }
 
     /**
+     * Fired when a script instance becomes enabled.
+     *
+     * @event ScriptType#enable
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('enable', function () {
+     *         // Script Instance is now enabled
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when a script instance becomes disabled.
+     *
+     * @event ScriptType#disable
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('disable', function () {
+     *         // Script Instance is now disabled
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when a script instance changes state to enabled or disabled.
+     *
+     * @event ScriptType#state
+     * @param {boolean} enabled - True if now enabled, False if disabled.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('state', function (enabled) {
+     *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when a script instance is destroyed and removed from component.
+     *
+     * @event ScriptType#destroy
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('destroy', function () {
+     *         // no more part of an entity
+     *         // good place to cleanup entity from destroyed script
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when any script attribute has been changed.
+     *
+     * @event ScriptType#attr
+     * @param {string} name - Name of attribute.
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr', function (name, value, valueOld) {
+     *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when a specific script attribute has been changed.
+     *
+     * @event ScriptType#attr:[name]
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr:speed', function (value, valueOld) {
+     *         console.log('speed been changed from ' + valueOld + ' to ' + value);
+     *     });
+     * };
+     */
+
+    /**
+     * Fired when a script instance had an exception. The script instance will be automatically
+     * disabled.
+     *
+     * @event ScriptType#error
+     * @param {Error} err - Native JavaScript Error object with details of error.
+     * @param {string} method - The method of the script instance that the exception originated from.
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('error', function (err, method) {
+     *         // caught an exception
+     *         console.log(err.stack);
+     *     });
+     * };
+     */
+
+    /**
      * True if the instance of this type is in running state. False when script is not running,
      * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
      * disabled or the Script Instance is disabled. When disabled no update methods will be called
@@ -293,100 +388,6 @@ class ScriptType extends EventHandler {
      * gets redefined. If the new ScriptType has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
      * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
-     */
-
-    /**
-     * @event
-     * @name ScriptType#enable
-     * @description Fired when a script instance becomes enabled.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('enable', function () {
-     *         // Script Instance is now enabled
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#disable
-     * @description Fired when a script instance becomes disabled.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('disable', function () {
-     *         // Script Instance is now disabled
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#state
-     * @description Fired when a script instance changes state to enabled or disabled.
-     * @param {boolean} enabled - True if now enabled, False if disabled.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('state', function (enabled) {
-     *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#destroy
-     * @description Fired when a script instance is destroyed and removed from component.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('destroy', function () {
-     *         // no more part of an entity
-     *         // good place to cleanup entity from destroyed script
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#attr
-     * @description Fired when any script attribute has been changed.
-     * @param {string} name - Name of attribute.
-     * @param {object} value - New value.
-     * @param {object} valueOld - Old value.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr', function (name, value, valueOld) {
-     *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#attr:[name]
-     * @description Fired when a specific script attribute has been changed.
-     * @param {object} value - New value.
-     * @param {object} valueOld - Old value.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr:speed', function (value, valueOld) {
-     *         console.log('speed been changed from ' + valueOld + ' to ' + value);
-     *     });
-     * };
-     */
-
-    /**
-     * @event
-     * @name ScriptType#error
-     * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
-     * @param {Error} err - Native JavaScript Error object with details of error.
-     * @param {string} method - The method of the script instance that the exception originated from.
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('error', function (err, method) {
-     *         // caught an exception
-     *         console.log(err.stack);
-     *     });
-     * };
      */
 }
 

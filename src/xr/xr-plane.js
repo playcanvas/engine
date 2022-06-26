@@ -71,9 +71,9 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrPlane#remove
-     * @description Fired when {@link XrPlane} is removed.
+     * Fired when {@link XrPlane} is removed.
+     *
+     * @event XrPlane#remove
      * @example
      * plane.once('remove', function () {
      *     // plane is not available anymore
@@ -81,9 +81,10 @@ class XrPlane extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrPlane#change
-     * @description Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed. Position and rotation can change at any time without triggering a `change` event.
+     * Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed.
+     * Position and rotation can change at any time without triggering a `change` event.
+     *
+     * @event XrPlane#change
      * @example
      * plane.on('change', function () {
      *     // plane has been changed

@@ -78,41 +78,38 @@ class CollisionComponent extends Component {
         this.on('set_render', this.onSetRender, this);
     }
 
-    // Events Documentation
     /**
-     * @event
-     * @name CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+     * The 'contact' event is fired when a contact occurs between two rigid bodies.
+     *
+     * @event CollisionComponent#contact
      * @param {ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
-     * @event
-     * @name CollisionComponent#collisionstart
-     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * Fired when two rigid bodies start touching.
+     *
+     * @event CollisionComponent#collisionstart
      * @param {ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
-     * @event
-     * @name CollisionComponent#collisionend
-     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * Fired two rigid-bodies stop touching.
+     *
+     * @event CollisionComponent#collisionend
      * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
-     * @event
-     * @name CollisionComponent#triggerenter
-     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link RigidBodyComponent} attached.
+     * Fired when a rigid body enters a trigger volume.
+     *
+     * @event CollisionComponent#triggerenter
      * @param {Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
-     * @event
-     * @name CollisionComponent#triggerleave
-     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link RigidBodyComponent} attached.
+     * Fired when a rigid body exits a trigger volume.
+     *
+     * @event CollisionComponent#triggerleave
      * @param {Entity} other - The {@link Entity} that exited this collision volume.
      */
 

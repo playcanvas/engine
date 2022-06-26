@@ -104,6 +104,41 @@ class SoundSlot extends EventHandler {
     }
 
     /**
+     * Fired when a sound instance starts playing.
+     *
+     * @event SoundSlot#play
+     * @param {SoundInstance} instance - The instance that started playing.
+     */
+
+    /**
+     * Fired when a sound instance is paused.
+     *
+     * @event SoundSlot#pause
+     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
+     */
+
+    /**
+     * Fired when a sound instance is resumed.
+     *
+     * @event SoundSlot#resume
+     * @param {SoundInstance} instance - The instance that was resumed.
+     */
+
+    /**
+     * Fired when a sound instance is stopped.
+     *
+     * @event SoundSlot#stop
+     * @param {SoundInstance} instance - The instance that was stopped.
+     */
+
+    /**
+     * Fired when the asset assigned to the slot is loaded.
+     *
+     * @event SoundSlot#load
+     * @param {Sound} sound - The sound resource that was loaded.
+     */
+
+    /**
      * Plays a sound. If {@link SoundSlot#overlap} is true the new sound instance will be played
      * independently of any other instances already playing. Otherwise existing sound instances
      * will stop before playing the new sound.
@@ -676,43 +711,6 @@ class SoundSlot extends EventHandler {
     get volume() {
         return this._volume;
     }
-
-    // Events Documentation
-
-    /**
-     * @event
-     * @name SoundSlot#play
-     * @description Fired when a sound instance starts playing.
-     * @param {SoundInstance} instance - The instance that started playing.
-     */
-
-    /**
-     * @event
-     * @name SoundSlot#pause
-     * @description Fired when a sound instance is paused.
-     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
-     */
-
-    /**
-     * @event
-     * @name SoundSlot#resume
-     * @description Fired when a sound instance is resumed..
-     * @param {SoundInstance} instance - The instance that was resumed.
-     */
-
-    /**
-     * @event
-     * @name SoundSlot#stop
-     * @description Fired when a sound instance is stopped.
-     * @param {SoundInstance} instance - The instance that was stopped.
-     */
-
-    /**
-     * @event
-     * @name SoundSlot#load
-     * @description Fired when the asset assigned to the slot is loaded.
-     * @param {Sound} sound - The sound resource that was loaded.
-     */
 }
 
 export { SoundSlot };

@@ -54,11 +54,11 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrImageTracking#error
+     * Fired when the XR session is started, but image tracking failed to process the provided
+     * images.
+     *
+     * @event XrImageTracking#error
      * @param {Error} error - Error object related to a failure of image tracking.
-     * @description Fired when the XR session is started, but image tracking failed to process the
-     * provided images.
      */
 
     /**

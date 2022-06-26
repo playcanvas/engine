@@ -66,9 +66,9 @@ class XrHitTest extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrHitTest#add
-     * @description Fired when new {@link XrHitTestSource} is added to the list.
+     * Fired when new {@link XrHitTestSource} is added to the list.
+     *
+     * @event XrHitTest#add
      * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
      * @example
      * app.xr.hitTest.on('add', function (hitTestSource) {
@@ -77,9 +77,9 @@ class XrHitTest extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrHitTest#remove
-     * @description Fired when {@link XrHitTestSource} is removed to the list.
+     * Fired when {@link XrHitTestSource} is removed to the list.
+     *
+     * @event XrHitTest#remove
      * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
      * @example
      * app.xr.hitTest.on('remove', function (hitTestSource) {
@@ -88,9 +88,10 @@ class XrHitTest extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrHitTest#result
-     * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry.
+     *
+     * @event XrHitTest#result
      * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
      * @param {Vec3} position - Position of hit test.
      * @param {Quat} rotation - Rotation of hit test.
@@ -103,10 +104,10 @@ class XrHitTest extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrHitTest#error
+     * Fired when failed create hit test source.
+     *
+     * @event XrHitTest#error
      * @param {Error} error - Error object related to failure of creating hit test source.
-     * @description Fired when failed create hit test source.
      */
 
     /** @private */
