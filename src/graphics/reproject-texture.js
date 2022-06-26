@@ -115,7 +115,7 @@ const packSamples = (samples) => {
 // generate a vector on the hemisphere with phong reflection distribution
 const hemisphereSamplePhong = (dstVec, x, y, specularPower) => {
     const phi = y * 2 * Math.PI;
-    const cosTheta = Math.pow(1 - x, 1 / (specularPower + 1));
+    const cosTheta = (1 - x) ** (1 / (specularPower + 1));
     const sinTheta = Math.sqrt(1 - cosTheta * cosTheta);
     dstVec.set(Math.cos(phi) * sinTheta, Math.sin(phi) * sinTheta, cosTheta).normalize();
 };

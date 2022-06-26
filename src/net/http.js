@@ -571,7 +571,7 @@ class Http {
         if (options.retry && options.retries < options.maxRetries) {
             options.retries++;
             options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
-            const retryDelay = math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
+            const retryDelay = math.clamp(2 ** options.retries * Http.retryDelay, 0, options.maxRetryDelay || 5000);
             console.log(`${method}: ${url} - Error ${xhr.status}. Retrying in ${retryDelay} ms`);
 
             setTimeout(() => {

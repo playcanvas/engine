@@ -193,7 +193,7 @@ function shFromCubemap(device, source, dontFlipX) {
                         value *= a * 8.0;
                         value *= value;
                     } else {
-                        value = Math.pow(value, 2.2);
+                        value **= 2.2;
                     }
 
                     sh[coef1 + c] += value * weight1;

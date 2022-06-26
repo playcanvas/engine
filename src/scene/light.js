@@ -144,7 +144,7 @@ class Light {
 
         // Cache of light property data in a format more friendly for shader uniforms
         this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
-        const c = Math.pow(this._finalColor[0], 2.2);
+        const c = this._finalColor[0] ** 2.2;
         this._linearFinalColor = new Float32Array([c, c, c]);
 
         this._position = new Vec3(0, 0, 0);
@@ -707,13 +707,13 @@ class Light {
         finalColor[1] = g * i;
         finalColor[2] = b * i;
         if (i >= 1) {
-            linearFinalColor[0] = Math.pow(r, 2.2) * i;
-            linearFinalColor[1] = Math.pow(g, 2.2) * i;
-            linearFinalColor[2] = Math.pow(b, 2.2) * i;
+            linearFinalColor[0] = r ** 2.2 * i;
+            linearFinalColor[1] = g ** 2.2 * i;
+            linearFinalColor[2] = b ** 2.2 * i;
         } else {
-            linearFinalColor[0] = Math.pow(finalColor[0], 2.2);
-            linearFinalColor[1] = Math.pow(finalColor[1], 2.2);
-            linearFinalColor[2] = Math.pow(finalColor[2], 2.2);
+            linearFinalColor[0] = finalColor[0] ** 2.2;
+            linearFinalColor[1] = finalColor[1] ** 2.2;
+            linearFinalColor[2] = finalColor[2] ** 2.2;
         }
     }
 

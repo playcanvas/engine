@@ -1079,7 +1079,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         if (specData.hasOwnProperty('diffuseFactor')) {
             color = specData.diffuseFactor;
             // Convert from linear space to sRGB space
-            material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+            material.diffuse.set(color[0] ** (1 / 2.2), color[1] ** (1 / 2.2), color[2] ** (1 / 2.2));
             material.opacity = color[3];
         } else {
             material.diffuse.set(1, 1, 1);
@@ -1100,7 +1100,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         if (specData.hasOwnProperty('specularFactor')) {
             color = specData.specularFactor;
             // Convert from linear space to sRGB space
-            material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+            material.specular.set(color[0] ** (1 / 2.2), color[1] ** (1 / 2.2), color[2] ** (1 / 2.2));
         } else {
             material.specular.set(1, 1, 1);
         }
@@ -1126,7 +1126,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         if (pbrData.hasOwnProperty('baseColorFactor')) {
             color = pbrData.baseColorFactor;
             // Convert from linear space to sRGB space
-            material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+            material.diffuse.set(color[0] ** (1 / 2.2), color[1] ** (1 / 2.2), color[2] ** (1 / 2.2));
             material.opacity = color[3];
         } else {
             material.diffuse.set(1, 1, 1);
@@ -1187,7 +1187,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
         color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
-        material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        material.emissive.set(color[0] ** (1 / 2.2), color[1] ** (1 / 2.2), color[2] ** (1 / 2.2));
         material.emissiveTint = true;
     } else {
         material.emissive.set(0, 0, 0);

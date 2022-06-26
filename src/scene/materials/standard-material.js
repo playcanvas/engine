@@ -930,9 +930,9 @@ function _defineColor(name, defaultValue) {
         const gamma = material.useGammaTonemap && scene.gammaCorrection;
 
         if (gamma) {
-            uniform[0] = Math.pow(color.r, 2.2);
-            uniform[1] = Math.pow(color.g, 2.2);
-            uniform[2] = Math.pow(color.b, 2.2);
+            uniform[0] = color.r ** 2.2;
+            uniform[1] = color.g ** 2.2;
+            uniform[2] = color.b ** 2.2;
         } else {
             uniform[0] = color.r;
             uniform[1] = color.g;
@@ -989,7 +989,7 @@ function _defineMaterialProps() {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
         return material.shadingModel === SPECULAR_PHONG ?
             // legacy: expand back to specular power
-            Math.pow(2, material.shininess * 0.01 * 11) :
+            2 ** (material.shininess * 0.01 * 11) :
             material.shininess * 0.01;
     });
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {

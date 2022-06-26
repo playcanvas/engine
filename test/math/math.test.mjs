@@ -66,7 +66,7 @@ describe('math', function () {
 
         it('returns 2 ^ 24 - 1 when all supplied bytes are 255', function () {
             const uint24 = math.bytesToInt24(255, 255, 255);
-            expect(uint24).to.equal(Math.pow(2, 24) - 1);
+            expect(uint24).to.equal(2 ** 24 - 1);
         });
 
     });
@@ -90,7 +90,7 @@ describe('math', function () {
 
         it('returns 2 ^ 32 - 1 when all supplied bytes are 255', function () {
             const uint32 = math.bytesToInt32(255, 255, 255, 255);
-            expect(uint32).to.equal(Math.pow(2, 32) - 1);
+            expect(uint32).to.equal(2 ** 32 - 1);
         });
 
     });

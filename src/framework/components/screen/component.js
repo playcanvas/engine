@@ -126,7 +126,7 @@ class ScreenComponent extends Component {
         // the combined scale is 1 for an even blend
         const lx = Math.log2(resolution.x / referenceResolution.x);
         const ly = Math.log2(resolution.y / referenceResolution.y);
-        return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
+        return 2 ** (lx * (1 - this._scaleBlend) + ly * this._scaleBlend);
     }
 
     _onResize(width, height) {

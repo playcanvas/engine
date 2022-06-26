@@ -128,7 +128,7 @@ class FloatPacking {
     static float2MantissaExponent(value, array, offset, numBytes) {
         // exponent is increased by one, so that 2^exponent is larger than the value
         const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
-        value /= Math.pow(2, exponent);
+        value /= 2 ** exponent;
 
         // value is now in -1..1 range, store it using specified number of bytes less one
         FloatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);

@@ -341,7 +341,7 @@ class WebglTexture {
                     }
                 } else {
                     // Upload the byte array
-                    resMult = 1 / Math.pow(2, mipLevel);
+                    resMult = 1 / 2 ** mipLevel;
                     for (face = 0; face < 6; face++) {
                         if (!texture._levelsUpdated[0][face])
                             continue;
@@ -378,7 +378,7 @@ class WebglTexture {
                 // ----- 3D -----
                 // Image/canvas/video not supported (yet?)
                 // Upload the byte array
-                resMult = 1 / Math.pow(2, mipLevel);
+                resMult = 1 / 2 ** mipLevel;
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
                                             mipLevel,
@@ -429,7 +429,7 @@ class WebglTexture {
                     );
                 } else {
                     // Upload the byte array
-                    resMult = 1 / Math.pow(2, mipLevel);
+                    resMult = 1 / 2 ** mipLevel;
                     if (texture._compressed) {
                         gl.compressedTexImage2D(
                             gl.TEXTURE_2D,

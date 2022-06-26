@@ -210,7 +210,7 @@ if (!hasAudioContext()) {
         } else if (distanceModel === DISTANCE_INVERSE) {
             result = refDistance / (refDistance + rollOffFactor * (distance - refDistance));
         } else if (distanceModel === DISTANCE_EXPONENTIAL) {
-            result = Math.pow(distance / refDistance, -rollOffFactor);
+            result = (distance / refDistance) ** -rollOffFactor;
         }
         return math.clamp(result, 0, 1);
     };
