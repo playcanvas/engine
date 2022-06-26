@@ -564,7 +564,7 @@ class ForwardRenderer {
         this.ambientColor[2] = scene.ambientLight.b;
         if (scene.gammaCorrection) {
             for (let i = 0; i < 3; i++) {
-                this.ambientColor[i] = this.ambientColor[i] ** 2.2;
+                this.ambientColor[i] **= 2.2;
             }
         }
         this.ambientId.setValue(this.ambientColor);
@@ -1677,7 +1677,7 @@ class ForwardRenderer {
             this.fogColor[2] = scene.fogColor.b;
             if (scene.gammaCorrection) {
                 for (let i = 0; i < 3; i++) {
-                    this.fogColor[i] = this.fogColor[i] ** 2.2;
+                    this.fogColor[i] **= 2.2;
                 }
             }
             this.fogColorId.setValue(this.fogColor);
