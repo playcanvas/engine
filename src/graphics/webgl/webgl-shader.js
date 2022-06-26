@@ -125,6 +125,7 @@ class WebglShader {
     /**
      * Compiles an individual shader.
      *
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {string} src - The shader source code.
      * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
      * fragment shader.
