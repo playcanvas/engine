@@ -309,6 +309,7 @@ class LitShader {
             }
         }
 
+        /** @type {[string, string, string, any[]]} */
         const codes = [code, this.varyings, codeBody, []];
 
         mapTransforms.forEach((mapTransform) => {
