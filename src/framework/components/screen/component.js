@@ -297,6 +297,9 @@ class ScreenComponent extends Component {
             Debug.warn(`Clamping screen priority from ${value} to 255`);
             value = 0xFF;
         }
+        if (this._priority === value) {
+            return;
+        }
 
         this._priority = value;
         this.syncDrawOrder();
