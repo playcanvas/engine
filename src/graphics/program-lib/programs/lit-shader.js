@@ -1002,13 +1002,8 @@ class LitShader {
                     code += "    dBinormalW = vBinormalW;\n";
                 }
             }
-        }
 
-        if (this.needsNormal) {
             code += "    getViewDir();\n";
-            if (!options.normalMap) {
-                code += "    getNormal();\n";
-            }
             if (hasTBN) {
                 code += "    getTBN();\n";
             }
