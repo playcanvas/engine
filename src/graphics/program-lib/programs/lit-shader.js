@@ -1292,7 +1292,7 @@ class LitShader {
             if (options.occludeDirect) {
                 code += "    occludeDiffuse();\n";
             }
-            if (options.occludeSpecular) {
+            if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
                 code += "    occludeSpecular();\n";
             }
         }
