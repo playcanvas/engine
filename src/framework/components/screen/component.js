@@ -299,6 +299,7 @@ class ScreenComponent extends Component {
         }
 
         this._priority = value;
+        this.syncDrawOrder();
     }
 
     get priority() {
