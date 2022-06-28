@@ -5,7 +5,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { Vec3 } from '../../../../src/math/vec3.js';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { stub, restore } from 'sinon';
 
 describe('CollisionComponent', function () {
     /** @type {Application} */
@@ -176,24 +176,24 @@ describe('CollisionComponent', function () {
 
         // Ignore requests to Rigidbody Component System
         const rigidbody = app.systems.rigidbody;
-        sinon.stub(rigidbody, 'createBody').callsFake(() => {
+        stub(rigidbody, 'createBody').callsFake(() => {
             return btRigidBody;
         });
-        sinon.stub(rigidbody, 'removeBody').callsFake(() => {});
-        sinon.stub(rigidbody, 'destroyBody').callsFake(() => {});
-        sinon.stub(rigidbody, 'addBody').callsFake(() => {});
+        stub(rigidbody, 'removeBody').callsFake(() => {});
+        stub(rigidbody, 'destroyBody').callsFake(() => {});
+        stub(rigidbody, 'addBody').callsFake(() => {});
     });
 
     afterEach(function () {
         app.destroy();
-        sinon.restore();
+        restore();
     });
 
     // Tests
 
     it('should initialize with default values when no options provided', function () {
         // Test case specific override
-        const stub = sinon.stub(Ammo, 'btBoxShape').callsFake((btVec) => {
+        const stubbed = stub(Ammo, 'btBoxShape').callsFake((btVec) => {
             expect(btVec).to.be.an('object');
             return btShape;
         });
@@ -214,12 +214,12 @@ describe('CollisionComponent', function () {
         expect(component.shape).to.be.an('object');
         expect(component.type).to.equal('box');
         expect(entity.trigger).to.be.an('object');
-        expect(stub.callCount).to.equal(1);
+        expect(stubbed.callCount).to.equal(1);
     });
 
     it('should create a box shaped trigger when correct options provided', function () {
         // Test case specific override
-        const stub = sinon.stub(Ammo, 'btBoxShape').callsFake((btVec) => {
+        const stubbed = stub(Ammo, 'btBoxShape').callsFake((btVec) => {
             expect(btVec).to.be.an('object');
             return btShape;
         });
@@ -237,12 +237,12 @@ describe('CollisionComponent', function () {
         assertVec3(component.halfExtents, 1, 2, 3);
 
         // Total shapes created 1 for the default + 1 when we changed the half extents
-        expect(stub.callCount).to.equal(2);
+        expect(stubbed.callCount).to.equal(2);
     });
 
     it('should create a sphere shaped trigger when correct options provided', function () {
         // Test case specific override
-        const stub = sinon.stub(Ammo, 'btSphereShape').callsFake((radius) => {
+        const stubbed = stub(Ammo, 'btSphereShape').callsFake((radius) => {
             assertNum(radius);
             return btShape;
         });
@@ -258,7 +258,7 @@ describe('CollisionComponent', function () {
         assertNum(component.radius, 2);
 
         // Total shapes created 1 for the default + 1 when we changed the radius
-        expect(stub.callCount).to.equal(2);
+        expect(stubbed.callCount).to.equal(2);
     });
 
     it('should create a capsule shaped trigger when correct options provided', function () {
@@ -269,9 +269,9 @@ describe('CollisionComponent', function () {
             assertNum(radius); assertNum(height);
             return btShape;
         };
-        sinon.stub(Ammo, 'btCapsuleShapeX').callsFake(cb);
-        sinon.stub(Ammo, 'btCapsuleShape').callsFake(cb);
-        sinon.stub(Ammo, 'btCapsuleShapeZ').callsFake(cb);
+        stub(Ammo, 'btCapsuleShapeX').callsFake(cb);
+        stub(Ammo, 'btCapsuleShape').callsFake(cb);
+        stub(Ammo, 'btCapsuleShapeZ').callsFake(cb);
 
         entity.addComponent('collision', { type: 'capsule' });
         const component = entity.collision;
@@ -306,9 +306,9 @@ describe('CollisionComponent', function () {
             expect(btVec).to.be.an('object');
             return btShape;
         };
-        sinon.stub(Ammo, 'btCylinderShapeX').callsFake(cb);
-        sinon.stub(Ammo, 'btCylinderShape').callsFake(cb);
-        sinon.stub(Ammo, 'btCylinderShapeZ').callsFake(cb);
+        stub(Ammo, 'btCylinderShapeX').callsFake(cb);
+        stub(Ammo, 'btCylinderShape').callsFake(cb);
+        stub(Ammo, 'btCylinderShapeZ').callsFake(cb);
 
         entity.addComponent('collision', { type: 'cylinder' });
         const component = entity.collision;
@@ -343,9 +343,9 @@ describe('CollisionComponent', function () {
             assertNum(radius); assertNum(height);
             return btShape;
         };
-        sinon.stub(Ammo, 'btConeShapeX').callsFake(cb);
-        sinon.stub(Ammo, 'btConeShape').callsFake(cb);
-        sinon.stub(Ammo, 'btConeShapeZ').callsFake(cb);
+        stub(Ammo, 'btConeShapeX').callsFake(cb);
+        stub(Ammo, 'btConeShape').callsFake(cb);
+        stub(Ammo, 'btConeShapeZ').callsFake(cb);
 
         entity.addComponent('collision', { type: 'cone' });
         const component = entity.collision;
@@ -374,11 +374,11 @@ describe('CollisionComponent', function () {
 
     it('should create a mesh trigger when correct options provided', function (done) {
         // Test case specific override
-        const triStub = sinon.stub(Ammo, 'btTriangleMesh').callsFake(() => {
+        const triStub = stub(Ammo, 'btTriangleMesh').callsFake(() => {
             return btTriangleMesh;
         });
 
-        const bvhStub = sinon.stub(Ammo, 'btBvhTriangleMeshShape').callsFake((triMesh, useQuantizedAabbCompression) => {
+        const bvhStub = stub(Ammo, 'btBvhTriangleMeshShape').callsFake((triMesh, useQuantizedAabbCompression) => {
             expect(triMesh).to.equal(btTriangleMesh);
             expect(useQuantizedAabbCompression).to.be.true;
             return btShape;
