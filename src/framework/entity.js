@@ -212,7 +212,7 @@ class Entity extends GraphNode {
     /**
      * Component storage.
      *
-     * @type {Object.<string, Component>}
+     * @type {Object<string, Component>}
      * @ignore
      */
     c = {};
@@ -552,19 +552,17 @@ class Entity extends GraphNode {
         if (this._parent)
             this._parent.removeChild(this);
 
+        // recursively destroy all children
         const children = this._children;
-        let child = children.shift();
-        while (child) {
+        while (children.length) {
+
+            // remove a child from the array and disconnect it from the parent
+            const child = children.pop();
+            child._parent = null;
+
             if (child instanceof Entity) {
                 child.destroy();
             }
-
-            // make sure child._parent is null because
-            // we have removed it from the children array before calling
-            // destroy on it
-            child._parent = null;
-
-            child = children.shift();
         }
 
         // fire destroy event
@@ -603,7 +601,7 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @param {Object.<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
+     * @param {Object<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
      * @returns {Entity} A new Entity which is a deep copy of the original.
      * @private
@@ -699,9 +697,9 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
 }
 
 /**
- * @event
- * @name Entity#destroy
- * @description Fired after the entity is destroyed.
+ * Fired after the entity is destroyed.
+ *
+ * @event Entity#destroy
  * @param {Entity} entity - The entity that was destroyed.
  * @example
  * entity.on("destroy", function (e) {

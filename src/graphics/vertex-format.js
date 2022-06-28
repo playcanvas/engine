@@ -243,7 +243,8 @@ class VertexFormat {
         this.batchingHash = hashCode(stringElementsBatch.join());
 
         // rendering hash
-        this.renderingingHash = hashCode(stringElementsRender.join());
+        this.renderingingHashString = stringElementsRender.join('_');
+        this.renderingingHash = hashCode(this.renderingingHashString);
     }
 }
 

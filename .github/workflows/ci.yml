@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
@@ -13,10 +16,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 16.x
       uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Install dependencies
       run: npm ci
     - name: Build PlayCanvas
@@ -28,10 +31,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 16.x
       uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Install dependencies
       run: npm ci
     - name: Run ESLint
@@ -43,10 +46,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 16.x
       uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Install dependencies
       run: npm ci
     - name: Build TypeScript declarations
@@ -75,10 +78,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 16.x
       uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Install dependencies
       run: npm ci
     - name: Build PlayCanvas (ES5-only)
@@ -94,10 +97,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Setup Node.js 12.x
+    - name: Setup Node.js 16.x
       uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Install dependencies
       run: npm ci
     - name: Build PlayCanvas (ES6-only)

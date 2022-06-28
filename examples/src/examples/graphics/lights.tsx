@@ -1,17 +1,8 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import SliderInput from '@playcanvas/pcui/SliderInput/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class LightsExample {
@@ -28,6 +19,9 @@ class LightsExample {
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
                 </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.shadowIntensity' }}/>
+                </LabelGroup>
                 <LabelGroup text='cookie'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.cookieIntensity' }}/>
                 </LabelGroup>
@@ -38,6 +32,9 @@ class LightsExample {
                 </LabelGroup>
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.shadowIntensity' }}/>
                 </LabelGroup>
                 <LabelGroup text='cookie'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.cookieIntensity' }}/>
@@ -50,11 +47,13 @@ class LightsExample {
                 <LabelGroup text='intensity'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.intensity' }}/>
                 </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.shadowIntensity' }}/>
+                </LabelGroup>
             </Panel>
         </>;
     }
 
-    // @ts-ignore: override class function$
     example(canvas: HTMLCanvasElement, data:any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
@@ -126,16 +125,19 @@ class LightsExample {
                 spot: {
                     enabled: true,
                     intensity: 0.8,
-                    cookieIntensity: 1
+                    cookieIntensity: 1,
+                    shadowIntensity: 1
                 },
                 omni: {
                     enabled: true,
                     intensity: 0.8,
-                    cookieIntensity: 1
+                    cookieIntensity: 1,
+                    shadowIntensity: 1
                 },
                 directional: {
                     enabled: true,
-                    intensity: 0.8
+                    intensity: 0.8,
+                    shadowIntensity: 1
                 }
             });
 
@@ -179,7 +181,6 @@ class LightsExample {
                     assets.xmas_posz.id, assets.xmas_negz.id
                 ]
             });
-            // @ts-ignore engine-tsd
             cubemapAsset.loadFaces = true;
             app.assets.add(cubemapAsset);
 

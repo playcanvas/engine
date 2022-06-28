@@ -46,8 +46,12 @@ class ElementComponentSystem extends ComponentSystem {
         this._rtlReorder = null;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new Texture(app.graphicsDevice, { width: 1, height: 1, format: PIXELFORMAT_R8_G8_B8_A8 });
-        this._defaultTexture.name = 'element-system';
+        this._defaultTexture = new Texture(app.graphicsDevice, {
+            width: 1,
+            height: 1,
+            format: PIXELFORMAT_R8_G8_B8_A8,
+            name: 'element-system'
+        });
         const pixels = this._defaultTexture.lock();
         const pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -72,10 +76,7 @@ class ElementComponentSystem extends ComponentSystem {
         this.defaultScreenSpaceImageMaskMaterial = null;
 
         // text element materials created on demand by getTextElementMaterial()
-        this.defaultTextMaterial = null;
-        this.defaultBitmapTextMaterial = null;
-        this.defaultScreenSpaceTextMaterial = null;
-        this.defaultScreenSpaceBitmapTextMaterial = null;
+        this._defaultTextMaterials = {};
 
         this.defaultImageMaterials = [];
 
@@ -171,6 +172,10 @@ class ElementComponentSystem extends ComponentSystem {
 
         if (data.useInput !== undefined) {
             component.useInput = data.useInput;
+        }
+
+        if (data.fitMode !== undefined) {
+            component.fitMode = data.fitMode;
         }
 
         component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
@@ -311,6 +316,7 @@ class ElementComponentSystem extends ComponentSystem {
             fontAsset: source.fontAsset,
             font: source.font,
             useInput: source.useInput,
+            fitMode: source.fitMode,
             batchGroupId: source.batchGroupId,
             mask: source.mask,
             outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
@@ -329,90 +335,59 @@ class ElementComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
-    getTextElementMaterial(screenSpace, msdf) {
-        if (screenSpace) {
-            if (msdf) {
-                if (!this.defaultScreenSpaceTextMaterial) {
-                    this.defaultScreenSpaceTextMaterial = new StandardMaterial();
-                    this.defaultScreenSpaceTextMaterial.name = 'defaultScreenSpaceTextMaterial';
-                    this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
-                    this.defaultScreenSpaceTextMaterial.useLighting = false;
-                    this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
-                    this.defaultScreenSpaceTextMaterial.useFog = false;
-                    this.defaultScreenSpaceTextMaterial.useSkybox = false;
-                    this.defaultScreenSpaceTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                    this.defaultScreenSpaceTextMaterial.emissive.set(1, 1, 1);
-                    this.defaultScreenSpaceTextMaterial.opacity = 0.5;
-                    this.defaultScreenSpaceTextMaterial.blendType = BLEND_PREMULTIPLIED;
-                    this.defaultScreenSpaceTextMaterial.depthWrite = false;
-                    this.defaultScreenSpaceTextMaterial.depthTest = false;
-                    this.defaultScreenSpaceTextMaterial.emissiveVertexColor = true;
-                    this.defaultScreenSpaceTextMaterial.update();
-                }
-                return this.defaultScreenSpaceTextMaterial;
-            }
-            if (!this.defaultScreenSpaceBitmapTextMaterial) {
-                this.defaultScreenSpaceBitmapTextMaterial = new StandardMaterial();
-                this.defaultScreenSpaceBitmapTextMaterial.name = 'defaultScreenSpaceBitmapTextMaterial';
-                this.defaultScreenSpaceBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
-                this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
-                this.defaultScreenSpaceBitmapTextMaterial.emissiveTint = true;
-                this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
-                this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
-                this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
-                this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
-                this.defaultScreenSpaceBitmapTextMaterial.useGammaTonemap = false;
-                this.defaultScreenSpaceBitmapTextMaterial.useFog = false;
-                this.defaultScreenSpaceBitmapTextMaterial.useSkybox = false;
-                this.defaultScreenSpaceBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                this.defaultScreenSpaceBitmapTextMaterial.blendType = BLEND_PREMULTIPLIED;
-                this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
-                this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
-                this.defaultScreenSpaceBitmapTextMaterial.emissiveVertexColor = true;
-                this.defaultScreenSpaceBitmapTextMaterial.update();
-            }
-            return this.defaultScreenSpaceBitmapTextMaterial;
+    getTextElementMaterial(screenSpace, msdf, textAttibutes) {
+        const hash = (screenSpace && (1 << 0)) |
+                          (msdf && (1 << 1)) |
+                 (textAttibutes && (1 << 2));
 
+        let material = this._defaultTextMaterials[hash];
+
+        if (material) {
+            return material;
         }
+
+        let name = "TextMaterial";
+
+        material = new StandardMaterial();
+
         if (msdf) {
-            if (!this.defaultTextMaterial) {
-                this.defaultTextMaterial = new StandardMaterial();
-                this.defaultTextMaterial.name = 'defaultTextMaterial';
-                this.defaultTextMaterial.msdfMap = this._defaultTexture;
-                this.defaultTextMaterial.useLighting = false;
-                this.defaultTextMaterial.useGammaTonemap = false;
-                this.defaultTextMaterial.useFog = false;
-                this.defaultTextMaterial.useSkybox = false;
-                this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                this.defaultTextMaterial.emissive.set(1, 1, 1);
-                this.defaultTextMaterial.opacity = 0.5;
-                this.defaultTextMaterial.blendType = BLEND_PREMULTIPLIED;
-                this.defaultTextMaterial.depthWrite = false;
-                this.defaultTextMaterial.emissiveVertexColor = true;
-                this.defaultTextMaterial.update();
-            }
-            return this.defaultTextMaterial;
+            material.msdfMap = this._defaultTexture;
+            material.msdfTextAttribute = textAttibutes;
+            material.emissive.set(1, 1, 1);
+        } else {
+            name = "Bitmap" + name;
+            material.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
+            material.emissiveMap = this._defaultTexture;
+            material.emissiveTint = true;
+            material.opacityMap = this._defaultTexture;
+            material.opacityMapChannel = 'a';
         }
-        if (!this.defaultBitmapTextMaterial) {
-            this.defaultBitmapTextMaterial = new StandardMaterial();
-            this.defaultBitmapTextMaterial.name = 'defaultBitmapTextMaterial';
-            this.defaultBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5);  // set to non-(1,1,1) so that tint is actually applied
-            this.defaultBitmapTextMaterial.emissiveTint = true;
-            this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
-            this.defaultBitmapTextMaterial.opacity = 0.5;
-            this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
-            this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
-            this.defaultBitmapTextMaterial.useLighting = false;
-            this.defaultBitmapTextMaterial.useGammaTonemap = false;
-            this.defaultBitmapTextMaterial.useFog = false;
-            this.defaultBitmapTextMaterial.useSkybox = false;
-            this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-            this.defaultBitmapTextMaterial.blendType = BLEND_PREMULTIPLIED;
-            this.defaultBitmapTextMaterial.depthWrite = false;
-            this.defaultBitmapTextMaterial.emissiveVertexColor = true;
-            this.defaultBitmapTextMaterial.update();
+
+        if (screenSpace) {
+            name = 'ScreenSpace' + name;
+            material.depthTest = false;
         }
-        return this.defaultBitmapTextMaterial;
+
+        // The material name can be:
+        //  defaultTextMaterial
+        //  defaultBitmapTextMaterial
+        //  defaultScreenSpaceTextMaterial
+        //  defaultScreenSpaceBitmapTextMaterial
+        material.name = 'default' + name;
+        material.useLighting = false;
+        material.useGammaTonemap = false;
+        material.useFog = false;
+        material.useSkybox = false;
+        material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+        material.opacity = 0.5;
+        material.blendType = BLEND_PREMULTIPLIED;
+        material.depthWrite = false;
+        material.emissiveVertexColor = true;
+        material.update();
+
+        this._defaultTextMaterials[hash] = material;
+
+        return material;
     }
 
     _createBaseImageMaterial() {

@@ -124,10 +124,10 @@ function UntarScope(isWorker) {
         const headers = asciiDecoder.decode(headersDataView);
         this._bytesRead += 512;
 
-        let name = headers.substr(0, 100).replace(/\0/g, '');
-        const ustarFormat = headers.substr(257, 6);
-        const size = parseInt(headers.substr(124, 12), 8);
-        const type = headers.substr(156, 1);
+        let name = headers.substring(0, 100).replace(/\0/g, '');
+        const ustarFormat = headers.substring(257, 263);
+        const size = parseInt(headers.substring(124, 136), 8);
+        const type = headers.substring(156, 157);
         const start = this._bytesRead;
         let url = null;
 
@@ -171,7 +171,7 @@ function UntarScope(isWorker) {
         }
 
         if (ustarFormat.indexOf('ustar') !== -1) {
-            const namePrefix = headers.substr(345, 155).replace(/\0/g, '');
+            const namePrefix = headers.substring(345, 500).replace(/\0/g, '');
 
             if (namePrefix.length > 0) {
                 name = namePrefix.trim() + name.trim();
@@ -269,13 +269,17 @@ function getWorkerUrl() {
 }
 
 /**
- * @private
- * @name UntarWorker
- * @classdesc Wraps untar'ing a tar archive with a Web Worker.
- * @description Creates new instance of an UntarWorker.
- * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link AssetRegistry} prefix.
+ * Wraps untar'ing a tar archive with a Web Worker.
+ *
+ * @ignore
  */
 class UntarWorker {
+    /**
+     * Creates new instance of an UntarWorker.
+     *
+     * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the
+     * archive. This is usually the {@link AssetRegistry} prefix.
+     */
     constructor(filenamePrefix) {
         this._requestId = 0;
         this._pendingRequests = {};
@@ -284,6 +288,10 @@ class UntarWorker {
         this._worker.addEventListener('message', this._onMessage.bind(this));
     }
 
+    /**
+     * @param {MessageEvent} e - The message event from the worker.
+     * @private
+     */
     _onMessage(e) {
         const id = e.data.id;
         if (!this._pendingRequests[id]) return;
@@ -310,13 +318,12 @@ class UntarWorker {
     }
 
     /**
-     * @private
-     * @function
-     * @name UntarWorker#untar
-     * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
+     * Untars the specified array buffer using a Web Worker and returns the result in the callback.
+     *
      * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
-     * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
-     * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors.
+     * @param {Function} callback - The callback function called when the worker is finished or if
+     * there is an error. The callback has the following arguments: {error, files}, where error is
+     * a string if any, and files is an array of file descriptors.
      */
     untar(arrayBuffer, callback) {
         const id = this._requestId++;
@@ -335,21 +342,16 @@ class UntarWorker {
     }
 
     /**
-     * @private
-     * @function
-     * @name UntarWorker#hasPendingRequests
-     * @description Returns whether the worker has pending requests to untar array buffers.
-     * @returns {boolean} Returns true of false.
+     * Returns whether the worker has pending requests to untar array buffers.
+     *
+     * @returns {boolean} Returns true if there are pending requests and false otherwise.
      */
     hasPendingRequests() {
         return Object.keys(this._pendingRequests).length > 0;
     }
 
     /**
-     * @private
-     * @function
-     * @name UntarWorker#destroy
-     * @description Destroys the internal Web Worker.
+     * Destroys the internal Web Worker.
      */
     destroy() {
         if (this._worker) {

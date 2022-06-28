@@ -545,11 +545,11 @@ describe('pc.ImageElement', function () {
         expect(e.element.spriteFrame).to.equal(0);
     });
 
-    it('Image element spriteFrame clamped to the latest frame available to the sprite when the frame keys of the sprite change', function () {
+    it('Image element spriteFrame clamped to the latest frame available to the sprite when the frame keys of the sprite change with correct aspect ratio', function () {
         var atlas = new pc.TextureAtlas();
         atlas.frames = {
-            0: { rect: new pc.Vec4(), pivot: new pc.Vec2() },
-            1: { rect: new pc.Vec4(), pivot: new pc.Vec2() }
+            0: { rect: new pc.Vec4(0, 0, 32, 32), pivot: new pc.Vec2() },
+            1: { rect: new pc.Vec4(0, 0, 16, 32), pivot: new pc.Vec2() }
         };
         atlas.texture = new pc.Texture(app.graphicsDevice);
 
@@ -564,9 +564,12 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(e);
         expect(e.element.spriteFrame).to.equal(1);
+        expect(e.element._image._targetAspectRatio).to.equal(0.5);
 
         e.element.sprite.frameKeys = [0];
         expect(e.element.spriteFrame).to.equal(0);
+
+        expect(e.element._image._targetAspectRatio).to.equal(1);
     });
 
     it('Image element calls _updateMesh when its sprite is 9-sliced and the sprite\'s PPU changes', function () {
@@ -1153,5 +1156,39 @@ describe('pc.ImageElement', function () {
 
         expect(copy.element.spriteAsset).to.be.null;
         expect(copy.element.sprite).to.equal(e.element.sprite);
+    });
+
+    it('Setting texture and changing the fitMode setting changes the mesh', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            width: 50,
+            height: 25,
+            textureAsset: assets.texture.id
+        });
+        app.root.addChild(e);
+
+        var texture = new pc.Texture(app.graphicsDevice);
+
+        e.element.texture = texture;
+
+        expect(e.element._image._targetAspectRatio).to.be.equal(1); // setting texture sets target aspect ratio
+
+        // no aspect ratio fitting
+        expect(e.element.fitMode).to.equal(pc.FITMODE_STRETCH);
+        expect(e.element._image.mesh.aabb.center.x).to.equal(25);
+        expect(e.element._image.mesh.aabb.center.y).to.equal(12.5);
+        expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(25);
+        expect(e.element._image.mesh.aabb.halfExtents.y).to.equal(12.5);
+
+        // change aspect ratio should trigger _updateMesh
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.fitMode = pc.FITMODE_CONTAIN;
+        expect(spy.calledOnce).to.equal(true);
+
+        expect(e.element._image.mesh.aabb.center.x).to.equal(12.5);
+        expect(e.element._image.mesh.aabb.center.y).to.equal(12.5);
+        expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(12.5);
+        expect(e.element._image.mesh.aabb.halfExtents.y).to.equal(12.5);
     });
 });

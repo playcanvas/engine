@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, TRACEID_RENDER_ACTION } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';
@@ -39,9 +39,6 @@ class LayerComposition extends EventHandler {
         super();
 
         this.name = name;
-
-        // enable logging
-        this.logRenderActions = false;
 
         /**
          * A read-only array of {@link Layer} sorted in the order they will be rendered.
@@ -100,7 +97,12 @@ class LayerComposition extends EventHandler {
          */
         this.cameras = [];
 
-        // the actual rendering sequence, generated based on layers and cameras
+        /**
+         * The actual rendering sequence, generated based on layers and cameras
+         *
+         * @type {RenderAction[]}
+         * @ignore
+         */
         this._renderActions = [];
 
         // all currently created light clusters, that need to be updated before rendering
@@ -122,6 +124,10 @@ class LayerComposition extends EventHandler {
             cluster.destroy();
         });
         this._worldClusters = null;
+
+        // render actions
+        this._renderActions.forEach(ra => ra.destroy());
+        this._renderActions = null;
     }
 
     // returns an empty light cluster object to be used when no lights are used
@@ -379,6 +385,10 @@ class LayerComposition extends EventHandler {
                 }
             }
 
+            // destroy unused render actions
+            for (let i = renderActionCount; i < this._renderActions.length; i++) {
+                this._renderActions[i].destroy();
+            }
             this._renderActions.length = renderActionCount;
 
             // prepare clustered lighting for render actions
@@ -483,22 +493,26 @@ class LayerComposition extends EventHandler {
     }
 
     // find existing light cluster that is compatible with specified layer
-    findCompatibleCluster(layer, renderActionCount) {
+    findCompatibleCluster(layer, renderActionCount, emptyWorldClusters) {
 
         // check already set up render actions
         for (let i = 0; i < renderActionCount; i++) {
             const ra = this._renderActions[i];
             const raLayer = this.layerList[ra.layerIndex];
 
-            // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
-            if (layer === raLayer) {
-                return ra.lightClusters;
-            }
+            // only reuse clusters if not empty
+            if (ra.lightClusters !== emptyWorldClusters) {
 
-            if (ra.lightClusters) {
-                // if the layer has exactly the same set of lights, use the same cluster
-                if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
+                // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
+                if (layer === raLayer) {
                     return ra.lightClusters;
+                }
+
+                if (ra.lightClusters) {
+                    // if the layer has exactly the same set of lights, use the same cluster
+                    if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
+                        return ra.lightClusters;
+                    }
                 }
             }
         }
@@ -513,6 +527,9 @@ class LayerComposition extends EventHandler {
         // reuse previously allocated clusters
         tempClusterArray.push(...this._worldClusters);
 
+        // the cluster with no lights
+        const emptyWorldClusters = this.getEmptyWorldClusters(device);
+
         // start with no clusters
         this._worldClusters.length = 0;
 
@@ -523,7 +540,7 @@ class LayerComposition extends EventHandler {
             const layer = this.layerList[ra.layerIndex];
 
             // if the layer has lights used by clusters
-            if (layer._clusteredLightsSet.size) {
+            if (layer.hasClusteredLights) {
 
                 // and if the layer has meshes
                 const transparent = this.subLayerList[ra.layerIndex];
@@ -531,7 +548,7 @@ class LayerComposition extends EventHandler {
                 if (meshInstances.length) {
 
                     // reuse cluster that was already set up and is compatible
-                    let clusters = this.findCompatibleCluster(layer, i);
+                    let clusters = this.findCompatibleCluster(layer, i, emptyWorldClusters);
                     if (!clusters) {
 
                         // use already allocated cluster from before
@@ -554,7 +571,7 @@ class LayerComposition extends EventHandler {
 
             // no clustered lights, use the cluster with no lights
             if (!ra.lightClusters) {
-                ra.lightClusters = this.getEmptyWorldClusters(device);
+                ra.lightClusters = emptyWorldClusters;
             }
         }
 
@@ -569,6 +586,7 @@ class LayerComposition extends EventHandler {
     addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
 
         // try and reuse object, otherwise allocate new
+        /** @type {RenderAction} */
         let renderAction = renderActions[renderActionIndex];
         if (!renderAction) {
             renderAction = renderActions[renderActionIndex] = new RenderAction();
@@ -576,6 +594,7 @@ class LayerComposition extends EventHandler {
 
         // render target from the camera takes precedence over the render target from the layer
         let rt = layer.renderTarget;
+        /** @type {CameraComponent} */
         const camera = layer.cameras[cameraIndex];
         if (camera && camera.renderTarget) {
             if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
@@ -600,9 +619,9 @@ class LayerComposition extends EventHandler {
         let clearStencil = needsClear ? camera.clearStencilBuffer : false;
 
         // clear buffers if requested by the layer
-        clearColor |= layer.clearColorBuffer;
-        clearDepth |= layer.clearDepthBuffer;
-        clearStencil |= layer.clearStencilBuffer;
+        clearColor ||= layer.clearColorBuffer;
+        clearDepth ||= layer.clearDepthBuffer;
+        clearStencil ||= layer.clearStencilBuffer;
 
         // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
         // don't render them to render target anymore
@@ -663,8 +682,8 @@ class LayerComposition extends EventHandler {
     _logRenderActions() {
 
         // #if _DEBUG
-        if (this.logRenderActions) {
-            Debug.log('Render Actions for composition: ' + this.name);
+        if (Debug.getTrace(TRACEID_RENDER_ACTION)) {
+            Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const layerIndex = ra.layerIndex;
@@ -675,12 +694,12 @@ class LayerComposition extends EventHandler {
                 const dirLightCount = ra.directionalLights.length;
                 const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
-                Debug.log(i +
+                Debug.trace(TRACEID_RENDER_ACTION, i +
                     (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
                     (' Lay: ' + layer.name).padEnd(22, ' ') +
                     (transparent ? ' TRANSP' : ' OPAQUE') +
                     (enabled ? ' ENABLED ' : ' DISABLED') +
-                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length) +
+                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length).toString().padStart(4) +
                     (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
                     ' Clear: ' + clear +
                     ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +

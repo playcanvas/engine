@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug, TRACEID_TEXTURE_ALLOC } from '../core/debug.js';
 import { math } from '../math/math.js';
 
 import {
@@ -22,6 +22,8 @@ import {
 
 let _pixelSizeTable = null;
 let _blockSizeTable = null;
+
+let id = 0;
 
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
@@ -139,6 +141,7 @@ class Texture {
      * texture.unlock();
      */
     constructor(graphicsDevice, options) {
+        this.id = id++;
         this.device = graphicsDevice;
         Debug.assert(this.device, "Texture contructor requires a graphicsDevice to be valid");
 
@@ -260,12 +263,19 @@ class Texture {
 
         // track the texture
         graphicsDevice.textures.push(this);
+
+        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
+            `${this.cubemap ? '[Cubemap]' : ''}` +
+            `${this.volume ? '[Volume]' : ''}` +
+            `${this.mipmaps ? '[Mipmaps]' : ''}`);
     }
 
     /**
      * Frees resources associated with this texture.
      */
     destroy() {
+
+        Debug.trace(TRACEID_TEXTURE_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
         if (this.device) {
             // stop tracking the texture

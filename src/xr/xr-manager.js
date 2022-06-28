@@ -46,7 +46,7 @@ class XrManager extends EventHandler {
     _supported = platform.browser && !!navigator.xr;
 
     /**
-     * @type {Object.<string, boolean>}
+     * @type {Object<string, boolean>}
      * @private
      */
     _available = {};
@@ -228,9 +228,9 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrManager#available
-     * @description Fired when availability of specific XR type is changed.
+     * Fired when availability of specific XR type is changed.
+     *
+     * @event XrManager#available
      * @param {string} type - The session type that has changed availability.
      * @param {boolean} available - True if specified session type is now available.
      * @example
@@ -240,9 +240,9 @@ class XrManager extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrManager#available:[type]
-     * @description Fired when availability of specific XR type is changed.
+     * Fired when availability of specific XR type is changed.
+     *
+     * @event XrManager#available:[type]
      * @param {boolean} available - True if specified session type is now available.
      * @example
      * app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
@@ -251,9 +251,9 @@ class XrManager extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrManager#start
-     * @description Fired when XR session is started.
+     * Fired when XR session is started.
+     *
+     * @event XrManager#start
      * @example
      * app.xr.on('start', function () {
      *     // XR session has started
@@ -261,9 +261,9 @@ class XrManager extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrManager#end
-     * @description Fired when XR session is ended.
+     * Fired when XR session is ended.
+     *
+     * @event XrManager#end
      * @example
      * app.xr.on('end', function () {
      *     // XR session has ended
@@ -271,10 +271,11 @@ class XrManager extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrManager#update
-     * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used for interfacing directly with WebXR APIs.
-     * @description Fired when XR session is updated, providing relevant XRFrame object.
+     * Fired when XR session is updated, providing relevant XRFrame object.
+     *
+     * @event XrManager#update
+     * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame)
+     * object that can be used for interfacing directly with WebXR APIs.
      * @example
      * app.xr.on('update', function (frame) {
      *
@@ -282,15 +283,26 @@ class XrManager extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrManager#error
-     * @param {Error} error - Error object related to failure of session start or check of session type support.
-     * @description Fired when XR session is failed to start or failed to check for session type support.
+     * Fired when XR session is failed to start or failed to check for session type support.
+     *
+     * @event XrManager#error
+     * @param {Error} error - Error object related to failure of session start or check of session
+     * type support.
      * @example
      * app.xr.on('error', function (ex) {
      *     // XR session has failed to start, or failed to check for session type support
      * });
      */
+
+    /**
+     * Destroys the XrManager instance.
+     *
+     * @ignore
+     */
+    destroy() {
+        this.depthSensing.destroy();
+        this.depthSensing = null;
+    }
 
     /**
      * Attempts to start XR session for provided {@link CameraComponent} and optionally fires

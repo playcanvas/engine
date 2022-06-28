@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
@@ -62,7 +64,7 @@ class SoundManager extends EventHandler {
         if (hasAudioContext() || this._forceWebAudioApi) {
             this._addAudioContextUserInteractionListeners();
         } else {
-            console.warn('No support for 3D audio found');
+            Debug.warn('No support for 3D audio found');
         }
 
         this.listener = new Listener(this);

@@ -108,12 +108,14 @@ class SoundInstance extends EventHandler {
         this._suspended = false;
 
         /**
-         * True if we want to suspend the event handled to the 'onended' event.
+         * Greater than 0 if we want to suspend the event handled to the 'onended' event.
+         * When an 'onended' event is suspended, this counter is decremented by 1.
+         * When a future 'onended' event is to be suspended, this counter is incremented by 1.
          *
-         * @type {boolean}
+         * @type {number}
          * @private
          */
-        this._suspendEndEvent = false;
+        this._suspendEndEvent = 0;
 
         /**
          * True if we want to suspend firing instance events.
@@ -234,6 +236,36 @@ class SoundInstance extends EventHandler {
             this._createSource();
         }
     }
+
+    /**
+     * Fired when the instance starts playing its source.
+     *
+     * @event SoundInstance#play
+     */
+
+    /**
+     * Fired when the instance is paused.
+     *
+     * @event SoundInstance#pause
+     */
+
+    /**
+     * Fired when the instance is resumed.
+     *
+     * @event SoundInstance#resume
+     */
+
+    /**
+     * Fired when the instance is stopped.
+     *
+     * @event SoundInstance#stop
+     */
+
+    /**
+     * Fired when the sound currently played by the instance ends.
+     *
+     * @event SoundInstance#end
+     */
 
     /**
      * Gets or sets the current time of the sound that is playing. If the value provided is bigger
@@ -478,10 +510,10 @@ class SoundInstance extends EventHandler {
     /** @private */
     _onEnded() {
         // the callback is not fired synchronously
-        // so only reset _suspendEndEvent to false when the
+        // so only decrement _suspendEndEvent when the
         // callback is fired
-        if (this._suspendEndEvent) {
-            this._suspendEndEvent = false;
+        if (this._suspendEndEvent > 0) {
+            this._suspendEndEvent--;
             return;
         }
 
@@ -620,7 +652,7 @@ class SoundInstance extends EventHandler {
 
         // Stop the source and re-create it because we cannot reuse the same source.
         // Suspend the end event as we are manually stopping the source
-        this._suspendEndEvent = true;
+        this._suspendEndEvent++;
         this.source.stop(0);
         this.source = null;
 
@@ -710,7 +742,7 @@ class SoundInstance extends EventHandler {
 
         this._startOffset = null;
 
-        this._suspendEndEvent = true;
+        this._suspendEndEvent++;
         if (this._state === STATE_PLAYING) {
             this.source.stop(0);
         }
@@ -915,7 +947,7 @@ if (!hasAudioContext()) {
             if (!this.source || this._state !== STATE_PLAYING)
                 return false;
 
-            this._suspendEndEvent = true;
+            this._suspendEndEvent++;
             this.source.pause();
             this._playWhenLoaded = false;
             this._state = STATE_PAUSED;
@@ -952,7 +984,7 @@ if (!hasAudioContext()) {
             this._manager.off('resume', this._onManagerResume, this);
             this._manager.off('destroy', this._onManagerDestroy, this);
 
-            this._suspendEndEvent = true;
+            this._suspendEndEvent++;
             this.source.pause();
             this._playWhenLoaded = false;
             this._state = STATE_STOPPED;
@@ -1099,37 +1131,5 @@ if (!hasAudioContext()) {
         }
     });
 }
-
-// Events Documentation
-
-/**
- * @event
- * @name SoundInstance#play
- * @description Fired when the instance starts playing its source.
- */
-
-/**
- * @event
- * @name SoundInstance#pause
- * @description Fired when the instance is paused.
- */
-
-/**
- * @event
- * @name SoundInstance#resume
- * @description Fired when the instance is resumed.
- */
-
-/**
- * @event
- * @name SoundInstance#stop
- * @description Fired when the instance is stopped.
- */
-
-/**
- * @event
- * @name SoundInstance#end
- * @description Fired when the sound currently played by the instance ends.
- */
 
 export { SoundInstance };

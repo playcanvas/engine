@@ -4,7 +4,7 @@ class CustomShaderExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Custom Shader';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 /**
  * Simple Screen-Space Vertex Shader with one UV coordinate.
  * This shader is useful for simple UI shaders.
@@ -33,7 +33,7 @@ void main(void) {
     gl_Position = matrix_model * vec4(vertex_position, 1.0);
     gl_Position.zw = vec2(0.0, 1.0);
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 /**
  * Simple Color-Inverse Fragment Shader with intensity control.
  * 

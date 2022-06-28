@@ -88,6 +88,7 @@ class BasicMaterial extends Material {
             useMorphNormal: objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
             useMorphTextureBased: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0,
 
+            alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,
             diffuseMap: !!this.colorMap,
             pass: pass

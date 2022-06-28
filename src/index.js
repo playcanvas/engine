@@ -21,11 +21,13 @@ export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
+export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { Debug } from './core/debug.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -56,7 +58,7 @@ export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
 export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
-export { programlib } from './graphics/program-lib/program-lib.js';
+export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
 export { EnvLighting } from './graphics/env-lighting.js';

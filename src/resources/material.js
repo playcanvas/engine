@@ -114,9 +114,9 @@ class MaterialHandler {
             this._placeholderTextures[key] = new Texture(this._device, {
                 width: 2,
                 height: 2,
-                format: PIXELFORMAT_R8_G8_B8_A8
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                name: 'material_placeholder'
             });
-            this._placeholderTextures[key].name = 'placeholder';
 
             // fill pixels with color
             const pixels = this._placeholderTextures[key].lock();

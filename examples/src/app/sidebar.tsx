@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react';
-// @ts-ignore: library file import
-import Container from '@playcanvas/pcui/Container/component';
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import TextInput from '@playcanvas/pcui/TextInput/component';
-// @ts-ignore: library file import
-import Label from '@playcanvas/pcui/Label/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
-// @ts-ignore: library file import
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 

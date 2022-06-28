@@ -241,7 +241,7 @@ class Scene extends EventHandler {
          * shaders that reference global settings.
          *
          * @type {boolean}
-         * @private
+         * @ignore
          */
         this.updateShaders = true;
 
@@ -254,6 +254,39 @@ class Scene extends EventHandler {
         // immediate rendering
         this.immediate = new Immediate(this.device);
     }
+
+    /**
+     * Fired when the skybox is set.
+     *
+     * @event Scene#set:skybox
+     * @param {Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
+     */
+
+    /**
+     * Fired when the layer composition is set. Use this event to add callbacks or advanced
+     * properties to your layers.
+     *
+     * @event Scene#set:layers
+     * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
+     * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
+     * @example
+     * this.app.scene.on('set:layers', function (oldComp, newComp) {
+     *     var list = newComp.layerList;
+     *     var layer;
+     *     for (var i = 0; i < list.length; i++) {
+     *         layer = list[i];
+     *         switch (layer.name) {
+     *             case 'MyLayer':
+     *                 layer.onEnable = myOnEnableFunction;
+     *                 layer.onDisable = myOnDisableFunction;
+     *                 break;
+     *             case 'MyOtherLayer':
+     *                 layer.shaderPass = myShaderPass;
+     *                 break;
+     *         }
+     *     }
+     * });
+     */
 
     /**
      * Returns the default layer used by the immediate drawing functions.
@@ -807,38 +840,6 @@ class Scene extends EventHandler {
     getModels(model) {
         return this._models;
     }
-
-    /**
-     * @event
-     * @name Scene#set:skybox
-     * @description Fired when the skybox is set.
-     * @param {Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
-     */
-
-    /**
-     * @event
-     * @name Scene#set:layers
-     * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-     * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
-     * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
-     * @example
-     * this.app.scene.on('set:layers', function (oldComp, newComp) {
-     *     var list = newComp.layerList;
-     *     var layer;
-     *     for (var i = 0; i < list.length; i++) {
-     *         layer = list[i];
-     *         switch (layer.name) {
-     *             case 'MyLayer':
-     *                 layer.onEnable = myOnEnableFunction;
-     *                 layer.onDisable = myOnDisableFunction;
-     *                 break;
-     *             case 'MyOtherLayer':
-     *                 layer.shaderPass = myShaderPass;
-     *                 break;
-     *         }
-     *     }
-     * });
-     */
 }
 
 export { Scene };

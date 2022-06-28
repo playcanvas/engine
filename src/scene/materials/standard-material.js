@@ -10,10 +10,11 @@ import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
     FRESNEL_SCHLICK,
-    SHADER_FORWARDHDR, SHADER_PICK,
+    SHADER_DEPTH, SHADER_PICK,
     SPECOCC_AO,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
+import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 
@@ -336,8 +337,6 @@ let _params = new Set();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with
- * specular.
  * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
  * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
  * disable it in case when all reflection comes only from a few light sources, and you don't use an
@@ -385,7 +384,6 @@ let _params = new Set();
  * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
  * for the list of possible values.
  * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
- * - specularAntialias: the value of {@link StandardMaterial#specularAntialias}.
  * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
  * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
  * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
@@ -501,7 +499,7 @@ class StandardMaterial extends Material {
         });
 
         /**
-         * @type {Object.<string, string>}
+         * @type {Object<string, string>}
          * @private
          */
         this._chunks = { };
@@ -511,7 +509,7 @@ class StandardMaterial extends Material {
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
-     * @type {Object.<string, string>}
+     * @type {Object<string, string>}
      */
     set chunks(value) {
         this._dirtyShader = true;
@@ -713,13 +711,13 @@ class StandardMaterial extends Material {
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass > SHADER_FORWARDHDR && pass <= SHADER_PICK;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
-            this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
 
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
@@ -1046,7 +1044,6 @@ function _defineMaterialProps() {
     _defineFlag('specularTint', false);
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
-    _defineFlag('specularAntialias', false);
     _defineFlag('useMetalness', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
@@ -1067,6 +1064,7 @@ function _defineMaterialProps() {
     _defineFlag('pixelSnap', false);
     _defineFlag('twoSidedLighting', false);
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
+    _defineFlag('msdfTextAttribute', false);
 
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);

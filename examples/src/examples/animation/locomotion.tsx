@@ -1,15 +1,8 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Button from '@playcanvas/pcui/Button/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, Button, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class LocomotionExample {
@@ -26,15 +19,17 @@ class LocomotionExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement, data: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', run);
-        } else {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', run);
-        }
+        pc.WasmModule.setConfig('Ammo', {
+            glueUrl: '/static/lib/ammo/ammo.wasm.js',
+            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+            fallbackUrl: '/static/lib/ammo/ammo.js'
+        });
+
+        pc.WasmModule.getInstance('Ammo', run);
 
         function run() {
 

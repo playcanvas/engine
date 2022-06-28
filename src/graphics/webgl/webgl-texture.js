@@ -85,7 +85,6 @@ class WebglTexture {
     initialize(device, texture) {
 
         const gl = device.gl;
-        let ext;
 
         this._glTexture = gl.createTexture();
 
@@ -134,92 +133,77 @@ class WebglTexture {
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case PIXELFORMAT_DXT1:
-                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT;
                 break;
             case PIXELFORMAT_DXT3:
-                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT3_EXT;
                 break;
             case PIXELFORMAT_DXT5:
-                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 break;
             case PIXELFORMAT_ETC1:
-                ext = device.extCompressedTextureETC1;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB_ETC1_WEBGL;
+                this._glInternalFormat = device.extCompressedTextureETC1.COMPRESSED_RGB_ETC1_WEBGL;
                 break;
             case PIXELFORMAT_PVRTC_2BPP_RGB_1:
-                ext = device.extCompressedTexturePVRTC;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
                 break;
             case PIXELFORMAT_PVRTC_2BPP_RGBA_1:
-                ext = device.extCompressedTexturePVRTC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
                 break;
             case PIXELFORMAT_PVRTC_4BPP_RGB_1:
-                ext = device.extCompressedTexturePVRTC;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
                 break;
             case PIXELFORMAT_PVRTC_4BPP_RGBA_1:
-                ext = device.extCompressedTexturePVRTC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
                 break;
             case PIXELFORMAT_ETC2_RGB:
-                ext = device.extCompressedTextureETC;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB8_ETC2;
+                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_RGB8_ETC2;
                 break;
             case PIXELFORMAT_ETC2_RGBA:
-                ext = device.extCompressedTextureETC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
+                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_RGBA8_ETC2_EAC;
                 break;
             case PIXELFORMAT_ASTC_4x4:
-                ext = device.extCompressedTextureASTC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_ASTC_4x4_KHR;
+                this._glInternalFormat = device.extCompressedTextureASTC.COMPRESSED_RGBA_ASTC_4x4_KHR;
                 break;
             case PIXELFORMAT_ATC_RGB:
-                ext = device.extCompressedTextureATC;
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = ext.COMPRESSED_RGB_ATC_WEBGL;
+                this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGB_ATC_WEBGL;
                 break;
             case PIXELFORMAT_ATC_RGBA:
-                ext = device.extCompressedTextureATC;
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = ext.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
+                this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                 break;
             case PIXELFORMAT_RGB16F:
                 // definition varies between WebGL1 and 2
-                ext = device.extTextureHalfFloat;
                 this._glFormat = gl.RGB;
                 if (device.webgl2) {
                     this._glInternalFormat = gl.RGB16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
                     this._glInternalFormat = gl.RGB;
-                    this._glPixelType = ext.HALF_FLOAT_OES;
+                    this._glPixelType = device.extTextureHalfFloat.HALF_FLOAT_OES;
                 }
                 break;
             case PIXELFORMAT_RGBA16F:
                 // definition varies between WebGL1 and 2
-                ext = device.extTextureHalfFloat;
                 this._glFormat = gl.RGBA;
                 if (device.webgl2) {
                     this._glInternalFormat = gl.RGBA16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
                     this._glInternalFormat = gl.RGBA;
-                    this._glPixelType = ext.HALF_FLOAT_OES;
+                    this._glPixelType = device.extTextureHalfFloat.HALF_FLOAT_OES;
                 }
                 break;
             case PIXELFORMAT_RGB32F:
@@ -260,10 +244,15 @@ class WebglTexture {
                     this._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
                 }
                 break;
-            case PIXELFORMAT_DEPTHSTENCIL: // WebGL2 only
+            case PIXELFORMAT_DEPTHSTENCIL:
                 this._glFormat = gl.DEPTH_STENCIL;
-                this._glInternalFormat = gl.DEPTH24_STENCIL8;
-                this._glPixelType = gl.UNSIGNED_INT_24_8;
+                if (device.webgl2) {
+                    this._glInternalFormat = gl.DEPTH24_STENCIL8;
+                    this._glPixelType = gl.UNSIGNED_INT_24_8;
+                } else {
+                    this._glInternalFormat = gl.DEPTH_STENCIL;
+                    this._glPixelType = device.extDepthTexture.UNSIGNED_INT_24_8_WEBGL;
+                }
                 break;
             case PIXELFORMAT_111110F: // WebGL2 only
                 this._glFormat = gl.RGB;

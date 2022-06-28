@@ -50,8 +50,8 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  *
  * Relevant 'Engine-only' examples:
  *
- * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes.html)
- * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle.html)
+ * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes)
+ * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle)
  *
  * @augments Component
  */
@@ -82,10 +82,45 @@ class RigidBodyComponent extends Component {
         this._type = BODYTYPE_STATIC;
     }
 
+    /**
+     * Fired when a contact occurs between two rigid bodies.
+     *
+     * @event RigidBodyComponent#contact
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * Fired when two rigid bodies start touching.
+     *
+     * @event RigidBodyComponent#collisionstart
+     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * Fired when two rigid bodies stop touching.
+     *
+     * @event RigidBodyComponent#collisionend
+     * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
+     */
+
+    /**
+     * Fired when a rigid body enters a trigger volume.
+     *
+     * @event RigidBodyComponent#triggerenter
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigid body entered.
+     */
+
+    /**
+     * Fired when a rigid body exits a trigger volume.
+     *
+     * @event RigidBodyComponent#triggerleave
+     * @param {Entity} other - The {@link Entity} with trigger volume that this rigid body exited.
+     */
+
     static onLibraryLoaded() {
 
         // Lazily create shared variable
-        if (typeof Ammo !== 'undefined' && !ammoTransform) {
+        if (typeof Ammo !== 'undefined') {
             ammoTransform = new Ammo.btTransform();
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
@@ -985,41 +1020,5 @@ class RigidBodyComponent extends Component {
         this.disableSimulation();
     }
 }
-
-// Events Documentation
-/**
- * @event
- * @name RigidBodyComponent#contact
- * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
- * @param {ContactResult} result - Details of the contact between the two rigid bodies.
- */
-
-/**
- * @event
- * @name RigidBodyComponent#collisionstart
- * @description The 'collisionstart' event is fired when two rigid bodies start touching.
- * @param {ContactResult} result - Details of the contact between the two rigid bodies.
- */
-
-/**
- * @event
- * @name RigidBodyComponent#collisionend
- * @description The 'collisionend' event is fired two rigid-bodies stop touching.
- * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
- */
-
-/**
- * @event
- * @name RigidBodyComponent#triggerenter
- * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
- * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody entered.
- */
-
-/**
- * @event
- * @name RigidBodyComponent#triggerleave
- * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
- * @param {Entity} other - The {@link Entity} with trigger volume that this rigidbody exited.
- */
 
 export { RigidBodyComponent };

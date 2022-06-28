@@ -106,7 +106,7 @@ class AnimComponent extends Component {
      */
     set normalizeWeights(value) {
         this._normalizeWeights = value;
-        this.resetStateGraph();
+        this.unbind();
     }
 
     get normalizeWeights() {
@@ -447,19 +447,9 @@ class AnimComponent extends Component {
         this._layerIndices = {};
         this._parameters = {};
         this._playing = false;
-        Object.keys(this._targets).forEach((targetKey) => {
-            this._targets[targetKey].unbind();
-        });
+        this.unbind();
         // clear all targets from previous binding
         this._targets = {};
-    }
-
-    resetStateGraph() {
-        this.removeStateGraph();
-        if (this.stateGraphAsset) {
-            const stateGraph = this.system.app.assets.get(this.stateGraphAsset).resource;
-            this.loadStateGraph(stateGraph);
-        }
     }
 
     /**
@@ -472,6 +462,14 @@ class AnimComponent extends Component {
             const layerPlaying = this._layers[i].playing;
             this._layers[i].reset();
             this._layers[i].playing = layerPlaying;
+        }
+    }
+
+    unbind() {
+        if (!this._normalizeWeights) {
+            Object.keys(this._targets).forEach((targetKey) => {
+                this._targets[targetKey].unbind();
+            });
         }
     }
 

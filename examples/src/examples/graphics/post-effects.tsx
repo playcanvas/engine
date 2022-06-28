@@ -1,17 +1,8 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import SliderInput from '@playcanvas/pcui/SliderInput/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class PostEffectsExample {
@@ -77,6 +68,9 @@ class PostEffectsExample {
                 </LabelGroup>
                 <LabelGroup text='brightness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
+                </LabelGroup>
+                <LabelGroup text='downscale'>
+                    <SelectInput options={[{ v: 1, t: 'None' }, { v: 2, t: '50%' }, { v: '4', t: '25%' }]} binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.downscale' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='POST-PROCESS UI [KEY_6]'>
@@ -191,7 +185,8 @@ class PostEffectsExample {
                     enabled: true,
                     radius: 5,
                     samples: 16,
-                    brightness: 0
+                    brightness: 0,
+                    downscale: 1
                 },
                 bloom: {
                     enabled: true,
@@ -293,8 +288,8 @@ class PostEffectsExample {
                 // - it's a negative distance between the camera and the focus sphere
                 camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
 
-                // display the depth texture if bokeh is enabled
-                if (camera.script.bokeh.enabled) {
+                // display the depth texture if it was rendered
+                if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
                     // @ts-ignore engine-tsd
                     app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
                 }

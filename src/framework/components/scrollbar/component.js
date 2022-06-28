@@ -50,6 +50,17 @@ class ScrollbarComponent extends Component {
         this._toggleLifecycleListeners('on');
     }
 
+    /**
+     * Fired whenever the scroll value changes.
+     *
+     * @event ScrollbarComponent#set:value
+     * @param {number} value - The current scroll value.
+     */
+
+    /**
+     * @param {string} onOrOff - 'on' or 'off'.
+     * @private
+     */
     _toggleLifecycleListeners(onOrOff) {
         this[onOrOff]('set_value', this._onSetValue, this);
         this[onOrOff]('set_handleSize', this._onSetHandleSize, this);
@@ -185,13 +196,6 @@ class ScrollbarComponent extends Component {
         this._destroyDragHelper();
         this._toggleLifecycleListeners('off');
     }
-
-/**
- * @event
- * @name ScrollbarComponent#set:value
- * @description Fired whenever the scroll value changes.
- * @param {number} value - The current scroll value.
- */
 }
 
 export { ScrollbarComponent };
