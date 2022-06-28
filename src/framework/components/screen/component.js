@@ -286,8 +286,8 @@ class ScreenComponent extends Component {
     }
 
     /**
-     * Priority determines the order in which screens components are rendered.
-     * Needs to be an integer between 0 and 255.
+     * Priority determines the order in which Screen components in the same layer are rendered.
+     * Number must be an integer between 0 and 255.
      * Priority is set into the top 8 bits of the drawOrder property in an element.
      *
      * @type {number}
