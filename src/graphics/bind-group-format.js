@@ -43,7 +43,7 @@ class BindGroupFormat {
         this.bufferFormats = bufferFormats;
 
         // maps a buffer format name to an index
-        /** @type Map<string, number> */
+        /** @type {Map<string, number>} */
         this.bufferFormatsMap = new Map();
         bufferFormats.forEach((bf, i) => this.bufferFormatsMap.set(bf.name, i));
 
@@ -51,7 +51,7 @@ class BindGroupFormat {
         this.textureFormats = textureFormats;
 
         // maps a texture format name to an index
-        /** @type Map<string, number> */
+        /** @type {Map<string, number>} */
         this.textureFormatsMap = new Map();
         textureFormats.forEach((tf, i) => this.textureFormatsMap.set(tf.name, i));
 

@@ -105,6 +105,18 @@ class ScrollViewComponent extends Component {
         this._toggleElementListeners('on');
     }
 
+    /**
+     * Fired whenever the scroll position changes.
+     *
+     * @event ScrollViewComponent#set:scroll
+     * @param {Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
+     */
+
+    /**
+     * @param {string} onOrOff - 'on' or 'off'.
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @private
+     */
     _toggleLifecycleListeners(onOrOff, system) {
         this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
         this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
@@ -113,6 +125,10 @@ class ScrollViewComponent extends Component {
         system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
     }
 
+    /**
+     * @param {string} onOrOff - 'on' or 'off'.
+     * @private
+     */
     _toggleElementListeners(onOrOff) {
         if (this.entity.element) {
             if (onOrOff === 'on' && this._hasElementListeners) {
@@ -686,13 +702,6 @@ class ScrollViewComponent extends Component {
     get scroll() {
         return this._scroll;
     }
-
-    /**
-     * @event
-     * @name ScrollViewComponent#set:scroll
-     * @description Fired whenever the scroll position changes.
-     * @param {Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
-     */
 }
 
 export { ScrollViewComponent };
