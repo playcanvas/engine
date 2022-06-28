@@ -8,7 +8,7 @@ import { http, Http } from '../../src/net/http.js';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { restore, spy } from 'sinon';
 
 describe('AssetRegistry', function () {
 
@@ -25,7 +25,7 @@ describe('AssetRegistry', function () {
     afterEach(function () {
         app.destroy();
         Http.retryDelay = retryDelay;
-        sinon.restore();
+        restore();
     });
 
     describe('#constructor', function () {
@@ -186,7 +186,7 @@ describe('AssetRegistry', function () {
         });
 
         it('supports retry loading of container assets', function (done) {
-            sinon.spy(http, 'request');
+            spy(http, 'request');
             app.loader.enableRetry(2);
             app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', function (err, asset) {
                 expect(http.request.callCount).to.equal(3);

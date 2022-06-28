@@ -1,7 +1,7 @@
 import { http, Http } from '../../src/net/http.js';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { restore, spy } from 'sinon';
 
 describe('Http', function () {
     let retryDelay;
@@ -13,7 +13,7 @@ describe('Http', function () {
 
     afterEach(function () {
         Http.retryDelay = retryDelay;
-        sinon.restore();
+        restore();
     });
 
     describe('#get()', function () {
@@ -31,7 +31,7 @@ describe('Http', function () {
         });
 
         it('does not retry if retry is false', function (done) {
-            sinon.spy(http, 'request');
+            spy(http, 'request');
             http.get('http://localhost:3000/someurl.json', function (err, data) {
                 expect(err).to.equal(404);
                 expect(http.request.callCount).to.equal(1);
@@ -40,7 +40,7 @@ describe('Http', function () {
         });
 
         it('retries resource and returns 404 in the end if not found', function (done) {
-            sinon.spy(http, 'request');
+            spy(http, 'request');
             http.get('http://localhost:3000/someurl.json', {
                 retry: true,
                 maxRetries: 2
@@ -52,7 +52,7 @@ describe('Http', function () {
         });
 
         it('retries resource 5 times by default', function (done) {
-            sinon.spy(http, 'request');
+            spy(http, 'request');
             http.get('http://localhost:3000/someurl.json', {
                 retry: true
             }, function (err) {

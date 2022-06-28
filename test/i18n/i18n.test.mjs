@@ -5,7 +5,7 @@ import { JsonHandler } from '../../src/resources/json.js';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { restore, stub } from 'sinon';
 
 describe('I18n', function () {
 
@@ -18,7 +18,7 @@ describe('I18n', function () {
 
     afterEach(function () {
         app.destroy();
-        sinon.restore();
+        restore();
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {
@@ -583,7 +583,7 @@ describe('I18n', function () {
     });
 
     it.skip('assets not in asset registry get loaded after they are added to the registry', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -600,7 +600,7 @@ describe('I18n', function () {
     });
 
     it.skip('assets in asset registry get loaded when passed to i18n', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -618,7 +618,7 @@ describe('I18n', function () {
     });
 
     it('assets already loaded are parsed when passed to i18n', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -637,7 +637,7 @@ describe('I18n', function () {
     });
 
     it('translations are unloaded when the asset is unloaded', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -658,7 +658,7 @@ describe('I18n', function () {
     });
 
     it('translations are unloaded when the asset is removed', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -679,7 +679,7 @@ describe('I18n', function () {
     });
 
     it('translations are re-loaded when the asset is removed and then added again', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -704,7 +704,7 @@ describe('I18n', function () {
     });
 
     it('translations are re-loaded when the contents of the asset change', function (done) {
-        sinon.stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
