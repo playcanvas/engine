@@ -291,7 +291,6 @@ class ScreenComponent extends Component {
      * Priority is set into the top 8 bits of the drawOrder property in an element.
      *
      * @type {number}
-     * @public
      */
     set priority(value) {
         if (value > 0xFF) {
