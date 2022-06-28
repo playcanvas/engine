@@ -217,7 +217,6 @@ export { AppBase, app } from './framework/app-base.js';
 export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
-export * from './anim/controller/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
 export { AnimComponentLayer } from './framework/components/anim/component-layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';
