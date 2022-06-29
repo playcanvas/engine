@@ -23,6 +23,7 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
+import { validateUserChunks } from '../chunks/chunk-validation.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -65,19 +66,23 @@ class LitShader {
         if (options.chunks) {
             this.chunks = {};
 
-            for (const p in shaderChunks) {
-                if (shaderChunks.hasOwnProperty(p)) {
-                    if (options.chunks[p]) {
-                        const chunk = options.chunks[p];
-                        for (const a in builtinAttributes) {
-                            if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
-                                this.attributes[a] = builtinAttributes[a];
-                            }
+            const userChunks = options.chunks;
+
+            // #if _DEBUG
+            validateUserChunks(options.chunks);
+            // #endif
+
+            for (const chunkName in shaderChunks) {
+                if (userChunks.hasOwnProperty('chunkName')) {
+                    const chunk = userChunks[chunkName];
+                    for (const a in builtinAttributes) {
+                        if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
+                            this.attributes[a] = builtinAttributes[a];
                         }
-                        this.chunks[p] = chunk;
-                    } else {
-                        this.chunks[p] = shaderChunks[p];
                     }
+                    this.chunks[chunkName] = chunk;
+                } else {
+                    this.chunks[chunkName] = shaderChunks[chunkName];
                 }
             }
         } else {
