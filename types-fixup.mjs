@@ -440,7 +440,7 @@ const standardMaterialProps = [
     ['useSpecularityFactor', 'boolean'],
     ['specularityFactor', 'number'],
     ['specularityFactorMap', 'Texture|null'],
-    ['f0', 'color'],
+    ['f0', 'Color'],
     ['f0Tint', 'boolean'],
     ['f0Map', 'Texture|null'],
     ['f0MapChannel', 'string'],
