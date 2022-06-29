@@ -1,7 +1,10 @@
+import { Tracing } from "./tracing.js";
+
 /**
  * Engine debug log system. Note that the logging only executes in the
- * debug build of the engine, and is stripped out in other builds. It allows
- * you to monitor logs from various engine systems.
+ * debug build of the engine, and is stripped out in other builds.
+ *
+ * @ignore
  */
 class Debug {
     /**
@@ -13,53 +16,9 @@ class Debug {
     static _loggedMessages = new Set();
 
     /**
-     * Set storing names of enabled trace channels
-     *
-     * @type {Set<string>}
-     * @private
-     */
-    static _traceChannels = new Set();
-
-    /**
-     * Enable or disable trace channel
-     *
-     * @param {string} channel - Name of the trace channel. Can be:
-     *
-     * - {@link TRACEID_RENDER_FRAME}
-     * - {@link TRACEID_RENDER_PASS}
-     * - {@link TRACEID_RENDER_PASS_DETAIL}
-     * - {@link TRACEID_RENDER_ACTION}
-     * - {@link TRACEID_RENDER_TARGET_ALLOC}
-     * - {@link TRACEID_TEXTURE_ALLOC}
-     *
-     * @param {boolean} enabled - new enabled state for it
-     */
-    static setTrace(channel, enabled = true) {
-
-        // #if _DEBUG
-        if (enabled) {
-            Debug._traceChannels.add(channel);
-        } else {
-            Debug._traceChannels.delete(channel);
-        }
-        // #endif
-    }
-
-    /**
-     * Test if the trace channel is enabled.
-     *
-     * @param {string} channel - Name of the trace channnel.
-     * @returns {boolean} - True if the trace channel is enabled.
-     */
-    static getTrace(channel) {
-        return Debug._traceChannels.has(channel);
-    }
-
-    /**
      * Deprecated warning message.
      *
      * @param {string} message - The message to log.
-     * @ignore
      */
     static deprecated(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -73,7 +32,6 @@ class Debug {
      *
      * @param {boolean|object} assertion - The assertion to check.
      * @param {...*} args - The values to be written to the log.
-     * @ignore
      */
     static assert(assertion, ...args) {
         if (!assertion) {
@@ -85,7 +43,6 @@ class Debug {
      * Executes a function in debug mode only.
      *
      * @param {Function} func - Function to call.
-     * @ignore
      */
     static call(func) {
         func();
@@ -95,7 +52,6 @@ class Debug {
      * Info message.
      *
      * @param {...*} args - The values to be written to the log.
-     * @ignore
      */
     static log(...args) {
         console.log(...args);
@@ -105,7 +61,6 @@ class Debug {
      * Info message logged no more than once.
      *
      * @param {string} message - The message to log.
-     * @ignore
      */
     static logOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -118,7 +73,6 @@ class Debug {
      * Warning message.
      *
      * @param {...*} args - The values to be written to the log.
-     * @ignore
      */
     static warn(...args) {
         console.warn(...args);
@@ -128,7 +82,6 @@ class Debug {
      * Warning message logged no more than once.
      *
      * @param {string} message - The message to log.
-     * @ignore
      */
     static warnOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -141,7 +94,6 @@ class Debug {
      * Error message.
      *
      * @param {...*} args - The values to be written to the log.
-     * @ignore
      */
     static error(...args) {
         console.error(...args);
@@ -151,7 +103,6 @@ class Debug {
      * Error message logged no more than once.
      *
      * @param {string} message - The message to log.
-     * @ignore
      */
     static errorOnce(message) {
         if (!Debug._loggedMessages.has(message)) {
@@ -165,10 +116,9 @@ class Debug {
      *
      * @param {string} channel - The trace channel
      * @param {...*} args - The values to be written to the log.
-     * @ignore
      */
     static trace(channel, ...args) {
-        if (Debug._traceChannels.has(channel)) {
+        if (Tracing.get(channel)) {
             console.log(`${channel.padEnd(20, ' ')}|`, ...args);
         }
     }

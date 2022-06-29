@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
+import { Tracing } from '../core/tracing.js';
 
 /** @typedef {import('../graphics/render-pass.js').RenderPass} RenderPass */
 /** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
@@ -129,7 +130,7 @@ class FrameGraph {
 
     log() {
         // #if _DEBUG
-        if (Debug.getTrace(TRACEID_RENDER_PASS) || Debug.getTrace(TRACEID_RENDER_PASS_DETAIL)) {
+        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
             this.renderPasses.forEach((renderPass, index) => {
 
