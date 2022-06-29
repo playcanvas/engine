@@ -138,7 +138,8 @@ class StandardMaterialOptionsBuilder {
         options.ambientTint = stdMat.ambientTint;
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
-        options.specularityFactorTint = stdMat.useSpecularityFactor ? 1 : 0;
+        options.useSpecularityFactor = stdMat.useSpecularityFactor ? 1 : 0;
+        options.specularityFactorTint = (stdMat.useMetalness && stdMat.specularityFactor < 1 && stdMat.useSpecularityFactor) ? 1 : 0;
         options.f0Tint = f0Tint ? 2 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;

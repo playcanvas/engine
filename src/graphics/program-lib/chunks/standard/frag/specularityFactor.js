@@ -8,7 +8,7 @@ uniform float material_specularityFactor;
 uniform sampler2D texture_specularityFactorMap;
 #endif
 
-float getSpecularityFactor() {
+void getSpecularityFactor() {
     float specularityFactor = 1.0;
 
     #ifdef MAPFLOAT
@@ -23,6 +23,6 @@ float getSpecularityFactor() {
     specularityFactor *= saturate(vVertexColor.$VC);
     #endif
 
-    return specularityFactor;
+    dSpecularityFactor = specularityFactor;
 }
 `;
