@@ -3,7 +3,7 @@
  * Note that the trace logging only takes place in the debug build of the engine and is stripped
  * out in other builds.
  */
- class Tracing {
+class Tracing {
     /**
      * Set storing the names of enabled trace channels.
      *
