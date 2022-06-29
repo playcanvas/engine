@@ -64,15 +64,135 @@ class ScriptComponent extends Component {
         this.on('set_enabled', this._onSetEnabled, this);
     }
 
-    set enabled(value) {
-        const oldValue = this._enabled;
-        this._enabled = value;
-        this.fire('set', 'enabled', oldValue, value);
-    }
+    /**
+     * Fired when Component becomes enabled. Note: this event does not take in account entity or
+     * any of its parent enabled state.
+     *
+     * @event ScriptComponent#enable
+     * @example
+     * entity.script.on('enable', function () {
+     *     // component is enabled
+     * });
+     */
 
-    get enabled() {
-        return this._enabled;
-    }
+    /**
+     * Fired when Component becomes disabled. Note: this event does not take in account entity or
+     * any of its parent enabled state.
+     *
+     * @event ScriptComponent#disable
+     * @example
+     * entity.script.on('disable', function () {
+     *     // component is disabled
+     * });
+     */
+
+    /**
+     * Fired when Component changes state to enabled or disabled. Note: this event does not take in
+     * account entity or any of its parent enabled state.
+     *
+     * @event ScriptComponent#state
+     * @param {boolean} enabled - True if now enabled, False if disabled.
+     * @example
+     * entity.script.on('state', function (enabled) {
+     *     // component changed state
+     * });
+     */
+
+    /**
+     * Fired when Component is removed from entity.
+     *
+     * @event ScriptComponent#remove
+     * @example
+     * entity.script.on('remove', function () {
+     *     // entity has no more script component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is created and attached to component.
+     *
+     * @event ScriptComponent#create
+     * @param {string} name - The name of the Script Type.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @example
+     * entity.script.on('create', function (name, scriptInstance) {
+     *     // new script instance added to component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is created and attached to component.
+     *
+     * @event ScriptComponent#create:[name]
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @example
+     * entity.script.on('create:playerController', function (scriptInstance) {
+     *     // new script instance 'playerController' is added to component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is destroyed and removed from component.
+     *
+     * @event ScriptComponent#destroy
+     * @param {string} name - The name of the Script Type.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @example
+     * entity.script.on('destroy', function (name, scriptInstance) {
+     *     // script instance has been destroyed and removed from component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is destroyed and removed from component.
+     *
+     * @event ScriptComponent#destroy:[name]
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @example
+     * entity.script.on('destroy:playerController', function (scriptInstance) {
+     *     // script instance 'playerController' has been destroyed and removed from component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is moved in component.
+     *
+     * @event ScriptComponent#move
+     * @param {string} name - The name of the Script Type.
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {number} ind - New position index.
+     * @param {number} indOld - Old position index.
+     * @example
+     * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
+     *     // script instance has been moved in component
+     * });
+     */
+
+    /**
+     * Fired when a script instance is moved in component.
+     *
+     * @event ScriptComponent#move:[name]
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {number} ind - New position index.
+     * @param {number} indOld - Old position index.
+     * @example
+     * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
+     *     // script instance 'playerController' has been moved in component
+     * });
+     */
+
+    /**
+     * Fired when a script instance had an exception.
+     *
+     * @event ScriptComponent#error
+     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
+     * @param {Error} err - Native JS Error object with details of an error.
+     * @param {string} method - The method of the script instance that the exception originated from.
+     * @example
+     * entity.script.on('error', function (scriptInstance, err, method) {
+     *     // script instance caught an exception
+     * });
+     */
 
     /**
      * An array of all script instances attached to an entity. This array is read-only and should
@@ -124,6 +244,16 @@ class ScriptComponent extends Component {
         return this._scripts;
     }
 
+    set enabled(value) {
+        const oldValue = this._enabled;
+        this._enabled = value;
+        this.fire('set', 'enabled', oldValue, value);
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
     static scriptMethods = {
         initialize: 'initialize',
         postInitialize: 'postInitialize',
@@ -131,136 +261,6 @@ class ScriptComponent extends Component {
         postUpdate: 'postUpdate',
         swap: 'swap'
     };
-
-    /**
-     * @event
-     * @name ScriptComponent#enable
-     * @description Fired when Component becomes enabled
-     * Note: this event does not take in account entity or any of its parent enabled state.
-     * @example
-     * entity.script.on('enable', function () {
-     *     // component is enabled
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#disable
-     * @description Fired when Component becomes disabled
-     * Note: this event does not take in account entity or any of its parent enabled state.
-     * @example
-     * entity.script.on('disable', function () {
-     *     // component is disabled
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#state
-     * @description Fired when Component changes state to enabled or disabled
-     * Note: this event does not take in account entity or any of its parent enabled state.
-     * @param {boolean} enabled - True if now enabled, False if disabled.
-     * @example
-     * entity.script.on('state', function (enabled) {
-     *     // component changed state
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#remove
-     * @description Fired when Component is removed from entity.
-     * @example
-     * entity.script.on('remove', function () {
-     *     // entity has no more script component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#create
-     * @description Fired when a script instance is created and attached to component.
-     * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
-     * @example
-     * entity.script.on('create', function (name, scriptInstance) {
-     *     // new script instance added to component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#create:[name]
-     * @description Fired when a script instance is created and attached to component.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
-     * @example
-     * entity.script.on('create:playerController', function (scriptInstance) {
-     *     // new script instance 'playerController' is added to component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#destroy
-     * @description Fired when a script instance is destroyed and removed from component.
-     * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
-     * @example
-     * entity.script.on('destroy', function (name, scriptInstance) {
-     *     // script instance has been destroyed and removed from component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#destroy:[name]
-     * @description Fired when a script instance is destroyed and removed from component.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
-     * @example
-     * entity.script.on('destroy:playerController', function (scriptInstance) {
-     *     // script instance 'playerController' has been destroyed and removed from component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#move
-     * @description Fired when a script instance is moved in component.
-     * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
-     * @param {number} ind - New position index.
-     * @param {number} indOld - Old position index.
-     * @example
-     * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
-     *     // script instance has been moved in component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#move:[name]
-     * @description Fired when a script instance is moved in component.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
-     * @param {number} ind - New position index.
-     * @param {number} indOld - Old position index.
-     * @example
-     * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
-     *     // script instance 'playerController' has been moved in component
-     * });
-     */
-
-    /**
-     * @event
-     * @name ScriptComponent#error
-     * @description Fired when a script instance had an exception.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
-     * @param {Error} err - Native JS Error object with details of an error.
-     * @param {string} method - The method of the script instance that the exception originated from.
-     * @example
-     * entity.script.on('error', function (scriptInstance, err, method) {
-     *     // script instance caught an exception
-     * });
-     */
 
     onEnable() {
         this._beingEnabled = true;

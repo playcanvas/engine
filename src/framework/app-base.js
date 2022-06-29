@@ -6,7 +6,8 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Debug, TRACEID_RENDER_FRAME } from '../core/debug.js';
+import { Debug } from '../core/debug.js';
+import { TRACEID_RENDER_FRAME } from '../core/constants.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';
@@ -19,6 +20,11 @@ import { http } from '../net/http.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
+
+import { basic } from '../graphics/program-lib/programs/basic.js';
+import { particle } from '../graphics/program-lib/programs/particle.js';
+import { skybox } from '../graphics/program-lib/programs/skybox.js';
+import { standard } from '../graphics/program-lib/programs/standard.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -265,16 +271,25 @@ class AppBase extends EventHandler {
      * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
      */
     init(appOptions) {
+        const device = appOptions.graphicsDevice;
+
+        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+
         /**
          * The graphics device used by the application.
          *
          * @type {GraphicsDevice}
          */
-        this.graphicsDevice = appOptions.graphicsDevice;
-        Debug.assert(this.graphicsDevice, "The application cannot be created without a valid GraphicsDevice");
+        this.graphicsDevice = device;
+
+        // register shader programs
+        device.programLib.register('basic', basic);
+        device.programLib.register('particle', particle);
+        device.programLib.register('skybox', skybox);
+        device.programLib.register('standard', standard);
 
         this._initDefaultMaterial();
-        this.stats = new ApplicationStats(this.graphicsDevice);
+        this.stats = new ApplicationStats(device);
 
         /**
          * @type {SoundManager}
@@ -289,12 +304,12 @@ class AppBase extends EventHandler {
          */
         this.loader = new ResourceLoader(this);
 
-        LightsBuffer.init(this.graphicsDevice);
+        LightsBuffer.init(device);
 
         /**
          * Stores all entities that have been created for this app by guid.
          *
-         * @type {Object.<string, Entity>}
+         * @type {Object<string, Entity>}
          * @ignore
          */
         this._entityIndex = {};
@@ -307,7 +322,7 @@ class AppBase extends EventHandler {
          * // Set the tone mapping property of the application's scene
          * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
          */
-        this.scene = new Scene(this.graphicsDevice);
+        this.scene = new Scene(device);
         this._registerSceneImmediate(this.scene);
 
         /**
@@ -437,7 +452,7 @@ class AppBase extends EventHandler {
         });
 
         // placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(this.graphicsDevice);
+        AreaLightLuts.createPlaceholder(device);
 
         /**
          * The forward renderer.
@@ -445,7 +460,7 @@ class AppBase extends EventHandler {
          * @type {ForwardRenderer}
          * @ignore
          */
-        this.renderer = new ForwardRenderer(this.graphicsDevice);
+        this.renderer = new ForwardRenderer(device);
         this.renderer.scene = this.scene;
 
         /**
@@ -463,7 +478,7 @@ class AppBase extends EventHandler {
          */
         this.lightmapper = null;
         if (appOptions.lightmapper) {
-            this.lightmapper = new appOptions.lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
+            this.lightmapper = new appOptions.lightmapper(device, this.root, this.scene, this.renderer, this.assets);
             this.once('prerender', this._firstBake, this);
         }
 
@@ -474,7 +489,7 @@ class AppBase extends EventHandler {
          */
         this._batcher = null;
         if (appOptions.batchManager) {
-            this._batcher = new appOptions.batchManager(this.graphicsDevice, this.root, this.scene);
+            this._batcher = new appOptions.batchManager(device, this.root, this.scene);
             this.once('prerender', this._firstBatch, this);
         }
 

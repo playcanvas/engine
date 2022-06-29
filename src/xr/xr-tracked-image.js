@@ -92,6 +92,18 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
+     * Fired when image becomes actively tracked.
+     *
+     * @event XrTrackedImage#tracked
+     */
+
+    /**
+     * Fired when image is no more actively tracked.
+     *
+     * @event XrTrackedImage#untracked
+     */
+
+    /**
      * Image that is used for tracking.
      *
      * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
@@ -144,18 +156,6 @@ class XrTrackedImage extends EventHandler {
     get emulated() {
         return this._emulated;
     }
-
-    /**
-     * @event
-     * @name XrTrackedImage#tracked
-     * @description Fired when image becomes actively tracked.
-     */
-
-    /**
-     * @event
-     * @name XrTrackedImage#untracked
-     * @description Fired when image is no more actively tracked.
-     */
 
     /**
      * @returns {Promise<ImageBitmap>} Promise that resolves to an image bitmap.

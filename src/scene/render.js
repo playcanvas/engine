@@ -3,14 +3,6 @@ import { EventHandler } from '../core/event-handler.js';
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 
 /**
- * @event
- * @private
- * @name Render#set:meshes
- * @description Fired when the meshes are set
- * @param {Mesh[]} meshes - The meshes
- */
-
-/**
  * A render contains an array of meshes that are referenced by a single hierarchy node in a GLB
  * model, and are accessible using {@link ContainerResource#renders} property. The render is the
  * resource of a Render Asset.
@@ -35,6 +27,14 @@ class Render extends EventHandler {
          */
         this._meshes = null;
     }
+
+    /**
+     * Fired when the meshes are set.
+     *
+     * @event Render#set:meshes
+     * @param {Mesh[]} meshes - The meshes.
+     * @ignore
+     */
 
     /**
      * The meshes that the render contains.

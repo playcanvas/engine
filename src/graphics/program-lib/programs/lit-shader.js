@@ -314,6 +314,7 @@ class LitShader {
             }
         }
 
+        /** @type {[string, string, string, any[]]} */
         const codes = [code, this.varyings, codeBody, []];
 
         mapTransforms.forEach((mapTransform) => {
@@ -1007,13 +1008,8 @@ class LitShader {
                     code += "    dBinormalW = vBinormalW;\n";
                 }
             }
-        }
 
-        if (this.needsNormal) {
             code += "    getViewDir();\n";
-            if (!options.normalMap) {
-                code += "    getNormal();\n";
-            }
             if (hasTBN) {
                 code += "    getTBN();\n";
             }
@@ -1302,7 +1298,7 @@ class LitShader {
             if (options.occludeDirect) {
                 code += "    occludeDiffuse();\n";
             }
-            if (options.occludeSpecular) {
+            if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
                 code += "    occludeSpecular();\n";
             }
         }

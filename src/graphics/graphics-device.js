@@ -2,7 +2,6 @@ import { EventHandler } from '../core/event-handler.js';
 import { platform } from '../core/platform.js';
 
 import { ScopeSpace } from './scope-space.js';
-import { programlib } from './program-lib/program-lib.js';
 import { ProgramLibrary } from './program-library.js';
 
 import {
@@ -172,11 +171,21 @@ class GraphicsDevice extends EventHandler {
         // Create the ScopeNamespace for shader attributes and variables
         this.scope = new ScopeSpace("Device");
 
+        // Create the program library instance
         this.programLib = new ProgramLibrary(this);
-        for (const generator in programlib)
-            this.programLib.register(generator, programlib[generator]);
     }
 
+    /**
+     * Fired when the canvas is resized.
+     *
+     * @event GraphicsDevice#resizecanvas
+     * @param {number} width - The new width of the canvas in pixels.
+     * @param {number} height - The new height of the canvas in pixels.
+     */
+
+    /**
+     * Destroy the graphics device.
+     */
     destroy() {
         // fire the destroy event.
         // textures and other device resources may destroy themselves in response.

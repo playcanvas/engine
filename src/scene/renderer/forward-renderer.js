@@ -33,7 +33,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH, PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -104,7 +104,7 @@ class ForwardRenderer {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
 
-        /** @type {Scene} */
+        /** @type {Scene|null} */
         this.scene = null;
 
         this._shadowDrawCalls = 0;
@@ -419,8 +419,9 @@ class ForwardRenderer {
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
-        this.cameraParams[2] = (1 - f / n) * 0.5;
-        this.cameraParams[3] = (1 + f / n) * 0.5;
+        this.cameraParams[2] = n;
+        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+
         this.cameraParamsId.setValue(this.cameraParams);
 
         if (this.device.supportsUniformBuffers) {
@@ -470,7 +471,7 @@ class ForwardRenderer {
      * Set up the viewport and the scissor for camera rendering.
      *
      * @param {Camera} camera - The camera containing the viewport infomation.
-     * @param {RenderTarget} renderTarget - The render target. NULL for the default one.
+     * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
 
@@ -1587,7 +1588,7 @@ class ForwardRenderer {
     /**
      * Updates the layer composition for rendering.
      *
-     * @param {LayerComposition} comp - The layer composition to upodate.
+     * @param {LayerComposition} comp - The layer composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
      * @returns {number} - Flags of what was updated
      * @ignore
@@ -1697,6 +1698,10 @@ class ForwardRenderer {
         this.screenSizeId.setValue(this._screenSize);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     * @param {number} compUpdatedFlags - Flags of what was updated.
+     */
     updateLightStats(comp, compUpdatedFlags) {
 
         // #if _PROFILER
@@ -1728,9 +1733,13 @@ class ForwardRenderer {
         // #endif
     }
 
-    // Shadow map culling for directional and visible local lights
-    // visible meshInstances are collected into light._renderData, and are marked as visible
-    // for directional lights also shadow camera matrix is set up
+    /**
+     * Shadow map culling for directional and visible local lights
+     * visible meshInstances are collected into light._renderData, and are marked as visible
+     * for directional lights also shadow camera matrix is set up
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
     cullShadowmaps(comp) {
 
         // shadow casters culling for local (point and spot) lights
@@ -1759,8 +1768,12 @@ class ForwardRenderer {
         }
     }
 
-    // visibility culling of lights, meshInstances, shadows casters
-    // Also applies meshInstance.visible and camera.cullingMask
+    /**
+     * visibility culling of lights, meshInstances, shadows casters
+     * Also applies meshInstance.visible and camera.cullingMask
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
     cullComposition(comp) {
 
         // #if _PROFILER
@@ -1831,10 +1844,16 @@ class ForwardRenderer {
         // #endif
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     updateLightTextureAtlas(comp) {
         this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     updateClusters(comp) {
 
         // #if _PROFILER
@@ -2022,6 +2041,9 @@ class ForwardRenderer {
         frameGraph.addRenderPass(renderPass);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     update(comp) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;

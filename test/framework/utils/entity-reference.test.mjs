@@ -7,7 +7,7 @@ import { DummyComponentSystem } from '../../test-component/system.mjs';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 /** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
 
@@ -42,7 +42,7 @@ describe('EntityReference', function () {
     });
 
     afterEach(function () {
-        sinon.restore();
+        restore();
         app.destroy();
     });
 
@@ -77,7 +77,7 @@ describe('EntityReference', function () {
     it('does not attempt to resolve the entity reference if the parent component is not on the scene graph yet', function () {
         app.root.removeChild(testEntity);
 
-        sinon.spy(app.root, 'findByGuid');
+        spy(app.root, 'findByGuid');
 
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1.getGuid();
@@ -119,8 +119,8 @@ describe('EntityReference', function () {
 
     it('removes all entity and component listeners when the guid is reassigned', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
-            'entity#foo': sinon.stub(),
-            'dummy#bar': sinon.stub()
+            'entity#foo': stub(),
+            'dummy#bar': stub()
         });
         expect(reference).to.be.ok;
 
@@ -135,8 +135,8 @@ describe('EntityReference', function () {
 
     it('removes all entity and component listeners when the parent component is removed', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
-            'entity#foo': sinon.stub(),
-            'dummy#bar': sinon.stub()
+            'entity#foo': stub(),
+            'dummy#bar': stub()
         });
         expect(reference).to.be.ok;
 
@@ -155,8 +155,8 @@ describe('EntityReference', function () {
 
     it('removes all entity and component listeners when the parent component\'s entity is destroyed', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
-            'entity#foo': sinon.stub(),
-            'dummy#bar': sinon.stub()
+            'entity#foo': stub(),
+            'dummy#bar': stub()
         });
         expect(reference).to.be.ok;
 
@@ -174,7 +174,7 @@ describe('EntityReference', function () {
     });
 
     it('fires component gain events when a guid is first assigned, if the referenced entity already has the component', function () {
-        const gainListener = sinon.stub();
+        const gainListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'dummy#gain': gainListener
@@ -187,7 +187,7 @@ describe('EntityReference', function () {
     });
 
     it('fires component gain events once a component is added', function () {
-        const gainListener = sinon.stub();
+        const gainListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity2', {
             'dummy#gain': gainListener
@@ -204,8 +204,8 @@ describe('EntityReference', function () {
     });
 
     it('fires component lose and gain events when a component is removed and re-added', function () {
-        const gainListener = sinon.stub();
-        const loseListener = sinon.stub();
+        const gainListener = stub();
+        const loseListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'dummy#gain': gainListener,
@@ -230,8 +230,8 @@ describe('EntityReference', function () {
     });
 
     it('fires component lose events when the guid is reassigned, but only for component types that the entity had', function () {
-        const dummyLoseListener = sinon.stub();
-        const lightLoseListener = sinon.stub();
+        const dummyLoseListener = stub();
+        const lightLoseListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'dummy#lose': dummyLoseListener,
@@ -251,8 +251,8 @@ describe('EntityReference', function () {
     });
 
     it('forwards any events dispatched by a component', function () {
-        const fooListener = sinon.stub();
-        const barListener = sinon.stub();
+        const fooListener = stub();
+        const barListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'dummy#foo': fooListener,
@@ -276,8 +276,8 @@ describe('EntityReference', function () {
     });
 
     it('correctly handles component event forwarding across component removal and subsequent re-addition', function () {
-        const fooListener = sinon.stub();
-        const barListener = sinon.stub();
+        const fooListener = stub();
+        const barListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'dummy#foo': fooListener,
@@ -305,8 +305,8 @@ describe('EntityReference', function () {
     });
 
     it('forwards any events dispatched by the entity', function () {
-        const fooListener = sinon.stub();
-        const barListener = sinon.stub();
+        const fooListener = stub();
+        const barListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'entity#foo': fooListener,
@@ -330,8 +330,8 @@ describe('EntityReference', function () {
     });
 
     it('correctly handles entity event forwarding across entity nullification and subsequent reassignment', function () {
-        const fooListener = sinon.stub();
-        const barListener = sinon.stub();
+        const fooListener = stub();
+        const barListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'entity#foo': fooListener,
@@ -362,7 +362,7 @@ describe('EntityReference', function () {
             expect(reference).to.be.ok;
         }
 
-        const callback = sinon.stub();
+        const callback = stub();
 
         expect(function () {
             testEventMap({ 'foo': callback });
@@ -382,7 +382,7 @@ describe('EntityReference', function () {
     });
 
     it('logs a warning if the entity property is set to anything other than a string, undefined or null', function () {
-        sinon.stub(console, 'warn');
+        stub(console, 'warn');
 
         const reference = new EntityReference(testComponent, 'myEntity1');
         expect(reference).to.be.ok;

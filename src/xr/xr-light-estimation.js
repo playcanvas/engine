@@ -94,16 +94,16 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrLightEstimation#available
-     * @description Fired when light estimation data becomes available.
+     * Fired when light estimation data becomes available.
+     *
+     * @event XrLightEstimation#available
      */
 
     /**
-     * @event
-     * @name XrLightEstimation#error
+     * Fired when light estimation has failed to start.
+     *
+     * @event XrLightEstimation#error
      * @param {Error} error - Error object related to failure of light estimation start.
-     * @description Fired when light estimation has failed to start.
      * @example
      * app.xr.lightEstimation.on('error', function (ex) {
      *     // has failed to start

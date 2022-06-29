@@ -88,7 +88,7 @@ class SpriteComponent extends Component {
         /**
          * Dictionary of sprite animation clips.
          *
-         * @type {Object.<string, SpriteAnimationClip>}
+         * @type {Object<string, SpriteAnimationClip>}
          * @private
          */
         this._clips = {};
@@ -109,6 +109,48 @@ class SpriteComponent extends Component {
          */
         this._currentClip = this._defaultClip;
     }
+
+    /**
+     * Fired when an animation clip starts playing.
+     *
+     * @event SpriteComponent#play
+     * @param {SpriteAnimationClip} clip - The clip that started playing.
+     */
+
+    /**
+     * Fired when an animation clip is paused.
+     *
+     * @event SpriteComponent#pause
+     * @param {SpriteAnimationClip} clip - The clip that was paused.
+     */
+
+    /**
+     * Fired when an animation clip is resumed.
+     *
+     * @event SpriteComponent#resume
+     * @param {SpriteAnimationClip} clip - The clip that was resumed.
+     */
+
+    /**
+     * Fired when an animation clip is stopped.
+     *
+     * @event SpriteComponent#stop
+     * @param {SpriteAnimationClip} clip - The clip that was stopped.
+     */
+
+    /**
+     * Fired when an animation clip stops playing because it reached its ending.
+     *
+     * @event SpriteComponent#end
+     * @param {SpriteAnimationClip} clip - The clip that ended.
+     */
+
+    /**
+     * Fired when an animation clip reached the end of its current loop.
+     *
+     * @event SpriteComponent#loop
+     * @param {SpriteAnimationClip} clip - The clip.
+     */
 
     /**
      * The type of the SpriteComponent. Can be:
@@ -252,7 +294,7 @@ class SpriteComponent extends Component {
     /**
      * A dictionary that contains {@link SpriteAnimationClip}s.
      *
-     * @type {Object.<string, SpriteAnimationClip>}
+     * @type {Object<string, SpriteAnimationClip>}
      */
     set clips(value) {
         // if value is null remove all clips
@@ -937,50 +979,6 @@ class SpriteComponent extends Component {
 
         this._currentClip.stop();
     }
-
-    // Events Documentation
-
-    /**
-     * @event
-     * @name SpriteComponent#play
-     * @description Fired when an animation clip starts playing.
-     * @param {SpriteAnimationClip} clip - The clip that started playing.
-     */
-
-    /**
-     * @event
-     * @name SpriteComponent#pause
-     * @description Fired when an animation clip is paused.
-     * @param {SpriteAnimationClip} clip - The clip that was paused.
-     */
-
-    /**
-     * @event
-     * @name SpriteComponent#resume
-     * @description Fired when an animation clip is resumed.
-     * @param {SpriteAnimationClip} clip - The clip that was resumed.
-     */
-
-    /**
-     * @event
-     * @name SpriteComponent#stop
-     * @description Fired when an animation clip is stopped.
-     * @param {SpriteAnimationClip} clip - The clip that was stopped.
-     */
-
-    /**
-     * @event
-     * @name SpriteComponent#end
-     * @description Fired when an animation clip stops playing because it reached its ending.
-     * @param {SpriteAnimationClip} clip - The clip that ended.
-     */
-
-    /**
-     * @event
-     * @name SpriteComponent#loop
-     * @description Fired when an animation clip reached the end of its current loop.
-     * @param {SpriteAnimationClip} clip - The clip.
-     */
 }
 
 export { SpriteComponent };

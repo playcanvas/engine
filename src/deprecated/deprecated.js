@@ -34,8 +34,8 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../graphics/constants.js';
+import { begin, dummyFragmentCode, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from '../graphics/program-lib/programs/common.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { programlib } from '../graphics/program-lib/program-lib.js';
 import { shaderChunks } from '../graphics/program-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
@@ -316,6 +316,18 @@ export function ContextCreationError(message) {
     this.message = (message || '');
 }
 ContextCreationError.prototype = Error.prototype;
+
+export const programlib = {
+    begin: begin,
+    dummyFragmentCode: dummyFragmentCode,
+    end: end,
+    fogCode: fogCode,
+    gammaCode: gammaCode,
+    precisionCode: precisionCode,
+    skinCode: skinCode,
+    tonemapCode: tonemapCode,
+    versionCode: versionCode
+};
 
 export const gfx = {
     ADDRESS_CLAMP_TO_EDGE: ADDRESS_CLAMP_TO_EDGE,

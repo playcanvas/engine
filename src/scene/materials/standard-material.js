@@ -499,7 +499,7 @@ class StandardMaterial extends Material {
         });
 
         /**
-         * @type {Object.<string, string>}
+         * @type {Object<string, string>}
          * @private
          */
         this._chunks = { };
@@ -509,7 +509,7 @@ class StandardMaterial extends Material {
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
-     * @type {Object.<string, string>}
+     * @type {Object<string, string>}
      */
     set chunks(value) {
         this._dirtyShader = true;
@@ -715,9 +715,9 @@ class StandardMaterial extends Material {
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
-            this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
 
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);

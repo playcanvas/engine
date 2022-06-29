@@ -26,8 +26,8 @@ class GrabPassExample {
         'shader.frag': /* glsl */`
             precision mediump float;
 
-            // use the special uSceneColorMap texture, which is a built-in texture. Each time this texture is used
-            // for rendering, the engine will copy color framebuffer to it which represents already rendered scene
+            // use the special uSceneColorMap texture, which is a built-in texture containing
+            // a copy of the color buffer at the point of capture, inside the Depth layer.
             uniform sampler2D uSceneColorMap;
 
             // normal map providing offsets

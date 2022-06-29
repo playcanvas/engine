@@ -59,9 +59,9 @@ class XrHitTestSource extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrHitTestSource#remove
-     * @description Fired when {@link XrHitTestSource} is removed.
+     * Fired when {@link XrHitTestSource} is removed.
+     *
+     * @event XrHitTestSource#remove
      * @example
      * hitTestSource.once('remove', function () {
      *     // hit test source has been removed
@@ -69,12 +69,14 @@ class XrHitTestSource extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrHitTestSource#result
-     * @description Fired when hit test source receives new results. It provides transform information that tries to match real world picked geometry.
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry.
+     *
+     * @event XrHitTestSource#result
      * @param {Vec3} position - Position of hit test.
      * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
+     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will
+     * provide related input source.
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);

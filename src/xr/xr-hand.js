@@ -68,7 +68,7 @@ class XrHand extends EventHandler {
     _joints = [];
 
     /**
-     * @type {Object.<string, XrJoint>}
+     * @type {Object<string, XrJoint>}
      * @private
      */
     _jointsById = {};
@@ -128,15 +128,15 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrHand#tracking
-     * @description Fired when tracking becomes available.
+     * Fired when tracking becomes available.
+     *
+     * @event XrHand#tracking
      */
 
     /**
-     * @event
-     * @name XrHand#trackinglost
-     * @description Fired when tracking is lost.
+     * Fired when tracking is lost.
+     *
+     * @event XrHand#trackinglost
      */
 
     /**

@@ -160,14 +160,6 @@ function testTextureFloatHighPrecision(device) {
 }
 
 /**
- * @event
- * @name GraphicsDevice#resizecanvas
- * @description The 'resizecanvas' event is fired when the canvas is resized.
- * @param {number} width - The new width of the canvas in pixels.
- * @param {number} height - The new height of the canvas in pixels.
- */
-
-/**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
@@ -1946,27 +1938,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const defaultOptions = this.defaultClearOptions;
         options = options || defaultOptions;
 
-        const flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
+        const flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
         if (flags !== 0) {
             const gl = this.gl;
 
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
-                const color = (options.color == undefined) ? defaultOptions.color : options.color;
+                const color = (options.color === undefined) ? defaultOptions.color : options.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
                 this.setColorWrite(true, true, true, true);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
-                const depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
+                const depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
                 this.setClearDepth(depth);
                 this.setDepthWrite(true);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
-                const stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
+                const stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
                 this.setClearStencil(stencil);
             }
 

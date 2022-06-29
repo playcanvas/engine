@@ -4,6 +4,7 @@ import {
 
 /** @typedef {import('../../graphics/uniform-buffer.js').UniformBuffer} UniformBuffer */
 /** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
+/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
 
 /**
@@ -24,7 +25,11 @@ class RenderAction {
         // camera of type CameraComponent
         this.camera = null;
 
-        // render target this render action renders to (taken from either camera or layer)
+        /**
+         * render target this render action renders to (taken from either camera or layer)
+         *
+         * @type {RenderTarget|null}
+         */
         this.renderTarget = null;
 
         // light clusters (type WorldClusters)
