@@ -782,6 +782,10 @@ class LitShader {
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
+            if (options.useMetalness) {
+                code += chunks.metalnessModulatePS;
+            }
+
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
@@ -1030,18 +1034,13 @@ class LitShader {
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-            // this is needed to allow custom area light fresnel calculations
-            if (hasAreaLights) {
-                code += "    #ifdef AREA_LIGHTS\n";
-                code += "    dSpecularityNoFres = dSpecularity;\n";
-                code += "    #ifdef CLEARCOAT\n";
-                code += "    ccSpecularityNoFres = ccSpecularity;\n";
-                code += "    #endif\n";
-                code += "    #endif\n";
-            }
 
-            if (options.fresnelModel > 0) {
-                code += "    getFresnel();\n";
+            if (options.useMetalness) {
+                if (options.useSpecularityFactor) {
+                    code += "    getMetalnessModulate(dIor, dSpecularityFactor);\n";
+                } else {
+                    code += "    getMetalnessModulate(dIor);\n";
+                }
             }
         }
 
@@ -1073,18 +1072,33 @@ class LitShader {
             if (this.reflections) {
                 if (options.clearCoat > 0) {
                     code += "    addReflectionCC();\n";
+                    if (options.fresnelModel > 0) {
+                        if (options.useSpecularityFactor) {
+                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), ccSpecularity, dSpecularityFactor);\n";
+                        } else {
+                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), ccSpecularity);\n";
+                        }
+                    }  else {
+                        code += "    ccReflection.rgb *= ccSpecularity;\n";
+                    }
                 }
                 code += "    addReflection();\n";
+
+                // Fresnel has to be applied to reflections
+                if (options.fresnelModel > 0) {
+                    if (options.useSpecularityFactor) {
+                        code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity, dSpecularityFactor);\n";
+                    } else {
+                        code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);\n";
+                    }
+                } else {
+                    code += "    dReflection.rgb *= dSpecularity;\n";
+                }
             }
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                code += "    #ifdef CLEARCOAT\n";
-                code += "    ccReflection.rgb *= ccSpecularity;\n";
-                code += "    #endif\n";
-                code += "    dReflection.rgb *= dSpecularity;\n";
                 code += "    dSpecularLight *= dSpecularity;\n";
-
                 // code += "    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
 
                 // evaluate material based area lights data, shared by all area lights
@@ -1357,7 +1371,6 @@ class LitShader {
         if (code.includes("dLightDirW")) structCode += "vec3 dLightDirW;\n";
         if (code.includes("dLightPosW")) structCode += "vec3 dLightPosW;\n";
         if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
-        if (code.includes("dSpecularityNoFres")) structCode += "vec3 dSpecularityNoFres;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
         if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";

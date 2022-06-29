@@ -1,10 +1,4 @@
 export default /* glsl */`
-void processMetalness(float metalness) {
-    const float dielectricF0 = 0.04;
-    dSpecularity = mix(vec3(dielectricF0), dAlbedo, metalness);
-    dAlbedo *= 1.0 - metalness;
-}
-
 #ifdef MAPFLOAT
 uniform float material_metalness;
 #endif
@@ -28,6 +22,9 @@ void getSpecularity() {
     metalness *= saturate(vVertexColor.$VC);
     #endif
 
-    processMetalness(metalness);
+    dSpecularity = getF0();
+    dIor = 0.04;
+
+    dMetalness = metalness;
 }
 `;

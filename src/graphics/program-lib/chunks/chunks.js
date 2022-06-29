@@ -48,6 +48,7 @@ import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
 import extensionPS from './lit/frag/extension.js';
 import extensionVS from './lit/vert/extension.js';
+import f0PS from './standard/frag/f0.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import fixCubemapSeamsNonePS from './common/frag/fixCubemapSeamsNone.js';
@@ -66,6 +67,7 @@ import gles3PS from './common/frag/gles3.js';
 import gles3VS from './common/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
 import instancingVS from './lit/vert/instancing.js';
+import iorPS from './standard/frag/ior.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
 import lightmapAddPS from './lit/frag/lightmapAdd.js';
@@ -78,6 +80,7 @@ import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import ltc from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
+import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
@@ -164,6 +167,7 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
+import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
@@ -246,6 +250,7 @@ const shaderChunks = {
     envMultiplyPS,
     extensionPS,
     extensionVS,
+    f0PS,
     falloffInvSquaredPS,
     falloffLinearPS,
     fixCubemapSeamsNonePS,
@@ -263,6 +268,7 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    iorPS,
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,
@@ -275,6 +281,7 @@ const shaderChunks = {
     lightSpecularPhongPS,
     ltc,
     metalnessPS,
+    metalnessModulatePS,
     msdfPS,
     msdfVS,
     normalVS,
@@ -362,6 +369,7 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
+    specularityFactorPS,
     spotPS,
     startPS,
     startVS,
