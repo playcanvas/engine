@@ -5,7 +5,7 @@
  */
  class Tracing {
     /**
-     * Set storing names of enabled trace channels
+     * Set storing the names of enabled trace channels.
      *
      * @type {Set<string>}
      * @private
@@ -13,7 +13,7 @@
     static _traceChannels = new Set();
 
     /**
-     * Enable or disable trace channel
+     * Enable or disable a trace channel.
      *
      * @param {string} channel - Name of the trace channel. Can be:
      *
@@ -24,7 +24,7 @@
      * - {@link TRACEID_RENDER_TARGET_ALLOC}
      * - {@link TRACEID_TEXTURE_ALLOC}
      *
-     * @param {boolean} enabled - new enabled state for it
+     * @param {boolean} enabled - New enabled state for the channel.
      */
     static set(channel, enabled = true) {
 
