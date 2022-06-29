@@ -319,7 +319,7 @@ const standard = {
                 if (options.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
-                    func.append("dSpecularityFactor = getSpecularityFactor();");
+                    func.append("getSpecularityFactor();");
                 }
                 code.append(this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks));
                 code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
