@@ -1294,29 +1294,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             material.specularityFactorMap = textures[specularData.specularTexture.index];
         }
     }
-
-    // handle KHR_materials_ior absorption
-    if (gltfMaterial.hasOwnProperty('extensions') &&
-        gltfMaterial.extensions.hasOwnProperty('KHR_materials_ior')) {
-        const iorData = gltfMaterial.extensions.KHR_materials_ior;
-        if (iorData.hasOwnProperty('ior')) {
-            material.ior = iorData.ior;
-        } else {
-            material.ior = 1.0;
-        }
-    }
-
-        // handle KHR_materials_ior absorption
-    if (gltfMaterial.hasOwnProperty('extensions') &&
-        gltfMaterial.extensions.hasOwnProperty('KHR_materials_sheen')) {
-        const sheenData = gltfMaterial.extensions.KHR_materials_sheen;
-        if (sheenData.hasOwnProperty('sheenColorFactor')) {
-            material.ior = sheenData.ior;
-        } else {
-            material.ior = 1.0;
-        }
-    }
-
     material.update();
 
     return material;
