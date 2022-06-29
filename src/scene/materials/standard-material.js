@@ -111,6 +111,13 @@ let _params = new Set();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {boolean} useSpecularityFactor Use the specularity factor to weight specularity
+ * @property {number} specularityFactor The factor of specularity, exclusive to specular
+ * @property {Texture|null} specularityFactorMap The factor of specularity as a texture
+ * @property {boolean} f0Tint Multiply F0 reflection color
+ * @property {Vec3} f0 The F0 color
+ * @property {Texture|null} f0Map The map used for the F0 reflection color
+ * @property {string} f0MapChannel Color channels of the F0 color
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
@@ -626,6 +633,12 @@ class StandardMaterial extends Material {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
+            if (!this.f0Map || this.f0Tint) {
+                this._setParameter('material_f0', getUniform('f0'));
+            }
+            if (!this.specularityFactorMap || this.specularityFactor > 0) {
+                this._setParameter('material_specularityFactor', this.specularityFactor);
+            }
         }
 
         if (this.enableGGXSpecular) {
@@ -990,7 +1003,9 @@ function _defineMaterialProps() {
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
+    _defineColor('f0', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
+    _defineFloat('specularityFactor', 0);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
@@ -1050,6 +1065,7 @@ function _defineMaterialProps() {
     _defineFlag('diffuseTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('emissiveTint', false);
+    _defineFlag('f0Tint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('enableGGXSpecular', false);
@@ -1076,6 +1092,8 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
+    _defineTex2D('f0', 0, 3, '', true);
+    _defineTex2D('specularityFactor', 0, 1, '', true);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);

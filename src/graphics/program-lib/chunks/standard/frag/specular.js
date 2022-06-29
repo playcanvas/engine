@@ -8,18 +8,22 @@ uniform sampler2D texture_specularMap;
 #endif
 
 void getSpecularity() {
-    dSpecularity = vec3(1.0);
+
+    vec3 specularity = vec3(1,1,1);
 
     #ifdef MAPCOLOR
-    dSpecularity *= material_specular;
+    specularity *= material_specular;
     #endif
 
     #ifdef MAPTEXTURE
-    dSpecularity *= texture2D(texture_specularMap, $UV, textureBias).$CH;
+    vec3 srgb = texture2D(texture_specularMap, $UV, textureBias).$CH;
+    specularity *=  vec3(pow(srgb.r, 2.2), pow(srgb.g, 2.2), pow(srgb.b, 2.2));
     #endif
 
     #ifdef MAPVERTEX
-    dSpecularity *= saturate(vVertexColor.$VC);
+    specularity *= saturate(vVertexColor.$VC); 
     #endif
+
+    dSpecularity = specularity;
 }
 `;
