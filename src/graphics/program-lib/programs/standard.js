@@ -314,7 +314,6 @@ const standard = {
                     decl.append("float dMetalness;");
                     decl.append("float dIor;");
                 }
-                code.append(this._addMap("ior", "iorPS", options, litShader.chunks));
                 code.append(this._addMap("f0", "f0PS", options, litShader.chunks));
                 if (options.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");
