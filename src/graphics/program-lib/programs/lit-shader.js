@@ -1074,9 +1074,9 @@ class LitShader {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
                         if (options.useSpecularityFactor) {
-                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), ccSpecularity, dSpecularityFactor);\n";
+                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity), dSpecularityFactor);\n";
                         } else {
-                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), ccSpecularity);\n";
+                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
                         }
                     }  else {
                         code += "    ccReflection.rgb *= ccSpecularity;\n";
