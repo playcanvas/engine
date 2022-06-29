@@ -6,7 +6,8 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Debug, TRACEID_RENDER_FRAME } from '../core/debug.js';
+import { Debug } from '../core/debug.js';
+import { TRACEID_RENDER_FRAME } from '../core/constants.js';
 
 import { math } from '../math/math.js';
 import { Color } from '../math/color.js';

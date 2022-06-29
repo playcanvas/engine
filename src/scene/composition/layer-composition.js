@@ -1,4 +1,6 @@
-import { Debug, TRACEID_RENDER_ACTION } from '../../core/debug.js';
+import { TRACEID_RENDER_ACTION } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';
@@ -682,7 +684,7 @@ class LayerComposition extends EventHandler {
     _logRenderActions() {
 
         // #if _DEBUG
-        if (Debug.getTrace(TRACEID_RENDER_ACTION)) {
+        if (Tracing.get(TRACEID_RENDER_ACTION)) {
             Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
