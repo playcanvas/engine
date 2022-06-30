@@ -111,12 +111,12 @@ let _params = new Set();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {number} specularityFactor The factor of specularity, exclusive to specular
- * @property {Texture|null} specularityFactorMap The factor of specularity as a texture
- * @property {boolean} f0Tint Multiply F0 reflection color.
- * @property {Vec3} f0 The F0 color.
- * @property {Texture|null} f0Map The map used for the F0 reflection color.
- * @property {string} f0MapChannel Color channels of the F0 color.
+ * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
+ * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
+ * @property {string} specularityFactorMapChannel The channel used by the specularity factor texture to sample from (default is 'a').
+ * @property {Vec3} f0 A uniform F0 color, which is the color of specular reflection at 0 degrees fresnel (default is white).
+ * @property {Texture|null} f0Map The map used for the F0 reflection color (default is null).
+ * @property {string} f0MapChannel Color channels of the F0 color (default is rgb).
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires

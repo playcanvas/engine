@@ -16,7 +16,7 @@ vec3 getF0() {
     #endif
 
     #ifdef MAPTEXTURE
-    f0 *= texture2D(texture_f0Map, $UV, textureBias).$CH;
+    f0 *= texture2DSRGB(texture_f0Map, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

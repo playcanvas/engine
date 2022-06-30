@@ -1036,7 +1036,7 @@ class LitShader {
         if ((this.lighting && options.useSpecular) || this.reflections) {
 
             if (options.useMetalness) {
-                if (options.specularityFactorTint) {
+                if (options.useSpecularityFactor) {
                     code += "    getMetalnessModulate(dIor, dSpecularityFactor);\n";
                 } else {
                     code += "    getMetalnessModulate(dIor);\n";
@@ -1073,7 +1073,7 @@ class LitShader {
                 if (options.clearCoat > 0) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
-                        if (options.specularityFactorTint) {
+                        if (options.useSpecularityFactor) {
                             code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity), dSpecularityFactor);\n";
                         } else {
                             code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
@@ -1086,7 +1086,7 @@ class LitShader {
 
                 // Fresnel has to be applied to reflections
                 if (options.fresnelModel > 0) {
-                    if (options.specularityFactorTint) {
+                    if (options.useSpecularityFactor) {
                         code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity, dSpecularityFactor);\n";
                     } else {
                         code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);\n";
