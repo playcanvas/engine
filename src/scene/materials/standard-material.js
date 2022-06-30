@@ -1004,7 +1004,7 @@ function _defineMaterialProps() {
     _defineColor('emissive', new Color(0, 0, 0));
     _defineColor('f0', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
-    _defineFloat('specularityFactor', 0);
+    _defineFloat('specularityFactor', 1);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
@@ -1092,7 +1092,7 @@ function _defineMaterialProps() {
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
     _defineTex2D('f0', 0, 3, '', true);
-    _defineTex2D('specularityFactor', 0, 1, '', true);
+    _defineTex2D('specularityFactor', 0, 1, '', false);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);
