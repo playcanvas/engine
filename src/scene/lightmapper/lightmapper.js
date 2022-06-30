@@ -9,6 +9,7 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
+    CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
@@ -20,7 +21,6 @@ import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
-import { CHUNKAPI_1_55 } from '../../graphics/constants.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
