@@ -1211,16 +1211,16 @@ class LitShader {
                             if (light._normalOffsetBias) {
                                 code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
-                            code += "    float shadow = getShadowPoint" + shadowReadMode + shadowCoordArgs;
-                            code += `    dAtten *= mix(1.0f, shadow, light${i}_shadowIntensity);\n`;
+                            code += `    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`;
+                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
                             code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "    float shadow = getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
-                            code += `    dAtten *= mix(1.0f, shadow, light${i}_shadowIntensity);\n`;
+                            code += `    float shadow${i} = getShadow${shadowReadMode}(light${i}_shadowMap, light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
+                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
                         }
                     }
                 }
