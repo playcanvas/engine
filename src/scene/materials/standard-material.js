@@ -111,7 +111,6 @@ let _params = new Set();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} useSpecularityFactor Use the specularity factor to weight specularity
  * @property {number} specularityFactor The factor of specularity, exclusive to specular
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture
  * @property {boolean} f0Tint Multiply F0 reflection color

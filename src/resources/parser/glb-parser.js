@@ -1285,11 +1285,9 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
         material.specularityFactor = 1;
         if (specularData.hasOwnProperty('specularFactor')) {
-            material.useSpecularityFactor = true;
             material.specularityFactor = specularData.specularFactor;
         }
         if (specularData.hasOwnProperty('specularTexture')) {
-            material.useSpecularityFactor = true;
             material.specularityFactorMapChannel = 'a';
             material.specularityFactorMap = textures[specularData.specularTexture.index];
         }
