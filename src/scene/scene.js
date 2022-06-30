@@ -9,7 +9,7 @@ import { math } from '../math/math.js';
 
 import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, GAMMA_SRGB, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, GAMMA_SRGB, LAYERID_IMMEDIATE, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
@@ -247,9 +247,6 @@ class Scene extends EventHandler {
 
         this._shaderVersion = 0;
         this._statsUpdated = false;
-
-        // backwards compatibility only
-        this._models = [];
 
         // immediate rendering
         this.immediate = new Immediate(this.device);
@@ -800,45 +797,6 @@ class Scene extends EventHandler {
             this.skybox = cubemaps[0] || null;
             this.prefilteredCubemaps = cubemaps.slice(1);
         }
-    }
-
-    // Backwards compatibility
-    addModel(model) {
-        if (this.containsModel(model)) return;
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.addMeshInstances(model.meshInstances);
-        this._models.push(model);
-    }
-
-    addShadowCaster(model) {
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.addShadowCasters(model.meshInstances);
-    }
-
-    removeModel(model) {
-        const index = this._models.indexOf(model);
-        if (index !== -1) {
-            const layer = this.layers.getLayerById(LAYERID_WORLD);
-            if (!layer) return;
-            layer.removeMeshInstances(model.meshInstances);
-            this._models.splice(index, 1);
-        }
-    }
-
-    removeShadowCasters(model) {
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.removeShadowCasters(model.meshInstances);
-    }
-
-    containsModel(model) {
-        return this._models.indexOf(model) >= 0;
-    }
-
-    getModels(model) {
-        return this._models;
     }
 }
 
