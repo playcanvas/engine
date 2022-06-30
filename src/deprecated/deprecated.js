@@ -51,7 +51,7 @@ import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 import { VertexIterator } from '../graphics/vertex-iterator.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY } from '../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -552,6 +552,59 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
         }
     });
 });
+
+Object.defineProperty(Scene.prototype, 'models', {
+    get: function () {
+        if (!this._models) {
+            this._models = [];
+        }
+        return this._models;
+    }
+});
+
+Scene.prototype.addModel = function(model) {
+    Debug.deprecated('pc.Scene#addModel is deprecated.');
+    if (this.containsModel(model)) return;
+    const layer = this.layers.getLayerById(LAYERID_WORLD);
+    if (!layer) return;
+    layer.addMeshInstances(model.meshInstances);
+    this.models.push(model);
+};
+
+Scene.prototype.addShadowCaster = function(model) {
+    Debug.deprecated('pc.Scene#addShadowCaster is deprecated.');
+    const layer = this.layers.getLayerById(LAYERID_WORLD);
+    if (!layer) return;
+    layer.addShadowCasters(model.meshInstances);
+};
+
+Scene.prototype.removeModel = function(model) {
+    Debug.deprecated('pc.Scene#removeModel is deprecated.');
+    const index = this.models.indexOf(model);
+    if (index !== -1) {
+        const layer = this.layers.getLayerById(LAYERID_WORLD);
+        if (!layer) return;
+        layer.removeMeshInstances(model.meshInstances);
+        this.models.splice(index, 1);
+    }
+};
+
+Scene.prototype.removeShadowCasters = function(model) {
+    Debug.deprecated('pc.Scene#removeShadowCasters is deprecated.');
+    const layer = this.layers.getLayerById(LAYERID_WORLD);
+    if (!layer) return;
+    layer.removeShadowCasters(model.meshInstances);
+};
+
+Scene.prototype.containsModel = function(model) {
+    Debug.deprecated('pc.Scene#containsModel is deprecated.');
+    return this.models.indexOf(model) >= 0;
+};
+
+Scene.prototype.getModels = function(model) {
+    Debug.deprecated('pc.Scene#getModels is deprecated.');
+    return this.models;
+};
 
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {
