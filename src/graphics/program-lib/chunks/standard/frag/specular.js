@@ -9,7 +9,7 @@ uniform sampler2D texture_specularMap;
 
 void getSpecularity() {
 
-    vec3 specularity = vec3(1,1,1);
+    vec3 specularity = vec3(1, 1, 1);
 
     #ifdef MAPCOLOR
     specularity *= material_specular;
