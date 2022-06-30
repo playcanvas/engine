@@ -75,6 +75,7 @@ class ProgramLibrary {
                 console.warn(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
             const shaderDefinition = generator.createShaderDefinition(gd, options);
+            shaderDefinition.name = `standard-pass:${options.pass}`;
             shader = this._cache[key] = new Shader(gd, shaderDefinition);
         }
         return shader;
