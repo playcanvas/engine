@@ -1257,6 +1257,10 @@ class LitShader {
                     }
                 }
 
+                if (options.useSpecular) {
+                    code += "    vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));\n";
+                }
+
                 // specular / clear coat
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
@@ -1265,15 +1269,23 @@ class LitShader {
                     if (options.useSpecular) code += "    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 } else {
+                    var calcFresnel = false;
+                    if (lightShape === LIGHTTYPE_DIRECTIONAL) {
+                        calcFresnel = true;
+                    }
 
-                    // punctual light
-                    if (hasAreaLights) {
-                        // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                        if (options.clearCoat > 0) code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "    dSpecularLight += dSpecularity * getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    } else {
-                        if (options.clearCoat > 0) code += "    ccSpecularLight += getLightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                        if (options.useSpecular) code += "    dSpecularLight += getLightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
+                    if (options.clearCoat > 0) {
+                        code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC(halfDir) * dAtten * light" + i + "_color";
+                        code += (usesCookieNow ? " * dAtten3" : "");
+                        code += (calcFresnel ? "* getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity))" : "");
+                        code +=  ";\n";
+                    }
+                    if (options.useSpecular) {
+                        code += "    dSpecularLight += dSpecularity * getLightSpecular(halfDir) * dAtten * light" + i + "_color" 
+                        code += (usesCookieNow ? " * dAtten3" : "");
+                        code += (calcFresnel ? "* getFresnel(dot(dViewDirW, halfDir), vec3(dSpecularity))" : "");
+                        code += ";\n";
                     }
                 }
 
