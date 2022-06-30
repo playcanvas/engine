@@ -1282,7 +1282,7 @@ class LitShader {
                         code +=  ";\n";
                     }
                     if (options.useSpecular) {
-                        code += "    dSpecularLight += dSpecularity * getLightSpecular(halfDir) * dAtten * light" + i + "_color" 
+                        code += "    dSpecularLight += dSpecularity * getLightSpecular(halfDir) * dAtten * light" + i + "_color";
                         code += (usesCookieNow ? " * dAtten3" : "");
                         code += (calcFresnel ? "* getFresnel(dot(dViewDirW, halfDir), vec3(dSpecularity))" : "");
                         code += ";\n";
