@@ -16,8 +16,7 @@ void getSpecularity() {
     #endif
 
     #ifdef MAPTEXTURE
-    vec3 srgb = texture2D(texture_specularMap, $UV, textureBias).$CH;
-    specularity *=  vec3(pow(srgb.r, 2.2), pow(srgb.g, 2.2), pow(srgb.b, 2.2));
+    specularity *= texture2DSRGB(texture_specularMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

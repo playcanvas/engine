@@ -315,7 +315,7 @@ const standard = {
                     decl.append("float dIor;");
                 }
                 code.append(this._addMap("f0", "f0PS", options, litShader.chunks));
-                if (options.specularityFactorTint) {
+                if (options.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
                     func.append("getSpecularityFactor();");
