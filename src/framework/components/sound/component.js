@@ -41,7 +41,7 @@ class SoundComponent extends Component {
         this._distanceModel = DISTANCE_LINEAR;
 
         /**
-         * @type {Object<string, SoundSlot>}
+         * @type {object<string, SoundSlot>}
          * @private
          */
         this._slots = {};
@@ -251,7 +251,7 @@ class SoundComponent extends Component {
     /**
      * A dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
      *
-     * @type {Object<string, SoundSlot>}
+     * @type {object<string, SoundSlot>}
      */
     set slots(newValue) {
         const oldValue = this._slots;

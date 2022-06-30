@@ -23,7 +23,7 @@ import { Component } from '../component.js';
  */
 class AnimationComponent extends Component {
     /**
-     * @type {Object<string, Animation>}
+     * @type {object<string, Animation>}
      * @private
      */
     _animations = {};
@@ -70,7 +70,7 @@ class AnimationComponent extends Component {
     toSkel = null;
 
     /**
-     * @type {Object<string, string>}
+     * @type {object<string, string>}
      * @ignore
      */
     animationsIndex = {};
@@ -124,7 +124,7 @@ class AnimationComponent extends Component {
     /**
      * Get or set dictionary of animations by name.
      *
-     * @type {Object<string, Animation>}
+     * @type {object<string, Animation>}
      */
     set animations(value) {
         this._animations = value;

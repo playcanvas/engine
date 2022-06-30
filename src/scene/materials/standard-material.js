@@ -499,7 +499,7 @@ class StandardMaterial extends Material {
         });
 
         /**
-         * @type {Object<string, string>}
+         * @type {object<string, string>}
          * @private
          */
         this._chunks = { };
@@ -509,7 +509,7 @@ class StandardMaterial extends Material {
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
-     * @type {Object<string, string>}
+     * @type {object<string, string>}
      */
     set chunks(value) {
         this._dirtyShader = true;
