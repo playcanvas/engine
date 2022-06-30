@@ -103,6 +103,7 @@ class Immediate {
     getTextureShader() {
         if (!this.textureShader) {
             const shaderDefinition = {
+                name: 'DebugTextureShader',
                 attributes: {
                     aPosition: SEMANTIC_POSITION
                 },
@@ -128,6 +129,7 @@ class Immediate {
 
             const gl2 = this.device.webgl2 ? '#define GL2' : '';
             const shaderDefinition = {
+                name: 'DebugDepthTextureShader',
                 attributes: {
                     aPosition: SEMANTIC_POSITION
                 },

@@ -1,4 +1,9 @@
+import { TRACEID_SHADER_ALLOC } from '../core/constants.js';
+import { Debug } from '../core/debug.js';
+
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
+let id = 0;
 
 /**
  * A shader is a program that is responsible for rendering graphical primitives on a device's
@@ -14,6 +19,7 @@ class Shader {
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
+     * @param {string} [definition.name] - The name of the shader.
      * @param {Object<string, string>} definition.attributes - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader.
@@ -48,8 +54,12 @@ class Shader {
      * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
+        this.id = id++;
         this.device = graphicsDevice;
         this.definition = definition;
+        this.name = definition.name || 'Untitled';
+
+        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`);
 
         this.init();
 
@@ -70,6 +80,7 @@ class Shader {
      * Frees resources associated with this shader.
      */
     destroy() {
+        Debug.trace(TRACEID_SHADER_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
         this.impl.destroy(this);
     }
 

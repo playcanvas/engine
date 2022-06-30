@@ -1146,15 +1146,16 @@ class ForwardRenderer {
     }
 
     updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
-        meshInstance.material._scene = this.scene;
+        const material = meshInstance.material;
+        material._scene = this.scene;
 
         // if material has dirtyBlend set, notify scene here
-        if (meshInstance.material._dirtyBlend) {
+        if (material._dirtyBlend) {
             this.scene.layers._dirtyBlend = true;
         }
 
-        meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
-        meshInstance._shader[pass] = meshInstance.material.shader;
+        material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
+        meshInstance._shader[pass] = material.shader;
     }
 
     setCullMode(cullFaces, flip, drawCall) {

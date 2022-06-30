@@ -40,3 +40,10 @@ export const TRACEID_RENDER_TARGET_ALLOC = 'RenderTargetAlloc';
  * @type {string}
  */
 export const TRACEID_TEXTURE_ALLOC = 'TextureAlloc';
+
+/**
+ * Logs the creation of shaders.
+ *
+ * @type {string}
+ */
+export const TRACEID_SHADER_ALLOC = 'ShaderAlloc';
