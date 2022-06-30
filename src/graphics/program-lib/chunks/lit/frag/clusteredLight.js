@@ -512,9 +512,11 @@ void evaluateLight(ClusterLightData light) {
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef CLUSTER_SPECULAR
 
+                vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
                 // specular
                 {
-                    vec3 punctualSpecular = getLightSpecular() * dAtten * light.color * dAtten3;
+                    
+                    vec3 punctualSpecular = getLightSpecular(halfDir) * dAtten * light.color * dAtten3;
 
                     #if defined(CLUSTER_AREALIGHTS)
                         punctualSpecular *= dSpecularity;
@@ -525,7 +527,7 @@ void evaluateLight(ClusterLightData light) {
 
                 #ifdef CLUSTER_CLEAR_COAT
 
-                    vec3 punctualCC = getLightSpecularCC() * dAtten * light.color * dAtten3;
+                    vec3 punctualCC = getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3;
 
                     #if defined(CLUSTER_AREALIGHTS)
                         punctualCC *= ccSpecularity;
