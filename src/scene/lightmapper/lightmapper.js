@@ -20,6 +20,7 @@ import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
+import { CHUNKAPI_1_55 } from '../../graphics/constants.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
@@ -224,6 +225,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
+        material.chunks.APIVersion = CHUNKAPI_1_55;
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
