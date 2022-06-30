@@ -1,20 +1,12 @@
 import { EventHandler } from '../core/event-handler.js';
 
 import { Color } from '../math/color.js';
-import { Mat3 } from '../math/mat3.js';
-import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 import { math } from '../math/math.js';
 
-import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
-
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_NONE, GAMMA_SRGBHDR, GAMMA_SRGB, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_WORLD, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
-import { createBox } from './procedural.js';
-import { GraphNode } from './graph-node.js';
-import { Material } from './materials/material.js';
-import { MeshInstance } from './mesh-instance.js';
-import { Model } from './model.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
+import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Immediate } from './immediate/immediate.js';
 
@@ -151,6 +143,14 @@ class Scene extends EventHandler {
     root = null;
 
     /**
+     * The sky of the scene.
+     *
+     * @type {Sky}
+     * @ignore
+     */
+    sky = null;
+
+    /**
      * Create a new Scene instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
@@ -201,8 +201,6 @@ class Scene extends EventHandler {
         // internally generated envAtlas owned by the scene
         this._internalEnvAtlas = null;
 
-        this.skyboxModel = null;
-
         this._skyboxIntensity = 1;
         this._skyboxMip = 0;
 
@@ -247,9 +245,6 @@ class Scene extends EventHandler {
 
         this._shaderVersion = 0;
         this._statsUpdated = false;
-
-        // backwards compatibility only
-        this._models = [];
 
         // immediate rendering
         this.immediate = new Immediate(this.device);
@@ -493,7 +488,7 @@ class Scene extends EventHandler {
         }
 
         if (changed) {
-            this._resetSkyboxModel();
+            this._resetSky();
 
             if (complete) {
                 // update env atlas
@@ -527,7 +522,7 @@ class Scene extends EventHandler {
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
             this._skyboxCubeMap = value;
-            this._resetSkyboxModel();
+            this._resetSky();
         }
     }
 
@@ -543,7 +538,7 @@ class Scene extends EventHandler {
     set skyboxIntensity(value) {
         if (value !== this._skyboxIntensity) {
             this._skyboxIntensity = value;
-            this._resetSkyboxModel();
+            this._resetSky();
         }
     }
 
@@ -560,7 +555,7 @@ class Scene extends EventHandler {
     set skyboxMip(value) {
         if (value !== this._skyboxMip) {
             this._skyboxMip = value;
-            this._resetSkyboxModel();
+            this._resetSky();
         }
     }
 
@@ -576,7 +571,7 @@ class Scene extends EventHandler {
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
-            this._resetSkyboxModel();
+            this._resetSky();
         }
     }
 
@@ -608,7 +603,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
-        this._resetSkyboxModel();
+        this._resetSky();
         this.root = null;
         this.off();
     }
@@ -669,7 +664,7 @@ class Scene extends EventHandler {
             }
         });
 
-        this._resetSkyboxModel();
+        this._resetSky();
     }
 
     // get the actual texture to use for skybox rendering
@@ -690,96 +685,19 @@ class Scene extends EventHandler {
         return this._skyboxCubeMap || cubemaps[0] || this._envAtlas;
     }
 
-    _updateSkybox(device) {
-        if (this.skyboxModel) {
-            return;
-        }
-
-        // get the used texture
-        const skyboxTex = this._getSkyboxTex();
-        if (!skyboxTex) {
-            return;
-        }
-
-        const material = new Material();
-        const scene = this;
-
-        material.updateShader = function (dev, sc, defs, staticLightList, pass) {
-            const library = device.getProgramLibrary();
-
-            if (skyboxTex.cubemap) {
-                this.shader = library.getProgram('skybox', {
-                    type: 'cubemap',
-                    rgbm: skyboxTex.type === TEXTURETYPE_RGBM,
-                    hdr: (skyboxTex.type === TEXTURETYPE_RGBM || skyboxTex.format === PIXELFORMAT_RGBA32F),
-                    useIntensity: scene.skyboxIntensity !== 1,
-                    mip: skyboxTex.fixCubemapSeams ? scene.skyboxMip : 0,
-                    fixSeams: skyboxTex.fixCubemapSeams,
-                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-                });
-            } else {
-                this.shader = library.getProgram('skybox', {
-                    type: 'envAtlas',
-                    encoding: skyboxTex.encoding,
-                    useIntensity: scene.skyboxIntensity !== 1,
-                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-                });
+    _updateSky(device) {
+        if (!this.sky) {
+            const texture = this._getSkyboxTex();
+            if (texture) {
+                this.sky = new Sky(device, this, texture);
+                this.fire('set:skybox', texture);
             }
-        };
-
-        material.updateShader();
-
-        if (skyboxTex.cubemap) {
-            material.setParameter('texture_cubeMap', skyboxTex);
-        } else {
-            material.setParameter('texture_envAtlas', skyboxTex);
-            material.setParameter('mipLevel', this._skyboxMip);
-        }
-
-        if (!this.skyboxRotation.equals(Quat.IDENTITY)) {
-            if (!this._skyboxRotationMat4) this._skyboxRotationMat4 = new Mat4();
-            if (!this._skyboxRotationMat3) this._skyboxRotationMat3 = new Mat3();
-            this._skyboxRotationMat4.setTRS(Vec3.ZERO, this._skyboxRotation, Vec3.ONE);
-            this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
-            material.setParameter('cubeMapRotationMatrix', this._skyboxRotationMat3.data);
-        } else {
-            material.setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
-        }
-
-        material.cull = CULLFACE_FRONT;
-        material.depthWrite = false;
-
-        const skyLayer = this.layers.getLayerById(LAYERID_SKYBOX);
-        if (skyLayer) {
-            const node = new GraphNode('Skybox');
-            const mesh = createBox(device);
-            const meshInstance = new MeshInstance(mesh, material, node);
-            meshInstance.cull = false;
-            meshInstance._noDepthDrawGl1 = true;
-
-            // disable picker, the material has custom update shader and does not handle picker variant
-            meshInstance.pick = false;
-
-            const model = new Model();
-            model.graph = node;
-            model.meshInstances = [meshInstance];
-            this.skyboxModel = model;
-
-            skyLayer.addMeshInstances(model.meshInstances);
-            this.skyLayer = skyLayer;
-
-            this.fire('set:skybox', skyboxTex);
         }
     }
 
-    _resetSkyboxModel() {
-        if (this.skyboxModel) {
-            this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
-            this.skyboxModel.destroy();
-        }
-        this.skyboxModel = null;
+    _resetSky() {
+        this.sky?.destroy();
+        this.sky = null;
         this.updateShaders = true;
     }
 
@@ -800,45 +718,6 @@ class Scene extends EventHandler {
             this.skybox = cubemaps[0] || null;
             this.prefilteredCubemaps = cubemaps.slice(1);
         }
-    }
-
-    // Backwards compatibility
-    addModel(model) {
-        if (this.containsModel(model)) return;
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.addMeshInstances(model.meshInstances);
-        this._models.push(model);
-    }
-
-    addShadowCaster(model) {
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.addShadowCasters(model.meshInstances);
-    }
-
-    removeModel(model) {
-        const index = this._models.indexOf(model);
-        if (index !== -1) {
-            const layer = this.layers.getLayerById(LAYERID_WORLD);
-            if (!layer) return;
-            layer.removeMeshInstances(model.meshInstances);
-            this._models.splice(index, 1);
-        }
-    }
-
-    removeShadowCasters(model) {
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.removeShadowCasters(model.meshInstances);
-    }
-
-    containsModel(model) {
-        return this._models.indexOf(model) >= 0;
-    }
-
-    getModels(model) {
-        return this._models;
     }
 }
 

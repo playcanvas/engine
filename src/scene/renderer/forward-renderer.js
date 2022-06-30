@@ -558,6 +558,9 @@ class ForwardRenderer {
         DebugGraphics.popGpuMarker(device);
     }
 
+    /**
+     * @param {Scene} scene - The scene.
+     */
     dispatchGlobalLights(scene) {
         this.ambientColor[0] = scene.ambientLight.r;
         this.ambientColor[1] = scene.ambientLight.g;
@@ -569,7 +572,10 @@ class ForwardRenderer {
         }
         this.ambientId.setValue(this.ambientColor);
         this.exposureId.setValue(scene.exposure);
-        if (scene.skyboxModel) this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+
+        if (scene.sky) {
+            this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+        }
     }
 
     _resolveLight(scope, i) {
@@ -2053,7 +2059,7 @@ class ForwardRenderer {
         this.initViewBindGroupFormat();
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox(this.device);
+        this.scene._updateSky(this.device);
 
         // update layer composition if something has been invalidated
         const updated = this.updateLayerComposition(comp, clusteredLightingEnabled);

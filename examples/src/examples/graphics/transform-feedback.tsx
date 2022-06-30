@@ -197,8 +197,7 @@ void main(void)
                 material.depthWrite = false;
 
                 // Create the mesh instance
-                const node = new pc.GraphNode();
-                const meshInstance = new pc.MeshInstance(mesh, material, node);
+                const meshInstance = new pc.MeshInstance(mesh, material);
 
                 // create an entity used to render the mesh instance using a render component
                 const entity = new pc.Entity();
