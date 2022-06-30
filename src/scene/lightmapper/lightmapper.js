@@ -9,6 +9,7 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
+    CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
@@ -224,6 +225,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
+        material.chunks.APIVersion = CHUNKAPI_1_55;
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
