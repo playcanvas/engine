@@ -148,12 +148,6 @@ class CollisionSystemImpl {
             entity.trigger.destroy();
             delete entity.trigger;
         }
-
-        const component = entity.collision;
-        if (app.scene.containsModel(component.model)) {
-            app.root.removeChild(component.model.graph);
-            app.scene.removeModel(component.model);
-        }
     }
 
     // Called when the collision is cloned to another entity
