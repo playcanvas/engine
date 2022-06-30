@@ -562,7 +562,7 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-Scene.prototype.addModel = function(model) {
+Scene.prototype.addModel = function (model) {
     Debug.deprecated('pc.Scene#addModel is deprecated.');
     if (this.containsModel(model)) return;
     const layer = this.layers.getLayerById(LAYERID_WORLD);
@@ -571,14 +571,14 @@ Scene.prototype.addModel = function(model) {
     this.models.push(model);
 };
 
-Scene.prototype.addShadowCaster = function(model) {
+Scene.prototype.addShadowCaster = function (model) {
     Debug.deprecated('pc.Scene#addShadowCaster is deprecated.');
     const layer = this.layers.getLayerById(LAYERID_WORLD);
     if (!layer) return;
     layer.addShadowCasters(model.meshInstances);
 };
 
-Scene.prototype.removeModel = function(model) {
+Scene.prototype.removeModel = function (model) {
     Debug.deprecated('pc.Scene#removeModel is deprecated.');
     const index = this.models.indexOf(model);
     if (index !== -1) {
@@ -589,19 +589,19 @@ Scene.prototype.removeModel = function(model) {
     }
 };
 
-Scene.prototype.removeShadowCasters = function(model) {
+Scene.prototype.removeShadowCasters = function (model) {
     Debug.deprecated('pc.Scene#removeShadowCasters is deprecated.');
     const layer = this.layers.getLayerById(LAYERID_WORLD);
     if (!layer) return;
     layer.removeShadowCasters(model.meshInstances);
 };
 
-Scene.prototype.containsModel = function(model) {
+Scene.prototype.containsModel = function (model) {
     Debug.deprecated('pc.Scene#containsModel is deprecated.');
     return this.models.indexOf(model) >= 0;
 };
 
-Scene.prototype.getModels = function(model) {
+Scene.prototype.getModels = function (model) {
     Debug.deprecated('pc.Scene#getModels is deprecated.');
     return this.models;
 };
