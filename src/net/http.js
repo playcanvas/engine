@@ -34,7 +34,8 @@ class Http {
         AAC: 'audio/aac',
         BIN: 'application/octet-stream',
         BASIS: 'image/basis',
-        GLB: 'model/gltf-binary'
+        GLB: 'model/gltf-binary',
+        OPUS: 'audio/ogg; codecs="opus"'
     };
 
     static ResponseType = {
@@ -55,7 +56,8 @@ class Http {
         '.aac',
         '.dds',
         '.basis',
-        '.glb'
+        '.glb',
+        '.opus'
     ];
 
     static retryDelay = 100;
@@ -474,7 +476,8 @@ class Http {
             Http.ContentType.BIN,
             Http.ContentType.DDS,
             Http.ContentType.BASIS,
-            Http.ContentType.GLB
+            Http.ContentType.GLB,
+            Http.ContentType.OPUS
         ];
         if (binTypes.indexOf(contentType) >= 0) {
             return true;

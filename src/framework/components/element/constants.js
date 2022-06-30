@@ -18,3 +18,24 @@ export const ELEMENTTYPE_IMAGE = 'image';
  * @type {string}
  */
 export const ELEMENTTYPE_TEXT = 'text';
+
+/**
+ * Fit the content exactly to Element's bounding box.
+ *
+ * @type {string}
+ */
+export const FITMODE_STRETCH = 'stretch';
+
+/**
+ * Fit the content within the Element's bounding box while preserving its Aspect Ratio.
+ *
+ * @type {string}
+ */
+export const FITMODE_CONTAIN = 'contain';
+
+/**
+ * Fit the content to cover the entire Element's bounding box while preserving its Aspect Ratio.
+ *
+ * @type {string}
+ */
+export const FITMODE_COVER = 'cover';

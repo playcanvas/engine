@@ -57,7 +57,6 @@ class TextEmojisExample {
             const size = 64;
             const elSize = 32;
 
-            // @ts-ignore engine-tsd
             const canvasFont = new pc.CanvasFont(app, {
                 color: new pc.Color(1, 1, 1), // white
                 fontName: "Arial",

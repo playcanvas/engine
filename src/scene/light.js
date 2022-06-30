@@ -160,6 +160,7 @@ class Light {
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
         this.shadowBias = -0.0005;
+        this.shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this._isVsm = false;
@@ -195,7 +196,7 @@ class Light {
     }
 
     set numCascades(value) {
-        if (!this.cascades || this.numCascades != value) {
+        if (!this.cascades || this.numCascades !== value) {
             this.cascades = directionalCascades[value - 1];
             this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
             this._shadowCascadeDistances = new Float32Array(4);     // always 4
@@ -591,6 +592,7 @@ class Light {
         clone.normalOffsetBias = this._normalOffsetBias;
         clone.shadowResolution = this._shadowResolution;
         clone.shadowDistance = this.shadowDistance;
+        clone.shadowIntensity = this.shadowIntensity;
 
         // Cookies properties
         // clone.cookie = this._cookie;

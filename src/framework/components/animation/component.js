@@ -23,7 +23,7 @@ import { Component } from '../component.js';
  */
 class AnimationComponent extends Component {
     /**
-     * @type {Object.<string, Animation>}
+     * @type {Object<string, Animation>}
      * @private
      */
     _animations = {};
@@ -70,7 +70,7 @@ class AnimationComponent extends Component {
     toSkel = null;
 
     /**
-     * @type {Object.<string, string>}
+     * @type {Object<string, string>}
      * @ignore
      */
     animationsIndex = {};
@@ -98,12 +98,16 @@ class AnimationComponent extends Component {
 
     /**
      * If true the first animation asset will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
      */
     activate = true;
 
     /**
      * Speed multiplier for animation play back. 1 is playback at normal speed and 0 pauses the
      * animation.
+     *
+     * @type {number}
      */
     speed = 1;
 
@@ -120,7 +124,7 @@ class AnimationComponent extends Component {
     /**
      * Get or set dictionary of animations by name.
      *
-     * @type {Object.<string, Animation>}
+     * @type {Object<string, Animation>}
      */
     set animations(value) {
         this._animations = value;

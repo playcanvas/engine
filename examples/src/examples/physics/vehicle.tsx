@@ -6,18 +6,20 @@ class VehicleExample {
     static NAME = 'Vehicle';
 
 
-    example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
+    example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {
             keyboard: new pc.Keyboard(window)
         });
 
-        if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.wasm.js', '/static/lib/ammo/ammo.wasm.wasm', demo);
-        } else {
-            loadWasmModuleAsync('Ammo', '/static/lib/ammo/ammo.js', '', demo);
-        }
+        pc.WasmModule.setConfig('Ammo', {
+            glueUrl: '/static/lib/ammo/ammo.wasm.js',
+            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+            fallbackUrl: '/static/lib/ammo/ammo.js'
+        });
+
+        pc.WasmModule.getInstance('Ammo', demo);
 
         function demo() {
 

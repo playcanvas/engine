@@ -3,12 +3,12 @@
 <head>
     <script src="../../build/playcanvas-extras.js"></script>
     <script src="../../build/playcanvas-observer.js"></script>
-    <script src="../../build/wasm-loader.js"></script>
     <script src="../../build/urlSearchParamsPolyfill.js"></script>
     <script src="../../build/promisePolyfill.js"></script>
     <script src="../../build/fetchPolyfill.js"></script>
     <script src="../../build/regeneratorRuntimePolyfill.js"></script>
     <script src="../../build/arrayFromPolyfill.js"></script>
+    <script src="../../build/objectValuesPolyfill.js"></script>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -66,16 +66,13 @@
         function loadEngine(callback) {
             const enginePath = urlParams && urlParams.get('use_local_engine') || "{{{enginePath}}}";
 
-            fetch(enginePath)
-                .then(function(response) { return response.text() })
-                .then(function(data) {
-                    var module = {
-                        exports: {}
-                    };
-                    window.pc = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
-                    window.top.pc = window.pc;
-                    callback();
-                });
+            const script = document.createElement('script');
+            script.setAttribute('src', enginePath);
+            script.onload = function() {
+                window.top.pc = window.pc;
+                callback();
+            };
+            document.head.appendChild(script);
         }
 
         function setupApplication(app) {
@@ -169,10 +166,6 @@
                     return data;
                 } else if (arg === 'pcx') {
                     return pcx;
-                } else if (arg === 'loadWasmModuleAsync') {
-                    return loadWasmModuleAsync;
-                } else if (arg === 'wasmSupported') {
-                    return wasmSupported;
                 }
             });
             window.exampleFunction.apply(this, args);

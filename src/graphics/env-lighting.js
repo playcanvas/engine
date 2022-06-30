@@ -145,6 +145,7 @@ class EnvLighting {
         DebugGraphics.pushGpuMarker(device, "genAtlas");
 
         const result = options?.target || new Texture(device, {
+            name: 'envAtlas',
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
@@ -161,7 +162,7 @@ class EnvLighting {
 
         // generate mipmaps
         const rect = new Vec4(0, 0, 512 * s, 256 * s);
-        const levels = calcLevels(512);
+        const levels = calcLevels(256) - calcLevels(4);
         for (let i = 0; i < levels; ++i) {
             reprojectTexture(source, result, {
                 numSamples: 1,
@@ -233,6 +234,7 @@ class EnvLighting {
         DebugGraphics.pushGpuMarker(device, "genPrefilteredAtlas");
 
         const result = options?.target || new Texture(device, {
+            name: 'envPrefilteredAtlas',
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,

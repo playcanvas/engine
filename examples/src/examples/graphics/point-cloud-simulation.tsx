@@ -5,7 +5,7 @@ class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Point Cloud Simulation';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -34,7 +34,7 @@ void main(void)
     // color depends on position of particle
     outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1);
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision mediump float;
 varying vec4 outColor;
 

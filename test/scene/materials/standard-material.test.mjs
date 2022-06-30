@@ -234,7 +234,6 @@ describe('StandardMaterial', function () {
         expect(material.specular.r).to.equal(0);
         expect(material.specular.g).to.equal(0);
         expect(material.specular.b).to.equal(0);
-        expect(material.specularAntialias).to.equal(false);
         expect(material.specularMap).to.be.null;
         expect(material.specularMapChannel).to.equal('rgb');
         expect(material.specularMapOffset).to.be.an.instanceof(Vec2);

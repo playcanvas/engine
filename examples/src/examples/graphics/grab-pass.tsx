@@ -5,73 +5,73 @@ class GrabPassExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Grab Pass';
     static FILES = {
-        'shader.vert': `
-attribute vec3 aPosition;
-attribute vec2 aUv;
+        'shader.vert': /* glsl */`
+            attribute vec3 vertex_position;
+            attribute vec2 vertex_texCoord0;
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_viewProjection;
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
 
-varying vec2 texCoord;
+            varying vec2 texCoord;
 
-void main(void)
-{
-    // project the position
-    vec4 pos = matrix_model * vec4(aPosition, 1.0);
-    gl_Position = matrix_viewProjection * pos;
+            void main(void)
+            {
+                // project the position
+                vec4 pos = matrix_model * vec4(vertex_position, 1.0);
+                gl_Position = matrix_viewProjection * pos;
 
+                texCoord = vertex_texCoord0;
+            }
+        `,
+        'shader.frag': /* glsl */`
+            precision mediump float;
 
-    texCoord = aUv;
-}`,
-        'shader.frag': `
-precision mediump float;
+            // use the special uSceneColorMap texture, which is a built-in texture containing
+            // a copy of the color buffer at the point of capture, inside the Depth layer.
+            uniform sampler2D uSceneColorMap;
 
-// use the special texture_grabPass texture, which is a built-in texture. Each time this texture is used
-// for rendering, the engine will copy color framebuffer to it which represents already rendered scene
-uniform sampler2D texture_grabPass;
+            // normal map providing offsets
+            uniform sampler2D uOffsetMap;
 
-// normal map providing offsets
-uniform sampler2D uOffsetMap;
+            // roughness map
+            uniform sampler2D uRoughnessMap;
 
-// roughness map
-uniform sampler2D uRoughnessMap;
+            // engine built-in constant storing render target size in .xy and inverse size in .zw
+            uniform vec4 uScreenSize;
 
-// engine built-in constant storing render target size in .xy and inverse size in .zw
-uniform vec4 uScreenSize;
+            varying vec2 texCoord;
 
-varying vec2 texCoord;
+            void main(void)
+            {
+                float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
 
-void main(void)
-{
-    float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
+                // sample offset texture - used to add distortion to the sampled background
+                vec2 offset = texture2D(uOffsetMap, texCoord).rg;
+                offset = 2.0 * offset - 1.0;
 
-    // sample offset texture - used to add distortion to the sampled background
-    vec2 offset = texture2D(uOffsetMap, texCoord).rg;
-    offset = 2.0 * offset - 1.0;
+                // offset strength
+                offset *= (0.2 + roughness) * 0.015;
 
-    // offset strength
-    offset *= (0.2 + roughness) * 0.015;
+                // get normalized uv coordinates for canvas
+                vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
 
-    // get normalized uv coordinates for canvas
-    vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
+                // roughness dictates which mipmap level gets used, in 0..4 range
+                float mipmap = roughness * 5.0;
 
-    // roughness dictates which mipmap level gets used, in 0..4 range
-    float mipmap = roughness * 5.0;
+                // get background pixel color with distorted offset
+                #ifdef GL2
+                    // only webgl2 (and webgl1 extension - not handled here) supports reading specified mipmap
+                    vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
+                #else
+                    vec3 grabColor = texture2D(uSceneColorMap, grabUv + offset).rgb;
+                #endif
 
-    // get background pixel color with distorted offset
-    #ifdef GL2
-        // only webgl2 (and webgl1 extension - not handled here) supports reading specified mipmap
-        vec3 grabColor = texture2D(texture_grabPass, grabUv + offset, mipmap).rgb;
-    #else
-        vec3 grabColor = texture2D(texture_grabPass, grabUv + offset).rgb;
-    #endif
-
-    // brighten the refracted texture a little bit
-    // brighten even more the rough parts of the glass
-    gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
-}`
+                // brighten the refracted texture a little bit
+                // brighten even more the rough parts of the glass
+                gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
+            }
+        `
     };
-
 
     example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
@@ -101,11 +101,11 @@ void main(void)
 
             app.scene.toneMapping = pc.TONEMAP_ACES;
 
-            // Render meshes to immediate layer, which renders after skybox - to include skybox in the refraction.
-            // Set up front to back sorting for those meshes - so when we get to render the glass,
-            // object behind it would be rendered already
-            const immediateLayer = app.scene.layers.getLayerByName("Immediate");
-            immediateLayer.opaqueSortMode = pc.SORTMODE_BACK2FRONT;
+            // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+            // Move the depth layer to take place after World and Skydome layers, to capture both of them.
+            const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+            app.scene.layers.remove(depthLayer);
+            app.scene.layers.insertOpaque(depthLayer, 2);
 
             // helper function to create a primitive with shape type, position, scale, color
             function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
@@ -121,8 +121,7 @@ void main(void)
                 const primitive = new pc.Entity();
                 primitive.addComponent('render', {
                     type: primitiveType,
-                    material: material,
-                    layers: [immediateLayer.id]
+                    material: material
                 });
 
                 // set position and scale and add it to scene
@@ -146,7 +145,7 @@ void main(void)
             }
 
             // Create the camera, which renders entities
-            const camera = new pc.Entity();
+            const camera = new pc.Entity("SceneCamera");
             camera.addComponent("camera", {
                 clearColor: new pc.Color(0.2, 0.2, 0.2)
             });
@@ -154,25 +153,19 @@ void main(void)
             camera.setLocalPosition(0, 10, 20);
             camera.lookAt(pc.Vec3.ZERO);
 
+            // enable the camera to render the scene's color map.
+            camera.camera.requestSceneColorMap(true);
+
             // create a primitive which uses refraction shader to distort the view behind it
             const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
             glass.render.castShadows = false;
             glass.render.receiveShadows = false;
 
-            // @ts-ignore create shader using vertex and fragment shaders
-            const webgl2def = (app.graphicsDevice.webgl2) ? "#define GL2\n" : "";
-            const shaderDefinition = {
-                attributes: {
-                    aPosition: pc.SEMANTIC_POSITION,
-                    aUv: pc.SEMANTIC_TEXCOORD0
-                },
-                vshader: files['shader.vert'],
-                fshader: webgl2def + files['shader.frag']
-            };
+            const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
 
             // reflection material using the shader
             const refractionMaterial = new pc.Material();
-            refractionMaterial.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+            refractionMaterial.shader = shader;
             glass.render.material = refractionMaterial;
 
             // set an offset map on the material
@@ -181,7 +174,10 @@ void main(void)
             // set roughness map
             refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
 
-            // refractionMaterial.update();
+            // transparency
+            refractionMaterial.blendType = pc.BLEND_NORMAL;
+            refractionMaterial.update();
+
             app.start();
 
             // update things each frame

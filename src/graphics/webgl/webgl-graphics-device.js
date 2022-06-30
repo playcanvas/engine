@@ -28,17 +28,21 @@ import { drawQuadWithShader } from '../simple-post-effect.js';
 import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
-import { GrabPass } from '../grab-pass.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { Color } from '../../math/color.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
 /** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
+
+const invalidateAttachments = [];
 
 function testRenderable(gl, pixelFormat) {
     let result = true;
@@ -114,10 +118,10 @@ function testTextureFloatHighPrecision(device) {
         height: 1,
         mipmaps: false,
         minFilter: FILTER_NEAREST,
-        magFilter: FILTER_NEAREST
+        magFilter: FILTER_NEAREST,
+        name: 'testFHP'
     };
     const tex1 = new Texture(device, textureOptions);
-    tex1.name = 'testFHP';
     const targ1 = new RenderTarget({
         colorBuffer: tex1,
         depth: false
@@ -126,7 +130,6 @@ function testTextureFloatHighPrecision(device) {
 
     textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
     const tex2 = new Texture(device, textureOptions);
-    tex2.name = 'testFHP';
     const targ2 = new RenderTarget({
         colorBuffer: tex2,
         depth: false
@@ -155,14 +158,6 @@ function testTextureFloatHighPrecision(device) {
 
     return f === 0;
 }
-
-/**
- * @event
- * @name GraphicsDevice#resizecanvas
- * @description The 'resizecanvas' event is fired when the canvas is resized.
- * @param {number} width - The new width of the canvas in pixels.
- * @param {number} height - The new height of the canvas in pixels.
- */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -229,6 +224,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super(canvas);
 
         this.defaultFramebuffer = null;
+
+        // true if the default framebuffer has alpha
+        this.defaultFramebufferAlpha = options.alpha;
 
         this.updateClientRect();
 
@@ -338,7 +336,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.SRC_ALPHA_SATURATE,
             gl.ONE_MINUS_SRC_ALPHA,
             gl.DST_ALPHA,
-            gl.ONE_MINUS_DST_ALPHA
+            gl.ONE_MINUS_DST_ALPHA,
+            gl.CONSTANT_COLOR,
+            gl.ONE_MINUS_CONSTANT_COLOR,
+            gl.CONSTANT_ALPHA,
+            gl.ONE_MINUS_CONSTANT_ALPHA
         ];
 
         this.glComparison = [
@@ -618,12 +620,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._spectorCurrentMarker = "";
         // #endif
 
-        // set to false during rendering when grabTexture is unavailable (when rendering shadows ..)
-        this.grabPassAvailable = true;
-
-        this.grabPass = new GrabPass(this, options.alpha);
-        this.grabPass.create();
-
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
@@ -639,8 +635,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     destroy() {
         super.destroy();
         const gl = this.gl;
-
-        this.grabPass.destroy();
 
         if (this.webgl2 && this.feedback) {
             gl.deleteTransformFeedback(this.feedback);
@@ -679,7 +673,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createRenderTargetImpl(renderTarget) {
-        return new WebglRenderTarget(renderTarget);
+        return new WebglRenderTarget();
     }
 
     // #if _DEBUG
@@ -915,6 +909,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendFunc(gl.ONE, gl.ZERO);
         gl.blendEquation(gl.FUNC_ADD);
 
+        this.blendColor = new Color(0, 0, 0, 0);
+        gl.blendColor(0, 0, 0, 0);
+
         this.writeRed = true;
         this.writeGreen = true;
         this.writeBlue = true;
@@ -963,10 +960,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.clearDepth = 1;
         gl.clearDepth(1);
 
-        this.clearRed = 0;
-        this.clearBlue = 0;
-        this.clearGreen = 0;
-        this.clearAlpha = 0;
+        this.clearColor = new Color(0, 0, 0, 0);
         gl.clearColor(0, 0, 0, 0);
 
         this.clearStencil = 0;
@@ -1030,9 +1024,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.loseContext();
         }
 
-        // grab pass
-        this.grabPass.destroy();
-
         // release textures
         for (const texture of this.textures) {
             texture.loseContext();
@@ -1071,8 +1062,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
-
-        this.grabPass.create();
     }
 
     /**
@@ -1114,7 +1103,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Binds the specified framebuffer object.
      *
-     * @param {WebGLFramebuffer} fb - The framebuffer to bind.
+     * @param {WebGLFramebuffer | null} fb - The framebuffer to bind.
      * @ignore
      */
     setFramebuffer(fb) {
@@ -1128,7 +1117,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Copies source render target into destination render target. Mostly used by post-effects.
      *
-     * @param {RenderTarget} source - The source render target.
+     * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
      * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
      * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
@@ -1148,7 +1137,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     Debug.error("Can't copy empty color buffer to backbuffer");
                     return false;
                 }
-            } else {
+            } else if (source) {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
                     Debug.error("Can't copy color buffer, because one of the render targets doesn't have it");
@@ -1160,16 +1149,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         }
-        if (depth) {
-            if (!source._depthBuffer || !dest._depthBuffer) {
-                Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
-                return false;
-            }
-            if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                Debug.error("Can't copy render targets of different depth formats");
-                return false;
+        if (depth && source) {
+            if (!source._depth) {   // when depth is automatic, we cannot test the buffer nor its format
+                if (!source._depthBuffer || !dest._depthBuffer) {
+                    Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                    return false;
+                }
+                if (source._depthBuffer._format !== dest._depthBuffer._format) {
+                    Debug.error("Can't copy render targets of different depth formats");
+                    return false;
+                }
             }
         }
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
         if (this.webgl2 && dest) {
             const prevRt = this.renderTarget;
@@ -1190,6 +1183,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.constantTexSource.setValue(source._colorBuffer);
             drawQuadWithShader(this, dest, shader);
         }
+
+        DebugGraphics.popGpuMarker(this);
 
         return true;
     }
@@ -1236,12 +1231,135 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Start a render pass.
+     *
+     * @param {RenderPass} renderPass - The render pass to start.
+     * @ignore
+     */
+    startPass(renderPass) {
+
+        DebugGraphics.pushGpuMarker(this, `START-PASS`);
+
+        // set up render target
+        this.setRenderTarget(renderPass.renderTarget);
+        this.updateBegin();
+
+        // clear the render target
+        const colorOps = renderPass.colorOps;
+        const depthStencilOps = renderPass.depthStencilOps;
+        if (colorOps.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+
+            // the pass always clears full target
+            const rt = renderPass.renderTarget;
+            const width = rt ? rt.width : this.width;
+            const height = rt ? rt.height : this.height;
+            this.setViewport(0, 0, width, height);
+            this.setScissor(0, 0, width, height);
+
+            let clearFlags = 0;
+            const clearOptions = {};
+
+            if (colorOps.clear) {
+                clearFlags |= CLEARFLAG_COLOR;
+                clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
+            }
+
+            if (depthStencilOps.clearDepth) {
+                clearFlags |= CLEARFLAG_DEPTH;
+                clearOptions.depth = depthStencilOps.clearDepthValue;
+            }
+
+            if (depthStencilOps.clearStencil) {
+                clearFlags |= CLEARFLAG_STENCIL;
+                clearOptions.stencil = depthStencilOps.clearStencilValue;
+            }
+
+            // clear it
+            clearOptions.flags = clearFlags;
+            this.clear(clearOptions);
+        }
+
+        Debug.assert(!this.insideRenderPass);
+        this.insideRenderPass = true;
+
+        DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
+     * End a render pass.
+     *
+     * @param {RenderPass} renderPass - The render pass to end.
+     * @ignore
+     */
+    endPass(renderPass) {
+
+        DebugGraphics.pushGpuMarker(this, `END-PASS`);
+
+        this.unbindVertexArray();
+
+        const target = this.renderTarget;
+        if (target) {
+
+            // invalidate buffers to stop them being written to on tiled architextures
+            if (this.webgl2) {
+                invalidateAttachments.length = 0;
+                const gl = this.gl;
+
+                // invalidate color only if we don't need to resolve it
+                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
+                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                }
+                if (!renderPass.depthStencilOps.storeDepth) {
+                    invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
+                }
+                if (!renderPass.depthStencilOps.storeStencil) {
+                    invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                }
+
+                if (invalidateAttachments.length > 0) {
+
+                    // invalidate the whole buffer
+                    // TODO: we could handle viewport invalidation as well
+                    if (renderPass.fullSizeClearRect) {
+                        gl.invalidateFramebuffer(gl.DRAW_FRAMEBUFFER, invalidateAttachments);
+                    }
+                }
+            }
+
+            // resolve the color buffer
+            if (renderPass.colorOps.resolve) {
+                if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
+                    target.resolve(true, false);
+                }
+            }
+
+            // generate mipmaps
+            if (renderPass.colorOps.mipmaps) {
+                const colorBuffer = target._colorBuffer;
+                if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+                    this.activeTexture(this.maxCombinedTextures - 1);
+                    this.bindTexture(colorBuffer);
+                    this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                }
+            }
+        }
+
+        this.insideRenderPass = false;
+
+        DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
      * Marks the beginning of a block of rendering. Internally, this function binds the render
      * target currently set on the device. This function should be matched with a call to
      * {@link GraphicsDevice#updateEnd}. Calls to {@link GraphicsDevice#updateBegin} and
      * {@link GraphicsDevice#updateEnd} must not be nested.
+     *
+     * @ignore
      */
     updateBegin() {
+        DebugGraphics.pushGpuMarker(this, 'UPDATE-BEGIN');
+
         this.boundVao = null;
 
         // clear texture units once a frame on desktop safari
@@ -1259,28 +1377,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Create a new WebGL frame buffer object
             if (!target.impl._glFrameBuffer) {
                 this.initRenderTarget(target);
-
             } else {
                 this.setFramebuffer(target.impl._glFrameBuffer);
             }
         } else {
             this.setFramebuffer(this.defaultFramebuffer);
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**
      * Marks the end of a block of rendering. This function should be called after a matching call
      * to {@link GraphicsDevice#updateBegin}. Calls to {@link GraphicsDevice#updateBegin} and
      * {@link GraphicsDevice#updateEnd} must not be nested.
+     *
+     * @ignore
      */
     updateEnd() {
-        const gl = this.gl;
 
-        // unbind VAO from device to protect it from being changed
-        if (this.boundVao) {
-            this.boundVao = null;
-            this.gl.bindVertexArray(null);
-        }
+        DebugGraphics.pushGpuMarker(this, `UPDATE-END`);
+
+        this.unbindVertexArray();
 
         // Unset the render target
         const target = this.renderTarget;
@@ -1292,7 +1410,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // updating each face!
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
-                gl.generateMipmap(colorBuffer.impl._glTarget);
+                this.gl.generateMipmap(colorBuffer.impl._glTarget);
             }
 
             // Resolve MSAA if needed
@@ -1300,6 +1418,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 target.resolve();
             }
         }
+
+        DebugGraphics.popGpuMarker(this);
     }
 
     /**
@@ -1464,10 +1584,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (!texture.impl._glTexture)
             texture.impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPass.texture) {
+        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
+
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
@@ -1476,11 +1597,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 texture._parameterFlags = 0;
             }
 
-            // grab framebuffer to be used as a texture - this returns false when not supported for current render pass
-            // (for example when rendering to shadow map), in which case previous content is used
-            const processed = (texture === this.grabPass.texture) && this.grabPass.prepareTexture();
-
-            if (!processed && (texture._needsUpload || texture._needsMipmapsUpload)) {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
@@ -1568,6 +1685,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         return vao;
+    }
+
+    unbindVertexArray() {
+        // unbind VAO from device to protect it from being changed
+        if (this.boundVao) {
+            this.boundVao = null;
+            this.gl.bindVertexArray(null);
+        }
     }
 
     setBuffers() {
@@ -1662,6 +1787,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             sampler = samplers[i];
             samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
+
+                // #if _DEBUG
+                const samplerName = sampler.scopeId.name;
+                if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
+                }
+                if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                }
+                // #endif
+
                 continue; // Because unset constants shouldn't raise random errors
             }
 
@@ -1802,39 +1938,32 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const defaultOptions = this.defaultClearOptions;
         options = options || defaultOptions;
 
-        const flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
+        const flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
         if (flags !== 0) {
             const gl = this.gl;
 
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
-                const color = (options.color == undefined) ? defaultOptions.color : options.color;
+                const color = (options.color === undefined) ? defaultOptions.color : options.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
+                this.setColorWrite(true, true, true, true);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
-                const depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
+                const depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
                 this.setClearDepth(depth);
-                if (!this.depthWrite) {
-                    gl.depthMask(true);
-                }
+                this.setDepthWrite(true);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
-                const stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
+                const stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
                 this.setClearStencil(stencil);
             }
 
             // Clear the frame buffer
             gl.clear(this.glClearFlag[flags]);
-
-            if (flags & CLEARFLAG_DEPTH) {
-                if (!this.depthWrite) {
-                    gl.depthMask(false);
-                }
-            }
         }
     }
 
@@ -1879,12 +2008,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     setClearColor(r, g, b, a) {
-        if ((r !== this.clearRed) || (g !== this.clearGreen) || (b !== this.clearBlue) || (a !== this.clearAlpha)) {
+        const c = this.clearColor;
+        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
             this.gl.clearColor(r, g, b, a);
-            this.clearRed = r;
-            this.clearGreen = g;
-            this.clearBlue = b;
-            this.clearAlpha = a;
+            this.clearColor.set(r, g, b, a);
         }
     }
 
@@ -2355,6 +2482,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
      * - {@link BLENDMODE_DST_ALPHA}
      * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
+     * - {@link BLENDMODE_CONSTANT_COLOR}
+     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_COLOR}
+     * - {@link BLENDMODE_CONSTANT_ALPHA}
+     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_ALPHA}
      *
      * @param {number} blendSrc - The source blend function.
      * @param {number} blendDst - The destination blend function.
@@ -2445,6 +2576,23 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.blendEquation = blendEquation;
             this.blendAlphaEquation = blendAlphaEquation;
             this.separateAlphaEquation = true;
+        }
+    }
+
+    /**
+     * Set the source and destination blending factors.
+     *
+     * @param {number} r - The red component in the range of 0 to 1. Default value is 0.
+     * @param {number} g - The green component in the range of 0 to 1. Default value is 0.
+     * @param {number} b - The blue component in the range of 0 to 1. Default value is 0.
+     * @param {number} a - The alpha component in the range of 0 to 1. Default value is 0.
+     * @ignore
+     */
+    setBlendColor(r, g, b, a) {
+        const c = this.blendColor;
+        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+            this.gl.blendColor(r, g, b, a);
+            c.set(r, g, b, a);
         }
     }
 

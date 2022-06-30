@@ -69,21 +69,21 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * @event
-     * @name XrPlaneDetection#available
-     * @description Fired when plane detection becomes available.
+     * Fired when plane detection becomes available.
+     *
+     * @event XrPlaneDetection#available
      */
 
     /**
-     * @event
-     * @name XrPlaneDetection#unavailable
-     * @description Fired when plane detection becomes unavailable.
+     * Fired when plane detection becomes unavailable.
+     *
+     * @event XrPlaneDetection#unavailable
      */
 
     /**
-     * @event
-     * @name XrPlaneDetection#add
-     * @description Fired when new {@link XrPlane} is added to the list.
+     * Fired when new {@link XrPlane} is added to the list.
+     *
+     * @event XrPlaneDetection#add
      * @param {XrPlane} plane - Plane that has been added.
      * @example
      * app.xr.planeDetection.on('add', function (plane) {
@@ -92,9 +92,9 @@ class XrPlaneDetection extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrPlaneDetection#remove
-     * @description Fired when a {@link XrPlane} is removed from the list.
+     * Fired when a {@link XrPlane} is removed from the list.
+     *
+     * @event XrPlaneDetection#remove
      * @param {XrPlane} plane - Plane that has been removed.
      * @example
      * app.xr.planeDetection.on('remove', function (plane) {

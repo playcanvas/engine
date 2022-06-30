@@ -1,5 +1,6 @@
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
+import { Debug } from '../core/debug.js';
 
 import { Mat3 } from '../math/mat3.js';
 import { Mat4 } from '../math/mat4.js';
@@ -1148,6 +1149,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Add a new child to the child list and update the parent value of the child node.
+     * If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The new child to add.
      * @example
@@ -1155,19 +1157,14 @@ class GraphNode extends EventHandler {
      * this.entity.addChild(e);
      */
     addChild(node) {
-        if (node._parent !== null)
-            throw new Error('GraphNode is already parented');
-
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
-
+        this._prepareInsertChild(node);
         this._children.push(node);
         this._onInsertChild(node);
     }
 
     /**
      * Add a child to this node, maintaining the child's transform in world space.
+     * If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The child to add.
      * @example
@@ -1176,16 +1173,11 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     addChildAndSaveTransform(node) {
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
 
         const wPos = node.getPosition();
         const wRot = node.getRotation();
 
-        const current = node._parent;
-        if (current)
-            current.removeChild(node);
+        this._prepareInsertChild(node);
 
         node.setPosition(tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
         node.setRotation(tmpQuat.copy(this.getRotation()).invert().mul(wRot));
@@ -1196,7 +1188,7 @@ class GraphNode extends EventHandler {
 
     /**
      * Insert a new child to the child list at the specified index and update the parent value of
-     * the child node.
+     * the child node. If the node already had a parent, it is removed from its child list.
      *
      * @param {GraphNode} node - The new child to insert.
      * @param {number} index - The index in the child list of the parent where the new node will be
@@ -1206,30 +1198,28 @@ class GraphNode extends EventHandler {
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-        if (node._parent !== null)
-            throw new Error('GraphNode is already parented');
 
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
-
+        this._prepareInsertChild(node);
         this._children.splice(index, 0, node);
         this._onInsertChild(node);
     }
 
-    // #if _DEBUG
     /**
+     * Prepares node for being inserted to a parent node, and removes it from the previous parent.
+     *
      * @param {GraphNode} node - The node being inserted.
      * @private
      */
-    _debugInsertChild(node) {
-        if (this === node)
-            throw new Error('GraphNode cannot be a child of itself');
+    _prepareInsertChild(node) {
 
-        if (this.isDescendantOf(node))
-            throw new Error('GraphNode cannot add an ancestor as a child');
+        // remove it from the existing parent
+        if (node._parent) {
+            node._parent.removeChild(node);
+        }
+
+        Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
+        Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);
     }
-    // #endif
 
     /**
      * Fires an event on all children of the node. The event `name` is fired on the first (root)

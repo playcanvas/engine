@@ -57,6 +57,25 @@ class ElementDragHelper extends EventHandler {
         this._toggleLifecycleListeners('on');
     }
 
+    /**
+     * Fired when a new drag operation starts.
+     *
+     * @event ElementDragHelper#drag:start
+     */
+
+    /**
+     * Fired when the current new drag operation ends.
+     *
+     * @event ElementDragHelper#drag:end
+     */
+
+    /**
+     * Fired whenever the position of the dragged element changes.
+     *
+     * @event ElementDragHelper#drag:move
+     * @param {Vec3} value - The current position.
+     */
+
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
@@ -228,25 +247,6 @@ class ElementDragHelper extends EventHandler {
     get isDragging() {
         return this._isDragging;
     }
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:start
-     * @description Fired when a new drag operation starts.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:end
-     * @description Fired when the current new drag operation ends.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:move
-     * @description Fired whenever the position of the dragged element changes.
-     * @param {Vec3} value - The current position.
-     */
 }
 
 export { ElementDragHelper };

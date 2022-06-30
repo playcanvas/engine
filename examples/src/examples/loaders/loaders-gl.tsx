@@ -7,7 +7,7 @@ class LoadersGlExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Loaders.gl';
     static FILES = {
-        'shader.vert': `
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
 attribute vec4 aColor;
@@ -26,7 +26,7 @@ void main(void)
     gl_PointSize = 1.5;
     outColor = aColor;
 }`,
-        'shader.frag': `
+        'shader.frag': /* glsl */`
 precision lowp float;
 varying vec4 outColor;
 

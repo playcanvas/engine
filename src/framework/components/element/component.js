@@ -15,7 +15,7 @@ import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 
-import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
+import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
@@ -80,12 +80,12 @@ const matD = new Mat4();
  * ```
  *
  * Relevant 'Engine-only' examples:
- * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic.html)
- * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline.html)
- * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow.html)
- * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup.html)
- * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap.html)
- * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter.html)
+ * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic)
+ * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline)
+ * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow)
+ * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup)
+ * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap)
+ * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter)
  *
  * @property {Color} color The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color
  * of the text for {@link ELEMENTTYPE_TEXT} types.
@@ -103,6 +103,8 @@ const matD = new Mat4();
  * textWidth. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoHeight Automatically set the height of the component to be the same as
  * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
+ * @property {string} fitMode Set how the content should be fitted and preserve the aspect ratio of
+ * the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
  * @property {Font} font The font used for rendering the text. Only works for
@@ -129,7 +131,22 @@ const matD = new Mat4();
  * @property {Vec2} alignment The horizontal and vertical alignment of the text. Values range from
  * 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for
  * {@link ELEMENTTYPE_TEXT} types.
- * @property {string} text The text to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+ * @property {string} text The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To
+ * override certain text styling properties on a per-character basis, the text can optionally
+ * include markup tags contained within square brackets. Supported tags are:
+ *
+ * - `color` - override the element's `color` property. Examples:
+ *   - `[color="#ff0000"]red text[/color]`
+ *   - `[color="#00ff00"]green text[/color]`
+ *   - `[color="#0000ff"]blue text[/color]`
+ * - `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
+ *   - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+ * - `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
+ *   - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+ *   - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+ *
+ * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
+ * true.
  * @property {string} key The localization key to use to get the localized text from
  * {@link Application#i18n}. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} textureAsset The id of the texture asset to render. Only works for
@@ -156,8 +173,7 @@ const matD = new Mat4();
  * @property {boolean} unicodeConverter Convert unicode characters using a function registered by
  * `app.systems.element.registerUnicodeConverter`.
  * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for
- * {@link ELEMENTTYPE_TEXT} types. The only supported tag is `[color]` with a hex color value. e.g.
- * `[color="#ff0000"]red text[/color]`
+ * {@link ELEMENTTYPE_TEXT} types. Defaults to false.
  * @property {number} rangeStart Index of the first character to render. Only works for
  * {@link ELEMENTTYPE_TEXT} types.
  * @property {number} rangeEnd Index of the last character to render. Only works for
@@ -241,6 +257,9 @@ class ElementComponent extends Component {
 
         this._drawOrder = 0;
 
+        // Fit mode
+        this._fitMode = FITMODE_STRETCH;
+
         // input related
         this._useInput = false;
 
@@ -257,6 +276,87 @@ class ElementComponent extends Component {
         this._maskOffset = 0.5;
         this._maskedBy = null; // the entity that is masking this element
     }
+
+    /**
+     * Fired when the mouse is pressed while the cursor is on the component. Only fired when
+     * useInput is true.
+     *
+     * @event ElementComponent#mousedown
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse is released while the cursor is on the component. Only fired when
+     * useInput is true.
+     *
+     * @event ElementComponent#mouseup
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor enters the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mouseenter
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor leaves the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mouseleave
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mousemove
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mousewheel
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse is pressed and released on the component or when a touch starts and
+     * ends on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#click
+     * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch starts on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchstart
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch ends on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchend
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch moves after it started touching the component. Only fired when useInput
+     * is true.
+     *
+     * @event ElementComponent#touchmove
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch is canceled on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchcancel
+     * @param {ElementTouchEvent} event - The event.
+     */
 
     get _absLeft() {
         return this._localAnchor.x + this._margin.x;
@@ -770,7 +870,7 @@ class ElementComponent extends Component {
             }
         } else {
             if (this._useInput === true) {
-                console.warn('Elements will not get any input events because this.system.app.elementInput is not created');
+                Debug.warn('Elements will not get any input events because this.system.app.elementInput is not created');
             }
         }
 
@@ -779,6 +879,28 @@ class ElementComponent extends Component {
 
     get useInput() {
         return this._useInput;
+    }
+
+    /**
+     * Set how the content should be fitted and preserve the aspect ratio of the source texture or sprite.
+     * Only works for {@link ELEMENTTYPE_IMAGE} types. Can be:
+     *
+     * - {@link FITMODE_STRETCH}: Fit the content exactly to Element's bounding box.
+     * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while preserving its Aspect Ratio.
+     * - {@link FITMODE_COVER}: Fit the content to cover the entire Element's bounding box while preserving its Aspect Ratio.
+     *
+     * @type {string}
+     */
+    set fitMode(value) {
+        this._fitMode = value;
+        this._calculateSize(true, true);
+        if (this._image) {
+            this._image.refreshMesh();
+        }
+    }
+
+    get fitMode() {
+        return this._fitMode;
     }
 
     /**
@@ -1627,6 +1749,12 @@ class ElementComponent extends Component {
 
         return false;
     }
+
+    _dirtyBatch() {
+        if (this.batchGroupId !== -1) {
+            this.system.app.batcher?.markGroupDirty(this.batchGroupId);
+        }
+    }
 }
 
 function _define(name) {
@@ -1641,8 +1769,16 @@ function _define(name) {
         },
         set: function (value) {
             if (this._text) {
+                if (this._text[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._text[name] = value;
             } else if (this._image) {
+                if (this._image[name] !== value) {
+                    this._dirtyBatch();
+                }
+
                 this._image[name] = value;
             }
         }
@@ -1687,82 +1823,5 @@ _define('shadowOffset');
 _define('enableMarkup');
 _define('rangeStart');
 _define('rangeEnd');
-
-// Events Documentation
-
-/**
- * @event
- * @name ElementComponent#mousedown
- * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mouseup
- * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mouseenter
- * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-/**
- * @event
- * @name ElementComponent#mouseleave
- * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-/**
- * @event
- * @name ElementComponent#mousemove
- * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mousewheel
- * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#click
- * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchstart
- * @description Fired when a touch starts on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchend
- * @description Fired when a touch ends on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchmove
- * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchcancel
- * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
 
 export { ElementComponent };

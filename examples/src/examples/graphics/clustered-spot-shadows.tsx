@@ -1,25 +1,9 @@
 import React from 'react';
-// @ts-ignore: library file import
 import * as pc from '../../../../';
 
-// @ts-ignore: library file import
-import Panel from '@playcanvas/pcui/Panel/component';
-// @ts-ignore: library file import
-import SliderInput from '@playcanvas/pcui/SliderInput/component';
-// @ts-ignore: library file import
-import LabelGroup from '@playcanvas/pcui/LabelGroup/component';
-// @ts-ignore: library file import
-import BindingTwoWay from '@playcanvas/pcui/BindingTwoWay';
-// @ts-ignore: library file import
-import SelectInput from '@playcanvas/pcui/SelectInput/component';
-// @ts-ignore: library file import
+import { BindingTwoWay } from '@playcanvas/pcui';
+import { BooleanInput, Button, Label, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-// @ts-ignore: library file import
-import BooleanInput from '@playcanvas/pcui/BooleanInput/component';
-// @ts-ignore: library file import
-import Button from '@playcanvas/pcui/Button/component';
-// @ts-ignore: library file import
-import Label from '@playcanvas/pcui/Label/component';
 
 class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
@@ -58,6 +42,9 @@ class ClusteredSpotShadowsExample {
                 </LabelGroup>
                 <LabelGroup text='Static'>
                     <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.static' }} value={data.get('settings.static')}/>
+                </LabelGroup>
+                <LabelGroup text='Shadow Intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowIntensity' }} min={0} max={1} value={data.get('settings.shadowIntensity')}/>
                 </LabelGroup>
                 <Button text='Add Light' onClick={() => data.emit('add')}/>
                 <Button text='Remove Light' onClick={() => data.emit('remove')}/>
@@ -101,6 +88,7 @@ class ClusteredSpotShadowsExample {
                 shadowType: pc.SHADOW_PCF3,      // shadow filter type
                 shadowsEnabled: true,
                 cookiesEnabled: true,
+                shadowIntensity: 1,
                 numLights: 0,
                 debug: false,
                 debugAtlas: false,
@@ -114,28 +102,22 @@ class ClusteredSpotShadowsExample {
             app.scene.setSkybox(assets.cubemap.resources);
 
             // enabled clustered lighting. This is a temporary API and will change in the future
-            // @ts-ignore engine-tsd
             app.scene.clusteredLightingEnabled = true;
 
-            // adjust default clustered lighting parameters to handle many lights:
-            // @ts-ignore
+            // adjust default clustered lighting parameters to handle many lights
             const lighting = app.scene.lighting;
 
-            // 1) subdivide space with lights into this many cells:
-            // @ts-ignore engine-tsd
+            // 1) subdivide space with lights into this many cells
             lighting.cells = new pc.Vec3(12, 4, 12);
 
-            // 2) and allow this many lights per cell:
-            // @ts-ignore engine-tsd
+            // 2) and allow this many lights per cell
             const maxLights = 24;
             lighting.maxLightsPerCell = maxLights;
 
             // enable clustered shadows (it's enabled by default as well)
-            // @ts-ignore engine-tsd
             lighting.shadowsEnabled = true;
 
             // enable clustered cookies
-            // @ts-ignore engine-tsd
             lighting.cookiesEnabled = true;
 
             // resolution of the shadow and cookie atlas
@@ -313,7 +295,10 @@ class ClusteredSpotShadowsExample {
 
                     // show debug atlas
                     debugAtlas = value;
-
+                } else if (pathArray[1] === 'shadowIntensity') {
+                    for (let i = 0; i < spotLightList.length; i++) {
+                        spotLightList[i].light.shadowIntensity = value;
+                    }
                 } else {
                     // @ts-ignore
                     lighting[pathArray[1]] = value;

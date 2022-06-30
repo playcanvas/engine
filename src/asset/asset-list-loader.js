@@ -77,6 +77,10 @@ class AssetListLoader extends EventHandler {
         this.off("load");
     }
 
+    _assetHasDependencies(asset) {
+        return (asset.type === 'model' && asset.file?.url && asset.file.url && asset.file.url.match(/.json$/g));
+    }
+
     /**
      * Start loading asset list, call done() when all assets have loaded or failed to load.
      *
@@ -103,12 +107,24 @@ class AssetListLoader extends EventHandler {
             // as some assets may be loading by this call
             if (!asset.loaded) {
                 loadingAssets = true;
+                // json based models should be loaded with the loadFromUrl function so that their dependencies can be loaded too.
+                if (this._assetHasDependencies(asset)) {
+                    this._registry.loadFromUrl(asset.file.url, asset.type, (err, loadedAsset) => {
+                        if (err) {
+                            this._onError(err, asset);
+                            return;
+                        }
+                        this._onLoad(asset);
+                    });
+                }
                 this._loadingAssets.add(asset);
                 this._registry.add(asset);
             }
         });
         this._loadingAssets.forEach((asset) => {
-            this._registry.load(asset);
+            if (!this._assetHasDependencies(asset)) {
+                this._registry.load(asset);
+            }
         });
         if (!loadingAssets && this._waitingAssets.size === 0) {
             this.fire("load", Array.from(this._assets));

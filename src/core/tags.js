@@ -21,6 +21,26 @@ class Tags extends EventHandler {
     }
 
     /**
+     * @event Tags#add
+     * @param {string} tag - Name of a tag added to a set.
+     * @param {object} parent - Parent object who tags belong to.
+     */
+
+    /**
+     * @event Tags#remove
+     * @param {string} tag - Name of a tag removed from a set.
+     * @param {object} parent - Parent object who tags belong to.
+     */
+
+    /**
+     * Fires when tags have been added or removed. It will fire once on bulk changes, while
+     * `add`/`remove` will fire on each tag operation.
+     *
+     * @event Tags#change
+     * @param {object} [parent] - Parent object who tags belong to.
+     */
+
+    /**
      * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
      *
      * @param {...*} name - Name of a tag, or array of tags.
@@ -237,27 +257,5 @@ class Tags extends EventHandler {
         return this._list.length;
     }
 }
-
-/**
- * @event
- * @name Tags#add
- * @param {string} tag - Name of a tag added to a set.
- * @param {object} parent - Parent object who tags belong to.
- */
-
-/**
- * @event
- * @name Tags#remove
- * @param {string} tag - Name of a tag removed from a set.
- * @param {object} parent - Parent object who tags belong to.
- */
-
-/**
- * @event
- * @name Tags#change
- * @param {object} [parent] - Parent object who tags belong to.
- * @description Fires when tags been added / removed.
- * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation.
- */
 
 export { Tags };

@@ -44,21 +44,21 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateEnvOptions(options, device, stdMat, scene);
+        this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
             if (options.gamma) options.gamma = GAMMA_SRGBHDR;
             options.toneMap = TONEMAP_LINEAR;
         }
-        options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & SHADERDEF_TANGENTS) !== 0);
+        options.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
@@ -145,7 +145,6 @@ class StandardMaterialOptionsBuilder {
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
-        options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
         options.alphaFade = stdMat.alphaFade;
@@ -162,6 +161,7 @@ class StandardMaterialOptionsBuilder {
         options.useMetalness = stdMat.useMetalness;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
+        options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
@@ -175,7 +175,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
     }
 
-    _updateEnvOptions(options, device, stdMat, scene) {
+    _updateEnvOptions(options, stdMat, scene) {
         options.fog = stdMat.useFog ? scene.fog : 'none';
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;

@@ -229,14 +229,6 @@ class ContactResult {
     }
 }
 
-// Events Documentation
-/**
- * @event
- * @name RigidBodyComponentSystem#contact
- * @description Fired when a contact occurs between two rigid bodies.
- * @param {SingleContactResult} result - Details of the contact between the two bodies.
- */
-
 const _schema = ['enabled'];
 
 /**
@@ -320,6 +312,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.on('remove', this.onRemove, this);
     }
 
+    /**
+     * Fired when a contact occurs between two rigid bodies.
+     *
+     * @event RigidBodyComponentSystem#contact
+     * @param {SingleContactResult} result - Details of the contact between the two bodies.
+     */
+
+    /**
+     * Called once Ammo has been loaded. Responsible for creating the physics world.
+     *
+     * @ignore
+     */
     onLibraryLoaded() {
         // Create the Ammo physics world
         if (typeof Ammo !== 'undefined') {

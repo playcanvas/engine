@@ -59,16 +59,14 @@ const getExampleClassFromTextFile = (Babel, text) => {
         filename: `transformedScript.tsx`,
         presets: ["react", "typescript", "env"]
     }).code;
-    text = text.replace("wasmSupported(", "window.wasmSupported(");
-    text = text.replace("loadWasmModuleAsync(", "window.loadWasmModuleAsync(");
     text = text.replace(/static\//g, '../../static/');
     return text;
 };
 
 const getEngineTypeFromClass = (text) => {
-    if (text.indexOf(`_defineProperty(Example, "ENGINE", 'DEBUG');` !== -1)) {
+    if (text.indexOf(`_defineProperty(Example, "ENGINE", 'DEBUG');`) !== -1) {
         return 'DEBUG';
-    } else if (text.indexOf(`_defineProperty(Example, "ENGINE", 'PERFORMANCE');` !== -1)) {
+    } else if (text.indexOf(`_defineProperty(Example, "ENGINE", 'PERFORMANCE');`) !== -1) {
         return 'PERFORMANCE';
     }
     return null;

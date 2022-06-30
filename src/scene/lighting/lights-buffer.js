@@ -276,11 +276,11 @@ class LightsBuffer {
         return tempAreaLightSizes;
     }
 
-    addLightDataFlags(data8, index, light, isSpot, castShadows) {
+    addLightDataFlags(data8, index, light, isSpot, castShadows, shadowIntensity) {
         data8[index + 0] = isSpot ? 255 : 0;
         data8[index + 1] = light._shape * 64;           // value 0..3
         data8[index + 2] = light._falloffMode * 255;    // value 0..1
-        data8[index + 3] = castShadows ? 255 : 0;
+        data8[index + 3] = castShadows ? shadowIntensity * 255 : 0;
     }
 
     addLightDataColor(data8, index, light, gammaCorrection, isCookie) {
@@ -400,7 +400,7 @@ class LightsBuffer {
         const data8Start = lightIndex * this.lightsTexture8.width * 4;
 
         // flags
-        this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot, castShadows);
+        this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot, castShadows, light.shadowIntensity);
 
         // light color
         this.addLightDataColor(data8, data8Start + 4 * TextureIndex8.COLOR_A, light, gammaCorrection, isCookie);

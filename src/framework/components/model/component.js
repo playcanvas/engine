@@ -44,7 +44,7 @@ class ModelComponent extends Component {
     _model = null;
 
     /**
-     * @type {Object.<string, number>}
+     * @type {Object<string, number>}
      * @private
      */
     _mapping = {};
@@ -203,6 +203,7 @@ class ModelComponent extends Component {
      * - "cylinder": The component will render a cylinder (radius 0.5, height 1)
      * - "plane": The component will render a plane (1 unit in each dimension)
      * - "sphere": The component will render a sphere (radius 0.5)
+     * - "torus": The component will render a torus (tubeRadius: 0.2, ringRadius: 0.3)
      *
      * @type {string}
      */
@@ -342,13 +343,9 @@ class ModelComponent extends Component {
             if (this.entity.animation)
                 this.entity.animation.setModel(this._model);
 
-            // Update any animation component
+            // Update any anim component
             if (this.entity.anim) {
-                if (this.entity.anim.playing) {
-                    this.entity.anim.rebind();
-                } else {
-                    this.entity.anim.resetStateGraph();
-                }
+                this.entity.anim.rebind();
             }
             // trigger event handler to load mapping
             // for new model
@@ -633,7 +630,7 @@ class ModelComponent extends Component {
      * components of type 'asset'. The mapping contains pairs of mesh instance index - material
      * asset id.
      *
-     * @type {Object.<string, number>}
+     * @type {Object<string, number>}
      */
     set mapping(value) {
         if (this._type !== 'asset')

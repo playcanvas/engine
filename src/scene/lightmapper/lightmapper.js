@@ -140,9 +140,9 @@ class Lightmapper {
                 width: 4,
                 height: 4,
                 format: PIXELFORMAT_R8_G8_B8_A8,
-                type: TEXTURETYPE_RGBM
+                type: TEXTURETYPE_RGBM,
+                name: 'lightmapBlack'
             });
-            this.blackTex.name = 'lightmapBlack';
 
             // incref black texture in the cache to avoid it being destroyed
             LightmapCache.incRef(this.blackTex);
@@ -282,7 +282,7 @@ class Lightmapper {
 
     createTexture(size, type, name) {
 
-        const tex = new Texture(this.device, {
+        return new Texture(this.device, {
             // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
             // #endif
@@ -294,11 +294,9 @@ class Lightmapper {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: name
         });
-        tex.name = name;
-
-        return tex;
     }
 
     // recursively walk the hierarchy of nodes starting at the specified node
@@ -1092,6 +1090,8 @@ class Lightmapper {
                         this.renderer._shadowMapTime = 0;
 
                         this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+
+                        device.updateEnd();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;

@@ -91,7 +91,6 @@ class WorldToScreenExample {
                 screenPos.y *= pixelRatio;
 
                 // account for screen scaling
-                // @ts-ignore engine-tsd
                 const scale = screen.scale;
 
                 // invert the y position
