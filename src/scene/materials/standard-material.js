@@ -111,10 +111,10 @@ let _params = new Set();
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} specularityFactor The factor of specularity, exclusive to specular
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture
- * @property {boolean} f0Tint Multiply F0 reflection color
- * @property {Vec3} f0 The F0 color
- * @property {Texture|null} f0Map The map used for the F0 reflection color
- * @property {string} f0MapChannel Color channels of the F0 color
+ * @property {boolean} f0Tint Multiply F0 reflection color.
+ * @property {Vec3} f0 The F0 color.
+ * @property {Texture|null} f0Map The map used for the F0 reflection color.
+ * @property {string} f0MapChannel Color channels of the F0 color.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
