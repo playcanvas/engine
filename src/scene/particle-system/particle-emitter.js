@@ -878,10 +878,10 @@ class ParticleEmitter {
                 pack8: this.emitter.pack8,
                 customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
             });
-            this.shader = shader;
+
             return shader;
         };
-        this.material.getShaderVariant();
+        this.material.shader = this.material.getShaderVariant();
     }
 
     resetMaterial() {
