@@ -611,7 +611,7 @@ class Layer {
             if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) {
 
                 // skip this for materials not using variants
-                if (mat.getPassShader !== Material.prototype.getPassShader) {
+                if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
                     // clear shader variants on the material and also on mesh instances that use it
                     mat.clearVariants();
                 }

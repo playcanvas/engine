@@ -716,7 +716,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getPassShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 

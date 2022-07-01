@@ -1546,7 +1546,7 @@ class ForwardRenderer {
                     _tempMaterialSet.add(mat);
 
                     // skip this for materials not using variants
-                    if (mat.getPassShader !== Material.prototype.getPassShader) {
+                    if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
 
                         if (onlyLitShaders) {
                             // skip materials not using lighting

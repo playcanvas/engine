@@ -257,7 +257,7 @@ class Lightmapper {
         material.cull = CULLFACE_NONE;
         material.forceUv1 = true; // provide data to xformUv1
         material.update();
-        material.getPassShader(device, scene);
+        material.getShaderVariant(device, scene);
 
         return material;
     }

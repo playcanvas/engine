@@ -43,7 +43,7 @@ class Sky {
 
         const material = new Material();
 
-        material.getPassShader = function (dev, sc, defs, staticLightList, pass) {
+        material.getShaderVariant = function (dev, sc, defs, staticLightList, pass) {
             const library = device.getProgramLibrary();
 
             if (texture.cubemap) {
@@ -70,7 +70,7 @@ class Sky {
             return this.shader;
         };
 
-        material.getPassShader();
+        material.getShaderVariant();
 
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);

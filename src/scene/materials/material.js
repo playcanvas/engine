@@ -380,7 +380,7 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getPassShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // return the shader specified by the user of the material
         Debug.assert(this._shader, 'Material does not have shader set', this);
         return this._shader;
