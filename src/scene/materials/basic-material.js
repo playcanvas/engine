@@ -104,8 +104,7 @@ class BasicMaterial extends Material {
             pass: pass
         };
         const library = device.getProgramLibrary();
-        const shader = library.getProgram('basic', options);
-        return shader;
+        return library.getProgram('basic', options);
     }
 }
 
