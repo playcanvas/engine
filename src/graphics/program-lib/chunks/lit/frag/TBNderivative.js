@@ -20,7 +20,7 @@ void getTBN() {
     dTBN = mat3(
         normalize(T * tbnBasis),
         normalize(-B * tbnBasis),
-        normalize(dVertexNormalW)
+        dVertexNormalW
     );
 }
 `;
