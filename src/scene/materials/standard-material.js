@@ -737,11 +737,6 @@ class StandardMaterial extends Material {
         const library = device.getProgramLibrary();
         const shader = library.getProgram('standard', options);
 
-        if (!objDefs) {
-            this.clearVariants();
-            this.variants[0] = shader;
-        }
-
         this._dirtyShader = false;
         return shader;
     }
