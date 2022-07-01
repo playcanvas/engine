@@ -1253,7 +1253,7 @@ class LitShader {
                 }
 
                 if (options.useSpecular) {
-                    code += "    vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));\n";
+                    code += "    vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);\n";
                 }
 
                 // specular / clear coat
