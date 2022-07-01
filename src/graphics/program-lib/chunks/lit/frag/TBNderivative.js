@@ -17,9 +17,10 @@ void getTBN() {
     vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
     vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 
-    // construct a scale-invariant frame
-    float denom = max( dot(T,T), dot(B,B) );
-    float invmax = (denom == 0.0) ? 0.0 : tbnBasis / sqrt( denom );
-    dTBN = mat3(T * invmax, -B * invmax, dVertexNormalW );
+    dTBN = mat3(
+        normalize(T * tbnBasis),
+        normalize(-B * tbnBasis),
+        normalize(dVertexNormalW)
+    );
 }
 `;
