@@ -1567,7 +1567,7 @@ class ForwardRenderer {
 
     /**
      * @param {LayerComposition} comp - The layer composition to update.
-     * @param {boolean} lightsChanged - The if lights of the composition has changed.
+     * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
     beginFrame(comp, lightsChanged) {
         const meshInstances = comp._meshInstances;
