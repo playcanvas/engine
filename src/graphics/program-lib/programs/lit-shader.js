@@ -896,12 +896,7 @@ class LitShader {
             }
 
             if (options.fresnelModel > 0) {
-                if (options.conserveEnergy && !hasAreaLights) {
-                    // NB if there are area lights, energy conservation is done differently
-                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
-                } else {
-                    code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
-                }
+                code += chunks.combineDiffuseSpecularPS; // if you don't use environment cubemaps, you may consider this
             } else if (this.reflections) {
                 code += chunks.combineDiffuseSpecularOldPS;
             } else {
