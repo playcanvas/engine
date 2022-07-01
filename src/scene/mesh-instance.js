@@ -656,7 +656,7 @@ class MeshInstance {
     }
 
     /**
-     * Obtain a shader variant required to render the mesh instance within specified pass. 
+     * Obtain a shader variant required to render the mesh instance within specified pass.
      *
      * @param {Scene} scene - The scene.
      * @param {number} pass - The render pass.
