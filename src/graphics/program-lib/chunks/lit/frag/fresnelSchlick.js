@@ -1,12 +1,14 @@
 export default /* glsl */`
 // Schlick's approximation
 vec3 getFresnel(float cosTheta, vec3 f0) {
-    float fresnel = pow(1.0 - max(cosTheta, 0.0), 5.0);
-    return f0 + (1.0 - f0) * fresnel;
+    float fresnel = pow(1.0 - abs(cosTheta), 4.0);
+    float glossSq = dGlossiness * dGlossiness;
+    return f0 + (1.0 - f0) * fresnel * glossSq;
 }
 
 vec3 getFresnel(float cosTheta, vec3 f0, float specularityFactor) {
-    float fresnel = pow(1.0 - max(cosTheta, 0.0), 5.0);
-    return f0 + (1.0 - f0) * fresnel * specularityFactor;
+    float fresnel = pow(1.0 - abs(cosTheta), 5.0);
+    float glossSq = dGlossiness * dGlossiness;
+    return f0 + (1.0 - f0) * fresnel * glossSq * specularityFactor;
 }
 `;
