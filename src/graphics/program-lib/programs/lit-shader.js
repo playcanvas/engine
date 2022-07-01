@@ -1270,7 +1270,7 @@ class LitShader {
 
                 } else {
                     var calcFresnel = false;
-                    if (lightShape === LIGHTTYPE_DIRECTIONAL) {
+                    if (lightType === LIGHTTYPE_DIRECTIONAL) {
                         calcFresnel = true;
                     }
 
