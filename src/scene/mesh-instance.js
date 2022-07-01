@@ -665,9 +665,7 @@ class MeshInstance {
      * @ignore
      */
     updatePassShader(scene, pass, staticLightList, sortedLights) {
-        const material = this.material;
-        const shader = material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights);
-        this._shader[pass] = shader;
+        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights);
     }
 
     // Parameter management
