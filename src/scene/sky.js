@@ -43,7 +43,7 @@ class Sky {
 
         const material = new Material();
 
-        material.updateShader = function (dev, sc, defs, staticLightList, pass) {
+        material.getPassShader = function (dev, sc, defs, staticLightList, pass) {
             const library = device.getProgramLibrary();
 
             if (texture.cubemap) {
@@ -66,9 +66,11 @@ class Sky {
                     toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
                 });
             }
+
+            return this.shader;
         };
 
-        material.updateShader();
+        material.getPassShader();
 
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);

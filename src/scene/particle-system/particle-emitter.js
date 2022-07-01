@@ -833,8 +833,8 @@ class ParticleEmitter {
         if (this.lighting) {
             this.normalOption = hasNormal ? 2 : 1;
         }
-        // updateShader is also called by pc.Scene when all shaders need to be updated
-        this.material.updateShader = function () {
+        // getPassShader is also called by pc.Scene when all shaders need to be updated
+        this.material.getPassShader = function () {
 
             // The app works like this:
             // 1. Emitter init
@@ -879,8 +879,9 @@ class ParticleEmitter {
                 customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
             });
             this.shader = shader;
+            return shader;
         };
-        this.material.updateShader();
+        this.material.getPassShader();
     }
 
     resetMaterial() {

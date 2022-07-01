@@ -22,6 +22,7 @@ import { LightmapCache } from './lightmapper/lightmap-cache.js';
 /** @typedef {import('../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
+/** @typedef {import('./scene.js').Scene} Scene */
 /** @typedef {import('./morph-instance.js').MorphInstance} MorphInstance */
 /** @typedef {import('./skin-instance.js').SkinInstance} SkinInstance */
 
@@ -652,6 +653,21 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
+    }
+
+    /**
+     * Obtain a shader variant required to render the mesh instance within specified pass. 
+     *
+     * @param {Scene} scene - The scene.
+     * @param {number} pass - The render pass.
+     * @param {any} staticLightList - List of static lights.
+     * @param {any} sortedLights - Array of array of lights.
+     * @ignore
+     */
+    updatePassShader(scene, pass, staticLightList, sortedLights) {
+        const material = this.material;
+        const shader = material.getPassShader(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights);
+        this._shader[pass] = shader;
     }
 
     // Parameter management

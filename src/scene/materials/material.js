@@ -17,6 +17,7 @@ import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../graphics/shader.js').Shader} Shader */
 
 let id = 0;
 
@@ -115,13 +116,21 @@ let id = 0;
  */
 class Material {
     /**
+     * A shader used to render the material. Note that this is used only by materials where the user
+     * specifies the shader. Most material types generate multiple shader variants, and do not set this.
+     *
+     * @type {Shader}
+     * @private
+     */
+    _shader = null;
+
+    /**
      * Create a new Material instance.
      */
     constructor() {
         this.name = 'Untitled';
         this.id = id++;
 
-        this._shader = null;
         this.variants = {};
         this.parameters = {};
 
@@ -311,7 +320,7 @@ class Material {
      */
     copy(source) {
         this.name = source.name;
-        this.shader = source.shader;
+        this._shader = source._shader;
 
         // Render states
         this.alphaTest = source.alphaTest;
@@ -371,8 +380,10 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        // For vanilla materials, the shader can only be set by the user
+    getPassShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+        // return the shader specified by the user of the material
+        Debug.assert(this._shader, 'Material does not have shader set', this);
+        return this._shader;
     }
 
     /**
@@ -393,11 +404,16 @@ class Material {
     }
 
     clearVariants() {
+
+        // clear variants on the material
         this.variants = {};
+
+        // but also clear them from all materials that reference them
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];
-            for (let j = 0; j < meshInstance._shader.length; j++) {
-                meshInstance._shader[j] = null;
+            const shaders = meshInstance._shader;
+            for (let j = 0; j < shaders.length; j++) {
+                shaders[j] = null;
             }
         }
     }

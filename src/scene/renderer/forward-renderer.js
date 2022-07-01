@@ -51,6 +51,7 @@ import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 /** @typedef {import('../scene.js').Scene} Scene */
+/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('../camera.js').Camera} Camera */
 /** @typedef {import('../frame-graph.js').FrameGraph} FrameGraph */
 /** @typedef {import('../composition/layer-composition.js').LayerComposition} LayerComposition */
@@ -1145,19 +1146,6 @@ class ForwardRenderer {
         }
     }
 
-    updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
-        const material = meshInstance.material;
-        material._scene = this.scene;
-
-        // if material has dirtyBlend set, notify scene here
-        if (material._dirtyBlend) {
-            this.scene.layers._dirtyBlend = true;
-        }
-
-        material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
-        meshInstance._shader[pass] = material.shader;
-    }
-
     setCullMode(cullFaces, flip, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
@@ -1282,6 +1270,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < drawCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
 
             // apply visibility override
@@ -1325,10 +1314,16 @@ class ForwardRenderer {
 
                 if (material !== prevMaterial) {
                     this._materialSwitches++;
+                    material._scene = scene;
 
                     if (material.dirty) {
                         material.updateUniforms(device, scene);
                         material.dirty = false;
+                    }
+
+                    // if material has dirtyBlend set, notify scene here
+                    if (material._dirtyBlend) {
+                        scene.layers._dirtyBlend = true;
                     }
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
@@ -1336,15 +1331,16 @@ class ForwardRenderer {
                             const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
-                                this.updateShader(drawCall, objDefs, null, pass, sortedLights);
+                                drawCall.updatePassShader(scene, pass, null, sortedLights);
                                 material.variants[variantKey] = drawCall._shader[pass];
                             }
                         } else {
-                            this.updateShader(drawCall, objDefs, drawCall._staticLightList, pass, sortedLights);
+                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights);
                         }
-                        drawCall._shaderDefs = objDefs;
                         drawCall._lightHash = lightHash;
                     }
+
+                    Debug.assert(drawCall._shader[pass], "no shader for pass", material);
                 }
 
                 addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
@@ -1536,6 +1532,10 @@ class ForwardRenderer {
         // #endif
     }
 
+    /**
+     * @param {MeshInstance[]} drawCalls - Mesh instances.
+     * @param {boolean} onlyLitShaders - Limits the update to shaders affected by lighting.
+     */
     updateShaders(drawCalls, onlyLitShaders) {
         const count = drawCalls.length;
         for (let i = 0; i < count; i++) {
@@ -1545,7 +1545,8 @@ class ForwardRenderer {
                 if (!_tempMaterialSet.has(mat)) {
                     _tempMaterialSet.add(mat);
 
-                    if (mat.updateShader !== Material.prototype.updateShader) {
+                    // skip this for materials not using variants
+                    if (mat.getPassShader !== Material.prototype.getPassShader) {
 
                         if (onlyLitShaders) {
                             // skip materials not using lighting
@@ -1553,8 +1554,8 @@ class ForwardRenderer {
                                 continue;
                         }
 
+                        // clear shader variants on the material and also on mesh instances that use it
                         mat.clearVariants();
-                        mat.shader = null;
                     }
                 }
             }
@@ -1564,6 +1565,10 @@ class ForwardRenderer {
         _tempMaterialSet.clear();
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {boolean} lightsChanged - The if lights of the composition has changed.
+     */
     beginFrame(comp, lightsChanged) {
         const meshInstances = comp._meshInstances;
 
@@ -1579,6 +1584,7 @@ class ForwardRenderer {
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
         this.updateCpuSkinMatrices(meshInstances);
 
+        // clear mesh instance visibility
         const miCount = meshInstances.length;
         for (let i = 0; i < miCount; i++) {
             meshInstances[i].visibleThisFrame = false;
