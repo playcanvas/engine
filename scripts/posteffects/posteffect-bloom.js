@@ -184,7 +184,19 @@ function BloomEffect(graphicsDevice) {
 BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
 BloomEffect.prototype.constructor = BloomEffect;
 
+BloomEffect.prototype._destroy = function () {
+    if (this.targets) {
+        var i;
+        for (i = 0; i < this.targets.length; i++) {
+            this.targets[i].destroyTextureBuffers();
+            this.targets[i].destroy();
+        }
+    }
+    this.targets.length = 0;
+};
+
 BloomEffect.prototype._resize = function (target) {
+
 
     var width = target.colorBuffer.width;
     var height = target.colorBuffer.height;
@@ -192,22 +204,13 @@ BloomEffect.prototype._resize = function (target) {
     if (width === this.width && height === this.height)
         return;
 
-    this.width = width;
-    this.height = height;
-
-    var i;
-    if (this.targets) {
-        for (i = 0; i < this.targets.length; i++) {
-            this.targets[i].destroyFrameBuffers();
-            this.targets[i].destroyTextureBuffers();
-            this.targets[i].destroy();
-        }
-    }
+    this._destroy();
 
     // Render targets
-    this.targets = [];
+    var i;
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
+            name: "Bloom Texture" + i,
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
             height: height >> 1,
@@ -219,6 +222,7 @@ BloomEffect.prototype._resize = function (target) {
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'pe-bloom';
         var bloomTarget = new pc.RenderTarget({
+            name: "Bloom Render Target " + i,
             colorBuffer: colorBuffer,
             depth: false
         });
@@ -317,5 +321,6 @@ Bloom.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this._destroy();
     });
 };

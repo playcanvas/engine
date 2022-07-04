@@ -381,6 +381,21 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
+SSAOEffect.prototype._destroy = function () {
+    if (this.target) {
+        this.target.destroyTextureBuffers();
+        this.target.destroy();
+        this.target = null;
+
+    }
+
+    if (this.blurTarget) {
+        this.blurTarget.destroyTextureBuffers();
+        this.blurTarget.destroy();
+        this.blurTarget = null;
+    }
+};
+
 SSAOEffect.prototype._resize = function (target) {
 
     var width = Math.ceil(target.colorBuffer.width / this.downscale);
@@ -393,17 +408,9 @@ SSAOEffect.prototype._resize = function (target) {
     // Render targets
     this.width = width;
     this.height = height;
-    if (this.target) {
-        this.target.destroyFrameBuffers();
-        this.target.destroyTextureBuffers();
-        this.target.destroy();
-        this.target = null;
 
-        this.blurTarget.destroyFrameBuffers();
-        this.blurTarget.destroyTextureBuffers();
-        this.blurTarget.destroy();
-        this.blurTarget = null;
-    }
+    this._destroy();
+
     var ssaoResultBuffer = new pc.Texture(this.device, {
         format: pc.PIXELFORMAT_R8_G8_B8_A8,
         minFilter: pc.FILTER_LINEAR,
@@ -416,6 +423,7 @@ SSAOEffect.prototype._resize = function (target) {
     });
     ssaoResultBuffer.name = 'SSAO Result';
     this.target = new pc.RenderTarget({
+        name: "SSAO Result Render Target",
         colorBuffer: ssaoResultBuffer,
         depth: false
     });
@@ -432,6 +440,7 @@ SSAOEffect.prototype._resize = function (target) {
     });
     ssaoBlurBuffer.name = 'SSAO Blur';
     this.blurTarget = new pc.RenderTarget({
+        name: "SSAO Blur Render Target",
         colorBuffer: ssaoBlurBuffer,
         depth: false
     });
@@ -552,5 +561,6 @@ SSAO.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this.effect._destroy();
     });
 };
