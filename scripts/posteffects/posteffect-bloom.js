@@ -204,6 +204,9 @@ BloomEffect.prototype._resize = function (target) {
     if (width === this.width && height === this.height)
         return;
 
+    this.width = width;
+    this.height = height;
+
     this._destroy();
 
     // Render targets
