@@ -388,6 +388,9 @@ SSAOEffect.prototype._destroy = function () {
         this.target.destroy();
         this.target = null;
 
+    }
+    
+    if (this.blurTarget) {
         this.blurTarget.destroyTextureBuffers();
         this.blurTarget.destroy();
         this.blurTarget = null;
@@ -422,6 +425,7 @@ SSAOEffect.prototype._resize = function (target) {
     });
     ssaoResultBuffer.name = 'SSAO Result';
     this.target = new pc.RenderTarget({
+        name: "SSAO Result Render Target",
         colorBuffer: ssaoResultBuffer,
         depth: false
     });
@@ -438,6 +442,7 @@ SSAOEffect.prototype._resize = function (target) {
     });
     ssaoBlurBuffer.name = 'SSAO Blur';
     this.blurTarget = new pc.RenderTarget({
+        name: "SSAO Blur Render Target",
         colorBuffer: ssaoBlurBuffer,
         depth: false
     });

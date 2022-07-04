@@ -210,6 +210,7 @@ BloomEffect.prototype._resize = function (target) {
     var i;
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
+            name: "Bloom Texture" + i,
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
             height: height >> 1,
@@ -221,6 +222,7 @@ BloomEffect.prototype._resize = function (target) {
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'pe-bloom';
         var bloomTarget = new pc.RenderTarget({
+            name: "Bloom Render Target " + i,
             colorBuffer: colorBuffer,
             depth: false
         });
