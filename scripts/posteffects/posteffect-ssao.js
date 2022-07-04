@@ -383,8 +383,8 @@ SSAOEffect.prototype.constructor = SSAOEffect;
 
 SSAOEffect.prototype._resize = function (target) {
 
-    var width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
-    var height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
+    var width = Math.ceil(target.colorBuffer.width / this.downscale);
+    var height = Math.ceil(target.colorBuffer.height / this.downscale);
 
     // If no change, skip resize
     if (width === this.width && height === this.height)
