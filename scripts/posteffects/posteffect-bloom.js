@@ -192,6 +192,7 @@ BloomEffect.prototype._destroy = function () {
             this.targets[i].destroy();
         }
     }
+    this.targets.length = 0;
 };
 
 BloomEffect.prototype._resize = function (target) {
@@ -206,7 +207,6 @@ BloomEffect.prototype._resize = function (target) {
     this._destroy();
 
     // Render targets
-    this.targets = [];
     var i;
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
