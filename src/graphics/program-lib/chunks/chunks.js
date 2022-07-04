@@ -27,7 +27,6 @@ import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combineClearCoatPS from './lit/frag/combineClearCoat.js';
 import combineDiffusePS from './lit/frag/combineDiffuse.js';
 import combineDiffuseSpecularPS from './lit/frag/combineDiffuseSpecular.js';
-import combineDiffuseSpecularNoConservePS from './lit/frag/combineDiffuseSpecularNoConserve.js';
 import combineDiffuseSpecularNoReflPS from './lit/frag/combineDiffuseSpecularNoRefl.js';
 import combineDiffuseSpecularNoReflSeparateAmbientPS from './lit/frag/combineDiffuseSpecularNoReflSeparateAmbient.js';
 import combineDiffuseSpecularOldPS from './lit/frag/combineDiffuseSpecularOld.js';
@@ -228,7 +227,6 @@ const shaderChunks = {
     combineClearCoatPS,
     combineDiffusePS,
     combineDiffuseSpecularPS,
-    combineDiffuseSpecularNoConservePS,
     combineDiffuseSpecularNoReflPS,
     combineDiffuseSpecularNoReflSeparateAmbientPS,
     combineDiffuseSpecularOldPS,
