@@ -179,17 +179,15 @@ function BloomEffect(graphicsDevice) {
     // Uniforms
     this.sampleWeights = new Float32Array(SAMPLE_COUNT);
     this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
-
-    this.resize(null);
 }
 
 BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
 BloomEffect.prototype.constructor = BloomEffect;
 
-BloomEffect.prototype.resize = function (target) {
+BloomEffect.prototype._resize = function (target) {
 
     var width, height;
-    if (target === null) {
+    if (target === undefined) {
         width = this.device.width;
         height = this.device.height;
     } else {
@@ -234,6 +232,9 @@ BloomEffect.prototype.resize = function (target) {
 
 Object.assign(BloomEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
