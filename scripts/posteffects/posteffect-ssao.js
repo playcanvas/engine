@@ -389,7 +389,7 @@ SSAOEffect.prototype._destroy = function () {
         this.target = null;
 
     }
-    
+
     if (this.blurTarget) {
         this.blurTarget.destroyTextureBuffers();
         this.blurTarget.destroy();
