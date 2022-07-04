@@ -358,7 +358,6 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "precision " + graphicsDevice.precision + " float;",
             "varying vec2 vUv0;",
-            "uniform float uUpscale;",
             "uniform sampler2D uColorBuffer;",
             "uniform sampler2D uSSAOBuffer;",
             "",
@@ -399,9 +398,8 @@ SSAOEffect.prototype._destroy = function () {
 
 SSAOEffect.prototype._resize = function (target) {
 
-
-    var width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
-    var height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
+    var width = Math.ceil(target.colorBuffer.width / this.downscale);
+    var height = Math.ceil(target.colorBuffer.height / this.downscale);
 
     // If no change, skip resize
     if (width === this.width && height === this.height)
@@ -498,7 +496,6 @@ Object.assign(SSAOEffect.prototype, {
         pc.drawFullscreenQuad(device, this.blurTarget, this.vertexBuffer, this.blurShader, rect);
 
         // Finally output to screen
-        scope.resolve("uUpscale").setValue(1.0 / this.downscale);
         scope.resolve("uSSAOBuffer").setValue(this.blurTarget.colorBuffer);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.outputShader, rect);
