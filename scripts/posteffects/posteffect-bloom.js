@@ -186,8 +186,8 @@ BloomEffect.prototype.constructor = BloomEffect;
 
 BloomEffect.prototype._resize = function (target) {
 
-    const width = target.colorBuffer.width;
-    const height = target.colorBuffer.height;
+    var width = target.colorBuffer.width;
+    var height = target.colorBuffer.height;
 
     if (width === this.width && height === this.height)
         return;
