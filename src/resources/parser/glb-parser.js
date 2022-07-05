@@ -1257,7 +1257,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         material.emissiveMapUv = material.diffuseMapUv;
         material.emissiveMapTiling.copy(material.diffuseMapTiling);
         material.emissiveMapOffset.copy(material.diffuseMapOffset);
-        material.emissiveMapRotation = material.diffuseMapRotation;
         material.emissiveMapChannel = material.diffuseMapChannel;
         material.emissiveVertexColor = material.diffuseVertexColor;
         material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;

@@ -18,14 +18,10 @@ class RenderToTextureExample {
         // - camera - this camera renders into main framebuffer, objects from World, Excluded and also Skybox layers
 
         // Create the app and start the update loop
-        const app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(document.body),
-            touch: new pc.TouchDevice(document.body)
-        });
+        const app = new pc.Application(canvas, {});
 
         const assets = {
-            'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
+            'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -59,45 +55,6 @@ class RenderToTextureExample {
                 return primitive;
             }
 
-            // helper function to create a basic particle system
-            function createParticleSystem(position: pc.Vec3) {
-
-                // make particles move in different directions
-                const localVelocityCurve = new pc.CurveSet([
-                    [0, 0, 0.5, 8],
-                    [0, 0, 0.5, 8],
-                    [0, 0, 0.5, 8]
-                ]);
-                const localVelocityCurve2 = new pc.CurveSet([
-                    [0, 0, 0.5, -8],
-                    [0, 0, 0.5, -8],
-                    [0, 0, 0.5, -8]
-                ]);
-
-                // increasing gravity
-                const worldVelocityCurve = new pc.CurveSet([
-                    [0, 0],
-                    [0, 0, 0.2, 6, 1, -48],
-                    [0, 0]
-                ]);
-
-                // Create entity for particle system
-                const entity = new pc.Entity();
-                app.root.addChild(entity);
-                entity.setLocalPosition(position);
-
-                // add particlesystem component to entity
-                entity.addComponent("particlesystem", {
-                    numParticles: 200,
-                    lifetime: 1,
-                    rate: 0.01,
-                    scaleGraph: new pc.Curve([0, 0.5]),
-                    velocityGraph: worldVelocityCurve,
-                    localVelocityGraph: localVelocityCurve,
-                    localVelocityGraph2: localVelocityCurve2
-                });
-            }
-
             // create texture and render target for rendering into, including depth buffer
             const texture = new pc.Texture(app.graphicsDevice, {
                 width: 512,
@@ -117,22 +74,19 @@ class RenderToTextureExample {
                 samples: 2
             });
 
-            // create a layer for object that do not render into texture, add it right after the world layer
+            // create a layer for object that do not render into texture
             const excludedLayer = new pc.Layer({ name: "Excluded" });
-            app.scene.layers.insert(excludedLayer, 1);
+            app.scene.layers.push(excludedLayer);
 
             // get world and skybox layers
             const worldLayer = app.scene.layers.getLayerByName("World");
             const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
 
             // create ground plane and 3 primitives, visible in world layer
-            const plane = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.2, 0.4, 0.2), [worldLayer.id]);
+            createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.2, 0.4, 0.2), [worldLayer.id]);
             createPrimitive("sphere", new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.RED, [worldLayer.id]);
-            createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);
             createPrimitive("box", new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELLOW, [worldLayer.id]);
-
-            // particle system
-            createParticleSystem(new pc.Vec3(2, 3, 0));
+            createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);
 
             // Create main camera, which renders entities in world, excluded and skybox layers
             const camera = new pc.Entity("Camera");
@@ -143,19 +97,6 @@ class RenderToTextureExample {
             camera.translate(0, 9, 15);
             camera.lookAt(1, 4, 0);
             app.root.addChild(camera);
-
-            // add orbit camera script with a mouse and a touch support
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
-                attributes: {
-                    inertiaFactor: 0.2,
-                    focusEntity: plane,
-                    distanceMax: 20,
-                    frameOnStart: false
-                }
-            });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
 
             // Create texture camera, which renders entities in world and skybox layers into the texture
             const textureCamera = new pc.Entity("TextureCamera");

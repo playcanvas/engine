@@ -368,6 +368,8 @@ class PostEffectQueue {
 
         for (let i = 0, len = effects.length; i < len; i++) {
             const fx = effects[i];
+            if (fx.effect.resize !== undefined)
+                fx.effect.resize(fx.inputTarget);
             if (fx.inputTarget.width !== desiredWidth ||
                 fx.inputTarget.height !== desiredHeight)  {
                 this._resizeOffscreenTarget(fx.inputTarget);

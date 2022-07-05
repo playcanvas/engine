@@ -479,7 +479,6 @@ class ShadowRenderer {
 
         const device = this.device;
         const forwardRenderer = this.forwardRenderer;
-        const scene = forwardRenderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
 
         // Sort shadow casters
@@ -497,7 +496,7 @@ class ShadowRenderer {
             forwardRenderer.setSkinning(device, meshInstance, material);
 
             if (material.dirty) {
-                material.updateUniforms(device, scene);
+                material.updateUniforms(device, forwardRenderer.scene);
                 material.dirty = false;
             }
 
@@ -515,7 +514,7 @@ class ShadowRenderer {
             // set shader
             let shadowShader = meshInstance._shader[shadowPass];
             if (!shadowShader) {
-                meshInstance.updatePassShader(scene, shadowPass);
+                forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, shadowPass);
                 shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }

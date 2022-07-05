@@ -607,13 +607,10 @@ class Layer {
 
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
 
-            // clear old shader variants if necessary
-            if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) {
-
-                // skip this for materials not using variants
-                if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
-                    // clear shader variants on the material and also on mesh instances that use it
+            if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+                if (mat.updateShader !== Material.prototype.updateShader) {
                     mat.clearVariants();
+                    mat.shader = null;
                 }
                 mat._shaderVersion = sceneShaderVer;
             }

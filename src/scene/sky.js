@@ -43,11 +43,11 @@ class Sky {
 
         const material = new Material();
 
-        material.getShaderVariant = function (dev, sc, defs, staticLightList, pass) {
+        material.updateShader = function (dev, sc, defs, staticLightList, pass) {
             const library = device.getProgramLibrary();
 
             if (texture.cubemap) {
-                return library.getProgram('skybox', {
+                this.shader = library.getProgram('skybox', {
                     type: 'cubemap',
                     rgbm: texture.type === TEXTURETYPE_RGBM,
                     hdr: (texture.type === TEXTURETYPE_RGBM || texture.format === PIXELFORMAT_RGBA32F),
@@ -57,18 +57,18 @@ class Sky {
                     gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                     toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
                 });
+            } else {
+                this.shader = library.getProgram('skybox', {
+                    type: 'envAtlas',
+                    encoding: texture.encoding,
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
+                });
             }
-
-            return library.getProgram('skybox', {
-                type: 'envAtlas',
-                encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1,
-                gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-            });
         };
 
-        material.shader = material.getShaderVariant();
+        material.updateShader();
 
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);

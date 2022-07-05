@@ -47,10 +47,11 @@ class ProgramLibrary {
 
     getProgram(name, options) {
         const generator = this._generators[name];
-        if (!generator) {
+        if (generator === undefined) {
             Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             return null;
         }
+        const gd = this._device;
         const key = generator.generateKey(options);
         let shader = this._cache[key];
         if (!shader) {
@@ -73,10 +74,9 @@ class ProgramLibrary {
             if (this._precached)
                 console.warn(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
-            const device = this._device;
-            const shaderDefinition = generator.createShaderDefinition(device, options);
-            shaderDefinition.name = `${name}-pass:${options.pass}`;
-            shader = this._cache[key] = new Shader(device, shaderDefinition);
+            const shaderDefinition = generator.createShaderDefinition(gd, options);
+            shaderDefinition.name = `standard-pass:${options.pass}`;
+            shader = this._cache[key] = new Shader(gd, shaderDefinition);
         }
         return shader;
     }
