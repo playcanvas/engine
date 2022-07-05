@@ -513,27 +513,20 @@ void evaluateLight(ClusterLightData light) {
             #ifdef CLUSTER_SPECULAR
 
                 vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
+                
                 // specular
-                {
-                    
-                    vec3 punctualSpecular = getLightSpecular(halfDir) * dAtten * light.color * dAtten3;
-
-                    #if defined(CLUSTER_AREALIGHTS)
-                        punctualSpecular *= dSpecularity;
-                    #endif
-
-                    dSpecularLight += punctualSpecular;
-                }
+                #ifdef CLUSTER_SPECULAR_FRESNEL
+                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), dSpecularity);
+                #else
+                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * dSpecularity;
+                #endif
 
                 #ifdef CLUSTER_CLEAR_COAT
-
-                    vec3 punctualCC = getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3;
-
-                    #if defined(CLUSTER_AREALIGHTS)
-                        punctualCC *= ccSpecularity;
+                    #ifdef CLUSTER_SPECULAR_FRESNEL
+                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity));
+                    #else
+                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * vec3(ccSpecularity));
                     #endif
-
-                    ccSpecularLight += punctualCC;
                 #endif
 
             #endif

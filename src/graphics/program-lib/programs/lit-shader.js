@@ -886,6 +886,10 @@ class LitShader {
             // enable specular path in clustered chunk
             code += "#define CLUSTER_SPECULAR\n";
 
+            if (options.fresnelModel > 0) {
+                code += '#define CLUSTER_SPECULAR_FRESNEL\n';
+            }
+
             // enable conserve energy path in clustered chunk
             if (options.conserveEnergy) {
                 code += "#define CLUSTER_CONSERVE_ENERGY\n";
