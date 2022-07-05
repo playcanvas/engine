@@ -50,7 +50,7 @@ class BindGroupFormat {
         /** @type {BindTextureFormat[]} */
         this.textureFormats = textureFormats;
 
-            // maps a texture format name to a slot index
+        // maps a texture format name to a slot index
         /** @type {Map<string, number>} */
         this.textureFormatsMap = new Map();
         textureFormats.forEach((tf, i) => this.textureFormatsMap.set(tf.name, i));
