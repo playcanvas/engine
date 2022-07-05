@@ -691,7 +691,7 @@ class StandardMaterial extends Material {
 
         // set overridden environment textures
         if (this.envAtlas && !isPhong) {
-            this._setParameter('texture_envAtlas', envAtlas);
+            this._setParameter('texture_envAtlas', this.envAtlas);
         } else if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
         } else if (this.sphereMap) {
