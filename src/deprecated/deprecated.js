@@ -112,8 +112,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../resources/basis.js';
-import { EventHandler } from '../core/event-handler.js';
-import { Asset } from '../asset/asset.js';
 
 // CORE
 
