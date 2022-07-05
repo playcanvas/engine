@@ -1072,26 +1072,24 @@ class LitShader {
                 if (options.clearCoat > 0) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
-                        if (options.useSpecularityFactor) {
-                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity), dSpecularityFactor);\n";
-                        } else {
-                            code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
-                        }
+                        code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
                     }  else {
                         code += "    ccReflection.rgb *= ccSpecularity;\n";
                     }
+                }
+                if (options.useSpecularityFactor) {
+                    code += "    ccReflection *= dSpecularityFactor;\n";
                 }
                 code += "    addReflection();\n";
 
                 // Fresnel has to be applied to reflections
                 if (options.fresnelModel > 0) {
-                    if (options.useSpecularityFactor) {
-                        code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity, dSpecularityFactor);\n";
-                    } else {
-                        code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);\n";
-                    }
+                    code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);\n";
                 } else {
                     code += "    dReflection.rgb *= dSpecularity;\n";
+                }
+                if (options.useSpecularityFactor) {
+                    code += "    dReflection *= dSpecularityFactor;\n";
                 }
             }
 
@@ -1257,7 +1255,7 @@ class LitShader {
                 }
 
                 if (options.useSpecular) {
-                    code += "    vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);\n";
+                    code += "    dHalfDirW = normalize(-dLightDirNormW + dViewDirW);\n";
                 }
 
                 // specular / clear coat
@@ -1275,15 +1273,15 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.clearCoat > 0) {
-                        code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC(halfDir) * dAtten * light" + i + "_color";
+                        code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
                         code +=  ";\n";
                     }
                     if (options.useSpecular) {
-                        code += "    dSpecularLight += dSpecularity * getLightSpecular(halfDir) * dAtten * light" + i + "_color";
+                        code += "    dSpecularLight += dSpecularity * getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), dSpecularity)" : " * dSpecularity";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : " * dSpecularity";
                         code += ";\n";
                     }
                 }
@@ -1337,6 +1335,10 @@ class LitShader {
             code += "dAlpha *= material_alphaFade;\n";
         }
 
+        if (options.useSpecularityFactor) {
+            code += "    dSpecularLight *= dSpecularityFactor;\n";
+        }
+
         code += chunks.endPS;
         if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_ADDITIVEALPHA || options.alphaToCoverage) {
             code += chunks.outputAlphaPS;
@@ -1376,6 +1378,7 @@ class LitShader {
         if (code.includes("dBinormalW")) structCode += "vec3 dBinormalW;\n";
         if (code.includes("dViewDirW")) structCode += "vec3 dViewDirW;\n";
         if (code.includes("dReflDirW")) structCode += "vec3 dReflDirW;\n";
+        if (code.includes("dHalfDirW")) structCode += "vec3 dHalfDirW;\n";
         if (code.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";
         if (code.includes("dSpecularLight")) structCode += "vec3 dSpecularLight;\n";
         if (code.includes("dLightDirNormW")) structCode += "vec3 dLightDirNormW;\n";
