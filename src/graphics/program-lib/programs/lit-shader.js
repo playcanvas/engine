@@ -1264,8 +1264,8 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light
-                    if (options.clearCoat > 0) code += "    ccLightSpecular = ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
-                    if (options.useSpecular) code += "    lightSpecular = dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.clearCoat > 0) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useSpecular) code += "    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 } else {
                     var calcFresnel = false;
@@ -1275,15 +1275,15 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.clearCoat > 0) {
-                        code += "    ccLightSpecular = ccSpecularity * getLightSpecularCC(halfDir) * dAtten * light" + i + "_color";
+                        code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC(halfDir) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity))" : "";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
                         code +=  ";\n";
                     }
                     if (options.useSpecular) {
                         code += "    dSpecularLight += dSpecularity * getLightSpecular(halfDir) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), vec3(dSpecularity))" : "";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, halfDir), dSpecularity)" : " * dSpecularity";
                         code += ";\n";
                     }
                 }
