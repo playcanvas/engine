@@ -687,13 +687,17 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
-        if (this.cubeMap) {
-            this._setParameter('texture_cubeMap', this.cubeMap);
-        }
+        const isPhong = this.shadingModel === SPECULAR_PHONG;
 
-        if (this.sphereMap) {
+        // set overridden environment textures
+        if (this.envAtlas && !isPhong) {
+            this._setParameter('texture_envAtlas', envAtlas);
+        } else if (this.cubeMap) {
+            this._setParameter('texture_cubeMap', this.cubeMap);
+        } else if (this.sphereMap) {
             this._setParameter('texture_sphereMap', this.sphereMap);
         }
+
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
@@ -705,14 +709,21 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
-        const envAtlas = this.envAtlas || (this.useSkybox ? scene.envAtlas : null);
-        if (envAtlas) {
-            this._setParameter('texture_envAtlas', envAtlas);
+        const isPhong = this.shadingModel === SPECULAR_PHONG;
+        const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
 
-            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+        if (!hasLocalEnvOverride && this.useSkybox) {
+            if (scene.envAtlas && !isPhong) {
+                this._setParameter('texture_envAtlas', scene.envAtlas);
+            } else if (scene.skybox) {
+                this._setParameter('texture_cubeMap', scene.skybox);
+            }
+
+            if (!scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
+
         this._processParameters('_activeLightingParams');
     }
 
