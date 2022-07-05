@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { Color } from '../../math/color.js';
 import { Vec2 } from '../../math/vec2.js';
 import { Quat } from '../../math/quat.js';
@@ -512,6 +514,15 @@ class StandardMaterial extends Material {
         this._uniformCache = { };
     }
 
+    set shader(shader) {
+        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
+    }
+
+    get shader() {
+        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
+        return null;
+    }
+
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
@@ -701,7 +712,6 @@ class StandardMaterial extends Material {
         this._processParameters('_activeParams');
 
         if (this._dirtyShader) {
-            this.shader = null;
             this.clearVariants();
         }
     }
@@ -718,7 +728,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
@@ -731,19 +741,16 @@ class StandardMaterial extends Material {
         else
             this.shaderOptBuilder.updateRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
 
+        // execute user callback to modify the options
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
         }
 
         const library = device.getProgramLibrary();
-        this.shader = library.getProgram('standard', options);
-
-        if (!objDefs) {
-            this.clearVariants();
-            this.variants[0] = this.shader;
-        }
+        const shader = library.getProgram('standard', options);
 
         this._dirtyShader = false;
+        return shader;
     }
 
     /**

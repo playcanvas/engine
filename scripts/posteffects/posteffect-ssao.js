@@ -377,23 +377,15 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.brightness = 0;
     this.samples = 20;
     this.downscale = 1.0;
-
-    this.resize(null);
 }
 
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
-SSAOEffect.prototype.resize = function (target) {
+SSAOEffect.prototype._resize = function (target) {
 
-    var width, height;
-    if (target === null) {
-        width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
-        height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
-    } else {
-        width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
-        height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
-    }
+    var width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
+    var height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
 
     // If no change, skip resize
     if (width === this.width && height === this.height)
@@ -423,7 +415,7 @@ SSAOEffect.prototype.resize = function (target) {
         height: this.height,
         mipmaps: false
     });
-    ssaoResultBuffer.name = 'ssao';
+    ssaoResultBuffer.name = 'SSAO Result';
     this.target = new pc.RenderTarget({
         colorBuffer: ssaoResultBuffer,
         depth: false
@@ -439,6 +431,7 @@ SSAOEffect.prototype.resize = function (target) {
         height: this.height,
         mipmaps: false
     });
+    ssaoBlurBuffer.name = 'SSAO Blur';
     this.blurTarget = new pc.RenderTarget({
         colorBuffer: ssaoBlurBuffer,
         depth: false
@@ -447,6 +440,9 @@ SSAOEffect.prototype.resize = function (target) {
 
 Object.assign(SSAOEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
@@ -554,11 +550,6 @@ SSAO.prototype.initialize = function () {
         } else {
             queue.removeEffect(this.effect);
         }
-    });
-
-    this.on('attr:downscale', () => {
-        if (!this.enabled) return;
-        this.effect.resize();
     });
 
     this.on('destroy', function () {

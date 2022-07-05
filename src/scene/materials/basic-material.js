@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Color } from '../../math/color.js';
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
@@ -50,6 +51,15 @@ class BasicMaterial extends Material {
         this.vertexColors = false;
     }
 
+    set shader(shader) {
+        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
+    }
+
+    get shader() {
+        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
+        return null;
+    }
+
     /**
      * Copy a `BasicMaterial`.
      *
@@ -79,7 +89,7 @@ class BasicMaterial extends Material {
         }
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
         const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
@@ -94,7 +104,7 @@ class BasicMaterial extends Material {
             pass: pass
         };
         const library = device.getProgramLibrary();
-        this.shader = library.getProgram('basic', options);
+        return library.getProgram('basic', options);
     }
 }
 
