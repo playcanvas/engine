@@ -1035,11 +1035,7 @@ class LitShader {
         if ((this.lighting && options.useSpecular) || this.reflections) {
 
             if (options.useMetalness) {
-                if (options.useSpecularityFactor) {
-                    code += "    getMetalnessModulate(dIor, dSpecularityFactor);\n";
-                } else {
-                    code += "    getMetalnessModulate(dIor);\n";
-                }
+                code += "    getMetalnessModulate(dIor);\n";
             }
         }
 
