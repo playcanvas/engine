@@ -537,7 +537,7 @@ class Material {
             }
         }
 
-        this.meshInstances = null;
+        this.meshInstances.length = 0;
     }
 
     /**
