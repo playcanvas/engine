@@ -7,8 +7,22 @@ import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../sce
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { ShaderPass } from '../scene/shader-pass.js';
 
-// Public interface
+/**
+ * A class responsible for creation and caching of required shaders.
+ * There is a two level cache. The first level generates the shader based on the provided options.
+ * The second level processes this generated shader using processing options - in most cases
+ * modifies it to support uniform buffers.
+ *
+ * @ignore
+ */
 class ProgramLibrary {
+    /**
+     * A cache of shaders processed using processing options.
+     *
+     * @type {Map<string, Shader>}
+     */
+    processedCache = new Map();
+
     constructor(device) {
         this._device = device;
         this._cache = {};
@@ -45,13 +59,7 @@ class ProgramLibrary {
         return (generator !== undefined);
     }
 
-    getProgram(name, options) {
-        const generator = this._generators[name];
-        if (!generator) {
-            Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
-            return null;
-        }
-        const key = generator.generateKey(options);
+    generateShader(generator, name, key, options) {
         let shader = this._cache[key];
         if (!shader) {
             let lights;
@@ -71,7 +79,7 @@ class ProgramLibrary {
                 options.lights = lights;
 
             if (this._precached)
-                console.warn(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
+                Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
             const device = this._device;
             const shaderDefinition = generator.createShaderDefinition(device, options);
@@ -79,6 +87,44 @@ class ProgramLibrary {
             shader = this._cache[key] = new Shader(device, shaderDefinition);
         }
         return shader;
+    }
+
+    getProgram(name, options, processingOptions) {
+        const generator = this._generators[name];
+        if (!generator) {
+            Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
+            return null;
+        }
+
+        // we have a key for shader source code generation, a key for its further processing to work with
+        // uniform buffers, and a final key to get the processed shader from the cache
+        const generationKey = generator.generateKey(options);
+        const processingKey = JSON.stringify(processingOptions);
+        const totalKey = `${generationKey}#${processingKey}`;
+
+        // do we have final processed shader
+        let processedShader = this.processedCache.get(totalKey);
+        if (!processedShader) {
+
+            // get generated shader
+            const generatedShader = this.generateShader(generator, name, generationKey, options);
+            Debug.assert(generatedShader);
+
+            // create a shader definition for the shader that will include the processingOptions
+            const generatedShaderDef = generatedShader.definition;
+            const shaderDefinition = {
+                attributes: generatedShaderDef.attributes,
+                vshader: generatedShaderDef.vshader,
+                fshader: generatedShaderDef.fshader,
+                processingOptions: processingOptions
+            };
+
+            // add new shader to the processed cache
+            processedShader = new Shader(this._device, shaderDefinition);
+            this.processedCache.set(totalKey, processedShader);
+        }
+
+        return processedShader;
     }
 
     storeNewProgram(name, options) {
@@ -156,6 +202,9 @@ class ProgramLibrary {
         if (cache) {
             const shaders = new Array(cache.length);
             for (let i = 0; i < cache.length; i++) {
+
+                // default options for the standard materials are not stored, and so they are inserted
+                // back into the loaded options
                 if (cache[i].name === "standard") {
                     const opt = cache[i].options;
                     const defaultMat = this._getDefaultStdMatOptions(opt.pass);
@@ -164,6 +213,7 @@ class ProgramLibrary {
                             opt[p] = defaultMat[p];
                     }
                 }
+
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
         }

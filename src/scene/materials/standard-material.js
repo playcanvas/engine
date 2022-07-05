@@ -19,6 +19,7 @@ import {
 import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
+import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
@@ -716,7 +717,8 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
@@ -734,8 +736,10 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+
         const library = device.getProgramLibrary();
-        const shader = library.getProgram('standard', options);
+        const shader = library.getProgram('standard', options, processingOptions);
 
         this._dirtyShader = false;
         return shader;

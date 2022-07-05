@@ -15,9 +15,11 @@ import {
 } from '../constants.js';
 import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
+import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../../graphics/shader.js').Shader} Shader */
+/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
 
 let id = 0;
 
@@ -125,6 +127,14 @@ class Material {
     _shader = null;
 
     /**
+     * The mesh instances referencing this material
+     *
+     * @type {MeshInstance[]}
+     * @private
+     */
+    meshInstances = [];
+
+    /**
      * Create a new Material instance.
      */
     constructor() {
@@ -164,8 +174,6 @@ class Material {
         this.blueWrite = true;
         this.alphaWrite = true;
 
-        this.meshInstances = []; // The mesh instances referencing this material
-
         this._shaderVersion = 0;
         this._scene = null;
         this._dirtyBlend = false;
@@ -183,74 +191,66 @@ class Material {
 
     // returns boolean depending on material being transparent
     get transparent() {
-        return this.blend || this.blendSrc !== BLENDMODE_ONE || this.blendDst !== BLENDMODE_ZERO || this.blendEquation !== BLENDEQUATION_ADD;
+        return this.blend;
     }
 
     set blendType(type) {
-        const prevBlend = this.blend;
+        let blend = true;
         switch (type) {
             case BLEND_NONE:
-                this.blend = false;
+                blend = false;
                 this.blendSrc = BLENDMODE_ONE;
                 this.blendDst = BLENDMODE_ZERO;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_NORMAL:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_SRC_ALPHA;
                 this.blendDst = BLENDMODE_ONE_MINUS_SRC_ALPHA;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_PREMULTIPLIED:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_ONE;
                 this.blendDst = BLENDMODE_ONE_MINUS_SRC_ALPHA;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_ADDITIVE:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_ONE;
                 this.blendDst = BLENDMODE_ONE;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_ADDITIVEALPHA:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_SRC_ALPHA;
                 this.blendDst = BLENDMODE_ONE;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_MULTIPLICATIVE2X:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_DST_COLOR;
                 this.blendDst = BLENDMODE_SRC_COLOR;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_SCREEN:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_ONE_MINUS_DST_COLOR;
                 this.blendDst = BLENDMODE_ONE;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_MULTIPLICATIVE:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_DST_COLOR;
                 this.blendDst = BLENDMODE_ZERO;
                 this.blendEquation = BLENDEQUATION_ADD;
                 break;
             case BLEND_MIN:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_ONE;
                 this.blendDst = BLENDMODE_ONE;
                 this.blendEquation = BLENDEQUATION_MIN;
                 break;
             case BLEND_MAX:
-                this.blend = true;
                 this.blendSrc = BLENDMODE_ONE;
                 this.blendDst = BLENDMODE_ONE;
                 this.blendEquation = BLENDEQUATION_MAX;
                 break;
         }
-        if (prevBlend !== this.blend) {
+        if (this.blend !== blend) {
+            this.blend = blend;
             if (this._scene) {
                 this._scene.layers._dirtyBlend = true;
             } else {
@@ -261,54 +261,55 @@ class Material {
     }
 
     get blendType() {
-        if (!this.transparent) {
+        if (!this.blend) {
             return BLEND_NONE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
-                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_SRC_ALPHA) && (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_NORMAL;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_ONE) && (this.blendDst === BLENDMODE_ONE) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_ADDITIVE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_SRC_ALPHA) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_SRC_ALPHA) && (this.blendDst === BLENDMODE_ONE) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_ADDITIVEALPHA;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_SRC_COLOR) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_DST_COLOR) && (this.blendDst === BLENDMODE_SRC_COLOR) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_MULTIPLICATIVE2X;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE_MINUS_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_ONE_MINUS_DST_COLOR) && (this.blendDst === BLENDMODE_ONE) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_SCREEN;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_MIN)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_ONE) && (this.blendDst === BLENDMODE_ONE) &&
+            (this.blendEquation === BLENDEQUATION_MIN)) {
             return BLEND_MIN;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE) &&
-                   (this.blendEquation === BLENDEQUATION_MAX)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_ONE) && (this.blendDst === BLENDMODE_ONE) &&
+            (this.blendEquation === BLENDEQUATION_MAX)) {
             return BLEND_MAX;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_DST_COLOR) &&
-                   (this.blendDst === BLENDMODE_ZERO) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_DST_COLOR) && (this.blendDst === BLENDMODE_ZERO) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_MULTIPLICATIVE;
-        } else if ((this.blend) &&
-                   (this.blendSrc === BLENDMODE_ONE) &&
-                   (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                   (this.blendEquation === BLENDEQUATION_ADD)) {
+        }
+
+        if ((this.blendSrc === BLENDMODE_ONE) && (this.blendDst === BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+            (this.blendEquation === BLENDEQUATION_ADD)) {
             return BLEND_PREMULTIPLIED;
         }
+
         return BLEND_NORMAL;
     }
 
@@ -380,10 +381,39 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        // return the shader specified by the user of the material
-        Debug.assert(this._shader, 'Material does not have shader set', this);
-        return this._shader;
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+
+        Debug.assert(this._shader, 'Material does not have a shader set', this);
+
+        // default generator for a material - simply return existing shader definition. Use generator and getProgram
+        // to allow for shader processing to be cached
+        const key = `shader-id-${this._shader.id}`;
+        const shaderDefinition = this._shader.definition;
+        const materialGenerator = {
+            generateKey: function (options) {
+                // unique name based of the shader id
+                return key;
+            },
+
+            createShaderDefinition: function (device, options) {
+                return shaderDefinition;
+            }
+        };
+
+        // temporarily register the program generator
+        const libraryModuleName = 'shader';
+        const library = device.getProgramLibrary();
+        Debug.assert(!library.isRegistered(libraryModuleName));
+        library.register(libraryModuleName, materialGenerator);
+
+        // generate shader variant - its the same shader, but with different processing options
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const variant = library.getProgram(libraryModuleName, {}, processingOptions);
+
+        // unregister it again
+        library.unregister(libraryModuleName);
+
+        return variant;
     }
 
     /**
@@ -409,12 +439,10 @@ class Material {
         this.variants = {};
 
         // but also clear them from all materials that reference them
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            const meshInstance = this.meshInstances[i];
-            const shaders = meshInstance._shader;
-            for (let j = 0; j < shaders.length; j++) {
-                shaders[j] = null;
-            }
+        const meshInstances = this.meshInstances;
+        const count = meshInstances.length;
+        for (let i = 0; i < count; i++) {
+            meshInstances[i].clearShaders();
         }
     }
 
@@ -496,9 +524,7 @@ class Material {
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];
-            for (let j = 0; j < meshInstance._shader.length; j++) {
-                meshInstance._shader[j] = null;
-            }
+            meshInstance.clearShaders();
             meshInstance._material = null;
 
             if (meshInstance.mesh) {
@@ -507,17 +533,29 @@ class Material {
                     meshInstance.material = defaultMaterial;
                 }
             } else {
-                Debug.warn('pc.Material: MeshInstance mesh is null, default material cannot be assigned to the MeshInstance');
+                Debug.warn('pc.Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
+
+        this.meshInstances = null;
     }
 
-    // registers mesh instance as referencing the material
+    /**
+     * Registers mesh instance as referencing the material.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance to de-register.
+     * @ignore
+     */
     addMeshInstanceRef(meshInstance) {
         this.meshInstances.push(meshInstance);
     }
 
-    // de-registers mesh instance as referencing the material
+    /**
+     * De-registers mesh instance as referencing the material.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance to de-register.
+     * @ignore
+     */
     removeMeshInstanceRef(meshInstance) {
         const meshInstances = this.meshInstances;
         const i = meshInstances.indexOf(meshInstance);

@@ -1331,11 +1331,11 @@ class ForwardRenderer {
                             const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
-                                drawCall.updatePassShader(scene, pass, null, sortedLights);
+                                drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
                                 material.variants[variantKey] = drawCall._shader[pass];
                             }
                         } else {
-                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights);
+                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
                         }
                         drawCall._lightHash = lightHash;
                     }
