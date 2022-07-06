@@ -13,7 +13,7 @@ class ShaderProcessorOptions {
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {UniformBufferFormat} viewUniformFormat - Format if the uniform buffer.
+     * @param {UniformBufferFormat} viewUniformFormat - Format of the uniform buffer.
      * @param {BindGroupFormat} viewBindGroupFormat - Format of the bind group.
      */
     constructor(viewUniformFormat, viewBindGroupFormat) {
