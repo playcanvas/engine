@@ -114,9 +114,6 @@ let _params = new Set();
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
  * @property {string} specularityFactorMapChannel The channel used by the specularity factor texture to sample from (default is 'a').
- * @property {Vec3} f0 A uniform F0 color, which is the color of specular reflection at 0 degrees fresnel (default is white).
- * @property {Texture|null} f0Map The map used for the F0 reflection color (default is null).
- * @property {string} f0MapChannel Color channels of the F0 color (default is rgb).
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
@@ -632,10 +629,10 @@ class StandardMaterial extends Material {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
-            if (!this.f0Map || this.f0Tint) {
-                this._setParameter('material_f0', getUniform('f0'));
+            if (!this.specularMap || this.specularTint) {
+                this._setParameter('material_specular', getUniform('specular'));
             }
-            if (!this.specularityFactorMap || this.specularityFactor > 0) {
+            if (!this.specularityFactorMap || this.specularityFactor < 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
         }
@@ -1002,7 +999,6 @@ function _defineMaterialProps() {
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
-    _defineColor('f0', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
 
@@ -1064,7 +1060,6 @@ function _defineMaterialProps() {
     _defineFlag('diffuseTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('emissiveTint', false);
-    _defineFlag('f0Tint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('enableGGXSpecular', false);
@@ -1091,7 +1086,6 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
-    _defineTex2D('f0', 0, 3, '', true);
     _defineTex2D('specularityFactor', 0, 1, '', false);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);

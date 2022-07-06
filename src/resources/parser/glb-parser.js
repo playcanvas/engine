@@ -1040,6 +1040,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     material.specularTint = true;
     material.specularVertexColor = true;
 
+    material.specular.set(1, 1, 1);
     material.specularityFactor = 1.0;
 
     if (gltfMaterial.hasOwnProperty('name')) {
@@ -1275,12 +1276,12 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
         const specularData = gltfMaterial.extensions.KHR_materials_specular;
         if (specularData.hasOwnProperty('specularColorTexture')) {
-            material.f0Map = textures[specularData.specularColorTexture.index];
-            material.f0MapChannel = 'rgb';
+            material.specularMap = textures[specularData.specularColorTexture.index];
+            material.specularMapChannel = 'rgb';
         }
         if (specularData.hasOwnProperty('specularColorFactor')) {
             color = specularData.specularColorFactor;
-            material.f0.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+            material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
         }
 
         if (specularData.hasOwnProperty('specularFactor')) {

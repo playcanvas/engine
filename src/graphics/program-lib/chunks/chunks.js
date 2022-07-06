@@ -47,7 +47,6 @@ import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
 import extensionPS from './lit/frag/extension.js';
 import extensionVS from './lit/vert/extension.js';
-import f0PS from './standard/frag/f0.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import fixCubemapSeamsNonePS from './common/frag/fixCubemapSeamsNone.js';
@@ -165,6 +164,7 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
+import specularColorPS from './standard/frag/specularColor.js';
 import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
@@ -247,7 +247,6 @@ const shaderChunks = {
     envMultiplyPS,
     extensionPS,
     extensionVS,
-    f0PS,
     falloffInvSquaredPS,
     falloffLinearPS,
     fixCubemapSeamsNonePS,
@@ -365,6 +364,7 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
+    specularColorPS,
     specularityFactorPS,
     spotPS,
     startPS,

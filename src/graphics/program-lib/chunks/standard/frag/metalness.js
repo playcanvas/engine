@@ -22,7 +22,7 @@ void getSpecularity() {
     metalness *= saturate(vVertexColor.$VC);
     #endif
 
-    dSpecularity = getF0();
+    dSpecularity = getSpecularColor();
     dIor = 0.04;
 
     dMetalness = metalness;
