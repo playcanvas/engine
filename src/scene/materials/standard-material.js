@@ -289,11 +289,12 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
- * @property {Texture|null} sphereMap The spherical environment map of the material (default is
- * null). Affects reflections.
+ * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
+ * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
- * Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient
- * color.
+ * This setting overrides sphereMap and will replace the scene lighting environment.
+ * @property {Texture|null} sphereMap The spherical environment map of the material (default is
+ * null). This will replace the scene lighting environment.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
