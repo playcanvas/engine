@@ -289,11 +289,12 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
- * @property {Texture|null} sphereMap The spherical environment map of the material (default is
- * null). Affects reflections.
+ * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
+ * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
- * Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient
- * color.
+ * This setting overrides sphereMap and will replace the scene lighting environment.
+ * @property {Texture|null} sphereMap The spherical environment map of the material (default is
+ * null). This will replace the scene lighting environment.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
@@ -687,13 +688,17 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
-        if (this.cubeMap) {
-            this._setParameter('texture_cubeMap', this.cubeMap);
-        }
+        const isPhong = this.shadingModel === SPECULAR_PHONG;
 
-        if (this.sphereMap) {
+        // set overridden environment textures
+        if (this.envAtlas && !isPhong) {
+            this._setParameter('texture_envAtlas', this.envAtlas);
+        } else if (this.cubeMap) {
+            this._setParameter('texture_cubeMap', this.cubeMap);
+        } else if (this.sphereMap) {
             this._setParameter('texture_sphereMap', this.sphereMap);
         }
+
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
@@ -705,14 +710,21 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
-        const envAtlas = this.envAtlas || (this.useSkybox ? scene.envAtlas : null);
-        if (envAtlas) {
-            this._setParameter('texture_envAtlas', envAtlas);
+        const isPhong = this.shadingModel === SPECULAR_PHONG;
+        const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
 
-            if (this.useSkybox && !scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
+        if (!hasLocalEnvOverride && this.useSkybox) {
+            if (scene.envAtlas && !isPhong) {
+                this._setParameter('texture_envAtlas', scene.envAtlas);
+            } else if (scene.skybox) {
+                this._setParameter('texture_cubeMap', scene.skybox);
+            }
+
+            if (!scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
                 this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
+
         this._processParameters('_activeLightingParams');
     }
 

@@ -200,6 +200,10 @@ class StandardMaterialOptionsBuilder {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
             usingSceneEnv = true;
+        } else if (stdMat.useSkybox && scene.skybox) {
+            options.reflectionSource = 'cubeMap';
+            options.reflectionEncoding = scene.skybox.encoding;
+            usingSceneEnv = true;
         } else {
             options.reflectionSource = null;
             options.reflectionEncoding = null;
