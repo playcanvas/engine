@@ -1,5 +1,6 @@
 import { TRACEID_SHADER_ALLOC } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
+import { Preprocessor } from '../core/preprocessor.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
@@ -60,6 +61,13 @@ class Shader {
         this.name = definition.name || 'Untitled';
 
         Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`);
+
+        Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
+        Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
+
+        // pre-process shader sources
+        definition.vshader = Preprocessor.run(definition.vshader);
+        definition.fshader = Preprocessor.run(definition.fshader);
 
         this.init();
 

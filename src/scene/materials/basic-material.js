@@ -5,6 +5,7 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 
+import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 import { Material } from './material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -51,15 +52,6 @@ class BasicMaterial extends Material {
         this.vertexColors = false;
     }
 
-    set shader(shader) {
-        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
-    }
-
-    get shader() {
-        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
-        return null;
-    }
-
     /**
      * Copy a `BasicMaterial`.
      *
@@ -89,7 +81,16 @@ class BasicMaterial extends Material {
         }
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+
+        // Note: this is deprecated function Editor and possibly other projects use: they define
+        // updateShader callback on their BasicMaterial, so we handle it here.
+        if (this.updateShader) {
+            Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
+            this.updateShader(device, scene, objDefs, staticLightList, pass, sortedLights);
+            return this.shader;
+        }
+
         const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
@@ -103,8 +104,11 @@ class BasicMaterial extends Material {
             diffuseMap: !!this.colorMap,
             pass: pass
         };
+
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+
         const library = device.getProgramLibrary();
-        return library.getProgram('basic', options);
+        return library.getProgram('basic', options, processingOptions);
     }
 }
 

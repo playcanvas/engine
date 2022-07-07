@@ -102,6 +102,16 @@ class UniformBufferFormat {
         }
         this.byteSize = byteSize;
     }
+
+    /**
+     * Returns format of a uniform with specified name.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {UniformFormat} - The format of the uniform.
+     */
+    get(name) {
+        return this.map.get(name);
+    }
 }
 
 export { UniformFormat, UniformBufferFormat };

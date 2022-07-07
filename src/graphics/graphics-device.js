@@ -145,7 +145,8 @@ class GraphicsDevice extends EventHandler {
             // #endif
             tex: 0,
             vb: 0,
-            ib: 0
+            ib: 0,
+            ub: 0
         };
 
         this._shaderStats = {
