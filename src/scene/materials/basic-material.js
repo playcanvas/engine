@@ -52,16 +52,6 @@ class BasicMaterial extends Material {
         this.vertexColors = false;
     }
 
-    set shader(shader) {
-        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
-        this._shader = shader;
-    }
-
-    get shader() {
-        Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
-        return this._shader;
-    }
-
     /**
      * Copy a `BasicMaterial`.
      *
