@@ -792,7 +792,7 @@ class LitShader {
         }
 
         if (options.reflectionSource === 'envAtlas') {
-            code += chunks.atlasPS;
+            code += chunks.envAtlasPS;
             code += chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'cubeMap') {
             code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;

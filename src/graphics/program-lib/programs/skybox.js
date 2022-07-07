@@ -32,7 +32,7 @@ const skybox = {
             fshader += tonemapCode(options.toneMapping);
             fshader += shaderChunks.decodePS;
             fshader += shaderChunks.sphericalPS;
-            fshader += shaderChunks.atlasPS;
+            fshader += shaderChunks.envAtlasPS;
             fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
         }
 
