@@ -1093,7 +1093,7 @@ class ImageElement {
 
             // if texture's aspect ratio changed and the element needs to preserve aspect ratio, refresh the mesh
             const newAspectRatio = this._texture.width / this._texture.height;
-            if (newAspectRatio != this._targetAspectRatio) {
+            if (newAspectRatio !== this._targetAspectRatio) {
                 this._targetAspectRatio = newAspectRatio;
                 if (this._element.fitMode !== FITMODE_STRETCH) {
                     this.refreshMesh();

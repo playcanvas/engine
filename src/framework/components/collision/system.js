@@ -173,7 +173,6 @@ class CollisionSystemImpl {
 
     // Called when the collision is removed
     remove(entity, data) {
-        const app = this.system.app;
         if (entity.rigidbody && entity.rigidbody.body) {
             entity.rigidbody.disableSimulation();
         }
@@ -181,11 +180,6 @@ class CollisionSystemImpl {
         if (entity.trigger) {
             entity.trigger.destroy();
             delete entity.trigger;
-        }
-
-        if (app.scene.containsModel(data.model)) {
-            app.root.removeChild(data.model.graph);
-            app.scene.removeModel(data.model);
         }
     }
 

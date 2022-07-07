@@ -277,6 +277,87 @@ class ElementComponent extends Component {
         this._maskedBy = null; // the entity that is masking this element
     }
 
+    /**
+     * Fired when the mouse is pressed while the cursor is on the component. Only fired when
+     * useInput is true.
+     *
+     * @event ElementComponent#mousedown
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse is released while the cursor is on the component. Only fired when
+     * useInput is true.
+     *
+     * @event ElementComponent#mouseup
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor enters the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mouseenter
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor leaves the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mouseleave
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mousemove
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#mousewheel
+     * @param {ElementMouseEvent} event - The event.
+     */
+
+    /**
+     * Fired when the mouse is pressed and released on the component or when a touch starts and
+     * ends on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#click
+     * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch starts on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchstart
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch ends on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchend
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch moves after it started touching the component. Only fired when useInput
+     * is true.
+     *
+     * @event ElementComponent#touchmove
+     * @param {ElementTouchEvent} event - The event.
+     */
+
+    /**
+     * Fired when a touch is canceled on the component. Only fired when useInput is true.
+     *
+     * @event ElementComponent#touchcancel
+     * @param {ElementTouchEvent} event - The event.
+     */
+
     get _absLeft() {
         return this._localAnchor.x + this._margin.x;
     }
@@ -1742,82 +1823,5 @@ _define('shadowOffset');
 _define('enableMarkup');
 _define('rangeStart');
 _define('rangeEnd');
-
-// Events Documentation
-
-/**
- * @event
- * @name ElementComponent#mousedown
- * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mouseup
- * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mouseenter
- * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-/**
- * @event
- * @name ElementComponent#mouseleave
- * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-/**
- * @event
- * @name ElementComponent#mousemove
- * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#mousewheel
- * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#click
- * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
- * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchstart
- * @description Fired when a touch starts on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchend
- * @description Fired when a touch ends on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchmove
- * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
-
-/**
- * @event
- * @name ElementComponent#touchcancel
- * @description Fired when a touch is canceled on the component. Only fired when useInput is true.
- * @param {ElementTouchEvent} event - The event.
- */
 
 export { ElementComponent };

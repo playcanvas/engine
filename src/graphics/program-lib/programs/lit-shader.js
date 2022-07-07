@@ -24,6 +24,7 @@ import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { begin, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from './common.js';
+import { validateUserChunks } from '../chunks/chunk-validation.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -60,19 +61,23 @@ class LitShader {
         if (options.chunks) {
             this.chunks = {};
 
-            for (const p in shaderChunks) {
-                if (shaderChunks.hasOwnProperty(p)) {
-                    if (options.chunks[p]) {
-                        const chunk = options.chunks[p];
-                        for (const a in builtinAttributes) {
-                            if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
-                                this.attributes[a] = builtinAttributes[a];
-                            }
+            const userChunks = options.chunks;
+
+            // #if _DEBUG
+            validateUserChunks(options.chunks);
+            // #endif
+
+            for (const chunkName in shaderChunks) {
+                if (userChunks.hasOwnProperty(chunkName)) {
+                    const chunk = userChunks[chunkName];
+                    for (const a in builtinAttributes) {
+                        if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
+                            this.attributes[a] = builtinAttributes[a];
                         }
-                        this.chunks[p] = chunk;
-                    } else {
-                        this.chunks[p] = shaderChunks[p];
                     }
+                    this.chunks[chunkName] = chunk;
+                } else {
+                    this.chunks[chunkName] = shaderChunks[chunkName];
                 }
             }
         } else {
@@ -300,6 +305,7 @@ class LitShader {
             }
         }
 
+        /** @type {[string, string, string, any[]]} */
         const codes = [code, this.varyings, codeBody, []];
 
         mapTransforms.forEach((mapTransform) => {
@@ -991,13 +997,8 @@ class LitShader {
                     code += "    dBinormalW = vBinormalW;\n";
                 }
             }
-        }
 
-        if (this.needsNormal) {
             code += "    getViewDir();\n";
-            if (!options.normalMap) {
-                code += "    getNormal();\n";
-            }
             if (hasTBN) {
                 code += "    getTBN();\n";
             }
@@ -1199,16 +1200,16 @@ class LitShader {
                             if (light._normalOffsetBias) {
                                 code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
-                            code += "    float shadow = getShadowPoint" + shadowReadMode + shadowCoordArgs;
-                            code += `    dAtten *= mix(1.0f, shadow, light${i}_shadowIntensity);\n`;
+                            code += `    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`;
+                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
                             code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "    float shadow = getShadow" + shadowReadMode + "(light" + i + "_shadowMap, light" + i + "_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
-                            code += `    dAtten *= mix(1.0f, shadow, light${i}_shadowIntensity);\n`;
+                            code += `    float shadow${i} = getShadow${shadowReadMode}(light${i}_shadowMap, light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
+                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
                         }
                     }
                 }
@@ -1286,7 +1287,7 @@ class LitShader {
             if (options.occludeDirect) {
                 code += "    occludeDiffuse();\n";
             }
-            if (options.occludeSpecular) {
+            if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
                 code += "    occludeSpecular();\n";
             }
         }

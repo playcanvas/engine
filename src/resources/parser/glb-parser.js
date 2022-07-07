@@ -792,7 +792,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                                 break;
                         }
 
-                        if (!status || !status.ok() || outputGeometry.ptr == 0) {
+                        if (!status || !status.ok() || outputGeometry.ptr === 0) {
                             callback('Failed to decode draco compressed asset: ' +
                             (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType)));
                             return;
@@ -1285,6 +1285,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         material.emissiveMapUv = material.diffuseMapUv;
         material.emissiveMapTiling.copy(material.diffuseMapTiling);
         material.emissiveMapOffset.copy(material.diffuseMapOffset);
+        material.emissiveMapRotation = material.diffuseMapRotation;
         material.emissiveMapChannel = material.diffuseMapChannel;
         material.emissiveVertexColor = material.diffuseVertexColor;
         material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;

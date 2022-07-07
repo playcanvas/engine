@@ -52,14 +52,15 @@ import { DebugGraphics } from './debug-graphics.js';
  * TransformExample.prototype.initialize = function() {
  *     var device = this.app.graphicsDevice;
  *     var mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
- *     var node = new pc.GraphNode();
- *     var meshInstance = new pc.MeshInstance(mesh, this.material.resource, node);
- *     var model = new pc.Model();
- *     model.graph = node;
- *     model.meshInstances = [ meshInstance ];
- *     this.app.scene.addModel(model);
+ *     var meshInstance = new pc.MeshInstance(mesh, this.material.resource);
+ *     var entity = new pc.Entity();
+ *     entity.addComponent('render', {
+ *         type: 'asset',
+ *         meshInstances: [meshInstance]
+ *     });
+ *     app.root.addChild(entity);
  *
- *     // if webgl2 is not supported, TF is not available
+ *     // if webgl2 is not supported, transform-feedback is not available
  *     if (!device.webgl2) return;
  *     var inputBuffer = mesh.vertexBuffer;
  *     this.tf = new pc.TransformFeedback(inputBuffer);

@@ -60,9 +60,9 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * @event
-     * @name AssetRegistry#load
-     * @description Fired when an asset completes loading.
+     * Fired when an asset completes loading.
+     *
+     * @event AssetRegistry#load
      * @param {Asset} asset - The asset that has just loaded.
      * @example
      * app.assets.on("load", function (asset) {
@@ -71,9 +71,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#load:[id]
-     * @description Fired when an asset completes loading.
+     * Fired when an asset completes loading.
+     *
+     * @event AssetRegistry#load:[id]
      * @param {Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
@@ -85,9 +85,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#load:url:[url]
-     * @description Fired when an asset completes loading.
+     * Fired when an asset completes loading.
+     *
+     * @event AssetRegistry#load:url:[url]
      * @param {Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
@@ -99,9 +99,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#add
-     * @description Fired when an asset is added to the registry.
+     * Fired when an asset is added to the registry.
+     *
+     * @event AssetRegistry#add
      * @param {Asset} asset - The asset that was added.
      * @example
      * app.assets.on("add", function (asset) {
@@ -110,9 +110,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#add:[id]
-     * @description Fired when an asset is added to the registry.
+     * Fired when an asset is added to the registry.
+     *
+     * @event AssetRegistry#add:[id]
      * @param {Asset} asset - The asset that was added.
      * @example
      * var id = 123456;
@@ -122,16 +122,16 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#add:url:[url]
-     * @description Fired when an asset is added to the registry.
+     * Fired when an asset is added to the registry.
+     *
+     * @event AssetRegistry#add:url:[url]
      * @param {Asset} asset - The asset that was added.
      */
 
     /**
-     * @event
-     * @name AssetRegistry#remove
-     * @description Fired when an asset is removed from the registry.
+     * Fired when an asset is removed from the registry.
+     *
+     * @event AssetRegistry#remove
      * @param {Asset} asset - The asset that was removed.
      * @example
      * app.assets.on("remove", function (asset) {
@@ -140,9 +140,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#remove:[id]
-     * @description Fired when an asset is removed from the registry.
+     * Fired when an asset is removed from the registry.
+     *
+     * @event AssetRegistry#remove:[id]
      * @param {Asset} asset - The asset that was removed.
      * @example
      * var id = 123456;
@@ -152,16 +152,16 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#remove:url:[url]
-     * @description Fired when an asset is removed from the registry.
+     * Fired when an asset is removed from the registry.
+     *
+     * @event AssetRegistry#remove:url:[url]
      * @param {Asset} asset - The asset that was removed.
      */
 
     /**
-     * @event
-     * @name AssetRegistry#error
-     * @description Fired when an error occurs during asset loading.
+     * Fired when an error occurs during asset loading.
+     *
+     * @event AssetRegistry#error
      * @param {string} err - The error message.
      * @param {Asset} asset - The asset that generated the error.
      * @example
@@ -174,9 +174,9 @@ class AssetRegistry extends EventHandler {
      */
 
     /**
-     * @event
-     * @name AssetRegistry#error:[id]
-     * @description Fired when an error occurs during asset loading.
+     * Fired when an error occurs during asset loading.
+     *
+     * @event AssetRegistry#error:[id]
      * @param {Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;

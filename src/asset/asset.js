@@ -154,6 +154,63 @@ class Asset extends EventHandler {
     }
 
     /**
+     * Fired when the asset has completed loading.
+     *
+     * @event Asset#load
+     * @param {Asset} asset - The asset that was loaded.
+     */
+
+    /**
+     * Fired just before the asset unloads the resource. This allows for the opportunity to prepare
+     * for an asset that will be unloaded. E.g. Changing the texture of a model to a default before
+     * the one it was using is unloaded.
+     *
+     * @event Asset#unload
+     * @param {Asset} asset - The asset that is due to be unloaded.
+     */
+
+    /**
+     * Fired when the asset is removed from the asset registry.
+     *
+     * @event Asset#remove
+     * @param {Asset} asset - The asset that was removed.
+     */
+
+    /**
+     * Fired if the asset encounters an error while loading.
+     *
+     * @event Asset#error
+     * @param {string} err - The error message.
+     * @param {Asset} asset - The asset that generated the error.
+     */
+
+    /**
+     * Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
+     *
+     * @event Asset#change
+     * @param {Asset} asset - The asset that was loaded.
+     * @param {string} property - The name of the property that changed.
+     * @param {*} value - The new property value.
+     * @param {*} oldValue - The old property value.
+     */
+
+    /**
+     * Fired when we add a new localized asset id to the asset.
+     *
+     * @event Asset#add:localized
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we added.
+     */
+
+    /**
+     * Fired when we remove a localized asset id from the asset.
+     *
+     * @event Asset#remove:localized
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we removed.
+     */
+
+    /**
      * The asset id.
      *
      * @type {number}
@@ -305,61 +362,6 @@ class Asset extends EventHandler {
     get loadFaces() {
         return this._loadFaces;
     }
-
-    /**
-     * @event
-     * @name Asset#load
-     * @description Fired when the asset has completed loading.
-     * @param {Asset} asset - The asset that was loaded.
-     */
-
-    /**
-     * @event
-     * @name Asset#unload
-     * @description Fired just before the asset unloads the resource. This allows for the opportunity to prepare for an asset that will be unloaded. E.g. Changing the texture of a model to a default before the one it was using is unloaded.
-     * @param {Asset} asset - The asset that is due to be unloaded.
-     */
-
-    /**
-     * @event
-     * @name Asset#remove
-     * @description Fired when the asset is removed from the asset registry.
-     * @param {Asset} asset - The asset that was removed.
-     */
-
-    /**
-     * @event
-     * @name Asset#error
-     * @description Fired if the asset encounters an error while loading.
-     * @param {string} err - The error message.
-     * @param {Asset} asset - The asset that generated the error.
-     */
-
-    /**
-     * @event
-     * @name Asset#change
-     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
-     * @param {Asset} asset - The asset that was loaded.
-     * @param {string} property - The name of the property that changed.
-     * @param {*} value - The new property value.
-     * @param {*} oldValue - The old property value.
-     */
-
-    /**
-     * @event
-     * @name Asset#add:localized
-     * @description Fired when we add a new localized asset id to the asset.
-     * @param {string} locale - The locale.
-     * @param {number} assetId - The asset id we added.
-     */
-
-    /**
-     * @event
-     * @name Asset#remove:localized
-     * @description Fired when we remove a localized asset id from the asset.
-     * @param {string} locale - The locale.
-     * @param {number} assetId - The asset id we removed.
-     */
 
     /**
      * Return the URL required to fetch the file for this asset.

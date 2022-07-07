@@ -358,7 +358,6 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
             "precision " + graphicsDevice.precision + " float;",
             "varying vec2 vUv0;",
-            "uniform float uUpscale;",
             "uniform sampler2D uColorBuffer;",
             "uniform sampler2D uSSAOBuffer;",
             "",
@@ -377,23 +376,30 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.brightness = 0;
     this.samples = 20;
     this.downscale = 1.0;
-
-    this.resize(null);
 }
 
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
-SSAOEffect.prototype.resize = function (target) {
+SSAOEffect.prototype._destroy = function () {
+    if (this.target) {
+        this.target.destroyTextureBuffers();
+        this.target.destroy();
+        this.target = null;
 
-    var width, height;
-    if (target === null) {
-        width = Math.ceil(this.device.width / this.device.maxPixelRatio / this.downscale);
-        height = Math.ceil(this.device.height / this.device.maxPixelRatio / this.downscale);
-    } else {
-        width = Math.ceil(target.colorBuffer.width / this.device.maxPixelRatio / this.downscale);
-        height = Math.ceil(target.colorBuffer.height / this.device.maxPixelRatio / this.downscale);
     }
+
+    if (this.blurTarget) {
+        this.blurTarget.destroyTextureBuffers();
+        this.blurTarget.destroy();
+        this.blurTarget = null;
+    }
+};
+
+SSAOEffect.prototype._resize = function (target) {
+
+    var width = Math.ceil(target.colorBuffer.width / this.downscale);
+    var height = Math.ceil(target.colorBuffer.height / this.downscale);
 
     // If no change, skip resize
     if (width === this.width && height === this.height)
@@ -402,17 +408,9 @@ SSAOEffect.prototype.resize = function (target) {
     // Render targets
     this.width = width;
     this.height = height;
-    if (this.target) {
-        this.target.destroyFrameBuffers();
-        this.target.destroyTextureBuffers();
-        this.target.destroy();
-        this.target = null;
 
-        this.blurTarget.destroyFrameBuffers();
-        this.blurTarget.destroyTextureBuffers();
-        this.blurTarget.destroy();
-        this.blurTarget = null;
-    }
+    this._destroy();
+
     var ssaoResultBuffer = new pc.Texture(this.device, {
         format: pc.PIXELFORMAT_R8_G8_B8_A8,
         minFilter: pc.FILTER_LINEAR,
@@ -423,8 +421,9 @@ SSAOEffect.prototype.resize = function (target) {
         height: this.height,
         mipmaps: false
     });
-    ssaoResultBuffer.name = 'ssao';
+    ssaoResultBuffer.name = 'SSAO Result';
     this.target = new pc.RenderTarget({
+        name: "SSAO Result Render Target",
         colorBuffer: ssaoResultBuffer,
         depth: false
     });
@@ -439,7 +438,9 @@ SSAOEffect.prototype.resize = function (target) {
         height: this.height,
         mipmaps: false
     });
+    ssaoBlurBuffer.name = 'SSAO Blur';
     this.blurTarget = new pc.RenderTarget({
+        name: "SSAO Blur Render Target",
         colorBuffer: ssaoBlurBuffer,
         depth: false
     });
@@ -447,6 +448,9 @@ SSAOEffect.prototype.resize = function (target) {
 
 Object.assign(SSAOEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
@@ -492,7 +496,6 @@ Object.assign(SSAOEffect.prototype, {
         pc.drawFullscreenQuad(device, this.blurTarget, this.vertexBuffer, this.blurShader, rect);
 
         // Finally output to screen
-        scope.resolve("uUpscale").setValue(1.0 / this.downscale);
         scope.resolve("uSSAOBuffer").setValue(this.blurTarget.colorBuffer);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
         pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.outputShader, rect);
@@ -556,12 +559,8 @@ SSAO.prototype.initialize = function () {
         }
     });
 
-    this.on('attr:downscale', () => {
-        if (!this.enabled) return;
-        this.effect.resize();
-    });
-
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this.effect._destroy();
     });
 };

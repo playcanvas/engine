@@ -196,7 +196,7 @@ class Light {
     }
 
     set numCascades(value) {
-        if (!this.cascades || this.numCascades != value) {
+        if (!this.cascades || this.numCascades !== value) {
             this.cascades = directionalCascades[value - 1];
             this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
             this._shadowCascadeDistances = new Float32Array(4);     // always 4

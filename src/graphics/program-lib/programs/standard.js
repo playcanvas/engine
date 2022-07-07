@@ -260,6 +260,7 @@ const standard = {
                 //     if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
                 //     code += tbn;
                 // }
+                decl.append("vec2 dUvOffset;");
                 code.append(this._addMap("height", "parallaxPS", options, litShader.chunks));
                 func.append("getParallax();");
             }

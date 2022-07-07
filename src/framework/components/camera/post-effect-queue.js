@@ -60,8 +60,6 @@ class PostEffectQueue {
         // legacy
         this.depthTarget = null;
 
-        this.renderTargetScale = 1;
-
         camera.on('set:rect', this.onCameraRectChanged, this);
     }
 
@@ -75,8 +73,8 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        const height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
+        const width = Math.floor(rect.z * this.app.graphicsDevice.width);
+        const height = Math.floor(rect.w * this.app.graphicsDevice.height);
 
         const colorBuffer = new Texture(this.app.graphicsDevice, {
             name: name,
@@ -129,11 +127,6 @@ class PostEffectQueue {
     _destroyOffscreenTarget(rt) {
         rt.destroyTextureBuffers();
         rt.destroy();
-    }
-
-    setRenderTargetScale(scale) {
-        this.renderTargetScale = scale;
-        this.resizeRenderTargets();
     }
 
     /**
@@ -361,15 +354,13 @@ class PostEffectQueue {
     resizeRenderTargets() {
 
         const rect = this.camera.rect;
-        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
-        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
+        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width);
+        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height);
 
         const effects = this.effects;
 
         for (let i = 0, len = effects.length; i < len; i++) {
             const fx = effects[i];
-            if (fx.effect.resize !== undefined)
-                fx.effect.resize(fx.inputTarget);
             if (fx.inputTarget.width !== desiredWidth ||
                 fx.inputTarget.height !== desiredHeight)  {
                 this._resizeOffscreenTarget(fx.inputTarget);

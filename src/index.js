@@ -13,6 +13,7 @@ import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
+export * from './core/constants.js';
 export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
@@ -27,7 +28,7 @@ export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
-export { Debug } from './core/debug.js';
+export { Tracing } from './core/tracing.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -217,7 +218,6 @@ export { AppBase, app } from './framework/app-base.js';
 export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
-export * from './anim/controller/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
 export { AnimComponentLayer } from './framework/components/anim/component-layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';

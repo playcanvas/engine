@@ -179,40 +179,41 @@ function BloomEffect(graphicsDevice) {
     // Uniforms
     this.sampleWeights = new Float32Array(SAMPLE_COUNT);
     this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
-
-    this.resize(null);
 }
 
 BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
 BloomEffect.prototype.constructor = BloomEffect;
 
-BloomEffect.prototype.resize = function (target) {
-
-    var width, height;
-    if (target === null) {
-        width = this.device.width;
-        height = this.device.height;
-    } else {
-        width = target.colorBuffer.width;
-        height = target.colorBuffer.height;
-    }
-
-    if (width === this.width && height === this.height)
-        return;
-
-    var i;
+BloomEffect.prototype._destroy = function () {
     if (this.targets) {
+        var i;
         for (i = 0; i < this.targets.length; i++) {
-            this.targets[i].destroyFrameBuffers();
             this.targets[i].destroyTextureBuffers();
             this.targets[i].destroy();
         }
     }
+    this.targets.length = 0;
+};
+
+BloomEffect.prototype._resize = function (target) {
+
+
+    var width = target.colorBuffer.width;
+    var height = target.colorBuffer.height;
+
+    if (width === this.width && height === this.height)
+        return;
+
+    this.width = width;
+    this.height = height;
+
+    this._destroy();
 
     // Render targets
-    this.targets = [];
+    var i;
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
+            name: "Bloom Texture" + i,
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width >> 1,
             height: height >> 1,
@@ -224,6 +225,7 @@ BloomEffect.prototype.resize = function (target) {
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.name = 'pe-bloom';
         var bloomTarget = new pc.RenderTarget({
+            name: "Bloom Render Target " + i,
             colorBuffer: colorBuffer,
             depth: false
         });
@@ -234,6 +236,9 @@ BloomEffect.prototype.resize = function (target) {
 
 Object.assign(BloomEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
@@ -319,5 +324,6 @@ Bloom.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this._destroy();
     });
 };

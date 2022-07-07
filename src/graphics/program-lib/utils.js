@@ -30,7 +30,7 @@ const attrib2Semantic = {
  * Extract the attributes specified in a vertex shader.
  *
  * @param {string} vsCode - The vertex shader code.
- * @returns {Object.<string, string>} The attribute name to semantic map.
+ * @returns {Object<string, string>} The attribute name to semantic map.
  * @ignore
  */
 function collectAttribs(vsCode) {
@@ -80,7 +80,8 @@ function createShader(device, vsName, psName, useTransformFeedback = false) {
         attributes: attribs,
         vshader: vsCode,
         fshader: psCode,
-        useTransformFeedback: useTransformFeedback
+        useTransformFeedback: useTransformFeedback,
+        name: `${vsName}_${psName}`
     });
 }
 
@@ -110,6 +111,7 @@ function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedbac
     }
 
     shaderCache[uName] = new Shader(device, {
+        name: uName,
         attributes: attribs,
         vshader: vsCode,
         fshader: psPreamble + psCode,

@@ -175,6 +175,17 @@ class GraphicsDevice extends EventHandler {
         this.programLib = new ProgramLibrary(this);
     }
 
+    /**
+     * Fired when the canvas is resized.
+     *
+     * @event GraphicsDevice#resizecanvas
+     * @param {number} width - The new width of the canvas in pixels.
+     * @param {number} height - The new height of the canvas in pixels.
+     */
+
+    /**
+     * Destroy the graphics device.
+     */
     destroy() {
         // fire the destroy event.
         // textures and other device resources may destroy themselves in response.

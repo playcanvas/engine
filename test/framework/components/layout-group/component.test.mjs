@@ -5,7 +5,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 /** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
@@ -45,13 +45,13 @@ describe('LayoutGroupComponent', function () {
 
         app.systems.fire('postUpdate');
 
-        sinon.spy(entity0.layoutgroup, 'reflow');
-        sinon.spy(entity0_0.layoutgroup, 'reflow');
-        sinon.spy(entity0_0_0.layoutgroup, 'reflow');
+        spy(entity0.layoutgroup, 'reflow');
+        spy(entity0_0.layoutgroup, 'reflow');
+        spy(entity0_0_0.layoutgroup, 'reflow');
     });
 
     afterEach(function () {
-        sinon.restore();
+        restore();
         app.destroy();
     });
 
@@ -76,7 +76,7 @@ describe('LayoutGroupComponent', function () {
         let done = false;
 
         entity0.layoutgroup.reflow.restore();
-        sinon.stub(entity0.layoutgroup, 'reflow').callsFake(function () {
+        stub(entity0.layoutgroup, 'reflow').callsFake(function () {
             if (!done) {
                 done = true;
                 system.scheduleReflow(entity0_0_0.layoutgroup);
@@ -104,12 +104,12 @@ describe('LayoutGroupComponent', function () {
     });
 
     it('bails if the maximum iteration count is reached', function () {
-        sinon.stub(console, 'warn');
+        stub(console, 'warn');
 
         system.scheduleReflow(entity0.layoutgroup);
 
         entity0.layoutgroup.reflow.restore();
-        sinon.stub(entity0.layoutgroup, 'reflow').callsFake(function () {
+        stub(entity0.layoutgroup, 'reflow').callsFake(function () {
             system.scheduleReflow(entity0.layoutgroup);
         });
 

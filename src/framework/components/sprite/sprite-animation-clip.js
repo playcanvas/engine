@@ -46,6 +46,42 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     /**
+     * Fired when the clip starts playing.
+     *
+     * @event SpriteAnimationClip#play
+     */
+
+    /**
+     * Fired when the clip is paused.
+     *
+     * @event SpriteAnimationClip#pause
+     */
+
+    /**
+     * Fired when the clip is resumed.
+     *
+     * @event SpriteAnimationClip#resume
+     */
+
+    /**
+     * Fired when the clip is stopped.
+     *
+     * @event SpriteAnimationClip#stop
+     */
+
+    /**
+     * Fired when the clip stops playing because it reached its ending.
+     *
+     * @event SpriteAnimationClip#end
+     */
+
+    /**
+     * Fired when the clip reached the end of its current loop.
+     *
+     * @event SpriteAnimationClip#loop
+     */
+
+    /**
      * The total duration of the animation in seconds.
      *
      * @type {number}
@@ -445,44 +481,6 @@ class SpriteAnimationClip extends EventHandler {
         this.fire('stop');
         this._component.fire('stop', this);
     }
-
-    // Events Documentation
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#play
-     * @description Fired when the clip starts playing.
-     */
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#pause
-     * @description Fired when the clip is paused.
-     */
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#resume
-     * @description Fired when the clip is resumed.
-     */
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#stop
-     * @description Fired when the clip is stopped.
-     */
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#end
-     * @description Fired when the clip stops playing because it reached its ending.
-     */
-
-    /**
-     * @event
-     * @name SpriteAnimationClip#loop
-     * @description Fired when the clip reached the end of its current loop.
-     */
 }
 
 export { SpriteAnimationClip };

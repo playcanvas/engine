@@ -51,6 +51,7 @@ import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 /** @typedef {import('../scene.js').Scene} Scene */
+/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
 /** @typedef {import('../camera.js').Camera} Camera */
 /** @typedef {import('../frame-graph.js').FrameGraph} FrameGraph */
 /** @typedef {import('../composition/layer-composition.js').LayerComposition} LayerComposition */
@@ -104,7 +105,7 @@ class ForwardRenderer {
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
 
-        /** @type {Scene} */
+        /** @type {Scene|null} */
         this.scene = null;
 
         this._shadowDrawCalls = 0;
@@ -471,7 +472,7 @@ class ForwardRenderer {
      * Set up the viewport and the scissor for camera rendering.
      *
      * @param {Camera} camera - The camera containing the viewport infomation.
-     * @param {RenderTarget} renderTarget - The render target. NULL for the default one.
+     * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
 
@@ -558,6 +559,9 @@ class ForwardRenderer {
         DebugGraphics.popGpuMarker(device);
     }
 
+    /**
+     * @param {Scene} scene - The scene.
+     */
     dispatchGlobalLights(scene) {
         this.ambientColor[0] = scene.ambientLight.r;
         this.ambientColor[1] = scene.ambientLight.g;
@@ -569,7 +573,10 @@ class ForwardRenderer {
         }
         this.ambientId.setValue(this.ambientColor);
         this.exposureId.setValue(scene.exposure);
-        if (scene.skyboxModel) this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+
+        if (scene.sky) {
+            this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+        }
     }
 
     _resolveLight(scope, i) {
@@ -1139,18 +1146,6 @@ class ForwardRenderer {
         }
     }
 
-    updateShader(meshInstance, objDefs, staticLightList, pass, sortedLights) {
-        meshInstance.material._scene = this.scene;
-
-        // if material has dirtyBlend set, notify scene here
-        if (meshInstance.material._dirtyBlend) {
-            this.scene.layers._dirtyBlend = true;
-        }
-
-        meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
-        meshInstance._shader[pass] = meshInstance.material.shader;
-    }
-
     setCullMode(cullFaces, flip, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
@@ -1275,6 +1270,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < drawCallsCount; i++) {
 
+            /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
 
             // apply visibility override
@@ -1318,10 +1314,16 @@ class ForwardRenderer {
 
                 if (material !== prevMaterial) {
                     this._materialSwitches++;
+                    material._scene = scene;
 
                     if (material.dirty) {
                         material.updateUniforms(device, scene);
                         material.dirty = false;
+                    }
+
+                    // if material has dirtyBlend set, notify scene here
+                    if (material._dirtyBlend) {
+                        scene.layers._dirtyBlend = true;
                     }
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
@@ -1329,15 +1331,16 @@ class ForwardRenderer {
                             const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
                             if (!drawCall._shader[pass]) {
-                                this.updateShader(drawCall, objDefs, null, pass, sortedLights);
+                                drawCall.updatePassShader(scene, pass, null, sortedLights);
                                 material.variants[variantKey] = drawCall._shader[pass];
                             }
                         } else {
-                            this.updateShader(drawCall, objDefs, drawCall._staticLightList, pass, sortedLights);
+                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights);
                         }
-                        drawCall._shaderDefs = objDefs;
                         drawCall._lightHash = lightHash;
                     }
+
+                    Debug.assert(drawCall._shader[pass], "no shader for pass", material);
                 }
 
                 addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
@@ -1529,6 +1532,10 @@ class ForwardRenderer {
         // #endif
     }
 
+    /**
+     * @param {MeshInstance[]} drawCalls - Mesh instances.
+     * @param {boolean} onlyLitShaders - Limits the update to shaders affected by lighting.
+     */
     updateShaders(drawCalls, onlyLitShaders) {
         const count = drawCalls.length;
         for (let i = 0; i < count; i++) {
@@ -1538,7 +1545,8 @@ class ForwardRenderer {
                 if (!_tempMaterialSet.has(mat)) {
                     _tempMaterialSet.add(mat);
 
-                    if (mat.updateShader !== Material.prototype.updateShader) {
+                    // skip this for materials not using variants
+                    if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
 
                         if (onlyLitShaders) {
                             // skip materials not using lighting
@@ -1546,8 +1554,8 @@ class ForwardRenderer {
                                 continue;
                         }
 
+                        // clear shader variants on the material and also on mesh instances that use it
                         mat.clearVariants();
-                        mat.shader = null;
                     }
                 }
             }
@@ -1557,6 +1565,10 @@ class ForwardRenderer {
         _tempMaterialSet.clear();
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {boolean} lightsChanged - True if lights of the composition has changed.
+     */
     beginFrame(comp, lightsChanged) {
         const meshInstances = comp._meshInstances;
 
@@ -1572,6 +1584,7 @@ class ForwardRenderer {
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
         this.updateCpuSkinMatrices(meshInstances);
 
+        // clear mesh instance visibility
         const miCount = meshInstances.length;
         for (let i = 0; i < miCount; i++) {
             meshInstances[i].visibleThisFrame = false;
@@ -1588,7 +1601,7 @@ class ForwardRenderer {
     /**
      * Updates the layer composition for rendering.
      *
-     * @param {LayerComposition} comp - The layer composition to upodate.
+     * @param {LayerComposition} comp - The layer composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
      * @returns {number} - Flags of what was updated
      * @ignore
@@ -1698,6 +1711,10 @@ class ForwardRenderer {
         this.screenSizeId.setValue(this._screenSize);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     * @param {number} compUpdatedFlags - Flags of what was updated.
+     */
     updateLightStats(comp, compUpdatedFlags) {
 
         // #if _PROFILER
@@ -1729,9 +1746,13 @@ class ForwardRenderer {
         // #endif
     }
 
-    // Shadow map culling for directional and visible local lights
-    // visible meshInstances are collected into light._renderData, and are marked as visible
-    // for directional lights also shadow camera matrix is set up
+    /**
+     * Shadow map culling for directional and visible local lights
+     * visible meshInstances are collected into light._renderData, and are marked as visible
+     * for directional lights also shadow camera matrix is set up
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
     cullShadowmaps(comp) {
 
         // shadow casters culling for local (point and spot) lights
@@ -1760,8 +1781,12 @@ class ForwardRenderer {
         }
     }
 
-    // visibility culling of lights, meshInstances, shadows casters
-    // Also applies meshInstance.visible and camera.cullingMask
+    /**
+     * visibility culling of lights, meshInstances, shadows casters
+     * Also applies meshInstance.visible and camera.cullingMask
+     *
+     * @param {LayerComposition} comp - The layer composition.
+     */
     cullComposition(comp) {
 
         // #if _PROFILER
@@ -1832,10 +1857,16 @@ class ForwardRenderer {
         // #endif
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     updateLightTextureAtlas(comp) {
         this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     updateClusters(comp) {
 
         // #if _PROFILER
@@ -2023,6 +2054,9 @@ class ForwardRenderer {
         frameGraph.addRenderPass(renderPass);
     }
 
+    /**
+     * @param {LayerComposition} comp - The layer composition.
+     */
     update(comp) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
@@ -2031,7 +2065,7 @@ class ForwardRenderer {
         this.initViewBindGroupFormat();
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSkybox(this.device);
+        this.scene._updateSky(this.device);
 
         // update layer composition if something has been invalidated
         const updated = this.updateLayerComposition(comp, clusteredLightingEnabled);
