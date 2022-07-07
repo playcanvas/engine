@@ -525,7 +525,7 @@ void evaluateLight(ClusterLightData light) {
                     #ifdef CLUSTER_SPECULAR_FRESNEL
                         ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity));
                     #else
-                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * vec3(ccSpecularity));
+                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * vec3(ccSpecularity);
                     #endif
                 #endif
 
