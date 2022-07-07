@@ -1114,6 +1114,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             extractTextureTransform(baseColorTexture, material, ['diffuse', 'opacity']);
         }
         material.useMetalness = true;
+        material.specular.set(1, 1, 1);
         if (pbrData.hasOwnProperty('metallicFactor')) {
             material.metalness = pbrData.metallicFactor;
         } else {
