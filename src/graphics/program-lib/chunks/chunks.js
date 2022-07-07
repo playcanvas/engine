@@ -164,7 +164,6 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
-import specularColorPS from './standard/frag/specularColor.js';
 import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
@@ -364,7 +363,6 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
-    specularColorPS,
     specularityFactorPS,
     spotPS,
     startPS,

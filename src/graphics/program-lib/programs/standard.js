@@ -307,20 +307,22 @@ const standard = {
 
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
-                const specularPropName = options.useMetalness ? "metalness" : "specular";
                 decl.append("vec3 dSpecularity;");
                 decl.append("float dGlossiness;");
                 if (options.useMetalness) {
                     decl.append("float dMetalness;");
                     decl.append("float dIor;");
                 }
-                code.append(this._addMap("specular", "specularColorPS", options, litShader.chunks));
                 if (options.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
                     func.append("getSpecularityFactor();");
                 }
-                code.append(this._addMap(specularPropName, specularPropName + "PS", options, litShader.chunks));
+                if (options.useMetalness) {
+                    code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));
+                    func.append("getMetalness();");
+                }
+                code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
                 code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
                 func.append("getGlossiness();");
                 func.append("getSpecularity();");

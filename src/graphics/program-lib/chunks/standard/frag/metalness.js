@@ -7,7 +7,7 @@ uniform float material_metalness;
 uniform sampler2D texture_metalnessMap;
 #endif
 
-void getSpecularity() {
+void getMetalness() {
     float metalness = 1.0;
 
     #ifdef MAPFLOAT
@@ -22,9 +22,7 @@ void getSpecularity() {
     metalness *= saturate(vVertexColor.$VC);
     #endif
 
-    dSpecularity = getSpecularColor();
     dIor = 0.04;
-
     dMetalness = metalness;
 }
 `;
