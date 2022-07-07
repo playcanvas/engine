@@ -47,6 +47,11 @@ const standardMaterialParameterTypes = {
     specularMapRotation: 'number',
     specularityFactor: 'number',
     specularityFactorMap: 'texture',
+    specularityFactorMapChannel: 'string',
+    specularityFactorMapUv: 'number',
+    specularityFactorMapTiling: 'vec2',
+    specularityFactorMapOffset: 'vec2',
+    specularityFactorMapRotation: 'number',
     occludeSpecular: 'enum:occludeSpecular',
 
     useMetalness: 'boolean',
@@ -62,9 +67,6 @@ const standardMaterialParameterTypes = {
     metalnessMapTiling: 'vec2',
     metalnessMapOffset: 'vec2',
     metalnessMapRotation: 'number',
-    f0: "rgb",
-    f0Tint: 'boolean',
-    f0Map: 'texture',
 
     conserveEnergy: 'boolean',
     shininess: 'number',
