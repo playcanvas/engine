@@ -312,15 +312,13 @@ const standard = {
                 if (options.useMetalness) {
                     decl.append("float dMetalness;");
                     decl.append("float dIor;");
+                    code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));
+                    func.append("getMetalness();");
                 }
                 if (options.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
                     func.append("getSpecularityFactor();");
-                }
-                if (options.useMetalness) {
-                    code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));
-                    func.append("getMetalness();");
                 }
                 code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
                 code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
