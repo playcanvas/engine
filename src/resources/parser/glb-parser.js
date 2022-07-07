@@ -1040,9 +1040,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     material.specularTint = true;
     material.specularVertexColor = true;
 
-    material.specular.set(1, 1, 1);
-    material.specularityFactor = 1.0;
-
     if (gltfMaterial.hasOwnProperty('name')) {
         material.name = gltfMaterial.name;
     }
