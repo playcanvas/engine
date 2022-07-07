@@ -1086,7 +1086,7 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
-    _defineTex2D('specularityFactor', 0, 1, '', false);
+    _defineTex2D('specularityFactor', 0, 1, '', true);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);
