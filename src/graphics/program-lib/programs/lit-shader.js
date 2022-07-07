@@ -1269,13 +1269,13 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.clearCoat > 0) {
-                        code += "    ccSpecularLight += ccSpecularity * getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
+                        code += "    ccSpecularLight += getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
                         code +=  ";\n";
                     }
                     if (options.useSpecular) {
-                        code += "    dSpecularLight += dSpecularity * getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
+                        code += "    dSpecularLight += getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : " * dSpecularity";
                         code += ";\n";
