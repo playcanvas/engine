@@ -54,11 +54,12 @@ class BasicMaterial extends Material {
 
     set shader(shader) {
         Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
+        this._shader = shader;
     }
 
     get shader() {
         Debug.warn('BasicMaterial#shader property is not implemented, and should not be used.');
-        return null;
+        return this._shader;
     }
 
     /**
@@ -91,6 +92,15 @@ class BasicMaterial extends Material {
     }
 
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+
+        // Note: this is deprecated function Editor and possibly other projects use: they define
+        // updateShader callback on their BasicMaterial, so we handle it here.
+        if (this.updateShader) {
+            Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
+            this.updateShader(device, scene, objDefs, staticLightList, pass, sortedLights);
+            return this.shader;
+        }
+
         const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
