@@ -18,6 +18,7 @@ class UniformBuffer {
     constructor(graphicsDevice, format) {
         this.device = graphicsDevice;
         this.format = format;
+        Debug.assert(format);
 
         this.impl = graphicsDevice.createUniformBufferImpl(this);
 
@@ -27,6 +28,8 @@ class UniformBuffer {
 
         this.storage = new ArrayBuffer(format.byteSize);
         this.storageFloat32 = new Float32Array(this.storage);
+
+        graphicsDevice._vram.ub += this.format.byteSize;
 
         // TODO: register with the device and handle lost context
         // this.device.buffers.push(this);
@@ -44,8 +47,7 @@ class UniformBuffer {
 
         this.impl.destroy(device);
 
-        // TODO: track used memory
-        // device._vram.vb -= this.storage.byteLength;
+        device._vram.ub -= this.format.byteSize;
     }
 
     /**
@@ -62,6 +64,7 @@ class UniformBuffer {
         Debug.assert(uniform, `Uniform [${name}] is not part of the Uniform buffer.`);
         if (uniform) {
             const offset = uniform.offset;
+            Debug.assert(value, `Value was not set when assigning to uniform [${name}]`);
             this.storageFloat32.set(value, offset);
         }
     }

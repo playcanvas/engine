@@ -19,6 +19,8 @@ import { LightmapCache } from './lightmapper/lightmap-cache.js';
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/shader.js').Shader} Shader */
 /** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
+/** @typedef {import('../graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
 /** @typedef {import('../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
@@ -87,6 +89,14 @@ class MeshInstance {
     _material;
 
     /**
+     * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
+     *
+     * @type {Array<Shader>}
+     * @ignore
+     */
+    _shader = [null, null, null];
+
+    /**
      * Create a new MeshInstance instance.
      *
      * @param {Mesh} mesh - The graphics mesh to instance.
@@ -119,14 +129,6 @@ class MeshInstance {
         }
 
         this._key = [0, 0];
-
-        /**
-         * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
-         *
-         * @type {Array<Shader>}
-         * @ignore
-         */
-        this._shader = [null, null, null];
 
         this.isStatic = false;
         this._staticLightList = null;
@@ -378,14 +380,25 @@ class MeshInstance {
     }
 
     /**
+     * Clear the internal shader array.
+     *
+     * @ignore
+     */
+    clearShaders() {
+        const shaders = this._shader;
+        for (let i = 0; i < shaders.length; i++) {
+            shaders[i] = null;
+        }
+    }
+
+    /**
      * The material used by this mesh instance.
      *
      * @type {Material}
      */
     set material(material) {
-        for (let i = 0; i < this._shader.length; i++) {
-            this._shader[i] = null;
-        }
+
+        this.clearShaders();
 
         const prevMat = this._material;
 
@@ -396,23 +409,21 @@ class MeshInstance {
 
         this._material = material;
 
-        if (this._material) {
+        if (material) {
 
             // Record that the material is referenced by this mesh instance
-            this._material.addMeshInstanceRef(this);
+            material.addMeshInstanceRef(this);
 
             this.updateKey();
 
-            const prevBlend = prevMat && (prevMat.blendType !== BLEND_NONE);
-            const thisBlend = this._material.blendType !== BLEND_NONE;
-            if (prevBlend !== thisBlend) {
-                let scene = this._material._scene;
-                if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
-
+            // if blend type of the material changes
+            const prevBlend = prevMat && prevMat.transparent;
+            if (material.transparent !== prevBlend) {
+                const scene = this._material._scene || prevMat?._scene;
                 if (scene) {
                     scene.layers._dirtyBlend = true;
                 } else {
-                    this._material._dirtyBlend = true;
+                    material._dirtyBlend = true;
                 }
             }
         }
@@ -661,11 +672,14 @@ class MeshInstance {
      * @param {Scene} scene - The scene.
      * @param {number} pass - The render pass.
      * @param {any} staticLightList - List of static lights.
-     * @param {any} sortedLights - Array of array of lights.
+     * @param {any} sortedLights - Array of arrays of lights.
+     * @param {UniformBufferFormat} viewUniformFormat - THe format of the view uniform buffer.
+     * @param {BindGroupFormat} viewBindGroupFormat - The format of the view bind group.
      * @ignore
      */
-    updatePassShader(scene, pass, staticLightList, sortedLights) {
-        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights);
+    updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
+                                                            viewUniformFormat, viewBindGroupFormat);
     }
 
     // Parameter management

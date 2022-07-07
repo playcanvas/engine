@@ -5,6 +5,7 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 
+import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 import { Material } from './material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -89,7 +90,7 @@ class BasicMaterial extends Material {
         }
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
         const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
@@ -103,8 +104,11 @@ class BasicMaterial extends Material {
             diffuseMap: !!this.colorMap,
             pass: pass
         };
+
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+
         const library = device.getProgramLibrary();
-        return library.getProgram('basic', options);
+        return library.getProgram('basic', options, processingOptions);
     }
 }
 

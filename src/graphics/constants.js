@@ -1109,6 +1109,9 @@ export const SHADERSTAGE_COMPUTE = 4;
 export const BINDGROUP_VIEW = 0;
 export const BINDGROUP_MESH = 1;
 
+// names of bind groups
+export const bindGroupNames = ['view', 'mesh'];
+
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
