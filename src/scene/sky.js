@@ -3,7 +3,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
-import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
+import { CULLFACE_FRONT } from '../graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
