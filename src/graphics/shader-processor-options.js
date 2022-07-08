@@ -42,7 +42,7 @@ class ShaderProcessorOptions {
     }
 
     /**
-     * Get the bind group textur slot for the texture uniform name.
+     * Get the bind group texture slot for the texture uniform name.
      *
      * @param {string} name - The name of the texture uniform.
      * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
