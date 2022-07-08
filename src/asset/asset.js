@@ -466,7 +466,7 @@ class Asset extends EventHandler {
     ready(callback, scope) {
         scope = scope || this;
 
-        if (this.resource) {
+        if (this.loaded) {
             callback.call(scope, this);
         } else {
             this.once('load', function (asset) {
