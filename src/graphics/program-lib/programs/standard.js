@@ -8,6 +8,7 @@ import {
 
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
+import { ChunkUtils } from '../chunk-utils.js';
 
 /** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
 
@@ -126,11 +127,11 @@ const standard = {
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
-     * @param {number|null} samplerFormat - Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D".
+     * @param {number} encoding - The texture's encoding
      * @returns {string} The shader code to support this map.
      * @private
      */
-    _addMap: function (propName, chunkName, options, chunks, samplerFormat = null) {
+    _addMap: function (propName, chunkName, options, chunks, encoding = null) {
         const mapPropName = propName + "Map";
         const uVPropName = mapPropName + "Uv";
         const transformPropName = mapPropName + "Transform";
@@ -152,9 +153,8 @@ const standard = {
 
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
-            if (samplerFormat !== null) {
-                const fmt = samplerFormat === 0 ? "texture2DSRGB" : (samplerFormat === 1 ? "texture2DRGBM" : "texture2D");
-                subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
+            if (encoding) {
+                subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
             }
         }
 
@@ -338,7 +338,7 @@ const standard = {
 
             // emission
             decl.append("vec3 dEmission;");
-            code.append(this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveFormat));
+            code.append(this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveEncoding));
             func.append("getEmission();");
 
             // clearcoat
@@ -364,7 +364,7 @@ const standard = {
                 if (lightmapDir) {
                     decl.append("vec3 dLightmapDir;");
                 }
-                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapFormat));
+                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
         } else {

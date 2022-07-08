@@ -36,8 +36,8 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     vec2 uv0, uv1;
     float weight;
     if (ilevel == 0.0) {
-        uv0 = mapMip(uv, ilevel2);
-        uv1 = mapMip(uv, ilevel2 + 1.0);
+        uv0 = mapShinyUv(uv, ilevel2);
+        uv1 = mapShinyUv(uv, ilevel2 + 1.0);
         weight = level2 - ilevel2;
     } else {
         // accessing rough reflection - just sample the same part twice

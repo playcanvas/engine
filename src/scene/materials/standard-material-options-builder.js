@@ -1,7 +1,7 @@
 import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
-    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_DXT5,
     TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../../graphics/constants.js';
 import {
@@ -147,8 +147,8 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.emissiveMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
-        options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.type === TEXTURETYPE_RGBM ? 1 : (stdMat.lightMap.format === PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
+        options.emissiveEncoding = stdMat.emissiveMap ? stdMat.emissiveMap.encoding : null;
+        options.lightMapEncoding = stdMat.lightMap ? stdMat.lightMap.encoding : null;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
         options.alphaFade = stdMat.alphaFade;
@@ -245,7 +245,7 @@ class StandardMaterialOptionsBuilder {
             options.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapFormat = 1; // rgbm
+                options.lightMapEncoding = 'rgbm';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;

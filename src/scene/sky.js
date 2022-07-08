@@ -3,7 +3,7 @@ import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 import { Quat } from '../math/quat.js';
 
-import { CULLFACE_FRONT, PIXELFORMAT_RGBA32F, TEXTURETYPE_RGBM } from '../graphics/constants.js';
+import { CULLFACE_FRONT } from '../graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
@@ -49,8 +49,7 @@ class Sky {
             if (texture.cubemap) {
                 return library.getProgram('skybox', {
                     type: 'cubemap',
-                    rgbm: texture.type === TEXTURETYPE_RGBM,
-                    hdr: (texture.type === TEXTURETYPE_RGBM || texture.format === PIXELFORMAT_RGBA32F),
+                    encoding: texture.encoding,
                     useIntensity: scene.skyboxIntensity !== 1,
                     mip: texture.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: texture.fixCubemapSeams,

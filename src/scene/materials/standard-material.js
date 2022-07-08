@@ -427,16 +427,8 @@ let _params = new Set();
  * ambient on certain platform (mostly Android) for performance reasons.
  * - useSpecular: if any specular or reflections are needed at all.
  * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * - emissiveFormat: how emissiveMap must be sampled. This value is based on
- * {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
- *   - 0: sRGB texture
- *   - 1: RGBM-encoded HDR texture
- *   - 2: Simple read (no conversion from sRGB)
- * - lightMapFormat: how lightMap must be sampled. This value is based on
- * {@link Texture#options.rgbm} and {@link Texture#options.format}. Possible values are:
- *   - 0: sRGB texture
- *   - 1: RGBM-encoded HDR texture
- *   - 2: Simple read (no conversion from sRGB)
+ * - emissiveEncoding: how emissiveMap is encoded. This value is based on Texture#encoding.
+ * - lightMapEncoding: how lightMap is encoded. This value is based on on Texture#encoding.
  * - useRgbm: if decodeRGBM() function is needed in the shader at all.
  * - packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
  * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
