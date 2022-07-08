@@ -1297,7 +1297,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     if (gltfMaterial.hasOwnProperty('extensions')) {
         for (var key in gltfMaterial.extensions) {
             const extensionFunc = extensions[key];
-            if (extensionFunc != undefined) {
+            if (extensionFunc !== undefined) {
                 extensionFunc(gltfMaterial.extensions[key], material, textures);
             }
         }
