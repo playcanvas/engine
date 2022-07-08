@@ -1,14 +1,12 @@
 export default /* glsl */`
 // Anisotropic GGX
-float calcLightSpecular(float tGlossiness, vec3 tNormalW) {
+float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 h) {
     float PI = 3.141592653589793;
     float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
     float anisotropy = material_anisotropy * roughness;
  
     float at = max((roughness + anisotropy), roughness / 4.0);
     float ab = max((roughness - anisotropy), roughness / 4.0);
-
-    vec3 h = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
 
     float NoH = dot(tNormalW, h);
     float ToH = dot(dTBN[0], h);
@@ -34,13 +32,13 @@ float calcLightSpecular(float tGlossiness, vec3 tNormalW) {
     return D * G;
 }
 
-float getLightSpecular() {
-    return calcLightSpecular(dGlossiness, dNormalW);
+float getLightSpecular(vec3 h) {
+    return calcLightSpecular(dGlossiness, dNormalW, h);
 }
 
 #ifdef CLEARCOAT
-float getLightSpecularCC() {
-    return calcLightSpecular(ccGlossiness, ccNormalW);
+float getLightSpecularCC(vec3 h) {
+    return calcLightSpecular(ccGlossiness, ccNormalW, h);
 }
 #endif
 `;
