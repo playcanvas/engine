@@ -966,7 +966,7 @@ const extractTextureTransform = function (source, material, maps) {
     }
 };
 
-const pbrSpecGlossiness = function (data, material, textures) {
+const extensionPbrSpecGlossiness = function (data, material, textures) {
     let color, texture;
     if (data.hasOwnProperty('diffuseFactor')) {
         color = data.diffuseFactor;
@@ -1011,7 +1011,7 @@ const pbrSpecGlossiness = function (data, material, textures) {
     }
 };
 
-const clearCoat = function (data, material, textures) {
+const extensionClearCoat = function (data, material, textures) {
     if (data.hasOwnProperty('clearcoatFactor')) {
         material.clearCoat = data.clearcoatFactor * 0.25; // TODO: remove temporary workaround for replicating glTF clear-coat visuals
     } else {
@@ -1079,7 +1079,7 @@ const clearCoat = function (data, material, textures) {
     material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
 };
 
-const unlit = function (data, material, textures) {
+const extensionUnlit = function (data, material, textures) {
     material.useLighting = false;
 
     // copy diffuse into emissive
@@ -1101,7 +1101,7 @@ const unlit = function (data, material, textures) {
     material.diffuseVertexColor = false;
 };
 
-const metallicF0 = function (data, material, textures) {
+const extensionSpecular = function (data, material, textures) {
     let color;
     if (data.hasOwnProperty('specularColorTexture')) {
         material.specularMap = textures[data.specularColorTexture.index];
@@ -1287,10 +1287,10 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     // Provide list of supported extensions and their functions
     const extensions = {
-        "KHR_materials_pbrSpecularGlossiness": pbrSpecGlossiness,
-        "KHR_materials_clearcoat": clearCoat,
-        "KHR_materials_unlit": unlit,
-        "KHR_materials_specular": metallicF0
+        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
+        "KHR_materials_clearcoat": extensionClearCoat,
+        "KHR_materials_unlit": extensionUnlit,
+        "KHR_materials_specular": extensionSpecular
     };
 
     // Handle extensions
