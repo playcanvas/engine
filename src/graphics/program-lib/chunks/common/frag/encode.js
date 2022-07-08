@@ -7,7 +7,7 @@ vec4 encodeGamma(vec3 source) {
     return vec4(pow(source + 0.0000001, vec3(1.0 / 2.2)), 1.0);
 }
 
-vec4 encodeRGBM_(vec3 source) { // modified RGBM
+vec4 encodeRGBM(vec3 source) { // modified RGBM
     vec4 result;
     result.rgb = pow(source.rgb, vec3(0.5));
     result.rgb *= 1.0 / 8.0;
@@ -19,7 +19,7 @@ vec4 encodeRGBM_(vec3 source) { // modified RGBM
     return result;
 }
 
-vec4 encodeRGBM(vec3 source) {
+vec4 encodeRGBP(vec3 source) {
     // convert incoming linear to gamma(ish)
     vec3 gamma = pow(source, vec3(0.5));
 

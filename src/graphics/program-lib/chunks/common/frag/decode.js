@@ -7,12 +7,12 @@ vec3 decodeGamma(vec4 raw) {
     return pow(raw.xyz, vec3(2.2));
 }
 
-vec3 decodeRGBM_(vec4 raw) {
+vec3 decodeRGBM(vec4 raw) {
     vec3 color = (8.0 * raw.a) * raw.rgb;
     return color * color;
 }
 
-vec3 decodeRGBM(vec4 raw) {
+vec3 decodeRGBP(vec4 raw) {
     vec3 color = raw.rgb * (-raw.a * 7.0 + 8.0);
     return color * color;
 }

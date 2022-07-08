@@ -16,7 +16,7 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -649,19 +649,19 @@ class Texture {
 
     // get the texture's encoding type
     get encoding() {
-        if (this.type === TEXTURETYPE_RGBM) {
-            return 'rgbm';
+        switch (this.type) {
+            case TEXTURETYPE_RGBM:
+                return 'rgbm';
+            case TEXTURETYPE_RGBE:
+                return 'rgbe';
+            case TEXTURETYPE_RGBP:
+                return 'rgbp';
+            default:
+                return (this.format === PIXELFORMAT_RGB16F ||
+                        this.format === PIXELFORMAT_RGB32F ||
+                        this.format === PIXELFORMAT_RGBA16F ||
+                        this.format === PIXELFORMAT_RGBA32F) ? 'linear' : 'srgb';
         }
-
-        if (this.type === TEXTURETYPE_RGBE) {
-            return 'rgbe';
-        }
-
-        if (this.format === PIXELFORMAT_RGBA16F || this.format === PIXELFORMAT_RGBA32F) {
-            return 'linear';
-        }
-
-        return 'srgb';
     }
 
     // static functions

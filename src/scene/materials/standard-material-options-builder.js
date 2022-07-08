@@ -1,8 +1,7 @@
 import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
 
 import {
-    PIXELFORMAT_DXT5,
-    TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
 } from '../../graphics/constants.js';
 import {
     BLEND_NONE,
@@ -183,7 +182,6 @@ class StandardMaterialOptionsBuilder {
         options.fog = stdMat.useFog ? scene.fog : 'none';
         options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
-        options.useRgbm = (stdMat.emissiveMap && stdMat.emissiveMap.type === TEXTURETYPE_RGBM) || (stdMat.lightMap && stdMat.lightMap.type === TEXTURETYPE_RGBM);
         options.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
@@ -251,7 +249,6 @@ class StandardMaterialOptionsBuilder {
                 options.lightMapUv = 1;
                 options.lightMapTransform = 0;
                 options.lightMapWithoutAmbient = !stdMat.lightMap;
-                options.useRgbm = true;
                 if ((objDefs & SHADERDEF_DIRLM) !== 0) {
                     options.dirLightMap = true;
                 }

@@ -429,7 +429,6 @@ let _params = new Set();
  * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
  * - emissiveEncoding: how emissiveMap is encoded. This value is based on Texture#encoding.
  * - lightMapEncoding: how lightMap is encoded. This value is based on on Texture#encoding.
- * - useRgbm: if decodeRGBM() function is needed in the shader at all.
  * - packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
  * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
  * "highp" or null to use default.
