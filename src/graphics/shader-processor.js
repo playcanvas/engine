@@ -39,8 +39,8 @@ class ShaderProcessor {
         const varyingMap = new Map();
 
         // extract lines of interests from both shaders
-        const vertexExtracted = ShaderProcessor.extract(shaderDefinition.vshader, true);
-        const fragmentExtracted = ShaderProcessor.extract(shaderDefinition.fshader, false);
+        const vertexExtracted = ShaderProcessor.extract(shaderDefinition.vshader);
+        const fragmentExtracted = ShaderProcessor.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesBlock = ShaderProcessor.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes);
@@ -75,7 +75,7 @@ class ShaderProcessor {
     }
 
     // Extract required information from the shader source code.
-    static extract(src, isVertex) {
+    static extract(src) {
 
         // collected data
         const attributes = [];
