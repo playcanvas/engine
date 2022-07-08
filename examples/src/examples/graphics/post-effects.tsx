@@ -9,7 +9,6 @@ class PostEffectsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Post Effects';
 
-
     controls(data: Observer) {
         return <>
             <Panel headerText='BLOOM [KEY_1]'>
@@ -86,7 +85,15 @@ class PostEffectsExample {
             keyboard: new pc.Keyboard(window)
         });
 
+        // set up and load draco module, as the glb we load is draco compressed
+        pc.WasmModule.setConfig('DracoDecoderModule', {
+            glueUrl: '/static/lib/draco/draco.wasm.js',
+            wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+            fallbackUrl: '/static/lib/draco/draco.js'
+        });
+
         const assets = {
+            'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
             'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
             'bokeh': new pc.Asset('bokeh', 'script', { url: '/static/scripts/posteffects/posteffect-bokeh.js' }),
             'sepia': new pc.Asset('sepia', 'script', { url: '/static/scripts/posteffects/posteffect-sepia.js' }),
@@ -106,7 +113,7 @@ class PostEffectsExample {
 
             // setup skydome
             app.scene.setSkybox(assets['helipad.dds'].resources);
-            app.scene.skyboxMip = 3;
+            app.scene.skyboxMip = 2;
             app.scene.exposure = 1;
 
             // helper function to create a 3d primitive including its material
@@ -117,12 +124,7 @@ class PostEffectsExample {
                 material.shininess = 40;
                 material.metalness = 0.6;
                 material.useMetalness = true;
-
-                // random diffuse and emissive color
-                material.diffuse = new pc.Color(brightness, brightness, brightness);
-                if (allowEmissive && Math.random() < 0.15) {
-                    material.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
-                }
+                material.emissive = pc.Color.YELLOW;
                 material.update();
 
                 // create the primitive using the material
@@ -132,44 +134,32 @@ class PostEffectsExample {
                     material: material
                 });
 
-                // set position and scale and add it to scene
-                primitive.setLocalPosition(position);
+                // set scale and add it to scene
                 primitive.setLocalScale(scale);
                 app.root.addChild(primitive);
 
                 return primitive;
             }
 
-            // create the ground plane from the boxes
-            for (let x = -2; x <= 2; x += 0.5) {
-                for (let z = 0; z <= 10; z += 0.5) {
-                    createPrimitive("box", new pc.Vec3(x * 40, -5, z * 40), new pc.Vec3(18, 2, 18), Math.random());
-                }
-            }
-
-            // create the towers from the boxes
-            let scale = 16;
-            for (let y = 0; y <= 7; y++) {
-                for (let x = -1; x <= 1; x += 2) {
-                    for (let z = 0; z <= 10; z += 2) {
-                        const prim = createPrimitive("box", new pc.Vec3(x * 40, 2 + y * 10, z * 40), new pc.Vec3(scale, scale, scale), Math.random());
-                        prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-                    }
-                }
-                scale -= 1.5;
-            }
+            // get the instance of the chess board and set up with render component
+            const boardEntity = assets.board.resource.instantiateRenderEntity({
+                castShadows: true,
+                receiveShadows: true
+            });
+            app.root.addChild(boardEntity);
 
             // create a sphere which represents the point of focus for the bokeh filter
-            const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(10, 10, 10), 1.5, false);
+            const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 1.5, false);
 
             // add an omni light as a child of this sphere
             const light = new pc.Entity();
             light.addComponent("light", {
                 type: "omni",
-                color: pc.Color.WHITE,
-                intensity: 4,
-                range: 100,
-                castShadows: false
+                color: pc.Color.YELLOW,
+                intensity: 2,
+                range: 150,
+                shadowDistance: 150,
+                castShadows: true
             });
             focusPrimitive.addChild(light);
 
@@ -191,7 +181,7 @@ class PostEffectsExample {
                 bloom: {
                     enabled: true,
                     bloomIntensity: 0.8,
-                    bloomThreshold: 0.8,
+                    bloomThreshold: 0.7,
                     blurAmount: 15
                 },
                 sepia: {
@@ -206,7 +196,7 @@ class PostEffectsExample {
                 bokeh: {
                     enabled: true,
                     aperture: 0.1,
-                    maxBlur: 0.01
+                    maxBlur: 0.02
                 }
             });
 
@@ -280,13 +270,18 @@ class PostEffectsExample {
                 // rotate the skydome
                 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, angle * 20, 0);
 
-                // move the focus sphere in the world closer and further away
-                const focusPosition = new pc.Vec3(0, 10, Math.abs(Math.sin(angle * 0.1)) * 400);
+                // move the focus sphere in the world
+                const focusPosition = new pc.Vec3(0, 30, Math.sin(1 + angle * 0.3) * 90);
                 focusPrimitive.setPosition(focusPosition);
 
                 // set the focus distance to the bokeh effect
                 // - it's a negative distance between the camera and the focus sphere
                 camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
+
+                // orbit the camera around
+                camera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
+                focusPosition.y -= 20;
+                camera.lookAt(focusPosition);
 
                 // display the depth texture if it was rendered
                 if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
