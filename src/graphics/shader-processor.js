@@ -6,7 +6,6 @@ import {
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
 
-/** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('./shader-processor-options.js').ShaderProcessorOptions} ShaderProcessorOptions */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
