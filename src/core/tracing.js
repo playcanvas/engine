@@ -23,6 +23,7 @@ class Tracing {
      * - {@link TRACEID_RENDER_ACTION}
      * - {@link TRACEID_RENDER_TARGET_ALLOC}
      * - {@link TRACEID_TEXTURE_ALLOC}
+     * - {@link TRACEID_SHADER_ALLOC}
      *
      * @param {boolean} enabled - New enabled state for the channel.
      */

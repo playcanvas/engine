@@ -1,4 +1,5 @@
 export default /* glsl */`
+
 #ifdef MAPCOLOR
 uniform vec3 material_specular;
 #endif
@@ -8,18 +9,20 @@ uniform sampler2D texture_specularMap;
 #endif
 
 void getSpecularity() {
-    dSpecularity = vec3(1.0);
+    vec3 specularColor = vec3(1,1,1);
 
     #ifdef MAPCOLOR
-    dSpecularity *= material_specular;
+    specularColor *= material_specular;
     #endif
 
     #ifdef MAPTEXTURE
-    dSpecularity *= texture2D(texture_specularMap, $UV, textureBias).$CH;
+    specularColor *= texture2DSRGB(texture_specularMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
-    dSpecularity *= saturate(vVertexColor.$VC);
+    specularColor *= saturate(vVertexColor.$VC);
     #endif
+
+    dSpecularity = specularColor;
 }
 `;

@@ -9,6 +9,9 @@ import {
 
 import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
 
+// Spector integration
+const shaderNameCode = '#define SHADER_NAME BasicMaterial\n';
+
 const basic = {
     generateKey: function (options) {
         let key = 'basic';
@@ -45,7 +48,7 @@ const basic = {
         }
 
         // GENERATE VERTEX SHADER
-        let code = '';
+        let code = shaderNameCode;
 
         // VERTEX SHADER DECLARATIONS
         code += shaderChunks.transformDeclVS;
@@ -100,6 +103,7 @@ const basic = {
 
         // GENERATE FRAGMENT SHADER
         code = precisionCode(device);
+        code += shaderNameCode;
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
