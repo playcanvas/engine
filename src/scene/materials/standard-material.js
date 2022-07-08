@@ -112,6 +112,14 @@ let _params = new Set();
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
+ * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
+ * @property {number} specularityMapUv Specularity factor map UV channel.
+ * @property {Vec2} specularityMapTiling Controls the 2D tiling of the specularity factor map.
+ * @property {Vec2} specularityMapOffset Controls the 2D offset of the specularity factor map. Each component is
+ * between 0 and 1.
+ * @property {number} specularityMapRotation Controls the 2D rotation (in degrees) of the specularity factor map.
+ * @property {string} specularityFactorMapChannel The channel used by the specularity factor texture to sample from (default is 'a').
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
@@ -628,6 +636,12 @@ class StandardMaterial extends Material {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
+            if (!this.specularMap || this.specularTint) {
+                this._setParameter('material_specular', getUniform('specular'));
+            }
+            if (!this.specularityFactorMap || this.specularityFactor < 1) {
+                this._setParameter('material_specularityFactor', this.specularityFactor);
+            }
         }
 
         if (this.enableGGXSpecular) {
@@ -1007,6 +1021,7 @@ function _defineMaterialProps() {
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
     _defineFloat('emissiveIntensity', 1);
+    _defineFloat('specularityFactor', 1);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
@@ -1092,6 +1107,7 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
+    _defineTex2D('specularityFactor', 0, 1, '', true);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);

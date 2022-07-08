@@ -939,92 +939,65 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
-    const glossChunk = [
-        '#ifdef MAPFLOAT',
-        'uniform float material_shininess;',
-        '#endif',
-        '',
-        '#ifdef MAPTEXTURE',
-        'uniform sampler2D texture_glossMap;',
-        '#endif',
-        '',
-        'void getGlossiness() {',
-        '    dGlossiness = 1.0;',
-        '',
-        '#ifdef MAPFLOAT',
-        '    dGlossiness *= material_shininess;',
-        '#endif',
-        '',
-        '#ifdef MAPTEXTURE',
-        '    dGlossiness *= texture2D(texture_glossMap, $UV, textureBias).$CH;',
-        '#endif',
-        '',
-        '#ifdef MAPVERTEX',
-        '    dGlossiness *= saturate(vVertexColor.$VC);',
-        '#endif',
-        '',
-        '    dGlossiness = 1.0 - dGlossiness;',
-        '',
-        '    dGlossiness += 0.0000001;',
-        '}'
-    ].join('\n') + '\n';
+    const glossChunk = `
+        #ifdef MAPFLOAT
+        uniform float material_shininess;
+        #endif
+        
+        #ifdef MAPTEXTURE
+        uniform sampler2D texture_glossMap;
+        #endif
+        
+        void getGlossiness() {
+            dGlossiness = 1.0;
+        
+        #ifdef MAPFLOAT
+            dGlossiness *= material_shininess;
+        #endif
+        
+        #ifdef MAPTEXTURE
+            dGlossiness *= texture2D(texture_glossMap, $UV, textureBias).$CH;
+        #endif
+        
+        #ifdef MAPVERTEX
+            dGlossiness *= saturate(vVertexColor.$VC);
+        #endif
+        
+            dGlossiness = 1.0 - dGlossiness;
+        
+            dGlossiness += 0.0000001;
+        }
+        `;
 
-    const specularChunk = [
-        '#ifdef MAPCOLOR',
-        'uniform vec3 material_specular;',
-        '#endif',
-        '',
-        '#ifdef MAPTEXTURE',
-        'uniform sampler2D texture_specularMap;',
-        '#endif',
-        '',
-        'void getSpecularity() {',
-        '    dSpecularity = vec3(1.0);',
-        '',
-        '    #ifdef MAPCOLOR',
-        '        dSpecularity *= material_specular;',
-        '    #endif',
-        '',
-        '    #ifdef MAPTEXTURE',
-        '        vec3 srgb = texture2D(texture_specularMap, $UV, textureBias).$CH;',
-        '        dSpecularity *= vec3(pow(srgb.r, 2.2), pow(srgb.g, 2.2), pow(srgb.b, 2.2));',
-        '    #endif',
-        '',
-        '    #ifdef MAPVERTEX',
-        '        dSpecularity *= saturate(vVertexColor.$VC);',
-        '    #endif',
-        '}'
-    ].join('\n') + '\n';
-
-    const clearCoatGlossChunk = [
-        '#ifdef MAPFLOAT',
-        'uniform float material_clearCoatGlossiness;',
-        '#endif',
-        '',
-        '#ifdef MAPTEXTURE',
-        'uniform sampler2D texture_clearCoatGlossMap;',
-        '#endif',
-        '',
-        'void getClearCoatGlossiness() {',
-        '    ccGlossiness = 1.0;',
-        '',
-        '#ifdef MAPFLOAT',
-        '    ccGlossiness *= material_clearCoatGlossiness;',
-        '#endif',
-        '',
-        '#ifdef MAPTEXTURE',
-        '    ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV, textureBias).$CH;',
-        '#endif',
-        '',
-        '#ifdef MAPVERTEX',
-        '    ccGlossiness *= saturate(vVertexColor.$VC);',
-        '#endif',
-        '',
-        '    ccGlossiness = 1.0 - ccGlossiness;',
-        '',
-        '    ccGlossiness += 0.0000001;',
-        '}'
-    ].join('\n') + '\n';
+    const clearCoatGlossChunk = /* glsl */`
+        #ifdef MAPFLOAT
+        uniform float material_clearCoatGlossiness;
+        #endif
+        
+        #ifdef MAPTEXTURE
+        uniform sampler2D texture_clearCoatGlossMap;
+        #endif
+        
+        void getClearCoatGlossiness() {
+            ccGlossiness = 1.0;
+        
+        #ifdef MAPFLOAT
+            ccGlossiness *= material_clearCoatGlossiness;
+        #endif
+        
+        #ifdef MAPTEXTURE
+            ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+        #endif
+        
+        #ifdef MAPVERTEX
+            ccGlossiness *= saturate(vVertexColor.$VC);
+        #endif
+        
+            ccGlossiness = 1.0 - ccGlossiness;
+        
+            ccGlossiness += 0.0000001;
+        }
+        `;
 
     const zeros = [0, 0];
     const ones = [1, 1];
@@ -1117,9 +1090,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
             extractTextureTransform(specularGlossinessTexture, material, ['gloss', 'metalness']);
         }
-
-        material.chunks.specularPS = specularChunk;
-
     } else if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
         const pbrData = gltfMaterial.pbrMetallicRoughness;
 
@@ -1144,6 +1114,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             extractTextureTransform(baseColorTexture, material, ['diffuse', 'opacity']);
         }
         material.useMetalness = true;
+        material.specular.set(1, 1, 1);
         if (pbrData.hasOwnProperty('metallicFactor')) {
             material.metalness = pbrData.metallicFactor;
         } else {
@@ -1297,6 +1268,32 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         material.diffuseVertexColor = false;
     }
 
+    // handle KHR_materials_specular absorption
+    if (gltfMaterial.hasOwnProperty('extensions') &&
+        gltfMaterial.extensions.hasOwnProperty('KHR_materials_specular')) {
+
+        const specularData = gltfMaterial.extensions.KHR_materials_specular;
+        if (specularData.hasOwnProperty('specularColorTexture')) {
+            material.specularMap = textures[specularData.specularColorTexture.index];
+            material.specularMapChannel = 'rgb';
+        }
+        if (specularData.hasOwnProperty('specularColorFactor')) {
+            color = specularData.specularColorFactor;
+            material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+        } else {
+            material.specular.set(1, 1, 1);
+        }
+
+        if (specularData.hasOwnProperty('specularFactor')) {
+            material.specularityFactor = specularData.specularFactor;
+        } else {
+            material.specularityFactor = 1;
+        }
+        if (specularData.hasOwnProperty('specularTexture')) {
+            material.specularityFactorMapChannel = 'a';
+            material.specularityFactorMap = textures[specularData.specularTexture.index];
+        }
+    }
     material.update();
 
     return material;

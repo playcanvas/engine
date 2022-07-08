@@ -141,11 +141,11 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 void calcLTCLightValues()
 {
     dLTCUV = getLTCLightUV(dGlossiness, dNormalW);
-    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, dSpecularityNoFres); 
+    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, dSpecularity); 
 
 #ifdef CLEARCOAT
     ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularityNoFres));
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularity));
 #endif
 }
 

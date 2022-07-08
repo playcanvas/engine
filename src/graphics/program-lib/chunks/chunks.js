@@ -27,7 +27,6 @@ import clusteredLightPS from './lit/frag/clusteredLight.js';
 import combineClearCoatPS from './lit/frag/combineClearCoat.js';
 import combineDiffusePS from './lit/frag/combineDiffuse.js';
 import combineDiffuseSpecularPS from './lit/frag/combineDiffuseSpecular.js';
-import combineDiffuseSpecularNoConservePS from './lit/frag/combineDiffuseSpecularNoConserve.js';
 import combineDiffuseSpecularNoReflPS from './lit/frag/combineDiffuseSpecularNoRefl.js';
 import combineDiffuseSpecularNoReflSeparateAmbientPS from './lit/frag/combineDiffuseSpecularNoReflSeparateAmbient.js';
 import combineDiffuseSpecularOldPS from './lit/frag/combineDiffuseSpecularOld.js';
@@ -78,6 +77,7 @@ import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import ltc from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
+import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
@@ -164,6 +164,7 @@ import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
+import specularityFactorPS from './standard/frag/specularityFactor.js';
 import spotPS from './lit/frag/spot.js';
 import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
@@ -225,7 +226,6 @@ const shaderChunks = {
     combineClearCoatPS,
     combineDiffusePS,
     combineDiffuseSpecularPS,
-    combineDiffuseSpecularNoConservePS,
     combineDiffuseSpecularNoReflPS,
     combineDiffuseSpecularNoReflSeparateAmbientPS,
     combineDiffuseSpecularOldPS,
@@ -275,6 +275,7 @@ const shaderChunks = {
     lightSpecularPhongPS,
     ltc,
     metalnessPS,
+    metalnessModulatePS,
     msdfPS,
     msdfVS,
     normalVS,
@@ -362,6 +363,7 @@ const shaderChunks = {
     skyboxHDRPS,
     skyboxVS,
     specularPS,
+    specularityFactorPS,
     spotPS,
     startPS,
     startVS,
