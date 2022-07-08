@@ -66,13 +66,32 @@ class BindGroupFormat {
     }
 
     /**
-     * Returns slot index for a texture slot name.
+     * Returns format of texture with specified name.
      *
      * @param {string} name - The name of the texture slot.
-     * @returns {number} - The slot index.
+     * @returns {BindTextureFormat} - The format.
      */
-    getTextureSlot(name) {
-        return this.textureFormatsMap.get(name);
+    getTexture(name) {
+        const index = this.textureFormatsMap.get(name);
+        if (index) {
+            return this.textureFormats[index];
+        }
+
+        return null;
+    }
+
+    getShaderDeclarationTextures(bindGroup) {
+        let code = '';
+        let bindIndex = this.bufferFormats.length;
+        this.textureFormats.forEach((format) => {
+
+            // TODO: suport different types of textures and samplers
+
+            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform texture2D ${format.name};\n` +
+                    `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;
+        });
+
+        return code;
     }
 
     loseContext() {
