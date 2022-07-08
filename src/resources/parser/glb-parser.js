@@ -947,6 +947,8 @@ const extractTextureTransform = function (source, material, maps) {
         }
     }
 
+    const zeros = [0, 0];
+    const ones = [1, 1];
     const textureTransform = source.extensions?.KHR_texture_transform;
     if (textureTransform) {
         const offset = textureTransform.offset || zeros;
@@ -1155,8 +1157,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         }
         `;
 
-    const zeros = [0, 0];
-    const ones = [1, 1];
 
     const material = new StandardMaterial();
 
@@ -1285,6 +1285,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         material.cull = CULLFACE_BACK;
     }
 
+    // Provide list of supported extensions and their functions
     const extensions = {
         "KHR_materials_pbrSpecularGlossiness": pbrSpecGlossiness,
         "KHR_materials_clearcoat": clearCoat,
