@@ -18,10 +18,6 @@ const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
 
-// const textureTypes = [
-//     'sampler2D'
-// ];
-
 /**
  * Pure static class implementing processing of GLSL shaders. It allocates
  * fixed locations for attributes, and handles conversion of uniforms to
