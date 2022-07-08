@@ -1,12 +1,10 @@
 import { Debug } from '../core/debug.js';
 import {
-    BINDGROUP_MESH, uniformTypeToName, bindGroupNames, semanticToLocation,
+    BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
-import { UniformBuffer } from './uniform-buffer.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
-import { BindGroup } from './bind-group.js';
 
 /** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('./shader-processor-options.js').ShaderProcessorOptions} ShaderProcessorOptions */
