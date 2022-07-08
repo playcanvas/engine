@@ -171,6 +171,8 @@ function BloomEffect(graphicsDevice) {
         fshader: bloomCombineFrag
     });
 
+    this.targets = [];
+
     // Effect defaults
     this.bloomThreshold = 0.25;
     this.blurAmount = 4;
