@@ -307,7 +307,7 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @param {boolean} force - Set to true to force initialization of the attributes.
+     * @param {boolean} [force] - Set to true to force initialization of the attributes.
      * @private
      */
     __initializeAttributes(force) {
