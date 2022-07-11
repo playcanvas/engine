@@ -1100,6 +1100,33 @@ export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
 
+export const uniformTypeToName = [
+    'bool',
+    'int',
+    'float',
+    'vec2',
+    'vec3',
+    'vec4',
+    'ivec2',
+    'ivec3',
+    'ivec4',
+    'bec2',
+    'bec3',
+    'bec4',
+    'mat2',
+    'mat3',
+    'mat4',
+    'sampler2D',
+    'samplerCube',
+    '', // not directly handled: UNIFORMTYPE_FLOATARRAY
+    'sampler2DShadow',
+    'samplerCubeShadow',
+    'sampler3D',
+    '', // not directly handled: UNIFORMTYPE_VEC2ARRAY
+    '', // not directly handled: UNIFORMTYPE_VEC3ARRAY
+    '' // not directly handled: UNIFORMTYPE_VEC4ARRAY
+];
+
 // (bit-flags) shader stages for resource visibility on the GPU
 export const SHADERSTAGE_VERTEX = 1;
 export const SHADERSTAGE_FRAGMENT = 2;
