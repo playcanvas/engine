@@ -163,7 +163,9 @@ class AppBase extends EventHandler {
         super();
 
         // #if _DEBUG
-        console.log(`Powered by PlayCanvas ${version} ${revision}`);
+        if (version?.indexOf('$') < 0) {
+            Debug.log(`Powered by PlayCanvas ${version} ${revision}`);
+        }
         // #endif
 
         // Store application instance
