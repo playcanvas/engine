@@ -199,7 +199,7 @@ describe('GraphNode', function () {
     });
 
     describe('#clone', function () {
-        it('cloning an extending class should keep its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserGraphNode extends GraphNode {}
             const a = new UserGraphNode();
             const b = a.clone();
