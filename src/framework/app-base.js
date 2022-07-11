@@ -162,9 +162,9 @@ class AppBase extends EventHandler {
     constructor(canvas) {
         super();
 
-        // #if _DEBUG
-        console.log(`Powered by PlayCanvas ${version} ${revision}`);
-        // #endif
+        if (version.indexOf('$') < 0) {
+            Debug.log(`Powered by PlayCanvas ${version} ${revision}`);
+        }
 
         // Store application instance
         AppBase._applications[canvas.id] = this;
