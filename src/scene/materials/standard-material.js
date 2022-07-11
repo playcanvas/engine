@@ -1018,7 +1018,7 @@ function _defineFlag(name, defaultValue) {
 function _defineMaterialProps() {
     _defineColor('ambient', new Color(0.7, 0.7, 0.7));
     _defineColor('diffuse', new Color(1, 1, 1));
-    _defineColor('specular', new Color(0, 0, 0));
+    _defineColor('specular', new Color(1, 1, 1));
     _defineColor('emissive', new Color(0, 0, 0));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
