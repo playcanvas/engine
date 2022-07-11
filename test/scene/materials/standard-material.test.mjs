@@ -231,9 +231,9 @@ describe('StandardMaterial', function () {
         expect(material.shininess).to.equal(25);
 
         expect(material.specular).to.be.instanceof(Color);
-        expect(material.specular.r).to.equal(0);
-        expect(material.specular.g).to.equal(0);
-        expect(material.specular.b).to.equal(0);
+        expect(material.specular.r).to.equal(1);
+        expect(material.specular.g).to.equal(1);
+        expect(material.specular.b).to.equal(1);
         expect(material.specularMap).to.be.null;
         expect(material.specularMapChannel).to.equal('rgb');
         expect(material.specularMapOffset).to.be.an.instanceof(Vec2);
