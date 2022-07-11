@@ -55,6 +55,7 @@ class MaterialTranslucentSpecularExample {
                 const material = new pc.StandardMaterial();
                 material.diffuse = new pc.Color(0.7, 0.7, 0.7);
                 material.metalness = 0.0;
+                material.specular = new pc.Color(1, 1, 1);
                 material.shininess = ((z) / (NUM_SPHERES_Z - 1) * 50) + 50;
                 material.useMetalness = true;
                 material.blendType = pc.BLEND_NORMAL;
