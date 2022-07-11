@@ -27,6 +27,9 @@ class BoxReflectionExample {
                 <LabelGroup text='Metalness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.metalness' }} min={0} max={1} precision={2}/>
                 </LabelGroup>
+                <LabelGroup text='Reflectivity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.reflectivity' }} min={0} max={1} precision={2}/>
+                </LabelGroup>
                 <LabelGroup text='Bumpiness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.bumpiness' }} min={0} max={1} precision={2}/>
                 </LabelGroup>
@@ -55,9 +58,10 @@ class BoxReflectionExample {
 
             data.set('settings', {
                 updateFrequency: 10,
-                shininess: 90,
-                metalness: 0.7,
-                bumpiness: 0.2
+                shininess: 80,
+                metalness: 0.9,
+                bumpiness: 0.2,
+                reflectivity: 0.5
             });
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -92,6 +96,7 @@ class BoxReflectionExample {
             roomMaterial.normalMapTiling.set(5, 5);
             roomMaterial.bumpiness = 0.1;
             roomMaterial.shininess = 90;
+            roomMaterial.reflectivity = 0.3;
             // @ts-ignore
             roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
             roomMaterial.metalness = 0.5;
@@ -123,6 +128,7 @@ class BoxReflectionExample {
             sphereMaterial.bumpiness = 0.7;
             sphereMaterial.shininess = 30;
             sphereMaterial.metalness = 0.7;
+            sphereMaterial.reflectivity = 0.3;
             // @ts-ignore
             sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
             sphereMaterial.update();
@@ -333,15 +339,18 @@ class BoxReflectionExample {
                 const shininess = data.get('settings.shininess');
                 const metalness = data.get('settings.metalness');
                 const bumpiness = data.get('settings.bumpiness');
+                const reflectivity = data.get('settings.reflectivity');
 
                 roomMaterial.shininess = shininess;
                 roomMaterial.metalness = metalness;
                 roomMaterial.bumpiness = bumpiness;
+                roomMaterial.reflectivity = reflectivity;
                 roomMaterial.update();
 
                 sphereMaterial.shininess = shininess;
                 sphereMaterial.metalness = metalness;
                 sphereMaterial.bumpiness = bumpiness;
+                sphereMaterial.reflectivity = reflectivity;
                 sphereMaterial.update();
             });
         });
