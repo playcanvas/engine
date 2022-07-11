@@ -133,10 +133,18 @@ class ShaderProcessor {
     }
 
     /**
+     * Process the lines with uniforms. The function receives the lines containing all uniforms,
+     * both numerical as well as textures/samplers. The function also receives the format of uniform
+     * buffers (numerical) and bind groups (textures) for view and material level. All uniforms that
+     * match any of those are ignored, as those would be supplied by view / material level buffers.
+     * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
+     * uniforms that change on the level of the mesh.
+     *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Array<string>} uniformLines - Lines containing uniforms.
      * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
-     * @returns {object} - The uniform data.
+     * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
+     * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
     static processUniforms(device, uniformLines, processingOptions) {
 
