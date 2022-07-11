@@ -113,7 +113,7 @@ describe('Curve', function () {
             }
         });
 
-        it('cloning an extending class should keep its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserCurve extends Curve {}
             const a = new UserCurve();
             const b = a.clone();
