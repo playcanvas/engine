@@ -198,6 +198,15 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#clone', function () {
+        it('cloning an extending class should keep its class prototype', function () {
+            class UserGraphNode extends GraphNode {}
+            const a = new UserGraphNode();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserGraphNode);
+        });
+    });
+
     describe('#find()', function () {
 
         it('finds a node by property', function () {
@@ -827,15 +836,6 @@ describe('GraphNode', function () {
             expect(pos.z).to.be.closeTo(-30, 0.00001);
         });
 
-    });
-
-    describe('#clone', function () {
-        it('cloning an extending class should keep its class prototype', function () {
-            class UserGraphNode extends GraphNode {}
-            const a = new UserGraphNode();
-            const b = a.clone();
-            expect(b).to.be.an.instanceof(UserGraphNode);
-        });
     });
 
 });
