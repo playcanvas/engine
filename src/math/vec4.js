@@ -120,14 +120,16 @@ class Vec4 {
     /**
      * Returns an identical copy of the specified 4-dimensional vector.
      *
-     * @returns {Vec4} A 4-dimensional vector containing the result of the cloning.
+     * @returns {this} A 4-dimensional vector containing the result of the cloning.
      * @example
      * var v = new pc.Vec4(10, 20, 30, 40);
      * var vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
     clone() {
-        return new Vec4(this.x, this.y, this.z, this.w);
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr(this.x, this.y, this.z, this.w);
     }
 
     /**

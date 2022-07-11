@@ -26,14 +26,16 @@ class Mat3 {
     /**
      * Creates a duplicate of the specified matrix.
      *
-     * @returns {Mat3} A duplicate matrix.
+     * @returns {this} A duplicate matrix.
      * @example
      * var src = new pc.Mat3().translate(10, 20, 30);
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
-        return new Mat3().copy(this);
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 
     /**

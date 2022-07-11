@@ -198,6 +198,15 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#clone', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
+            class UserGraphNode extends GraphNode {}
+            const a = new UserGraphNode();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserGraphNode);
+        });
+    });
+
     describe('#find()', function () {
 
         it('finds a node by property', function () {
