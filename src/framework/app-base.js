@@ -853,7 +853,7 @@ class AppBase extends EventHandler {
                 let scriptUrl = scripts[i];
                 // support absolute URLs (for now)
                 if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
-                    scriptUrl = path.join(self._scriptPrefix, scripts[i]);
+                    scriptUrl = path.join(this._scriptPrefix, scripts[i]);
 
                 this.loader.load(scriptUrl, 'script', onLoad);
             }
