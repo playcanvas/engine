@@ -1325,7 +1325,7 @@ class LitShader {
         if (options.useSpecularityFactor) {
             code += "    dSpecularLight *= dSpecularityFactor;\n";
         }
-        
+
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
                 code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
