@@ -115,7 +115,7 @@ describe('Vec3', function () {
             expect(v2.z).to.equal(3);
         });
 
-        it('cloning an extending class should keep its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserVec3 extends Vec3 {}
             const a = new UserVec3();
             const b = a.clone();
