@@ -14,7 +14,7 @@ import {
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARDHDR, SHADER_PICK,
+    SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
@@ -919,6 +919,9 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
+                if (options.reflectionSource !== 'envAtlas') {
+                    code += chunks.envAtlasPS;
+                }
                 code += chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
@@ -1418,7 +1421,7 @@ class LitShader {
             fshader: this.fshader
         };
 
-        if (this.options.pass <= SHADER_FORWARDHDR) {
+        if (ShaderPass.isForward(this.options.pass)) {
             result.tag = SHADERTAG_MATERIAL;
         }
 

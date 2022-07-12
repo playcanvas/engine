@@ -2,10 +2,10 @@ import { hashCode } from '../../../core/hash.js';
 
 import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
-    SHADER_FORWARD, SHADER_FORWARDHDR, SPECULAR_PHONG,
+    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-
+import { ShaderPass } from '../../../scene/shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -85,7 +85,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR);
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -252,7 +252,7 @@ const standard = {
         // global texture bias for standard textures
         decl.append("uniform float textureBias;");
 
-        if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {

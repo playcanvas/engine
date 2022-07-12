@@ -676,6 +676,34 @@ export const SHADER_SHADOW = 4; // start of shadow related pass constants
 // Note: the Editor is using constant 24 for its internal purpose
 
 /**
+ * Shader that performs forward rendering.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_FORWARD = 'forward';
+
+/**
+ * Shader that performs depth rendering.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEPTH = 'depth';
+
+/**
+ * Shader used for picking.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_PICK = 'pick';
+
+/**
+ * Shader used for rendering shadow textures.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_SHADOW = 'shadow';
+
+/**
  * This mode renders a sprite as a simple quad.
  *
  * @type {number}
