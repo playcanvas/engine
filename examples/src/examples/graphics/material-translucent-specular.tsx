@@ -54,6 +54,7 @@ class MaterialTranslucentSpecularExample {
             const createSphere = function (x: number, y: number, z: number) {
                 const material = new pc.StandardMaterial();
                 material.diffuse = new pc.Color(0.7, 0.7, 0.7);
+                material.specular = new pc.Color(1, 1, 1);
                 material.metalness = 0.0;
                 material.shininess = ((z) / (NUM_SPHERES_Z - 1) * 50) + 50;
                 material.useMetalness = true;
