@@ -1035,7 +1035,7 @@ class LitShader {
         if ((this.lighting && options.useSpecular) || this.reflections) {
 
             if (options.useMetalness) {
-                code += "    getMetalnessModulate(dIor);\n";
+                code += "    getMetalnessModulate();\n";
             }
         }
 
@@ -1308,7 +1308,7 @@ class LitShader {
             }
 
             if (this.reflections && options.refraction) {
-                code += "    addRefraction();\n";
+                code += "    addRefraction(dIor);\n";
             }
         }
         code += "\n";

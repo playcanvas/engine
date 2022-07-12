@@ -64,6 +64,7 @@ import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles3PS from './common/frag/gles3.js';
 import gles3VS from './common/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import iorPS from './standard/frag/ior.js';
 import instancingVS from './lit/vert/instancing.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -263,6 +264,7 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    iorPS,
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,
