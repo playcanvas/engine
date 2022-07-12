@@ -338,7 +338,7 @@ const standard = {
 
             // emission
             decl.append("vec3 dEmission;");
-            code.append(this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveEncoding || 'linear'));
+            code.append(this._addMap("emissive", "emissivePS", options, litShader.chunks, options.emissiveEncoding));
             func.append("getEmission();");
 
             // clearcoat
@@ -364,7 +364,7 @@ const standard = {
                 if (lightmapDir) {
                     decl.append("vec3 dLightmapDir;");
                 }
-                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding || 'linear'));
+                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
         } else {
