@@ -127,7 +127,7 @@ const standard = {
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
-     * @param {number} encoding - The texture's encoding
+     * @param {string} encoding - The texture's encoding
      * @returns {string} The shader code to support this map.
      * @private
      */
@@ -154,7 +154,7 @@ const standard = {
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
             if (encoding) {
-                subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
+                subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
             }
         }
 
