@@ -12,12 +12,12 @@ import {
  */
 class ShaderPass {
     /**
-     * Returns true if the shader pass is a shadow shader pass.
+     * Returns the shader type given the shader pass.
      *
      * @param {number} shaderPass - The shader pass.
-     * @returns {string} - True if the pass is a shadow shader pass.
+     * @returns {string} - The shader type.
      */
-    static getPassType(shaderPass) {
+    static getType(shaderPass) {
         switch (shaderPass) {
             case SHADER_FORWARD:
             case SHADER_FORWARDHDR:
@@ -38,7 +38,7 @@ class ShaderPass {
      * @returns {boolean} - True if the pass is a forward shader pass.
      */
     static isForward(pass) {
-        return this.getPassType(pass) === SHADERTYPE_FORWARD;
+        return this.getType(pass) === SHADERTYPE_FORWARD;
     }
 
     /**
@@ -48,7 +48,7 @@ class ShaderPass {
      * @returns {boolean} - True if the pass is a shadow shader pass.
      */
     static isShadow(pass) {
-        return this.getPassType(pass) === SHADERTYPE_SHADOW;
+        return this.getType(pass) === SHADERTYPE_SHADOW;
     }
 
     /**
