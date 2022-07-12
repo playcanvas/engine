@@ -3,7 +3,8 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_R8_G8_B8_A8,
+    PASSTYPE_FORWARD
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -919,6 +920,9 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
+                if (options.reflectionSource !== 'envAtlas') {
+                    code += chunks.envAtlasPS;
+                }
                 code += chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
@@ -1418,7 +1422,7 @@ class LitShader {
             fshader: this.fshader
         };
 
-        if (this.options.pass <= SHADER_FORWARDHDR) {
+        if (ShaderPass.getPassType(this.options.pass) === PASSTYPE_FORWARD) {
             result.tag = SHADERTAG_MATERIAL;
         }
 
