@@ -5,7 +5,6 @@ import {
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-import { PASSTYPE_FORWARD } from '../../constants.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
@@ -86,7 +85,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = ShaderPass.getPassType(options.pass) === PASSTYPE_FORWARD;
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -253,7 +252,7 @@ const standard = {
         // global texture bias for standard textures
         decl.append("uniform float textureBias;");
 
-        if (ShaderPass.getPassType(options.pass) === PASSTYPE_FORWARD) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {
