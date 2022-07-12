@@ -3,7 +3,7 @@ import { hashCode } from '../../../core/hash.js';
 import { PASSTYPE_FORWARD } from '../../constants.js';
 import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
-    SHADER_FORWARD, SHADER_FORWARDHDR, SPECULAR_PHONG,
+    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';

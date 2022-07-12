@@ -1213,26 +1213,25 @@ export const CHUNKAPI_1_55 = '1.55';
  *
  * @type {string}
  */
- export const PASSTYPE_FORWARD = 'forward';
+export const PASSTYPE_FORWARD = 'forward';
 
- /**
-  * Shader pass that performs depth rendering.
-  *
-  * @type {string}
-  */
- export const PASSTYPE_DEPTH = 'depth';
- 
- /**
-  * Shader pass used for picking.
-  *
-  * @type {string}
-  */
- export const PASSTYPE_PICK = 'pick';
- 
- /**
-  * Shader pass used for rendering shadow textures.
-  *
-  * @type {string}
-  */
- export const PASSTYPE_SHADOW = 'shadow';
- 
+/**
+ * Shader pass that performs depth rendering.
+ *
+ * @type {string}
+ */
+export const PASSTYPE_DEPTH = 'depth';
+
+/**
+ * Shader pass used for picking.
+ *
+ * @type {string}
+ */
+export const PASSTYPE_PICK = 'pick';
+
+/**
+ * Shader pass used for rendering shadow textures.
+ *
+ * @type {string}
+ */
+export const PASSTYPE_SHADOW = 'shadow';
