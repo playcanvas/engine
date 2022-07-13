@@ -1103,6 +1103,7 @@ const extensionUnlit = function (data, material, textures) {
 
 const extensionSpecular = function (data, material, textures) {
     let color;
+    material.useSpecularF0 = true;
     if (data.hasOwnProperty('specularColorTexture')) {
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';

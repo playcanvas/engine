@@ -181,6 +181,8 @@ let _params = new Set();
  * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
  * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
+ * @property {boolean} useSpecularF0 Use specular map to apply color tint to specular reflections
+ * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
  * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
@@ -1075,6 +1077,7 @@ function _defineMaterialProps() {
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
+    _defineFlag('useSpecularF0', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);
