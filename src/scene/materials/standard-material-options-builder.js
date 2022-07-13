@@ -126,7 +126,7 @@ class StandardMaterialOptionsBuilder {
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalness && stdMat.useMetalnessSpecularTint && (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap);
+        const specularityFactorTint = useSpecular && stdMat.useMetalness && (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap);
 
         const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
         const emissiveTintIntensity = (stdMat.emissiveIntensity !== 1);
