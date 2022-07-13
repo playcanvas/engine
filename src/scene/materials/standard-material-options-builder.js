@@ -81,12 +81,17 @@ class StandardMaterialOptionsBuilder {
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
 
         // clustered lighting features (in shared options as shadow pass needs this too)
-        if (scene.clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled && stdMat.useLighting) {
             options.clusteredLightingEnabled = true;
             options.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             options.clusteredLightingShadowType = scene.lighting.shadowType;
             options.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+        } else {
+            options.clusteredLightingEnabled = false;
+            options.clusteredLightingCookiesEnabled = false;
+            options.clusteredLightingShadowsEnabled = false;
+            options.clusteredLightingAreaLightsEnabled = false;
         }
     }
 
