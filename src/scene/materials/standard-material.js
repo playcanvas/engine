@@ -644,7 +644,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
 
-            if (this.refractionIndex != 1.5) {
+            if (this.refractionIndex !== 1.5) {
                 this._setParameter('material_f0', this.f0);
             } else {
                 this._setParameter('material_f0', 0.04);
