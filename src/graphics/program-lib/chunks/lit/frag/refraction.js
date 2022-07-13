@@ -14,7 +14,7 @@ void addRefraction(float ior) {
     vec4 tmpRefl = dReflection;
     dReflDirW = refract2(-dViewDirW, dNormalW, ior);
 
-    dReflection = vec4(0, 0, 0, 0);
+    dReflection = vec4(0);
     addReflection();
 
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, material_refraction);
