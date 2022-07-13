@@ -645,7 +645,7 @@ class StandardMaterial extends Material {
 
             if (this.refractionIndex !== 1.5) {
                 const f0 = (this.refractionIndex - 1) / (this.refractionIndex + 1);
-                this._setParameter('material_f0', f0*f0);
+                this._setParameter('material_f0', f0 * f0);
             } else {
                 this._setParameter('material_f0', 0.04);
             }
