@@ -1127,8 +1127,6 @@ const extensionSpecular = function (data, material, textures) {
 
 const extensionIor = function (data, material, textures) {
     material.refractionIndex = data.ior;
-    const f0sq = (data.ior - 1) / (data.ior + 1);
-    material.f0 = f0sq * f0sq;
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {

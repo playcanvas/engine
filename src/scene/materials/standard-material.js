@@ -220,7 +220,6 @@ let _params = new Set();
  * indices of refraction, the one around the object and the one of its own surface. In most
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
- * @property {number} f0 Defines the f0 weight as calculated using ((ior - 1) / (ior + 1))^2
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
@@ -645,7 +644,8 @@ class StandardMaterial extends Material {
             }
 
             if (this.refractionIndex !== 1.5) {
-                this._setParameter('material_f0', this.f0);
+                const f0 = (this.refractionIndex - 1) / (this.refractionIndex + 1);
+                this._setParameter('material_f0', f0*f0);
             } else {
                 this._setParameter('material_f0', 0.04);
             }
@@ -1049,7 +1049,6 @@ function _defineMaterialProps() {
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
     _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
-    _defineFloat('f0', 0.04);
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
