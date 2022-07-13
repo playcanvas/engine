@@ -91,7 +91,7 @@ class StandardMaterialOptionsBuilder {
             options.clusteredLightingEnabled = false;
             options.clusteredLightingCookiesEnabled = false;
             options.clusteredLightingShadowsEnabled = false;
-            options.clusteredLightingAreaLightsEnabled = false;            
+            options.clusteredLightingAreaLightsEnabled = false;
         }
     }
 
