@@ -122,7 +122,7 @@ class StandardMaterialOptionsBuilder {
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
-        const specularTint = useSpecular && (stdMat.useMetalness === stdMat.useMetalnessSpecularTint) &&
+        const specularTint = useSpecular && (!stdMat.useMetalness || stdMat.useMetalnessSpecularTint) &&
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
 
