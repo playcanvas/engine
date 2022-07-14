@@ -1133,7 +1133,7 @@ const extensionIor = function (data, material, textures) {
 };
 
 const extensionTransmission = function (data, material, textures) {
-    material.blendType = BLEND_NORMAL; 
+    material.blendType = BLEND_NORMAL;
     if (data.hasOwnProperty('transmissionFactor')) {
         material.refraction = data.transmissionFactor;
     }
