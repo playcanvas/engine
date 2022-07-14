@@ -155,6 +155,18 @@ const standard = {
 
             if (encoding) {
                 subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
+
+                // continue to support $texture2DSAMPLE
+                if (subCode.indexOf('$texture2DSAMPLE')) {
+                    const decodeTable = {
+                        linear: 'texture2D',
+                        srgb: 'texture2DSRGB',
+                        rgbm: 'texture2DRGBM',
+                        rgbe: 'texture2DRGBE'
+                    };
+
+                    subCode = subCode.replace(/\$texture2DSAMPLE/g, decodeTable[encoding] || 'texture2D');
+                }
             }
         }
 
@@ -367,6 +379,14 @@ const standard = {
                 code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
+
+            // only add the legacy chunk if it's referenced
+            if (code.code.indexOf('texture2DSRGB') !== -1 ||
+                code.code.indexOf('texture2DRGBM') !== -1 ||
+                code.code.indexOf('texture2DRGBE') !== -1) {
+                code.prepend(litShader.chunks.textureSamplePS);
+            }
+
         } else {
             // all other passes require only opacity
             if (options.alphaTest) {

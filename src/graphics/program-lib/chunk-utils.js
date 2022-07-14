@@ -1,8 +1,8 @@
 const decodeTable = {
-    'linear': 'decodeLinear',
-    'srgb': 'decodeGamma',
-    'rgbm': 'decodeRGBM',
-    'rgbe': 'decodeRGBE'
+    linear: 'decodeLinear',
+    srgb: 'decodeGamma',
+    rgbm: 'decodeRGBM',
+    rgbe: 'decodeRGBE'
 };
 
 class ChunkUtils {

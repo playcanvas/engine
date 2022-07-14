@@ -748,13 +748,14 @@ class LitShader {
             }
         }
 
+        // FIXME: only add these when needed
+        code += chunks.sphericalPS;
+        code += chunks.encodePS;
+        code += chunks.decodePS;
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
-        // FIXME: only add decode when needed
-        code += chunks.decodePS;
-        code += chunks.sphericalPS;
 
         // frontend
         code += this.frontendCode;
