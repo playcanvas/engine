@@ -1,5 +1,5 @@
 export default /* glsl */`
-uniform float material_refraction, material_refractionIndex;
+uniform float material_refraction;
 
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     float vn = dot(viewVec, Normal);
@@ -8,17 +8,17 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction() {
+void addRefraction(float ior) {
     // use same reflection code with refraction vector
-    vec3 tmp = dReflDirW;
-    vec4 tmp2 = dReflection;
-    dReflection = vec4(0.0);
-    dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
+    vec3 tmpDir = dReflDirW;
+    vec4 tmpRefl = dReflection;
+    dReflDirW = refract2(-dViewDirW, dNormalW, ior);
 
+    dReflection = vec4(0);
     addReflection();
 
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, material_refraction);
-    dReflDirW = tmp;
-    dReflection = tmp2;
+    dReflection = tmpRefl;    
+    dReflDirW = tmpDir;
 }
 `;
