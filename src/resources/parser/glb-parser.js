@@ -1132,6 +1132,17 @@ const extensionIor = function (data, material, textures) {
     }
 };
 
+const extensionTransmission = function (data, material, textures) {
+    material.blendType = BLEND_NORMAL; 
+    if (data.hasOwnProperty('transmissionFactor')) {
+        material.refraction = data.transmissionFactor;
+    }
+    if (data.hasOwnProperty('transmissionTexture')) {
+        material.refractionMapChannel = 'r';
+        material.refractionMap = textures[data.transmissionTexture.index];
+    }
+};
+
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
@@ -1298,7 +1309,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_unlit": extensionUnlit,
         "KHR_materials_specular": extensionSpecular,
-        "KHR_materials_ior": extensionIor
+        "KHR_materials_ior": extensionIor,
+        "KHR_materials_transmission": extensionTransmission
     };
 
     // Handle extensions
