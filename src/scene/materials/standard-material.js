@@ -1077,7 +1077,7 @@ function _defineMaterialProps() {
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
-    _defineFlag('useMetalnessSpecularTint', false);
+    _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);
