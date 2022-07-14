@@ -154,7 +154,7 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.degammaSpecular = stdMat.useMetalnessSpecularColor;
+        options.specularEncoding = stdMat.specularMap ? stdMat.specularMap.encoding : null;
         options.emissiveEncoding = stdMat.emissiveMap ? stdMat.emissiveMap.encoding : null;
         options.lightMapEncoding = stdMat.lightMap ? stdMat.lightMap.encoding : null;
         options.conserveEnergy = stdMat.conserveEnergy;
