@@ -1126,7 +1126,9 @@ const extensionSpecular = function (data, material, textures) {
 };
 
 const extensionIor = function (data, material, textures) {
-    material.refractionIndex = data.ior;
+    if (data.hasOwnProperty('ior')) {
+        material.refractionIndex = data.ior;
+    }
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
