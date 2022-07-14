@@ -66,6 +66,7 @@ import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles3PS from './common/frag/gles3.js';
 import gles3VS from './common/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import iorPS from './standard/frag/ior.js';
 import instancingVS from './lit/vert/instancing.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -178,6 +179,7 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
+import textureSamplePS from './lit/frag/textureSample.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
@@ -267,6 +269,7 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    iorPS,
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,
@@ -379,6 +382,7 @@ const shaderChunks = {
     TBNderivativePS,
     TBNfastPS,
     TBNObjectSpacePS,
+    textureSamplePS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,

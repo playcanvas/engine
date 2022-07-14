@@ -1,4 +1,5 @@
 import { hashCode } from '../../../core/hash.js';
+import { Debug } from '../../../core/debug.js';
 
 import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
@@ -155,6 +156,18 @@ const standard = {
 
             if (encoding) {
                 subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
+
+                // continue to support $texture2DSAMPLE
+                if (subCode.indexOf('$texture2DSAMPLE')) {
+                    const decodeTable = {
+                        linear: 'texture2D',
+                        srgb: 'texture2DSRGB',
+                        rgbm: 'texture2DRGBM',
+                        rgbe: 'texture2DRGBE'
+                    };
+
+                    subCode = subCode.replace(/\$texture2DSAMPLE/g, decodeTable[encoding] || 'texture2D');
+                }
             }
         }
 
@@ -305,13 +318,18 @@ const standard = {
             code.append(this._addMap("diffuse", "diffusePS", options, litShader.chunks));
             func.append("getAlbedo();");
 
+            if (options.refraction) {
+                decl.append("float dIor;");
+                code.append(this._addMap("refractionIndex", "iorPS", options, litShader.chunks));
+                func.append("getRefractionIndex();");
+            }
+
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 decl.append("vec3 dSpecularity;");
                 decl.append("float dGlossiness;");
                 if (options.useMetalness) {
                     decl.append("float dMetalness;");
-                    decl.append("float dIor;");
                     code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));
                     func.append("getMetalness();");
                 }
@@ -371,6 +389,15 @@ const standard = {
                 code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
+
+            // only add the legacy chunk if it's referenced
+            if (code.code.indexOf('texture2DSRGB') !== -1 ||
+                code.code.indexOf('texture2DRGBM') !== -1 ||
+                code.code.indexOf('texture2DRGBE') !== -1) {
+                Debug.deprecated('Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
+                code.prepend(litShader.chunks.textureSamplePS);
+            }
+
         } else {
             // all other passes require only opacity
             if (options.alphaTest) {

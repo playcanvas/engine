@@ -3,6 +3,14 @@ vec3 decodeLinear(vec4 raw) {
     return raw.rgb;
 }
 
+float decodeGamma(float raw) {
+    return pow(raw, 2.2);
+}
+
+vec3 decodeGamma(vec3 raw) {
+    return pow(raw, vec3(2.2));
+}
+
 vec3 decodeGamma(vec4 raw) {
     return pow(raw.xyz, vec3(2.2));
 }

@@ -3,8 +3,8 @@ vec4 encodeLinear(vec3 source) {
     return vec4(source, 1.0);
 }
 
-vec4 encodeGamma(vec3 source) {
-    return vec4(pow(source + 0.0000001, vec3(1.0 / 2.2)), 1.0);
+vec3 encodeGamma(vec3 source) {
+    return pow(source + 0.0000001, vec3(1.0 / 2.2));
 }
 
 vec4 encodeRGBM(vec3 source) { // modified RGBM
