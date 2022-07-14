@@ -332,7 +332,11 @@ const standard = {
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
                     func.append("getSpecularityFactor();");
                 }
-                code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
+                if (options.useSpecularColor) {
+                    code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
+                } else {
+                    code.append("void getSpecularity() { dSpecularity = vec3(1); }");
+                }
                 code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
                 func.append("getGlossiness();");
                 func.append("getSpecularity();");
