@@ -11,7 +11,7 @@ void addLightMap() {
 
         dDiffuseLight += dLightmap * nlight * 2.0;
     }
-
-    dSpecularLight += dLightmap * getLightSpecular();
+    vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
+    dSpecularLight += dLightmap * getLightSpecular(halfDir);
 }
 `;
