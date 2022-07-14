@@ -1,4 +1,5 @@
 import { hashCode } from '../../../core/hash.js';
+import { Debug } from '../../../core/debug.js';
 
 import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
@@ -388,6 +389,7 @@ const standard = {
             if (code.code.indexOf('texture2DSRGB') !== -1 ||
                 code.code.indexOf('texture2DRGBM') !== -1 ||
                 code.code.indexOf('texture2DRGBE') !== -1) {
+                Debug.deprecated('Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
                 code.prepend(litShader.chunks.textureSamplePS);
             }
 
