@@ -321,6 +321,9 @@ const standard = {
                     func.append("getSpecularityFactor();");
                 }
                 if (options.useSpecularColor) {
+                    if (options.degammaSpecular) {
+                        code.append("#define DEGAMMA_SPECULAR 1");
+                    }
                     code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
                 } else {
                     code.append("void getSpecularity() { dSpecularity = vec3(1); }");
