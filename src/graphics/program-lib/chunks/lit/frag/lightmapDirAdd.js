@@ -10,7 +10,7 @@ void addLightMap() {
         float nlight = (flight / max(vlight, 0.01)) * 0.5;
 
         dDiffuseLight += dLightmap * nlight * 2.0;
-        dSpecularLight += dLightmap * getLightSpecular(normalize(dLightmapDir + dViewDirW));
+        dSpecularLight += dLightmap * getLightSpecular(normalize(-dLightmapDir + dViewDirW));
     }
 }
 `;
