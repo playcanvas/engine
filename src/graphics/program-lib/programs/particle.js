@@ -87,6 +87,7 @@ const particle = {
         if (options.soft) fshader += "\nvarying float vDepth;\n";
 
         if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
+        fshader += shaderChunks.decodePS;
         fshader += gammaCode(options.gamma);
         fshader += tonemapCode(options.toneMap);
 
