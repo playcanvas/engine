@@ -318,12 +318,6 @@ const standard = {
             code.append(this._addMap("diffuse", "diffusePS", options, litShader.chunks));
             func.append("getAlbedo();");
 
-            if (options.refraction) {
-                decl.append("float dIor;");
-                code.append(this._addMap("refractionIndex", "iorPS", options, litShader.chunks));
-                func.append("getRefractionIndex();");
-            }
-
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 decl.append("vec3 dSpecularity;");
