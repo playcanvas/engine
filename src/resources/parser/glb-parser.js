@@ -1003,6 +1003,7 @@ const extensionPbrSpecGlossiness = function (data, material, textures) {
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
+        material.specularEncoding = 'srgb';
         material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
         material.specularMapChannel = 'rgb';
         material.glossMapChannel = 'a';
@@ -1105,6 +1106,7 @@ const extensionSpecular = function (data, material, textures) {
     let color;
     material.useMetalnessSpecularColor = true;
     if (data.hasOwnProperty('specularColorTexture')) {
+        material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
     }
