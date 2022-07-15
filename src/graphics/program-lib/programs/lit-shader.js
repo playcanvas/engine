@@ -1300,7 +1300,7 @@ class LitShader {
             }
 
             if (this.reflections && options.refraction) {
-                code += "    addRefraction(dIor);\n";
+                code += "    addRefraction();\n";
             }
         }
         code += "\n";
