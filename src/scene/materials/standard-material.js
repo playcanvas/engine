@@ -217,6 +217,15 @@ let _params = new Set();
  * "r", "g", "b" or "a".
  * @property {number} refraction Defines the visibility of refraction. Material can refract the
  * same cube map as used for reflections.
+ * @property {Texture|null} refractionMap The map of the refraction visibility.
+ * @property {number} refractionMapUv Refraction map UV channel.
+ * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
+ * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component is
+ * between 0 and 1.
+ * @property {number} refractionMapRotation Controls the 2D rotation (in degrees) of the emissive
+ * map.
+ * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
  * distortion. The value is calculated as (outerIor / surfaceIor), where inputs are measured
  * indices of refraction, the one around the object and the one of its own surface. In most
@@ -1114,6 +1123,7 @@ function _defineMaterialProps() {
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);
     _defineTex2D('opacity', 0, 1, 'a', true);
+    _defineTex2D('refraction', 0, 1, '', true);
     _defineTex2D('height', 0, 1, '', false);
     _defineTex2D('ao', 0, 1, '', true);
     _defineTex2D('light', 1, 3, '', true);

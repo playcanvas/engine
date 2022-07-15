@@ -1003,6 +1003,7 @@ const extensionPbrSpecGlossiness = function (data, material, textures) {
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
+        material.specularEncoding = 'srgb';
         material.specularMap = material.glossMap = textures[specularGlossinessTexture.index];
         material.specularMapChannel = 'rgb';
         material.glossMapChannel = 'a';
@@ -1105,6 +1106,7 @@ const extensionSpecular = function (data, material, textures) {
     let color;
     material.useMetalnessSpecularColor = true;
     if (data.hasOwnProperty('specularColorTexture')) {
+        material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
     }
@@ -1129,6 +1131,17 @@ const extensionSpecular = function (data, material, textures) {
 const extensionIor = function (data, material, textures) {
     if (data.hasOwnProperty('ior')) {
         material.refractionIndex = data.ior;
+    }
+};
+
+const extensionTransmission = function (data, material, textures) {
+    material.blendType = BLEND_NORMAL;
+    if (data.hasOwnProperty('transmissionFactor')) {
+        material.refraction = data.transmissionFactor;
+    }
+    if (data.hasOwnProperty('transmissionTexture')) {
+        material.refractionMapChannel = 'r';
+        material.refractionMap = textures[data.transmissionTexture.index];
     }
 };
 
@@ -1298,7 +1311,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_unlit": extensionUnlit,
         "KHR_materials_specular": extensionSpecular,
-        "KHR_materials_ior": extensionIor
+        "KHR_materials_ior": extensionIor,
+        "KHR_materials_transmission": extensionTransmission
     };
 
     // Handle extensions
