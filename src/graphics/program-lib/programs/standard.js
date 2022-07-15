@@ -155,7 +155,13 @@ const standard = {
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
             if (encoding) {
-                subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
+                if (options[channelPropName] === 'aaa') {
+                    // completely skip decoding if the user has selected the alpha channel (since alpha
+                    // is never decoded).
+                    subCode = subCode.replace(/\$DECODE/g, 'passThrough');
+                } else {
+                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
+                }
 
                 // continue to support $texture2DSAMPLE
                 if (subCode.indexOf('$texture2DSAMPLE')) {
