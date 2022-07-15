@@ -385,7 +385,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @param {GraphNode} clone - The cloned graph node to copy into.
+     * @param {this} clone - The cloned graph node to copy into.
      * @private
      */
     _cloneInternal(clone) {
@@ -426,10 +426,10 @@ class GraphNode extends EventHandler {
     /**
      * Clone a graph node.
      *
-     * @returns {GraphNode} A clone of the specified graph node.
+     * @returns {this} A clone of the specified graph node.
      */
     clone() {
-        const clone = new GraphNode();
+        const clone = new this.constructor();
         this._cloneInternal(clone);
         return clone;
     }

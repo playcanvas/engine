@@ -104,6 +104,13 @@ describe('Vec2', function () {
             expect(v2.y).to.equal(2);
         });
 
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
+            class UserVec2 extends Vec2 {}
+            const a = new UserVec2();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserVec2);
+        });
+
     });
 
     describe('#copy', function () {

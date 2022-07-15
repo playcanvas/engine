@@ -27,27 +27,36 @@ class ShaderProcessorOptions {
      * Get the bind group index for the uniform name.
      *
      * @param {string} name - The name of the uniform.
-     * @returns {number} - Returns the index if the uniform exists, -1 otherwise.
+     * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
-    has(name) {
+    hasUniform(name) {
 
-        // uniform name
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
             if (uniformFormat.get(name)) {
-                return i;
+                return true;
             }
         }
 
-        // texture name
+        return false;
+    }
+
+    /**
+     * Get the bind group texture slot for the texture uniform name.
+     *
+     * @param {string} name - The name of the texture uniform.
+     * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
+     */
+    hasTexture(name) {
+
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
-            if (groupFormat.getTextureSlot(name)) {
-                return i;
+            if (groupFormat.getTexture(name)) {
+                return true;
             }
         }
 
-        return -1;
+        return false;
     }
 }
 

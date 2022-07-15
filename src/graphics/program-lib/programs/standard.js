@@ -1,11 +1,12 @@
 import { hashCode } from '../../../core/hash.js';
+import { Debug } from '../../../core/debug.js';
 
 import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
-    SHADER_FORWARD, SHADER_FORWARDHDR, SPECULAR_PHONG,
+    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
-
+import { ShaderPass } from '../../../scene/shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -85,7 +86,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR);
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -127,7 +128,7 @@ const standard = {
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
-     * @param {number} encoding - The texture's encoding
+     * @param {string} encoding - The texture's encoding
      * @returns {string} The shader code to support this map.
      * @private
      */
@@ -154,7 +155,25 @@ const standard = {
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
             if (encoding) {
-                subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
+                if (options[channelPropName] === 'aaa') {
+                    // completely skip decoding if the user has selected the alpha channel (since alpha
+                    // is never decoded).
+                    subCode = subCode.replace(/\$DECODE/g, 'passThrough');
+                } else {
+                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.gamma && encoding === 'srgb') ? 'linear' : encoding));
+                }
+
+                // continue to support $texture2DSAMPLE
+                if (subCode.indexOf('$texture2DSAMPLE')) {
+                    const decodeTable = {
+                        linear: 'texture2D',
+                        srgb: 'texture2DSRGB',
+                        rgbm: 'texture2DRGBM',
+                        rgbe: 'texture2DRGBE'
+                    };
+
+                    subCode = subCode.replace(/\$texture2DSAMPLE/g, decodeTable[encoding] || 'texture2D');
+                }
             }
         }
 
@@ -252,7 +271,7 @@ const standard = {
         // global texture bias for standard textures
         decl.append("uniform float textureBias;");
 
-        if (options.pass === SHADER_FORWARD || options.pass === SHADER_FORWARDHDR) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {
@@ -305,13 +324,18 @@ const standard = {
             code.append(this._addMap("diffuse", "diffusePS", options, litShader.chunks));
             func.append("getAlbedo();");
 
+            if (options.refraction) {
+                decl.append("float dTransmission;");
+                code.append(this._addMap("refraction", "transmissionPS", options, litShader.chunks));
+                func.append("getRefraction();");
+            }
+
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 decl.append("vec3 dSpecularity;");
                 decl.append("float dGlossiness;");
                 if (options.useMetalness) {
                     decl.append("float dMetalness;");
-                    decl.append("float dIor;");
                     code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));
                     func.append("getMetalness();");
                 }
@@ -320,7 +344,11 @@ const standard = {
                     code.append(this._addMap("specularityFactor", "specularityFactorPS", options, litShader.chunks));
                     func.append("getSpecularityFactor();");
                 }
-                code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
+                if (options.useSpecularColor) {
+                    code.append(this._addMap("specular", "specularPS", options, litShader.chunks));
+                } else {
+                    code.append("void getSpecularity() { dSpecularity = vec3(1); }");
+                }
                 code.append(this._addMap("gloss", "glossPS", options, litShader.chunks));
                 func.append("getGlossiness();");
                 func.append("getSpecularity();");
@@ -367,6 +395,15 @@ const standard = {
                 code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
+
+            // only add the legacy chunk if it's referenced
+            if (code.code.indexOf('texture2DSRGB') !== -1 ||
+                code.code.indexOf('texture2DRGBM') !== -1 ||
+                code.code.indexOf('texture2DRGBE') !== -1) {
+                Debug.deprecated('Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
+                code.prepend(litShader.chunks.textureSamplePS);
+            }
+
         } else {
             // all other passes require only opacity
             if (options.alphaTest) {

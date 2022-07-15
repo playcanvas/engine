@@ -80,12 +80,17 @@ class StandardMaterialOptionsBuilder {
         options.nineSlicedMode = stdMat.nineSlicedMode || 0;
 
         // clustered lighting features (in shared options as shadow pass needs this too)
-        if (scene.clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled && stdMat.useLighting) {
             options.clusteredLightingEnabled = true;
             options.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             options.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             options.clusteredLightingShadowType = scene.lighting.shadowType;
             options.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+        } else {
+            options.clusteredLightingEnabled = false;
+            options.clusteredLightingCookiesEnabled = false;
+            options.clusteredLightingShadowsEnabled = false;
+            options.clusteredLightingAreaLightsEnabled = false;
         }
     }
 
@@ -121,6 +126,7 @@ class StandardMaterialOptionsBuilder {
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
+        const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
         const specularTint = useSpecular &&
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
@@ -139,6 +145,7 @@ class StandardMaterialOptionsBuilder {
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.useSpecularityFactor = specularityFactorTint || !!stdMat.specularityFactorMap;
+        options.useSpecularColor = useSpecularColor;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
         options.emissiveTint = (emissiveTintColor ? 2 : 0) + (emissiveTintIntensity ? 1 : 0);
@@ -160,7 +167,8 @@ class StandardMaterialOptionsBuilder {
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
-        options.refraction = !!stdMat.refraction;
+        options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
+        options.refractionIndexTint = (stdMat.refractionIndex !== 1.5) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;

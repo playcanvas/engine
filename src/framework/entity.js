@@ -583,7 +583,7 @@ class Entity extends GraphNode {
      * Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components
      * and all descendants. Note, this Entity is not in the hierarchy and must be added manually.
      *
-     * @returns {GraphNode} A new Entity which is a deep copy of the original.
+     * @returns {this} A new Entity which is a deep copy of the original.
      * @example
      * var e = this.entity.clone();
      *
@@ -603,11 +603,12 @@ class Entity extends GraphNode {
     /**
      * @param {Object<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
-     * @returns {Entity} A new Entity which is a deep copy of the original.
+     * @returns {this} A new Entity which is a deep copy of the original.
      * @private
      */
     _cloneRecursively(duplicatedIdsMap) {
-        const clone = new Entity(this._app);
+        /** @type {this} */
+        const clone = new this.constructor(this._app);
         super._cloneInternal(clone);
 
         for (const type in this.c) {

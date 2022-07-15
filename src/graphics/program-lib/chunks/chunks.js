@@ -178,6 +178,7 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
+import textureSamplePS from './standard/frag/textureSample.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
@@ -186,6 +187,7 @@ import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
+import transmissionPS from './standard/frag/transmission.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import viewDirPS from './lit/frag/viewDir.js';
@@ -379,6 +381,7 @@ const shaderChunks = {
     TBNderivativePS,
     TBNfastPS,
     TBNObjectSpacePS,
+    textureSamplePS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,
@@ -387,6 +390,7 @@ const shaderChunks = {
     tonemappingNonePS,
     transformVS,
     transformDeclVS,
+    transmissionPS,
     uv0VS,
     uv1VS,
     viewDirPS,

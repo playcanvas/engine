@@ -52,6 +52,13 @@ describe('Color', function () {
             expect(c2.a).to.equal(0.4);
         });
 
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
+            class UserColor extends Color {}
+            const a = new UserColor();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserColor);
+        });
+
     });
 
     describe('#copy', function () {

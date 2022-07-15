@@ -14,7 +14,7 @@ import {
     LIGHTFALLOFF_LINEAR,
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADER_DEPTH, SHADER_FORWARDHDR, SHADER_PICK,
+    SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
@@ -748,13 +748,13 @@ class LitShader {
             }
         }
 
+        // FIXME: only add these when needed
+        code += chunks.sphericalPS;
+        code += chunks.decodePS;
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
-        // FIXME: only add decode when needed
-        code += chunks.decodePS;
-        code += chunks.sphericalPS;
 
         // frontend
         code += this.frontendCode;
@@ -919,6 +919,9 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
+                if (options.reflectionSource !== 'envAtlas') {
+                    code += chunks.envAtlasPS;
+                }
                 code += chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding));
             } else {
                 code += chunks.ambientConstantPS;
@@ -1024,7 +1027,7 @@ class LitShader {
         if ((this.lighting && options.useSpecular) || this.reflections) {
 
             if (options.useMetalness) {
-                code += "    getMetalnessModulate(dIor);\n";
+                code += "    getMetalnessModulate();\n";
             }
         }
 
@@ -1311,17 +1314,17 @@ class LitShader {
             }
         }
 
+        if (options.useSpecularityFactor) {
+            code += "    dSpecularLight *= dSpecularityFactor;\n";
+        }
+
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
-                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a) * dSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n";
+                code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
                 code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
             code += "dAlpha *= material_alphaFade;\n";
-        }
-
-        if (options.useSpecularityFactor) {
-            code += "    dSpecularLight *= dSpecularityFactor;\n";
         }
 
         code += chunks.endPS;
@@ -1418,7 +1421,7 @@ class LitShader {
             fshader: this.fshader
         };
 
-        if (this.options.pass <= SHADER_FORWARDHDR) {
+        if (ShaderPass.isForward(this.options.pass)) {
             result.tag = SHADERTAG_MATERIAL;
         }
 

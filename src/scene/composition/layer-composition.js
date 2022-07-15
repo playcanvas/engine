@@ -392,6 +392,10 @@ class LayerComposition extends EventHandler {
                 this._renderActions[i].destroy();
             }
             this._renderActions.length = renderActionCount;
+        }
+
+        // allocate light clusteres if lights or meshes or cameras are modified
+        if (this._dirtyCameras || (result & (COMPUPDATED_LIGHTS | COMPUPDATED_INSTANCES))) {
 
             // prepare clustered lighting for render actions
             if (clusteredLightingEnabled) {

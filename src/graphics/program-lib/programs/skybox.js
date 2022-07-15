@@ -19,18 +19,18 @@ const skybox = {
             fshader = precisionCode(device);
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.decodePS;
             fshader += gammaCode(options.gamma);
             fshader += tonemapCode(options.toneMapping);
-            fshader += shaderChunks.decodePS;
             fshader += shaderChunks.skyboxHDRPS
                 .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
                 .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
         } else {
             fshader = precisionCode(device);
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.decodePS;
             fshader += gammaCode(options.gamma);
             fshader += tonemapCode(options.toneMapping);
-            fshader += shaderChunks.decodePS;
             fshader += shaderChunks.sphericalPS;
             fshader += shaderChunks.envAtlasPS;
             fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));

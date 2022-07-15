@@ -94,7 +94,7 @@ class EnvLighting {
      * if target isn't specified. Defaults to 128.
      * @returns {Texture} The resulting cubemap.
      */
-    static generateLightingSource(source, options = null) {
+    static generateLightingSource(source, options) {
         const device = source.device;
 
         DebugGraphics.pushGpuMarker(device, "genLightingSource");
@@ -139,7 +139,7 @@ class EnvLighting {
      * lighting. Defaults to 2048.
      * @returns {Texture} The resulting atlas
      */
-    static generateAtlas(source, options = null) {
+    static generateAtlas(source, options) {
         const device = source.device;
         const format = lightingPixelFormat(device);
 
@@ -217,7 +217,7 @@ class EnvLighting {
      * Generate the environment lighting atlas from prefiltered cubemap data.
      *
      * @param {Texture[]} sources - Array of 6 prefiltered textures.
-     * @param {object} options - The options object
+     * @param {object} [options] - The options object
      * @param {Texture} [options.target] - The target texture. If one is not provided then a
      * new texture will be created and returned.
      * @param {number} [options.size] - Size of the target texture to create. Only used if
@@ -228,7 +228,7 @@ class EnvLighting {
      * lighting. Default is 2048.
      * @returns {Texture} The resulting atlas texture.
      */
-    static generatePrefilteredAtlas(sources, options = null) {
+    static generatePrefilteredAtlas(sources, options) {
         const device = sources[0].device;
         const format = lightingPixelFormat(device);
 

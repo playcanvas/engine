@@ -22,7 +22,6 @@ void getMetalness() {
     metalness *= saturate(vVertexColor.$VC);
     #endif
 
-    dIor = 0.04;
     dMetalness = metalness;
 }
 `;

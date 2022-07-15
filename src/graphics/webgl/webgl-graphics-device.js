@@ -206,7 +206,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {boolean} [options.preserveDrawingBuffer=false] - If the value is true the buffers
      * will not be cleared and will preserve their values until cleared or overwritten by the
      * author.
-     * @param {'default'|'high-performance'|'low-power'} [options.powerPreference ='default'] - A
+     * @param {'default'|'high-performance'|'low-power'} [options.powerPreference='default'] - A
      * hint to the user agent indicating what configuration of GPU is suitable for the WebGL
      * context. Possible values are:
      *
@@ -217,8 +217,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {boolean} [options.failIfMajorPerformanceCaveat=false] - Boolean that indicates if a
      * context will be created if the system performance is low or if no hardware GPU is available.
+     * @param {boolean} [options.preferWebGl2=true] - Boolean that indicates if a WebGl2 context
+     * should be preferred.
      * @param {boolean} [options.desynchronized=false] - Boolean that hints the user agent to
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
+     * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
+     * compatible graphics adapter for an immersive XR device.
      */
     constructor(canvas, options = {}) {
         super(canvas);

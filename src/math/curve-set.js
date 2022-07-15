@@ -123,10 +123,11 @@ class CurveSet {
     /**
      * Returns a clone of the specified curve set object.
      *
-     * @returns {CurveSet} A clone of the specified curve set.
+     * @returns {this} A clone of the specified curve set.
      */
     clone() {
-        const result = new CurveSet();
+        /** @type {this} */
+        const result = new this.constructor();
 
         result.curves = [];
         for (let i = 0; i < this.curves.length; i++) {

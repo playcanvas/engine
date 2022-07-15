@@ -493,6 +493,12 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
         });
 
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
+            class UserEntity extends Entity {}
+            const a = new UserEntity();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserEntity);
+        });
     });
 
     describe('#destroy', function () {

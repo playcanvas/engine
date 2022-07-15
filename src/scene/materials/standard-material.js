@@ -181,6 +181,8 @@ let _params = new Set();
  * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
  * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
+ * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the specular map to apply color tint to specular reflections
+ * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
  * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
@@ -215,6 +217,15 @@ let _params = new Set();
  * "r", "g", "b" or "a".
  * @property {number} refraction Defines the visibility of refraction. Material can refract the
  * same cube map as used for reflections.
+ * @property {Texture|null} refractionMap The map of the refraction visibility.
+ * @property {number} refractionMapUv Refraction map UV channel.
+ * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
+ * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component is
+ * between 0 and 1.
+ * @property {number} refractionMapRotation Controls the 2D rotation (in degrees) of the emissive
+ * map.
+ * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
  * distortion. The value is calculated as (outerIor / surfaceIor), where inputs are measured
  * indices of refraction, the one around the object and the one of its own surface. In most
@@ -632,6 +643,13 @@ class StandardMaterial extends Material {
             }
             if (!this.specularityFactorMap || this.specularityFactor < 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
+            }
+
+            if (this.refractionIndex !== 1.5) {
+                const f0 = (this.refractionIndex - 1) / (this.refractionIndex + 1);
+                this._setParameter('material_f0', f0 * f0);
+            } else {
+                this._setParameter('material_f0', 0.04);
             }
         }
 
@@ -1074,6 +1092,7 @@ function _defineMaterialProps() {
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
+    _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);
@@ -1103,6 +1122,7 @@ function _defineMaterialProps() {
     _defineTex2D('metalness', 0, 1, '', true);
     _defineTex2D('gloss', 0, 1, '', true);
     _defineTex2D('opacity', 0, 1, 'a', true);
+    _defineTex2D('refraction', 0, 1, '', true);
     _defineTex2D('height', 0, 1, '', false);
     _defineTex2D('ao', 0, 1, '', true);
     _defineTex2D('light', 1, 3, '', true);

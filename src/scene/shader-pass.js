@@ -1,5 +1,9 @@
 import { Debug } from '../core/debug.js';
-import { SHADER_SHADOW, SHADOW_COUNT, LIGHTTYPE_COUNT } from './constants.js';
+import {
+    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK,
+    SHADER_SHADOW, SHADOW_COUNT, LIGHTTYPE_COUNT,
+    SHADERTYPE_FORWARD, SHADERTYPE_DEPTH, SHADERTYPE_PICK, SHADERTYPE_SHADOW
+} from './constants.js';
 
 /**
  * A pure static utility class, responsible for math operations on the shader pass constants.
@@ -8,13 +12,43 @@ import { SHADER_SHADOW, SHADOW_COUNT, LIGHTTYPE_COUNT } from './constants.js';
  */
 class ShaderPass {
     /**
+     * Returns the shader type given the shader pass.
+     *
+     * @param {number} shaderPass - The shader pass.
+     * @returns {string} - The shader type.
+     */
+    static getType(shaderPass) {
+        switch (shaderPass) {
+            case SHADER_FORWARD:
+            case SHADER_FORWARDHDR:
+                return SHADERTYPE_FORWARD;
+            case SHADER_DEPTH:
+                return SHADERTYPE_DEPTH;
+            case SHADER_PICK:
+                return SHADERTYPE_PICK;
+            default:
+                return (shaderPass >= SHADER_SHADOW && shaderPass < SHADER_SHADOW + SHADOW_COUNT * LIGHTTYPE_COUNT) ? SHADERTYPE_SHADOW : SHADERTYPE_FORWARD;
+        }
+    }
+
+    /**
+     * Returns true if the shader pass is a forward shader pass.
+     *
+     * @param {number} pass - The shader pass.
+     * @returns {boolean} - True if the pass is a forward shader pass.
+     */
+    static isForward(pass) {
+        return this.getType(pass) === SHADERTYPE_FORWARD;
+    }
+
+    /**
      * Returns true if the shader pass is a shadow shader pass.
      *
      * @param {number} pass - The shader pass.
      * @returns {boolean} - True if the pass is a shadow shader pass.
      */
     static isShadow(pass) {
-        return pass >= SHADER_SHADOW && pass < SHADER_SHADOW + SHADOW_COUNT * LIGHTTYPE_COUNT;
+        return this.getType(pass) === SHADERTYPE_SHADOW;
     }
 
     /**

@@ -46,6 +46,13 @@ describe('Quat', function () {
             expect(q2.w).to.equal(0.4);
         });
 
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
+            class UserQuat extends Quat {}
+            const a = new UserQuat();
+            const b = a.clone();
+            expect(b).to.be.an.instanceof(UserQuat);
+        });
+
     });
 
     describe('#copy()', function () {
