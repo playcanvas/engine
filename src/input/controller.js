@@ -132,9 +132,11 @@ class Controller {
      * @param {object} item - An object to add.
      */
     appendAction(action, item) {
-        this._actions[action] ?
-            this._actions[action].push(item) :
+        if (this._actions[action]) {
+            this._actions[action].push(item);
+        } else {
             this._actions[action] = [item];
+        }
     }
 
     /**
