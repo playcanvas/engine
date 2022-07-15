@@ -345,7 +345,7 @@ const standard = {
                     func.append("getSpecularityFactor();");
                 }
                 if (options.useSpecularColor) {
-                    code.append(this._addMap("specular", "specularPS", options, litShader.chunks, options.useMetalness ? 'srgb' : 'linear'));
+                    code.append(this._addMap("specular", "specularPS", options, litShader.chunks, options.specularEncoding));
                 } else {
                     code.append("void getSpecularity() { dSpecularity = vec3(1); }");
                 }
