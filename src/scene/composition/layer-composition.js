@@ -395,7 +395,7 @@ class LayerComposition extends EventHandler {
         }
 
         // allocate light clusteres if lights or meshes or cameras are modified
-        if (this._dirtyCameras || (result & (COMPUPDATED_LIGHTS | COMPUPDATED_INSTANCES))) {
+        if (result & (COMPUPDATED_LIGHTS | COMPUPDATED_LIGHTS | COMPUPDATED_INSTANCES)) {
 
             // prepare clustered lighting for render actions
             if (clusteredLightingEnabled) {
@@ -403,7 +403,7 @@ class LayerComposition extends EventHandler {
             }
         }
 
-        if ((result & COMPUPDATED_LIGHTS) || (result & COMPUPDATED_CAMERAS)) {
+        if (result & (COMPUPDATED_LIGHTS | COMPUPDATED_LIGHTS)) {
             this._logRenderActions();
         }
 
