@@ -1287,7 +1287,7 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                // code += "    addClusteredLights();\n";
+                code += "    addClusteredLights();\n";
             }
 
             if (hasAreaLights) {
