@@ -890,10 +890,11 @@ class LitShader {
 
             if (options.fresnelModel > 0) {
                 code += chunks.combineDiffuseSpecularPS;
-            } else if (this.reflections) {
-                code += chunks.combineDiffuseSpecularOldPS;
             } else {
-                if (options.diffuseMap) {
+                // non-fresnel phong model
+                if (this.reflections) {
+                    code += chunks.combineDiffuseSpecularOldPS;
+                } else if (options.diffuseMap) {
                     code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
                 } else {
                     code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
@@ -1286,7 +1287,7 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                code += "    addClusteredLights();\n";
+                // code += "    addClusteredLights();\n";
             }
 
             if (hasAreaLights) {
