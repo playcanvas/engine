@@ -27,4 +27,8 @@ vec3 decodeRGBE(vec4 raw) {
         return raw.xyz * pow(2.0, raw.w * 255.0 - 128.0);
     }
 }
+
+vec4 passThrough(vec4 raw) {
+    return raw;
+}
 `;
