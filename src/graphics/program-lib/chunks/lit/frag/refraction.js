@@ -1,5 +1,4 @@
 export default /* glsl */`
-uniform float material_refraction;
 uniform float material_refractionIndex;
 
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
@@ -16,10 +15,11 @@ void addRefraction() {
     dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
 
     dReflection = vec4(0);
+
     addReflection();
 
-    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, material_refraction);
-    dReflection = tmpRefl;    
+    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, dTransmission);
+    dReflection = tmpRefl;
     dReflDirW = tmpDir;
 }
 `;

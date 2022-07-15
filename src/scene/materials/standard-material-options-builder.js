@@ -168,7 +168,7 @@ class StandardMaterialOptionsBuilder {
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
-        options.refraction = !!stdMat.refraction;
+        options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.5) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
