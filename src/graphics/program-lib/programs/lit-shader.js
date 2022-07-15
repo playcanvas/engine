@@ -748,13 +748,13 @@ class LitShader {
             }
         }
 
+        // FIXME: only add these when needed
+        code += chunks.sphericalPS;
+        code += chunks.decodePS;
         code += gammaCode(options.gamma, chunks);
         code += tonemapCode(options.toneMap, chunks);
         code += fogCode(options.fog, chunks);
 
-        // FIXME: only add decode when needed
-        code += chunks.decodePS;
-        code += chunks.sphericalPS;
 
         // frontend
         code += this.frontendCode;
@@ -1027,7 +1027,7 @@ class LitShader {
         if ((this.lighting && options.useSpecular) || this.reflections) {
 
             if (options.useMetalness) {
-                code += "    getMetalnessModulate(dIor);\n";
+                code += "    getMetalnessModulate();\n";
             }
         }
 
@@ -1300,7 +1300,7 @@ class LitShader {
             }
 
             if (this.reflections && options.refraction) {
-                code += "    addRefraction();\n";
+                code += "    addRefraction(dIor);\n";
             }
         }
         code += "\n";

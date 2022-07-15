@@ -1126,6 +1126,12 @@ const extensionSpecular = function (data, material, textures) {
     }
 };
 
+const extensionIor = function (data, material, textures) {
+    if (data.hasOwnProperty('ior')) {
+        material.refractionIndex = data.ior;
+    }
+};
+
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
@@ -1291,7 +1297,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_unlit": extensionUnlit,
-        "KHR_materials_specular": extensionSpecular
+        "KHR_materials_specular": extensionSpecular,
+        "KHR_materials_ior": extensionIor
     };
 
     // Handle extensions

@@ -636,6 +636,13 @@ class StandardMaterial extends Material {
             if (!this.specularityFactorMap || this.specularityFactor < 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
+
+            if (this.refractionIndex !== 1.5) {
+                const f0 = (this.refractionIndex - 1) / (this.refractionIndex + 1);
+                this._setParameter('material_f0', f0 * f0);
+            } else {
+                this._setParameter('material_f0', 0.04);
+            }
         }
 
         if (this.enableGGXSpecular) {

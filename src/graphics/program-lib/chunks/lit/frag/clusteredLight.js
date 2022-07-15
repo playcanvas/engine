@@ -512,7 +512,7 @@ void evaluateLight(ClusterLightData light) {
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef CLUSTER_SPECULAR
 
-                vec3 halfDir = normalize(normalize(-dLightDirNormW) + normalize(dViewDirW));
+                vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);
                 
                 // specular
                 #ifdef CLUSTER_SPECULAR_FRESNEL
