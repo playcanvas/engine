@@ -184,17 +184,10 @@ class Controller {
         }
 
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_MOUSE,
-                button: button
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_MOUSE,
-                button: -button
-            }];
-        }
+        this.appendAction(action, {
+            type: ACTION_MOUSE,
+            button: -button
+        });
     }
 
     /**
