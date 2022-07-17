@@ -170,6 +170,7 @@ class StandardMaterialOptionsBuilder {
         options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.5) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
+        options.specularEncoding = stdMat.specularEncoding === undefined ? 'linear' : stdMat.specularEncoding;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
