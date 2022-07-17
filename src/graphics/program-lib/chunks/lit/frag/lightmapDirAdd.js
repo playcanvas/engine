@@ -9,10 +9,16 @@ void addLightMap() {
         float flight = saturate(dot(dLightDirNormW, -dNormalW));
         float nlight = (flight / max(vlight, 0.01)) * 0.5;
 
-        vec3 halfDirW = normalize(-dLightmapDir + dViewDirW);
-
         dDiffuseLight += dLightmap * nlight * 2.0;
-        dSpecularLight += dLightmap * getLightSpecular(halfDirW) * getFresnel(dot(dViewDirW, halfDirW), dSpecularity);
+
+        vec3 halfDirW = normalize(-dLightmapDir + dViewDirW);
+        vec3 specularLight = dLightmap * getLightSpecular(halfDirW);
+
+        #ifdef CLUSTER_SPECULAR_FRESNEL
+        specularLight *= getFresnel(dot(dViewDirW, halfDirW), dSpecularity);
+        #endif
+
+        dSpecularLight += specularLight;
     }
 }
 `;
