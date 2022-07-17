@@ -889,12 +889,15 @@ class LitShader {
             }
 
             if (options.fresnelModel > 0) {
+                // schlick
                 code += chunks.combineDiffuseSpecularPS;
             } else {
-                // non-fresnel phong model
+                // no fresnel
                 if (this.reflections) {
                     code += chunks.combineDiffuseSpecularOldPS;
                 } else if (options.diffuseMap) {
+                    // FIXME: the following test seems almost random: what does the presence
+                    // of a diffuse map have to do with not adding reflections?
                     code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
                 } else {
                     code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
