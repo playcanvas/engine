@@ -410,7 +410,7 @@ void evaluateLight(ClusterLightData light) {
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
                             float shadow = getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
                         #endif
-                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
+                        dAtten *= mix(1.0, shadow, light.shadowIntensity);
 
                     } else {
 
@@ -424,7 +424,7 @@ void evaluateLight(ClusterLightData light) {
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
                             float shadow = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
-                        dAtten *= mix(1.0f, shadow, light.shadowIntensity);
+                        dAtten *= mix(1.0, shadow, light.shadowIntensity);
                     }
                 }
 
