@@ -895,13 +895,17 @@ class LitShader {
                 // no fresnel
                 if (this.reflections) {
                     code += chunks.combineDiffuseSpecularOldPS;
-                } else if (options.diffuseMap) {
-                    // FIXME: the following test seems almost random: what does the presence
-                    // of a diffuse map have to do with not adding reflections?
-                    code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
                 } else {
-                    code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
-                    useOldAmbient = true;
+                    // no reflections
+                    // FIXME: the following test for presence of diffuseMap and then resulting
+                    // chunk selection seems arbitrary; why would the presence of diffuseMap
+                    // indicate "useOldAmbient"?
+                    if (options.diffuseMap) {
+                        code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
+                    } else {
+                        code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                        useOldAmbient = true;
+                    }
                 }
             }
         } else {
