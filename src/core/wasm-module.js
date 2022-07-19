@@ -8,7 +8,7 @@ const cachedResult = (func) => {
             result = func();
         }
         return result;
-    }
+    };
 };
 
 class Impl {
