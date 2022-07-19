@@ -120,7 +120,7 @@ class CubemapHandler {
                     resources[i + 1] = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
-                        // we have some old assets that were not created in RGBM format (see gangnum
+                        // we have some old assets that were not created in RGBM format (see Gangnam
                         // project). These assets appear to have predated the texture type member. So
                         // here we assume assets with a texture type member were created in RGBM and
                         // older assets were created without.
