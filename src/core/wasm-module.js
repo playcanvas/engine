@@ -1,5 +1,5 @@
 // wrapper function which caches on the first invocation and subsequently
-// returns the result of the passed in function
+// returns the cached result of the passed in function
 const cachedResult = (func) => {
     const uninitToken = {};
     let result = uninitToken;
