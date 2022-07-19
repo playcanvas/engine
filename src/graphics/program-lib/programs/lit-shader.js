@@ -889,15 +889,23 @@ class LitShader {
             }
 
             if (options.fresnelModel > 0) {
+                // schlick
                 code += chunks.combineDiffuseSpecularPS;
-            } else if (this.reflections) {
-                code += chunks.combineDiffuseSpecularOldPS;
             } else {
-                if (options.diffuseMap) {
-                    code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
+                // no fresnel
+                if (this.reflections) {
+                    code += chunks.combineDiffuseSpecularOldPS;
                 } else {
-                    code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
-                    useOldAmbient = true;
+                    // no reflections
+                    // FIXME: the following test for presence of diffuseMap and then resulting
+                    // chunk selection seems arbitrary; why would the presence of diffuseMap
+                    // indicate "useOldAmbient"?
+                    if (options.diffuseMap) {
+                        code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
+                    } else {
+                        code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                        useOldAmbient = true;
+                    }
                 }
             }
         } else {

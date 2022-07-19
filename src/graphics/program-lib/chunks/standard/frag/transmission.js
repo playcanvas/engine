@@ -16,7 +16,7 @@ void getRefraction() {
     #endif
 
     #ifdef MAPTEXTURE
-    refraction *= texture2DSRGB(texture_refractionMap, $UV, textureBias).$CH;
+    refraction *= gammaCorrectInput(texture2D(texture_refractionMap, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

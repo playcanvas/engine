@@ -1,5 +1,5 @@
 export default /* glsl */`
 vec3 combineColor() {
-    return dAlbedo * dDiffuseLight + dSpecularLight * dSpecularity;
+    return dAlbedo * dDiffuseLight + dSpecularLight;
 }
 `;
