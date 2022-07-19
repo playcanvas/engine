@@ -1219,7 +1219,7 @@ class LitShader {
                                 code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
                             code += `    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`;
-                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
+                            code += `    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);\n`;
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
@@ -1227,7 +1227,7 @@ class LitShader {
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += `    float shadow${i} = getShadow${shadowReadMode}(light${i}_shadowMap, light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
-                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
+                            code += `    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);\n`;
                         }
                     }
                 }
