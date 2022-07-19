@@ -1,25 +1,30 @@
+// wrapper function that caches the func result on first invocation and
+// then subsequently returns the cached value
+const cachedResult = (func) => {
+    const uninitToken = {};
+    let result = uninitToken;
+    return () => {
+        if (result === uninitToken) {
+            result = func();
+        }
+        return result;
+    };
+};
+
 class Impl {
     static modules = {};
 
     // returns true if the running host supports wasm modules (all browsers except IE)
-    static wasmSupported() {
-        let supported = null;
-
-        if (supported === null) {
-            supported = (() => {
-                try {
-                    if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-                        const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                        if (module instanceof WebAssembly.Module)
-                            return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-                    }
-                } catch (e) { }
-                return false;
-            })();
-        }
-
-        return supported;
-    }
+    static wasmSupported = cachedResult(() => {
+        try {
+            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+                const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+                if (module instanceof WebAssembly.Module)
+                    return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+            }
+        } catch (e) { }
+        return false;
+    });
 
     // load a script
     static loadScript(url, callback) {
