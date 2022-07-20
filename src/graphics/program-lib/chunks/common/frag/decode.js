@@ -20,6 +20,11 @@ vec3 decodeRGBM(vec4 raw) {
     return color * color;
 }
 
+vec3 decodeRGBP(vec4 raw) {
+    vec3 color = raw.rgb * (-raw.a * 7.0 + 8.0);
+    return color * color;
+}
+
 vec3 decodeRGBE(vec4 raw) {
     if (raw.a == 0.0) {
         return vec3(0.0, 0.0, 0.0);
