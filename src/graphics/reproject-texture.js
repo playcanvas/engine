@@ -1,14 +1,13 @@
 import { Debug } from '../core/debug.js';
 import {
     FILTER_NEAREST,
-    TEXTURETYPE_RGBM, TEXTURETYPE_RGBE,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from './constants.js';
 import { Vec3 } from '../math/vec3.js';
 import { random } from '../math/random.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
+import { ChunkUtils } from './program-lib/chunk-utils.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
@@ -17,26 +16,6 @@ import { DebugGraphics } from './debug-graphics.js';
 import { DeviceCache } from './device-cache.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
-
-// get a coding string for texture based on its type and pixel format.
-const getCoding = (texture) => {
-    switch (texture.type) {
-        case TEXTURETYPE_RGBM:
-            return "RGBM";
-        case TEXTURETYPE_RGBE:
-            return "RGBE";
-        default:
-            switch (texture.format) {
-                case PIXELFORMAT_RGB16F:
-                case PIXELFORMAT_RGB32F:
-                case PIXELFORMAT_RGBA16F:
-                case PIXELFORMAT_RGBA32F:
-                    return "Linear";
-                default:
-                    return "Gamma";
-            }
-    }
-};
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -447,8 +426,8 @@ function reprojectTexture(source, target, options = {}) {
     const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
 
     const processFunc = funcNames[distribution] || 'reproject';
-    const decodeFunc = `decode${getCoding(source)}`;
-    const encodeFunc = `encode${getCoding(target)}`;
+    const decodeFunc = ChunkUtils.decodeFunc(source.encoding);
+    const encodeFunc = ChunkUtils.encodeFunc(target.encoding);
     const sourceFunc = `sample${getProjectionName(source.projection)}`;
     const targetFunc = `getDirection${getProjectionName(target.projection)}`;
     const numSamples = options.hasOwnProperty('numSamples') ? options.numSamples : 1024;
