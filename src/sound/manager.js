@@ -58,19 +58,17 @@ class SoundManager extends EventHandler {
 
         this._resumeContext = null;
         this._resumeContextAttached = false;
-        this._unlock = null;
-        this._unlockAttached = false;
+        this._selfSuspended = false;
+        this._unlocked = false;
+        this._unlocking = false;
 
-        if (hasAudioContext() || this._forceWebAudioApi) {
-            this._addAudioContextUserInteractionListeners();
-        } else {
+        if (!hasAudioContext() && !this._forceWebAudioApi) {
             Debug.warn('No support for 3D audio found');
         }
 
         this.listener = new Listener(this);
 
         this._volume = 1;
-        this.suspended = false;
     }
 
     /**
@@ -89,6 +87,10 @@ class SoundManager extends EventHandler {
         return this._volume;
     }
 
+    get suspended() {
+        return !this._context || !this._unlocked || this._context.state !== CONTEXT_STATE_RUNNING;
+    }
+
     /**
      * Get the Web Audio API context.
      *
@@ -105,20 +107,34 @@ class SoundManager extends EventHandler {
                     this._context = new webkitAudioContext();
                 }
 
+                this._state = this._context ? this._context.state || CONTEXT_STATE_SUSPENDED : CONTEXT_STATE_SUSPENDED;
+                console.log(`manager._state: ${this._state}`);
+
                 if (this._context) {
-                    this._state = this._context.state;
+                    this._unlocked = this._state === CONTEXT_STATE_RUNNING;
+                    if (!this._unlocked) {
+                        this._addContextUnlockListeners();
+                    }
 
                     // When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc),
                     // the AudioContext state will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other
                     // browsers), and 'resume' must be expliclty called.
-                    this._context.onstatechange = () => {
-                        if (!this._context) return;
+                    const self = this;
+                    this._context.onstatechange = function () {
+                        console.log(`context: onstatechange: ${self._context.state}`);
 
                         // explicitly call .resume() when previous state was suspended or interrupted
-                        if (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED) {
-                            this._safelyResumeContext();
+                        // @ts-ignore
+                        if (self._unlocked && !this._selfSuspended && ((self._context.state === CONTEXT_STATE_INTERRUPTED && self._state === CONTEXT_STATE_RUNNING))) {
+                            self._context.resume().then(() => {
+                                console.warn(`onstatechange: _context.resume(): success`);
+                            }, (e) => {
+                                console.warn(`onstatechange: _context.resume(): rejected`);
+                                console.warn(e);
+                            }).catch(() => {
+                                console.warn(`onstatechange: _context.resume(): fail`);
+                            });
                         }
-                        this._state = this._context.state;
                     };
                 }
             }
@@ -128,34 +144,67 @@ class SoundManager extends EventHandler {
     }
 
     suspend() {
-        this.suspended = true;
+        console.log(`manager.suspend`);
+        this._selfSuspended = true;
+
+        if (this.suspended) {
+            console.log(`manager.suspend: already suspended: ${!this._context} || ${!this._unlocked} || ${this._context.state}`);
+            return;
+        }
+
+        console.log(`manager.suspend: fired suspend`);
         this.fire('suspend');
     }
 
     resume() {
-        this.suspended = false;
-        this.fire('resume');
+        console.log(`manager.resume`);
+        this._selfSuspended = false;
 
-        // attempt to safely resume the AudioContext
-        if (this.context && (this._state === CONTEXT_STATE_INTERRUPTED || this._state === CONTEXT_STATE_SUSPENDED)) {
-            this._safelyResumeContext();
+        if (!this._context) {
+            console.log(`manager.resume: no context!`);
+            return;
+        }
+
+        if (!this._unlocked && !this._unlocking) {
+            console.log(`manager.resume: still locked!`);
+            return;
+        }
+
+        // @ts-ignore
+        if (this._state === CONTEXT_STATE_SUSPENDED || this._state === CONTEXT_STATE_RUNNING && this._context.state === CONTEXT_STATE_INTERRUPTED) {
+            console.log(`manager.resume: _context.resume()`);
+
+            this._context.resume().then(() => {
+                console.warn(`manager.resume: _context.resume(): success & fired resume`);
+                this._state = CONTEXT_STATE_RUNNING;
+                console.log(`manager._state: ${this._state}`);
+
+                this.fire('resume');
+            }, (e) => {
+                console.warn(`manager.resume: _context.resume(): rejected`);
+                console.warn(e);
+                setTimeout(this.resume, 0);
+            }).catch((e) => {
+                console.warn(`manager.resume: _context.resume(): fail`);
+                console.warn(e);
+            });
+        } else {
+            console.log(`manager.resume: fired resume`);
+            this.fire('resume');
         }
     }
 
     destroy() {
         if (this._resumeContext && this._resumeContextAttached) {
             USER_INPUT_EVENTS.forEach((eventName) => {
-                window.removeEventListener(eventName, this._resumeContext);
+                window.removeEventListener(eventName, this._resumeContext, false);
             });
-        }
-
-        if (this._unlock && this._unlockAttached) {
-            window.removeEventListener('touchend', this._unlock);
         }
 
         this.fire('destroy');
 
         if (this._context && this._context.close) {
+            console.log(`destroy(): _context.close()`);
             this._context.close();
             this._context = null;
         }
@@ -221,29 +270,16 @@ class SoundManager extends EventHandler {
         return channel;
     }
 
-    /**
-     * Attempt to resume the AudioContext, but safely handle failure scenarios.
-     * When the browser window loses focus (i.e. switching tab, hiding the app on mobile, etc),
-     * the AudioContext state will be set to 'interrupted' (on iOS Safari) or 'suspended' (on other
-     * browsers), and 'resume' must be expliclty called. However, the Auto-Play policy might block
-     * the AudioContext from running - in those cases, we need to add the interaction listeners,
-     * making the AudioContext be resumed later.
-     *
-     * @private
-     */
-    _safelyResumeContext() {
-        if (!this._context) return;
+    _removeUserInputListeners() {
+        if (!this._resumeContextAttached) {
+            return;
+        }
 
-        this._context.resume().then(() => {
-            // if after the callback the state is not yet running, add interaction listeners to resume context later
-            if (this._context.state !== CONTEXT_STATE_RUNNING) {
-                this._addAudioContextUserInteractionListeners();
-            }
-        }).catch(() => {
-            // if context could not be resumed at this point (for instance, due to auto-play policy),
-            // add interaction listeners to resume the context later
-            this._addAudioContextUserInteractionListeners();
+        USER_INPUT_EVENTS.forEach((eventName) => {
+            window.removeEventListener(eventName, this._resumeContext, false);
         });
+        this._resumeContextAttached = false;
+        this._resumeContext = null;
     }
 
     /**
@@ -252,56 +288,39 @@ class SoundManager extends EventHandler {
      *
      * @private
      */
-    _addAudioContextUserInteractionListeners() {
+    _addContextUnlockListeners() {
         // resume AudioContext on user interaction because of autoplay policy
         if (!this._resumeContext) {
             this._resumeContext = () => {
-                if (!this.context || this.context.state === CONTEXT_STATE_RUNNING) {
-                    USER_INPUT_EVENTS.forEach((eventName) => {
-                        window.removeEventListener(eventName, this._resumeContext);
-                    });
-
-                    this._resumeContextAttached = false;
-                } else {
-                    this.context.resume();
+                if (!this._context || this._unlocked || this._unlocking) {
+                    return;
                 }
+                this._unlocking = true;
+
+                this.resume();
+
+                const buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
+                const source = this._context.createBufferSource();
+                source.buffer = buffer;
+                source.connect(this._context.destination);
+                source.start(0);
+                console.warn(`unlock: played source`);
+                source.onended = (event) => {
+                    console.warn(`unlock: ended source`);
+                    source.disconnect(0);
+                    this._unlocked = true;
+                    this._unlocking = false;
+                    this._removeUserInputListeners();
+                };
             };
         }
 
         if (!this._resumeContextAttached) {
+            console.warn(`attach _context resume`);
             USER_INPUT_EVENTS.forEach((eventName) => {
-                window.addEventListener(eventName, this._resumeContext);
+                window.addEventListener(eventName, this._resumeContext, false);
             });
-
             this._resumeContextAttached = true;
-        }
-
-        // iOS only starts sound as a response to user interaction
-        if (platform.ios) {
-            // Play an inaudible sound when the user touches the screen
-            // This only happens once
-            if (!this._unlock) {
-                this._unlock = () => {
-                    // no further need for this so remove the listener
-                    window.removeEventListener('touchend', this._unlock);
-                    this._unlockAttached = false;
-
-                    const context = this.context;
-                    if (context) {
-                        const buffer = context.createBuffer(1, 1, 44100);
-                        const source = context.createBufferSource();
-                        source.buffer = buffer;
-                        source.connect(context.destination);
-                        source.start(0);
-                        source.disconnect();
-                    }
-                };
-            }
-
-            if (!this._unlockAttached) {
-                window.addEventListener('touchend', this._unlock);
-                this._unlockAttached = true;
-            }
         }
     }
 }

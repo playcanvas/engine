@@ -133,6 +133,10 @@ class SoundInstance extends EventHandler {
          */
         this._playWhenLoaded = true;
 
+        this._waitingContextSuspension = false;
+        this._stopOnWaitingContextSuspension = false;
+        this._pauseOnWaitingContextSuspension = false;
+
         /**
          * @type {number}
          * @private
@@ -509,6 +513,8 @@ class SoundInstance extends EventHandler {
 
     /** @private */
     _onEnded() {
+        console.log(`instance:_onEnded()`);
+
         // the callback is not fired synchronously
         // so only decrement _suspendEndEvent when the
         // callback is fired
@@ -540,6 +546,7 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _onManagerSuspend() {
+        console.log(`instance._onManagerSuspend()`);
         if (this._state === STATE_PLAYING && !this._suspended) {
             this._suspended = true;
             this.pause();
@@ -552,6 +559,7 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _onManagerResume() {
+        console.log(`instance._onManagerResume()`);
         if (this._suspended) {
             this._suspended = false;
             this.resume();
@@ -583,6 +591,30 @@ class SoundInstance extends EventHandler {
             this.stop();
         }
 
+        // set state to playing
+        this._state = STATE_PLAYING;
+        // no need for this anymore
+        this._playWhenLoaded = false;
+
+        this._pauseOnWaitingContextSuspension = false;
+        this._stopOnWaitingContextSuspension = false;
+
+        if (!this._manager.suspended) {
+            console.log(`instance.play(): manager is not suspended, playing now!`);
+            this._playAudio();
+        } else {
+            console.log(`instance.play(): manager is suspended, waiting for 'resume'`);
+            this._manager.once('resume', this._playAudio, this);
+            this._waitingContextSuspension = true;
+        }
+
+        return true;
+    }
+
+    _playAudio() {
+        console.log(`instance.play.playAudio()`);
+        this._waitingContextSuspension = false;
+
         if (!this.source) {
             this._createSource();
         }
@@ -605,11 +637,6 @@ class SoundInstance extends EventHandler {
         this._currentTime = 0;
         this._currentOffset = offset;
 
-        // set state to playing
-        this._state = STATE_PLAYING;
-        // no need for this anymore
-        this._playWhenLoaded = false;
-
         // Initialize volume and loop - note moved to be after start() because of Chrome bug
         this.volume = this._volume;
         this.loop = this._loop;
@@ -621,15 +648,20 @@ class SoundInstance extends EventHandler {
         this._manager.on('resume', this._onManagerResume, this);
         this._manager.on('destroy', this._onManagerDestroy, this);
 
-        // suspend immediately if manager is suspended
-        if (this._manager.suspended) {
-            this._onManagerSuspend();
+        if (!this._suspendInstanceEvents) {
+            this._onPlay();
         }
 
-        if (!this._suspendInstanceEvents)
-            this._onPlay();
-
-        return true;
+        if (this._pauseOnWaitingContextSuspension) {
+            console.log(`instance.play.playAudio(): _pauseOnWaitingContextSuspension`);
+            this._pauseOnWaitingContextSuspension = false;
+            this.pause();
+        }
+        if (this._stopOnWaitingContextSuspension) {
+            console.log(`instance.play.playAudio(): _stopOnWaitingContextSuspension`);
+            this._stopOnWaitingContextSuspension = false;
+            this.stop();
+        }
     }
 
     /**
@@ -641,14 +673,20 @@ class SoundInstance extends EventHandler {
         // no need for this anymore
         this._playWhenLoaded = false;
 
-        if (this._state !== STATE_PLAYING || !this.source)
+        if (this._state !== STATE_PLAYING)
             return false;
-
-        // store current time
-        this._updateCurrentTime();
 
         // set state to paused
         this._state = STATE_PAUSED;
+
+        if (this._waitingContextSuspension) {
+            console.log(`instance.pause(): _waitingContextSuspension - set _pauseOnWaitingContextSuspension`);
+            this._pauseOnWaitingContextSuspension = true;
+            return true;
+        }
+
+        // store current time
+        this._updateCurrentTime();
 
         // Stop the source and re-create it because we cannot reuse the same source.
         // Suspend the end event as we are manually stopping the source
@@ -675,6 +713,15 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
+        // set state back to playing
+        this._state = STATE_PLAYING;
+
+        if (this._waitingContextSuspension) {
+            console.log(`instance.resume(): _waitingContextSuspension - reset _pauseOnWaitingContextSuspension`);
+            this._pauseOnWaitingContextSuspension = false;
+            return true;
+        }
+
         if (!this.source) {
             this._createSource();
         }
@@ -698,9 +745,6 @@ class SoundInstance extends EventHandler {
         } else {
             this.source.start(0, offset);
         }
-
-        // set state back to playing
-        this._state = STATE_PLAYING;
 
         this._startedAt = this._manager.context.currentTime;
         this._currentOffset = offset;
@@ -726,8 +770,17 @@ class SoundInstance extends EventHandler {
     stop() {
         this._playWhenLoaded = false;
 
-        if (this._state === STATE_STOPPED || !this.source)
+        if (this._state === STATE_STOPPED)
             return false;
+
+        // set the state to stopped
+        this._state = STATE_STOPPED;
+
+        if (this._waitingContextSuspension) {
+            console.log(`instance.stop(): _waitingContextSuspension - set _stopOnWaitingContextSuspension`);
+            this._stopOnWaitingContextSuspension = true;
+            return true;
+        }
 
         // unsubscribe from manager events
         this._manager.off('volumechange', this._onManagerVolumeChange, this);
@@ -743,13 +796,10 @@ class SoundInstance extends EventHandler {
         this._startOffset = null;
 
         this._suspendEndEvent++;
-        if (this._state === STATE_PLAYING) {
+        if (this._state === STATE_PLAYING && this.source) {
             this.source.stop(0);
         }
         this.source = null;
-
-        // set the state to stopped
-        this._state = STATE_STOPPED;
 
         if (!this._suspendInstanceEvents)
             this._onStop();
