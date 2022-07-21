@@ -880,7 +880,6 @@ class LitShader {
                 code += "#define COMBINE_REFLECTIONS\n";
             }
 
-
             if (options.clearCoat) {
                 code += "#define COMBINE_CLEARCOAT\n";
             }
@@ -1067,7 +1066,6 @@ class LitShader {
                 if (options.useSpecularityFactor) {
                     code += "    ccReflection.rgb *= dSpecularityFactor;\n";
                 }
-
 
                 // Fresnel has to be applied to reflections
                 code += "    addReflection();\n";
