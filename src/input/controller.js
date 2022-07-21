@@ -187,7 +187,7 @@ class Controller {
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
         this.appendAction(action, {
             type: ACTION_MOUSE,
-            button: - Math.abs(button)
+            button: -Math.abs(button)
         });
     }
 
