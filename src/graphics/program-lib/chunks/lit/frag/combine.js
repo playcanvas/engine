@@ -1,6 +1,6 @@
 export default /* glsl */`
 vec3 combineColor() {
-    vec3 ret = vec3(0, 0, 0);
+    vec3 ret = vec3(0);
 #ifdef COMBINE_OLD_AMBIENT
     ret += (dDiffuseLight - light_globalAmbient) * dAlbedo + material_ambient * light_globalAmbient;
 #else
