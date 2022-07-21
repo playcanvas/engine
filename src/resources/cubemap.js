@@ -120,7 +120,8 @@ class CubemapHandler {
                     resources[i + 1] = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
-                        type: TEXTURETYPE_RGBM,
+                        // assume prefiltered data has same encoding as the faces asset
+                        type: getType() || tex.type,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,

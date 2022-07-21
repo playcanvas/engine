@@ -889,15 +889,23 @@ class LitShader {
             }
 
             if (options.fresnelModel > 0) {
+                // schlick
                 code += chunks.combineDiffuseSpecularPS;
-            } else if (this.reflections) {
-                code += chunks.combineDiffuseSpecularOldPS;
             } else {
-                if (options.diffuseMap) {
-                    code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
+                // no fresnel
+                if (this.reflections) {
+                    code += chunks.combineDiffuseSpecularOldPS;
                 } else {
-                    code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
-                    useOldAmbient = true;
+                    // no reflections
+                    // FIXME: the following test for presence of diffuseMap and then resulting
+                    // chunk selection seems arbitrary; why would the presence of diffuseMap
+                    // indicate "useOldAmbient"?
+                    if (options.diffuseMap) {
+                        code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
+                    } else {
+                        code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                        useOldAmbient = true;
+                    }
                 }
             }
         } else {
@@ -1211,7 +1219,7 @@ class LitShader {
                                 code += "    normalOffsetPointShadow(light" + i + "_shadowParams);\n";
                             }
                             code += `    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`;
-                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
+                            code += `    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);\n`;
                         } else {
                             const shadowMatArg = `light${i}_shadowMatrix`;
                             const shadowParamArg = `light${i}_shadowParams`;
@@ -1219,7 +1227,7 @@ class LitShader {
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += `    float shadow${i} = getShadow${shadowReadMode}(light${i}_shadowMap, light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
-                            code += `    dAtten *= mix(1.0f, shadow${i}, light${i}_shadowIntensity);\n`;
+                            code += `    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);\n`;
                         }
                     }
                 }

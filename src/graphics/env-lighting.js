@@ -10,6 +10,7 @@ import {
 import { DebugGraphics } from './debug-graphics.js';
 
 const fixCubemapSeams = true;
+const RGBA8_TYPE = TEXTURETYPE_RGBM;
 
 // calculate the number of mipmap levels given texture dimensions
 const calcLevels = (width, height = 0) => {
@@ -43,7 +44,7 @@ const createCubemap = (device, size, format, mipmaps) => {
         width: size,
         height: size,
         format: format,
-        type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+        type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
         addressU: ADDRESS_CLAMP_TO_EDGE,
         addressV: ADDRESS_CLAMP_TO_EDGE,
         fixCubemapSeams: fixCubemapSeams,
@@ -105,7 +106,7 @@ class EnvLighting {
             width: options?.size || 128,
             height: options?.size || 128,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
             fixCubemapSeams: false,
@@ -149,7 +150,7 @@ class EnvLighting {
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             projection: TEXTUREPROJECTION_EQUIRECT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -238,7 +239,7 @@ class EnvLighting {
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             projection: TEXTUREPROJECTION_EQUIRECT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
