@@ -608,7 +608,7 @@ class LitShader {
 
         let code = "";
 
-        if (options.clearCoat > 0) {
+        if (options.clearCoat) {
             code += '#define CLEARCOAT\n';
 
             // enable clear-coat path in clustered chunk
@@ -807,7 +807,7 @@ class LitShader {
         }
 
         if (this.reflections) {
-            if (options.clearCoat > 0) {
+            if (options.clearCoat) {
                 code += chunks.reflectionCCPS;
             }
             if (options.refraction) {
@@ -874,6 +874,16 @@ class LitShader {
 
             // enable specular path in clustered chunk
             code += "#define CLUSTER_SPECULAR\n";
+            code += "#define COMBINE_SPECULAR\n";
+
+            if (this.reflections) {
+                code += "#define COMBINE_REFLECTIONS\n";
+            }
+
+
+            if (options.clearCoat) {
+                code += "#define COMBINE_CLEARCOAT\n";
+            }
 
             if (options.fresnelModel > 0) {
                 code += '#define CLUSTER_SPECULAR_FRESNEL\n';
@@ -888,33 +898,14 @@ class LitShader {
                 code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
-            if (options.fresnelModel > 0) {
-                // schlick
-                code += chunks.combineDiffuseSpecularPS;
-            } else {
-                // no fresnel
-                if (this.reflections) {
-                    code += chunks.combineDiffuseSpecularOldPS;
-                } else {
-                    // no reflections
-                    // FIXME: the following test for presence of diffuseMap and then resulting
-                    // chunk selection seems arbitrary; why would the presence of diffuseMap
-                    // indicate "useOldAmbient"?
-                    if (options.diffuseMap) {
-                        code += chunks.combineDiffuseSpecularNoReflPS; // if you don't use environment cubemaps, you may consider this
-                    } else {
-                        code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
-                        useOldAmbient = true;
-                    }
-                }
+            if (!options.fresnelModel && !this.reflections && !options.diffuseMap) {
+                code += "    uniform vec3 material_ambient;\n";
+                code += "#define COMBINE_OLD_AMBIENT";
+                useOldAmbient = true;
             }
-        } else {
-            code += chunks.combineDiffusePS;
         }
 
-        if (options.clearCoat > 0) {
-            code += chunks.combineClearCoatPS;
-        }
+        code += chunks.combinePS;
 
         // lightmap support
         if (options.lightMap || options.lightVertexColor) {
@@ -1027,7 +1018,7 @@ class LitShader {
                 code += "    getReflDir();\n";
             }
 
-            if (options.clearCoat > 0) {
+            if (options.clearCoat) {
                 code += "    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));\n";
             }
         }
@@ -1065,7 +1056,7 @@ class LitShader {
 
         if (this.lighting || this.reflections) {
             if (this.reflections) {
-                if (options.clearCoat > 0) {
+                if (options.clearCoat) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
                         code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
@@ -1076,9 +1067,10 @@ class LitShader {
                 if (options.useSpecularityFactor) {
                     code += "    ccReflection.rgb *= dSpecularityFactor;\n";
                 }
-                code += "    addReflection();\n";
+
 
                 // Fresnel has to be applied to reflections
+                code += "    addReflection();\n";
                 if (options.fresnelModel > 0) {
                     code += "    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);\n";
                 } else {
@@ -1258,7 +1250,7 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light
-                    if (options.clearCoat > 0) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.clearCoat) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     if (options.useSpecular) code += "    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 } else {
@@ -1268,7 +1260,7 @@ class LitShader {
                     }
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                    if (options.clearCoat > 0) {
+                    if (options.clearCoat) {
                         code += "    ccSpecularLight += getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
@@ -1299,7 +1291,7 @@ class LitShader {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                if (options.clearCoat > 0) {
+                if (options.clearCoat) {
                     code += "    ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {

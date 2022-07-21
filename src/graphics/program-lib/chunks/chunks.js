@@ -24,12 +24,7 @@ import clusteredLightUtilsPS from './lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from './lit/frag/clusteredLight.js';
-import combineClearCoatPS from './lit/frag/combineClearCoat.js';
-import combineDiffusePS from './lit/frag/combineDiffuse.js';
-import combineDiffuseSpecularPS from './lit/frag/combineDiffuseSpecular.js';
-import combineDiffuseSpecularNoReflPS from './lit/frag/combineDiffuseSpecularNoRefl.js';
-import combineDiffuseSpecularNoReflSeparateAmbientPS from './lit/frag/combineDiffuseSpecularNoReflSeparateAmbient.js';
-import combineDiffuseSpecularOldPS from './lit/frag/combineDiffuseSpecularOld.js';
+import combinePS from './lit/frag/combine.js';
 import cookiePS from './lit/frag/cookie.js';
 import cubeMapProjectBoxPS from './lit/frag/cubeMapProjectBox.js';
 import cubeMapProjectNonePS from './lit/frag/cubeMapProjectNone.js';
@@ -227,12 +222,7 @@ const shaderChunks = {
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
     clusteredLightPS,
-    combineClearCoatPS,
-    combineDiffusePS,
-    combineDiffuseSpecularPS,
-    combineDiffuseSpecularNoReflPS,
-    combineDiffuseSpecularNoReflSeparateAmbientPS,
-    combineDiffuseSpecularOldPS,
+    combinePS,
     cookiePS,
     cubeMapProjectBoxPS,
     cubeMapProjectNonePS,
