@@ -1,6 +1,5 @@
 import { Debug } from '../core/debug.js';
 
-import { platform } from '../core/platform.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { math } from '../math/math.js';
@@ -11,11 +10,12 @@ import { Channel3d } from '../audio/channel3d.js';
 
 import { Listener } from './listener.js';
 
-const CONTEXT_STATE_NOT_CREATED = 'not created';
 const CONTEXT_STATE_RUNNING = 'running';
-const CONTEXT_STATE_SUSPENDED = 'suspended';
 const CONTEXT_STATE_INTERRUPTED = 'interrupted';
 
+/**
+ * List of Window events to listen when AudioContext needs to be unlocked.
+ */
 const USER_INPUT_EVENTS = [
     'click', 'contextmenu', 'auxclick', 'dblclick', 'mousedown',
     'mouseup', 'pointerup', 'touchend', 'keydown', 'keyup'
@@ -39,27 +39,53 @@ class SoundManager extends EventHandler {
         super();
 
         /**
+         * The underlying AudioContext, lazy loaded in the 'context' property.
+         *
          * @type {AudioContext}
          * @private
          */
         this._context = null;
-        /**
-         * The current state of the underlying AudioContext.
-         *
-         * @type {string}
-         * @private
-         */
-        this._state = CONTEXT_STATE_NOT_CREATED;
+
         /**
          * @type {boolean}
          * @private
          */
         this._forceWebAudioApi = options.forceWebAudioApi;
 
+        /**
+         * The function callback attached to the Window events USER_INPUT_EVENTS
+         *
+         * @type {EventListenerOrEventListenerObject}
+         * @private
+         */
         this._resumeContext = null;
-        this._resumeContextAttached = false;
+
+        /**
+         * Set to to true when suspend() was called explitly (either manually or on visibility change),
+         * and reset to false after resume() is called.
+         * This value is not directly bound to AudioContext.state.
+         *
+         * @type {boolean}
+         * @private
+         */
         this._selfSuspended = false;
+
+        /**
+         * If true, the AudioContext is in a special 'suspended' state where it needs to be resumed
+         * from a User event. In addition, some devices and browsers require that a blank sound be played.
+         *
+         * @type {boolean}
+         * @private
+         */
         this._unlocked = false;
+
+        /**
+         * Set after the unlock flow is triggered, but hasn't completed yet.
+         * Used to avoid starting multiple 'unlock' flows at the same time.
+         *
+         * @type {boolean}
+         * @private
+         */
         this._unlocking = false;
 
         if (!hasAudioContext() && !this._forceWebAudioApi) {
@@ -98,7 +124,7 @@ class SoundManager extends EventHandler {
      * @ignore
      */
     get context() {
-        // lazy create the AudioContext if possible
+        // lazy create the AudioContext
         if (!this._context) {
             if (hasAudioContext() || this._forceWebAudioApi) {
                 if (typeof AudioContext !== 'undefined') {
@@ -107,11 +133,10 @@ class SoundManager extends EventHandler {
                     this._context = new webkitAudioContext();
                 }
 
-                this._state = this._context ? this._context.state || CONTEXT_STATE_SUSPENDED : CONTEXT_STATE_SUSPENDED;
-                console.log(`manager._state: ${this._state}`);
-
+                // if context was successfully created, initialize it
                 if (this._context) {
-                    this._unlocked = this._state === CONTEXT_STATE_RUNNING;
+                    // AudioContext will start in a 'suspended' state if it is locked by the browser
+                    this._unlocked = this._context.state === CONTEXT_STATE_RUNNING;
                     if (!this._unlocked) {
                         this._addContextUnlockListeners();
                     }
@@ -124,8 +149,8 @@ class SoundManager extends EventHandler {
                         console.log(`context: onstatechange: ${self._context.state}`);
 
                         // explicitly call .resume() when previous state was suspended or interrupted
-                        // @ts-ignore
-                        if (self._unlocked && !this._selfSuspended && ((self._context.state === CONTEXT_STATE_INTERRUPTED && self._state === CONTEXT_STATE_RUNNING))) {
+                        if (self._unlocked && !self._selfSuspended && self._context.state !== CONTEXT_STATE_RUNNING) {
+                            console.warn(`onstatechange: _context.resume()`);
                             self._context.resume().then(() => {
                                 console.warn(`onstatechange: _context.resume(): success`);
                             }, (e) => {
@@ -171,13 +196,11 @@ class SoundManager extends EventHandler {
         }
 
         // @ts-ignore
-        if (this._state === CONTEXT_STATE_SUSPENDED || this._state === CONTEXT_STATE_RUNNING && this._context.state === CONTEXT_STATE_INTERRUPTED) {
+        if (this._context.state === CONTEXT_STATE_INTERRUPTED) {
             console.log(`manager.resume: _context.resume()`);
 
             this._context.resume().then(() => {
                 console.warn(`manager.resume: _context.resume(): success & fired resume`);
-                this._state = CONTEXT_STATE_RUNNING;
-                console.log(`manager._state: ${this._state}`);
 
                 this.fire('resume');
             }, (e) => {
@@ -195,11 +218,7 @@ class SoundManager extends EventHandler {
     }
 
     destroy() {
-        if (this._resumeContext && this._resumeContextAttached) {
-            USER_INPUT_EVENTS.forEach((eventName) => {
-                window.removeEventListener(eventName, this._resumeContext, false);
-            });
-        }
+        this._removeUserInputListeners();
 
         this.fire('destroy');
 
@@ -270,20 +289,9 @@ class SoundManager extends EventHandler {
         return channel;
     }
 
-    _removeUserInputListeners() {
-        if (!this._resumeContextAttached) {
-            return;
-        }
-
-        USER_INPUT_EVENTS.forEach((eventName) => {
-            window.removeEventListener(eventName, this._resumeContext, false);
-        });
-        this._resumeContextAttached = false;
-        this._resumeContext = null;
-    }
-
     /**
-     * Add the necessary Window EventListeners for resuming the AudioContext to comply with auto-play policies.
+     * Add the necessary Window EventListeners to comply with auto-play policies,
+     * and correctly unlock and resume the AudioContext.
      * For more info, https://developers.google.com/web/updates/2018/11/web-audio-autoplay.
      *
      * @private
@@ -315,13 +323,26 @@ class SoundManager extends EventHandler {
             };
         }
 
-        if (!this._resumeContextAttached) {
-            console.warn(`attach _context resume`);
-            USER_INPUT_EVENTS.forEach((eventName) => {
-                window.addEventListener(eventName, this._resumeContext, false);
-            });
-            this._resumeContextAttached = true;
+        console.warn(`attach _context resume`);
+        USER_INPUT_EVENTS.forEach((eventName) => {
+            window.addEventListener(eventName, this._resumeContext, false);
+        });
+    }
+
+    /**
+     * Remove all USER_INPUT_EVENTS unlock event listeners, if they're still attached.
+     *
+     * @private
+     */
+    _removeUserInputListeners() {
+        if (!this._resumeContext) {
+            return;
         }
+
+        USER_INPUT_EVENTS.forEach((eventName) => {
+            window.removeEventListener(eventName, this._resumeContext, false);
+        });
+        this._resumeContext = null;
     }
 }
 
