@@ -58,7 +58,7 @@ class SoundManager extends EventHandler {
          * @type {EventListenerOrEventListenerObject}
          * @private
          */
-        this._resumeContext = null;
+        this._resumeContextCallback = null;
 
         /**
          * Set to to true when suspend() was called explitly (either manually or on visibility change),
@@ -146,18 +146,15 @@ class SoundManager extends EventHandler {
                     // browsers), and 'resume' must be expliclty called.
                     const self = this;
                     this._context.onstatechange = function () {
-                        console.log(`context: onstatechange: ${self._context.state}`);
 
                         // explicitly call .resume() when previous state was suspended or interrupted
                         if (self._unlocked && !self._selfSuspended && self._context.state !== CONTEXT_STATE_RUNNING) {
-                            console.warn(`onstatechange: _context.resume()`);
                             self._context.resume().then(() => {
-                                console.warn(`onstatechange: _context.resume(): success`);
+                                // no-op
                             }, (e) => {
-                                console.warn(`onstatechange: _context.resume(): rejected`);
-                                console.warn(e);
-                            }).catch(() => {
-                                console.warn(`onstatechange: _context.resume(): fail`);
+                                Debug.error(`Attempted to resume the AudioContext on onstatechange, but it was rejected`, e);
+                            }).catch((e) => {
+                                Debug.error(`Attempted to resume the AudioContext on onstatechange, but threw an exception`, e);
                             });
                         }
                     };
@@ -169,52 +166,34 @@ class SoundManager extends EventHandler {
     }
 
     suspend() {
-        console.log(`manager.suspend`);
         this._selfSuspended = true;
 
         if (this.suspended) {
-            console.log(`manager.suspend: already suspended: ${!this._context} || ${!this._unlocked} || ${this._context.state}`);
+            // already suspended
             return;
         }
 
-        console.log(`manager.suspend: fired suspend`);
         this.fire('suspend');
     }
 
     resume() {
-        console.log(`manager.resume`);
         this._selfSuspended = false;
 
-        if (!this._context) {
-            console.log(`manager.resume: no context!`);
+        // cannot resume context if it wasn't created yet or if it's still locked
+        if (!this._context || (!this._unlocked && !this._unlocking)) {
             return;
         }
 
-        if (!this._unlocked && !this._unlocking) {
-            console.log(`manager.resume: still locked!`);
-            return;
-        }
-
-        // @ts-ignore
-        if (this._context.state === CONTEXT_STATE_INTERRUPTED) {
-            console.log(`manager.resume: _context.resume()`);
-
-            this._context.resume().then(() => {
-                console.warn(`manager.resume: _context.resume(): success & fired resume`);
-
-                this.fire('resume');
-            }, (e) => {
-                console.warn(`manager.resume: _context.resume(): rejected`);
-                console.warn(e);
-                setTimeout(this.resume, 0);
-            }).catch((e) => {
-                console.warn(`manager.resume: _context.resume(): fail`);
-                console.warn(e);
-            });
-        } else {
-            console.log(`manager.resume: fired resume`);
+        // Some browsers (mostly mobile) do not automatically resume the AudioContext, so explitly resume.
+        // If context has already been resumed, _context.resume() will immediately trigger the onfulfilled promise.
+        this._context.resume().then(() => {
+            // context has reported to have been resumed
             this.fire('resume');
-        }
+        }, (e) => {
+            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected`, e);
+        }).catch((e) => {
+            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception`, e);
+        });
     }
 
     destroy() {
@@ -223,7 +202,6 @@ class SoundManager extends EventHandler {
         this.fire('destroy');
 
         if (this._context && this._context.close) {
-            console.log(`destroy(): _context.close()`);
             this._context.close();
             this._context = null;
         }
@@ -297,25 +275,33 @@ class SoundManager extends EventHandler {
      * @private
      */
     _addContextUnlockListeners() {
+        this._unlocking = false;
+
         // resume AudioContext on user interaction because of autoplay policy
-        if (!this._resumeContext) {
-            this._resumeContext = () => {
+        if (!this._resumeContextCallback) {
+            this._resumeContextCallback = () => {
+                // prevent multiple unlock calls
                 if (!this._context || this._unlocked || this._unlocking) {
                     return;
                 }
                 this._unlocking = true;
 
+                // trigger the resume flow from a User-initiated event
                 this.resume();
 
+                // Some platforms (mostly iOS) require an additional sound to be played.
+                // This also performs a sanity check and verifies sounds can be played.
                 const buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
                 const source = this._context.createBufferSource();
                 source.buffer = buffer;
                 source.connect(this._context.destination);
                 source.start(0);
-                console.warn(`unlock: played source`);
+
+                // onended is only called if everything worked as expected (context is running)
                 source.onended = (event) => {
-                    console.warn(`unlock: ended source`);
                     source.disconnect(0);
+
+                    // unlocked!
                     this._unlocked = true;
                     this._unlocking = false;
                     this._removeUserInputListeners();
@@ -323,9 +309,9 @@ class SoundManager extends EventHandler {
             };
         }
 
-        console.warn(`attach _context resume`);
+        // attach to all user input events
         USER_INPUT_EVENTS.forEach((eventName) => {
-            window.addEventListener(eventName, this._resumeContext, false);
+            window.addEventListener(eventName, this._resumeContextCallback, false);
         });
     }
 
@@ -335,14 +321,14 @@ class SoundManager extends EventHandler {
      * @private
      */
     _removeUserInputListeners() {
-        if (!this._resumeContext) {
+        if (!this._resumeContextCallback) {
             return;
         }
 
         USER_INPUT_EVENTS.forEach((eventName) => {
-            window.removeEventListener(eventName, this._resumeContext, false);
+            window.removeEventListener(eventName, this._resumeContextCallback, false);
         });
-        this._resumeContext = null;
+        this._resumeContextCallback = null;
     }
 }
 

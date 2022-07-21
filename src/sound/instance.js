@@ -134,31 +134,6 @@ class SoundInstance extends EventHandler {
         this._playWhenLoaded = true;
 
         /**
-         * Set to true if a play() request was issued when the AudioContext was still suspended,
-         * and will therefore wait until it is resumed to play the audio.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._waitingContextSuspension = false;
-
-        /**
-         * Set to true if a stop() request was issued while _waitingContextSuspension was also true.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._stopOnWaitingContextSuspension = false;
-
-        /**
-         * Set to true if a pause() request was issued while _waitingContextSuspension was also true.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._pauseOnWaitingContextSuspension = false;
-
-        /**
          * @type {number}
          * @private
          */
@@ -242,6 +217,31 @@ class SoundInstance extends EventHandler {
              * @private
              */
             this._lastNode = null;
+
+            /**
+             * Set to true if a play() request was issued when the AudioContext was still suspended,
+             * and will therefore wait until it is resumed to play the audio.
+             *
+             * @type {boolean}
+             * @private
+             */
+            this._waitingContextSuspension = false;
+
+            /**
+             * Set to true if a stop() request was issued while _waitingContextSuspension was also true.
+             *
+             * @type {boolean}
+             * @private
+             */
+            this._stopOnWaitingContextSuspension = false;
+
+            /**
+             * Set to true if a pause() request was issued while _waitingContextSuspension was also true.
+             *
+             * @type {boolean}
+             * @private
+             */
+            this._pauseOnWaitingContextSuspension = false;
 
             this._initializeNodes();
 
@@ -534,8 +534,6 @@ class SoundInstance extends EventHandler {
 
     /** @private */
     _onEnded() {
-        console.log(`instance:_onEnded()`);
-
         // the callback is not fired synchronously
         // so only decrement _suspendEndEvent when the
         // callback is fired
@@ -567,7 +565,6 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _onManagerSuspend() {
-        console.log(`instance._onManagerSuspend()`);
         if (this._state === STATE_PLAYING && !this._suspended) {
             this._suspended = true;
             this.pause();
@@ -580,7 +577,6 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _onManagerResume() {
-        console.log(`instance._onManagerResume()`);
         if (this._suspended) {
             this._suspended = false;
             this.resume();
@@ -628,14 +624,12 @@ class SoundInstance extends EventHandler {
 
         // manager is suspended so audio cannot start now - wait for manager to resume
         if (this._manager.suspended) {
-            console.log(`instance.play(): manager is suspended, waiting for 'resume'`);
             this._manager.once('resume', this._playAudioImmediate, this);
             this._waitingContextSuspension = true;
 
             return false;
         }
 
-        console.log(`instance.play(): manager is not suspended, playing now!`);
         this._playAudioImmediate();
 
         return true;
@@ -648,7 +642,6 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _playAudioImmediate() {
-        console.log(`instance.play.playAudio()`);
         this._waitingContextSuspension = false;
 
         if (!this.source) {
@@ -689,12 +682,10 @@ class SoundInstance extends EventHandler {
         }
 
         if (this._pauseOnWaitingContextSuspension) {
-            console.log(`instance.play.playAudio(): _pauseOnWaitingContextSuspension`);
             this._pauseOnWaitingContextSuspension = false;
             this.pause();
         }
         if (this._stopOnWaitingContextSuspension) {
-            console.log(`instance.play.playAudio(): _stopOnWaitingContextSuspension`);
             this._stopOnWaitingContextSuspension = false;
             this.stop();
         }
@@ -717,7 +708,6 @@ class SoundInstance extends EventHandler {
 
         // play() was issued but hasn't actually started yet - so simply set the flag to pause later.
         if (this._waitingContextSuspension) {
-            console.log(`instance.pause(): _waitingContextSuspension - set _pauseOnWaitingContextSuspension`);
             this._pauseOnWaitingContextSuspension = true;
             return true;
         }
@@ -755,7 +745,6 @@ class SoundInstance extends EventHandler {
 
         // play() was issued but hasn't actually started yet - so simply reset the pause flag.
         if (this._waitingContextSuspension) {
-            console.log(`instance.resume(): _waitingContextSuspension - reset _pauseOnWaitingContextSuspension`);
             this._pauseOnWaitingContextSuspension = false;
             return true;
         }
@@ -816,7 +805,6 @@ class SoundInstance extends EventHandler {
 
         // play() was issued but hasn't actually started yet - so simply set a flag to stop later.
         if (this._waitingContextSuspension) {
-            console.log(`instance.stop(): _waitingContextSuspension - set _stopOnWaitingContextSuspension`);
             this._stopOnWaitingContextSuspension = true;
             return true;
         }
