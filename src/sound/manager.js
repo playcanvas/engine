@@ -184,16 +184,19 @@ class SoundManager extends EventHandler {
             return;
         }
 
-        // Some browsers (mostly mobile) do not automatically resume the AudioContext, so explitly resume.
-        // If context has already been resumed, _context.resume() will immediately trigger the onfulfilled promise.
-        this._context.resume().then(() => {
-            // context has reported to have been resumed
+        // @ts-ignore 'interrupted' is a valid state on iOS
+        if (this._context.state === CONTEXT_STATE_INTERRUPTED) {
+            // explictly resume() context, and only fire 'resume' event after context has resumed
+            this._context.resume().then(() => {
+                this.fire('resume');
+            }, (e) => {
+                Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected`, e);
+            }).catch((e) => {
+                Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception`, e);
+            });
+        } else {
             this.fire('resume');
-        }, (e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected`, e);
-        }).catch((e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception`, e);
-        });
+        }
     }
 
     destroy() {
