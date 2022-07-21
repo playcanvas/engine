@@ -334,6 +334,15 @@ const standard = {
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 decl.append("vec3 dSpecularity;");
                 decl.append("float dGlossiness;");
+                if (options.sheen) {
+                    decl.append("vec3 sSpecularity;");
+                    code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks));
+                    func.append("getSheen();");
+
+                    decl.append("float sGlossiness;");
+                    code.append(this._addMap("sheenGlossiness", "sheenGlossPS", options, litShader.chunks));
+                    func.append("getSheenGlossiness();");
+                }
                 if (options.useMetalness) {
                     decl.append("float dMetalness;");
                     code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks));

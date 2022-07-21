@@ -15,6 +15,10 @@ vec3 combineColor() {
 #ifdef LIT_CLEARCOAT
     ret += ccSpecularLight + ccReflection.rgb * ccReflection.a;
 #endif
+#ifdef LIT_SHEEN
+    float scaling = 1.0 - max(max(sSpecularity.r, sSpecularity.g), sSpecularity.b) * 0.157;
+    ret = ret * scaling + sSpecularLight + sReflection.rgb * sReflection.a;
+#endif
     return ret;
 }
 `;

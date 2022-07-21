@@ -650,6 +650,12 @@ class StandardMaterial extends Material {
             if (!this.specularityFactorMap || this.specularityFactor < 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
+            if (!this.sheenMap || this.sheenTint) {
+                this._setParameter('material_sheen', getUniform('sheen'));
+            }
+            if (!this.sheenGlossinessMap || this.sheenGlossinessTint) {
+                this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
+            }
 
             if (this.refractionIndex !== 1.5) {
                 const f0 = (this.refractionIndex - 1) / (this.refractionIndex + 1);
@@ -1035,8 +1041,10 @@ function _defineMaterialProps() {
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
+    _defineColor('sheen', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
+    _defineFloat('sheenGlossiness', 0);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
@@ -1100,6 +1108,7 @@ function _defineMaterialProps() {
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
+    _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);

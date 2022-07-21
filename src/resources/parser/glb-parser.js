@@ -1103,7 +1103,6 @@ const extensionUnlit = function (data, material, textures) {
 };
 
 const extensionSpecular = function (data, material, textures) {
-    let color;
     material.useMetalnessSpecularColor = true;
     if (data.hasOwnProperty('specularColorTexture')) {
         material.specularEncoding = 'srgb';
@@ -1111,7 +1110,7 @@ const extensionSpecular = function (data, material, textures) {
         material.specularMapChannel = 'rgb';
     }
     if (data.hasOwnProperty('specularColorFactor')) {
-        color = data.specularColorFactor;
+        const color = data.specularColorFactor;
         material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
     } else {
         material.specular.set(1, 1, 1);
@@ -1143,6 +1142,59 @@ const extensionTransmission = function (data, material, textures) {
         material.refractionMapChannel = 'r';
         material.refractionMap = textures[data.transmissionTexture.index];
     }
+};
+
+const extensionSheen = function (data, material, textures) {
+    material.useSheen = true;
+    if (data.hasOwnProperty('sheenColorFactor')) {
+        const color = data.sheenColorFactor;
+        material.sheen.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+    } else {
+        material.sheen.set(1, 1, 1);
+    }
+    if (data.hasOwnProperty('sheenColorTexture')) {
+        material.sheenMap = textures[data.sheenColorTexture.index];
+    }
+    if (data.hasOwnProperty('sheenRoughnessFactor')) {
+        material.sheenGlossiness = data.sheenRoughnessFactor;
+    } else {
+        material.sheenGlossiness = 0.0;
+    }
+    if (data.hasOwnProperty('sheenRoughnessTexture')) {
+        material.sheenGlossinessMap = textures[data.sheenRoughnessTexture.index];
+        material.sheenGlossinessMapChannel = 'a';
+    }
+
+    const sheenGlossChunk = `
+    #ifdef MAPFLOAT
+    uniform float material_sheenGlossiness;
+    #endif
+
+    #ifdef MAPTEXTURE
+    uniform sampler2D texture_sheenGlossinessMap;
+    #endif
+
+    void getSheenGlossiness() {
+        float sheenGlossiness = 1.0;
+
+        #ifdef MAPFLOAT
+        sheenGlossiness *= material_sheenGlossiness;
+        #endif
+
+        #ifdef MAPTEXTURE
+        sheenGlossiness *= texture2D(texture_sheenGlossinessMap, $UV, textureBias).$CH;
+        #endif
+
+        #ifdef MAPVERTEX
+        sheenGlossiness *= saturate(vVertexColor.$VC);
+        #endif
+
+        sheenGlossiness = 1.0 - sheenGlossiness;
+        sheenGlossiness += 0.0000001;
+        sGlossiness = sheenGlossiness;
+    }
+    `;
+    material.chunks.sheenGlossPS = sheenGlossChunk;
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
@@ -1312,7 +1364,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_unlit": extensionUnlit,
         "KHR_materials_specular": extensionSpecular,
         "KHR_materials_ior": extensionIor,
-        "KHR_materials_transmission": extensionTransmission
+        "KHR_materials_transmission": extensionTransmission,
+        "KHR_materials_sheen": extensionSheen
     };
 
     // Handle extensions
