@@ -332,6 +332,10 @@ const standard = {
                 decl.append("float dTransmission;");
                 code.append(this._addMap("refraction", "transmissionPS", options, litShader.chunks));
                 func.append("getRefraction();");
+
+                decl.append("float dThickness;");
+                code.append(this._addMap("thickness", "thicknessPS", options, litShader.chunks));
+                func.append("getThickness();");
             }
 
             // specularity & glossiness
