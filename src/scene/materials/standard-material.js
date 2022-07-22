@@ -717,6 +717,12 @@ class StandardMaterial extends Material {
             this._setParameter('material_refractionIndex', this.refractionIndex);
         }
 
+        if (this.thickness > 0) {
+            this._setParameter('material_thickness', this.thickness);
+            this._setParameter('material_attenuation', getUniform('attenuation'));
+            this._setParameter('material_attenuationDistance', this.attenuationDistance);
+        }
+
         this._setParameter('material_opacity', this.opacity);
 
         if (this.opacityFadesSpecular === false) {
@@ -1075,6 +1081,7 @@ function _defineMaterialProps() {
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
     _defineColor('sheen', new Color(1, 1, 1));
+    _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGlossiness', 0);
@@ -1098,6 +1105,8 @@ function _defineMaterialProps() {
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
     _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('thickness', 0);
+    _defineFloat('attenuationDistance', Infinity);
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
@@ -1166,6 +1175,7 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
+    _defineTex2D('thickness', 0, 1, '', true);
     _defineTex2D('specularityFactor', 0, 1, '', true);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);

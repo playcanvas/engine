@@ -1201,11 +1201,30 @@ const extensionSheen = function (data, material, textures) {
     material.chunks.sheenGlossPS = sheenGlossChunk;
 };
 
+const extensionVolume = function (data, material, textures) {
+    material.blendType = BLEND_NORMAL;
+    if (data.hasOwnProperty('thicknessFactor')) {
+        material.thickness = data.thicknessFactor;
+    }
+    if (data.hasOwnProperty('thicknessTexture')) {
+        material.thicknessMap = textures[data.thicknessTexture.index];
+    }
+    if (data.hasOwnProperty('attenuationDistance')) {
+        material.attenuationDistance = data.attenuationDistance;
+    }
+    if (data.hasOwnProperty('attenuationColor')) {
+        const color = data.attenuationColor;
+        material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+	}
+};
+
 const extensionEmissiveStrength = function (data, material, textures) {
     if (data.hasOwnProperty('emissiveStrength')) {
         material.emissiveIntensity = data.emissiveStrength;
     }
 };
+
+variant
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
@@ -1376,7 +1395,8 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_sheen": extensionSheen,
         "KHR_materials_specular": extensionSpecular,
         "KHR_materials_transmission": extensionTransmission,
-        "KHR_materials_unlit": extensionUnlit
+        "KHR_materials_unlit": extensionUnlit,
+		"KHR_materials_volume": extensionVolume
     };
 
     // Handle extensions

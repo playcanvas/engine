@@ -1,5 +1,7 @@
 export default /* glsl */`
 uniform float material_refractionIndex;
+uniform float material_attenuationDistance;
+uniform vec3 material_attenuation;
 
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     float vn = dot(viewVec, Normal);
