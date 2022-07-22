@@ -715,12 +715,10 @@ class StandardMaterial extends Material {
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
             this._setParameter('material_refractionIndex', this.refractionIndex);
-        }
 
-        if (this.thickness > 0) {
             this._setParameter('material_thickness', this.thickness);
             this._setParameter('material_attenuation', getUniform('attenuation'));
-            this._setParameter('material_attenuationDistance', this.attenuationDistance);
+            this._setParameter('material_invAttenuationDistance', this.attenuationDistance == 0 ? 0 : 1.0 / this.attenuationDistance);
         }
 
         this._setParameter('material_opacity', this.opacity);
@@ -1104,9 +1102,9 @@ function _defineMaterialProps() {
     _defineFloat('reflectivity', 1);
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
-    _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('refractionIndex', 1.5); // approx. (air ior / glass ior)
     _defineFloat('thickness', 0);
-    _defineFloat('attenuationDistance', Infinity);
+    _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
