@@ -256,6 +256,30 @@ let _params = new Set();
  * emissiveTint are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure. This color value is 3-component
+ * (RGB), where each component is between 0 and 1.
+ * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant sheen value.
+ * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is null).
+ * @property {number} sheenMapUv Sheen map UV channel.
+ * @property {Vec2} sheenMapTiling Controls the 2D tiling of the sheen map.
+ * @property {Vec2} sheenMapOffset Controls the 2D offset of the sheen map. Each component is
+ * between 0 and 1.
+ * @property {number} sheenMapRotation Controls the 2D rotation (in degrees) of the sheen
+ * map.
+ * @property {string} sheenMapChannel Color channels of the sheen map to use. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {number} sheenGlossiness The glossiness of the sheen (fabric) microfiber structure. This color value is 3-component
+ * (RGB), where each component is between 0 and 1.
+ * @property {boolean} sheenGlossinessTint Multiply sheen glossiness map and/or sheen glossiness vertex value by the scalar sheen glossiness value.
+ * @property {Texture|null} sheenGlossinessMap The sheen glossiness microstructure color map of the material (default is null).
+ * @property {number} sheenGlossinessMapUv Sheen map UV channel.
+ * @property {Vec2} sheenGlossinessMapTiling Controls the 2D tiling of the sheen glossiness map.
+ * @property {Vec2} sheenGlossinessMapOffset Controls the 2D offset of the sheen glossiness map. Each component is
+ * between 0 and 1.
+ * @property {number} sheenGlossinessMapRotation Controls the 2D rotation (in degrees) of the sheen glossiness
+ * map.
+ * @property {string} sheenGlossinessMapChannel Color channels of the sheen glossiness map to use. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where
  * 0 is fully transparent and 1 is fully opaque. If you want the material to be semi-transparent
  * you also need to set the {@link Material#blendType} to {@link BLEND_NORMAL},
