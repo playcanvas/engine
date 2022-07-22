@@ -1,9 +1,5 @@
 export default /* glsl */`
-    #ifdef CLEARCOAT
-    gl_FragColor.rgb = combineColorCC();
-    #else
     gl_FragColor.rgb = combineColor();
-    #endif 
 
     gl_FragColor.rgb += dEmission;
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);

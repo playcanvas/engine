@@ -112,7 +112,7 @@ Coords getSphereLightCoords(vec3 lightPos, vec3 halfWidth, vec3 halfHeight){
 
 // used for LTC LUT texture lookup
 vec2 dLTCUV;
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 vec2 ccLTCUV;
 #endif
 vec2 getLTCLightUV(float tGlossiness, vec3 tNormalW)
@@ -123,7 +123,7 @@ vec2 getLTCLightUV(float tGlossiness, vec3 tNormalW)
 
 //used for energy conservation and to modulate specular
 vec3 dLTCSpecFres;
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 vec3 ccLTCSpecFres;
 #endif
 vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
@@ -143,7 +143,7 @@ void calcLTCLightValues()
     dLTCUV = getLTCLightUV(dGlossiness, dNormalW);
     dLTCSpecFres = getLTCLightSpecFres(dLTCUV, dSpecularity); 
 
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
     ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
     ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularity));
 #endif
@@ -410,7 +410,7 @@ float getRectLightSpecular() {
     return calcRectLightSpecular(dNormalW, dLTCUV);
 }
 
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 float getRectLightSpecularCC() {
     return calcRectLightSpecular(ccNormalW, ccLTCUV);
 }
@@ -425,7 +425,7 @@ float getDiskLightSpecular() {
     return calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 float getDiskLightSpecularCC() {
     return calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }
@@ -435,7 +435,7 @@ float getSphereLightSpecular() {
     return calcDiskLightSpecular(dNormalW, dLTCUV);
 }
 
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 float getSphereLightSpecularCC() {
     return calcDiskLightSpecular(ccNormalW, ccLTCUV);
 }

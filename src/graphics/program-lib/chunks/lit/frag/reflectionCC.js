@@ -1,5 +1,5 @@
 export default /* glsl */`
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 uniform float material_clearCoatReflectivity;
 
 void addReflectionCC() {
