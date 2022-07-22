@@ -612,6 +612,27 @@ class LitShader {
             code += 'uniform float material_alphaFade;\n';
         }
 
+        if (options.useSpecular) {
+            code += "#define LIT_SPECULAR\n";
+
+            if (this.reflections) {
+                code += "#define LIT_REFLECTIONS\n";
+            }
+
+            if (options.clearCoat) {
+                code += "#define LIT_CLEARCOAT\n";
+            }
+
+            if (options.fresnelModel > 0) {
+                code += '#define LIT_SPECULAR_FRESNEL\n';
+            }
+
+            // enable conserve energy path in clustered chunk
+            if (options.conserveEnergy) {
+                code += "#define LIT_CONSERVE_ENERGY\n";
+            }
+        }
+
         // FRAGMENT SHADER INPUTS: UNIFORMS
         const shadowTypeUsed = [];
         let numShadowLights = 0;
@@ -864,26 +885,6 @@ class LitShader {
 
         let useOldAmbient = false;
         if (options.useSpecular) {
-
-            // enable specular path in clustered chunk
-            code += "#define LIT_SPECULAR\n";
-
-            if (this.reflections) {
-                code += "#define LIT_REFLECTIONS\n";
-            }
-
-            if (options.clearCoat) {
-                code += "#define LIT_CLEARCOAT\n";
-            }
-
-            if (options.fresnelModel > 0) {
-                code += '#define LIT_SPECULAR_FRESNEL\n';
-            }
-
-            // enable conserve energy path in clustered chunk
-            if (options.conserveEnergy) {
-                code += "#define LIT_CONSERVE_ENERGY\n";
-            }
 
             if (this.lighting) {
                 code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
