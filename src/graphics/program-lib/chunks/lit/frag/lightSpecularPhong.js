@@ -10,7 +10,7 @@ float getLightSpecular(vec3 h) {
     return calcLightSpecular(dGlossiness, dReflDirW, h);
 }
 
-#ifdef CLEARCOAT
+#ifdef LIT_CLEARCOAT
 float getLightSpecularCC(vec3 h) {
     return calcLightSpecular(ccGlossiness, ccReflDirW,h );
 }

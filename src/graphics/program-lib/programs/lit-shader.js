@@ -608,13 +608,6 @@ class LitShader {
 
         let code = "";
 
-        if (options.clearCoat) {
-            code += '#define CLEARCOAT\n';
-
-            // enable clear-coat path in clustered chunk
-            code += "#define CLUSTER_CLEAR_COAT\n";
-        }
-
         if (options.opacityFadesSpecular === false) {
             code += 'uniform float material_alphaFade;\n';
         }
@@ -873,24 +866,23 @@ class LitShader {
         if (options.useSpecular) {
 
             // enable specular path in clustered chunk
-            code += "#define CLUSTER_SPECULAR\n";
-            code += "#define COMBINE_SPECULAR\n";
+            code += "#define LIT_SPECULAR\n";
 
             if (this.reflections) {
-                code += "#define COMBINE_REFLECTIONS\n";
+                code += "#define LIT_REFLECTIONS\n";
             }
 
             if (options.clearCoat) {
-                code += "#define COMBINE_CLEARCOAT\n";
+                code += "#define LIT_CLEARCOAT\n";
             }
 
             if (options.fresnelModel > 0) {
-                code += '#define CLUSTER_SPECULAR_FRESNEL\n';
+                code += '#define LIT_SPECULAR_FRESNEL\n';
             }
 
             // enable conserve energy path in clustered chunk
             if (options.conserveEnergy) {
-                code += "#define CLUSTER_CONSERVE_ENERGY\n";
+                code += "#define LIT_CONSERVE_ENERGY\n";
             }
 
             if (this.lighting) {
@@ -899,7 +891,7 @@ class LitShader {
 
             if (!options.fresnelModel && !this.reflections && !options.diffuseMap) {
                 code += "    uniform vec3 material_ambient;\n";
-                code += "#define COMBINE_OLD_AMBIENT";
+                code += "#define LIT_OLD_AMBIENT";
                 useOldAmbient = true;
             }
         }
@@ -1319,7 +1311,7 @@ class LitShader {
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
                 code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
-                code += "#ifdef CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "#ifdef LIT_CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
             code += "dAlpha *= material_alphaFade;\n";

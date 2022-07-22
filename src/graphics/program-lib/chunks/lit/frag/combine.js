@@ -1,18 +1,18 @@
 export default /* glsl */`
 vec3 combineColor() {
     vec3 ret = vec3(0);
-#ifdef COMBINE_OLD_AMBIENT
+#ifdef LIT_OLD_AMBIENT
     ret += (dDiffuseLight - light_globalAmbient) * dAlbedo + material_ambient * light_globalAmbient;
 #else
     ret += dAlbedo * dDiffuseLight;
 #endif
-#ifdef COMBINE_SPECULAR
+#ifdef LIT_SPECULAR
     ret += dSpecularLight;
 #endif
-#ifdef COMBINE_REFLECTIONS
+#ifdef LIT_REFLECTIONS
     ret += dReflection.rgb * dReflection.a;
 #endif
-#ifdef COMBINE_CLEARCOAT
+#ifdef LIT_CLEARCOAT
     ret += ccSpecularLight + ccReflection.rgb * ccReflection.a;
 #endif
     return ret;

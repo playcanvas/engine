@@ -443,8 +443,8 @@ void evaluateLight(ClusterLightData light) {
             {
                 vec3 areaDiffuse = (dAttenD * dAtten) * light.color * dAtten3;
 
-                #if defined(CLUSTER_SPECULAR)
-                    #if defined(CLUSTER_CONSERVE_ENERGY)
+                #if defined(LIT_SPECULAR)
+                    #if defined(LIT_CONSERVE_ENERGY)
                         areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
                     #endif
                 #endif
@@ -454,7 +454,7 @@ void evaluateLight(ClusterLightData light) {
             }
 
             // specular and clear coat are material settings and get included by a define based on the material
-            #ifdef CLUSTER_SPECULAR
+            #ifdef LIT_SPECULAR
 
                 // area light specular
                 float areaLightSpecular;
@@ -469,7 +469,7 @@ void evaluateLight(ClusterLightData light) {
 
                 dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
 
-                #ifdef CLUSTER_CLEAR_COAT
+                #ifdef LIT_CLEARCOAT
 
                     // area light specular clear coat
                     float areaLightSpecularCC;
@@ -499,8 +499,8 @@ void evaluateLight(ClusterLightData light) {
                 vec3 punctualDiffuse = dAtten * light.color * dAtten3;
 
                 #if defined(CLUSTER_AREALIGHTS)
-                #if defined(CLUSTER_SPECULAR)
-                #if defined(CLUSTER_CONSERVE_ENERGY)
+                #if defined(LIT_SPECULAR)
+                #if defined(LIT_CONSERVE_ENERGY)
                     punctualDiffuse = mix(punctualDiffuse, vec3(0), dSpecularity);
                 #endif
                 #endif
@@ -510,19 +510,19 @@ void evaluateLight(ClusterLightData light) {
             }
    
             // specular and clear coat are material settings and get included by a define based on the material
-            #ifdef CLUSTER_SPECULAR
+            #ifdef LIT_SPECULAR
 
                 vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);
                 
                 // specular
-                #ifdef CLUSTER_SPECULAR_FRESNEL
+                #ifdef LIT_SPECULAR_FRESNEL
                     dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), dSpecularity);
                 #else
                     dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * dSpecularity;
                 #endif
 
-                #ifdef CLUSTER_CLEAR_COAT
-                    #ifdef CLUSTER_SPECULAR_FRESNEL
+                #ifdef LIT_CLEARCOAT
+                    #ifdef LIT_SPECULAR_FRESNEL
                         ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), vec3(ccSpecularity));
                     #else
                         ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * vec3(ccSpecularity);
