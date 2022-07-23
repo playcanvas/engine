@@ -163,6 +163,7 @@ class Controller {
             keys = [keys];
         }
 
+        // add keys to actions
         this.appendAction(action, {
             type: ACTION_KEYBOARD,
             keys: keys
@@ -209,7 +210,8 @@ class Controller {
         if (button === undefined) {
             throw new Error('Invalid button');
         }
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
+        
+        // add gamepad button and pad to actions
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
             button: button,
@@ -230,7 +232,6 @@ class Controller {
         }
         const i = this._axes[name].push(name);
 
-        //
         options = options || {};
         options.pad = options.pad || PAD_1;
 
