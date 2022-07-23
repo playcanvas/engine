@@ -139,7 +139,7 @@ class Controller {
             this._actions[action] = [item];
         }
     }
-    
+
     /**
      * Create or update a action which is enabled when the supplied keys are pressed.
      *
@@ -163,17 +163,10 @@ class Controller {
             keys = [keys];
         }
 
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_KEYBOARD,
-                keys: keys
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_KEYBOARD,
-                keys: keys
-            }];
-        }
+        this.appendAction(action, {
+            type: ACTION_KEYBOARD,
+            keys: keys
+        });
     }
 
     /**
@@ -217,19 +210,11 @@ class Controller {
             throw new Error('Invalid button');
         }
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            }];
-        }
+        this.appendAction(action, {
+            type: ACTION_GAMEPAD,
+            button: button,
+            pad: pad
+        });
     }
 
     /**
