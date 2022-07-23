@@ -132,7 +132,7 @@ class Controller {
      * @param {string} action - The name of the action.
      * @param {object} item - An object to add.
      */
-     appendAction(action, item) {
+    appendAction(action, item) {
         if (this._actions[action]) {
             this._actions[action].push(item);
         } else {
@@ -210,7 +210,6 @@ class Controller {
         if (button === undefined) {
             throw new Error('Invalid button');
         }
-        
         // add gamepad button and pad to actions
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
