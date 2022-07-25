@@ -182,7 +182,7 @@ class Controller {
             throw new Error('Invalid button');
         }
 
-        // add mouse button to actions
+        // add mouse button to actions     
         this.appendAction(action, {
             type: ACTION_MOUSE,
             button
@@ -203,7 +203,7 @@ class Controller {
         // add gamepad button and pad to actions
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
-            button: button,
+            button,
             pad
         });
     }
