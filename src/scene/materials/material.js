@@ -520,7 +520,7 @@ class Material {
      */
     destroy() {
         this.variants = {};
-        this.shader = null;
+        this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];

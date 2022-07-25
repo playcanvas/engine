@@ -14,7 +14,7 @@ import {
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
 
-import { standardMaterialParameterTypes } from './standard-material-parameters.js';
+import { standardMaterialParameterTypes, standardMaterialRemovedParameters } from './standard-material-parameters.js';
 
 class StandardMaterialValidator {
     constructor() {
@@ -79,6 +79,7 @@ class StandardMaterialValidator {
         // if removeInvalid flag is set to true then remove invalid properties from data
 
         const TYPES = standardMaterialParameterTypes;
+        const REMOVED = standardMaterialRemovedParameters;
 
         const pathMapping = (data.mappingFormat === 'path');
 
@@ -86,8 +87,12 @@ class StandardMaterialValidator {
             const type = TYPES[key];
 
             if (!type) {
-                Debug.warn(`Ignoring unsupported input property to standard material: ${key}`);
-                this.valid = false;
+                if (REMOVED[key]) {
+                    delete data[key];
+                } else {
+                    Debug.warn(`Ignoring unsupported input property to standard material: ${key}`);
+                    this.valid = false;
+                }
                 continue;
             }
 
