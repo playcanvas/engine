@@ -125,6 +125,21 @@ class Controller {
         }
     }
 
+
+    /**
+     * Reusable function to check and add actions
+     *
+     * @param {string} action - The name of the action.
+     * @param {object} item - An object to add.
+     */
+    appendAction(action, item) {
+        if (this._actions[action]) {
+            this._actions[action].push(item);
+        } else {
+            this._actions[action] = [item];
+        }
+    }
+
     /**
      * Create or update a action which is enabled when the supplied keys are pressed.
      *
@@ -148,17 +163,11 @@ class Controller {
             keys = [keys];
         }
 
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_KEYBOARD,
-                keys: keys
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_KEYBOARD,
-                keys: keys
-            }];
-        }
+        // add keys to actions
+        this.appendAction(action, {
+            type: ACTION_KEYBOARD,
+            keys: keys
+        });
     }
 
     /**
@@ -201,20 +210,12 @@ class Controller {
         if (button === undefined) {
             throw new Error('Invalid button');
         }
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            }];
-        }
+        // add gamepad button and pad to actions
+        this.appendAction(action, {
+            type: ACTION_GAMEPAD,
+            button: button,
+            pad: pad
+        });
     }
 
     /**
@@ -230,7 +231,6 @@ class Controller {
         }
         const i = this._axes[name].push(name);
 
-        //
         options = options || {};
         options.pad = options.pad || PAD_1;
 
