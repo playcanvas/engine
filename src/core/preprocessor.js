@@ -9,7 +9,7 @@ const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension)/g;
 // #define EXPRESSION
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
-// #extension NAME : enabled
+// #extension IDENTIFIER : enabled
 const EXTENSION = /extension[ \t]+([\w-]+)[ \t]+:[ \t]+enable/g;
 
 // #undef EXPRESSION
