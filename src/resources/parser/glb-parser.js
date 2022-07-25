@@ -1415,6 +1415,10 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
     const createMorphTargetCurves = (curve, node, entityPath) => {
+        if (!outputMap[curve.output]) {
+            Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
+            return;
+        }
         const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
         const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
 
