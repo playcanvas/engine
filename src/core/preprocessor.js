@@ -4,10 +4,13 @@ import { Debug } from './debug.js';
 const TRACEID = 'Preprocessor';
 
 // accepted keywords
-const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef)/g;
+const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension)/g;
 
 // #define EXPRESSION
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
+
+// #extension IDENTIFIER : enabled
+const EXTENSION = /extension[ \t]+([\w-]+)[ \t]+:[ \t]+enable/g;
 
 // #undef EXPRESSION
 const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
@@ -134,6 +137,27 @@ class Preprocessor {
 
                     // continue on the next line
                     KEYWORD.lastIndex = undef.index + undef[0].length;
+                    break;
+                }
+
+                case 'extension': {
+                    EXTENSION.lastIndex = match.index;
+                    const extension = EXTENSION.exec(source);
+                    if (extension) {
+                        const identifier = extension[1];
+
+                        // are we inside if-blocks that are accepted
+                        const keep = Preprocessor._keep(stack);
+
+                        if (keep) {
+                            defines.set(identifier, "true");
+                        }
+
+                        Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
+                    }
+
+                    // continue on the next line
+                    KEYWORD.lastIndex = extension.index + extension[0].length;
                     break;
                 }
 

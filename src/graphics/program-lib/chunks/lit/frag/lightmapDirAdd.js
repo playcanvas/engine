@@ -14,7 +14,7 @@ void addLightMap() {
         vec3 halfDirW = normalize(-dLightmapDir + dViewDirW);
         vec3 specularLight = dLightmap * getLightSpecular(halfDirW);
 
-        #ifdef CLUSTER_SPECULAR_FRESNEL
+        #ifdef LIT_SPECULAR
         specularLight *= getFresnel(dot(dViewDirW, halfDirW), dSpecularity);
         #endif
 

@@ -27,7 +27,7 @@ class Sky {
     /**
      * Mesh instance representing the visuals of the sky.
      *
-     * @type {MeshInstance};
+     * @type {MeshInstance}
      */
     meshInstance;
 

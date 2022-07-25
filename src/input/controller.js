@@ -125,6 +125,21 @@ class Controller {
         }
     }
 
+
+    /**
+     * Reusable function to check and add actions
+     *
+     * @param {string} action - The name of the action.
+     * @param {object} item - An object to add.
+     */
+    appendAction(action, item) {
+        if (this._actions[action]) {
+            this._actions[action].push(item);
+        } else {
+            this._actions[action] = [item];
+        }
+    }
+
     /**
      * Reusable function to check and add actions
      *
@@ -165,7 +180,7 @@ class Controller {
         // add keys to actions
         this.appendAction(action, {
             type: ACTION_KEYBOARD,
-            keys
+            keys: keys
         });
     }
 
@@ -205,8 +220,8 @@ class Controller {
         // add gamepad button and pad to actions
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
-            button,
-            pad
+            button: button,
+            pad: pad
         });
     }
 
