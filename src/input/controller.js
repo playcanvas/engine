@@ -177,7 +177,7 @@ class Controller {
         // add keys to actions
         this.appendAction(action, {
             type: ACTION_KEYBOARD,
-            keys: keys
+            keys
         });
     }
 
@@ -218,7 +218,7 @@ class Controller {
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
             button: button,
-            pad: pad
+            pad
         });
     }
 
