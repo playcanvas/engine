@@ -223,4 +223,13 @@ for (const key in standardMaterialParameterTypes) {
     }
 }
 
-export { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters };
+const standardMaterialRemovedParameters = {
+    specularAntialias: 'boolean'
+};
+
+export {
+    standardMaterialParameterTypes,
+    standardMaterialCubemapParameters,
+    standardMaterialTextureParameters,
+    standardMaterialRemovedParameters
+};
