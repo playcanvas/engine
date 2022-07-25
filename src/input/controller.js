@@ -196,7 +196,7 @@ class Controller {
             throw new Error('Invalid button');
         }
 
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
+        // add mouse button to actions
         this.appendAction(action, {
             type: ACTION_MOUSE,
             button
