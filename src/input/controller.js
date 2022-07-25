@@ -138,20 +138,6 @@ class Controller {
     }
 
     /**
-     * Reusable function to check and add actions
-     *
-     * @param {string} action - The name of the action.
-     * @param {object} item - An object to add.
-     */
-    appendAction(action, item) {
-        if (this._actions[action]) {
-            this._actions[action].push(item);
-        } else {
-            this._actions[action] = [item];
-        }
-    }
-
-    /**
      * Create or update a action which is enabled when the supplied keys are pressed.
      *
      * @param {string} action - The name of the action.
