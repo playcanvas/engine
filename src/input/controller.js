@@ -133,11 +133,8 @@ class Controller {
      * @param {object} item - An object to add.
      */
     appendAction(action, item) {
-        if (this._actions[action]) {
-            this._actions[action].push(item);
-        } else {
-            this._actions[action] = [item];
-        }
+        this._actions[action] = this._actions[action] || [];
+        this._actions[action].push(item);
     }
 
     /**
@@ -202,7 +199,7 @@ class Controller {
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
         this.appendAction(action, {
             type: ACTION_MOUSE,
-            button: -Math.abs(button)
+            button
         });
     }
 
