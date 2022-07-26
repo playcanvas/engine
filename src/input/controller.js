@@ -125,16 +125,19 @@ class Controller {
         }
     }
 
-
     /**
-     * Reusable function to check and add actions
+     * Helper function to append an action.
      *
-     * @param {string} action - The name of the action.
-     * @param {object} item - An object to add.
+     * @param {string} action_name - The name of the action.
+     * @param {object} action - An action object to add.
+     * @param {ACTION_KEYBOARD | ACTION_MOUSE | ACTION_GAMEPAD} action.type - The name of the action.
+     * @param {number[]} [action.keys] - Keyboard: A list of keycodes e.g. `[pc.KEY_A, pc.KEY_ENTER]`.
+     * @param {number} [action.button] - Mouse: e.g. `pc.MOUSEBUTTON_LEFT` - Gamepad: e.g. `pc.PAD_FACE_1`
+     * @param {number} [action.pad] - Gamepad: An index of the pad to register (use {@link PAD_1}, etc).
      */
-    appendAction(action, item) {
-        this._actions[action] = this._actions[action] || [];
-        this._actions[action].push(item);
+     appendAction(action_name, action) {
+        this._actions[action_name] = this._actions[action_name] || [];
+        this._actions[action_name].push(action);
     }
 
     /**
