@@ -250,7 +250,7 @@ describe('StandardMaterial', function () {
 
         expect(material.specularityFactor).to.be.equal(1);
         expect(material.specularityFactorMap).to.be.null;
-        expect(material.specularityFactorMapChannel).to.equal('a');
+        expect(material.specularityFactorMapChannel).to.equal('g');
         expect(material.specularityFactorMapOffset).to.be.an.instanceof(Vec2);
         expect(material.specularityFactorMapOffset.x).to.equal(0);
         expect(material.specularityFactorMapOffset.y).to.equal(0);
@@ -261,7 +261,7 @@ describe('StandardMaterial', function () {
         expect(material.specularityFactorMapUv).to.equal(0);
         expect(material.specularityFactorTint).to.equal(false);
         expect(material.specularityFactorVertexColor).to.equal(false);
-        expect(material.specularityFactorVertexColorChannel).to.equal('a');
+        expect(material.specularityFactorVertexColorChannel).to.equal('g');
 
         expect(material.sphereMap).to.be.null;
         expect(material.twoSidedLighting).to.equal(false);
