@@ -135,7 +135,7 @@ class Controller {
      * @param {number} [action.button] - Mouse: e.g. `pc.MOUSEBUTTON_LEFT` - Gamepad: e.g. `pc.PAD_FACE_1`
      * @param {number} [action.pad] - Gamepad: An index of the pad to register (use {@link PAD_1}, etc).
      */
-     appendAction(action_name, action) {
+    appendAction(action_name, action) {
         this._actions[action_name] = this._actions[action_name] || [];
         this._actions[action_name].push(action);
     }
