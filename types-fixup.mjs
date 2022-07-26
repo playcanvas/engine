@@ -450,6 +450,7 @@ const standardMaterialProps = [
     ['useGammaTonemap', 'boolean'],
     ['useLighting', 'boolean'],
     ['useMetalness', 'boolean'],
+    ['useMetalnessSpecularColor', 'boolean'],
     ['useSkybox', 'boolean']
 ];
 

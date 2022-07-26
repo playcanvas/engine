@@ -230,7 +230,7 @@ describe('StandardMaterial', function () {
         expect(material.shadingModel).to.equal(SPECULAR_BLINN);
         expect(material.shininess).to.equal(25);
 
-        expect(material.specular).to.be.instanceof(Color);
+        expect(material.specular).to.be.equal(Color);
         expect(material.specular.r).to.equal(0);
         expect(material.specular.g).to.equal(0);
         expect(material.specular.b).to.equal(0);
@@ -248,6 +248,21 @@ describe('StandardMaterial', function () {
         expect(material.specularVertexColor).to.equal(false);
         expect(material.specularVertexColorChannel).to.equal('rgb');
 
+        expect(material.specularityFactor).to.be.equal(1);
+        expect(material.specularityFactorMap).to.be.null;
+        expect(material.specularityFactorMapChannel).to.equal('a');
+        expect(material.specularityFactorMapOffset).to.be.an.instanceof(Vec2);
+        expect(material.specularityFactorMapOffset.x).to.equal(0);
+        expect(material.specularityFactorMapOffset.y).to.equal(0);
+        expect(material.specularityFactorMapRotation).to.equal(0);
+        expect(material.specularityFactorMapTiling).to.be.an.instanceof(Vec2);
+        expect(material.specularityFactorMapTiling.x).to.equal(1);
+        expect(material.specularityFactorMapTiling.y).to.equal(1);
+        expect(material.specularityFactorMapUv).to.equal(0);
+        expect(material.specularityFactorTint).to.equal(false);
+        expect(material.specularityFactorVertexColor).to.equal(false);
+        expect(material.specularityFactorVertexColorChannel).to.equal('a');
+
         expect(material.sphereMap).to.be.null;
         expect(material.twoSidedLighting).to.equal(false);
 
@@ -255,6 +270,7 @@ describe('StandardMaterial', function () {
         expect(material.useGammaTonemap).to.equal(true);
         expect(material.useLighting).to.equal(true);
         expect(material.useMetalness).to.equal(false);
+        expect(material.useMetalnessSpecularColor).to.equal(false);
         expect(material.useSkybox).to.equal(true);
     }
 
