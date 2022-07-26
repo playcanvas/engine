@@ -111,15 +111,21 @@ let _params = new Set();
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
+ * @property {boolean} specularityFactorTint Multiply specularity factor map and/or specular vertex color by the
+ * constant specular value.
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
- * @property {number} specularityMapUv Specularity factor map UV channel.
- * @property {Vec2} specularityMapTiling Controls the 2D tiling of the specularity factor map.
- * @property {Vec2} specularityMapOffset Controls the 2D offset of the specularity factor map. Each component is
+ * @property {number} specularityFactorMapUv Specularity factor map UV channel.
+ * @property {Vec2} specularityFactorMapTiling Controls the 2D tiling of the specularity factor map.
+ * @property {Vec2} specularityFactorMapOffset Controls the 2D offset of the specularity factor map. Each component is
  * between 0 and 1.
- * @property {number} specularityMapRotation Controls the 2D rotation (in degrees) of the specularity factor map.
+ * @property {number} specularityFactorMapRotation Controls the 2D rotation (in degrees) of the specularity factor map.
  * @property {string} specularityFactorMapChannel The channel used by the specularity factor texture to sample from (default is 'a').
+ * @property {boolean} specularityFactorVertexColor Use mesh vertex colors for specularity factor. If specularityFactorMap or
+ * are specularityFactorTint are set, they'll be multiplied by vertex colors.
+ * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
+ * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
  * @property {number} anisotropy Defines amount of anisotropy. Requires
@@ -1089,6 +1095,7 @@ function _defineMaterialProps() {
     _defineFlag('ambientTint', false);
     _defineFlag('diffuseTint', false);
     _defineFlag('specularTint', false);
+    _defineFlag('specularityFactorTint', false);
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
