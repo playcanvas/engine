@@ -111,6 +111,8 @@ let _params = new Set();
  * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or
  * are specularTint are set, they'll be multiplied by vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
+ * @property {boolean} specularityFactorTint Multiply specularity factor map and/or specular vertex color by the
+ * constant specular value.
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
@@ -1093,6 +1095,7 @@ function _defineMaterialProps() {
     _defineFlag('ambientTint', false);
     _defineFlag('diffuseTint', false);
     _defineFlag('specularTint', false);
+    _defineFlag('specularityFactorTint', false);
     _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
