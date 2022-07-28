@@ -89,6 +89,9 @@ import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 import outputTex2DPS from './common/frag/outputTex2D.js';
 import packDepthPS from './common/frag/packDepth.js';
+import sheenPS from './standard/frag/sheen.js';
+import sheenGlossPS from './standard/frag/sheenGloss.js';
+import sheenCharliePS from './lit/frag/sheenCharlie.js';
 import parallaxPS from './standard/frag/parallax.js';
 import particlePS from './particle/frag/particle.js';
 import particleVS from './particle/vert/particle.js';
@@ -287,6 +290,9 @@ const shaderChunks = {
     outputAlphaPremulPS,
     outputTex2DPS,
     packDepthPS,
+    sheenPS,
+    sheenGlossPS,
+    sheenCharliePS,
     parallaxPS,
     particlePS,
     particleVS,

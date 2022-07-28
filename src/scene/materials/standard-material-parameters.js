@@ -108,6 +108,17 @@ const standardMaterialParameterTypes = {
     clearCoatNormalMapOffset: 'vec2',
     clearCoatNormalMapRotation: 'number',
 
+    sheen: 'rgb',
+    sheenMap: 'texture',
+    sheenMapChannel: 'string',
+    sheenMapUv: 'number',
+    sheenMapTiling: 'vec2',
+    sheenMapOffset: 'vec2',
+    sheenMapMapRotation: 'number',
+    sheenTint: 'boolean',
+    sheenVertexColor: 'boolean',
+    sheenVertexColorChannel: 'string',
+
     fresnelModel: 'number',
 
     emissive: 'rgb',

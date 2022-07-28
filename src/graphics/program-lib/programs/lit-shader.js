@@ -638,6 +638,10 @@ class LitShader {
             if (options.conserveEnergy) {
                 this.defines.push("LIT_CONSERVE_ENERGY");
             }
+
+            if (options.sheen) {
+                this.defines.push("LIT_SHEEN");
+            }
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -833,6 +837,9 @@ class LitShader {
             }
             if (options.refraction) {
                 code += chunks.refractionPS;
+            }
+            if (options.sheen) {
+                code += chunks.sheenCharliePS;
             }
         }
 
@@ -1067,6 +1074,11 @@ class LitShader {
                     code += "    ccReflection.rgb *= dSpecularityFactor;\n";
                 }
 
+                if (options.sheen) {
+                    code += "    addReflectionSheen();\n";
+                    code += "    sReflection.rgb *= sSpecularity;\n";
+                }
+
                 // Fresnel has to be applied to reflections
                 code += "    addReflection();\n";
                 if (options.fresnelModel > 0) {
@@ -1264,6 +1276,11 @@ class LitShader {
                         code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
                         code +=  ";\n";
                     }
+                    if (options.sheen) {
+                        code += "    dSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color * sSpecularity";
+                        code += usesCookieNow ? " * dAtten3" : "";
+                        code +=  ";\n";
+                    }
                     if (options.useSpecular) {
                         code += "    dSpecularLight += getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
@@ -1379,6 +1396,8 @@ class LitShader {
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
+        if (code.includes("sSpecularLight")) structCode += "vec3 sSpecularLight;\n";
+        if (code.includes("sReflection")) structCode += "vec4 sReflection;\n";
 
         const result = this._fsGetBeginCode() +
             this.varyings +
