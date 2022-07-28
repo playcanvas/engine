@@ -125,19 +125,19 @@ class Controller {
         }
     }
 
-
     /**
-     * Reusable function to check and add actions
+     * Helper function to append an action.
      *
-     * @param {string} action - The name of the action.
-     * @param {object} item - An object to add.
+     * @param {string} action_name - The name of the action.
+     * @param {object} action - An action object to add.
+     * @param {ACTION_KEYBOARD | ACTION_MOUSE | ACTION_GAMEPAD} action.type - The name of the action.
+     * @param {number[]} [action.keys] - Keyboard: A list of keycodes e.g. `[pc.KEY_A, pc.KEY_ENTER]`.
+     * @param {number} [action.button] - Mouse: e.g. `pc.MOUSEBUTTON_LEFT` - Gamepad: e.g. `pc.PAD_FACE_1`
+     * @param {number} [action.pad] - Gamepad: An index of the pad to register (use {@link PAD_1}, etc).
      */
-    appendAction(action, item) {
-        if (this._actions[action]) {
-            this._actions[action].push(item);
-        } else {
-            this._actions[action] = [item];
-        }
+    appendAction(action_name, action) {
+        this._actions[action_name] = this._actions[action_name] || [];
+        this._actions[action_name].push(action);
     }
 
     /**
@@ -166,7 +166,7 @@ class Controller {
         // add keys to actions
         this.appendAction(action, {
             type: ACTION_KEYBOARD,
-            keys: keys
+            keys
         });
     }
 
@@ -185,18 +185,11 @@ class Controller {
             throw new Error('Invalid button');
         }
 
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_MOUSE,
-                button: button
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_MOUSE,
-                button: -button
-            }];
-        }
+        // add mouse button to actions
+        this.appendAction(action, {
+            type: ACTION_MOUSE,
+            button
+        });
     }
 
     /**
@@ -213,8 +206,8 @@ class Controller {
         // add gamepad button and pad to actions
         this.appendAction(action, {
             type: ACTION_GAMEPAD,
-            button: button,
-            pad: pad
+            button,
+            pad
         });
     }
 
