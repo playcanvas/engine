@@ -23,5 +23,6 @@ void getSheenGlossiness() {
     #endif
 
     sheenGlossiness += 0.0000001;
+    sGlossiness = sheenGlossiness;
 }
 `;
