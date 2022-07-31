@@ -224,15 +224,16 @@ vec4 reproject() {
         return ENCODE_FUNC(DECODE_FUNC(SOURCE_FUNC(TARGET_FUNC())));
     } else {
         // multi sample
-        vec2 sph = toSpherical(TARGET_FUNC());
-        vec2 sphu = dFdx(sph);
-        vec2 sphv = dFdy(sph);
+        vec3 t = TARGET_FUNC();
+        vec3 tu = dFdx(t);
+        vec3 tv = dFdy(t);
+
         vec3 result = vec3(0.0);
         for (float u = 0.0; u < NUM_SAMPLES_SQRT; ++u) {
             for (float v = 0.0; v < NUM_SAMPLES_SQRT; ++v) {
-                result += DECODE_FUNC(SOURCE_FUNC(sph +
-                                                  sphu * (u / NUM_SAMPLES_SQRT - 0.5) +
-                                                  sphv * (v / NUM_SAMPLES_SQRT - 0.5)));
+                result += DECODE_FUNC(SOURCE_FUNC(normalize(t +
+                                                            tu * (u / NUM_SAMPLES_SQRT - 0.5) +
+                                                            tv * (v / NUM_SAMPLES_SQRT - 0.5))));
             }
         }
         return ENCODE_FUNC(result / (NUM_SAMPLES_SQRT * NUM_SAMPLES_SQRT));
