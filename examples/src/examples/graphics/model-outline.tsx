@@ -23,6 +23,10 @@ class ModelOutlineExample {
 
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
+            // adjust default clustered lighting parameters to handle many lights
+            const lighting = app.scene.lighting;
+            lighting.shadowAtlasResolution = 4096;
+
             // helper function to create a primitive with shape type, position, scale, color and layer
             function createPrimitive(primitiveType: string, position: number | pc.Vec3, scale: number | pc.Vec3, color: pc.Color, layer: number[]) {
                 // create material of specified color
