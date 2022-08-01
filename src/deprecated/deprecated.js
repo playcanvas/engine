@@ -560,6 +560,12 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
+// This can be removed when 1.56 is out and the Editor no longer calls this
+Scene.prototype._updateSkybox = function (device) {
+    Debug.deprecated(`pc.Scene#_updateSkybox is deprecated. Use pc.Scene#_updateSky instead.`);
+    this._updateSky(device);
+};
+
 Scene.prototype.addModel = function (model) {
     Debug.deprecated('pc.Scene#addModel is deprecated.');
     if (this.containsModel(model)) return;
