@@ -11,11 +11,14 @@ const chunkVersions = {
     emissivePS: CHUNKAPI_1_55,
     lightmapDirPS: CHUNKAPI_1_55,
     lightmapSinglePS: CHUNKAPI_1_55,
+    metalnessPS: CHUNKAPI_1_55,
+    specularPS: CHUNKAPI_1_55,
     normalMapPS: CHUNKAPI_1_55,
     normalDetailMapPS: CHUNKAPI_1_55,
 
     // backend
     clusteredLightPS: CHUNKAPI_1_55,
+    fresnelSchlickPS: CHUNKAPI_1_55,
     endPS: CHUNKAPI_1_55,
     lightmapAddPS: CHUNKAPI_1_55,
     lightmapDirAddPS: CHUNKAPI_1_55,
