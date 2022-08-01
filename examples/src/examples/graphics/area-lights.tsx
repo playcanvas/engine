@@ -128,9 +128,6 @@ class AreaLightsExample {
 
             app.start();
 
-            // enable area lights which are disabled by default for clustered lighting
-            app.scene.lighting.areaLightsEnabled = true;
-
             // set the loaded area light LUT data
             app.setAreaLightLuts(assets.luts);
 
