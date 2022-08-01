@@ -227,22 +227,6 @@ class SoundInstance extends EventHandler {
              */
             this._waitingContextSuspension = false;
 
-            /**
-             * Set to true if a stop() request was issued while _waitingContextSuspension was also true.
-             *
-             * @type {boolean}
-             * @private
-             */
-            this._stopOnWaitingContextSuspension = false;
-
-            /**
-             * Set to true if a pause() request was issued while _waitingContextSuspension was also true.
-             *
-             * @type {boolean}
-             * @private
-             */
-            this._pauseOnWaitingContextSuspension = false;
-
             this._initializeNodes();
 
             /** @private */
@@ -613,10 +597,6 @@ class SoundInstance extends EventHandler {
         // no need for this anymore
         this._playWhenLoaded = false;
 
-        // reset pause and stop flags
-        this._pauseOnWaitingContextSuspension = false;
-        this._stopOnWaitingContextSuspension = false;
-
         // play() was already issued but hasn't actually started yet
         if (this._waitingContextSuspension) {
             return false;
@@ -643,6 +623,11 @@ class SoundInstance extends EventHandler {
      */
     _playAudioImmediate() {
         this._waitingContextSuspension = false;
+
+        // between play() and the manager being ready to play, a stop() or pause() call was made
+        if (this._state !== STATE_PLAYING) {
+            return;
+        }
 
         if (!this.source) {
             this._createSource();
@@ -680,15 +665,6 @@ class SoundInstance extends EventHandler {
         if (!this._suspendInstanceEvents) {
             this._onPlay();
         }
-
-        if (this._pauseOnWaitingContextSuspension) {
-            this._pauseOnWaitingContextSuspension = false;
-            this.pause();
-        }
-        if (this._stopOnWaitingContextSuspension) {
-            this._stopOnWaitingContextSuspension = false;
-            this.stop();
-        }
     }
 
     /**
@@ -706,9 +682,8 @@ class SoundInstance extends EventHandler {
         // set state to paused
         this._state = STATE_PAUSED;
 
-        // play() was issued but hasn't actually started yet - so simply set the flag to pause later.
+        // play() was issued but hasn't actually started yet.
         if (this._waitingContextSuspension) {
-            this._pauseOnWaitingContextSuspension = true;
             return true;
         }
 
@@ -743,9 +718,8 @@ class SoundInstance extends EventHandler {
         // set state back to playing
         this._state = STATE_PLAYING;
 
-        // play() was issued but hasn't actually started yet - so simply reset the pause flag.
+        // play() was issued but hasn't actually started yet
         if (this._waitingContextSuspension) {
-            this._pauseOnWaitingContextSuspension = false;
             return true;
         }
 
@@ -800,12 +774,12 @@ class SoundInstance extends EventHandler {
         if (this._state === STATE_STOPPED)
             return false;
 
-        // set the state to stopped
+        // set state to stopped
+        const wasPlaying = this._state === STATE_PLAYING;
         this._state = STATE_STOPPED;
 
-        // play() was issued but hasn't actually started yet - so simply set a flag to stop later.
+        // play() was issued but hasn't actually started yet
         if (this._waitingContextSuspension) {
-            this._stopOnWaitingContextSuspension = true;
             return true;
         }
 
@@ -823,7 +797,7 @@ class SoundInstance extends EventHandler {
         this._startOffset = null;
 
         this._suspendEndEvent++;
-        if (this._state === STATE_PLAYING && this.source) {
+        if (wasPlaying && this.source) {
             this.source.stop(0);
         }
         this.source = null;
