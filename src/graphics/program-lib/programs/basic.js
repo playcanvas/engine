@@ -1,5 +1,6 @@
 import {
-    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
+    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0,
+    DEVICETYPE_WEBGPU
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
@@ -7,7 +8,7 @@ import {
     SHADER_DEPTH, SHADER_PICK
 } from '../../../scene/constants.js';
 
-import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
+import { begin, end, fogCode, precisionCode, skinCode, versionCode } from './common.js';
 
 // Spector integration
 const shaderNameCode = '#define SHADER_NAME BasicMaterial\n';
@@ -48,7 +49,7 @@ const basic = {
         }
 
         // GENERATE VERTEX SHADER
-        let code = shaderNameCode;
+        let code = versionCode(device) + shaderNameCode;
 
         // VERTEX SHADER DECLARATIONS
         code += shaderChunks.transformDeclVS;
@@ -102,8 +103,12 @@ const basic = {
         const vshader = code;
 
         // GENERATE FRAGMENT SHADER
-        code = precisionCode(device);
+        code = versionCode(device) + precisionCode(device);
         code += shaderNameCode;
+
+        if (device.deviceType === DEVICETYPE_WEBGPU) {
+            code += shaderChunks.webgpuPS;
+        }
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {

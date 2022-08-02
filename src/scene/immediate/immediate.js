@@ -1,10 +1,6 @@
-import {
-    SEMANTIC_POSITION,
-    PRIMITIVE_TRISTRIP
-} from '../../graphics/constants.js';
-
-import { Shader } from '../../graphics/shader.js';
+import { PRIMITIVE_TRISTRIP } from '../../graphics/constants.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 
 import { BLEND_NORMAL } from '../../scene/constants.js';
 import { BasicMaterial } from '../../scene/materials/basic-material.js';
@@ -89,12 +85,12 @@ class Immediate {
     // shared vertex shader for textured quad rendering
     static getTextureVS() {
         return `
-            attribute vec2 aPosition;
+            attribute vec2 vertex_position;
             uniform mat4 matrix_model;
             varying vec2 uv0;
             void main(void) {
-                gl_Position = matrix_model * vec4(aPosition, 0, 1);
-                uv0 = aPosition.xy + 0.5;
+                gl_Position = matrix_model * vec4(vertex_position, 0, 1);
+                uv0 = vertex_position.xy + 0.5;
             }
         `;
     }
@@ -102,22 +98,15 @@ class Immediate {
     // shader used to display texture
     getTextureShader() {
         if (!this.textureShader) {
-            const shaderDefinition = {
-                name: 'DebugTextureShader',
-                attributes: {
-                    aPosition: SEMANTIC_POSITION
-                },
-                vshader: Immediate.getTextureVS(),
-                fshader: `
-                    precision lowp float;
-                    varying vec2 uv0;
-                    uniform sampler2D colorMap;
-                    void main (void) {
-                        gl_FragColor = vec4(texture2D(colorMap, uv0).xyz, 1);
-                    }
-                `
-            };
-            this.textureShader = new Shader(this.device, shaderDefinition);
+            const fshader = `
+                varying vec2 uv0;
+                uniform sampler2D colorMap;
+                void main (void) {
+                    gl_FragColor = vec4(texture2D(colorMap, uv0).xyz, 1);
+                }
+            `;
+
+            this.textureShader = createShaderFromCode(this.device, Immediate.getTextureVS(), fshader, 'DebugTextureShader');
         }
 
         return this.textureShader;
@@ -126,26 +115,16 @@ class Immediate {
     // shader used to display depth texture
     getDepthTextureShader() {
         if (!this.depthTextureShader) {
+            const fshader = `
+                ${shaderChunks.screenDepthPS}
+                varying vec2 uv0;
+                void main() {
+                    float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                    gl_FragColor = vec4(vec3(depth), 1.0);
+                }
+            `;
 
-            const gl2 = this.device.webgl2 ? '#define GL2' : '';
-            const shaderDefinition = {
-                name: 'DebugDepthTextureShader',
-                attributes: {
-                    aPosition: SEMANTIC_POSITION
-                },
-                vshader: Immediate.getTextureVS(),
-                fshader: `
-                    precision ${this.device.precision} float;
-                    ${gl2}
-                    ${shaderChunks.screenDepthPS}
-                    varying vec2 uv0;
-                    void main() {
-                        float depth = getLinearScreenDepth(uv0) * camera_params.x;
-                        gl_FragColor = vec4(vec3(depth), 1.0);
-                    }
-                    `
-            };
-            this.depthTextureShader = new Shader(this.device, shaderDefinition);
+            this.depthTextureShader = createShaderFromCode(this.device, Immediate.getTextureVS(), fshader, 'DebugDepthTextureShader');
         }
 
         return this.depthTextureShader;

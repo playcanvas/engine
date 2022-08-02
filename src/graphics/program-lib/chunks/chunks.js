@@ -190,6 +190,8 @@ import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import viewDirPS from './lit/frag/viewDir.js';
 import viewNormalVS from './lit/vert/viewNormal.js';
+import webgpuPS from './common/frag/webgpu.js';
+import webgpuVS from './common/vert/webgpu.js';
 
 /**
  * @static
@@ -390,7 +392,9 @@ const shaderChunks = {
     uv0VS,
     uv1VS,
     viewDirPS,
-    viewNormalVS
+    viewNormalVS,
+    webgpuPS,
+    webgpuVS
 };
 
 export { shaderChunks };

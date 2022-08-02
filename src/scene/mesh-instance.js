@@ -1,5 +1,10 @@
+import { Debug } from '../core/debug.js';
+
 import { BoundingBox } from '../shape/bounding-box.js';
 import { BoundingSphere } from '../shape/bounding-sphere.js';
+
+import { BindGroup } from '../graphics/bind-group.js';
+import { UniformBuffer } from '../graphics/uniform-buffer.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -21,6 +26,7 @@ import { LightmapCache } from './lightmapper/lightmap-cache.js';
 /** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
 /** @typedef {import('../graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('../graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
@@ -94,7 +100,16 @@ class MeshInstance {
      * @type {Array<Shader>}
      * @ignore
      */
-    _shader = [null, null, null];
+    _shader = [];
+
+    /**
+     * An array of bind groups, storing uniforms per pass. This has 1:1 relation with the _shades array,
+     * and is indexed by the shader pass constant as well.
+     *
+     * @type {Array<BindGroup>}
+     * @ignore
+     */
+    _bindGroups = [];
 
     /**
      * Create a new MeshInstance instance.
@@ -389,6 +404,54 @@ class MeshInstance {
         for (let i = 0; i < shaders.length; i++) {
             shaders[i] = null;
         }
+
+        this.destroyBindGroups();
+    }
+
+    destroyBindGroups() {
+
+        const groups = this._bindGroups;
+        for (let i = 0; i < groups.length; i++) {
+            const group = groups[i];
+            if (group) {
+                const uniformBuffer = group.defaultUniformBuffer;
+                if (uniformBuffer) {
+                    uniformBuffer.destroy();
+                }
+                group.destroy();
+            }
+        }
+        groups.length = 0;
+    }
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {number} pass - Shader pass number.
+     * @returns {BindGroup} - The mesh bind group.
+     * @ignore
+     */
+    getBindGroup(device, pass) {
+
+        // create bind group
+        let bindGroup = this._bindGroups[pass];
+        if (!bindGroup) {
+            const shader = this._shader[pass];
+            Debug.assert(shader);
+
+            // mesh uniform buffer
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat);
+
+            // mesh bind group
+            const bingGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bingGroupFormat);
+            bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+
+            this._bindGroups[pass] = bindGroup;
+        }
+
+        return bindGroup;
     }
 
     /**
@@ -588,6 +651,8 @@ class MeshInstance {
             this.morphInstance.destroy();
             this.morphInstance = null;
         }
+
+        this.destroyBindGroups();
 
         // make sure material clears references to this meshInstance
         this.material = null;

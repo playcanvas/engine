@@ -2,6 +2,7 @@ import { Debug } from '../core/debug.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
+/** @typedef {import('./uniform-buffer-format.js').UniformFormat} UniformFormat */
 
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
@@ -59,17 +60,41 @@ class UniformBuffer {
         this.impl.loseContext();
     }
 
-    set(name, value) {
-        const uniform = this.format.map.get(name);
-        Debug.assert(uniform, `Uniform [${name}] is not part of the Uniform buffer.`);
-        if (uniform) {
-            const offset = uniform.offset;
-            Debug.assert(value, `Value was not set when assigning to uniform [${name}]`);
-            this.storageFloat32.set(value, offset);
+    /**
+     * Assign a value to the uniform specified by its format. This is the fast version of assining
+     * a valu to a uniform, avoiding any lookups.
+     *
+     * @param {UniformFormat} uniformFormat - The format of the uniform.
+     */
+    setUniform(uniformFormat) {
+        Debug.assert(uniformFormat);
+        const offset = uniformFormat.offset;
+
+        const value = uniformFormat.scopeId.value;
+        Debug.assert(value, `Value was not set when assigning to uniform [${uniformFormat.name}]`);
+        this.storageFloat32.set(value, offset);
+    }
+
+    /**
+     * Assign a value to the uniform specified by name.
+     * @param {string} name - The name of the uniform.
+     */
+    set(name) {
+        const uniformFormat = this.format.map.get(name);
+        Debug.assert(uniformFormat, `Uniform name [${name}] is not part of the Uniform buffer.`);
+        if (uniformFormat) {
+            this.setUniform(uniformFormat);
         }
     }
 
     update() {
+
+        // set new values
+        const uniforms = this.format.uniforms;
+        for (let i = 0; i < uniforms.length; i++) {
+            this.setUniform(uniforms[i]);
+        }
+
         // Upload the new data
         this.impl.unlock(this);
     }

@@ -3,6 +3,8 @@ import { Debug } from '../core/debug.js';
 import { Preprocessor } from '../core/preprocessor.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */
+/** @typedef {import('../uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
 
 let id = 0;
 
@@ -15,6 +17,20 @@ let id = 0;
  * attributes specified in the vertex shader code.
  */
 class Shader {
+    /**
+     * Format of the uniform buffer for mesh bind grounp.
+     *
+     * @type {UniformBufferFormat}
+     */
+    meshUniformBufferFormat;
+
+    /**
+     * Format of the bind group for the mesh bind group.
+     *
+     * @type {BindGroupFormat}
+     */
+    meshBindGroupFormat;
+
     /**
      * Creates a new Shader instance.
      *

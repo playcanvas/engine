@@ -1,6 +1,9 @@
+import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
+
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./texture.js').Texture} Texture */
 /** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
+/** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
 
 import { Debug } from '../core/debug.js';
 
@@ -16,8 +19,10 @@ class BindGroup {
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform buffer.
      * @param {BindGroupFormat} format - Format of the bind group.
+     * @param {UniformBuffer} [defaultUniformBuffer] - The default uniform buffer. Typically a bind group only
+     * has a single uniform buffer, and this allows easier access.
      */
-    constructor(graphicsDevice, format) {
+    constructor(graphicsDevice, format, defaultUniformBuffer) {
         this.device = graphicsDevice;
         this.format = format;
         this.dirty = true;
@@ -25,13 +30,29 @@ class BindGroup {
 
         this.textures = [];
         this.uniformBuffers = [];
+
+        /** @type {UniformBuffer} */
+        this.defaultUniformBuffer = defaultUniformBuffer;
+        if (defaultUniformBuffer) {
+            this.setUniformBuffer(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, defaultUniformBuffer);
+        }
+    }
+
+    /**
+     * Frees resources associated with this bind group.
+     */
+    destroy() {
+        this.impl.destroy();
+        this.impl = null;
+        this.format = null;
+        this.defaultUniformBuffer = null;
     }
 
     /**
      * Assign a uniform buffer to a slot.
      *
-     * @param {*} name - The name of the uniform buffer slot
-     * @param {*} uniformBuffer - The Uniform buffer to assign to the slot.
+     * @param {string} name - The name of the uniform buffer slot
+     * @param {UniformBuffer} uniformBuffer - The Uniform buffer to assign to the slot.
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
@@ -43,7 +64,7 @@ class BindGroup {
     }
 
     /**
-     * Assign a texture to a slot.
+     * Assign a texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
      * @param {Texture} texture - Texture to assign to the slot.
@@ -58,16 +79,18 @@ class BindGroup {
     }
 
     /**
-     * Frees resources associated with this bind group.
-     */
-    destroy() {
-        this.impl.destroy();
-    }
-
-    /**
      * Applies any changes made to the bind group's properties.
      */
     update() {
+
+        const textureFormats = this.format.textureFormats;
+        for (let i = 0; i < textureFormats.length; i++) {
+            const textureFormat = textureFormats[i];
+            const value = textureFormat.scopeId.value;
+            Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group.`);
+            this.setTexture(textureFormat.name, value);
+        }
+
         if (this.dirty) {
             this.dirty = false;
             this.impl.update(this);

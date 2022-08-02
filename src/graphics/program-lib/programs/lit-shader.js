@@ -1,4 +1,5 @@
 import {
+    DEVICETYPE_WEBGPU,
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
@@ -478,7 +479,9 @@ class LitShader {
             code += this.chunks.extensionPS + "\n";
         }
 
-        if (this.device.webgl2) {
+        if (this.device.deviceType === DEVICETYPE_WEBGPU) {
+            code += this.chunks.webgpuPS;
+        } else if (this.device.webgl2) {
             code += this.chunks.gles3PS;
         }
 

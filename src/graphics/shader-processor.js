@@ -1,7 +1,8 @@
 import { Debug } from '../core/debug.js';
 import {
     BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
-    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT
+    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
+    UNIFORM_BUFFER_DEFAULT_SLOT_NAME
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
@@ -183,13 +184,13 @@ class ShaderProcessor {
             // validate types in else
 
         });
-        const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(meshUniforms) : null;
+        const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms) : null;
 
         // build mesh bind group format - start with uniform buffer
         const bufferFormats = [];
         if (meshUniformBufferFormat) {
             // TODO: we could optimize visibility to only stages that use any of the data
-            bufferFormats.push(new BindBufferFormat('mesh', SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
+            bufferFormats.push(new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
         }
 
         // add textures uniforms
@@ -250,7 +251,7 @@ class ShaderProcessor {
                 // store it in the map
                 varyingMap.set(name, index);
             } else {
-                Debug.assert(varyingMap.has(name), `Fragment shader requires varying ${name} but vertex shader does not generate it.`);
+                Debug.assert(varyingMap.has(name), `Fragment shader requires varying [${name}] but vertex shader does not generate it.`);
                 index = varyingMap.get(name);
             }
 
