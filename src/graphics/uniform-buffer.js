@@ -77,6 +77,7 @@ class UniformBuffer {
 
     /**
      * Assign a value to the uniform specified by name.
+     *
      * @param {string} name - The name of the uniform.
      */
     set(name) {
