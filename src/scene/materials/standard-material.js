@@ -681,7 +681,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
             }
 
-            const oneOverRefractionIndex = 1.0 / this.refractionIndex;
+            const oneOverRefractionIndex = this.refractionIndex === 0.0 ? 0.001 : 1.0 / this.refractionIndex;
             const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
             this._setParameter('material_f0', f0 * f0);
         }
