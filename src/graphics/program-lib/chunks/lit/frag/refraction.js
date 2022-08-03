@@ -23,7 +23,7 @@ void addRefraction() {
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-dViewDirW, dNormalW, 1.0 / material_refractionIndex)) * dThickness * modelScale;
+    vec3 refractionVector = normalize(refract(-dViewDirW, dNormalW, material_refractionIndex)) * dThickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -35,7 +35,7 @@ void addRefraction() {
     uv *= vec2(0.5);
 
     // Use IOR and roughness to select mip
-    float iorToRoughness = (1.0 - dGlossiness) * clamp(material_refractionIndex * 2.0 - 2.0, 0.0, 1.0);
+    float iorToRoughness = (1.0 - dGlossiness) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
     float refractionLod = log2(uScreenSize.x) * iorToRoughness;
     vec3 refraction = textureLod(uSceneColorMap, uv, refractionLod).rgb;
 
