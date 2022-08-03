@@ -71,6 +71,7 @@ import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
+import lightSheenPS from './lit/frag/lightSheen.js';
 import ltc from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
@@ -91,7 +92,6 @@ import outputTex2DPS from './common/frag/outputTex2D.js';
 import packDepthPS from './common/frag/packDepth.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
-import sheenCharliePS from './lit/frag/sheenCharlie.js';
 import parallaxPS from './standard/frag/parallax.js';
 import particlePS from './particle/frag/particle.js';
 import particleVS from './particle/vert/particle.js';
@@ -142,6 +142,7 @@ import reflectionCubePS from './lit/frag/reflectionCube.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
+import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 import refractionPS from './lit/frag/refraction.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
@@ -272,6 +273,7 @@ const shaderChunks = {
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
     lightSpecularPhongPS,
+    lightSheenPS,
     ltc,
     metalnessPS,
     metalnessModulatePS,
@@ -292,7 +294,6 @@ const shaderChunks = {
     packDepthPS,
     sheenPS,
     sheenGlossPS,
-    sheenCharliePS,
     parallaxPS,
     particlePS,
     particleVS,
@@ -343,6 +344,7 @@ const shaderChunks = {
     reflectionEnvPS,
     reflectionSpherePS,
     reflectionSphereLowPS,
+    reflectionSheenPS,
     refractionPS,
     reprojectPS,
     screenDepthPS,

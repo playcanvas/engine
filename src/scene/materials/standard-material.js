@@ -256,6 +256,7 @@ let _params = new Set();
  * emissiveTint are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {boolean} useSheen Toggle sheen specular effect on/off.
  * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant sheen value.
