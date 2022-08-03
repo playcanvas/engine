@@ -1130,7 +1130,7 @@ const extensionSpecular = function (data, material, textures) {
 
 const extensionIor = function (data, material, textures) {
     if (data.hasOwnProperty('ior')) {
-        material.refractionIndex = data.ior;
+        material.refractionIndex = 1.0 / data.ior;
     }
 };
 
