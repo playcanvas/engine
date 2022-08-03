@@ -686,9 +686,9 @@ class StandardMaterial extends Material {
                 const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
                 this._setParameter('material_f0', f0 * f0);
             } else {
-                this._setParameter('material_f0', 1.0);   
+                this._setParameter('material_f0', 1.0);
             }
-            
+
         }
 
         if (this.enableGGXSpecular) {
