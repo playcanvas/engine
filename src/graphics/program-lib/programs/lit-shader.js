@@ -842,7 +842,11 @@ class LitShader {
                 code += chunks.reflectionCCPS;
             }
             if (options.refraction) {
-                code += chunks.refractionPS;
+                if (options.useDynamicRefraction) {
+                    code += chunks.refractionDynamicPS;
+                } else {
+                    code += chunks.refractionCubePS;
+                }
             }
             if (options.sheen) {
                 code += chunks.reflectionSheenPS;

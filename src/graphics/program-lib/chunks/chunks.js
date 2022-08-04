@@ -144,7 +144,8 @@ import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
-import refractionPS from './lit/frag/refraction.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
@@ -350,7 +351,8 @@ const shaderChunks = {
     reflectionSpherePS,
     reflectionSphereLowPS,
     reflectionSheenPS,
-    refractionPS,
+    refractionCubePS,
+    refractionDynamicPS,
     reprojectPS,
     screenDepthPS,
     shadowCascadesPS,

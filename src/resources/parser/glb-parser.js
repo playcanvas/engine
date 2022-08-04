@@ -1203,6 +1203,7 @@ const extensionSheen = function (data, material, textures) {
 
 const extensionVolume = function (data, material, textures) {
     material.blendType = BLEND_NORMAL;
+    material.useDynamicRefraction = true;
     if (data.hasOwnProperty('thicknessFactor')) {
         material.thickness = data.thicknessFactor;
     }

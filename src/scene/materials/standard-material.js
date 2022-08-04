@@ -237,6 +237,8 @@ let _params = new Set();
  * indices of refraction, the one around the object and the one of its own surface. In most
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
+ * @property {boolean} useDynamicRefraction Enables higher quality refractions using a scene color
+ * instead of pre-computed cube maps for refractions.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
@@ -1159,6 +1161,7 @@ function _defineMaterialProps() {
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('shadingModel', SPECULAR_BLINN);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
+    _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
     _defineFlag('forceFragmentPrecision', null);
