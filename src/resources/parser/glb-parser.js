@@ -61,7 +61,7 @@ let dracoDecoderInstance = null;
 
 const getGlobalDracoDecoderModule = () => {
     return typeof window !== 'undefined' && window.DracoDecoderModule;
-}
+};
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
