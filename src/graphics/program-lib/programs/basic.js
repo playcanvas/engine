@@ -51,6 +51,12 @@ const basic = {
         // GENERATE VERTEX SHADER
         let code = versionCode(device) + shaderNameCode;
 
+        if (device.deviceType === DEVICETYPE_WEBGPU) {
+            code += shaderChunks.webgpuVS;
+        } else if (device.webgl2) {
+            code += shaderChunks.gles3VS;
+        }
+
         // VERTEX SHADER DECLARATIONS
         code += shaderChunks.transformDeclVS;
 
@@ -108,6 +114,8 @@ const basic = {
 
         if (device.deviceType === DEVICETYPE_WEBGPU) {
             code += shaderChunks.webgpuPS;
+        } else if (device.webgl2) {
+            code += shaderChunks.gles3PS;
         }
 
         // FRAGMENT SHADER DECLARATIONS
