@@ -444,6 +444,7 @@ const standardMaterialProps = [
     ['specularityFactorMapRotation', 'number'],
     ['specularityFactorMapTiling', 'Vec2'],
     ['specularityFactorMapUv', 'number'],
+    ['useSheen', 'boolean'],
     ['sheen', 'Color'],
     ['sheenMap', 'Texture|null'],
     ['sheenMapChannel', 'string'],

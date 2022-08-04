@@ -108,6 +108,7 @@ const standardMaterialParameterTypes = {
     clearCoatNormalMapOffset: 'vec2',
     clearCoatNormalMapRotation: 'number',
 
+    useSheen: 'boolean',
     sheen: 'rgb',
     sheenMap: 'texture',
     sheenMapChannel: 'string',

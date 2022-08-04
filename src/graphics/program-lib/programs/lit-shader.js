@@ -841,8 +841,12 @@ class LitShader {
                 code += chunks.refractionPS;
             }
             if (options.sheen) {
-                code += chunks.sheenCharliePS;
+                code += chunks.reflectionSheenPS;
             }
+        }
+
+        if (options.sheen) {
+            code += chunks.lightSheenPS;
         }
 
         // clustered lighting
