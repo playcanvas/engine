@@ -269,7 +269,11 @@ const standard = {
         let lightingUv = "";
 
         // global texture bias for standard textures
-        decl.append("uniform float textureBias;");
+        if (options.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
+            decl.append(`const float textureBias = -1000.0;`);
+        } else {
+            decl.append(`uniform float textureBias;`);
+        }
 
         if (ShaderPass.isForward(options.pass)) {
             // parallax
