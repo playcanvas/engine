@@ -671,7 +671,7 @@ class StandardMaterial extends Material {
             if (!this.specularMap || this.specularTint) {
                 this._setParameter('material_specular', getUniform('specular'));
             }
-            if (!this.specularityFactorMap || this.specularityFactor < 1) {
+            if (!this.specularityFactorMap || this.specularityFactorTint) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
             if (!this.sheenMap || this.sheenTint) {
