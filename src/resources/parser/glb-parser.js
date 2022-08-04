@@ -59,6 +59,10 @@ import { WasmModule } from '../../core/wasm-module.js';
 // instance of the draco decoder
 let dracoDecoderInstance = null;
 
+const getGlobalDracoDecoderModule = () => {
+    return typeof window !== 'undefined' && window.DracoDecoderModule;
+};
+
 // resources loaded from GLB file that the parser returns
 class GlbResources {
     constructor(gltf) {
@@ -764,7 +768,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
 
                 // access DracoDecoderModule
-                const decoderModule = dracoDecoderInstance || window.DracoDecoderModule;
+                const decoderModule = dracoDecoderInstance || getGlobalDracoDecoderModule();
                 if (decoderModule) {
                     const extDraco = extensions.KHR_draco_mesh_compression;
                     if (extDraco.hasOwnProperty('attributes')) {
@@ -2240,7 +2244,7 @@ const parseGltf = function (gltfChunk, callback) {
 
     // check required extensions
     const extensionsRequired = gltf?.extensionsRequired || [];
-    if (!dracoDecoderInstance && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
+    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
         WasmModule.getInstance('DracoDecoderModule', (instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);
