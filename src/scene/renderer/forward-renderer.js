@@ -16,7 +16,7 @@ import {
     STENCILOP_KEEP,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    BINDGROUP_VIEW
+    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
 } from '../../graphics/constants.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { UniformBuffer } from '../../graphics/uniform-buffer.js';
@@ -316,13 +316,13 @@ class ForwardRenderer {
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
-            this.viewUniformFormat = new UniformBufferFormat([
+            this.viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
             ]);
 
             // format of the view bind group - contains single uniform buffer, and some textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindBufferFormat('view', SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
             ]);
         }
@@ -449,22 +449,17 @@ class ForwardRenderer {
 
             while (renderAction.viewBindGroups.length < viewCount) {
                 const ub = new UniformBuffer(device, this.viewUniformFormat);
-                renderAction.viewUniformBuffers.push(ub);
-
-                const bg = new BindGroup(device, this.viewBindGroupFormat);
+                const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
                 renderAction.viewBindGroups.push(bg);
             }
 
-            const ub = renderAction.viewUniformBuffers[0];
-            ub.set("matrix_viewProjection", this.viewProjId.value);
-            ub.update();
-
-            const bg = renderAction.viewBindGroups[0];
-            bg.setUniformBuffer('view', ub);
-            bg.update();
+            // update view bind group / uniforms
+            const viewBindGroup = renderAction.viewBindGroups[0];
+            viewBindGroup.defaultUniformBuffer.update();
+            viewBindGroup.update();
 
             // TODO; this needs to be moved to drawInstance functions to handle XR
-            device.setBindGroup(BINDGROUP_VIEW, bg);
+            device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
         }
     }
 
@@ -1327,6 +1322,9 @@ class ForwardRenderer {
                     }
 
                     if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
+
+                        // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
+                        // the same for the same pass, using all lights of the scene
                         if (!drawCall.isStatic) {
                             const variantKey = pass + '_' + objDefs + '_' + lightHash;
                             drawCall._shader[pass] = material.variants[variantKey];
@@ -1335,6 +1333,9 @@ class ForwardRenderer {
                                 material.variants[variantKey] = drawCall._shader[pass];
                             }
                         } else {
+
+                            // static lights generate unique shader per draw call, as static lights are unique per draw call,
+                            // and so variants cache is not used
                             drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
                         }
                         drawCall._lightHash = lightHash;
@@ -1356,17 +1357,11 @@ class ForwardRenderer {
         return _drawCallList;
     }
 
-    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
+        const supportsUniformBuffers = device.supportsUniformBuffers;
         const scene = this.scene;
         const passFlag = 1 << pass;
-
-        // #if _PROFILER
-        const forwardStartTime = now();
-        // #endif
-
-        // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
 
         // Render the scene
         const preparedCallsCount = preparedCalls.drawCalls.length;
@@ -1482,6 +1477,19 @@ class ForwardRenderer {
                 this.setMorphing(device, drawCall.morphInstance);
                 this.setSkinning(device, drawCall, material);
 
+                if (supportsUniformBuffers) {
+
+                    // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
+                    // earlier here. This needs to be refactored for multi-view anyways.
+                    this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
+
+                    // update mesh bind group / uniform buffer
+                    const meshBindGroup = drawCall.getBindGroup(device, pass);
+                    meshBindGroup.defaultUniformBuffer.update();
+                    meshBindGroup.update();
+                    device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
+                }
+
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
 
@@ -1524,6 +1532,19 @@ class ForwardRenderer {
                 }
             }
         }
+    }
+
+    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+
+        // #if _PROFILER
+        const forwardStartTime = now();
+        // #endif
+
+        // run first pass over draw calls and handle material / shader updates
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
+
+        // render mesh instances
+        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
 
         _drawCallList.length = 0;
 

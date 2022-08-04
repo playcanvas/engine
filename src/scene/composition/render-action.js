@@ -2,7 +2,6 @@ import {
     LIGHTTYPE_DIRECTIONAL
 } from '../constants.js';
 
-/** @typedef {import('../../graphics/uniform-buffer.js').UniformBuffer} UniformBuffer */
 /** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
 /** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
@@ -58,10 +57,6 @@ class RenderAction {
         // and also the same directional lights, stored as indices into LayerComposition._lights
         this.directionalLightsIndices = [];
 
-        // an array of view uniform buffers (the number of these corresponds to the number of views when XR is used)
-        /** @type {Array<UniformBuffer>} */
-        this.viewUniformBuffers = [];
-
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
         /** @type {Array<BindGroup>} */
         this.viewBindGroups = [];
@@ -69,10 +64,10 @@ class RenderAction {
 
     // releases GPU resources
     destroy() {
-        this.viewUniformBuffers.forEach(ub => ub.destroy());
-        this.viewUniformBuffers.length = 0;
-
-        this.viewBindGroups.forEach(bg => bg.destroy());
+        this.viewBindGroups.forEach((bg) => {
+            bg.defaultUniformBuffer.destroy();
+            bg.destroy();
+        });
         this.viewBindGroups.length = 0;
     }
 

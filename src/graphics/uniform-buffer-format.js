@@ -6,7 +6,9 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4
 } from './constants.js';
 
+/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
 /** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // map of UNIFORMTYPE_*** to byte size
 const uniformTypeToByteSize = [];
@@ -60,6 +62,9 @@ class UniformFormat {
      */
     offset;
 
+    /** @type {ScopeId} */
+    scopeId;
+
     // TODO: add count for arrays
 
     constructor(name, type) {
@@ -85,9 +90,12 @@ class UniformBufferFormat {
     /**
      * Create a new UniformBufferFormat instance.
      *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer
      */
-    constructor(uniforms) {
+    constructor(graphicsDevice, uniforms) {
+        this.scope = graphicsDevice.scope;
+
         /** @type {UniformFormat[]} */
         this.uniforms = uniforms;
 
@@ -98,6 +106,8 @@ class UniformBufferFormat {
             const uniform = uniforms[i];
             uniform.offset = byteSize / 4;
             byteSize += uniform.byteSize;
+
+            uniform.scopeId = this.scope.resolve(uniform.name);
 
             this.map.set(uniform.name, uniform);
         }

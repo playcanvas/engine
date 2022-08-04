@@ -1,4 +1,5 @@
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
 
 /**
  * @ignore
@@ -8,7 +9,7 @@ class BindBufferFormat {
         /** @type {string} */
         this.name = name;
 
-        // SHADER_STAGE_VERTEX, SHADER_STAGE_FRAGMENT, SHADER_STAGE_COMPUTE
+        // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
         this.visibility = visibility;
     }
 }
@@ -17,11 +18,14 @@ class BindBufferFormat {
  * @ignore
  */
 class BindTextureFormat {
+    /** @type {ScopeId} */
+    scopeId;
+
     constructor(name, visibility) {
         /** @type {string} */
         this.name = name;
 
-        // SHADER_STAGE_VERTEX, SHADER_STAGE_FRAGMENT, SHADER_STAGE_COMPUTE
+        // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
         this.visibility = visibility;
     }
 }
@@ -50,10 +54,17 @@ class BindGroupFormat {
         /** @type {BindTextureFormat[]} */
         this.textureFormats = textureFormats;
 
+        const scope = graphicsDevice.scope;
+
         // maps a texture format name to a slot index
         /** @type {Map<string, number>} */
         this.textureFormatsMap = new Map();
-        textureFormats.forEach((tf, i) => this.textureFormatsMap.set(tf.name, i));
+        textureFormats.forEach((tf, i) => {
+            this.textureFormatsMap.set(tf.name, i);
+
+            // resolve scope id
+            tf.scopeId = scope.resolve(tf.name);
+        });
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
     }
@@ -73,7 +84,7 @@ class BindGroupFormat {
      */
     getTexture(name) {
         const index = this.textureFormatsMap.get(name);
-        if (index) {
+        if (index !== undefined) {
             return this.textureFormats[index];
         }
 

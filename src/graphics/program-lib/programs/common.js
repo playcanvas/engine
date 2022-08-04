@@ -1,4 +1,8 @@
 import {
+    DEVICETYPE_WEBGPU
+} from '../../../graphics/constants.js';
+
+import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
 } from '../../../scene/constants.js';
@@ -52,6 +56,12 @@ function skinCode(device, chunks) {
 }
 
 function precisionCode(device) {
+
+    // temporarily ignore precision for WebGPU
+    if (device.deviceType === DEVICETYPE_WEBGPU) {
+        return '';
+    }
+
     let pcode = 'precision ' + device.precision + ' float;\n';
     if (device.webgl2) {
         pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
@@ -60,6 +70,10 @@ function precisionCode(device) {
 }
 
 function versionCode(device) {
+    if (device.deviceType === DEVICETYPE_WEBGPU) {
+        return '#version 450\n';
+    }
+
     return device.webgl2 ? "#version 300 es\n" : "";
 }
 

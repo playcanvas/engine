@@ -32,6 +32,14 @@ class GraphicsDevice extends EventHandler {
     canvas;
 
     /**
+     * The graphics device type, DEVICETYPE_WEBGL or DEVICETYPE_WEBGPU.
+     *
+     * @type {string}
+     * @ignore
+     */
+    deviceType;
+
+    /**
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}

@@ -1,4 +1,5 @@
 import {
+    DEVICETYPE_WEBGPU,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
@@ -71,7 +72,10 @@ function createShader(device, vsName, psName, useTransformFeedback = false) {
     let psCode = precisionCode(device) + "\n" + shaderChunks[psName];
     const attribs = collectAttribs(vsCode);
 
-    if (device.webgl2) {
+    if (device.deviceType === DEVICETYPE_WEBGPU) {
+        vsCode = versionCode(device) + shaderChunks.webgpuVS + vsCode;
+        psCode = versionCode(device) + shaderChunks.webgpuPS + psCode;
+    } else if (device.webgl2) {
         vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
         psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
     }
@@ -105,7 +109,10 @@ function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedbac
     psCode = precisionCode(device) + "\n" + (psCode || dummyFragmentCode());
     const attribs = collectAttribs(vsCode);
 
-    if (device.webgl2) {
+    if (device.deviceType === DEVICETYPE_WEBGPU) {
+        vsCode = versionCode(device) + shaderChunks.webgpuVS + vsCode;
+        psCode = versionCode(device) + shaderChunks.webgpuPS + psCode;
+    } else if (device.webgl2) {
         vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
         psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
     }

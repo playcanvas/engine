@@ -4,6 +4,7 @@ import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 
 import {
+    DEVICETYPE_WEBGL,
     ADDRESS_CLAMP_TO_EDGE,
     BLENDEQUATION_ADD,
     BLENDMODE_ZERO, BLENDMODE_ONE,
@@ -226,6 +227,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     constructor(canvas, options = {}) {
         super(canvas);
+        this.deviceType = DEVICETYPE_WEBGL;
 
         this.defaultFramebuffer = null;
 
