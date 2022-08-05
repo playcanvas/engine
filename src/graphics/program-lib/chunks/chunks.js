@@ -139,6 +139,7 @@ import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
 import reflectionCCPS from './lit/frag/reflectionCC.js';
 import reflectionCubePS from './lit/frag/reflectionCube.js';
+import reflectionEnvHQPS from './lit/frag/reflectionEnvHQ.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
@@ -343,6 +344,7 @@ const shaderChunks = {
     reflDirAnisoPS,
     reflectionCCPS,
     reflectionCubePS,
+    reflectionEnvHQPS,
     reflectionEnvPS,
     reflectionSpherePS,
     reflectionSphereLowPS,

@@ -483,7 +483,7 @@ let _params = new Set();
  * from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * - useMorphPosition: if morphing code should be generated to morph positions.
  * - useMorphNormal: if morphing code should be generated to morph normals.
- * - reflectionSource: one of "envAtlas", "cubeMap", "sphereMap"
+ * - reflectionSource: one of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
  * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
  * - ambientSource: one of "ambientSH", "envAtlas", "constant"
  * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
@@ -754,7 +754,10 @@ class StandardMaterial extends Material {
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
         // set overridden environment textures
-        if (this.envAtlas && !isPhong) {
+        if (this.envAtlas && this.cubeMap && !isPhong) {
+            this._setParameter('texture_envAtlas', this.envAtlas);
+            this._setParameter('texture_cubeMap', this.cubeMap);
+        } else if (this.envAtlas && !isPhong) {
             this._setParameter('texture_envAtlas', this.envAtlas);
         } else if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
@@ -777,7 +780,10 @@ class StandardMaterial extends Material {
         const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
 
         if (!hasLocalEnvOverride && this.useSkybox) {
-            if (scene.envAtlas && !isPhong) {
+            if (scene.envAtlas && scene.skybox && !isPhong) {
+                this._setParameter('texture_envAtlas', scene.envAtlas);
+                this._setParameter('texture_cubeMap', scene.skybox);
+            } else if (scene.envAtlas && !isPhong) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
             } else if (scene.skybox) {
                 this._setParameter('texture_cubeMap', scene.skybox);
