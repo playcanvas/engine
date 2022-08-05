@@ -668,10 +668,12 @@ class XrManager extends EventHandler {
 
     /**
      * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * 
+     * @returns {boolean} True if update was successful, false otherwise.
      * @ignore
      */
     update(frame) {
-        if (!this._session) return;
+        if (!this._session) return false;
 
         // canvas resolution should be set on first frame availability or resolution changes
         const width = frame.session.renderState.baseLayer.framebufferWidth;
@@ -683,6 +685,9 @@ class XrManager extends EventHandler {
         }
 
         const pose = frame.getViewerPose(this._referenceSpace);
+
+        if (!pose) return false;
+
         const lengthNew = pose ? pose.views.length : 0;
 
         if (lengthNew > this.views.length) {
@@ -713,30 +718,28 @@ class XrManager extends EventHandler {
             }
         }
 
-        if (pose) {
-            // reset position
-            const posePosition = pose.transform.position;
-            const poseOrientation = pose.transform.orientation;
-            this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
-            this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
+        // reset position
+        const posePosition = pose.transform.position;
+        const poseOrientation = pose.transform.orientation;
+        this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
+        this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
-            const layer = frame.session.renderState.baseLayer;
+        const layer = frame.session.renderState.baseLayer;
 
-            for (let i = 0; i < pose.views.length; i++) {
-                // for each view, calculate matrices
-                const viewRaw = pose.views[i];
-                const view = this.views[i];
-                const viewport = layer.getViewport(viewRaw);
+        for (let i = 0; i < pose.views.length; i++) {
+            // for each view, calculate matrices
+            const viewRaw = pose.views[i];
+            const view = this.views[i];
+            const viewport = layer.getViewport(viewRaw);
 
-                view.viewport.x = viewport.x;
-                view.viewport.y = viewport.y;
-                view.viewport.z = viewport.width;
-                view.viewport.w = viewport.height;
+            view.viewport.x = viewport.x;
+            view.viewport.y = viewport.y;
+            view.viewport.z = viewport.width;
+            view.viewport.w = viewport.height;
 
-                view.projMat.set(viewRaw.projectionMatrix);
-                view.viewMat.set(viewRaw.transform.inverse.matrix);
-                view.viewInvMat.set(viewRaw.transform.matrix);
-            }
+            view.projMat.set(viewRaw.projectionMatrix);
+            view.viewMat.set(viewRaw.transform.inverse.matrix);
+            view.viewInvMat.set(viewRaw.transform.matrix);
         }
 
         // position and rotate camera based on calculated vectors
@@ -763,6 +766,8 @@ class XrManager extends EventHandler {
         }
 
         this.fire('update', frame);
+
+        return true;
     }
 
     /**

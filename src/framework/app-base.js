@@ -2179,30 +2179,34 @@ const makeTick = function (_app) {
         application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
+        let shouldRenderFrame = true;
+
         if (frame) {
-            application.xr?.update(frame);
+            shouldRenderFrame = application.xr?.update(frame);
             application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        application.update(dt);
+        if (shouldRenderFrame) {
+            application.update(dt);
 
-        application.fire("framerender");
+            application.fire("framerender");
 
-        Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
-        if (application.autoRender || application.renderNextFrame) {
-            application.updateCanvasSize();
-            application.render();
-            application.renderNextFrame = false;
+            if (application.autoRender || application.renderNextFrame) {
+                application.updateCanvasSize();
+                application.render();
+                application.renderNextFrame = false;
+            }
+
+            // set event data
+            _frameEndData.timestamp = now();
+            _frameEndData.target = application;
+
+            application.fire("frameend", _frameEndData);
         }
-
-        // set event data
-        _frameEndData.timestamp = now();
-        _frameEndData.target = application;
-
-        application.fire("frameend", _frameEndData);
 
         application._inFrameUpdate = false;
 
