@@ -822,7 +822,11 @@ class LitShader {
             }
         }
 
-        if (options.reflectionSource === 'envAtlas') {
+        if (options.reflectionSource === 'envAtlasHQ') {
+            code += options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += chunks.envAtlasPS;
+            code += chunks.reflectionEnvHQPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
+        } else if (options.reflectionSource === 'envAtlas') {
             code += chunks.envAtlasPS;
             code += chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding));
         } else if (options.reflectionSource === 'cubeMap') {
@@ -930,7 +934,7 @@ class LitShader {
             if (options.ambientSource === 'ambientSH') {
                 code += chunks.ambientSHPS;
             } else if (options.ambientSource === 'envAtlas') {
-                if (options.reflectionSource !== 'envAtlas') {
+                if (options.reflectionSource !== 'envAtlas' && options.reflectionSource !== 'envAtlasHQ') {
                     code += chunks.envAtlasPS;
                 }
                 code += chunks.ambientEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.ambientEncoding));

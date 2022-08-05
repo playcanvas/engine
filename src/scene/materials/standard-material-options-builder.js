@@ -203,7 +203,10 @@ class StandardMaterialOptionsBuilder {
         let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
-        if (stdMat.envAtlas && !isPhong) {
+        if (stdMat.envAtlas && stdMat.cubeMap && !isPhong) {
+            options.reflectionSource = 'envAtlasHQ';
+            options.reflectionEncoding = stdMat.envAtlas.encoding;
+        } else if (stdMat.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.cubeMap) {
@@ -212,6 +215,10 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.sphereMap) {
             options.reflectionSource = 'sphereMap';
             options.reflectionEncoding = stdMat.sphereMap.encoding;
+        } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox && !isPhong) {
+            options.reflectionSource = 'envAtlasHQ';
+            options.reflectionEncoding = scene.envAtlas.encoding;
+            usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.reflectionSource = 'envAtlas';
             options.reflectionEncoding = scene.envAtlas.encoding;
