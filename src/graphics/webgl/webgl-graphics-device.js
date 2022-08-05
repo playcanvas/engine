@@ -874,7 +874,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // incorrectly when using GPU for particles. See:
         // https://github.com/playcanvas/engine/issues/3967
         // https://github.com/playcanvas/engine/issues/3415
-        const samsungModelRegex = /SM-[a-zA-Z0-9]+\)/;
+        // https://github.com/playcanvas/engine/issues/4514
+        // Example UA matches: Starting 'SM' and any combination of letters or numbers:
+        // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
+        // Mozilla/5.0 (Linux, Android 12; SM-G970F)
+        const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
         this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex));
 
         ext = this.extTextureFilterAnisotropic;
