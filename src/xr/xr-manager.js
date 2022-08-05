@@ -668,7 +668,7 @@ class XrManager extends EventHandler {
 
     /**
      * @param {*} frame - XRFrame from requestAnimationFrame callback.
-     * 
+     *
      * @returns {boolean} True if update was successful, false otherwise.
      * @ignore
      */
