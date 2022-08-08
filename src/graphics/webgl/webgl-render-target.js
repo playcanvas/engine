@@ -42,6 +42,10 @@ class WebglRenderTarget {
         }
     }
 
+    get initialized() {
+        return this._glFrameBuffer !== null;
+    }
+
     init(device, target) {
         const gl = device.gl;
 

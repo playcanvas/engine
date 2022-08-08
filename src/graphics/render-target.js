@@ -117,7 +117,8 @@ class RenderTarget {
         }
 
         // device, from one of the buffers
-        this._device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
+        const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
+        this._device = device;
         Debug.assert(this._device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
 
         this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
@@ -139,7 +140,7 @@ class RenderTarget {
         this.flipY = !!options.flipY;
 
         // device specific implementation
-        this.impl = this._device.createRenderTargetImpl(this);
+        this.impl = device.createRenderTargetImpl(this);
 
         Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} samples: ${this.samples} ` +
             `${this.colorBuffer ? '[Color]' : ''}` +

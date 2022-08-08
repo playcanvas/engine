@@ -141,6 +141,18 @@ class DebugHelper {
             object.name = name;
         }
     }
+
+    /**
+     * Set a label to the label property of the object. Executes only in the debug build.
+     *
+     * @param {object} object - The object to assign the name to.
+     * @param {string} label - The label to assign.
+     */
+    static setLabel(object, label) {
+        if (object) {
+            object.label = label;
+        }
+    }
 }
 
 export { Debug, DebugHelper };
