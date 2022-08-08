@@ -1,5 +1,4 @@
 import { setupVertexArrayObject } from '../../polyfill/OESVertexArrayObject.js';
-import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 
@@ -674,7 +673,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglShader(shader);
     }
 
-    createTextureImpl() {
+    createTextureImpl(texture) {
         return new WebglTexture();
     }
 
@@ -1200,31 +1199,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Initialize render target before it can be used.
-     *
-     * @param {RenderTarget} target - The render target to be initialized.
-     * @ignore
-     */
-    initRenderTarget(target) {
-        if (target.impl._glFrameBuffer) return;
-
-        // #if _PROFILER
-        const startTime = now();
-        this.fire('fbo:create', {
-            timestamp: startTime,
-            target: this
-        });
-        // #endif
-
-        target.init();
-        this.targets.push(target);
-
-        // #if _PROFILER
-        this._renderTargetCreationTime += now() - startTime;
-        // #endif
-    }
-
-    /**
      * Get copy shader for efficient rendering of fullscreen-quad with texture.
      *
      * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
@@ -1385,7 +1359,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const target = this.renderTarget;
         if (target) {
             // Create a new WebGL frame buffer object
-            if (!target.impl._glFrameBuffer) {
+            if (!target.impl.initialized) {
                 this.initRenderTarget(target);
             } else {
                 this.setFramebuffer(target.impl._glFrameBuffer);

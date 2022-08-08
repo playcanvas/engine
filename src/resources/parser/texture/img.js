@@ -1,7 +1,10 @@
 import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
-import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/constants.js';
+import {
+    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET,
+    DEVICETYPE_WEBGPU
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
@@ -23,7 +26,9 @@ class ImgParser {
         // - Firefox doesn't support options parameter to createImageBitmap (see https://bugzilla.mozilla.org/show_bug.cgi?id=1533680)
         // - Safari supports ImageBitmap only as experimental feature.
         // this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
-        this.useImageBitmap = false;
+        // WebGPUTexture expects ImageBitmap.
+        const isWebGPU = registry?._loader?._app?.graphicsDevice?.deviceType === DEVICETYPE_WEBGPU;
+        this.useImageBitmap = isWebGPU;
     }
 
     load(url, callback, asset) {

@@ -1,5 +1,6 @@
 import { EventHandler } from '../core/event-handler.js';
 import { platform } from '../core/platform.js';
+import { now } from '../core/time.js';
 
 import { ScopeSpace } from './scope-space.js';
 import { ProgramLibrary } from './program-library.js';
@@ -268,6 +269,32 @@ class GraphicsDevice extends EventHandler {
      */
     getRenderTarget() {
         return this.renderTarget;
+    }
+
+    /**
+     * Initialize render target before it can be used.
+     *
+     * @param {RenderTarget} target - The render target to be initialized.
+     * @ignore
+     */
+    initRenderTarget(target) {
+
+        if (target.initialized) return;
+
+        // #if _PROFILER
+        const startTime = now();
+        this.fire('fbo:create', {
+            timestamp: startTime,
+            target: this
+        });
+        // #endif
+
+        target.init();
+        this.targets.push(target);
+
+        // #if _PROFILER
+        this._renderTargetCreationTime += now() - startTime;
+        // #endif
     }
 
     /**
