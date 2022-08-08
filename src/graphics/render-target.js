@@ -118,8 +118,8 @@ class RenderTarget {
 
         // device, from one of the buffers
         const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
+        Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
-        Debug.assert(this._device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
 
         this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
         this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
