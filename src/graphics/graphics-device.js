@@ -279,7 +279,7 @@ class GraphicsDevice extends EventHandler {
      */
     initRenderTarget(target) {
 
-        if (target.impl.initialized) return;
+        if (target.initialized) return;
 
         // #if _PROFILER
         const startTime = now();
