@@ -719,7 +719,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_refractionIndex', this.refractionIndex);
         }
 
-        if (this.thickness > 0) {
+        if (this.useDynamicRefraction) {
             this._setParameter('material_thickness', this.thickness);
             this._setParameter('material_attenuation', getUniform('attenuation'));
             this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
