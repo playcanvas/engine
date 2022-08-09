@@ -490,6 +490,8 @@ class ShadowRenderer {
         for (let i = 0; i < count; i++) {
             const meshInstance = visibleCasters[i];
             const mesh = meshInstance.mesh;
+
+            meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
             // set basic material states/parameters

@@ -19,6 +19,7 @@ import {
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
+import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
@@ -745,6 +746,13 @@ class MeshInstance {
     updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
         this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
                                                             viewUniformFormat, viewBindGroupFormat);
+    }
+
+    ensureMaterial(device) {
+        if (!this.material) {
+            Debug.warn(`Mesh attached to entity '${this.node.name}' does not have a material, using a default one.`);
+            this.material = getDefaultMaterial(device);
+        }
     }
 
     // Parameter management
