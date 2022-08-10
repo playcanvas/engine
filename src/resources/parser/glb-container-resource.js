@@ -197,7 +197,7 @@ class GlbContainerResource {
     }
 
     // apply material variant to mesh instances
-    applyMaterialVariant(name, instances, index) {
+    applyMaterialVariant(name, instances) {
         const variant = this.data.variants[name];
         instances.forEach((instance) => {
             const meshVariants = this.data.meshVariants[instance.mesh.id];
