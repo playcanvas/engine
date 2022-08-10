@@ -47,7 +47,13 @@ class Impl {
                 if (err) {
                     callback(err, null);
                 } else {
-                    window[moduleName]({
+                    const module = window[moduleName];
+
+                    // clear the module from the global window since we used to store global instance here
+                    window[moduleName] = undefined;
+
+                    // instantiate the module
+                    module({
                         locateFile: () => config.wasmUrl,
                         onAbort: () => {
                             callback('wasm module aborted.');
