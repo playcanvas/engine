@@ -841,14 +841,6 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     Debug.warn('File contains draco compressed data, but DracoDecoderModule is not configured.');
                 }
             }
-            if (extensions.hasOwnProperty("KHR_materials_variants")) {
-                const variants = extensions.KHR_materials_variants;
-                variants.mappings.forEach((mapping) => {
-                    mapping.variants.forEach((variant) => {
-                        meshVariants.at(-1)[variant] = mapping.material;
-                    });
-                });
-            }
         }
 
         // if mesh was not constructed from draco data, use uncompressed
@@ -897,6 +889,17 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = indices.length;
             } else {
                 mesh.primitive[0].count = vertexBuffer.numVertices;
+            }
+
+            if (primitive.hasOwnProperty("extensions") && primitive.extensions.hasOwnProperty("KHR_materials_variants")) {
+                const variants = primitive.extensions.KHR_materials_variants;
+                const tempMapping = {};
+                variants.mappings.forEach((mapping) => {
+                    mapping.variants.forEach((variant) => {
+                        tempMapping[variant] = mapping.material;
+                    });
+                });
+                meshVariants[mesh.id] = tempMapping;
             }
 
             meshDefaultMaterials[mesh.id] = primitive.material;

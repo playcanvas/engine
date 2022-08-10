@@ -199,12 +199,12 @@ class GlbContainerResource {
     // apply material variant to mesh instances
     applyMaterialVariant(name, instances, index) {
         const variant = this.data.variants[name];
-        const meshVariant = this.data.meshVariants[index];
-        if (meshVariant[variant]) {
-            instances.forEach((instance) => {
-                instance.material = this.data.materials[meshVariant[variant]];
-            });
-        }
+        instances.forEach((instance) => {
+            const meshVariants = this.data.meshVariants[instance.mesh.id];
+            if (meshVariants) {
+                instance.material = this.data.materials[meshVariants[variant]];
+            }
+        });
     }
 
     // helper function to create a single hierarchy from an array of nodes
