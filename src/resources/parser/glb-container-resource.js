@@ -75,10 +75,11 @@ class GlbContainerResource {
         const defaultMaterial = this._defaultMaterial;
         const skinnedMeshInstances = [];
 
-        const createMeshInstance = function (root, entity, mesh, materials, skins, gltfNode) {
+        const createMeshInstance = function (root, entity, mesh, materials, meshDefaultMaterials, skins, gltfNode) {
 
             // clone mesh instance
-            const material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            const materialIndex = meshDefaultMaterials[mesh.id];
+            const material = (materialIndex === undefined) ? defaultMaterial : materials[materialIndex];
             const meshInstance = new MeshInstance(mesh, material);
 
             // create morph instance
@@ -122,7 +123,7 @@ class GlbContainerResource {
                         for (var mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
-                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.skins, gltfNode);
+                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode);
 
                                 // add it to list
                                 if (!attachedMi) {

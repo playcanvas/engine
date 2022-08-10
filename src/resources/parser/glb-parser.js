@@ -74,6 +74,7 @@ class GlbResources {
         this.materials = null;
         this.variants = null;
         this.meshVariants = null;
+        this.meshDefaultMaterials = null;
         this.renders = null;
         this.skins = null;
         this.lights = null;
@@ -755,7 +756,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -898,9 +899,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
-            // TODO: Refactor, we should not store temporary data on the mesh.
-            // The container should store some mapping table instead.
-            mesh.materialIndex = primitive.material;
+            meshDefaultMaterials[mesh.id] = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
             mesh.aabb = getAccessorBoundingBox(accessor);
@@ -1771,7 +1770,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1782,7 +1781,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials);
     });
 };
 
@@ -2029,7 +2028,8 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     }), options, flipV);
     const variants = createVariants(gltf);
     const meshVariants = [];
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants);
+    const meshDefaultMaterials = [];
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -2050,6 +2050,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.materials = materials;
     result.variants = variants;
     result.meshVariants = meshVariants;
+    result.meshDefaultMaterials = meshDefaultMaterials;
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;
