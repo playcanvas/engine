@@ -72,6 +72,8 @@ class GlbResources {
         this.animations = null;
         this.textures = null;
         this.materials = null;
+        this.variants = null;
+        this.meshVariants = null;
         this.renders = null;
         this.skins = null;
         this.lights = null;
@@ -753,7 +755,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -761,6 +763,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
         let primitiveType, vertexBuffer, numIndices;
         let indices = null;
         let canUseMorph = true;
+        meshVariants.push({});
 
         // try and get draco compressed data first
         if (primitive.hasOwnProperty('extensions')) {
@@ -836,6 +839,14 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 } else {
                     Debug.warn('File contains draco compressed data, but DracoDecoderModule is not configured.');
                 }
+            }
+            if (extensions.hasOwnProperty("KHR_materials_variants")) {
+                const variants = extensions.KHR_materials_variants;
+                variants.mappings.forEach((mapping) => {
+                    mapping.variants.forEach((variant) => {
+                        meshVariants.at(-1)[variant] = mapping.material;
+                    });
+                });
             }
         }
 
@@ -1760,7 +1771,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1771,7 +1782,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants);
     });
 };
 
@@ -1794,6 +1805,17 @@ const createMaterials = function (gltf, textures, options, flipV) {
         }
         return material;
     });
+};
+
+const createVariants = function (gltf) {
+    if (!gltf.hasOwnProperty("extensions") || !gltf.extensions.hasOwnProperty("KHR_materials_variants"))
+        return null;
+
+    const variants = {};
+    for (let i = 0; i < gltf.extensions.KHR_materials_variants.variants.length; i++) {
+        variants[gltf.extensions.KHR_materials_variants.variants[i].name] = i;
+    }
+    return variants;
 };
 
 const createAnimations = function (gltf, nodes, bufferViews, options) {
@@ -2005,7 +2027,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;
     }), options, flipV);
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV);
+    const variants = createVariants(gltf);
+    const meshVariants = [];
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -2024,6 +2048,8 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.animations = animations;
     result.textures = textureAssets;
     result.materials = materials;
+    result.variants = variants;
+    result.meshVariants = meshVariants;
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;

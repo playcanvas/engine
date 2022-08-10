@@ -190,6 +190,22 @@ class GlbContainerResource {
         return GlbContainerResource.createSceneHierarchy(sceneClones, 'Entity');
     }
 
+    // get material variants
+    getMaterialVariants() {
+        return this.data.variants;
+    }
+
+    // apply material variant to mesh instances
+    applyMaterialVariant(name, instances, index) {
+        const variant = this.data.variants[name];
+        const meshVariant = this.data.meshVariants[index];
+        if (meshVariant[variant]) {
+            instances.forEach((instance) => {
+                instance.material = this.data.materials[meshVariant[variant]];
+            });
+        }
+    }
+
     // helper function to create a single hierarchy from an array of nodes
     static createSceneHierarchy(sceneNodes, nodeType) {
 
