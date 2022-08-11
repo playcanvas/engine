@@ -196,8 +196,23 @@ class GlbContainerResource {
         return this.data.variants;
     }
 
+    // apply material variant to entity
+    applyMaterialVariant(name, entity) {
+        const renders = entity.findComponents("render");
+        for (let i = 0; i < renders.length; i++) {
+            const renderComponent = renders[i];
+            const variant = this.data.variants[name];
+            renderComponent.meshInstances.forEach((instance) => {
+                const meshVariants = this.data.meshVariants[instance.mesh.id];
+                if (meshVariants) {
+                    instance.material = this.data.materials[meshVariants[variant]];
+                }
+            });
+        }
+    }
+
     // apply material variant to mesh instances
-    applyMaterialVariant(name, instances) {
+    applyMaterialVariantInstances(name, instances) {
         const variant = this.data.variants[name];
         instances.forEach((instance) => {
             const meshVariants = this.data.meshVariants[instance.mesh.id];
