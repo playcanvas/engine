@@ -1463,7 +1463,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         for (let i = 0; i < meshes.length; i++) {
             const mesh = meshes[i];
             if (mesh.name === nodeName && mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
-                return mesh.extras.targetNames[weightIndex];
+                return `name.${mesh.extras.targetNames[weightIndex]}`;
             }
         }
         return weightIndex;
