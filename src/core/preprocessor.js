@@ -10,7 +10,7 @@ const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension)/g;
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #extension IDENTIFIER : enabled
-const EXTENSION = /extension[ \t]+([\w-]+)[ \t]+:[ \t]+enable/g;
+const EXTENSION = /extension[ \t]+([\w-]+)[ \t]*:[ \t]*enable/g;
 
 // #undef EXPRESSION
 const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
@@ -143,6 +143,8 @@ class Preprocessor {
                 case 'extension': {
                     EXTENSION.lastIndex = match.index;
                     const extension = EXTENSION.exec(source);
+                    Debug.assert(extension, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    error ||= extension === null;
                     if (extension) {
                         const identifier = extension[1];
 
