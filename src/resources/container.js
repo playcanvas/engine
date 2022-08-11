@@ -60,6 +60,24 @@ class ContainerResource {
     instantiateRenderEntity(options) {
         return null;
     }
+
+    /**
+     * Queries the list of available material variants.
+     *
+     * @returns {object} A map which maps a variant name as a string to the variant index
+     * @example
+     * // load a glb file and instantiate an entity with a render component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     const variantListOptions: Array<{ v:string, t:string }> = materialVariants.map((variant: string) => ({ v: variant, t: variant }));
+     */
+    getMaterialVariants() {
+        return null;
+    }
 }
 
 /**
