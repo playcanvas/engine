@@ -200,7 +200,7 @@ class GlbContainerResource {
     applyMaterialVariant(name, entity) {
         const variant = this.data.variants[name];
         if (!variant)
-            return;        
+            return;
         const renders = entity.findComponents("render");
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
