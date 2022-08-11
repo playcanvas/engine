@@ -198,10 +198,12 @@ class GlbContainerResource {
 
     // apply material variant to entity
     applyMaterialVariant(name, entity) {
+        const variant = this.data.variants[name];
+        if (!variant)
+            return;        
         const renders = entity.findComponents("render");
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
-            const variant = this.data.variants[name];
             renderComponent.meshInstances.forEach((instance) => {
                 const meshVariants = this.data.meshVariants[instance.mesh.id];
                 if (meshVariants) {
@@ -214,6 +216,8 @@ class GlbContainerResource {
     // apply material variant to mesh instances
     applyMaterialVariantInstances(name, instances) {
         const variant = this.data.variants[name];
+        if (!variant)
+            return;
         instances.forEach((instance) => {
             const meshVariants = this.data.meshVariants[instance.mesh.id];
             if (meshVariants) {
