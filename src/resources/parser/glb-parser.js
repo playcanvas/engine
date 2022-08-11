@@ -764,7 +764,6 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
         let primitiveType, vertexBuffer, numIndices;
         let indices = null;
         let canUseMorph = true;
-        meshVariants.push({});
 
         // try and get draco compressed data first
         if (primitive.hasOwnProperty('extensions')) {
