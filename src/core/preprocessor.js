@@ -144,6 +144,7 @@ class Preprocessor {
                     EXTENSION.lastIndex = match.index;
                     const extension = EXTENSION.exec(source);
                     Debug.assert(extension, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    error ||= extension === null;
                     if (extension) {
                         const identifier = extension[1];
 
