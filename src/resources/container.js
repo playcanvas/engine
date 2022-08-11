@@ -2,6 +2,7 @@ import { path } from '../core/path.js';
 import { GlbParser } from './parser/glb-parser.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('../scene/mesh-instance').MeshInstance} MeshInstance */
 /** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
@@ -78,6 +79,44 @@ class ContainerResource {
     getMaterialVariants() {
         return null;
     }
+
+    /**
+     * Applies a material variant to an entity
+     *
+     * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
+     * @param {Entity} entity - Is the entity to which material variants will be applied
+     * @example
+     * // load a glb file and instantiate an entity with a render component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     asset.resource.applyMaterialVariant(materialVariants[0], entity);
+     */
+    applyMaterialVariant(name, entity) {}
+
+    /**
+     * Applies a material variant to a set of mesh instances. This method allows for a selective
+     * set of MeshInstances to apply a variant, instead of the entire entity
+     *
+     * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
+     * @param {MeshInstance} [instances] - An array of mesh instances
+     * // load a glb file and instantiate an entity with a render component based on it
+     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
+     *     var entity = asset.resource.instantiateRenderEntity({
+     *         castShadows: true
+     *     });
+     *     app.root.addChild(entity);
+     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     const renders = entity.findComponents("render");
+     *     for (let i = 0; i < renders.length; i++) {
+     *         const renderComponent = renders[i];
+     *         asset.resource.applyMaterialVariantInstances(materialVariants[0], renderComponent.meshInstances);
+     *     }
+     */
+    applyMaterialVariantInstances(name, instances) {}
 }
 
 /**
