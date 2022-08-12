@@ -40,7 +40,7 @@ class WebgpuRenderTarget {
     renderPassDescriptor = {};
 
     /**
-     * @param {RenderTarget} renderTarget - The rener target owning this implementation.
+     * @param {RenderTarget} renderTarget - The render target owning this implementation.
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
