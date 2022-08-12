@@ -5,6 +5,7 @@ import { MorphInstance } from '../../scene/morph-instance.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
 import { Model } from '../../scene/model.js';
+import { Debug } from '../../core/debug.js';
 
 // Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {
@@ -199,25 +200,29 @@ class GlbContainerResource {
     // apply material variant to entity
     applyMaterialVariant(name, entity) {
         const variant = this.data.variants[name];
-        if (!variant)
+        if (variant === undefined) {
+            Debug.warn(`No variant named ${name} exists in resource`);
             return;
+        }
         const renders = entity.findComponents("render");
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
-            renderComponent.meshInstances.forEach((instance) => {
-                const meshVariants = this.data.meshVariants[instance.mesh.id];
-                if (meshVariants) {
-                    instance.material = this.data.materials[meshVariants[variant]];
-                }
-            });
+            this._applyMaterialVariant(variant, renderComponent.meshInstances);
         }
     }
 
     // apply material variant to mesh instances
     applyMaterialVariantInstances(name, instances) {
         const variant = this.data.variants[name];
-        if (!variant)
+        if (variant === undefined) {
+            Debug.warn(`No variant named ${name} exists in resource`);
             return;
+        }
+        this._applyMaterialVariant(variant, instances);
+    }
+
+    // internally apply variant to instances
+    _applyMaterialVariant(variant, instances) {
         instances.forEach((instance) => {
             const meshVariants = this.data.meshVariants[instance.mesh.id];
             if (meshVariants) {
