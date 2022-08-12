@@ -2030,8 +2030,8 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         return textureAsset.resource;
     }), options, flipV);
     const variants = createVariants(gltf);
-    const meshVariants = [];
-    const meshDefaultMaterials = [];
+    const meshVariants = {};
+    const meshDefaultMaterials = {};
     const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
