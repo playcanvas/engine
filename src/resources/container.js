@@ -92,7 +92,7 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     var materialVariants = Object.keys(asset.resource.getMaterialVariants());
      *     asset.resource.applyMaterialVariant(materialVariants[0], entity);
      */
     applyMaterialVariant(name, entity) {}
@@ -109,9 +109,9 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     var materialVariants = Object.keys(asset.resource.getMaterialVariants());
      *     const renders = entity.findComponents("render");
-     *     for (let i = 0; i < renders.length; i++) {
+     *     for (var i = 0; i < renders.length; i++) {
      *         const renderComponent = renders[i];
      *         asset.resource.applyMaterialVariantInstances(materialVariants[0], renderComponent.meshInstances);
      *     }
