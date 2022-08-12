@@ -15,6 +15,8 @@ const EVENT_RESIZE = 'resizecanvas';
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./shader.js').Shader} Shader */
 /** @typedef {import('./texture.js').Texture} Texture */
+/** @typedef {import('./index-buffer.js').IndexBuffer} IndexBuffer */
+/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -257,6 +259,32 @@ class GraphicsDevice extends EventHandler {
      */
     setRenderTarget(renderTarget) {
         this.renderTarget = renderTarget;
+    }
+
+    /**
+     * Sets the current index buffer on the graphics device. On subsequent calls to
+     * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
+     * for any indexed primitives.
+     *
+     * @param {IndexBuffer} indexBuffer - The index buffer to assign to the device.
+     */
+    setIndexBuffer(indexBuffer) {
+        // Store the index buffer
+        this.indexBuffer = indexBuffer;
+    }
+
+    /**
+     * Sets the current vertex buffer on the graphics device. On subsequent calls to
+     * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
+     * data for any primitives.
+     *
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     */
+    setVertexBuffer(vertexBuffer) {
+
+        if (vertexBuffer) {
+            this.vertexBuffers.push(vertexBuffer);
+        }
     }
 
     /**
