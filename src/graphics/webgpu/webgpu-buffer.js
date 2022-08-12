@@ -17,7 +17,6 @@ class WebgpuBuffer {
     }
 
     loseContext() {
-        // this.bufferId = null;
     }
 
     /**
@@ -30,10 +29,8 @@ class WebgpuBuffer {
 
         const wgpu = device.wgpu;
 
-        // /// offset of getMappedRange must me a multiple of 8
-        // /// size of getMappedRange must be a multiple of 4
-        // /// !!!!!!!!!!!!!!
-        // Debug.assert(storage, "Not handling vertex buffer without initial data");
+        // offset of getMappedRange must me a multiple of 8
+        // size of getMappedRange must be a multiple of 4
 
         if (!this.buffer) {
             // size needs to be a multiple of 4
@@ -45,7 +42,7 @@ class WebgpuBuffer {
             });
 
 
-            // //////////// mappedAtCreation path
+            // mappedAtCreation path - this could be used when the data is provided
 
             // this.buffer = device.wgpu.createBuffer({
             //     size: size,
@@ -62,33 +59,8 @@ class WebgpuBuffer {
         const src = new Uint8Array(storage.buffer ? storage.buffer : storage);
         wgpu.queue.writeBuffer(this.buffer, 0, src, 0, src.length);
 
-
-        // if (!this.bufferId) {
-        //     this.bufferId = gl.createBuffer();
-        // }
-
-        // let glUsage;
-        // switch (usage) {
-        //     case BUFFER_STATIC:
-        //         glUsage = gl.STATIC_DRAW;
-        //         break;
-        //     case BUFFER_DYNAMIC:
-        //         glUsage = gl.DYNAMIC_DRAW;
-        //         break;
-        //     case BUFFER_STREAM:
-        //         glUsage = gl.STREAM_DRAW;
-        //         break;
-        //     case BUFFER_GPUDYNAMIC:
-        //         if (device.webgl2) {
-        //             glUsage = gl.DYNAMIC_COPY;
-        //         } else {
-        //             glUsage = gl.STATIC_DRAW;
-        //         }
-        //         break;
-        // }
-
-        // gl.bindBuffer(target, this.bufferId);
-        // gl.bufferData(target, storage, glUsage);
+        // TODO: handle usage types:
+        // - BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM, BUFFER_GPUDYNAMIC
     }
 }
 
