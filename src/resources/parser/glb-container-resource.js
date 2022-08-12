@@ -193,7 +193,7 @@ class GlbContainerResource {
 
     // get material variants
     getMaterialVariants() {
-        return this.data.variants;
+        return Object.keys(this.data.variants);
     }
 
     // apply material variant to entity
