@@ -65,7 +65,7 @@ class ContainerResource {
     /**
      * Queries the list of available material variants.
      *
-     * @returns {object} A map which maps a variant name as a string to the variant index
+     * @returns {string[]} An array of variant names.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -73,18 +73,18 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     let materialVariants = Object.keys(asset.resource.getMaterialVariants());
-     *     const variantListOptions: Array<{ v:string, t:string }> = materialVariants.map((variant: string) => ({ v: variant, t: variant }));
+     *     var materialVariants = asset.resource.getMaterialVariants();
+     *     var variantListOptions = materialVariants.map((variant) => ({ v: variant, t: variant }));
      */
     getMaterialVariants() {
         return null;
     }
 
     /**
-     * Applies a material variant to an entity
+     * Applies a material variant to an entity hierarchy.
      *
-     * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
-     * @param {Entity} entity - Is the entity to which material variants will be applied
+     * @param {string} name - The name of the variant, as quered from getMaterialVariants
+     * @param {Entity} entity - The entity root to which material variants will be applied
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -102,7 +102,7 @@ class ContainerResource {
      * set of MeshInstances to apply a variant, instead of the entire entity
      *
      * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
-     * @param {MeshInstance} [instances] - An array of mesh instances
+     * @param {MeshInstance[]} instances - An array of mesh instances
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
      *     var entity = asset.resource.instantiateRenderEntity({
