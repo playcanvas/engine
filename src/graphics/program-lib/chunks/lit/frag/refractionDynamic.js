@@ -2,10 +2,6 @@ export default /* glsl */`
 uniform float material_refractionIndex;
 uniform float material_invAttenuationDistance;
 uniform vec3 material_attenuation;
-uniform mat4 matrix_viewProjection;
-uniform mat4 matrix_model;
-uniform sampler2D uSceneColorMap;
-uniform vec4 uScreenSize;
 
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     float vn = dot(viewVec, Normal);

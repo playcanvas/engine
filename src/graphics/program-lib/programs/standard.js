@@ -320,6 +320,17 @@ const standard = {
                 func.append("getNormal();");
             }
 
+            if (litShader.needsSceneColor) {
+                decl.append("uniform sampler2D uSceneColorMap;");
+            }
+            if (litShader.needsScreenSize) {
+                decl.append("uniform vec4 uScreenSize;");
+            }
+            if (litShader.needsTransforms) {
+                decl.append("uniform mat4 matrix_viewProjection;");
+                decl.append("uniform mat4 matrix_model;");
+            }
+
             // albedo
             decl.append("vec3 dAlbedo;");
             if (options.diffuseDetail) {
