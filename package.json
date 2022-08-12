@@ -32,17 +32,17 @@
     "globals": {
       "Ammo": "readonly",
       "earcut": "readonly",
+      "glslang": "readonly",
+      "GPUBufferUsage": "readonly",
+      "GPUColorWrite": "readonly",
+      "GPUShaderStage": "readonly",
+      "GPUTextureUsage": "readonly",
       "opentype": "readonly",
       "pc": "readonly",
       "TWEEN": "readonly",
       "webkitAudioContext": "readonly",
       "XRRay": "readonly",
-      "XRWebGLLayer": "readonly",
-      "GPUBufferUsage": "readonly",
-      "GPUTextureUsage": "readonly",
-      "GPUShaderStage": "readonly",
-      "GPUColorWrite": "readonly",
-      "glslang": "readonly"
+      "XRWebGLLayer": "readonly"
     },
     "parser": "@babel/eslint-parser",
     "parserOptions": {
