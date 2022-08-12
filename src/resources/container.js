@@ -66,15 +66,6 @@ class ContainerResource {
      * Queries the list of available material variants.
      *
      * @returns {string[]} An array of variant names.
-     * @example
-     * // load a glb file and instantiate an entity with a render component based on it
-     * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
-     *         castShadows: true
-     *     });
-     *     app.root.addChild(entity);
-     *     var materialVariants = asset.resource.getMaterialVariants();
-     *     var variantListOptions = materialVariants.map((variant) => ({ v: variant, t: variant }));
      */
     getMaterialVariants() {
         return null;
@@ -83,7 +74,7 @@ class ContainerResource {
     /**
      * Applies a material variant to an entity hierarchy.
      *
-     * @param {string} name - The name of the variant, as quered from getMaterialVariants
+     * @param {string} name - The name of the variant, as quered from getMaterialVariants.
      * @param {Entity} entity - The entity root to which material variants will be applied
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
@@ -92,14 +83,15 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     var materialVariants = asset.resource.getMaterialVariants();
      *     asset.resource.applyMaterialVariant(materialVariants[0], entity);
      */
     applyMaterialVariant(name, entity) {}
 
     /**
-     * Applies a material variant to a set of mesh instances. This method allows for a selective
-     * set of MeshInstances to apply a variant, instead of the entire entity
+     * Applies a material variant to a set of mesh instances. Compared to the applyMaterialVariant,
+     * this method allows for setting the variant on a specific set of mesh instances instead of the 
+     * whole entity.
      *
      * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
      * @param {MeshInstance[]} instances - An array of mesh instances
@@ -109,7 +101,7 @@ class ContainerResource {
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = Object.keys(asset.resource.getMaterialVariants());
+     *     var materialVariants = asset.resource.getMaterialVariants();
      *     const renders = entity.findComponents("render");
      *     for (var i = 0; i < renders.length; i++) {
      *         const renderComponent = renders[i];
