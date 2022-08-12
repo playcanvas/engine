@@ -79,6 +79,7 @@
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-strip": "^2.1.0",
     "@rollup/pluginutils": "^4.2.1",
+    "@webgpu/types": "^0.1.21",
     "c8": "^7.12.0",
     "chai": "^4.3.6",
     "eslint": "^8.21.0",
@@ -124,8 +125,5 @@
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.js -- --single-run --release",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
-  },
-  "dependencies": {
-    "@webgpu/types": "^0.1.21"
   }
 }
