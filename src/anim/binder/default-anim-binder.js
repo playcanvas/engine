@@ -79,6 +79,11 @@ class DefaultAnimBinder {
             },
 
             'weight': function (node, weightName) {
+                if (weightName.indexOf('name.') === 0) {
+                    weightName = weightName.replace('name.', '');
+                } else {
+                    weightName = Number(weightName);
+                }
                 const meshInstances = findMeshInstances(node);
                 if (meshInstances) {
                     for (let i = 0; i < meshInstances.length; ++i) {
