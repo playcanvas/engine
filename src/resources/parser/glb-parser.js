@@ -1812,9 +1812,10 @@ const createVariants = function (gltf) {
     if (!gltf.hasOwnProperty("extensions") || !gltf.extensions.hasOwnProperty("KHR_materials_variants"))
         return null;
 
+    const data = gltf.extensions.KHR_materials_variants.variants;
     const variants = {};
-    for (let i = 0; i < gltf.extensions.KHR_materials_variants.variants.length; i++) {
-        variants[gltf.extensions.KHR_materials_variants.variants[i].name] = i;
+    for (let i = 0; i < data.length; i++) {
+        variants[data[i].name] = i;
     }
     return variants;
 };
