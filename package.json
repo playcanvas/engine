@@ -37,7 +37,12 @@
       "TWEEN": "readonly",
       "webkitAudioContext": "readonly",
       "XRRay": "readonly",
-      "XRWebGLLayer": "readonly"
+      "XRWebGLLayer": "readonly",
+      "GPUBufferUsage": "readonly",
+      "GPUTextureUsage": "readonly",
+      "GPUShaderStage": "readonly",
+      "GPUColorWrite": "readonly",
+      "glslang": "readonly"
     },
     "parser": "@babel/eslint-parser",
     "parserOptions": {
