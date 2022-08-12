@@ -1,6 +1,6 @@
 import {
     BLENDEQUATION_ADD,
-    BLENDMODE_ZERO, BLENDMODE_ONE,
+    BLENDMODE_ZERO, BLENDMODE_ONE
 } from '../constants.js';
 
 class WebgpuRenderState {
