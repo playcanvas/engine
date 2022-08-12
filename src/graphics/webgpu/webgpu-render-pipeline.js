@@ -75,7 +75,6 @@ class WebgpuRenderPipeline {
         // cached pipeline
         let pipeline = this.cache.get(key);
         if (!pipeline) {
-            console.log("create pipeline");
 
             const primitiveTopology = _primitiveTopology[primitive.type];
             Debug.assert(primitiveTopology, `Unsupported primitive topology ${primitive}`);

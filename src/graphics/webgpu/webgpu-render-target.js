@@ -66,8 +66,8 @@ class WebgpuRenderTarget {
     }
 
     /**
-     * Assign color buffer to which the render target renders to. Used to assign
-     * per frame main framebuffer color buffer.
+     * Assign a color buffer. This allows the color buffer of the main framebuffer
+     * to be swapped each frame to a buffer provided by the context.
      *
      * @param {GPUTexture} gpuTexture - The color buffer.
      */
@@ -102,7 +102,7 @@ class WebgpuRenderTarget {
         const width = renderTarget.width;
         const height = renderTarget.height;
 
-        // depth buffer that we render to (sinple or multi-sampled). We don't create resolve
+        // depth buffer that we render to (single or multi-sampled). We don't create resolve
         // depth buffer as we don't currently resolve it. This might need to change in the future.
         if (renderTarget.depth) {
 

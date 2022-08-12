@@ -8,7 +8,6 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
 class WebgpuVertexBuffer extends WebgpuBuffer {
     constructor(vertexBuffer, format) {
         super();
-        console.log("create WebGPU vertex buffer");
     }
 
     destroy(device) {
