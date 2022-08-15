@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { TRACEID_TEXTURE_ALLOC } from '../core/constants.js';
+import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../core/constants.js';
 import { math } from '../math/math.js';
 
 import {
@@ -317,6 +317,9 @@ class Texture {
      * @ignore
      */
     adjustVramSizeTracking(vram, size) {
+
+        Debug.trace(TRACEID_VRAM_TEXTURE, `${this.id} ${this.name} size: ${size} vram.texture: ${vram.tex} => ${vram.tex + size}`);
+
         vram.tex += size;
 
         // #if _PROFILER
