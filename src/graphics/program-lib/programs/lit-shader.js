@@ -576,7 +576,7 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives;
+        const applySlopeScaleBias = lightType === LIGHTTYPE_DIRECTIONAL && !device.webgl2 && device.extStandardDerivatives;
 
         if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
