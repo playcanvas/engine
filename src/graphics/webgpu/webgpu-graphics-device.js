@@ -70,7 +70,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     async initWebGpu() {
 
         if (!window.navigator.gpu) {
-            throw 'Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.';
+            throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
         this.glslang = await glslang();
