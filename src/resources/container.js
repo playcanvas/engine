@@ -90,11 +90,12 @@ class ContainerResource {
 
     /**
      * Applies a material variant to a set of mesh instances. Compared to the applyMaterialVariant,
-     * this method allows for setting the variant on a specific set of mesh instances instead of the 
+     * this method allows for setting the variant on a specific set of mesh instances instead of the
      * whole entity.
      *
-     * @param {string} name - Is the name of the variant, as quered from getMaterialVariants
+     * @param {string} name - The the name of the variant, as quered from getMaterialVariants
      * @param {MeshInstance[]} instances - An array of mesh instances
+     * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
      *     var entity = asset.resource.instantiateRenderEntity({
@@ -109,6 +110,20 @@ class ContainerResource {
      *     }
      */
     applyMaterialVariantInstances(name, instances) {}
+
+    /**
+     * Reset variant selection on entity hierarchy to use the default material
+     *
+     * @param {Entity} entity - The entity to reset variants on
+     */
+    resetMaterialVariant(entity) {}
+
+    /**
+     * Reset variant selection on set of mesh instances to use the default material
+     *
+     * @param {MeshInstance[]} instances - An array of mesh instances to reset variants on
+     */
+    resetMaterialVariantInstances(instances) {}
 }
 
 /**

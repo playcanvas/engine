@@ -199,6 +199,10 @@ class GlbContainerResource {
 
     // apply material variant to entity
     applyMaterialVariant(name, entity) {
+        if (!name) {
+            this.resetMaterialVariant(entity);
+            return;
+        }
         const variant = this.data.variants[name];
         if (variant === undefined) {
             Debug.warn(`No variant named ${name} exists in resource`);
@@ -211,8 +215,21 @@ class GlbContainerResource {
         }
     }
 
+    // reset material variants on entity
+    resetMaterialVariant(entity) {
+        const renders = entity.findComponents("render");
+        for (let i = 0; i < renders.length; i++) {
+            const renderComponent = renders[i];
+            this._resetMaterialVariant(renderComponent.meshInstances);
+        }
+    }
+
     // apply material variant to mesh instances
     applyMaterialVariantInstances(name, instances) {
+        if (!name) {
+            this.resetMaterialVariantInstances(instances);
+            return;
+        }
         const variant = this.data.variants[name];
         if (variant === undefined) {
             Debug.warn(`No variant named ${name} exists in resource`);
@@ -221,13 +238,26 @@ class GlbContainerResource {
         this._applyMaterialVariant(variant, instances);
     }
 
+    // reset material variant on instances
+    resetMaterialVariantInstances(instances) {
+        this._resetMaterialVariant(instances);
+    }
+
     // internally apply variant to instances
     _applyMaterialVariant(variant, instances) {
         instances.forEach((instance) => {
             const meshVariants = this.data.meshVariants[instance.mesh.id];
             if (meshVariants) {
                 instance.material = this.data.materials[meshVariants[variant]];
+                Debug.assert(instance.material);
             }
+        });
+    }
+
+    // internally apply the default material
+    _resetMaterialVariant(instances) {
+        instances.forEach((instances) => {
+            instances.material = this._defaultMaterial;
         });
     }
 
