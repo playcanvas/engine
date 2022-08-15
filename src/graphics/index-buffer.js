@@ -1,9 +1,12 @@
 import { Debug } from '../core/debug.js';
+import { TRACEID_VRAM_IB } from '../core/constants.js';
 import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
+let id = 0;
 
 /**
  * An index buffer stores index values into a {@link VertexBuffer}. Indexed graphical primitives
@@ -49,6 +52,8 @@ class IndexBuffer {
         this.numIndices = numIndices;
         this.usage = usage;
 
+        this.id = id++;
+
         this.impl = graphicsDevice.createIndexBufferImpl(this);
 
         // Allocate the storage
@@ -62,7 +67,7 @@ class IndexBuffer {
             this.storage = new ArrayBuffer(this.numBytes);
         }
 
-        graphicsDevice._vram.ib += this.numBytes;
+        this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);
 
         this.device.buffers.push(this);
     }
@@ -83,8 +88,15 @@ class IndexBuffer {
             this.device.indexBuffer = null;
         }
 
-        this.impl.destroy(device);
-        this.device._vram.ib -= this.storage.byteLength;
+        if (this.impl.initialized) {
+            this.impl.destroy(device);
+            this.adjustVramSizeTracking(device._vram, -this.storage.byteLength);
+        }
+    }
+
+    adjustVramSizeTracking(vram, size) {
+        Debug.trace(TRACEID_VRAM_IB, `${this.id} size: ${size} vram.ib: ${vram.ib} => ${vram.ib + size}`);
+        vram.ib += size;
     }
 
     /**
