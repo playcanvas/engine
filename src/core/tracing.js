@@ -24,6 +24,9 @@ class Tracing {
      * - {@link TRACEID_RENDER_TARGET_ALLOC}
      * - {@link TRACEID_TEXTURE_ALLOC}
      * - {@link TRACEID_SHADER_ALLOC}
+     * - {@link TRACEID_VRAM_TEXTURE}
+     * - {@link TRACEID_VRAM_VB}
+     * - {@link TRACEID_VRAM_IB}
      *
      * @param {boolean} enabled - New enabled state for the channel.
      */

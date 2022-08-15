@@ -1,4 +1,5 @@
 import { Debug } from '../core/debug.js';
+import { TRACEID_VRAM_VB } from '../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -37,7 +38,7 @@ class VertexBuffer {
 
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
-        graphicsDevice._vram.vb += this.numBytes;
+        this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);
 
         // Allocate the storage
         if (initialData) {
@@ -61,10 +62,15 @@ class VertexBuffer {
             device.buffers.splice(idx, 1);
         }
 
-        this.impl.destroy(device);
+        if (this.impl.initialized) {
+            this.impl.destroy(device);
+            this.adjustVramSizeTracking(device._vram, -this.storage.byteLength);
+        }
+    }
 
-        // TODO: double check this works correctly
-        device._vram.vb -= this.storage.byteLength;
+    adjustVramSizeTracking(vram, size) {
+        Debug.trace(TRACEID_VRAM_VB, `${this.id} size: ${size} vram.vb: ${vram.vb} => ${vram.vb + size}`);
+        vram.vb += size;
     }
 
     /**
