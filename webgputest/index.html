@@ -332,7 +332,7 @@ void main() {
                 textures.forEach((texture) => {
                     loadTexture(app, texture, texture.url);
                 });
-            });
+            }).catch(console.error);
         }
 
         window.addEventListener('load', main);
