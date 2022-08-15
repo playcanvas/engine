@@ -16,6 +16,10 @@ class WebgpuBuffer {
         }
     }
 
+    get initialized() {
+        return !!this.buffer;
+    }
+
     loseContext() {
     }
 
