@@ -576,6 +576,7 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
+        const applySlopeScaleBias = lightType === LIGHTTYPE_DIRECTIONAL && !device.webgl2 && device.extStandardDerivatives;
 
         if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
@@ -583,14 +584,13 @@ class LitShader {
             code += "    float depth = gl_FragCoord.z;\n";
         }
 
+        if (applySlopeScaleBias) {
+            code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+            code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+        }
+
         if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
-            if (device.extStandardDerivatives && !device.webgl2) {
-                code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-                code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
-                code += "    gl_FragColor = packFloat(depth);\n";
-            } else {
-                code += "    gl_FragColor = packFloat(depth);\n";
-            }
+            code += "    gl_FragColor = packFloat(depth);\n";
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
