@@ -1,5 +1,6 @@
 export default /* glsl */`
 uniform float material_refractionIndex;
+
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     float vn = dot(viewVec, Normal);
     float k = 1.0 - IOR * IOR * (1.0 - vn * vn);
