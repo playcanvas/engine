@@ -98,17 +98,15 @@ class WebgpuRenderTarget {
         Debug.assert(!renderTarget._depthBuffer, 'WebgpuRenderTarget does not yet support options.depthBuffer');
         const wgpu = device.wgpu;
 
-        const samples = renderTarget.samples;
-        const width = renderTarget.width;
-        const height = renderTarget.height;
+        const { samples, width, height, depth } = renderTarget;
 
         // depth buffer that we render to (single or multi-sampled). We don't create resolve
         // depth buffer as we don't currently resolve it. This might need to change in the future.
-        if (renderTarget.depth) {
+        if (depth) {
 
             /** @type {GPUTextureDescriptor} */
             const depthTextureDesc = {
-                size: [renderTarget.width, renderTarget.height, 1],
+                size: [width, height, 1],
                 dimension: '2d',
                 sampleCount: samples,
                 format: this.depthFormat,
