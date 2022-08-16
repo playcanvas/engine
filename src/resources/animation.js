@@ -6,6 +6,7 @@ import { Vec3 } from '../math/vec3.js';
 import { http, Http } from '../net/http.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
+import { AnimEvents } from '../anim/evaluator/anim-events.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
@@ -60,11 +61,16 @@ class AnimationHandler {
         });
     }
 
-    open(url, data) {
+    open(url, data, asset) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
             const glbResources = GlbParser.parse('filename.glb', data, null);
             if (glbResources) {
                 const animations = glbResources.animations;
+                if (asset?.data?.events) {
+                    for (let i = 0; i < animations.length; i++) {
+                        animations[i].events = new AnimEvents(Object.values(asset.data.events));
+                    }
+                }
                 glbResources.destroy();
                 return animations;
             }
