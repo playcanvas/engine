@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55 } from '../../constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56 } from '../../constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -39,6 +39,7 @@ const removedChunks = {
     reflectionDpAtlasPS: CHUNKAPI_1_51,
     reflectionPrefilteredCubePS: CHUNKAPI_1_51,
     reflectionPrefilteredCubeLodPS: CHUNKAPI_1_51,
+    refractionPS: CHUNKAPI_1_56,
 
     lightmapSingleVertPS: CHUNKAPI_1_55,
     normalMapFastPS: CHUNKAPI_1_55,

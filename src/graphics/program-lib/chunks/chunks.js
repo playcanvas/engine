@@ -144,7 +144,8 @@ import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
-import refractionPS from './lit/frag/refraction.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
@@ -179,6 +180,7 @@ import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import textureSamplePS from './standard/frag/textureSample.js';
+import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
@@ -349,7 +351,8 @@ const shaderChunks = {
     reflectionSpherePS,
     reflectionSphereLowPS,
     reflectionSheenPS,
-    refractionPS,
+    refractionCubePS,
+    refractionDynamicPS,
     reprojectPS,
     screenDepthPS,
     shadowCascadesPS,
@@ -384,6 +387,7 @@ const shaderChunks = {
     TBNfastPS,
     TBNObjectSpacePS,
     textureSamplePS,
+    thicknessPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,

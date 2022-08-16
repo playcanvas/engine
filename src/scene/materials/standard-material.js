@@ -237,6 +237,8 @@ let _params = new Set();
  * indices of refraction, the one around the object and the one of its own surface. In most
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
+ * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
+ * instead of pre-computed cube maps for refractions.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
@@ -717,6 +719,12 @@ class StandardMaterial extends Material {
             this._setParameter('material_refractionIndex', this.refractionIndex);
         }
 
+        if (this.useDynamicRefraction) {
+            this._setParameter('material_thickness', this.thickness);
+            this._setParameter('material_attenuation', getUniform('attenuation'));
+            this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
+        }
+
         this._setParameter('material_opacity', this.opacity);
 
         if (this.opacityFadesSpecular === false) {
@@ -1075,6 +1083,7 @@ function _defineMaterialProps() {
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
     _defineColor('sheen', new Color(1, 1, 1));
+    _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGlossiness', 0);
@@ -1098,6 +1107,8 @@ function _defineMaterialProps() {
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
     _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('thickness', 0);
+    _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
@@ -1150,6 +1161,7 @@ function _defineMaterialProps() {
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('shadingModel', SPECULAR_BLINN);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
+    _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
     _defineFlag('forceFragmentPrecision', null);
@@ -1166,6 +1178,7 @@ function _defineMaterialProps() {
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
     _defineTex2D('emissive', 0, 3, '', true);
+    _defineTex2D('thickness', 0, 1, '', true);
     _defineTex2D('specularityFactor', 0, 1, '', true);
     _defineTex2D('normal', 0, -1, '', false);
     _defineTex2D('metalness', 0, 1, '', true);

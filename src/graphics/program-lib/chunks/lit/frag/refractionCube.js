@@ -13,11 +13,8 @@ void addRefraction() {
     vec3 tmpDir = dReflDirW;
     vec4 tmpRefl = dReflection;
     dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
-
     dReflection = vec4(0);
-
     addReflection();
-
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, dTransmission);
     dReflection = tmpRefl;
     dReflDirW = tmpDir;
