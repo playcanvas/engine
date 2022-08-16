@@ -1227,8 +1227,6 @@ const extensionEmissiveStrength = function (data, material, textures) {
     }
 };
 
-variant
-
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
