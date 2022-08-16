@@ -1218,7 +1218,7 @@ const extensionVolume = function (data, material, textures) {
     if (data.hasOwnProperty('attenuationColor')) {
         const color = data.attenuationColor;
         material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-	}
+    }
 };
 
 const extensionEmissiveStrength = function (data, material, textures) {
