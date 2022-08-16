@@ -15,7 +15,6 @@ const chunkVersions = {
     specularPS: CHUNKAPI_1_55,
     normalMapPS: CHUNKAPI_1_55,
     normalDetailMapPS: CHUNKAPI_1_55,
-    thicknessPS: CHUNKAPI_1_56,
 
     // backend
     clusteredLightPS: CHUNKAPI_1_55,
@@ -27,9 +26,7 @@ const chunkVersions = {
     lightSpecularBlinnPS: CHUNKAPI_1_55,
     lightSpecularPhongPS: CHUNKAPI_1_55,
     normalVertexPS: CHUNKAPI_1_55,
-    startPS: CHUNKAPI_1_55,
-    refractionCubePS: CHUNKAPI_1_56,
-    refractionDynamicPS: CHUNKAPI_1_56
+    startPS: CHUNKAPI_1_55
 };
 
 // removed
