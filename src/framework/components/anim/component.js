@@ -12,7 +12,6 @@ import {
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
-import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
 import { Entity } from '../../entity.js';
 
 /** @typedef {import('./system.js').AnimComponentSystem} AnimComponentSystem */
@@ -429,10 +428,6 @@ class AnimComponent extends Component {
     }
 
     onAnimationAssetLoaded(layerName, stateName, asset) {
-        const animTrack = asset.resource;
-        if (asset.data.events) {
-            animTrack.events = new AnimEvents(Object.values(asset.data.events));
-        }
         this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
     }
 
