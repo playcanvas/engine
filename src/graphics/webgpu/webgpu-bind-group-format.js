@@ -10,13 +10,6 @@ import { WebgpuUtils } from './webgpu-utils.js';
  */
 class WebgpuBindGroupFormat {
     /**
-     * Unique key, used for caching
-     *
-     * @type {string}
-     */
-    key = '';
-
-    /**
      * @param {BindGroupFormat} bindGroupFormat -
      */
     constructor(bindGroupFormat) {
@@ -25,7 +18,14 @@ class WebgpuBindGroupFormat {
         const device = bindGroupFormat.device;
 
         /** @type {GPUBindGroupLayoutDescriptor} */
-        const descr = this.createDescriptor(bindGroupFormat);
+        const { key, descr } = this.createDescriptor(bindGroupFormat);
+
+        /**
+         * Unique key, used for caching
+         *
+         * @type {string}
+         */
+        this.key = key;
 
         /** @type {GPUBindGroupLayout} */
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
@@ -130,10 +130,13 @@ class WebgpuBindGroupFormat {
             });
         });
 
-        this.key = key;
+        const descr = {
+            entries: entries
+        };
 
         return {
-            entries: entries
+            key,
+            descr
         };
     }
 }
