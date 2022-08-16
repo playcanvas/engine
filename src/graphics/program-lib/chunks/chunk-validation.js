@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55 } from '../../constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56 } from '../../constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -15,6 +15,7 @@ const chunkVersions = {
     specularPS: CHUNKAPI_1_55,
     normalMapPS: CHUNKAPI_1_55,
     normalDetailMapPS: CHUNKAPI_1_55,
+    thicknessPS: CHUNKAPI_1_56,
 
     // backend
     clusteredLightPS: CHUNKAPI_1_55,
@@ -26,7 +27,9 @@ const chunkVersions = {
     lightSpecularBlinnPS: CHUNKAPI_1_55,
     lightSpecularPhongPS: CHUNKAPI_1_55,
     normalVertexPS: CHUNKAPI_1_55,
-    startPS: CHUNKAPI_1_55
+    startPS: CHUNKAPI_1_55,
+    refractionCubePS: CHUNKAPI_1_56,
+    refractionDynamicPS: CHUNKAPI_1_56
 };
 
 // removed
@@ -39,6 +42,7 @@ const removedChunks = {
     reflectionDpAtlasPS: CHUNKAPI_1_51,
     reflectionPrefilteredCubePS: CHUNKAPI_1_51,
     reflectionPrefilteredCubeLodPS: CHUNKAPI_1_51,
+    refractionPS: CHUNKAPI_1_56,
 
     lightmapSingleVertPS: CHUNKAPI_1_55,
     normalMapFastPS: CHUNKAPI_1_55,
