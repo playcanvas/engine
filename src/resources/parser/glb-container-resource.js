@@ -198,9 +198,9 @@ class GlbContainerResource {
     }
 
     // apply material variant to entity
-    applyMaterialVariant(name, entity) {
+    applyMaterialVariant(entity, name) {
         if (!name) {
-            this.resetMaterialVariant(entity);
+            this._resetMaterialVariant(entity);
             return;
         }
         const variant = this.data.variants[name];
@@ -216,18 +216,18 @@ class GlbContainerResource {
     }
 
     // reset material variants on entity
-    resetMaterialVariant(entity) {
+    _resetMaterialVariant(entity) {
         const renders = entity.findComponents("render");
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
-            this._resetMaterialVariant(renderComponent.meshInstances);
+            this._resetMaterialVariantInstances(renderComponent.meshInstances);
         }
     }
 
     // apply material variant to mesh instances
-    applyMaterialVariantInstances(name, instances) {
+    applyMaterialVariantInstances(instances, name) {
         if (!name) {
-            this.resetMaterialVariantInstances(instances);
+            this._resetMaterialVariantInstances(instances);
             return;
         }
         const variant = this.data.variants[name];
@@ -239,8 +239,10 @@ class GlbContainerResource {
     }
 
     // reset material variant on instances
-    resetMaterialVariantInstances(instances) {
-        this._resetMaterialVariant(instances);
+    _resetMaterialVariantInstances(instances) {
+        instances.forEach((instances) => {
+            instances.material = this._defaultMaterial;
+        });
     }
 
     // internally apply variant to instances
@@ -251,13 +253,6 @@ class GlbContainerResource {
                 instance.material = this.data.materials[meshVariants[variant]];
                 Debug.assert(instance.material);
             }
-        });
-    }
-
-    // internally apply the default material
-    _resetMaterialVariant(instances) {
-        instances.forEach((instances) => {
-            instances.material = this._defaultMaterial;
         });
     }
 

@@ -74,8 +74,9 @@ class ContainerResource {
     /**
      * Applies a material variant to an entity hierarchy.
      *
-     * @param {string} name - The name of the variant, as quered from getMaterialVariants.
      * @param {Entity} entity - The entity root to which material variants will be applied
+     * @param {string} [name] - The name of the variant, as quered from getMaterialVariants,
+     * if null the variant will be reset to the default
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -86,15 +87,16 @@ class ContainerResource {
      *     var materialVariants = asset.resource.getMaterialVariants();
      *     asset.resource.applyMaterialVariant(materialVariants[0], entity);
      */
-    applyMaterialVariant(name, entity) {}
+    applyMaterialVariant(entity, name) {}
 
     /**
      * Applies a material variant to a set of mesh instances. Compared to the applyMaterialVariant,
      * this method allows for setting the variant on a specific set of mesh instances instead of the
      * whole entity.
      *
-     * @param {string} name - The the name of the variant, as quered from getMaterialVariants
      * @param {MeshInstance[]} instances - An array of mesh instances
+     * @param {string} [name] - The the name of the variant, as quered from getMaterialVariants,
+     * if null the variant will be reset to the default
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -109,21 +111,7 @@ class ContainerResource {
      *         asset.resource.applyMaterialVariantInstances(materialVariants[0], renderComponent.meshInstances);
      *     }
      */
-    applyMaterialVariantInstances(name, instances) {}
-
-    /**
-     * Reset variant selection on entity hierarchy to use the default material
-     *
-     * @param {Entity} entity - The entity to reset variants on
-     */
-    resetMaterialVariant(entity) {}
-
-    /**
-     * Reset variant selection on set of mesh instances to use the default material
-     *
-     * @param {MeshInstance[]} instances - An array of mesh instances to reset variants on
-     */
-    resetMaterialVariantInstances(instances) {}
+    applyMaterialVariantInstances(instances, name) {}
 }
 
 /**
