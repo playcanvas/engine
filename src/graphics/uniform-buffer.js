@@ -71,7 +71,7 @@ class UniformBuffer {
         const offset = uniformFormat.offset;
 
         const value = uniformFormat.scopeId.value;
-        Debug.assert(value, `Value was not set when assigning to uniform [${uniformFormat.name}]`);
+        Debug.assert(value !== undefined, `Value was not set when assigning to uniform [${uniformFormat.name}]`);
         this.storageFloat32.set(value, offset);
     }
 
