@@ -75,7 +75,7 @@ class ContainerResource {
      * Applies a material variant to an entity hierarchy.
      *
      * @param {Entity} entity - The entity root to which material variants will be applied
-     * @param {string} [name] - The name of the variant, as quered from getMaterialVariants,
+     * @param {string} [name] - The name of the variant, as queried from getMaterialVariants,
      * if null the variant will be reset to the default
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
@@ -85,7 +85,7 @@ class ContainerResource {
      *     });
      *     app.root.addChild(entity);
      *     var materialVariants = asset.resource.getMaterialVariants();
-     *     asset.resource.applyMaterialVariant(materialVariants[0], entity);
+     *     asset.resource.applyMaterialVariant(entity, materialVariants[0]);
      */
     applyMaterialVariant(entity, name) {}
 
@@ -105,10 +105,10 @@ class ContainerResource {
      *     });
      *     app.root.addChild(entity);
      *     var materialVariants = asset.resource.getMaterialVariants();
-     *     const renders = entity.findComponents("render");
+     *     var renders = entity.findComponents("render");
      *     for (var i = 0; i < renders.length; i++) {
-     *         const renderComponent = renders[i];
-     *         asset.resource.applyMaterialVariantInstances(materialVariants[0], renderComponent.meshInstances);
+     *         var renderComponent = renders[i];
+     *         asset.resource.applyMaterialVariantInstances(renderComponent.meshInstances, materialVariants[0]);
      *     }
      */
     applyMaterialVariantInstances(instances, name) {}
