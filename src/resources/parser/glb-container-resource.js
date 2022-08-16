@@ -200,7 +200,11 @@ class GlbContainerResource {
     // apply material variant to entity
     applyMaterialVariant(entity, name) {
         if (!name) {
-            this._resetMaterialVariant(entity);
+            const renders = entity.findComponents("render");
+            for (let i = 0; i < renders.length; i++) {
+                const renderComponent = renders[i];
+                this._resetMaterialVariantInstances(renderComponent.meshInstances);
+            }
             return;
         }
         const variant = this.data.variants[name];
@@ -212,15 +216,6 @@ class GlbContainerResource {
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
             this._applyMaterialVariant(variant, renderComponent.meshInstances);
-        }
-    }
-
-    // reset material variants on entity
-    _resetMaterialVariant(entity) {
-        const renders = entity.findComponents("render");
-        for (let i = 0; i < renders.length; i++) {
-            const renderComponent = renders[i];
-            this._resetMaterialVariantInstances(renderComponent.meshInstances);
         }
     }
 
