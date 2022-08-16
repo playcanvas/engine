@@ -1201,6 +1201,12 @@ const extensionSheen = function (data, material, textures) {
     material.chunks.sheenGlossPS = sheenGlossChunk;
 };
 
+const extensionEmissiveStrength = function (data, material, textures) {
+    if (data.hasOwnProperty('emissiveStrength')) {
+        material.emissiveIntensity = data.emissiveStrength;
+    }
+};
+
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
@@ -1363,13 +1369,14 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     // Provide list of supported extensions and their functions
     const extensions = {
-        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_clearcoat": extensionClearCoat,
-        "KHR_materials_unlit": extensionUnlit,
-        "KHR_materials_specular": extensionSpecular,
+        "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
+        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
+        "KHR_materials_sheen": extensionSheen,
+        "KHR_materials_specular": extensionSpecular,
         "KHR_materials_transmission": extensionTransmission,
-        "KHR_materials_sheen": extensionSheen
+        "KHR_materials_unlit": extensionUnlit
     };
 
     // Handle extensions
