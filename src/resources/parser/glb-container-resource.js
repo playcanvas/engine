@@ -199,15 +199,7 @@ class GlbContainerResource {
 
     // apply material variant to entity
     applyMaterialVariant(entity, name) {
-        if (!name) {
-            const renders = entity.findComponents("render");
-            for (let i = 0; i < renders.length; i++) {
-                const renderComponent = renders[i];
-                this._resetMaterialVariantInstances(renderComponent.meshInstances);
-            }
-            return;
-        }
-        const variant = this.data.variants[name];
+        const variant = name ? this.data.variants[name] : null;
         if (variant === undefined) {
             Debug.warn(`No variant named ${name} exists in resource`);
             return;
@@ -221,11 +213,7 @@ class GlbContainerResource {
 
     // apply material variant to mesh instances
     applyMaterialVariantInstances(instances, name) {
-        if (!name) {
-            this._resetMaterialVariantInstances(instances);
-            return;
-        }
-        const variant = this.data.variants[name];
+        const variant = name ? this.data.variants[name] : null;
         if (variant === undefined) {
             Debug.warn(`No variant named ${name} exists in resource`);
             return;
@@ -233,20 +221,17 @@ class GlbContainerResource {
         this._applyMaterialVariant(variant, instances);
     }
 
-    // reset material variant on instances
-    _resetMaterialVariantInstances(instances) {
-        instances.forEach((instances) => {
-            instances.material = this._defaultMaterial;
-        });
-    }
-
     // internally apply variant to instances
     _applyMaterialVariant(variant, instances) {
         instances.forEach((instance) => {
-            const meshVariants = this.data.meshVariants[instance.mesh.id];
-            if (meshVariants) {
-                instance.material = this.data.materials[meshVariants[variant]];
-                Debug.assert(instance.material);
+            if (variant === null) {
+                instance.material = this._defaultMaterial;
+            } else {
+                const meshVariants = this.data.meshVariants[instance.mesh.id];
+                if (meshVariants) {
+                    instance.material = this.data.materials[meshVariants[variant]];
+                    Debug.assert(instance.material);
+                }
             }
         });
     }
