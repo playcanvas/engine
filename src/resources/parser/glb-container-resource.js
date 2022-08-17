@@ -5,6 +5,7 @@ import { MorphInstance } from '../../scene/morph-instance.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
 import { Model } from '../../scene/model.js';
+import { Debug } from '../../core/debug.js';
 
 // Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {
@@ -75,10 +76,11 @@ class GlbContainerResource {
         const defaultMaterial = this._defaultMaterial;
         const skinnedMeshInstances = [];
 
-        const createMeshInstance = function (root, entity, mesh, materials, skins, gltfNode) {
+        const createMeshInstance = function (root, entity, mesh, materials, meshDefaultMaterials, skins, gltfNode) {
 
             // clone mesh instance
-            const material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
+            const materialIndex = meshDefaultMaterials[mesh.id];
+            const material = (materialIndex === undefined) ? defaultMaterial : materials[materialIndex];
             const meshInstance = new MeshInstance(mesh, material);
 
             // create morph instance
@@ -122,7 +124,7 @@ class GlbContainerResource {
                         for (var mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
-                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.skins, gltfNode);
+                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode);
 
                                 // add it to list
                                 if (!attachedMi) {
@@ -188,6 +190,50 @@ class GlbContainerResource {
 
         // return the scene hierarchy created from scene clones
         return GlbContainerResource.createSceneHierarchy(sceneClones, 'Entity');
+    }
+
+    // get material variants
+    getMaterialVariants() {
+        return Object.keys(this.data.variants);
+    }
+
+    // apply material variant to entity
+    applyMaterialVariant(entity, name) {
+        const variant = name ? this.data.variants[name] : null;
+        if (variant === undefined) {
+            Debug.warn(`No variant named ${name} exists in resource`);
+            return;
+        }
+        const renders = entity.findComponents("render");
+        for (let i = 0; i < renders.length; i++) {
+            const renderComponent = renders[i];
+            this._applyMaterialVariant(variant, renderComponent.meshInstances);
+        }
+    }
+
+    // apply material variant to mesh instances
+    applyMaterialVariantInstances(instances, name) {
+        const variant = name ? this.data.variants[name] : null;
+        if (variant === undefined) {
+            Debug.warn(`No variant named ${name} exists in resource`);
+            return;
+        }
+        this._applyMaterialVariant(variant, instances);
+    }
+
+    // internally apply variant to instances
+    _applyMaterialVariant(variant, instances) {
+        instances.forEach((instance) => {
+            if (variant === null) {
+                instance.material = this._defaultMaterial;
+            } else {
+                const meshVariants = this.data.meshVariants[instance.mesh.id];
+                if (meshVariants) {
+                    instance.material = this.data.materials[meshVariants[variant]];
+                }
+            }
+            Debug.assert(instance.material);
+        });
     }
 
     // helper function to create a single hierarchy from an array of nodes

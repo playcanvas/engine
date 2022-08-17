@@ -72,6 +72,9 @@ class GlbResources {
         this.animations = null;
         this.textures = null;
         this.materials = null;
+        this.variants = null;
+        this.meshVariants = null;
+        this.meshDefaultMaterials = null;
         this.renders = null;
         this.skins = null;
         this.lights = null;
@@ -753,7 +756,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -887,9 +890,18 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
-            // TODO: Refactor, we should not store temporary data on the mesh.
-            // The container should store some mapping table instead.
-            mesh.materialIndex = primitive.material;
+            if (primitive.hasOwnProperty("extensions") && primitive.extensions.hasOwnProperty("KHR_materials_variants")) {
+                const variants = primitive.extensions.KHR_materials_variants;
+                const tempMapping = {};
+                variants.mappings.forEach((mapping) => {
+                    mapping.variants.forEach((variant) => {
+                        tempMapping[variant] = mapping.material;
+                    });
+                });
+                meshVariants[mesh.id] = tempMapping;
+            }
+
+            meshDefaultMaterials[mesh.id] = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
             mesh.aabb = getAccessorBoundingBox(accessor);
@@ -1760,7 +1772,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1771,7 +1783,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials);
     });
 };
 
@@ -1794,6 +1806,18 @@ const createMaterials = function (gltf, textures, options, flipV) {
         }
         return material;
     });
+};
+
+const createVariants = function (gltf) {
+    if (!gltf.hasOwnProperty("extensions") || !gltf.extensions.hasOwnProperty("KHR_materials_variants"))
+        return null;
+
+    const data = gltf.extensions.KHR_materials_variants.variants;
+    const variants = {};
+    for (let i = 0; i < data.length; i++) {
+        variants[data[i].name] = i;
+    }
+    return variants;
 };
 
 const createAnimations = function (gltf, nodes, bufferViews, options) {
@@ -2005,7 +2029,10 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;
     }), options, flipV);
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV);
+    const variants = createVariants(gltf);
+    const meshVariants = {};
+    const meshDefaultMaterials = {};
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -2024,6 +2051,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.animations = animations;
     result.textures = textureAssets;
     result.materials = materials;
+    result.variants = variants;
+    result.meshVariants = meshVariants;
+    result.meshDefaultMaterials = meshDefaultMaterials;
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;
