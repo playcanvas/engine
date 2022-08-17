@@ -127,7 +127,7 @@ class AssetListLoader extends EventHandler {
             }
         });
         if (!loadingAssets && this._waitingAssets.size === 0) {
-            this.fire("load", Array.from(this._assets));
+            this._loadingComplete();
         }
     }
 
