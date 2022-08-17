@@ -20,40 +20,40 @@
 
     <script type="module">
 
-        import { AppBase } from "../src/framework/app-base.js";
-        import { AppOptions } from "../src/framework/app-options.js";
-        import { WebgpuGraphicsDevice } from '../src/graphics/webgpu/webgpu-graphics-device.js';
-        import { Shader } from '../src/graphics/shader.js';
-        import { Texture } from '../src/graphics/texture.js';
-        import { RenderTarget } from '../src/graphics/render-target.js';
+        import { AppBase } from "../../src/framework/app-base.js";
+        import { AppOptions } from "../../src/framework/app-options.js";
+        import { WebgpuGraphicsDevice } from '../../src/graphics/webgpu/webgpu-graphics-device.js';
+        import { Shader } from '../../src/graphics/shader.js';
+        import { Texture } from '../../src/graphics/texture.js';
+        import { RenderTarget } from '../../src/graphics/render-target.js';
         import {
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_R8_G8_B8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
-        } from '../src/graphics/constants.js';
-        import { Entity } from "../src/framework/entity.js";
-        import { Tracing } from "../src/core/tracing.js";
+        } from '../../src/graphics/constants.js';
+        import { Entity } from "../../src/framework/entity.js";
+        import { Tracing } from "../../src/core/tracing.js";
         import { 
             TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL
-        } from "../src/core/constants.js";
-        import { Color } from "../src/math/color.js";
-        import { Vec3 } from "../src/math/vec3.js";
-        import { Quat } from "../src/math/quat.js";
-        import { StandardMaterial } from "../src/scene/materials/standard-material.js";
-        import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../src/scene/constants.js";
+        } from "../../src/core/constants.js";
+        import { Color } from "../../src/math/color.js";
+        import { Vec3 } from "../../src/math/vec3.js";
+        import { Quat } from "../../src/math/quat.js";
+        import { StandardMaterial } from "../../src/scene/materials/standard-material.js";
+        import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../../src/scene/constants.js";
 
-        import { Material } from "../src/scene/materials/material.js";
-        import { BasicMaterial } from "../src/scene/materials/basic-material.js";
-        import { RenderComponentSystem } from '../src/framework/components/render/system.js';
-        import { CameraComponentSystem } from '../src/framework/components/camera/system.js';
-        import { LightComponentSystem } from '../src/framework/components/light/system.js';
-        import { TextureHandler } from '../src/resources/texture.js';
+        import { Material } from "../../src/scene/materials/material.js";
+        import { BasicMaterial } from "../../src/scene/materials/basic-material.js";
+        import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
+        import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
+        import { LightComponentSystem } from '../../src/framework/components/light/system.js';
+        import { TextureHandler } from '../../src/resources/texture.js';
 
         const textures = [
             {
-                url: "base.jpg"
+                url: "../assets/textures/playcanvas.png"
             },
             {
-                url: "../examples/assets/textures/seaside-rocks01-diffuse-alpha.png"
+                url: "../assets/textures/seaside-rocks01-diffuse-alpha.png"
             },
         ];
 
