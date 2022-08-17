@@ -113,7 +113,7 @@ describe('AssetListLoader', function () {
 
     describe('#load', function () {
 
-        it('can succeed if an asset is already loaded', function (done) {
+        it('can call the ready callback if an asset is already loaded', function (done) {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
             asset.on('load', (asset) => {
@@ -125,6 +125,19 @@ describe('AssetListLoader', function () {
                     done();
                 });
                 assetListLoader.load();
+            });
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        it('can call the load callback if an asset is already loaded', function (done) {
+            const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
+            const assetListLoader = new AssetListLoader([asset], app.assets);
+            asset.on('load', (asset) => {
+                expect(asset.loaded).to.equal(true);
+                assetListLoader.load(() => {
+                    done();
+                });
             });
             app.assets.add(asset);
             app.assets.load(asset);
