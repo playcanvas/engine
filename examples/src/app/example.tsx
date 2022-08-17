@@ -29,6 +29,11 @@ class ControlLoader extends Component <ControlLoaderProps, ControlLoaderState> {
         this.state = {
             exampleLoaded: false
         };
+        window.addEventListener('exampleLoading', () => {
+            this.setState({
+                exampleLoaded: false
+            });
+        });
         window.addEventListener('exampleLoad', () => {
             this.setState({
                 exampleLoaded: true
