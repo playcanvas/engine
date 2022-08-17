@@ -36,6 +36,8 @@
                 }
             });
         }
+        var event = new CustomEvent("exampleLoading");
+        window.top.dispatchEvent(event);
 
         // include the example class which contains the example function to execute and any assets to load
         {{{ exampleClass }}}
