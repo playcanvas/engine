@@ -949,7 +949,7 @@ class ElementInput {
             const element = this._elements[i];
 
             // check if any of the layers this element renders to is being rendered by the camera
-            if (!element.layers.some(v => camera.layers.indexOf(v) !== -1)) {
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
                 continue;
             }
 
@@ -1005,7 +1005,7 @@ class ElementInput {
             const element = this._elements[i];
 
             // check if any of the layers this element renders to is being rendered by the camera
-            if (!element.layers.some(v => camera.layers.indexOf(v) !== -1)) {
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
                 continue;
             }
 

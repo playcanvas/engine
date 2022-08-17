@@ -42,6 +42,7 @@ class Camera {
         this._frustumCulling = true;
         this._horizontalFov = false;
         this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
+        this._layersSet = new Set(this._layers);
         this._nearClip = 0.1;
         this._node = null;
         this._orthoHeight = 10;
@@ -225,10 +226,15 @@ class Camera {
 
     set layers(newValue) {
         this._layers = newValue.slice(0);
+        this._layersSet = new Set(this._layers);
     }
 
     get layers() {
         return this._layers;
+    }
+
+    get layersSet() {
+        return this._layersSet;
     }
 
     set nearClip(newValue) {
