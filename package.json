@@ -32,6 +32,11 @@
     "globals": {
       "Ammo": "readonly",
       "earcut": "readonly",
+      "glslang": "readonly",
+      "GPUBufferUsage": "readonly",
+      "GPUColorWrite": "readonly",
+      "GPUShaderStage": "readonly",
+      "GPUTextureUsage": "readonly",
       "opentype": "readonly",
       "pc": "readonly",
       "TWEEN": "readonly",

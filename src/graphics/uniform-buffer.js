@@ -61,8 +61,8 @@ class UniformBuffer {
     }
 
     /**
-     * Assign a value to the uniform specified by its format. This is the fast version of assining
-     * a valu to a uniform, avoiding any lookups.
+     * Assign a value to the uniform specified by its format. This is the fast version of assigning
+     * a value to a uniform, avoiding any lookups.
      *
      * @param {UniformFormat} uniformFormat - The format of the uniform.
      */
@@ -71,7 +71,7 @@ class UniformBuffer {
         const offset = uniformFormat.offset;
 
         const value = uniformFormat.scopeId.value;
-        Debug.assert(value, `Value was not set when assigning to uniform [${uniformFormat.name}]`);
+        Debug.assert(value !== undefined, `Value was not set when assigning to uniform [${uniformFormat.name}]`);
         this.storageFloat32.set(value, offset);
     }
 

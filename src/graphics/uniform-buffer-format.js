@@ -11,6 +11,7 @@ import {
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // map of UNIFORMTYPE_*** to byte size
+// rules: http://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_appl.pdf
 const uniformTypeToByteSize = [];
 uniformTypeToByteSize[UNIFORMTYPE_FLOAT] = 4;
 uniformTypeToByteSize[UNIFORMTYPE_VEC2] = 8;
