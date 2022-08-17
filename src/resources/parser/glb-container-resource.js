@@ -230,9 +230,9 @@ class GlbContainerResource {
                 const meshVariants = this.data.meshVariants[instance.mesh.id];
                 if (meshVariants) {
                     instance.material = this.data.materials[meshVariants[variant]];
-                    Debug.assert(instance.material);
                 }
             }
+            Debug.assert(instance.material);
         });
     }
 
