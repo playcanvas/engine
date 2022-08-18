@@ -240,7 +240,17 @@ for (const key in standardMaterialParameterTypes) {
 }
 
 const standardMaterialRemovedParameters = {
-    specularAntialias: 'boolean'
+    specularAntialias: 'boolean',
+    diffuseMapTint: 'boolean',
+    diffuseMapVertexColor: 'boolean',
+    emissiveMapTint: 'boolean',
+    emissiveMapVertexColor: 'boolean',
+    specularMapTint: 'boolean',
+    specularMapVertexColor: 'boolean',
+    metalnessMapVertexColor: 'boolean',
+    aoMapVertexColor: 'boolean',
+    opacityMapVertexColor: 'boolean',
+    glossMapVertexColor: 'boolean'
 };
 
 export {
