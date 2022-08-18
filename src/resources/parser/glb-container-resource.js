@@ -259,7 +259,7 @@ class GlbContainerResource {
     static createModel(glb, defaultMaterial) {
 
         const createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
-            const materialIndex = meshDefaultMaterials[mesh.id];
+            const materialIndex = glb.meshDefaultMaterials[mesh.id];
             const material = (materialIndex === undefined) ? defaultMaterial : materials[materialIndex];
             const meshInstance = new MeshInstance(mesh, material, node);
 
