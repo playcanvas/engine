@@ -53,6 +53,6 @@ void addRefraction() {
 
     // Apply fresnel effect on refraction
     vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, dNormalW), dSpecularity);
-    dDiffuseLight = mix(dDiffuseLight, refraction * dAlbedo * transmittance * fresnel, dTransmission);
+    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, dTransmission);
 }
 `;
