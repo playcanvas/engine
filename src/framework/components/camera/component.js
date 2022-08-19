@@ -347,6 +347,10 @@ class CameraComponent extends Component {
         return this._camera.layers;
     }
 
+    get layersSet() {
+        return this._camera.layersSet;
+    }
+
     /**
      * The post effects queue for this camera. Use this to add or remove post effects from the camera.
      *
