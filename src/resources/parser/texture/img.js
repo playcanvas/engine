@@ -116,7 +116,9 @@ class ImgParser {
             }
         };
 
-        image.src = url;
+        const urlEncoded = url.replace(originalUrl, encodeURIComponent(originalUrl));
+
+        image.src = urlEncoded;
     }
 
     _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
