@@ -89,6 +89,23 @@ class ShaderPass {
         Debug.assert(ShaderPass.isShadow(pass));
         return pass;
     }
+
+    /**
+     * Returns the define code line for the shader pass.
+     *
+     * @param {number} pass - The shader pass.
+     * @returns {string} - A code line.
+     */
+    static getPassShaderDefine(pass) {
+        if (pass === SHADER_PICK) {
+            return '#define PICK_PASS\n';
+        } else if (pass === SHADER_DEPTH) {
+            return '#define DEPTH_PASS\n';
+        } else if (ShaderPass.isShadow(pass)) {
+            return '#define SHADOW_PASS\n';
+        }
+        return '';
+    }
 }
 
 export { ShaderPass };

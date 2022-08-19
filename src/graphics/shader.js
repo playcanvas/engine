@@ -76,7 +76,9 @@ class Shader {
         this.definition = definition;
         this.name = definition.name || 'Untitled';
 
-        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`);
+        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`, {
+            definition
+        });
 
         Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
         Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
