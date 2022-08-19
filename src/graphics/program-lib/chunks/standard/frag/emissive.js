@@ -23,7 +23,7 @@ void getEmission() {
     #endif
 
     #ifdef MAPTEXTURE
-    dEmission *= $DECODE(texture2D(texture_emissiveMap, $UV, textureBias)).$CH;
+    dEmission *= $DECODE(texture2DBias(texture_emissiveMap, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

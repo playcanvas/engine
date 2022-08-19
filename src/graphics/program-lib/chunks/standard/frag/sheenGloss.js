@@ -15,7 +15,7 @@ void getSheenGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-    sheenGlossiness *= texture2D(texture_sheenGlossinessMap, $UV, textureBias).$CH;
+    sheenGlossiness *= texture2DBias(texture_sheenGlossinessMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

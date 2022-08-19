@@ -16,7 +16,7 @@ void getSheen() {
     #endif
 
     #ifdef MAPTEXTURE
-    sheenColor *= $DECODE(texture2D(texture_sheenMap, $UV, textureBias)).$CH;
+    sheenColor *= $DECODE(texture2DBias(texture_sheenMap, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

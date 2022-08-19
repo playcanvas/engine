@@ -33,7 +33,7 @@
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 
-            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC
         } from "../../src/core/constants.js";
         import { Color } from "../../src/math/color.js";
         import { Vec3 } from "../../src/math/vec3.js";
@@ -143,25 +143,26 @@ void main() {
 
         function createPrimitive2(app, numBoxes, x, y, z, blendMode) {
 
-            // a basic material, which does not have support for lighting
+            /*
+            // basic material
             const material = new BasicMaterial();
-
-            // diffuse color
             material.color.set(x, y, 1 - y);
-
-            // diffuse texture with alpha channel for transparency
             material.colorMap = textures[1].resource;
-
-            // disable culling to see back faces as well
             material.cull = CULLFACE_NONE;
-
-            // set up alpha test value
             material.alphaTest = x / numBoxes - 0.1;
-
-            // alpha blend mode
             material.blendType = blendMode;
+            */
 
-            const box = new Entity();
+            // standard material
+            const material = new StandardMaterial();
+            material.useLighting = false;
+            material.emissive = new Color(x, y, 1 - y);
+            material.emissiveTint = true;
+            material.blendType = blendMode;
+            material.emissiveMap = textures[1].resource;
+            material.update();
+
+            const box = new Entity("Box-primitive2");
             box.addComponent("render", {
                 material: material,
                 type: "box",
@@ -180,6 +181,7 @@ void main() {
 
             // Tracing.set(TRACEID_RENDER_FRAME, true);
             // Tracing.set(TRACEID_RENDER_PASS, true);
+            Tracing.set(TRACEID_SHADER_ALLOC, true);
 
             app.start();
 

@@ -15,7 +15,7 @@ void getThickness() {
     #endif
 
     #ifdef MAPTEXTURE
-    dThickness *= texture2D(texture_thicknessMap, $UV, textureBias).$CH;
+    dThickness *= texture2DBias(texture_thicknessMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

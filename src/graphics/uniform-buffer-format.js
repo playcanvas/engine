@@ -1,41 +1,36 @@
 import { Debug } from '../core/debug.js';
+import { math } from '../math/math.js';
 import {
     uniformTypeToName, bindGroupNames,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
-    UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4
+    UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
 } from './constants.js';
 
 /** @typedef {import('./scope-id.js').ScopeId} ScopeId */
 /** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
-// map of UNIFORMTYPE_*** to byte size
-// rules: http://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_appl.pdf
-const uniformTypeToByteSize = [];
-uniformTypeToByteSize[UNIFORMTYPE_FLOAT] = 4;
-uniformTypeToByteSize[UNIFORMTYPE_VEC2] = 8;
-uniformTypeToByteSize[UNIFORMTYPE_VEC3] = 12;
-uniformTypeToByteSize[UNIFORMTYPE_VEC4] = 16;
-uniformTypeToByteSize[UNIFORMTYPE_INT] = 4;
-uniformTypeToByteSize[UNIFORMTYPE_IVEC2] = 8;
-uniformTypeToByteSize[UNIFORMTYPE_IVEC3] = 12;
-uniformTypeToByteSize[UNIFORMTYPE_IVEC4] = 16;
-uniformTypeToByteSize[UNIFORMTYPE_BOOL] = 4;
-uniformTypeToByteSize[UNIFORMTYPE_BVEC2] = 8;
-uniformTypeToByteSize[UNIFORMTYPE_BVEC3] = 12;
-uniformTypeToByteSize[UNIFORMTYPE_BVEC4] = 16;
-uniformTypeToByteSize[UNIFORMTYPE_MAT4] = 64;
+// map of UNIFORMTYPE_*** to number of 32bit elements
+const uniformTypeToNumElements = [];
+uniformTypeToNumElements[UNIFORMTYPE_FLOAT] = 1;
+uniformTypeToNumElements[UNIFORMTYPE_VEC2] = 2;
+uniformTypeToNumElements[UNIFORMTYPE_VEC3] = 3;
+uniformTypeToNumElements[UNIFORMTYPE_VEC4] = 4;
+uniformTypeToNumElements[UNIFORMTYPE_INT] = 1;
+uniformTypeToNumElements[UNIFORMTYPE_IVEC2] = 2;
+uniformTypeToNumElements[UNIFORMTYPE_IVEC3] = 3;
+uniformTypeToNumElements[UNIFORMTYPE_IVEC4] = 4;
+uniformTypeToNumElements[UNIFORMTYPE_BOOL] = 1;
+uniformTypeToNumElements[UNIFORMTYPE_BVEC2] = 2;
+uniformTypeToNumElements[UNIFORMTYPE_BVEC3] = 3;
+uniformTypeToNumElements[UNIFORMTYPE_BVEC4] = 4;
+uniformTypeToNumElements[UNIFORMTYPE_MAT2] = 8;    // 2 x vec4
+uniformTypeToNumElements[UNIFORMTYPE_MAT3] = 12;   // 3 x vec4
+uniformTypeToNumElements[UNIFORMTYPE_MAT4] = 16;   // 4 x vec4
 
 // Handle additiona types:
-//      UNIFORMTYPE_MAT2 = 12;
-//      UNIFORMTYPE_MAT3 = 13;
-//      UNIFORMTYPE_TEXTURE2D = 15;
-//      UNIFORMTYPE_TEXTURECUBE = 16;
 //      UNIFORMTYPE_FLOATARRAY = 17;
-//      UNIFORMTYPE_TEXTURE2D_SHADOW = 18;
-//      UNIFORMTYPE_TEXTURECUBE_SHADOW = 19;
-//      UNIFORMTYPE_TEXTURE3D = 20;
 //      UNIFORMTYPE_VEC2ARRAY = 21;
 //      UNIFORMTYPE_VEC3ARRAY = 22;
 //      UNIFORMTYPE_VEC4ARRAY = 23;
@@ -66,13 +61,36 @@ class UniformFormat {
     /** @type {ScopeId} */
     scopeId;
 
-    // TODO: add count for arrays
+    /**
+     * Count of elements for arrays, otherwise 1.
+     *
+     * @type {number}
+     */
+    count;
 
-    constructor(name, type) {
+    constructor(name, type, count = 1) {
         this.name = name;
         this.type = type;
-        this.byteSize = uniformTypeToByteSize[type];
+
+        this.count = count;
+        Debug.assert(count === 1, `Uniform arrays are not currently supported - uniform ${name}`);
+
+        const elementSize = uniformTypeToNumElements[type];
+        Debug.assert(elementSize, `Unhandled uniform format ${type} used for ${name}`);
+
+        this.byteSize = count * elementSize * 4;
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
+    }
+
+    // std140 rules: https://registry.khronos.org/OpenGL/specs/gl/glspec45.core.pdf#page=159
+    calculateOffset(offset) {
+
+        // Note: vec3 has the same alignment as vec4
+        const alignment = this.byteSize <= 8 ? this.byteSize : 16;
+
+        // align the start offset
+        offset = math.roundUp(offset, alignment);
+        this.offset = offset / 4;
     }
 }
 
@@ -102,17 +120,19 @@ class UniformBufferFormat {
 
         // TODO: optimize uniforms ordering
 
-        let byteSize = 0;
+        let offset = 0;
         for (let i = 0; i < uniforms.length; i++) {
             const uniform = uniforms[i];
-            uniform.offset = byteSize / 4;
-            byteSize += uniform.byteSize;
+            uniform.calculateOffset(offset);
+            offset = uniform.offset * 4 + uniform.byteSize;
 
             uniform.scopeId = this.scope.resolve(uniform.name);
 
             this.map.set(uniform.name, uniform);
         }
-        this.byteSize = byteSize;
+
+        // round up buffer size
+        this.byteSize = math.roundUp(offset, 16);
     }
 
     /**

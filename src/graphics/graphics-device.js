@@ -183,6 +183,9 @@ class GraphicsDevice extends EventHandler {
         // Create the ScopeNamespace for shader attributes and variables
         this.scope = new ScopeSpace("Device");
 
+        this.textureBias = this.scope.resolve("textureBias");
+        this.textureBias.setValue(0.0);
+
         // Create the program library instance
         this.programLib = new ProgramLibrary(this);
     }

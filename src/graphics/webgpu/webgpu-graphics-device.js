@@ -307,11 +307,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     // #if _DEBUG
     pushMarker(name) {
-        // this.commandEncoder?.pushDebugGroup(name);
+        this.passEncoder?.pushDebugGroup(name);
     }
 
     popMarker() {
-        // this.commandEncoder?.popDebugGroup();
+        this.passEncoder?.popDebugGroup();
     }
     // #endif
 }
