@@ -33,7 +33,10 @@ const properties = [
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false }
+    { name: 'scissorRect', readonly: false },
+    { name: 'aperture', readonly: false },
+    { name: 'shutter', readonly: false },
+    { name: 'sensitivity', readonly: false }
 ];
 
 /**
@@ -121,6 +124,10 @@ const properties = [
  * both front and back faces will be rendered. Defaults to true.
  * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
  * for reflection rendering. Defaults to false.
+ * @property {number} aperture The aperture of the camera lens in f-stops. High values means small aperture,
+ * low values means high aperture. Default is 1.4.
+ * @property {number} shutter The shutter speed of the camera in seconds. Default is 1.
+ * @property {number} sensitivity The sensitivity in ISO. Default is 100.
  * @augments Component
  */
 class CameraComponent extends Component {
