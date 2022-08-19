@@ -248,9 +248,9 @@ const standardMaterialRemovedParameters = {
     glossMapVertexColor: 'boolean',
     metalnessMapVertexColor: 'boolean',
     opacityMapVertexColor: 'boolean',
+    specularAntialias: 'boolean',
     specularMapTint: 'boolean',
-    specularMapVertexColor: 'boolean',
-    specularAntialias: 'boolean'
+    specularMapVertexColor: 'boolean'
 };
 
 export {
