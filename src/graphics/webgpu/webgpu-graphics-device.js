@@ -65,6 +65,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.supportsUniformBuffers = true;
+        this.supportsBoneTextures = true;
+        this.supportsMorphTargetTexturesCore = true;
+        this.extTextureFloat = true;
+        this.extTextureHalfFloat = false; // TODO: likely supported as well
+        this.boneLimit = 1024;
     }
 
     async initWebGpu() {

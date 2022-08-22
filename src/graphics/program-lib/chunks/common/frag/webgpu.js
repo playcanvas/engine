@@ -1,5 +1,6 @@
 export default /* glsl */`
-out highp vec4 pc_fragColor;
+
+layout(location = 0) out highp vec4 pc_fragColor;
 #define gl_FragColor pc_fragColor
 
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
