@@ -90,11 +90,7 @@ class ShaderProcessor {
         const uniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
 
         // parse uniform lines
-        /** @type {Array<UniformLine>} */
-        const parsedUniforms = [];
-        uniforms.forEach((line) => {
-            parsedUniforms.push(new UniformLine(line));
-        });
+        const parsedUniforms = uniforms.map(line => new UniformLine(line));
 
         const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions);
 
