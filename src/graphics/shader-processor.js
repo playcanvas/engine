@@ -42,8 +42,7 @@ class UniformLine {
 
     splitToWords(line) {
         // remove any double spaces
-        line = line.replace(/\s+/g, ' ').trim();
-        return line.split(' ');
+        return line.trim().split(/\s+/);
     }
 
     get isSampler() {
