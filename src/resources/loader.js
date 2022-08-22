@@ -3,6 +3,8 @@
 /** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
+import { Debug } from '../core/debug.js';
+
 /**
  * Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
  *
@@ -99,7 +101,8 @@ class ResourceLoader {
     load(url, type, callback, asset) {
         const handler = this._handlers[type];
         if (!handler) {
-            const err = `No handler for asset type: '${type}' when loading [${url}]`;
+            const err = `No resource handler for asset type: '${type}' when loading [${url}]`;
+            Debug.warnOnce(err);
             callback(err);
             return;
         }
