@@ -83,6 +83,7 @@ class UniformFormat {
     }
 
     // std140 rules: https://registry.khronos.org/OpenGL/specs/gl/glspec45.core.pdf#page=159
+    // TODO: this support limited subset of functionality, arrays and structs are not supported.
     calculateOffset(offset) {
 
         // Note: vec3 has the same alignment as vec4
