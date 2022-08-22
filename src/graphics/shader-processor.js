@@ -27,7 +27,9 @@ class UniformLine {
     constructor(line) {
         this.line = line;
 
-        const words = this.splitToWords(line);
+        // split to words handling any number of spaces
+        const words = line.trim().split(/\s+/);
+
         this.precision = undefined;
         this.type = words[0];
         this.name = words[1];
@@ -38,15 +40,8 @@ class UniformLine {
             this.type = words[1];
             this.name = words[2];
         }
-    }
 
-    splitToWords(line) {
-        // remove any double spaces
-        return line.trim().split(/\s+/);
-    }
-
-    get isSampler() {
-        return this.type.indexOf('sampler') !== -1;
+        this.isSampler = this.type.indexOf('sampler') !== -1;
     }
 }
 
