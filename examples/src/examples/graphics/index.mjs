@@ -1,5 +1,6 @@
 import AreaLightsExample from "./area-lights";
 import AreaPickerExample from "./area-picker";
+import AssetViewerExample from "./asset-viewer";
 import BatchingDynamicExample from "./batching-dynamic";
 import BoxReflectionExample from "./box-reflection";
 import ClusteredAreaLightsExample from "./clustered-area-lights";
@@ -53,6 +54,7 @@ import VideoTextureExample from "./video-texture";
 export {
     AreaLightsExample,
     AreaPickerExample,
+    AssetViewerExample,
     BatchingDynamicExample,
     BoxReflectionExample,
     ClusteredAreaLightsExample,
