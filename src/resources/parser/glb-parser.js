@@ -1081,7 +1081,7 @@ const extensionClearCoat = function (data, material, textures) {
         #endif
         
         #ifdef MAPTEXTURE
-            ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+            ccGlossiness *= texture2DBias(texture_clearCoatGlossMap, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1200,7 +1200,7 @@ const extensionSheen = function (data, material, textures) {
         #endif
 
         #ifdef MAPTEXTURE
-        sheenGlossiness *= texture2D(texture_sheenGlossinessMap, $UV, textureBias).$CH;
+        sheenGlossiness *= texture2DBias(texture_sheenGlossinessMap, $UV, textureBias).$CH;
         #endif
 
         #ifdef MAPVERTEX
@@ -1258,7 +1258,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         #endif
         
         #ifdef MAPTEXTURE
-            dGlossiness *= texture2D(texture_glossMap, $UV, textureBias).$CH;
+            dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX

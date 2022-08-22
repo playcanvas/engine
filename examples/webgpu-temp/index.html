@@ -20,6 +20,8 @@
 
     <script type="module">
 
+        import { Asset } from "../../src/asset/asset.js";
+        import { AssetListLoader } from "../../src/asset/asset-list-loader.js";
         import { AppBase } from "../../src/framework/app-base.js";
         import { AppOptions } from "../../src/framework/app-options.js";
         import { WebgpuGraphicsDevice } from '../../src/graphics/webgpu/webgpu-graphics-device.js';
@@ -33,7 +35,7 @@
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 
-            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC
         } from "../../src/core/constants.js";
         import { Color } from "../../src/math/color.js";
         import { Vec3 } from "../../src/math/vec3.js";
@@ -48,31 +50,10 @@
         import { LightComponentSystem } from '../../src/framework/components/light/system.js';
         import { TextureHandler } from '../../src/resources/texture.js';
 
-        const textures = [
-            {
-                url: "../assets/textures/playcanvas.png"
-            },
-            {
-                url: "../assets/textures/seaside-rocks01-diffuse-alpha.png"
-            },
-        ];
-
-        // texture loader
-        let countToLoad = textures.length;
-        const loadTexture = (app, destination, url) => {
-            const asset = app.assets.loadFromUrl(url, 'texture', function (error, asset) {
-                if (error) {
-                    console.error(error);
-                    return;
-                }
-                destination.resource = asset.resource;
-                countToLoad--;
-
-                if (countToLoad === 0) {
-                    onLoaded(app);
-                }
-            });
-        }
+        const assets = {
+            'playcanvas': new Asset('color', 'texture', { url: '../assets/textures/playcanvas.png' }),
+            'rocks': new Asset('color', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' })
+        };
 
         const vertexShaderGLSL = /* glsl */`
 
@@ -124,7 +105,7 @@ void main() {
             const material = new Material();
             material.shader = shader;
             material.setParameter('material_diffuse', [color.r, color.g, color.b]);
-            material.setParameter('texture_emissiveMap', textures[0].resource);
+            material.setParameter('texture_emissiveMap', assets.playcanvas.resource);
 
             // create primitive
             const primitive = new Entity(primitiveType);
@@ -143,25 +124,26 @@ void main() {
 
         function createPrimitive2(app, numBoxes, x, y, z, blendMode) {
 
-            // a basic material, which does not have support for lighting
+            /*
+            // basic material
             const material = new BasicMaterial();
-
-            // diffuse color
             material.color.set(x, y, 1 - y);
-
-            // diffuse texture with alpha channel for transparency
-            material.colorMap = textures[1].resource;
-
-            // disable culling to see back faces as well
+            material.colorMap = assets.rocks.resource;
             material.cull = CULLFACE_NONE;
-
-            // set up alpha test value
             material.alphaTest = x / numBoxes - 0.1;
-
-            // alpha blend mode
             material.blendType = blendMode;
+            */
 
-            const box = new Entity();
+            // standard material
+            const material = new StandardMaterial();
+            material.useLighting = false;
+            material.emissive = new Color(x, y, 1 - y);
+            material.emissiveTint = true;
+            material.blendType = blendMode;
+            material.emissiveMap = assets.rocks.resource;
+            material.update();
+
+            const box = new Entity("Box-primitive2");
             box.addComponent("render", {
                 material: material,
                 type: "box",
@@ -180,6 +162,7 @@ void main() {
 
             // Tracing.set(TRACEID_RENDER_FRAME, true);
             // Tracing.set(TRACEID_RENDER_PASS, true);
+            Tracing.set(TRACEID_SHADER_ALLOC, true);
 
             app.start();
 
@@ -299,7 +282,7 @@ void main() {
                 textureCamera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
                 textureCamera.lookAt(Vec3.ZERO);
 
-                app.drawTexture(0.6, -0.7, 0.6, 0.3, textures[0].resource);
+                app.drawTexture(0.6, -0.7, 0.6, 0.3, assets.rocks.resource);
                 app.drawTexture(-0.6, -0.7, 0.6, 0.5, renderTexture);
             });
 
@@ -328,10 +311,11 @@ void main() {
             app.graphicsDevice.initWebGpu().then(() => {
                 console.log("gpu device async created");
 
-                // load textures
-                textures.forEach((texture) => {
-                    loadTexture(app, texture, texture.url);
+                const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
+                assetListLoader.load(() => {
+                    onLoaded(app);
                 });
+
             }).catch(console.error);
         }
 

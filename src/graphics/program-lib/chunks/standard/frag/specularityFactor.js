@@ -16,7 +16,7 @@ void getSpecularityFactor() {
     #endif
 
     #ifdef MAPTEXTURE
-    specularityFactor *= texture2D(texture_specularityFactorMap, $UV, textureBias).$CH;
+    specularityFactor *= texture2DBias(texture_specularityFactorMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

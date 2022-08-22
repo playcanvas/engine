@@ -3,6 +3,7 @@ out highp vec4 pc_fragColor;
 #define gl_FragColor pc_fragColor
 
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
+#define texture2DBias(res, uv, bias) texture(sampler2D(res, res ## _sampler), uv, bias)
 
 // TODO: implement other texture sampling macros
 // #define textureCube texture

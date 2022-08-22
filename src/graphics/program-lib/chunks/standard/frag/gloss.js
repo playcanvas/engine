@@ -15,7 +15,7 @@ void getGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-    dGlossiness *= texture2D(texture_glossMap, $UV, textureBias).$CH;
+    dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

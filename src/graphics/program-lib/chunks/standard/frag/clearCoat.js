@@ -15,7 +15,7 @@ void getClearCoat() {
     #endif
 
     #ifdef MAPTEXTURE
-    ccSpecularity *= texture2D(texture_clearCoatMap, $UV, textureBias).$CH;
+    ccSpecularity *= texture2DBias(texture_clearCoatMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

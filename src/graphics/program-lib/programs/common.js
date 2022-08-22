@@ -129,7 +129,6 @@ function vertexIntro(device, name, pass, extensionCode) {
 function fragmentIntro(device, name, pass, extensionCode, forcePrecision) {
 
     let code = versionCode(device);
-    code += precisionCode(device, forcePrecision, true);
 
     if (device.deviceType === DEVICETYPE_WEBGPU) {
 
@@ -154,9 +153,12 @@ function fragmentIntro(device, name, pass, extensionCode, forcePrecision) {
                 code += "#extension GL_EXT_shader_texture_lod : enable\n";
                 code += "#define SUPPORTS_TEXLOD\n";
             }
+
+            code += shaderChunks.gles2PS;
         }
     }
 
+    code += precisionCode(device, forcePrecision, true);
     code += getShaderNameCode(name);
     code += ShaderPass.getPassShaderDefine(pass);
 

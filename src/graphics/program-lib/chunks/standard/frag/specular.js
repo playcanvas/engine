@@ -16,7 +16,7 @@ void getSpecularity() {
     #endif
 
     #ifdef MAPTEXTURE
-    specularColor *= $DECODE(texture2D(texture_specularMap, $UV, textureBias)).$CH;
+    specularColor *= $DECODE(texture2DBias(texture_specularMap, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

@@ -6,7 +6,7 @@ uniform float material_clearCoatBumpiness;
 
 void getClearCoatNormal() {
 #ifdef MAPTEXTURE
-    vec3 normalMap = unpackNormal(texture2D(texture_clearCoatNormalMap, $UV, textureBias));
+    vec3 normalMap = unpackNormal(texture2DBias(texture_clearCoatNormalMap, $UV, textureBias));
     normalMap = mix(vec3(0.0, 0.0, 1.0), normalMap, material_clearCoatBumpiness);
     ccNormalW = normalize(dTBN * normalMap);
 #else
