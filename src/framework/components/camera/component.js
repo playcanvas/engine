@@ -125,7 +125,7 @@ const properties = [
  * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
  * for reflection rendering. Defaults to false.
  * @property {number} aperture The aperture of the camera lens in f-stops. High values means small aperture,
- * low values means high aperture. Default is 1.4.
+ * low values means high aperture. Default is 1.0.
  * @property {number} shutter The shutter speed of the camera in seconds. Default is 1.
  * @property {number} sensitivity The sensitivity in ISO. Default is 100.
  * @augments Component
