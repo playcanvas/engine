@@ -13,12 +13,12 @@ class AssetViewerExample {
         return <>
             <LabelGroup text='Asset'>
                 <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'selection.focusEntity' }} type='number' options={[
-                    { v: 0, t: 'mosquito' },
-                    { v: 1, t: 'dish' },
-                    { v: 2, t: 'sheen chair mango' },
-                    { v: 3, t: 'sheen chair peacock' },
-                    { v: 4, t: 'lamp on' },
-                    { v: 5, t: 'lamp off' }
+                    { v: 0, t: 'lamp off' },
+                    { v: 1, t: 'lamp on' },
+                    { v: 2, t: 'dish' },
+                    { v: 3, t: 'mosquito' },
+                    { v: 4, t: 'sheen chair peacock' },
+                    { v: 5, t: 'sheen chair mango' }
                 ]} />
             </LabelGroup>
         </>;
@@ -61,6 +61,8 @@ class AssetViewerExample {
             app.scene.layers.insertOpaque(depthLayer, 2);
 
             app.scene.ambientLight = new pc.Color(0.0, 0.0, 0.0);
+
+
 
             const createText = function (fontAsset: pc.Asset, message: string, x: number, y: number, z: number, rotx: number, roty: number) {
                 // Create a text element-based entity
@@ -133,7 +135,7 @@ class AssetViewerExample {
             createText(assets.font, "KHR_materials_transmission\nKHR_materials_ior\nKHR_materials_volume\nKHR_materials_variants\nKHR_materials_clearcoat", -9, 3, 0, 0, 0);
 
             const assetList = [
-                mosquito, dish, sheen1, sheen2, lamp, lamp2
+                lamp2, lamp, dish, mosquito, sheen2, sheen1
             ];
 
             const material = new pc.StandardMaterial();
@@ -169,7 +171,7 @@ class AssetViewerExample {
             camera.script.create("orbitCamera", {
                 attributes: {
                     inertiaFactor: 0.2,
-                    focusEntity: assetList[0],
+                    focusEntity: assetList[3],
                     distanceMin: 1,
                     distanceMax: 400,
                     frameOnStart: false
@@ -200,22 +202,33 @@ class AssetViewerExample {
             app.scene.toneMapping = pc.TONEMAP_ACES;
             app.scene.skyboxMip = 1;
 
+            window.addEventListener("touchstart", (event) => {
+                const touch = event.touches[0];
+                const entity = data.get('selection.focusEntity');
+                let newEntity = entity;
+                if (touch.clientX <= canvas.width * 0.2) {
+                    newEntity = Math.max(0, entity - 1);
+                } else if (touch.clientX >= canvas.width * 0.8) {
+                    newEntity = Math.min(entity + 1, assetList.length);
+                }
+                if (entity !== newEntity) {
+                    data.set('selection.focusEntity', newEntity);
+                }
+            }, false);
+
             // handle HUD changes - update properties on the light
-            data.on('*:set', (path: string, value: any) => {
+            data.on('selection.focusEntity:set', (value: any) => {
                 const pos = assetList[value].getLocalPosition();
-                pos.z += 6.0;
-                pos.y += 2;
+                const newPos = new pc.Vec3(0, 2.0, 6.0).add(pos);
 
                 // @ts-ignore engine-tsd
-                camera.setLocalPosition(pos);
+                camera.setLocalPosition(newPos);
 
                 // @ts-ignore engine-tsd
                 camera.script.orbitCamera.focusEntity = assetList[value];
             });
 
-            data.set('selection', {
-                focusEntity: 0
-            });
+            data.set('selection.focusEntity', 3);
         });
     }
 }
