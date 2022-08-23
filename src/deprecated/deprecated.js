@@ -904,7 +904,7 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 
 // INPUT
 
-export const input = {
+export const input_aa = {
     getTouchTargetCoords: getTouchTargetCoords,
     Controller: Controller,
     GamePads: GamePads,

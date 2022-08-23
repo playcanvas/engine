@@ -192,7 +192,7 @@ function buildTarget(buildType, moduleFormat) {
     const outputOptions = {
         banner: getBanner(banner[buildType] || banner.release),
         plugins: outputPlugins[buildType || outputPlugins.release],
-        file: `${outputFile[buildType]}${outputExtension[moduleFormat]}`,
+        dir: `${outputFile[buildType]}${outputExtension[moduleFormat]}`,
         format: outputFormat[moduleFormat],
         indent: '\t',
         sourcemap: sourceMap[buildType] || sourceMap.release,
@@ -241,6 +241,7 @@ function buildTarget(buildType, moduleFormat) {
     return {
         input: 'src/index.js',
         output: outputOptions,
+        preserveModules: true,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),

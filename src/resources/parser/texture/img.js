@@ -2,8 +2,7 @@ import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET,
-    DEVICETYPE_WEBGPU
+    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -127,12 +126,8 @@ class ImgParser {
                 createImageBitmap(blob, {
                     premultiplyAlpha: 'none'
                 })
-                .then(function (imageBitmap) {
-                    callback(null, imageBitmap);
-                })
-                .catch(function (e) {
-                    callback(e);
-                });
+                    .then(imageBitmap => callback(null, imageBitmap))
+                    .catch(e => callback(e));
             }
         });
     }
