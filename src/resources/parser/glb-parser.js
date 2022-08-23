@@ -1124,6 +1124,9 @@ const extensionSpecular = function (data, material, textures) {
         material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
+
+        extractTextureTransform(data.specularColorTexture, material, ['specular']);
+
     }
     if (data.hasOwnProperty('specularColorFactor')) {
         const color = data.specularColorFactor;
@@ -1140,6 +1143,7 @@ const extensionSpecular = function (data, material, textures) {
     if (data.hasOwnProperty('specularTexture')) {
         material.specularityFactorMapChannel = 'a';
         material.specularityFactorMap = textures[data.specularTexture.index];
+        extractTextureTransform(data.specularTexture, material, ['specularityFactor']);
     }
 };
 
@@ -1159,6 +1163,7 @@ const extensionTransmission = function (data, material, textures) {
     if (data.hasOwnProperty('transmissionTexture')) {
         material.refractionMapChannel = 'r';
         material.refractionMap = textures[data.transmissionTexture.index];
+        extractTextureTransform(data.transmissionTexture, material, ['refraction']);
     }
 };
 
@@ -1172,6 +1177,7 @@ const extensionSheen = function (data, material, textures) {
     }
     if (data.hasOwnProperty('sheenColorTexture')) {
         material.sheenMap = textures[data.sheenColorTexture.index];
+        extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
     if (data.hasOwnProperty('sheenRoughnessFactor')) {
         material.sheenGlossiness = data.sheenRoughnessFactor;
@@ -1181,6 +1187,7 @@ const extensionSheen = function (data, material, textures) {
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
         material.sheenGlossinessMap = textures[data.sheenRoughnessTexture.index];
         material.sheenGlossinessMapChannel = 'a';
+        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGlossiness']);
     }
 
     const sheenGlossChunk = `
@@ -1223,6 +1230,7 @@ const extensionVolume = function (data, material, textures) {
     }
     if (data.hasOwnProperty('thicknessTexture')) {
         material.thicknessMap = textures[data.thicknessTexture.index];
+        extractTextureTransform(data.thicknessTexture, material, ['thickness']);
     }
     if (data.hasOwnProperty('attenuationDistance')) {
         material.attenuationDistance = data.attenuationDistance;
