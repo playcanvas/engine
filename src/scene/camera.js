@@ -52,7 +52,7 @@ class Camera {
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
         this._usePhysicallyBasedCamera = false;
-        this._aperture = 1.4;
+        this._aperture = 1.0;
         this._shutter = 1;
         this._sensitivity = 100;
 
