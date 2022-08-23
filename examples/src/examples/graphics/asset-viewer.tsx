@@ -151,14 +151,6 @@ class AssetViewerExample {
             plane.setLocalPosition(0, -1.0, 0);
             app.root.addChild(plane);
 
-            /*
-            const renders: Array<pc.RenderComponent> = entity.findComponents("render");
-            for (let i = 0; i < renders.length; i++) {
-                assets.statue.resource.applyMaterialVariant("Gray", renders[i].meshInstances, i);
-            }
-            */
-
-
             // Create an Entity with a camera component
             const camera = new pc.Entity();
             camera.addComponent("camera", {
