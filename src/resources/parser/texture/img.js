@@ -2,8 +2,7 @@ import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET,
-    DEVICETYPE_WEBGPU
+    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -22,13 +21,7 @@ class ImgParser {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-        // As of today (9 Jul 2021) ImageBitmap only works on Chrome:
-        // - Firefox doesn't support options parameter to createImageBitmap (see https://bugzilla.mozilla.org/show_bug.cgi?id=1533680)
-        // - Safari supports ImageBitmap only as experimental feature.
-        // this.useImageBitmap = typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
-        // WebGPUTexture expects ImageBitmap.
-        const isWebGPU = registry?._loader?._app?.graphicsDevice?.deviceType === DEVICETYPE_WEBGPU;
-        this.useImageBitmap = isWebGPU;
+        this.useImageBitmap = typeof ImageBitmap !== 'undefined';
     }
 
     load(url, callback, asset) {
@@ -133,12 +126,8 @@ class ImgParser {
                 createImageBitmap(blob, {
                     premultiplyAlpha: 'none'
                 })
-                    .then(function (imageBitmap) {
-                        callback(null, imageBitmap);
-                    })
-                    .catch(function (e) {
-                        callback(e);
-                    });
+                    .then(imageBitmap => callback(null, imageBitmap))
+                    .catch(e => callback(e));
             }
         });
     }
