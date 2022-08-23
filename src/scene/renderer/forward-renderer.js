@@ -415,6 +415,11 @@ class ForwardRenderer {
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
 
+        // Set exposure
+        if (camera.usePhysicallyBasedCamera) {
+            this.exposureId.setValue(camera.getExposure());
+        }
+
         const n = camera._nearClip;
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
