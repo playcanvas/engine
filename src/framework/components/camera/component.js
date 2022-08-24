@@ -396,6 +396,45 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Set camera aperture
+     *
+     * @type {number}
+     */
+    set aperture(newValue) {
+        this._camera.aperture = newValue;
+    }
+
+    get aperture() {
+        return this._camera.aperture;
+    }
+
+    /**
+     * Set camera sensitivity
+     *
+     * @type {number}
+     */
+    set sensitivity(newValue) {
+        this._camera.sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._camera.sensitivity;
+    }
+
+    /**
+     * Set camera shutter speed
+     *
+     * @type {number}
+     */
+    set shutter(newValue) {
+        this._camera.shutter = newValue;
+    }
+
+    get shutter() {
+        return this._camera.shutter;
+    }
+
+    /**
      * Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * Defaults to [0, 0, 1, 1].
      *
@@ -701,6 +740,9 @@ class CameraComponent extends Component {
         this.priority = source.priority;
         this.renderTarget = source.renderTarget;
         this.rect = source.rect;
+        this.aperture = source.aperture;
+        this.sensitivity = source.sensitivity;
+        this.shutter = source.shutter;
     }
 }
 

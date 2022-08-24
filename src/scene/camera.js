@@ -51,7 +51,6 @@ class Camera {
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
-        this._usePhysicallyBasedCamera = false;
         this._aperture = 1.0;
         this._shutter = 1;
         this._sensitivity = 100;
@@ -311,14 +310,6 @@ class Camera {
         return this._scissorRect;
     }
 
-    set usePhysicallyBasedCamera(newValue) {
-        this._usePhysicallyBasedCamera = newValue;
-    }
-
-    get usePhysicallyBasedCamera() {
-        return this._usePhysicallyBasedCamera;
-    }
-
     get viewMatrix() {
         if (this._viewMatDirty) {
             const wtm = this._node.getWorldTransform();
@@ -326,6 +317,30 @@ class Camera {
             this._viewMatDirty = false;
         }
         return this._viewMat;
+    }
+
+    set aperture(newValue) {
+        this._aperture = newValue;
+    }
+
+    get aperture() {
+        return this._aperture;
+    }
+
+    set sensitivity(newValue) {
+        this._sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._sensitivity;
+    }
+
+    set shutter(newValue) {
+        this._shutter = newValue;
+    }
+
+    get shutter() {
+        return this._shutter;
     }
 
     /**

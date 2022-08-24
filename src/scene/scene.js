@@ -151,6 +151,13 @@ class Scene extends EventHandler {
     sky = null;
 
     /**
+     * Use physically based camera parameters to describe exposure
+     *
+     * @type {boolean}
+     */
+    usePhysicallyBasedCamera = false;
+
+    /**
      * Create a new Scene instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.

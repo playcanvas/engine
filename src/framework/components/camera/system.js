@@ -71,7 +71,10 @@ class CameraComponentSystem extends ComponentSystem {
             'projection',
             'priority',
             'rect',
-            'scissorRect'
+            'scissorRect',
+            'aperture',
+            'shutter',
+            'sensitivity'
         ];
 
         for (let i = 0; i < properties.length; i++) {
@@ -129,7 +132,10 @@ class CameraComponentSystem extends ComponentSystem {
             projection: c.projection,
             priority: c.priority,
             rect: c.rect,
-            scissorRect: c.scissorRect
+            scissorRect: c.scissorRect,
+            aperture: c.aperture,
+            sensitivity: c.sensitivity,
+            shutter: c.shutter
         });
     }
 
