@@ -80,11 +80,13 @@ class SceneGrab {
         });
     }
 
-    resizeCondition(originalRenderTarget, requestedRenderTarget, device) {
-        if (originalRenderTarget && requestedRenderTarget) {
-            return originalRenderTarget.width !== requestedRenderTarget.width || originalRenderTarget.height !== requestedRenderTarget.height;
+    resizeCondition(source, requestedRenderTarget, device) {
+        const width = source ? source.width : device.width;
+        const height = source ? source.height : device.height;
+        if (requestedRenderTarget) {
+            return width !== requestedRenderTarget.width || height !== requestedRenderTarget.height;
         }
-        return originalRenderTarget?.width !== device.width || originalRenderTarget?.height !== device.height;
+        return width !== device.width || height !== device.height;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
