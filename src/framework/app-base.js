@@ -1696,17 +1696,12 @@ class AppBase extends EventHandler {
 
     /** @private */
     _firstBake() {
-        if (this.lightmapper) {
-            this.lightmapper.bake(null, this.scene.lightmapMode);
-        }
+        this.lightmapper?.bake(null, this.scene.lightmapMode);
     }
 
     /** @private */
     _firstBatch() {
-        const batcher = this.batcher;
-        if (batcher) {
-            batcher.generate();
-        }
+        this.batcher?.generate();
     }
 
     /**
