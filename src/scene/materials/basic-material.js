@@ -5,6 +5,7 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 
+import { basic } from '../../graphics/program-lib/programs/basic.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 import { Material } from './material.js';
 
@@ -108,6 +109,8 @@ class BasicMaterial extends Material {
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
         const library = device.getProgramLibrary();
+        library.register('basic', basic);
+
         return library.getProgram('basic', options, processingOptions);
     }
 }

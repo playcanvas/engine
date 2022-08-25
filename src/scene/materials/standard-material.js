@@ -827,6 +827,7 @@ class StandardMaterial extends Material {
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
         const library = device.getProgramLibrary();
+        library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions);
 
         this._dirtyShader = false;

@@ -21,11 +21,6 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 
-import { basic } from '../graphics/program-lib/programs/basic.js';
-import { particle } from '../graphics/program-lib/programs/particle.js';
-import { skybox } from '../graphics/program-lib/programs/skybox.js';
-import { standard } from '../graphics/program-lib/programs/standard.js';
-
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
@@ -283,12 +278,6 @@ class AppBase extends EventHandler {
          * @type {GraphicsDevice}
          */
         this.graphicsDevice = device;
-
-        // register shader programs
-        device.programLib.register('basic', basic);
-        device.programLib.register('particle', particle);
-        device.programLib.register('skybox', skybox);
-        device.programLib.register('standard', standard);
 
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(device);
