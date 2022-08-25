@@ -1703,7 +1703,10 @@ class AppBase extends EventHandler {
 
     /** @private */
     _firstBatch() {
-        this.batcher.generate();
+        const batcher = this.batcher;
+        if (batcher) {
+            batcher.generate();
+        }
     }
 
     /**
