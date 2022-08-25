@@ -64,14 +64,14 @@ class SceneGrab {
         names.forEach(name => device.scope.resolve(name).setValue(buffer));
     }
 
-    allocateTexture(device, name, format, isDepth, mipmaps) {
+    allocateTexture(device, source, name, format, isDepth, mipmaps) {
 
         // allocate texture that will store the depth
         return new Texture(device, {
             name,
             format,
-            width: device.width,
-            height: device.height,
+            width: source ? source.colorBuffer.width : device.width,
+            height: source ? source.colorBuffer.height : device.height,
             mipmaps,
             minFilter: isDepth ? FILTER_NEAREST : (mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR),
             magFilter: isDepth ? FILTER_NEAREST : FILTER_LINEAR,
@@ -80,13 +80,13 @@ class SceneGrab {
         });
     }
 
-    allocateRenderTarget(renderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
+    allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
 
         // texture / uniform names: new one (first), as well as old one  (second) for compatibility
         const names = isDepthUniforms ? _depthUniformNames : _colorUniformNames;
 
         // allocate texture buffer
-        const buffer = this.allocateTexture(device, names[0], format, isDepth, mipmaps);
+        const buffer = this.allocateTexture(device, sourceRenderTarget, names[0], format, isDepth, mipmaps);
 
         if (renderTarget) {
 
@@ -153,9 +153,9 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // allocate / resize existing RT as needed
-                    if (this.colorRenderTarget?.width !== device.width || this.colorRenderTarget?.height !== device.height) {
+                    if (this.colorRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.colorRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, device, this.colorFormat, false, true, false);
+                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, true, false);
                     }
 
                     // copy color from the current render target
@@ -178,9 +178,9 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (this.depthRenderTarget?.width !== device.width || this.depthRenderTarget?.height !== device.height) {
+                    if (this.depthRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.depthRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
                         self.releaseRenderTarget(this.depthRenderTarget);
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
                     }
 
                     // copy depth
@@ -247,9 +247,9 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget.depthBuffer || this.depthRenderTarget.width !== device.width || this.depthRenderTarget.height !== device.height) {
+                    if (!this.depthRenderTarget.depthBuffer || this.depthRenderTarget.width !== camera.renderTarget?.depthBuffer?.width || this.depthRenderTarget.height !== camera.renderTarget?.depthBuffer?.height) {
                         this.depthRenderTarget.destroyTextureBuffers();
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, device, PIXELFORMAT_R8_G8_B8_A8, false, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_R8_G8_B8_A8, false, false, true);
                     }
 
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
@@ -301,9 +301,9 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // reallocate RT if needed
-                    if (this.colorRenderTarget?.width !== device.width || this.colorRenderTarget?.height !== device.height) {
+                    if (this.colorRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.colorRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, device, this.colorFormat, false, false, false);
+                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, false, false);
                     }
 
                     // copy out the color buffer
@@ -318,7 +318,7 @@ class SceneGrab {
                     // copy framebuffer to it
                     device.bindTexture(colorBuffer);
                     const gl = device.gl;
-                    gl.copyTexImage2D(gl.TEXTURE_2D, 0, colorBuffer.impl._glFormat, 0, 0, device.width, device.height, 0);
+                    gl.copyTexImage2D(gl.TEXTURE_2D, 0, colorBuffer.impl._glFormat, 0, 0, colorBuffer.width, colorBuffer.height, 0);
 
                     // stop the device from updating this texture further
                     colorBuffer._needsUpload = false;
