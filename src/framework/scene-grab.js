@@ -183,7 +183,7 @@ class SceneGrab {
                 }
 
                 if (camera.renderSceneDepthMap) {
-                    
+
                     // reallocate RT if needed
                     if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
