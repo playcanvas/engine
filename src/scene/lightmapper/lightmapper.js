@@ -17,6 +17,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../graphics/constants.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../graphics/program-lib/chunks/chunks-lightmapper.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';
@@ -229,7 +230,7 @@ class Lightmapper {
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
-            let bakeLmEndChunk = shaderChunks.bakeLmEndPS; // encode to RGBM
+            let bakeLmEndChunk = shaderChunksLightmapper.bakeLmEndPS; // encode to RGBM
             if (addAmbient) {
                 // diffuse light stores accumulated AO, apply contrast and brightness to it
                 // and multiply ambient light color by the AO
@@ -247,7 +248,7 @@ class Lightmapper {
             material.lightMap = this.blackTex;
         } else {
             material.chunks.basePS = shaderChunks.basePS + '\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n';
-            material.chunks.endPS = shaderChunks.bakeDirLmEndPS;
+            material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
         }
 
         // avoid writing unrelated things to alpha
