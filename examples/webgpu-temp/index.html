@@ -49,10 +49,12 @@
         import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
         import { LightComponentSystem } from '../../src/framework/components/light/system.js';
         import { TextureHandler } from '../../src/resources/texture.js';
+        import { ContainerHandler } from '../../src/resources/container.js';
 
         const assets = {
             'playcanvas': new Asset('color', 'texture', { url: '../assets/textures/playcanvas.png' }),
-            'rocks': new Asset('color', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' })
+            'rocks': new Asset('color', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' }),
+            'model': new Asset('model', 'container', { url: '../assets/models/bitmoji.glb' }),
         };
 
         const vertexShaderGLSL = /* glsl */`
@@ -86,8 +88,9 @@ void main() {
 // in 
 varying vec2 uv;
 
-// out
-out highp vec4 outColor;
+// out - TODO: use shader intro which handles this per platform
+layout(location = 0) out highp vec4 pc_fragColor;
+#define gl_FragColor pc_fragColor
 
 uniform vec3 material_diffuse;
 
@@ -96,7 +99,7 @@ uniform sampler2D texture_emissiveMap;
 void main() {
     vec4 tex = texture2D(texture_emissiveMap, uv);
     vec3 diffuse = tex.xyz * material_diffuse;
-    outColor = vec4(diffuse, 1.0);
+    gl_FragColor = vec4(diffuse, 1.0);
 }
         `;
 
@@ -253,6 +256,17 @@ void main() {
             app.root.addChild(textureCamera);
             textureCamera.setLocalPosition(0, 0, 12);
 
+            /////////////// skinning - commented out as it is still not functional
+
+            // const modelEntity = assets.model.resource.instantiateRenderEntity({
+            // });
+
+            // const modelEntityParent = new Entity();
+            // modelEntityParent.addChild(modelEntity);
+            // app.root.addChild(modelEntityParent);
+
+            ///////////////
+
 
             let time = 0;
             const rot = new Quat();
@@ -303,6 +317,7 @@ void main() {
             ];
             createOptions.resourceHandlers = [
                 TextureHandler,
+                ContainerHandler
             ];
 
             const app = new AppBase(canvas);

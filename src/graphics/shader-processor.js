@@ -11,13 +11,39 @@ import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-gro
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // accepted keywords
-const KEYWORD = /[ \t]*(\battribute\b|\bvarying\b|\bout\b|\buniform\b)/g;
+// TODO: 'out' keyword is not in the list, as handling it is more complicated due
+// to 'out' keyword also being used to mark output only function parameters.
+const KEYWORD = /[ \t]*(\battribute\b|\bvarying\b|\buniform\b)/g;
 
 // match 'attribute' and anything else till ';'
 const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]+)([;]+)/g;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
+
+const precisionQualifiers = new Set(['highp', 'mediump', 'lowp']);
+
+class UniformLine {
+    constructor(line) {
+        this.line = line;
+
+        // split to words handling any number of spaces
+        const words = line.trim().split(/\s+/);
+
+        this.precision = undefined;
+        this.type = words[0];
+        this.name = words[1];
+
+        // if this is a precision qualifier
+        if (precisionQualifiers.has(this.type)) {
+            this.precision = words[0];
+            this.type = words[1];
+            this.name = words[2];
+        }
+
+        this.isSampler = this.type.indexOf('sampler') !== -1;
+    }
+}
 
 /**
  * Pure static class implementing processing of GLSL shaders. It allocates
@@ -57,7 +83,11 @@ class ShaderProcessor {
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
         const uniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
-        const uniformsData = ShaderProcessor.processUniforms(device, uniforms, shaderDefinition.processingOptions);
+
+        // parse uniform lines
+        const parsedUniforms = uniforms.map(line => new UniformLine(line));
+
+        const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions);
 
         // VS - insert the blocks to the source
         const vBlock = attributesBlock + '\n' + vertexVaryingsBlock + '\n' + uniformsData.code;
@@ -142,43 +172,35 @@ class ShaderProcessor {
      * uniforms that change on the level of the mesh.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {Array<string>} uniformLines - Lines containing uniforms.
+     * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
      * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
-    static processUniforms(device, uniformLines, processingOptions) {
-
-        const isSampler = (uniformType) => {
-            return uniformType.indexOf('sampler') !== -1;
-        };
+    static processUniforms(device, uniforms, processingOptions) {
 
         // split uniform lines into samplers and the rest
+        /** @type {Array<UniformLine>} */
         const uniformLinesSamplers = [];
+        /** @type {Array<UniformLine>} */
         const uniformLinesNonSamplers = [];
-        uniformLines.forEach((line) => {
-            const words = ShaderProcessor.splitToWords(line);
-            const type = words[0];
-            if (isSampler(type)) {
-                uniformLinesSamplers.push(line);
+        uniforms.forEach((uniform) => {
+            if (uniform.isSampler) {
+                uniformLinesSamplers.push(uniform);
             } else {
-                uniformLinesNonSamplers.push(line);
+                uniformLinesNonSamplers.push(uniform);
             }
         });
 
         // build mesh uniform buffer format
         const meshUniforms = [];
-        uniformLinesNonSamplers.forEach((line) => {
-            const words = ShaderProcessor.splitToWords(line);
-            const type = words[0];
-            const name = words[1];
-
+        uniformLinesNonSamplers.forEach((uniform) => {
             // uniforms not already in supplied uniform buffers go to the mesh buffer
-            if (!processingOptions.hasUniform(name)) {
-                const uniformType = uniformTypeToName.indexOf(type);
-                Debug.assert(uniformType >= 0, `Uniform type ${type} is not recognized on line [${line}]`);
-                const uniform = new UniformFormat(name, uniformType);
-                meshUniforms.push(uniform);
+            if (!processingOptions.hasUniform(uniform.name)) {
+                const uniformType = uniformTypeToName.indexOf(uniform.type);
+                Debug.assert(uniformType >= 0, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
+                const uniformFormat = new UniformFormat(uniform.name, uniformType);
+                meshUniforms.push(uniformFormat);
             }
 
             // validate types in else
@@ -195,15 +217,12 @@ class ShaderProcessor {
 
         // add textures uniforms
         const textureFormats = [];
-        uniformLinesSamplers.forEach((line) => {
-            const words = ShaderProcessor.splitToWords(line);
-            const name = words[1];
-
+        uniformLinesSamplers.forEach((uniform) => {
             // unmached texture uniforms go to mesh block
-            if (!processingOptions.hasTexture(name)) {
+            if (!processingOptions.hasTexture(uniform.name)) {
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
+                textureFormats.push(new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
             }
 
             // validate types in else
