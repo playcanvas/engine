@@ -1568,6 +1568,22 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      *
+     * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
+     * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
+     * @param {boolean} settings.render.lightingCookiesEnabled - If set to true, the clustered lighting will support cookie textures.
+     * @param {boolean} settings.render.lightingAreaLightsEnabled - If set to true, the clustered lighting will support area lights.
+     * @param {number} settings.render.lightingShadowAtlasResolution - Resolution of the atlas texture storing all non-directional shadow textures.
+     * @param {number} settings.render.lightingCookieAtlasResolution - Resolution of the atlas texture storing all non-directional cookie textures.
+     * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
+     * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
+     *
+     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
+     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
+     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     *
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * is subdivided into.
+     *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
