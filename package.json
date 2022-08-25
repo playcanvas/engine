@@ -20,6 +20,7 @@
   "main": "build/playcanvas.js",
   "module": "build/playcanvas.mjs/index.js",
   "types": "build/playcanvas.d.ts",
+  "sideEffects": false,
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
