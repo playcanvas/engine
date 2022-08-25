@@ -80,6 +80,13 @@ class SceneGrab {
         });
     }
 
+    resizeCondition(originalRenderTarget, requestedRenderTarget, device) {
+        if (originalRenderTarget && requestedRenderTarget) {
+            return originalRenderTarget.width !== requestedRenderTarget.width || originalRenderTarget.height !== requestedRenderTarget.height;
+        }
+        return originalRenderTarget?.width !== device.width || originalRenderTarget?.height !== device.height;
+    }
+
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
 
         // texture / uniform names: new one (first), as well as old one  (second) for compatibility
@@ -153,7 +160,7 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // allocate / resize existing RT as needed
-                    if (this.colorRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.colorRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
+                    if (self.resizeCondition(this.colorRenderTarget, camera.renderTarget?.colorBuffer, device)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, true, false);
                     }
@@ -176,9 +183,9 @@ class SceneGrab {
                 }
 
                 if (camera.renderSceneDepthMap) {
-
+                    
                     // reallocate RT if needed
-                    if (this.depthRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.depthRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
+                    if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
                     }
@@ -247,7 +254,7 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget.depthBuffer || this.depthRenderTarget.width !== camera.renderTarget?.depthBuffer?.width || this.depthRenderTarget.height !== camera.renderTarget?.depthBuffer?.height) {
+                    if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
                         this.depthRenderTarget.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_R8_G8_B8_A8, false, false, true);
                     }
@@ -301,7 +308,7 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // reallocate RT if needed
-                    if (this.colorRenderTarget?.width !== camera.renderTarget?.colorBuffer?.width || this.colorRenderTarget?.height !== camera.renderTarget?.colorBuffer?.height) {
+                    if (self.resizeCondition(this.colorRenderTarget, camera.renderTarget?.colorBuffer, device)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, false, false);
                     }
