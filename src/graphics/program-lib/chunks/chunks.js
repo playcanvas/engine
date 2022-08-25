@@ -8,8 +8,6 @@ import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
 import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
 import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
-import bakeDirLmEndPS from './lightmapper/frag/bakeDirLmEnd.js';
-import bakeLmEndPS from './lightmapper/frag/bakeLmEnd.js';
 import basePS from './lit/frag/base.js';
 import baseVS from './lit/vert/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
@@ -33,8 +31,6 @@ import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
 import diffusePS from './standard/frag/diffuse.js';
 import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
-import dilatePS from './lightmapper/frag/dilate.js';
-import bilateralDeNoisePS from './lightmapper/frag/bilateralDeNoise.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
@@ -216,8 +212,6 @@ const shaderChunks = {
     aoSpecOccConstPS,
     aoSpecOccConstSimplePS,
     aoSpecOccSimplePS,
-    bakeDirLmEndPS,
-    bakeLmEndPS,
     basePS,
     baseVS,
     baseNineSlicedPS,
@@ -240,8 +234,6 @@ const shaderChunks = {
     detailModesPS,
     diffusePS,
     diffuseDetailMapPS,
-    dilatePS,
-    bilateralDeNoisePS,
     decodePS,
     emissivePS,
     encodePS,

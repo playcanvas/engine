@@ -1,5 +1,6 @@
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../graphics/program-lib/chunks/chunks-lightmapper.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;
@@ -8,7 +9,7 @@ const DENOISE_FILTER_SIZE = 15;
 class LightmapFilters {
     constructor(device) {
         this.device = device;
-        this.shaderDilate = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.dilatePS, 'lmDilate');
+        this.shaderDilate = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.dilatePS, 'lmDilate');
 
         this.constantTexSource = device.scope.resolve('source');
 
@@ -37,7 +38,7 @@ class LightmapFilters {
     prepareDenoise(filterRange, filterSmoothness) {
 
         if (!this.shaderDenoise) {
-            this.shaderDenoise = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, shaderChunks.bilateralDeNoisePS, 'lmBilateralDeNoise');
+            this.shaderDenoise = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.bilateralDeNoisePS, 'lmBilateralDeNoise');
             this.sigmas = new Float32Array(2);
             this.constantSigmas = this.device.scope.resolve('sigmas');
             this.constantKernel = this.device.scope.resolve('kernel[0]');
