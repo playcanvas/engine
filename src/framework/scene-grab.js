@@ -83,7 +83,7 @@ class SceneGrab {
     resizeCondition(source, requestedRenderTarget, device) {
         const width = source?.width || device.width;
         const height = source?.height || device.height;
-        return width !== requestedRenderTarget?.width || height !== requestedRenderTarget?.height;
+        return !source || width !== requestedRenderTarget?.width || height !== requestedRenderTarget?.height;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
