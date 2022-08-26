@@ -81,12 +81,9 @@ class SceneGrab {
     }
 
     resizeCondition(source, requestedRenderTarget, device) {
-        const width = source ? source.width : device.width;
-        const height = source ? source.height : device.height;
-        if (requestedRenderTarget) {
-            return width !== requestedRenderTarget.width || height !== requestedRenderTarget.height;
-        }
-        return width !== device.width || height !== device.height;
+        const width = source?.width || device.width;
+        const height = source?.height || device.height;
+        return width !== requestedRenderTarget?.width || height !== requestedRenderTarget?.height;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
