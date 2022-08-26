@@ -48,8 +48,6 @@ const removedChunks = {
     combineDiffuseSpecularNoReflSeparateAmbientPS: CHUNKAPI_1_56,
     combineDiffuseSpecularOldPS: CHUNKAPI_1_56,
     combineDiffuseSpecularNoConservePS: CHUNKAPI_1_55,
-    dilatePS: CHUNKAPI_1_56,
-    bilateralDeNoisePS: CHUNKAPI_1_56,
     lightmapSingleVertPS: CHUNKAPI_1_55,
     normalMapFastPS: CHUNKAPI_1_55,
     specularAaNonePS: CHUNKAPI_1_55,
