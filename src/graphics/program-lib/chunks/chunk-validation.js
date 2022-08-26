@@ -15,6 +15,7 @@ const chunkVersions = {
     specularPS: CHUNKAPI_1_55,
     normalMapPS: CHUNKAPI_1_55,
     normalDetailMapPS: CHUNKAPI_1_55,
+    reflectionEnvPS: CHUNKAPI_1_56,
 
     // backend
     clusteredLightPS: CHUNKAPI_1_55,
@@ -40,6 +41,10 @@ const removedChunks = {
     reflectionPrefilteredCubePS: CHUNKAPI_1_51,
     reflectionPrefilteredCubeLodPS: CHUNKAPI_1_51,
     refractionPS: CHUNKAPI_1_56,
+
+    combineDiffuseSpecularPS: CHUNKAPI_1_56,
+    combineDiffuseSpecularNoConservePS: CHUNKAPI_1_56,
+    combineDiffusePS: CHUNKAPI_1_56,
 
     lightmapSingleVertPS: CHUNKAPI_1_55,
     normalMapFastPS: CHUNKAPI_1_55,
