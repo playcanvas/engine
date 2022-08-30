@@ -159,9 +159,17 @@ function testTextureFloatHighPrecision(device) {
     return f === 0;
 }
 
-// This function returns a promise which will asynchronously test the level of
-// support for ImageBitmap image loading in the current browser. Promise resolves
-// to true if ImageBitmap is supported, otherwise false.
+// ImageBitmap current state (Sep 2022):
+// - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
+//   there are likely still issues with older versions of both).
+// - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
+//   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
+//   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
+// - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
+//   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
+//   texture assets on the dom https://playcanvas.com/editor/scene/446278.
+
+// This function tests whether the current browser destroys PNG data or not.
 function testImageBitmap(device) {
     // 1x1 png image containing rgba(1, 2, 3, 63)
     const pngBytes = new Uint8Array([
