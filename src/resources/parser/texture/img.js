@@ -28,6 +28,11 @@ class ImgParser {
         const hasContents = !!asset?.file?.contents;
 
         if (hasContents) {
+            // ImageBitmap interface can load iage
+            if (this.device.supportsImageBitmap) {
+                this._loadImageBitmapFromData(asset.file.contents, callback);
+                return;
+            }
             url = {
                 load: URL.createObjectURL(new Blob([asset.file.contents])),
                 original: url.original
@@ -130,6 +135,12 @@ class ImgParser {
                     .catch(e => callback(e));
             }
         });
+    }
+
+    _loadImageBitmapFromData(data, callback) {
+        createImageBitmap(new Blob([data]), { premultiplyAlpha: 'none' })
+            .then(imageBitmap => callback(null, imageBitmap))
+            .catch(e => callback(e));
     }
 }
 
