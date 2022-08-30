@@ -166,7 +166,7 @@ class GraphNode extends EventHandler {
          * @type {Mat3}
          * @private
          */
-        this.normalMatrix = new Mat3();
+        this._normalMatrix = new Mat3();
         /**
          * @type {boolean}
          * @private
@@ -267,6 +267,24 @@ class GraphNode extends EventHandler {
             this._forward = new Vec3();
         }
         return this.getWorldTransform().getZ(this._forward).normalize().mulScalar(-1);
+    }
+
+    /**
+     * A matrix used to transform the normal.
+     *
+     * @type  {Mat3}
+     * @ignore
+     */
+    get normalMatrix() {
+
+        const normalMat = this._normalMatrix;
+        if (this._dirtyNormal) {
+            this.getWorldTransform().invertTo3x3(normalMat);
+            normalMat.transpose();
+            this._dirtyNormal = false;
+        }
+
+        return normalMat;
     }
 
     /**
