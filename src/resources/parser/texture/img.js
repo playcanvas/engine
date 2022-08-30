@@ -27,6 +27,9 @@ class ImgParser {
         // - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
         //   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
         //   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
+        // - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
+        //   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
+        //   texture assets on the dom https://playcanvas.com/editor/scene/446278.
         this.useImageBitmap = false; // typeof ImageBitmap !== 'undefined';
     }
 
