@@ -21,7 +21,13 @@ class ImgParser {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-        this.useImageBitmap = typeof ImageBitmap !== 'undefined';
+        // ImageBitmap current state (Sep 2022):
+        // - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
+        //   there are likely still issues with older versions of both).
+        // - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
+        //   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
+        //   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
+        this.useImageBitmap = false; // typeof ImageBitmap !== 'undefined';
     }
 
     load(url, callback, asset) {
