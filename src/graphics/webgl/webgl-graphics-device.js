@@ -179,7 +179,7 @@ function testImageBitmap(device) {
     ]);
 
     return createImageBitmap(new Blob([pngBytes], { type: 'image/png' }), { premultiplyAlpha: 'none' })
-        .then(image => {
+        .then((image) => {
             // create the texture
             const texture = new Texture(device, {
                 width: 1,
@@ -357,7 +357,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // start async image bitmap test
         this.supportsImageBitmap = null;
-        testImageBitmap(this).then(result => {
+        testImageBitmap(this).then((result) => {
             this.supportsImageBitmap = result;
         });
 
