@@ -21,9 +21,7 @@ class ImgParser {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-        this.useImageBitmap = () => {
-            return device.supportsImageBitmap;
-        };
+        this.device = device;
     }
 
     load(url, callback, asset) {
@@ -50,7 +48,7 @@ class ImgParser {
             crossOrigin = this.crossOrigin;
         }
 
-        if (this.useImageBitmap()) {
+        if (this.device.supportsImageBitmap) {
             this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
         } else {
             this._loadImage(url.load, url.original, crossOrigin, handler);
