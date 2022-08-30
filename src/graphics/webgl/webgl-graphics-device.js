@@ -191,7 +191,7 @@ function testImageBitmap(device) {
 
             // read pixels
             const rt = new RenderTarget({ colorBuffer: texture, depth: false });
-            device.setFramebuffer(rt._glFrameBuffer);
+            device.setFramebuffer(rt.impl._glFrameBuffer);
             device.initRenderTarget(rt);
 
             const data = new Uint8ClampedArray(4);
