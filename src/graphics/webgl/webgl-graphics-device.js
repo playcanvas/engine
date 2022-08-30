@@ -357,9 +357,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // start async image bitmap test
         this.supportsImageBitmap = null;
-        testImageBitmap(this).then((result) => {
-            this.supportsImageBitmap = result;
-        });
+        if (typeof ImageBitmap !== 'undefined') {
+            testImageBitmap(this).then((result) => {
+                this.supportsImageBitmap = result;
+            });
+        }
 
         this.defaultClearOptions = {
             color: [0, 0, 0, 1],
