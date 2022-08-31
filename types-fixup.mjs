@@ -3,6 +3,7 @@ import fs from 'fs';
 // Create a regex that matches any string starting with Class< and ending with >
 const regex = /Class<(.*?)>/g;
 const paths = [
+    './types/framework/entity.d.ts',
     './types/framework/components/script/component.d.ts',
     './types/script/script-attributes.d.ts',
     './types/script/script-registry.d.ts',
