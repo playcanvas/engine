@@ -26,6 +26,7 @@ import { AppBase } from './app-base.js';
 /** @typedef {import('./components/scroll-view/component.js').ScrollViewComponent} ScrollViewComponent */
 /** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
 /** @typedef {import('./components/sprite/component.js').SpriteComponent} SpriteComponent */
+/** @typedef {import('../script/script-type.js').ScriptType} ScriptType */
 
 /**
  * @type {GraphNode[]}
