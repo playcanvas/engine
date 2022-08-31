@@ -15,35 +15,35 @@ class AppOptions {
     /**
      * Input handler for {@link ElementComponent}s.
      *
-     * @type {ElementInput.constructor}
+     * @type {ElementInput}
      */
     elementInput;
 
     /**
      * Keyboard handler for input.
      *
-     * @type {Keyboard.constructor}
+     * @type {Keyboard}
      */
     keyboard;
 
     /**
      * Mouse handler for input.
      *
-     * @typeof {Mouse}
+     * @type {Mouse}
      */
     mouse;
 
     /**
      * TouchDevice handler for input.
      *
-     * @typeof {TouchDevice}
+     * @type {TouchDevice}
      */
     touch;
 
     /**
      * Gamepad handler for input.
      *
-     * @typeof {GamePads}
+     * @type {GamePads}
      */
     gamepads;
 
@@ -71,49 +71,49 @@ class AppOptions {
     /**
      * The sound manager
      *
-     * @typeof {SoundManager}
+     * @type {SoundManager}
      */
     soundManager;
 
     /**
      * The graphics device.
      *
-     * @typeof {GraphicsDevice}
+     * @type {GraphicsDevice}
      */
     graphicsDevice;
 
     /**
      * The lightmapper.
      *
-     * @type {Lightmapper.constructor}
+     * @type {Lightmapper}
      */
     lightmapper;
 
     /**
      * The BatchManager.
      *
-     * @type {BatchManager.constructor}
+     * @type {BatchManager}
      */
     batchManager;
 
     /**
      * The XrManager.
      *
-     * @typeof {XrManager}
+     * @type {XrManager}
      */
     xr;
 
     /**
      * The component systems the app requires.
      *
-     * @typeof {ComponentSystem.constructor[]}
+     * @type {ComponentSystem[]}
      */
     componentSystems = [];
 
     /**
      * The resource handlers the app requires.
      *
-     * @typeof {ResourceHandler.constructor[]}
+     * @type {ResourceHandler[]}
      */
     resourceHandlers = [];
 }
