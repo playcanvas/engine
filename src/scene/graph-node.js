@@ -622,7 +622,7 @@ class GraphNode extends EventHandler {
             if (result)
                 results.push(this);
 
-            if(this._parent) {
+            if (this._parent) {
                 results = results.concat(this._parent.findInParent(fn));
             }
         } else {
@@ -638,7 +638,7 @@ class GraphNode extends EventHandler {
                     results.push(this);
             }
 
-            if(this._parent) {
+            if (this._parent) {
                 results = results.concat(this._parent.findInParent(attr, value));
             }
         }
@@ -672,7 +672,7 @@ class GraphNode extends EventHandler {
      */
     findOneInParent(attr, value) {
         let result = null;
-        
+
         if (attr instanceof Function) {
             const fn = attr;
 
@@ -680,7 +680,7 @@ class GraphNode extends EventHandler {
             if (result)
                 return this;
 
-            if(this._parent) {
+            if (this._parent) {
                 return this._parent.findOneInParent(fn);
             }
         } else {
@@ -696,7 +696,7 @@ class GraphNode extends EventHandler {
                 }
             }
 
-            if(this._parent) {
+            if (this._parent) {
                 return this._parent.findOneInParent(attr, value);
             }
         }
