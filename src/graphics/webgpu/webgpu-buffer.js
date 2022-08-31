@@ -60,7 +60,15 @@ class WebgpuBuffer {
             // this.buffer.unmap();
         }
 
-        const src = new Uint8Array(storage.buffer ? storage.buffer : storage);
+        // src size needs to be a multiple of 4 as well
+        let src = new Uint8Array(storage.buffer ? storage.buffer : storage);
+        if (src.byteLength !== this.buffer.size) {
+            const alignedSrc = new Uint8Array(this.buffer.size);
+            alignedSrc.set(src);
+            src = alignedSrc;
+        }
+
+        // copy data to the gpu buffer
         wgpu.queue.writeBuffer(this.buffer, 0, src, 0, src.length);
 
         // TODO: handle usage types:

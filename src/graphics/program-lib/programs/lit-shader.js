@@ -604,18 +604,17 @@ class LitShader {
             hasAreaLights = true;
         }
 
+        let areaLutsPrecision = 'highp';
         if (device.areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
             // use offset and scale for rgb8 format luts
             code += "#define AREA_R8_G8_B8_A8_LUTS\n";
-            code += "#define AREA_LUTS_PRECISION lowp\n";
-        } else {
-            code += "#define AREA_LUTS_PRECISION highp\n";
+            areaLutsPrecision = 'lowp';
         }
 
         if (hasAreaLights || options.clusteredLightingEnabled) {
             code += "#define AREA_LIGHTS\n";
-            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex1;\n";
-            code += "uniform AREA_LUTS_PRECISION sampler2D areaLightsLutTex2;\n";
+            code += `uniform ${areaLutsPrecision} sampler2D areaLightsLutTex1;\n`;
+            code += `uniform ${areaLutsPrecision} sampler2D areaLightsLutTex2;\n`;
         }
 
         for (let i = 0; i < options.lights.length; i++) {
@@ -803,11 +802,14 @@ class LitShader {
 
             // include this before shadow / cookie code
             code += chunks.clusteredLightUtilsPS;
-            code += chunks.clusteredLightCookiesPS;
+            if (options.clusteredLightingCookiesEnabled)
+                code += chunks.clusteredLightCookiesPS;
 
-            // always include shadow chunks clustered lights support
-            shadowTypeUsed[SHADOW_PCF3] = true;
-            shadowTypeUsed[SHADOW_PCF5] = true;
+            // include shadow chunks clustered lights support
+            if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                shadowTypeUsed[SHADOW_PCF3] = true;
+                shadowTypeUsed[SHADOW_PCF5] = true;
+            }
             usePerspZbufferShadow = true;
         }
 
@@ -937,7 +939,11 @@ class LitShader {
                 code += "\n#define CLUSTER_AREALIGHTS";
 
             code += LightsBuffer.shaderDefines;
-            code += chunks.clusteredLightShadowsPS;
+
+            if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                code += chunks.clusteredLightShadowsPS;
+            }
+
             code += chunks.clusteredLightPS;
         }
 
@@ -1325,7 +1331,8 @@ class LitShader {
         if (usesSpot) {
             code = chunks.spotPS + code;
         }
-        if (usesCookie) {
+        if (usesCookie && !options.clusteredLightingEnabled) {
+            // non-clustered lights cookie code
             code = chunks.cookiePS + code;
         }
         let structCode = "";

@@ -72,7 +72,7 @@ const worldMatZ = new Vec3();
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 const tempSphere = new BoundingSphere();
 const boneTextureSize = [0, 0, 0, 0];
-let boneTexture, instancingData, modelMatrix, normalMatrix;
+let boneTexture, instancingData, modelMatrix;
 
 let keyA, keyB;
 
@@ -1056,13 +1056,7 @@ class ForwardRenderer {
             this.modelMatrixId.setValue(modelMatrix.data);
 
             if (normal) {
-                normalMatrix = meshInstance.node.normalMatrix;
-                if (meshInstance.node._dirtyNormal) {
-                    modelMatrix.invertTo3x3(normalMatrix);
-                    normalMatrix.transpose();
-                    meshInstance.node._dirtyNormal = false;
-                }
-                this.normalMatrixId.setValue(normalMatrix.data);
+                this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
             }
 
             device.draw(mesh.primitive[style]);
@@ -1479,6 +1473,7 @@ class ForwardRenderer {
                     // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
                     // earlier here. This needs to be refactored for multi-view anyways.
                     this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
+                    this.normalMatrixId.setValue(drawCall.node.normalMatrix.data);
 
                     // update mesh bind group / uniform buffer
                     const meshBindGroup = drawCall.getBindGroup(device, pass);

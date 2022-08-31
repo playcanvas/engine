@@ -54,7 +54,7 @@
         const assets = {
             'playcanvas': new Asset('color', 'texture', { url: '../assets/textures/playcanvas.png' }),
             'rocks': new Asset('color', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' }),
-            'model': new Asset('model', 'container', { url: '../assets/models/bitmoji.glb' }),
+            'model': new Asset('model', 'container', { url: '../assets/models/house.glb' }),
         };
 
         const vertexShaderGLSL = /* glsl */`
@@ -192,7 +192,7 @@ void main() {
             // Create an entity with a camera component
             const camera = new Entity();
             camera.addComponent("camera", {
-                clearColor: new Color(0.1, 0.1, 0.1, 1)
+                clearColor: new Color(0.4, 0.4, 0.4, 1)
             });
             app.root.addChild(camera);
             camera.setLocalPosition(0, 0, 5);
@@ -258,12 +258,22 @@ void main() {
 
             /////////////// skinning - commented out as it is still not functional
 
-            // const modelEntity = assets.model.resource.instantiateRenderEntity({
-            // });
+            const modelEntity = assets.model.resource.instantiateRenderEntity({
+            });
 
-            // const modelEntityParent = new Entity();
-            // modelEntityParent.addChild(modelEntity);
-            // app.root.addChild(modelEntityParent);
+            const renders = modelEntity.findComponents("render");
+            renders.forEach((render) => {
+                const meshInstances = render.meshInstances;
+                for (let i = 0; i < meshInstances.length; i++) {
+                    const meshInstance = meshInstances[i];
+                    meshInstance.material.useLighting = false;
+                }
+            });
+
+            const modelEntityParent = new Entity();
+            modelEntityParent.setLocalScale(20, 20, 20);
+            modelEntityParent.addChild(modelEntity);
+            app.root.addChild(modelEntityParent);
 
             ///////////////
 
@@ -322,6 +332,10 @@ void main() {
 
             const app = new AppBase(canvas);
             app.init(createOptions);
+
+            const lighting = app.scene.lighting;
+            lighting.shadowsEnabled = false;
+            lighting.cookiesEnabled = false;
 
             app.graphicsDevice.initWebGpu().then(() => {
                 console.log("gpu device async created");
