@@ -678,7 +678,7 @@ describe('Entity', function () {
     describe('#findScript', function () {
 
         it('finds script on single entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
@@ -687,7 +687,6 @@ describe('Entity', function () {
         });
 
         it('returns null when script is not found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             const script = e.findScript('myScript');
@@ -695,14 +694,13 @@ describe('Entity', function () {
         });
 
         it('returns null when script component is not found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             const script = e.findScript('myScript');
             expect(script).to.be.null;
         });
 
         it('finds script on child entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -713,7 +711,7 @@ describe('Entity', function () {
         });
 
         it('finds script on grandchild entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -726,7 +724,7 @@ describe('Entity', function () {
         });
 
         it('does not find script on parent entity', function () {
-			const MyScript = createScript('myScript');
+            createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -741,7 +739,7 @@ describe('Entity', function () {
     describe('#findScripts', function () {
 
         it('finds scripts on single entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
@@ -752,7 +750,6 @@ describe('Entity', function () {
         });
 
         it('returns empty array when no scripts are found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             const scripts = e.findScripts('myScript');
@@ -761,7 +758,6 @@ describe('Entity', function () {
         });
 
         it('returns empty array when no script component are found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             const scripts = e.findScripts('myScript');
             expect(scripts).to.be.an('array');
@@ -769,7 +765,7 @@ describe('Entity', function () {
         });
 
         it('finds scripts on child entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -782,7 +778,7 @@ describe('Entity', function () {
         });
 
         it('finds scripts on 3 entity hierarchy', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -803,7 +799,7 @@ describe('Entity', function () {
         });
 
         it('does not find scripts on parent entity', function () {
-			const MyScript = createScript('myScript');
+            createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -925,7 +921,7 @@ describe('Entity', function () {
     describe('#findScriptInParent', function () {
 
         it('finds script on single entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
@@ -934,7 +930,6 @@ describe('Entity', function () {
         });
 
         it('returns null when script is not found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             const script = e.findScriptInParent('myScript');
@@ -942,14 +937,13 @@ describe('Entity', function () {
         });
 
         it('returns null when script component is not found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             const script = e.findScriptInParent('myScript');
             expect(script).to.be.null;
         });
 
         it('finds script on parent entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -960,7 +954,7 @@ describe('Entity', function () {
         });
 
         it('finds script on grandparent entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -973,7 +967,7 @@ describe('Entity', function () {
         });
 
         it('does not find script on child entity', function () {
-			const MyScript = createScript('myScript');
+            createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -988,7 +982,7 @@ describe('Entity', function () {
     describe('#findScriptsInParent', function () {
 
         it('finds scripts on single entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
@@ -999,7 +993,6 @@ describe('Entity', function () {
         });
 
         it('returns empty array when no scripts are found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             const scripts = e.findScriptsInParent('myScript');
@@ -1008,7 +1001,6 @@ describe('Entity', function () {
         });
 
         it('returns empty array when no script component are found', function () {
-			const MyScript = createScript('myScript');
             const e = new Entity();
             const scripts = e.findScriptsInParent('myScript');
             expect(scripts).to.be.an('array');
@@ -1016,7 +1008,7 @@ describe('Entity', function () {
         });
 
         it('finds scripts on parent entity', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -1029,7 +1021,7 @@ describe('Entity', function () {
         });
 
         it('finds scripts on 3 entity hierarchy', function () {
-			const MyScript = createScript('myScript');
+            const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -1050,7 +1042,7 @@ describe('Entity', function () {
         });
 
         it('does not find scripts on child entity', function () {
-			const MyScript = createScript('myScript');
+            createScript('myScript');
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
