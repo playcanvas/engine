@@ -675,6 +675,147 @@ describe('Entity', function () {
 
     });
 
+    describe('#findScript', function () {
+
+        it('finds script on single entity', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const script = e.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns null when script is not found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            const script = e.findScript('myScript');
+            expect(script).to.be.null;
+        });
+
+        it('returns null when script component is not found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            const script = e.findScript('myScript');
+            expect(script).to.be.null;
+        });
+
+        it('finds script on child entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const script = root.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds script on grandchild entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            grandchild.addComponent('script');
+            grandchild.script.create('myScript');
+            const script = root.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find script on parent entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const script = child.findScript('myScript');
+            expect(script).to.be.null;
+        });
+
+    });
+
+    describe('#findScripts', function () {
+
+        it('finds scripts on single entity', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const scripts = e.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns empty array when no scripts are found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            const scripts = e.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('returns empty array when no script component are found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            const scripts = e.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('finds scripts on child entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds scripts on 3 entity hierarchy', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.addComponent('script');
+            root.script.create('myScript');
+            child.addComponent('script');
+            child.script.create('myScript');
+            grandchild.addComponent('script');
+            grandchild.script.create('myScript');
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(3);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+            expect(scripts[1]).to.be.an.instanceof(MyScript);
+            expect(scripts[2]).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find scripts on parent entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const scripts = child.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+    });
+
     describe('#findComponentInParent', function () {
 
         it('finds component on single entity', function () {
@@ -777,6 +918,147 @@ describe('Entity', function () {
             const components = root.findComponentsInParent('anim');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
+        });
+
+    });
+
+    describe('#findScriptInParent', function () {
+
+        it('finds script on single entity', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const script = e.findScriptInParent('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns null when script is not found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            const script = e.findScriptInParent('myScript');
+            expect(script).to.be.null;
+        });
+
+        it('returns null when script component is not found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            const script = e.findScriptInParent('myScript');
+            expect(script).to.be.null;
+        });
+
+        it('finds script on parent entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const script = child.findScriptInParent('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds script on grandparent entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const script = grandchild.findScriptInParent('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find script on child entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const script = root.findScriptInParent('myScript');
+            expect(script).to.be.null;
+        });
+
+    });
+
+    describe('#findScriptsInParent', function () {
+
+        it('finds scripts on single entity', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const scripts = e.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns empty array when no scripts are found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            const scripts = e.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('returns empty array when no script component are found', function () {
+			const MyScript = createScript('myScript');
+            const e = new Entity();
+            const scripts = e.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('finds scripts on parent entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const scripts = child.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds scripts on 3 entity hierarchy', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.addComponent('script');
+            root.script.create('myScript');
+            child.addComponent('script');
+            child.script.create('myScript');
+            grandchild.addComponent('script');
+            grandchild.script.create('myScript');
+            const scripts = grandchild.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(3);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+            expect(scripts[1]).to.be.an.instanceof(MyScript);
+            expect(scripts[2]).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find scripts on child entity', function () {
+			const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const scripts = root.findScriptsInParent('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
         });
 
     });
