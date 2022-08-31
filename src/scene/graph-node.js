@@ -590,6 +590,121 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Search the graph node and all of its ascendants for the nodes that satisfy some search
+     * criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each ascendant node to test if node satisfies the search
+     * logic. Returning true from the function will include the node into the results. If it's a
+     * string then it represents the name of a field or a method of the node. If this is the name
+     * of a field then the value passed as the second argument will be checked for equality. If
+     * this is the name of a function then the return value of the function will be checked for
+     * equality against the valued passed as the second argument to this function.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
+     * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
+     * @example
+     * // Finds all nodes that have a group element component
+     * var groups = element.findInParent(function (node) {
+     *     return node.element && node.element.type === pc.ELEMENTTYPE_GROUP;
+     * });
+     * @example
+     * // Finds all nodes that have the name property set to 'Test'
+     * var entities = entity.findInParent('name', 'Test');
+     */
+    findInParent(attr, value) {
+        let result, results = [];
+
+        if (attr instanceof Function) {
+            const fn = attr;
+
+            result = fn(this);
+            if (result)
+                results.push(this);
+
+            if(this._parent) {
+                results = results.concat(this._parent.findInParent(fn));
+            }
+        } else {
+            let testValue;
+
+            if (this[attr]) {
+                if (this[attr] instanceof Function) {
+                    testValue = this[attr]();
+                } else {
+                    testValue = this[attr];
+                }
+                if (testValue === value)
+                    results.push(this);
+            }
+
+            if(this._parent) {
+                results = results.concat(this._parent.findInParent(attr, value));
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Search the graph node and all of its ascendants for the first node that satisfies some
+     * search criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each ascendant node to test if node satisfies the search
+     * logic. Returning true from the function will result in that node being returned from
+     * findOne. If it's a string then it represents the name of a field or a method of the node. If
+     * this is the name of a field then the value passed as the second argument will be checked for
+     * equality. If this is the name of a function then the return value of the function will be
+     * checked for equality against the valued passed as the second argument to this function.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
+     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * node is found.
+     * @example
+     * // Find the first node that is called `head` and has a model component
+     * var head = player.findOneInParent(function (node) {
+     *     return node.model && node.name === 'head';
+     * });
+     * @example
+     * // Finds the first node that has the name property set to 'Test'
+     * var node = parent.findOneInParent('name', 'Test');
+     */
+    findOneInParent(attr, value) {
+        let result = null;
+        
+        if (attr instanceof Function) {
+            const fn = attr;
+
+            result = fn(this);
+            if (result)
+                return this;
+
+            if(this._parent) {
+                return this._parent.findOneInParent(fn);
+            }
+        } else {
+            let testValue;
+            if (this[attr]) {
+                if (this[attr] instanceof Function) {
+                    testValue = this[attr]();
+                } else {
+                    testValue = this[attr];
+                }
+                if (testValue === value) {
+                    return this;
+                }
+            }
+
+            if(this._parent) {
+                return this._parent.findOneInParent(attr, value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Return all graph nodes that satisfy the search query. Query can be simply a string, or comma
      * separated strings, to have inclusive results of assets that match at least one query. A
      * query that consists of an array of tags can be used to match graph nodes that have each tag
