@@ -413,6 +413,94 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#findInParent()', function () {
+
+        it('finds a node by property', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findInParent('name', 'Parent');
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(root);
+
+            res = child.findInParent('name', 'Child');
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+
+            res = child.findInParent('name', 'Not Found');
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+        it('finds a node by filter function', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findInParent(function (node) {
+                return node.name === 'Parent';
+            });
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(root);
+
+            res = child.findInParent(function (node) {
+                return node.name === 'Child';
+            });
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+
+            res = child.findInParent(function (node) {
+                return node.name === 'Not Found';
+            });
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+    });
+
+    describe('#findOneInParent()', function () {
+
+        it('finds a node by property', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findOneInParent('name', 'Parent');
+            expect(res).to.equal(root);
+
+            res = child.findOneInParent('name', 'Child');
+            expect(res).to.equal(child);
+
+            res = child.findOneInParent('name', 'Not Found');
+            expect(res).to.be.null;
+        });
+
+        it('finds a node by filter function', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findOneInParent(function (node) {
+                return node.name === 'Parent';
+            });
+            expect(res).to.equal(root);
+
+            res = child.findOneInParent(function (node) {
+                return node.name === 'Child';
+            });
+            expect(res).to.equal(child);
+
+            res = child.findOneInParent(function (node) {
+                return node.name === 'Not Found';
+            });
+            expect(res).to.be.null;
+        });
+
+    });
+
     describe('#forEach()', function () {
 
         it('iterates over all nodes', function () {
