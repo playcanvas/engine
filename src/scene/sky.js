@@ -10,6 +10,7 @@ import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
+import { skybox } from '../graphics/program-lib/programs/skybox.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -45,6 +46,7 @@ class Sky {
 
         material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
             const library = device.getProgramLibrary();
+            library.register('skybox', skybox);
 
             if (texture.cubemap) {
                 return library.getProgram('skybox', {

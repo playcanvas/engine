@@ -53,6 +53,11 @@ class WebgpuShader {
         // process the shader source to allow for uniforms
         const processed = ShaderProcessor.run(this.shader.device, this.shader.definition);
 
+        // keep reference to processed shaders in debug mode
+        Debug.call(() => {
+            this.processed = processed;
+        });
+
         this._vertexCode = this.transpile(processed.vshader, 'vertex', this.shader.definition.vshader);
         this._fragmentCode = this.transpile(processed.fshader, 'fragment', this.shader.definition.fshader);
 

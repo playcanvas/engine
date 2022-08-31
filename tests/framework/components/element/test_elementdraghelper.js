@@ -114,7 +114,7 @@ describe("pc.ElementDragHelper", function() {
             camera: camera
         });
 
-        app.mouse.fire("mousemove", {
+        element.fire("mousemove", {
             x: 51,
             y: 52
         });
@@ -132,7 +132,7 @@ describe("pc.ElementDragHelper", function() {
             camera: camera
         });
 
-        app.touch.fire("touchmove", {
+        element.fire("touchmove", {
             x: 51,
             y: 52
         });
@@ -149,7 +149,7 @@ describe("pc.ElementDragHelper", function() {
             camera: camera
         });
 
-        window.dispatchEvent(new Event('mouseup'));
+        element.fire('mouseup');
 
         expect(dragEndHandler.callCount).to.equal(1);
         expect(dragHelper.isDragging).to.equal(false);
@@ -169,7 +169,7 @@ describe("pc.ElementDragHelper", function() {
             camera: camera
         });
 
-        window.dispatchEvent(new Event(touchEventName));
+        element.fire(touchEventName);
 
         expect(dragEndHandler.callCount).to.equal(1);
         expect(dragHelper.isDragging).to.equal(false);
@@ -226,7 +226,7 @@ describe("pc.ElementDragHelper", function() {
             camera: camera
         });
 
-        app.mouse.fire("mousemove", {
+        element.fire("mousemove", {
             x: 60,
             y: 60
         });
