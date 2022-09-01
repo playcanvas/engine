@@ -539,7 +539,6 @@ class GraphNode extends EventHandler {
      */
     findOne(attr, value) {
         const len = this._children.length;
-        let result = null;
 
         if (attr instanceof Function) {
             if (attr(this))
@@ -557,7 +556,7 @@ class GraphNode extends EventHandler {
         }
 
         for (let i = 0; i < len; ++i) {
-            result = this._children[i].findOne(attr, value);
+            const result = this._children[i].findOne(attr, value);
             if (result)
                 return result;
         }
