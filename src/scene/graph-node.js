@@ -477,7 +477,6 @@ class GraphNode extends EventHandler {
      * equality against the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
-     * @param {GraphNode[]} [results] - Array where the results are appended to.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have `door` in their lower-cased name
@@ -488,27 +487,40 @@ class GraphNode extends EventHandler {
      * // Finds all nodes that have the name property set to 'Test'
      * var entities = parent.find('name', 'Test');
      */
-    find(attr, value, results = []) {
-        const len = this._children.length;
+    find(attr, value) {
+        const results = [];
+        let queryNode;
 
         if (attr instanceof Function) {
-            if (attr(this))
-                results.push(this);
-        } else if (this[attr]) {
-            let testValue;
+            queryNode = (node) => {
+                if (attr(node))
+                    results.push(node);
 
-            if (this[attr] instanceof Function) {
-                testValue = this[attr]();
-            } else {
-                testValue = this[attr];
-            }
-            if (testValue === value)
-                results.push(this);
+                for (let i = 0, len = node._children.length; i < len; ++i) {
+                    queryNode(node._children[i]);
+                }
+            };
+        } else {
+            queryNode = (node) => {
+                if (node[attr]) {
+                    let testValue;
+
+                    if (node[attr] instanceof Function) {
+                        testValue = node[attr]();
+                    } else {
+                        testValue = node[attr];
+                    }
+                    if (testValue === value)
+                        results.push(node);
+                }
+
+                for (let i = 0, len = node._children.length; i < len; ++i) {
+                    queryNode(node._children[i]);
+                }
+            };
         }
 
-        for (let i = 0; i < len; ++i) {
-            this._children[i].find(attr, value, results);
-        }
+        queryNode(this);
 
         return results;
     }
@@ -577,35 +589,39 @@ class GraphNode extends EventHandler {
      * equality against the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
-     * @param {GraphNode[]} [results] - Array where the results are appended to.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a group element component
-     * var groups = element.findInParent(function (node) {
+     * var groups = element.findInParents(function (node) {
      *     return node.element && node.element.type === pc.ELEMENTTYPE_GROUP;
      * });
      * @example
      * // Finds all nodes that have the name property set to 'Test'
-     * var entities = entity.findInParent('name', 'Test');
+     * var entities = entity.findInParents('name', 'Test');
      */
-    findInParent(attr, value, results = []) {
-        if (attr instanceof Function) {
-            if (attr(this))
-                results.push(this);
-        } else if (this[attr]) {
-            let testValue;
+    findInParents(attr, value) {
+        const results = [];
+        let testNode, current = this;
 
-            if (this[attr] instanceof Function) {
-                testValue = this[attr]();
-            } else {
-                testValue = this[attr];
-            }
-            if (testValue === value)
-                results.push(this);
+        if (attr instanceof Function) {
+            testNode = node => attr(node);
+        } else {
+            testNode = (node) => {
+                if (!node[attr])
+                    return false;
+
+                if (node[attr] instanceof Function)
+                    return node[attr]() === value;
+
+                return node[attr] === value;
+            };
         }
 
-        if (this._parent) {
-            this._parent.findInParent(attr, value, results);
+        while (current) {
+            if (testNode(current))
+                results.push(current);
+
+            current = current._parent;
         }
 
         return results;
@@ -628,31 +644,35 @@ class GraphNode extends EventHandler {
      * node is found.
      * @example
      * // Find the first node that is called `head` and has a model component
-     * var head = player.findOneInParent(function (node) {
+     * var head = player.findOneInParents(function (node) {
      *     return node.model && node.name === 'head';
      * });
      * @example
      * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOneInParent('name', 'Test');
+     * var node = parent.findOneInParents('name', 'Test');
      */
-    findOneInParent(attr, value) {
-        if (attr instanceof Function) {
-            if (attr(this))
-                return this;
-        } else if (this[attr]) {
-            let testValue;
+    findOneInParents(attr, value) {
+        let testNode, current = this;
 
-            if (this[attr] instanceof Function) {
-                testValue = this[attr]();
-            } else {
-                testValue = this[attr];
-            }
-            if (testValue === value)
-                return this;
+        if (attr instanceof Function) {
+            testNode = node => attr(node);
+        } else {
+            testNode = (node) => {
+                if (!node[attr])
+                    return false;
+
+                if (node[attr] instanceof Function)
+                    return node[attr]() === value;
+
+                return node[attr] === value;
+            };
         }
 
-        if (this._parent) {
-            return this._parent.findOneInParent(attr, value);
+        while (current) {
+            if (testNode(current))
+                return current;
+
+            current = current._parent;
         }
 
         return null;
@@ -712,6 +732,26 @@ class GraphNode extends EventHandler {
             const found = this._children[i].findByName(name);
             if (found !== null) return found;
         }
+        return null;
+    }
+
+    /**
+     * Get the first ancestor node found in the graph with the name.
+     *
+     * @param {string} name - The name of the graph.
+     * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
+     * null if no node is found.
+     */
+    findByNameInParents(name) {
+        let current = this;
+
+        while (current) {
+            if (current.name === name)
+                return current;
+
+            current = current._parent;
+        }
+
         return null;
     }
 

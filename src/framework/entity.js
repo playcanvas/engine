@@ -453,10 +453,10 @@ class Entity extends GraphNode {
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the ancestor tree that starts with this entity
-     * var light = entity.findComponentInParent("light");
+     * var light = entity.findComponentInParents("light");
      */
-    findComponentInParent(type) {
-        const entity = this.findOneInParent(function (node) {
+    findComponentInParents(type) {
+        const entity = this.findOneInParents(function (node) {
             return node.c && node.c[type];
         });
         return entity && entity.c[type];
@@ -470,10 +470,10 @@ class Entity extends GraphNode {
      * ascendants. Returns empty array if none found.
      * @example
      * // Get all element components in the ancestor tree that starts with this entity
-     * var elements = entity.findComponentsInParent("element");
+     * var elements = entity.findComponentsInParents("element");
      */
-    findComponentsInParent(type) {
-        const entities = this.findInParent(function (node) {
+    findComponentsInParents(type) {
+        const entities = this.findInParents(function (node) {
             return node.c && node.c[type];
         });
         return entities.map(function (entity) {
@@ -489,10 +489,10 @@ class Entity extends GraphNode {
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the ancestor tree that starts with this entity
-     * var controller = entity.findScriptInParent("playerController");
+     * var controller = entity.findScriptInParents("playerController");
      */
-    findScriptInParent(nameOrType) {
-        const entity = this.findOneInParent(function (node) {
+    findScriptInParents(nameOrType) {
+        const entity = this.findOneInParents(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entity && entity.c.script.get(nameOrType);
@@ -506,10 +506,10 @@ class Entity extends GraphNode {
      * ascendants. Returns empty array if none found.
      * @example
      * // Get all "playerController" instance in the ancestor tree that starts with this entity
-     * var controllers = entity.findScriptsInParent("playerController");
+     * var controllers = entity.findScriptsInParents("playerController");
      */
-    findScriptsInParent(nameOrType) {
-        const entities = this.findInParent(function (node) {
+    findScriptsInParents(nameOrType) {
+        const entities = this.findInParents(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entities.map(function (entity) {
