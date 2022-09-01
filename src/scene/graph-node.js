@@ -477,6 +477,7 @@ class GraphNode extends EventHandler {
      * equality against the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
+     * @param {GraphNode[]} [results] - Array where the results are appended to.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have `door` in their lower-cased name
@@ -487,8 +488,7 @@ class GraphNode extends EventHandler {
      * // Finds all nodes that have the name property set to 'Test'
      * var entities = parent.find('name', 'Test');
      */
-    find(attr, value) {
-        const results = [];
+    find(attr, value, results = []) {
         const len = this._children.length;
 
         if (attr instanceof Function) {
@@ -507,7 +507,7 @@ class GraphNode extends EventHandler {
         }
 
         for (let i = 0; i < len; ++i) {
-            results.push(...this._children[i].find(attr, value));
+            this._children[i].find(attr, value, results);
         }
 
         return results;
@@ -577,6 +577,7 @@ class GraphNode extends EventHandler {
      * equality against the valued passed as the second argument to this function.
      * @param {object} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
+     * @param {GraphNode[]} [results] - Array where the results are appended to.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a group element component
@@ -587,9 +588,7 @@ class GraphNode extends EventHandler {
      * // Finds all nodes that have the name property set to 'Test'
      * var entities = entity.findInParent('name', 'Test');
      */
-    findInParent(attr, value) {
-        const results = [];
-
+    findInParent(attr, value, results = []) {
         if (attr instanceof Function) {
             if (attr(this))
                 results.push(this);
@@ -606,7 +605,7 @@ class GraphNode extends EventHandler {
         }
 
         if (this._parent) {
-            results.push(...this._parent.findInParent(attr, value));
+            this._parent.findInParent(attr, value, results);
         }
 
         return results;
