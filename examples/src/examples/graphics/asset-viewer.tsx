@@ -36,6 +36,14 @@ class AssetViewerExample {
             touch: new pc.TouchDevice(document.body)
         });
 
+        // Licenses for GLB models:
+        // Mosquito In Amber by Sketchfab CC-BY-4.0
+        // Iridescent Dish with Olives by Wayfair LLC CC-BY-4.0
+        // StainedGlassLamp by by Wayfair LLC CC-BY-4.0
+        // SheenChair by by Wayfair LLC CC-BY-4.0, model and textures created by Eric Chadwick
+        //
+        // https://creativecommons.org/licenses/by/4.0/
+
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             helipad: new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
