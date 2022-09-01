@@ -492,34 +492,22 @@ class GraphNode extends EventHandler {
         const len = this._children.length;
 
         if (attr instanceof Function) {
-            const fn = attr;
-
-            if (fn(this))
+            if (attr(this))
                 results.push(this);
-
-            for (let i = 0; i < len; i++) {
-                const descendants = this._children[i].find(fn);
-                if (descendants.length)
-                    results.push(...descendants);
-            }
-        } else {
+        } else if (this[attr]) {
             let testValue;
 
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value)
-                    results.push(this);
+            if (this[attr] instanceof Function) {
+                testValue = this[attr]();
+            } else {
+                testValue = this[attr];
             }
+            if (testValue === value)
+                results.push(this);
+        }
 
-            for (let i = 0; i < len; ++i) {
-                const descendants = this._children[i].find(attr, value);
-                if (descendants.length)
-                    results.push(...descendants);
-            }
+        for (let i = 0; i < len; ++i) {
+            results.push(...this._children[i].find(attr, value));
         }
 
         return results;
@@ -554,34 +542,24 @@ class GraphNode extends EventHandler {
         let result = null;
 
         if (attr instanceof Function) {
-            const fn = attr;
-
-            if (fn(this))
+            if (attr(this))
                 return this;
-
-            for (let i = 0; i < len; i++) {
-                result = this._children[i].findOne(fn);
-                if (result)
-                    return result;
-            }
-        } else {
+        } else if (this[attr]) {
             let testValue;
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value) {
-                    return this;
-                }
-            }
 
-            for (let i = 0; i < len; i++) {
-                result = this._children[i].findOne(attr, value);
-                if (result)
-                    return result;
+            if (this[attr] instanceof Function) {
+                testValue = this[attr]();
+            } else {
+                testValue = this[attr];
             }
+            if (testValue === value)
+                return this;
+        }
+
+        for (let i = 0; i < len; ++i) {
+            result = this._children[i].findOne(attr, value);
+            if (result)
+                return result;
         }
 
         return null;
@@ -614,30 +592,22 @@ class GraphNode extends EventHandler {
         const results = [];
 
         if (attr instanceof Function) {
-            const fn = attr;
-
-            if (fn(this))
+            if (attr(this))
                 results.push(this);
-
-            if (this._parent) {
-                results.push(...this._parent.findInParent(fn));
-            }
-        } else {
+        } else if (this[attr]) {
             let testValue;
 
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value)
-                    results.push(this);
+            if (this[attr] instanceof Function) {
+                testValue = this[attr]();
+            } else {
+                testValue = this[attr];
             }
+            if (testValue === value)
+                results.push(this);
+        }
 
-            if (this._parent) {
-                results.push(...this._parent.findInParent(attr, value));
-            }
+        if (this._parent) {
+            results.push(...this._parent.findInParent(attr, value));
         }
 
         return results;
@@ -669,30 +639,22 @@ class GraphNode extends EventHandler {
      */
     findOneInParent(attr, value) {
         if (attr instanceof Function) {
-            const fn = attr;
-
-            if (fn(this))
+            if (attr(this))
                 return this;
-
-            if (this._parent) {
-                return this._parent.findOneInParent(fn);
-            }
-        } else {
+        } else if (this[attr]) {
             let testValue;
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value) {
-                    return this;
-                }
-            }
 
-            if (this._parent) {
-                return this._parent.findOneInParent(attr, value);
+            if (this[attr] instanceof Function) {
+                testValue = this[attr]();
+            } else {
+                testValue = this[attr];
             }
+            if (testValue === value)
+                return this;
+        }
+
+        if (this._parent) {
+            return this._parent.findOneInParent(attr, value);
         }
 
         return null;
