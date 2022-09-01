@@ -70,6 +70,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extTextureFloat = true;
         this.extTextureHalfFloat = false; // TODO: likely supported as well
         this.boneLimit = 1024;
+        this.supportsImageBitmap = true;
     }
 
     async initWebGpu() {
