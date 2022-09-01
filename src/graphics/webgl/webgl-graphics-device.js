@@ -159,6 +159,52 @@ function testTextureFloatHighPrecision(device) {
     return f === 0;
 }
 
+// ImageBitmap current state (Sep 2022):
+// - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
+//   there are likely still issues with older versions of both).
+// - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
+//   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
+//   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
+// - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
+//   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
+//   texture assets on the dom https://playcanvas.com/editor/scene/446278.
+
+// This function tests whether the current browser destroys PNG data or not.
+function testImageBitmap(device) {
+    // 1x1 png image containing rgba(1, 2, 3, 63)
+    const pngBytes = new Uint8Array([
+        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21,
+        196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 100, 98, 182, 7, 0, 0, 89, 0, 71, 67, 133, 148, 237,
+        0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
+    ]);
+
+    return createImageBitmap(new Blob([pngBytes], { type: 'image/png' }), { premultiplyAlpha: 'none' })
+        .then((image) => {
+            // create the texture
+            const texture = new Texture(device, {
+                width: 1,
+                height: 1,
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                mipmaps: false,
+                levels: [image]
+            });
+
+            // read pixels
+            const rt = new RenderTarget({ colorBuffer: texture, depth: false });
+            device.setFramebuffer(rt.impl._glFrameBuffer);
+            device.initRenderTarget(rt);
+
+            const data = new Uint8ClampedArray(4);
+            device.gl.readPixels(0, 0, 1, 1, device.gl.RGBA, device.gl.UNSIGNED_BYTE, data);
+
+            rt.destroy();
+            texture.destroy();
+
+            return data[0] === 1 && data[1] === 2 && data[2] === 3 && data[3] === 63;
+        })
+        .catch(e => false);
+}
+
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
@@ -308,6 +354,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeCapabilities();
         this.initializeRenderState();
         this.initializeContextCaches();
+
+        // start async image bitmap test
+        this.supportsImageBitmap = null;
+        if (typeof ImageBitmap !== 'undefined') {
+            testImageBitmap(this).then((result) => {
+                this.supportsImageBitmap = result;
+            });
+        }
 
         this.defaultClearOptions = {
             color: [0, 0, 0, 1],

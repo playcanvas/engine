@@ -2,8 +2,7 @@ import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET,
-    DEVICETYPE_WEBGPU
+    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET
 } from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
@@ -18,30 +17,22 @@ import { ABSOLUTE_URL } from '../../../asset/constants.js';
  * @ignore
  */
 class ImgParser {
-    constructor(registry) {
+    constructor(registry, device) {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-
-        // ImageBitmap current state (Sep 2022):
-        // - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
-        //   there are likely still issues with older versions of both).
-        // - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
-        //   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
-        //   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
-        // - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
-        //   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
-        //   texture assets on the dom https://playcanvas.com/editor/scene/446278.
-
-        // only enable when running webgpu
-        const isWebGPU = registry?._loader?._app?.graphicsDevice?.deviceType === DEVICETYPE_WEBGPU;
-        this.useImageBitmap = isWebGPU;
+        this.device = device;
     }
 
     load(url, callback, asset) {
         const hasContents = !!asset?.file?.contents;
 
         if (hasContents) {
+            // ImageBitmap interface can load iage
+            if (this.device.supportsImageBitmap) {
+                this._loadImageBitmapFromData(asset.file.contents, callback);
+                return;
+            }
             url = {
                 load: URL.createObjectURL(new Blob([asset.file.contents])),
                 original: url.original
@@ -62,7 +53,7 @@ class ImgParser {
             crossOrigin = this.crossOrigin;
         }
 
-        if (this.useImageBitmap) {
+        if (this.device.supportsImageBitmap) {
             this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
         } else {
             this._loadImage(url.load, url.original, crossOrigin, handler);
@@ -144,6 +135,12 @@ class ImgParser {
                     .catch(e => callback(e));
             }
         });
+    }
+
+    _loadImageBitmapFromData(data, callback) {
+        createImageBitmap(new Blob([data]), { premultiplyAlpha: 'none' })
+            .then(imageBitmap => callback(null, imageBitmap))
+            .catch(e => callback(e));
     }
 }
 
