@@ -155,7 +155,7 @@ class Scene extends EventHandler {
      *
      * @type {boolean}
      */
-    usePhysicallyBasedUnits = false;
+    physicalUnits = true;
 
     /**
      * Create a new Scene instance.

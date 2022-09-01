@@ -415,7 +415,7 @@ class ForwardRenderer {
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
 
-        if (this.scene.usePhysicallyBasedUnits) {
+        if (this.scene.physicalUnits) {
             this.exposureId.setValue(camera.getExposure());
         } else {
             this.exposureId.setValue(this.scene.exposure);
