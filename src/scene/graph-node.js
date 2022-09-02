@@ -22,10 +22,16 @@ const invParentRot = new Quat();
 const matrix = new Mat4();
 const target = new Vec3();
 const up = new Vec3();
+const checkAttr = (node, attr, value) => {
+    if (node[attr] instanceof Function)
+        return node[attr]() === value;
+
+    return node[attr] === value;
+};
 
 /**
- * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
- * node and all of its descendants.
+ * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findParents}
+ * and {@link GraphNode#findOneParent} to search through a graph node and all of its descendants or ascendants.
  *
  * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
@@ -34,8 +40,8 @@ const up = new Vec3();
  */
 
 /**
- * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
- * descendants.
+ * Callback used by {@link GraphNode#forEach} and {@link GraphNode#forEachParent} to iterate through
+ * a graph node and all of its descendants or ascendants.
  *
  * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
@@ -489,36 +495,18 @@ class GraphNode extends EventHandler {
      */
     find(attr, value) {
         const results = [];
-        let queryNode;
 
         if (attr instanceof Function) {
-            queryNode = (node) => {
+            this.forEach((node) => {
                 if (attr(node))
                     results.push(node);
-
-                for (let i = 0, len = node._children.length; i < len; ++i) {
-                    queryNode(node._children[i]);
-                }
-            };
+            });
         } else {
-            queryNode = (node) => {
-                let testValue;
-
-                if (node[attr] instanceof Function) {
-                    testValue = node[attr]();
-                } else {
-                    testValue = node[attr];
-                }
-                if (testValue === value)
+            this.forEach((node) => {
+                if (checkAttr(node, attr, value))
                     results.push(node);
-
-                for (let i = 0, len = node._children.length; i < len; ++i) {
-                    queryNode(node._children[i]);
-                }
-            };
+            });
         }
-
-        queryNode(this);
 
         return results;
     }
@@ -553,16 +541,8 @@ class GraphNode extends EventHandler {
         if (attr instanceof Function) {
             if (attr(this))
                 return this;
-        } else {
-            let testValue;
-
-            if (this[attr] instanceof Function) {
-                testValue = this[attr]();
-            } else {
-                testValue = this[attr];
-            }
-            if (testValue === value)
-                return this;
+        } else if (checkAttr(this, attr, value)) {
+            return this;
         }
 
         for (let i = 0; i < len; ++i) {
@@ -590,33 +570,26 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a group element component
-     * var groups = element.findInParents(function (node) {
+     * var groups = element.findParents(function (node) {
      *     return node.element && node.element.type === pc.ELEMENTTYPE_GROUP;
      * });
      * @example
      * // Finds all nodes that have the name property set to 'Test'
-     * var entities = entity.findInParents('name', 'Test');
+     * var entities = entity.findParents('name', 'Test');
      */
-    findInParents(attr, value) {
+    findParents(attr, value) {
         const results = [];
-        let testNode, current = this;
 
         if (attr instanceof Function) {
-            testNode = node => attr(node);
+            this.forEachParent((node) => {
+                if (attr(node))
+                    results.push(node);
+            });
         } else {
-            testNode = (node) => {
-                if (node[attr] instanceof Function)
-                    return node[attr]() === value;
-
-                return node[attr] === value;
-            };
-        }
-
-        while (current) {
-            if (testNode(current))
-                results.push(current);
-
-            current = current._parent;
+            this.forEachParent((node) => {
+                if (checkAttr(node, attr, value))
+                    results.push(node);
+            });
         }
 
         return results;
@@ -639,25 +612,20 @@ class GraphNode extends EventHandler {
      * node is found.
      * @example
      * // Find the first node that is called `head` and has a model component
-     * var head = player.findOneInParents(function (node) {
+     * var head = player.findOneParent(function (node) {
      *     return node.model && node.name === 'head';
      * });
      * @example
      * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOneInParents('name', 'Test');
+     * var node = parent.findOneParent('name', 'Test');
      */
-    findOneInParents(attr, value) {
+    findOneParent(attr, value) {
         let testNode, current = this;
 
         if (attr instanceof Function) {
             testNode = node => attr(node);
         } else {
-            testNode = (node) => {
-                if (node[attr] instanceof Function)
-                    return node[attr]() === value;
-
-                return node[attr] === value;
-            };
+            testNode = node => checkAttr(node, attr, value);
         }
 
         while (current) {
@@ -734,7 +702,7 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
      * null if no node is found.
      */
-    findByNameInParents(name) {
+    findParentByName(name) {
         let current = this;
 
         while (current) {
@@ -795,6 +763,27 @@ class GraphNode extends EventHandler {
         const children = this._children;
         for (let i = 0; i < children.length; i++) {
             children[i].forEach(callback, thisArg);
+        }
+    }
+
+    /**
+     * Executes a provided function once on this graph node and all of its ascendants.
+     *
+     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
+     * ascendant.
+     * @param {object} [thisArg] - Optional value to use as this when executing callback function.
+     * @example
+     * // Enable each node in ascendant tree
+     * current.forEachParent(function (node) {
+     *     node.enabled = true;
+     * });
+     */
+    forEachParent(callback, thisArg) {
+        let current = this;
+
+        while (current) {
+            callback.call(thisArg, current);
+            current = current._parent;
         }
     }
 

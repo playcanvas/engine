@@ -456,7 +456,7 @@ class Entity extends GraphNode {
      * var light = entity.findComponentInParents("light");
      */
     findComponentInParents(type) {
-        const entity = this.findOneInParents(function (node) {
+        const entity = this.findOneParent(function (node) {
             return node.c && node.c[type];
         });
         return entity && entity.c[type];
@@ -473,7 +473,7 @@ class Entity extends GraphNode {
      * var elements = entity.findComponentsInParents("element");
      */
     findComponentsInParents(type) {
-        const entities = this.findInParents(function (node) {
+        const entities = this.findParents(function (node) {
             return node.c && node.c[type];
         });
         return entities.map(function (entity) {
@@ -492,7 +492,7 @@ class Entity extends GraphNode {
      * var controller = entity.findScriptInParents("playerController");
      */
     findScriptInParents(nameOrType) {
-        const entity = this.findOneInParents(function (node) {
+        const entity = this.findOneParent(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entity && entity.c.script.get(nameOrType);
@@ -509,7 +509,7 @@ class Entity extends GraphNode {
      * var controllers = entity.findScriptsInParents("playerController");
      */
     findScriptsInParents(nameOrType) {
-        const entities = this.findInParents(function (node) {
+        const entities = this.findParents(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entities.map(function (entity) {
