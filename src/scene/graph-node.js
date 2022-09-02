@@ -502,17 +502,15 @@ class GraphNode extends EventHandler {
             };
         } else {
             queryNode = (node) => {
-                if (node[attr]) {
-                    let testValue;
+                let testValue;
 
-                    if (node[attr] instanceof Function) {
-                        testValue = node[attr]();
-                    } else {
-                        testValue = node[attr];
-                    }
-                    if (testValue === value)
-                        results.push(node);
+                if (node[attr] instanceof Function) {
+                    testValue = node[attr]();
+                } else {
+                    testValue = node[attr];
                 }
+                if (testValue === value)
+                    results.push(node);
 
                 for (let i = 0, len = node._children.length; i < len; ++i) {
                     queryNode(node._children[i]);
@@ -555,7 +553,7 @@ class GraphNode extends EventHandler {
         if (attr instanceof Function) {
             if (attr(this))
                 return this;
-        } else if (this[attr]) {
+        } else {
             let testValue;
 
             if (this[attr] instanceof Function) {
@@ -607,9 +605,6 @@ class GraphNode extends EventHandler {
             testNode = node => attr(node);
         } else {
             testNode = (node) => {
-                if (!node[attr])
-                    return false;
-
                 if (node[attr] instanceof Function)
                     return node[attr]() === value;
 
@@ -658,9 +653,6 @@ class GraphNode extends EventHandler {
             testNode = node => attr(node);
         } else {
             testNode = (node) => {
-                if (!node[attr])
-                    return false;
-
                 if (node[attr] instanceof Function)
                     return node[attr]() === value;
 
