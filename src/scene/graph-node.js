@@ -22,12 +22,19 @@ const invParentRot = new Quat();
 const matrix = new Mat4();
 const target = new Vec3();
 const up = new Vec3();
-const checkAttr = (node, attr, value) => {
-    if (node[attr] instanceof Function)
-        return node[attr]() === value;
 
-    return node[attr] === value;
-};
+function _createTest(attr, value) {
+    if (attr instanceof Function) {
+        return attr;
+    }
+    return (node) => {
+        let x = node[attr];
+        if (x instanceof Function) {
+            x = x();
+        }
+        return x === value;
+    };
+}
 
 /**
  * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findParents}
@@ -495,18 +502,12 @@ class GraphNode extends EventHandler {
      */
     find(attr, value) {
         const results = [];
+        const test = _createTest(attr, value);
 
-        if (attr instanceof Function) {
-            this.forEach((node) => {
-                if (attr(node))
-                    results.push(node);
-            });
-        } else {
-            this.forEach((node) => {
-                if (checkAttr(node, attr, value))
-                    results.push(node);
-            });
-        }
+        this.forEach((node) => {
+            if (test(node))
+                results.push(node);
+        });
 
         return results;
     }
@@ -536,17 +537,14 @@ class GraphNode extends EventHandler {
      * var node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
+        const test = _createTest(attr, value);
         const len = this._children.length;
 
-        if (attr instanceof Function) {
-            if (attr(this))
-                return this;
-        } else if (checkAttr(this, attr, value)) {
+        if (test(this))
             return this;
-        }
 
         for (let i = 0; i < len; ++i) {
-            const result = this._children[i].findOne(attr, value);
+            const result = this._children[i].findOne(test);
             if (result)
                 return result;
         }
@@ -579,18 +577,12 @@ class GraphNode extends EventHandler {
      */
     findParents(attr, value) {
         const results = [];
+        const test = _createTest(attr, value);
 
-        if (attr instanceof Function) {
-            this.forEachParent((node) => {
-                if (attr(node))
-                    results.push(node);
-            });
-        } else {
-            this.forEachParent((node) => {
-                if (checkAttr(node, attr, value))
-                    results.push(node);
-            });
-        }
+        this.forEachParent((node) => {
+            if (test(node))
+                results.push(node);
+        });
 
         return results;
     }
@@ -620,16 +612,11 @@ class GraphNode extends EventHandler {
      * var node = parent.findOneParent('name', 'Test');
      */
     findOneParent(attr, value) {
-        let testNode, current = this;
-
-        if (attr instanceof Function) {
-            testNode = node => attr(node);
-        } else {
-            testNode = node => checkAttr(node, attr, value);
-        }
+        const test = _createTest(attr, value);
+        let current = this;
 
         while (current) {
-            if (testNode(current))
+            if (test(current))
                 return current;
 
             current = current._parent;
