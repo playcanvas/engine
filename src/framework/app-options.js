@@ -11,6 +11,9 @@
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
 
+/**
+ * Application Options
+ */
 class AppOptions {
     /**
      * Input handler for {@link ElementComponent}s.
@@ -85,35 +88,35 @@ class AppOptions {
     /**
      * The lightmapper.
      *
-     * @type {typeof Lightmapper}
+     * @type {Lightmapper.constructor}
      */
     lightmapper;
 
     /**
      * The BatchManager.
      *
-     * @type {typeof BatchManager}
+     * @type {BatchManager.constructor}
      */
     batchManager;
 
     /**
      * The XrManager.
      *
-     * @type {typeof XrManager}
+     * @type {XrManager.constructor}
      */
     xr;
 
     /**
      * The component systems the app requires.
      *
-     * @type {(typeof ComponentSystem)[]}
+     * @type {ComponentSystem.constructor[]}
      */
     componentSystems = [];
 
     /**
      * The resource handlers the app requires.
      *
-     * @type {(typeof ResourceHandler)[]}
+     * @type {ResourceHandler.constructor[]}
      */
     resourceHandlers = [];
 }
