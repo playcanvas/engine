@@ -124,10 +124,6 @@ const properties = [
  * both front and back faces will be rendered. Defaults to true.
  * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
  * for reflection rendering. Defaults to false.
- * @property {number} aperture The aperture of the camera lens in f-stops. High values means small aperture,
- * low values means high aperture. Default is 1.0.
- * @property {number} shutter The shutter speed of the camera in seconds. Default is 1.
- * @property {number} sensitivity The sensitivity in ISO. Default is 100.
  * @augments Component
  */
 class CameraComponent extends Component {
@@ -396,7 +392,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera aperture
+     * Set camera aperture in f-stops, the default value is 1.0. Higher value means less exposure.
      *
      * @type {number}
      */
@@ -409,7 +405,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera sensitivity
+     * Set camera sensitivity in ISO, the default value is 100. Higher value means more exposure.
      *
      * @type {number}
      */
@@ -422,7 +418,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera shutter speed
+     * Set camera shutter speed in seconds, the default value is 1s. Longer shutter means more exposure.
      *
      * @type {number}
      */
