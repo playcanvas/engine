@@ -151,7 +151,7 @@ class Scene extends EventHandler {
     sky = null;
 
     /**
-     * Use physically based units for cameras and lights
+     * Use physically based units for cameras and lights.
      *
      * @type {boolean}
      */
