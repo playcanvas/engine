@@ -673,13 +673,7 @@ class GraphNode extends EventHandler {
      * null if no node is found.
      */
     findByName(name) {
-        if (this.name === name) return this;
-
-        for (let i = 0; i < this._children.length; i++) {
-            const found = this._children[i].findByName(name);
-            if (found !== null) return found;
-        }
-        return null;
+        return this.findOne('name', name);
     }
 
     /**
@@ -690,16 +684,7 @@ class GraphNode extends EventHandler {
      * null if no node is found.
      */
     findParentByName(name) {
-        let current = this;
-
-        while (current) {
-            if (current.name === name)
-                return current;
-
-            current = current._parent;
-        }
-
-        return null;
+        return this.findOneParent('name', name);
     }
 
     /**
