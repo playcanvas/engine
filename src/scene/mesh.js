@@ -679,6 +679,18 @@ class Mesh extends RefCountedObject {
     }
 
     /**
+     * Gets the vertex tangents data.
+     *
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} tangents - An
+     * array to populate with the vertex data. When typed array is supplied, enough space needs to
+     * be reserved, otherwise only partial data is copied.
+     * @returns {number} Returns the number of vertices populated.
+     */
+     getTangents(tangents) {
+        return this.getVertexStream(SEMANTIC_TANGENT, tangents);
+    }
+
+    /**
      * Gets the vertex uv data.
      *
      * @param {number} channel - The uv channel in [0..7] range.
