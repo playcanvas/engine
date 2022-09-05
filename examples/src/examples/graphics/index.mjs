@@ -15,6 +15,7 @@ import LayersExample from "./layers";
 import LightsBakedAOExample from "./lights-baked-a-o";
 import LightsBakedExample from "./lights-baked";
 import LightsExample from "./lights";
+import LightPhysicalUnitsExample from "./light-physical-units";
 import LinesExample from "./lines";
 import MaterialAnisotropicExample from "./material-anisotropic";
 import MaterialBasicExample from "./material-basic";
@@ -35,7 +36,6 @@ import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
 import ParticlesSnowExample from "./particles-snow";
 import ParticlesSparkExample from "./particles-spark";
-import PhysicalLightUnitsExample from "./physical-light-units";
 import PointCloudSimulationExample from "./point-cloud-simulation";
 import PointCloudExample from "./point-cloud";
 import PortalExample from "./portal";
@@ -70,6 +70,7 @@ export {
     LightsBakedAOExample,
     LightsBakedExample,
     LightsExample,
+    LightPhysicalUnitsExample,
     LinesExample,
     MaterialAnisotropicExample,
     MaterialBasicExample,
@@ -90,7 +91,6 @@ export {
     ParticlesRandomSpritesExample,
     ParticlesSnowExample,
     ParticlesSparkExample,
-    PhysicalLightUnitsExample,
     PointCloudSimulationExample,
     PointCloudExample,
     PortalExample,

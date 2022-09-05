@@ -4,9 +4,9 @@ import * as pc from '../../../../';
 import { BindingTwoWay } from '@playcanvas/pcui';
 import { BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-class PhysicalLightUnitsExample {
+class LightPhysicalUnitsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Physical Light Units';
+    static NAME = 'Light Physical Units';
 
     controls(data: Observer) {
         return <>
@@ -300,4 +300,4 @@ class PhysicalLightUnitsExample {
     }
 }
 
-export default PhysicalLightUnitsExample;
+export default LightPhysicalUnitsExample;
