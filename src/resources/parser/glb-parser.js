@@ -1177,6 +1177,7 @@ const extensionSheen = function (data, material, textures) {
     }
     if (data.hasOwnProperty('sheenColorTexture')) {
         material.sheenMap = textures[data.sheenColorTexture.index];
+        material.sheenEncoding = 'srgb';
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
     if (data.hasOwnProperty('sheenRoughnessFactor')) {

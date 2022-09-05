@@ -174,6 +174,7 @@ class StandardMaterialOptionsBuilder {
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
         options.specularEncoding = stdMat.specularEncoding === undefined ? 'linear' : stdMat.specularEncoding;
+        options.sheenEncoding = stdMat.sheenEncoding === undefined ? 'linear' : stdMat.sheenEncoding;
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
