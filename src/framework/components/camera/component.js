@@ -392,7 +392,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera aperture in f-stops, the default value is 1.0. Higher value means less exposure.
+     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
      *
      * @type {number}
      */
@@ -405,7 +405,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera sensitivity in ISO, the default value is 100. Higher value means more exposure.
+     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
      *
      * @type {number}
      */
@@ -418,7 +418,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Set camera shutter speed in seconds, the default value is 1s. Longer shutter means more exposure.
+     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
      *
      * @type {number}
      */
