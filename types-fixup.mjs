@@ -83,7 +83,10 @@ const cameraComponentProps = [
     ['nearClip', 'number'],
     ['orthoHeight', 'number'],
     ['projection', 'number'],
-    ['scissorRect', 'Vec4']
+    ['scissorRect', 'Vec4'],
+    ['shutter', 'number'],
+    ['aperture', 'number'],
+    ['sensitivity', 'number']
 ];
 
 path = './types/framework/components/camera/component.d.ts';
@@ -169,6 +172,7 @@ const lightComponentProps = [
     ['falloffMode', 'number'],
     ['innerConeAngle', 'number'],
     ['intensity', 'number'],
+    ['luminance', 'number'],
     ['isStatic', 'boolean'],
     ['layers', 'number[]'],
     ['mask', 'number'],

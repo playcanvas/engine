@@ -35,6 +35,7 @@ import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
 import ParticlesSnowExample from "./particles-snow";
 import ParticlesSparkExample from "./particles-spark";
+import PhysicalLightUnitsExample from "./physical-light-units";
 import PointCloudSimulationExample from "./point-cloud-simulation";
 import PointCloudExample from "./point-cloud";
 import PortalExample from "./portal";
@@ -89,6 +90,7 @@ export {
     ParticlesRandomSpritesExample,
     ParticlesSnowExample,
     ParticlesSparkExample,
+    PhysicalLightUnitsExample,
     PointCloudSimulationExample,
     PointCloudExample,
     PortalExample,
