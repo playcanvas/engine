@@ -51,9 +51,9 @@ class Camera {
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
-        this._aperture = 1.0;
-        this._shutter = 1;
-        this._sensitivity = 100;
+        this._aperture = 16.0;
+        this._shutter = 1.0 / 1000.0;
+        this._sensitivity = 1000;
 
         this._projMat = new Mat4();
         this._projMatDirty = true;
