@@ -83,10 +83,7 @@ const cameraComponentProps = [
     ['nearClip', 'number'],
     ['orthoHeight', 'number'],
     ['projection', 'number'],
-    ['scissorRect', 'Vec4'],
-    ['shutter', 'number'],
-    ['aperture', 'number'],
-    ['sensitivity', 'number']
+    ['scissorRect', 'Vec4']
 ];
 
 path = './types/framework/components/camera/component.d.ts';
