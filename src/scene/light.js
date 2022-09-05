@@ -100,6 +100,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
         this.mask = MASK_AFFECT_DYNAMIC;
@@ -393,6 +394,9 @@ class Light {
 
         this._outerConeAngle = value;
         this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
+        if (this._scene?.physicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get outerConeAngle() {
@@ -408,6 +412,17 @@ class Light {
 
     get intensity() {
         return this._intensity;
+    }
+
+    set luminance(value) {
+        if (this._luminance !== value) {
+            this._luminance = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get luminance() {
+        return this._luminance;
     }
 
     get cookieMatrix() {
@@ -562,6 +577,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
 
@@ -698,7 +714,17 @@ class Light {
         const g = color.g;
         const b = color.b;
 
-        const i = this._intensity;
+        let i = this._intensity;
+        if (this._scene?.physicalUnits) {
+            if (this._type === LIGHTTYPE_SPOT) {
+                const angleAsRadians = this._outerConeAngle * Math.PI / 180.0;
+                i = this._luminance / (2 * Math.PI * (1 - Math.cos(angleAsRadians / 2.0)));
+            } else if (this._type === LIGHTTYPE_OMNI) {
+                i = this._luminance / (4 * Math.PI);
+            } else {
+                i = this._luminance;
+            }
+        }
 
         const finalColor = this._finalColor;
         const linearFinalColor = this._linearFinalColor;
