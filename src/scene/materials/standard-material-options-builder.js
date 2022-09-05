@@ -191,7 +191,7 @@ class StandardMaterialOptionsBuilder {
 
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
-        options.sheenGlossinessTint = (stdMat.useSheen && stdMat.sheenGlossiness < 1) ? 1 : 0;
+        options.sheenGlossinessTint = 1;
     }
 
     _updateEnvOptions(options, stdMat, scene) {
