@@ -687,7 +687,7 @@ class Mesh extends RefCountedObject {
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
      */
-     getTangents(tangents) {
+    getTangents(tangents) {
         return this.getVertexStream(SEMANTIC_TANGENT, tangents);
     }
 
