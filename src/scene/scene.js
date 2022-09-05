@@ -58,7 +58,7 @@ class Scene extends EventHandler {
     ambientLight = new Color(0, 0, 0);
 
     /**
-     * The exposure value tweaks the overall brightness of the scene. Defaults to 1.
+     * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
      *
      * @type {number}
      */
@@ -149,6 +149,13 @@ class Scene extends EventHandler {
      * @ignore
      */
     sky = null;
+
+    /**
+     * Use physically based units for cameras and lights. When used, the exposure value is ignored.
+     *
+     * @type {boolean}
+     */
+    physicalUnits = false;
 
     /**
      * Create a new Scene instance.

@@ -415,6 +415,12 @@ class ForwardRenderer {
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
 
+        if (this.scene.physicalUnits) {
+            this.exposureId.setValue(camera.getExposure());
+        } else {
+            this.exposureId.setValue(this.scene.exposure);
+        }
+
         const n = camera._nearClip;
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
@@ -566,7 +572,6 @@ class ForwardRenderer {
             }
         }
         this.ambientId.setValue(this.ambientColor);
-        this.exposureId.setValue(scene.exposure);
 
         if (scene.sky) {
             this.skyboxIntensityId.setValue(scene.skyboxIntensity);

@@ -33,7 +33,10 @@ const properties = [
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false }
+    { name: 'scissorRect', readonly: false },
+    { name: 'aperture', readonly: false },
+    { name: 'shutter', readonly: false },
+    { name: 'sensitivity', readonly: false }
 ];
 
 /**
@@ -389,6 +392,45 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Set camera aperture in f-stops, the default value is 1.0. Higher value means less exposure.
+     *
+     * @type {number}
+     */
+    set aperture(newValue) {
+        this._camera.aperture = newValue;
+    }
+
+    get aperture() {
+        return this._camera.aperture;
+    }
+
+    /**
+     * Set camera sensitivity in ISO, the default value is 100. Higher value means more exposure.
+     *
+     * @type {number}
+     */
+    set sensitivity(newValue) {
+        this._camera.sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._camera.sensitivity;
+    }
+
+    /**
+     * Set camera shutter speed in seconds, the default value is 1s. Longer shutter means more exposure.
+     *
+     * @type {number}
+     */
+    set shutter(newValue) {
+        this._camera.shutter = newValue;
+    }
+
+    get shutter() {
+        return this._camera.shutter;
+    }
+
+    /**
      * Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * Defaults to [0, 0, 1, 1].
      *
@@ -694,6 +736,9 @@ class CameraComponent extends Component {
         this.priority = source.priority;
         this.renderTarget = source.renderTarget;
         this.rect = source.rect;
+        this.aperture = source.aperture;
+        this.sensitivity = source.sensitivity;
+        this.shutter = source.shutter;
     }
 }
 
