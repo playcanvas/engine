@@ -1248,6 +1248,32 @@ const extensionEmissiveStrength = function (data, material, textures) {
     }
 };
 
+const extensionIridescence = function (data, material, textures) {
+    if (data.hasOwnProperty('iridescenceFactor')) {
+        material.iridescence = data.iridescenceFactor;
+    }
+    if (data.hasOwnProperty('iridescenceTexture')) {
+        material.iridescenceMapChannel = 'r';
+        material.iridescenceMap = textures[data.iridescenceTexture.index];
+        extractTextureTransform(data.iridescenceTexture, material, ['iridescence']);
+
+    }
+    if (data.hasOwnProperty('iridescenceIor')) {
+        material.iridescenceRefractionIndex = data.iridescenceIor;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMinimum')) {
+        material.iridescenceThicknessMin = data.iridescenceThicknessMinimum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMaximum')) {
+        material.iridescenceThicknessMax = data.iridescenceThicknessMaximum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessTexture')) {
+        material.iridescenceThicknessMapChannel = 'g';
+        material.iridescenceThicknessMap = textures[data.iridescenceThicknessTexture.index];
+        extractTextureTransform(data.iridescenceThicknessTexture, material, ['iridescenceThickness']);
+    }
+};
+
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
@@ -1413,6 +1439,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
+        "KHR_material_iridescence": extensionIridescence,
         "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_sheen": extensionSheen,
         "KHR_materials_specular": extensionSpecular,

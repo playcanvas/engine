@@ -1117,6 +1117,11 @@ function _defineMaterialProps() {
     _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
 
+    _defineFloat('iridescence', 0);
+    _defineFloat('iridescenceRefractionIndex', 1.0 / 1.5);
+    _defineFloat('iridescenceThicknessMin', 0);
+    _defineFloat('iridescenceThicknessMax', 0);
+
     _defineObject('ambientSH');
 
     _defineObject('cubeMapProjectionBox', (material, device, scene) => {
@@ -1197,6 +1202,9 @@ function _defineMaterialProps() {
     _defineTex2D('clearCoatNormal', 0, -1, '', false);
     _defineTex2D('sheen', 0, 3, '', true);
     _defineTex2D('sheenGloss', 0, 1, '', true);
+
+    _defineTex2D('iridescence', 0, 1, '', true);
+    _defineTex2D('iridescenceThickness', 0, 1, '', true);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');
