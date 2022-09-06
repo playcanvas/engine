@@ -478,8 +478,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Search the graph node and all of its descendants for the nodes that satisfy some search
-     * criteria.
+     * Search all the graph node descendants for the nodes that satisfy some search criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
@@ -513,8 +512,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Search the graph node and all of its descendants for the first node that satisfies some
-     * search criteria.
+     * Search all the graph node descendants for the first node that satisfies some search criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
@@ -540,10 +538,10 @@ class GraphNode extends EventHandler {
         const test = _createTest(attr, value);
         const len = this._children.length;
 
-        if (test(this))
-            return this;
-
         for (let i = 0; i < len; ++i) {
+            if (test(this._children[i]))
+                return this._children[i];
+
             const result = this._children[i].findOne(test);
             if (result)
                 return result;
@@ -553,8 +551,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Search the graph node and all of its ascendants for the nodes that satisfy some search
-     * criteria.
+     * Search all the graph node ascendants for the nodes that satisfy some search criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each ascendant node to test if node satisfies the search
@@ -575,11 +572,11 @@ class GraphNode extends EventHandler {
      * // Finds all nodes that have the name property set to 'Test'
      * var entities = entity.findParents('name', 'Test');
      */
-    findParents(attr, value) {
+    findAncestors(attr, value) {
         const results = [];
         const test = _createTest(attr, value);
 
-        this.forEachParent((node) => {
+        this.forEachAncestor((node) => {
             if (test(node))
                 results.push(node);
         });
@@ -588,8 +585,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Search the graph node and all of its ascendants for the first node that satisfies some
-     * search criteria.
+     * Search all the graph node ascendants for the first node that satisfies some search criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each ascendant node to test if node satisfies the search
@@ -611,9 +607,9 @@ class GraphNode extends EventHandler {
      * // Finds the first node that has the name property set to 'Test'
      * var node = parent.findOneParent('name', 'Test');
      */
-    findOneParent(attr, value) {
+    findAncestor(attr, value) {
         const test = _createTest(attr, value);
-        let current = this;
+        let current = this._parent;
 
         while (current) {
             if (test(current))
@@ -646,23 +642,8 @@ class GraphNode extends EventHandler {
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
-    findByTag() {
-        const query = arguments;
-        const results = [];
-
-        const queryNode = (node, checkNode) => {
-            if (checkNode && node.tags.has(...query)) {
-                results.push(node);
-            }
-
-            for (let i = 0; i < node._children.length; i++) {
-                queryNode(node._children[i], true);
-            }
-        };
-
-        queryNode(this, false);
-
-        return results;
+    findByTag(...query) {
+        return this.find(node => node.tags.has(...query));
     }
 
     /**
@@ -683,8 +664,8 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
      * null if no node is found.
      */
-    findParentByName(name) {
-        return this.findOneParent('name', name);
+    findAncestorByName(name) {
+        return this.findAncestor('name', name);
     }
 
     /**
@@ -718,10 +699,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Executes a provided function once on this graph node and all of its descendants.
+     * Executes a provided function once on all of this graph node descendants.
      *
-     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
-     * descendant.
+     * @param {ForEachNodeCallback} callback - The function to execute on each graph node descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"
@@ -730,19 +710,17 @@ class GraphNode extends EventHandler {
      * });
      */
     forEach(callback, thisArg) {
-        callback.call(thisArg, this);
-
         const children = this._children;
         for (let i = 0; i < children.length; i++) {
+            callback.call(thisArg, children[i]);
             children[i].forEach(callback, thisArg);
         }
     }
 
     /**
-     * Executes a provided function once on this graph node and all of its ascendants.
+     * Executes a provided function once on all of this graph node ascendants.
      *
-     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
-     * ascendant.
+     * @param {ForEachNodeCallback} callback - The function to execute on each graph node ascendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Enable each node in ascendant tree
@@ -750,8 +728,8 @@ class GraphNode extends EventHandler {
      *     node.enabled = true;
      * });
      */
-    forEachParent(callback, thisArg) {
-        let current = this;
+    forEachAncestor(callback, thisArg) {
+        let current = this._parent;
 
         while (current) {
             callback.call(thisArg, current);
@@ -770,14 +748,7 @@ class GraphNode extends EventHandler {
      * }
      */
     isDescendantOf(node) {
-        let parent = this._parent;
-        while (parent) {
-            if (parent === node)
-                return true;
-
-            parent = parent._parent;
-        }
-        return false;
+        return !!this.findAncestor(parent => parent === node);
     }
 
     /**

@@ -571,17 +571,19 @@ describe('Entity', function () {
 
     describe('#findComponent', function () {
 
-        it('finds component on single entity', function () {
+        it('does not find component on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const component = e.findComponent('anim');
-            expect(component).to.be.an.instanceof(AnimComponent);
+            expect(component).to.be.null;
         });
 
         it('returns null when component is not found', function () {
-            const e = new Entity();
-            e.addComponent('anim');
-            const component = e.findComponent('render');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('anim');
+            const component = root.findComponent('render');
             expect(component).to.be.null;
         });
 
@@ -618,19 +620,20 @@ describe('Entity', function () {
 
     describe('#findComponents', function () {
 
-        it('finds components on single entity', function () {
+        it('does not find components on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const components = e.findComponents('anim');
             expect(components).to.be.an('array');
-            expect(components.length).to.equal(1);
-            expect(components[0]).to.be.an.instanceof(AnimComponent);
+            expect(components.length).to.equal(0);
         });
 
         it('returns empty array when no components are found', function () {
-            const e = new Entity();
-            e.addComponent('anim');
-            const components = e.findComponents('render');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('anim');
+            const components = root.findComponents('render');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
         });
@@ -657,10 +660,9 @@ describe('Entity', function () {
             grandchild.addComponent('anim');
             const components = root.findComponents('anim');
             expect(components).to.be.an('array');
-            expect(components.length).to.equal(3);
+            expect(components.length).to.equal(2);
             expect(components[0]).to.be.an.instanceof(AnimComponent);
             expect(components[1]).to.be.an.instanceof(AnimComponent);
-            expect(components[2]).to.be.an.instanceof(AnimComponent);
         });
 
         it('does not find components on parent entity', function () {
@@ -677,25 +679,29 @@ describe('Entity', function () {
 
     describe('#findScript', function () {
 
-        it('finds script on single entity', function () {
-            const MyScript = createScript('myScript');
+        it('does not find script on single entity', function () {
+            createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
             const script = e.findScript('myScript');
-            expect(script).to.be.an.instanceof(MyScript);
+            expect(script).to.be.null;
         });
 
         it('returns null when script is not found', function () {
-            const e = new Entity();
-            e.addComponent('script');
-            const script = e.findScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            const script = root.findScript('myScript');
             expect(script).to.be.null;
         });
 
         it('returns null when script component is not found', function () {
-            const e = new Entity();
-            const script = e.findScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const script = root.findScript('myScript');
             expect(script).to.be.null;
         });
 
@@ -738,28 +744,31 @@ describe('Entity', function () {
 
     describe('#findScripts', function () {
 
-        it('finds scripts on single entity', function () {
-            const MyScript = createScript('myScript');
+        it('does not find scripts on single entity', function () {
+            createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
             const scripts = e.findScripts('myScript');
             expect(scripts).to.be.an('array');
-            expect(scripts.length).to.equal(1);
-            expect(scripts[0]).to.be.an.instanceof(MyScript);
+            expect(scripts.length).to.equal(0);
         });
 
         it('returns empty array when no scripts are found', function () {
-            const e = new Entity();
-            e.addComponent('script');
-            const scripts = e.findScripts('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            const scripts = root.findScripts('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });
 
         it('returns empty array when no script component are found', function () {
-            const e = new Entity();
-            const scripts = e.findScripts('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const scripts = root.findScripts('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });
@@ -792,10 +801,9 @@ describe('Entity', function () {
             grandchild.script.create('myScript');
             const scripts = root.findScripts('myScript');
             expect(scripts).to.be.an('array');
-            expect(scripts.length).to.equal(3);
+            expect(scripts.length).to.equal(2);
             expect(scripts[0]).to.be.an.instanceof(MyScript);
             expect(scripts[1]).to.be.an.instanceof(MyScript);
-            expect(scripts[2]).to.be.an.instanceof(MyScript);
         });
 
         it('does not find scripts on parent entity', function () {
@@ -812,19 +820,21 @@ describe('Entity', function () {
 
     });
 
-    describe('#findComponentInParents', function () {
+    describe('#findComponentInAncestors', function () {
 
-        it('finds component on single entity', function () {
+        it('does not find component on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
-            const component = e.findComponentInParents('anim');
-            expect(component).to.be.an.instanceof(AnimComponent);
+            const component = e.findComponentInAncestors('anim');
+            expect(component).to.be.null;
         });
 
         it('returns null when component is not found', function () {
-            const e = new Entity();
-            e.addComponent('anim');
-            const component = e.findComponentInParents('render');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('anim');
+            const component = child.findComponentInAncestors('render');
             expect(component).to.be.null;
         });
 
@@ -833,7 +843,7 @@ describe('Entity', function () {
             const child = new Entity();
             root.addChild(child);
             root.addComponent('anim');
-            const component = child.findComponentInParents('anim');
+            const component = child.findComponentInAncestors('anim');
             expect(component).to.be.an.instanceof(AnimComponent);
         });
 
@@ -844,7 +854,7 @@ describe('Entity', function () {
             root.addChild(child);
             child.addChild(grandchild);
             root.addComponent('anim');
-            const component = grandchild.findComponentInParents('anim');
+            const component = grandchild.findComponentInAncestors('anim');
             expect(component).to.be.an.instanceof(AnimComponent);
         });
 
@@ -853,27 +863,28 @@ describe('Entity', function () {
             const child = new Entity();
             root.addChild(child);
             child.addComponent('anim');
-            const component = root.findComponentInParents('anim');
+            const component = root.findComponentInAncestors('anim');
             expect(component).to.be.null;
         });
 
     });
 
-    describe('#findComponentsInParents', function () {
+    describe('#findComponentsInAncestors', function () {
 
-        it('finds components on single entity', function () {
+        it('does not find components on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
-            const components = e.findComponentsInParents('anim');
+            const components = e.findComponentsInAncestors('anim');
             expect(components).to.be.an('array');
-            expect(components.length).to.equal(1);
-            expect(components[0]).to.be.an.instanceof(AnimComponent);
+            expect(components.length).to.equal(0);
         });
 
         it('returns empty array when no components are found', function () {
-            const e = new Entity();
-            e.addComponent('anim');
-            const components = e.findComponentsInParents('render');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('anim');
+            const components = root.findComponentsInAncestors('render');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
         });
@@ -883,7 +894,7 @@ describe('Entity', function () {
             const child = new Entity();
             root.addChild(child);
             root.addComponent('anim');
-            const components = child.findComponentsInParents('anim');
+            const components = child.findComponentsInAncestors('anim');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(1);
             expect(components[0]).to.be.an.instanceof(AnimComponent);
@@ -898,12 +909,11 @@ describe('Entity', function () {
             root.addComponent('anim');
             child.addComponent('anim');
             grandchild.addComponent('anim');
-            const components = grandchild.findComponentsInParents('anim');
+            const components = grandchild.findComponentsInAncestors('anim');
             expect(components).to.be.an('array');
-            expect(components.length).to.equal(3);
+            expect(components.length).to.equal(2);
             expect(components[0]).to.be.an.instanceof(AnimComponent);
             expect(components[1]).to.be.an.instanceof(AnimComponent);
-            expect(components[2]).to.be.an.instanceof(AnimComponent);
         });
 
         it('does not find components on child entity', function () {
@@ -911,34 +921,38 @@ describe('Entity', function () {
             const child = new Entity();
             root.addChild(child);
             child.addComponent('anim');
-            const components = root.findComponentsInParents('anim');
+            const components = root.findComponentsInAncestors('anim');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
         });
 
     });
 
-    describe('#findScriptInParents', function () {
+    describe('#findScriptInAncestors', function () {
 
-        it('finds script on single entity', function () {
-            const MyScript = createScript('myScript');
+        it('does not find script on single entity', function () {
+            createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
-            const script = e.findScriptInParents('myScript');
-            expect(script).to.be.an.instanceof(MyScript);
+            const script = e.findScriptInAncestors('myScript');
+            expect(script).to.be.null;
         });
 
         it('returns null when script is not found', function () {
-            const e = new Entity();
-            e.addComponent('script');
-            const script = e.findScriptInParents('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            const script = child.findScriptInAncestors('myScript');
             expect(script).to.be.null;
         });
 
         it('returns null when script component is not found', function () {
-            const e = new Entity();
-            const script = e.findScriptInParents('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const script = child.findScriptInAncestors('myScript');
             expect(script).to.be.null;
         });
 
@@ -949,7 +963,7 @@ describe('Entity', function () {
             root.addChild(child);
             root.addComponent('script');
             root.script.create('myScript');
-            const script = child.findScriptInParents('myScript');
+            const script = child.findScriptInAncestors('myScript');
             expect(script).to.be.an.instanceof(MyScript);
         });
 
@@ -962,7 +976,7 @@ describe('Entity', function () {
             child.addChild(grandchild);
             root.addComponent('script');
             root.script.create('myScript');
-            const script = grandchild.findScriptInParents('myScript');
+            const script = grandchild.findScriptInAncestors('myScript');
             expect(script).to.be.an.instanceof(MyScript);
         });
 
@@ -973,36 +987,39 @@ describe('Entity', function () {
             root.addChild(child);
             child.addComponent('script');
             child.script.create('myScript');
-            const script = root.findScriptInParents('myScript');
+            const script = root.findScriptInAncestors('myScript');
             expect(script).to.be.null;
         });
 
     });
 
-    describe('#findScriptsInParents', function () {
+    describe('#findScriptsInAncestors', function () {
 
-        it('finds scripts on single entity', function () {
-            const MyScript = createScript('myScript');
+        it('does not find scripts on single entity', function () {
+            createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
             e.script.create('myScript');
-            const scripts = e.findScriptsInParents('myScript');
+            const scripts = e.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
-            expect(scripts.length).to.equal(1);
-            expect(scripts[0]).to.be.an.instanceof(MyScript);
+            expect(scripts.length).to.equal(0);
         });
 
         it('returns empty array when no scripts are found', function () {
-            const e = new Entity();
-            e.addComponent('script');
-            const scripts = e.findScriptsInParents('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            const scripts = child.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });
 
         it('returns empty array when no script component are found', function () {
-            const e = new Entity();
-            const scripts = e.findScriptsInParents('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const scripts = child.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });
@@ -1014,7 +1031,7 @@ describe('Entity', function () {
             root.addChild(child);
             root.addComponent('script');
             root.script.create('myScript');
-            const scripts = child.findScriptsInParents('myScript');
+            const scripts = child.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(1);
             expect(scripts[0]).to.be.an.instanceof(MyScript);
@@ -1033,12 +1050,11 @@ describe('Entity', function () {
             child.script.create('myScript');
             grandchild.addComponent('script');
             grandchild.script.create('myScript');
-            const scripts = grandchild.findScriptsInParents('myScript');
+            const scripts = grandchild.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
-            expect(scripts.length).to.equal(3);
+            expect(scripts.length).to.equal(2);
             expect(scripts[0]).to.be.an.instanceof(MyScript);
             expect(scripts[1]).to.be.an.instanceof(MyScript);
-            expect(scripts[2]).to.be.an.instanceof(MyScript);
         });
 
         it('does not find scripts on child entity', function () {
@@ -1048,7 +1064,7 @@ describe('Entity', function () {
             root.addChild(child);
             child.addComponent('script');
             child.script.create('myScript');
-            const scripts = root.findScriptsInParents('myScript');
+            const scripts = root.findScriptsInAncestors('myScript');
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });

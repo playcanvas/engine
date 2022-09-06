@@ -374,11 +374,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its descendants for the first component of specified type.
+     * Search all the entity descendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component} A component of specified type, if the entity or any of its descendants
-     * has one. Returns undefined otherwise.
+     * @returns {Component} A component of specified type, if any of entity descendants has one.
+     * Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * var light = entity.findComponent("light");
@@ -391,11 +391,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its descendants for all components of specified type.
+     * Search all the entity descendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @returns {Component[]} All components of specified type in all of entity descendants.
+     * Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * var lights = entity.findComponents("light");
@@ -410,11 +410,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its descendants for the first script instance of specified type.
+     * Search all the entity descendants for the first script instance of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType} A script instance of specified type, if the entity or any of its descendants
-     * has one. Returns undefined otherwise.
+     * @returns {ScriptType} A script instance of specified type, if any of entity descendants has one.
+     * Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
      * var controller = entity.findScript("playerController");
@@ -427,11 +427,11 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its descendants for all script instances of specified type.
+     * Search all the entity descendants for all script instances of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType[]} All script instances of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @returns {ScriptType[]} All script instances of specified type in all of entity descendants.
+     * Returns empty array if none found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity
      * var controllers = entity.findScripts("playerController");
@@ -446,34 +446,34 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its ascendants for the first component of specified type.
+     * Search all the entity ascendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component} A component of specified type, if the entity or any of its ascendants
-     * has one. Returns undefined otherwise.
+     * @returns {Component} A component of specified type, if any of entity ascendants has one.
+     * Returns undefined otherwise.
      * @example
      * // Get the first found light component in the ancestor tree that starts with this entity
-     * var light = entity.findComponentInParents("light");
+     * var light = entity.findComponentInAncestors("light");
      */
-    findComponentInParents(type) {
-        const entity = this.findOneParent(function (node) {
+    findComponentInAncestors(type) {
+        const entity = this.findAncestor(function (node) {
             return node.c && node.c[type];
         });
         return entity && entity.c[type];
     }
 
     /**
-     * Search the entity and all of its ascendants for all components of specified type.
+     * Search all the entity ascendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type in the entity or any of its
-     * ascendants. Returns empty array if none found.
+     * @returns {Component[]} All components of specified type in all of entity ascendants.
+     * Returns empty array if none found.
      * @example
      * // Get all element components in the ancestor tree that starts with this entity
-     * var elements = entity.findComponentsInParents("element");
+     * var elements = entity.findComponentsInAncestors("element");
      */
-    findComponentsInParents(type) {
-        const entities = this.findParents(function (node) {
+    findComponentsInAncestors(type) {
+        const entities = this.findAncestors(function (node) {
             return node.c && node.c[type];
         });
         return entities.map(function (entity) {
@@ -482,34 +482,34 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its ascendants for the first script instance of specified type.
+     * Search all the entity ascendants for the first script instance of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType} A script instance of specified type, if the entity or any of its ascendants
-     * has one. Returns undefined otherwise.
+     * @returns {ScriptType} A script instance of specified type, if any of entity ascendants has one.
+     * Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the ancestor tree that starts with this entity
-     * var controller = entity.findScriptInParents("playerController");
+     * var controller = entity.findScriptInAncestors("playerController");
      */
-    findScriptInParents(nameOrType) {
-        const entity = this.findOneParent(function (node) {
+    findScriptInAncestors(nameOrType) {
+        const entity = this.findAncestor(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entity && entity.c.script.get(nameOrType);
     }
 
     /**
-     * Search the entity and all of its ascendants for all script instances of specified type.
+     * Search all the entity ascendants for all script instances of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType[]} All script instances of specified type in the entity or any of its
-     * ascendants. Returns empty array if none found.
+     * @returns {ScriptType[]} All script instances of specified type in all of entity ascendants.
+     * Returns empty array if none found.
      * @example
      * // Get all "playerController" instance in the ancestor tree that starts with this entity
-     * var controllers = entity.findScriptsInParents("playerController");
+     * var controllers = entity.findScriptsInAncestors("playerController");
      */
-    findScriptsInParents(nameOrType) {
-        const entities = this.findParents(function (node) {
+    findScriptsInAncestors(nameOrType) {
+        const entities = this.findAncestors(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
         });
         return entities.map(function (entity) {
