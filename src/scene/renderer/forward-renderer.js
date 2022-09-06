@@ -16,12 +16,13 @@ import {
     STENCILOP_KEEP,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
 } from '../../graphics/constants.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { UniformBuffer } from '../../graphics/uniform-buffer.js';
 import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat } from '../../graphics/bind-group-format.js';
+import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../graphics/bind-group-format.js';
 import { BindGroup } from '../../graphics/bind-group.js';
 import { RenderPass } from '../../graphics/render-pass.js';
 
@@ -323,6 +324,7 @@ class ForwardRenderer {
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
             ]);
         }
     }
@@ -2215,11 +2217,6 @@ class ForwardRenderer {
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
-            // Set the not very clever global variable which is only useful when there's just one camera
-            this.scene._activeCamera = camera.camera;
-
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
-
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
                 renderAction.lightClusters.activate(this.lightTextureAtlas);
@@ -2230,6 +2227,11 @@ class ForwardRenderer {
                     WorldClustersDebug.render(renderAction.lightClusters, this.scene);
                 }
             }
+
+            // Set the not very clever global variable which is only useful when there's just one camera
+            this.scene._activeCamera = camera.camera;
+
+            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
 
             // enable flip faces if either the camera has _flipFaces enabled or the render target
             // has flipY enabled
