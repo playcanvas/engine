@@ -355,7 +355,7 @@ const standard = {
                 decl.append("float dGlossiness;");
                 if (options.sheen) {
                     decl.append("vec3 sSpecularity;");
-                    code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks));
+                    code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks, options.sheenEncoding));
                     func.append("getSheen();");
 
                     decl.append("float sGlossiness;");

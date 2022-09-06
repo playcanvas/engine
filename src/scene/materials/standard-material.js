@@ -1195,6 +1195,8 @@ function _defineMaterialProps() {
     _defineTex2D('clearCoat', 0, 1, '', true);
     _defineTex2D('clearCoatGloss', 0, 1, '', true);
     _defineTex2D('clearCoatNormal', 0, -1, '', false);
+    _defineTex2D('sheen', 0, 3, '', true);
+    _defineTex2D('sheenGloss', 0, 1, '', true);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');

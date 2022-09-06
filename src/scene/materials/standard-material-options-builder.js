@@ -173,7 +173,8 @@ class StandardMaterialOptionsBuilder {
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
-        options.specularEncoding = stdMat.specularEncoding === undefined ? 'linear' : stdMat.specularEncoding;
+        options.specularEncoding = stdMat.specularEncoding || 'linear';
+        options.sheenEncoding = stdMat.sheenEncoding || 'linear';
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
@@ -191,7 +192,7 @@ class StandardMaterialOptionsBuilder {
 
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
-        options.sheenGlossinessTint = (stdMat.useSheen && stdMat.sheenGlossiness < 1) ? 1 : 0;
+        options.sheenGlossinessTint = 1;
     }
 
     _updateEnvOptions(options, stdMat, scene) {
