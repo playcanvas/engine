@@ -199,8 +199,8 @@ class GlbContainerResource {
 
     // apply material variant to entity
     applyMaterialVariant(entity, name) {
-        const variant = name ? this.data.variants[name] : null;
-        if (variant === undefined) {
+        const variant = name && this.data.variants[name];
+        if (!variant) {
             Debug.warn(`No variant named ${name} exists in resource`);
             return;
         }
