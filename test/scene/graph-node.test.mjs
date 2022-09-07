@@ -263,7 +263,7 @@ describe('GraphNode', function () {
 
     describe('#findByName()', function () {
 
-        it('search the root node', function () {
+        it('finds root by name', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -564,7 +564,7 @@ describe('GraphNode', function () {
             expect(child.findAncestorByName('child')).to.be.null;
         });
 
-        it('find the child node if included', function () {
+        it('finds child by name if included', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -582,7 +582,7 @@ describe('GraphNode', function () {
 
     describe('#forEach()', function () {
 
-        it('iterates over all nodes including root', function () {
+        it('iterates over all nodes', function () {
             const root = new GraphNode();
             const child1 = new GraphNode();
             const child2 = new GraphNode();
@@ -632,7 +632,7 @@ describe('GraphNode', function () {
             expect(visited[1]).to.equal(root);
         });
 
-        it('iterates over all nodes including grand child', function () {
+        it('iterates over all nodes', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             const grandchild = new GraphNode();

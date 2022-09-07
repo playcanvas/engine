@@ -571,7 +571,7 @@ describe('Entity', function () {
 
     describe('#findComponent', function () {
 
-        it('find component on single entity', function () {
+        it('finds component on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const component = e.findComponent('anim');
@@ -627,7 +627,7 @@ describe('Entity', function () {
 
     describe('#findComponents', function () {
 
-        it('does not find components on single entity', function () {
+        it('finds components on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const components = e.findComponents('anim');
@@ -696,7 +696,7 @@ describe('Entity', function () {
 
     describe('#findScript', function () {
 
-        it('find script on single entity', function () {
+        it('finds script on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
@@ -770,7 +770,7 @@ describe('Entity', function () {
 
     describe('#findScripts', function () {
 
-        it('find scripts on single entity', function () {
+        it('finds scripts on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
@@ -860,7 +860,7 @@ describe('Entity', function () {
 
     describe('#findComponentInAncestors', function () {
 
-        it('find component on single entity when included', function () {
+        it('finds component on single entity when included', function () {
             const e = new Entity();
             e.addComponent('anim');
             const component = e.findComponentInAncestors('anim', true);
@@ -916,7 +916,7 @@ describe('Entity', function () {
 
     describe('#findComponentsInAncestors', function () {
 
-        it('find components on single entity when included', function () {
+        it('finds components on single entity when included', function () {
             const e = new Entity();
             e.addComponent('anim');
             const components = e.findComponentsInAncestors('anim', true);
@@ -984,7 +984,7 @@ describe('Entity', function () {
 
     describe('#findScriptInAncestors', function () {
 
-        it('find script on single entity when included', function () {
+        it('finds script on single entity when included', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
@@ -1058,7 +1058,7 @@ describe('Entity', function () {
 
     describe('#findScriptsInAncestors', function () {
 
-        it('find scripts on single entity when included', function () {
+        it('finds scripts on single entity when included', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
