@@ -1,3 +1,5 @@
+import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT } from './constants.js';
+
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./scope-id.js').ScopeId} ScopeId */
 
@@ -21,12 +23,18 @@ class BindTextureFormat {
     /** @type {ScopeId} */
     scopeId;
 
-    constructor(name, visibility) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT) {
         /** @type {string} */
         this.name = name;
 
         // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
         this.visibility = visibility;
+
+        // TEXTUREDIMENSION_***
+        this.textureDimension = textureDimension;
+
+        // SAMPLETYPE_***
+        this.sampleType = sampleType;
     }
 }
 
