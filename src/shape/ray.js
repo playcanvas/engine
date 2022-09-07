@@ -1,3 +1,4 @@
+import { Mat4 } from 'src/math/mat4.js';
 import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -47,6 +48,17 @@ class Ray {
         this.origin.copy(origin);
         this.direction.copy(direction);
         return this;
+    }
+
+    /**
+     * Transforms the ray to a new one using a matrix
+     *
+     * @param {Mat4} matrix - The transformation matrix for the ray
+     */
+    transform(matrix) {
+        const newOrigin = matrix.transformPoint(this.origin);
+        const newDirection = matrix.transformVector(this.direction);
+        return new Ray(newOrigin, newDirection);
     }
 }
 

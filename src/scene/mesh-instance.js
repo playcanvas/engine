@@ -21,6 +21,7 @@ import {
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
+import { Ray } from 'src/index.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/shader.js').Shader} Shader */
@@ -453,6 +454,30 @@ class MeshInstance {
         }
 
         return bindGroup;
+    }
+
+    /**
+     * @param {Ray} ray - The graphics device.
+     */
+    rayCastToMesh(ray) {
+        const worldTransformInverted = this.node.getWorldTransform().clone();
+        worldTransformInverted.invert();
+        const transformedRay = ray.transform(worldTransformInverted);
+        const direction = transformedRay.direction;
+        direction.normalize();
+        transformedRay.set(transformedRay.origin, direction);
+        const dist = this._mesh.rayCast(transformedRay);
+        if (dist != null) {
+            const d = transformedRay.direction.clone();
+            d.normalize();
+            let e = transformedRay.origin.clone();
+            d.mulScalar(dist);
+            e.add(d);
+            e = this.node.getWorldTransform().clone().transformPoint(e);
+            return e;
+        }
+        
+        return dist;
     }
 
     /**

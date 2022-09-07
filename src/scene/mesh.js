@@ -1,8 +1,12 @@
 import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
+
 import { Vec3 } from '../math/vec3.js';
+import { Tri } from '../math/tri.js';
+import { BVHGlobal } from '../math/bvh.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
+import { Ray } from '../shape/ray.js';
 
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
@@ -20,6 +24,7 @@ import { VertexIterator } from '../graphics/vertex-iterator.js';
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
 import { getApplication } from '../framework/globals.js';
+
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
@@ -236,6 +241,12 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+
+        // triangles array
+        this.triangles = null;
+
+        // BVH
+        this.bvh = null;
     }
 
     /**
@@ -980,6 +991,74 @@ class Mesh extends RefCountedObject {
             indexed: true
         };
         this.indexBuffer[RENDERSTYLE_WIREFRAME] = wireBuffer;
+    }
+
+    buildTriangleArray() {
+        const triangles = [];
+        const positions = [];
+        const indices = [];
+        const numPositions = this.getPositions(positions);
+        const numIndices = this.getIndices(indices);
+        const points = [];
+
+        for (let i = 0; i < numPositions; i++) {
+            const v = new Vec3(positions[i*3], positions[i*3+1], positions[i*3+2]);
+            points.push(v);
+        }
+
+        for (let i = 0; i < numIndices/3; i++) {
+            const j = i * 3;
+            const triangle = new Tri(points[indices[j]], points[indices[j+1]], points[indices[j+2]]);
+            triangles.push(triangle);
+        }
+
+        this.triangles = triangles;
+    }
+
+    /**
+     * @param {Ray} ray - The ray to interesect with mesh
+     */
+    rayCast(ray) {
+
+        // Brute Force
+        /*const triangles = [];
+        const positions = [];
+        const indices = [];
+        const numPositions = this.getPositions(positions);
+        const numIndices = this.getIndices(indices);
+        const distances = [];
+        const points = [];
+        let isHit = undefined;
+
+        for (let i = 0; i < numPositions; i++) {
+            const v = new Vec3(positions[i*3], positions[i*3+1], positions[i*3+2]);
+            points.push(v);
+        }
+
+        for (let i = 0; i < numIndices/3; i++) {
+            const j = i * 3;
+            const triangle = new Tri(points[indices[j]], points[indices[j+1]], points[indices[j+2]]);
+            triangles.push(triangle);
+            const distance = triangle.intersectWithRay(ray);
+            distances.push(distance);
+            if (distance !== undefined) {
+                isHit = distance;
+            }
+        }
+        console.log(isHit);*/
+
+        if (!this.triangles) {
+            this.buildTriangleArray();
+        }
+
+        if (!this.bvh) {
+            this.bvh = new BVHGlobal();
+            this.bvh.BuildBVH(this.triangles);
+        }
+
+        this.bvh.minDist = null;
+        this.bvh.IntersectBVH(ray, 0);
+        return this.bvh.minDist;
     }
 }
 

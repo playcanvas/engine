@@ -25,6 +25,7 @@ import MeshDeformationExample from "./mesh-deformation";
 import MeshGenerationExample from "./mesh-generation";
 import MeshMorphManyExample from "./mesh-morph-many";
 import MeshMorphExample from "./mesh-morph";
+import MeshPickerExample from "./mesh-picker";
 import ModelAssetExample from "./model-asset";
 import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
@@ -78,6 +79,7 @@ export {
     MeshGenerationExample,
     MeshMorphManyExample,
     MeshMorphExample,
+    MeshPickerExample,
     ModelAssetExample,
     ModelOutlineExample,
     ModelTexturedBoxExample,
