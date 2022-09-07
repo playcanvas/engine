@@ -44,17 +44,17 @@ function _getIncludeSelf(attr, value, includeSelf) {
 }
 
 /**
- * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findParents}
- * and {@link GraphNode#findOneParent} to search through a graph node and all of its descendants or ascendants.
+ * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findAncestor}
+ * and {@link GraphNode#findAncestors} to search through a graph node and all of its descendants or ascendants.
  *
  * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
  * @returns {boolean} Returning `true` will result in that node being returned from
- * {@link GraphNode#find} or {@link GraphNode#findOne}.
+ * {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findAncestor} or {@link GraphNode#findAncestors}.
  */
 
 /**
- * Callback used by {@link GraphNode#forEach} and {@link GraphNode#forEachParent} to iterate through
+ * Callback used by {@link GraphNode#forEach} and {@link GraphNode#forEachAncestor} to iterate through
  * a graph node and all of its descendants or ascendants.
  *
  * @callback ForEachNodeCallback
