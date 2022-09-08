@@ -4,9 +4,9 @@ import { Debug } from '../core/debug.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
+import { Entity } from './entity.js';
 
 /** @typedef {import('./app-base.js').AppBase} AppBase */
-/** @typedef {import('./entity.js').Entity} Entity */
 
 /**
  * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
@@ -21,6 +21,14 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  *
  * @callback LoadSettingsCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ */
+
+/**
+ * Callback used by {@link SceneRegistry#changeScene}.
+ *
+ * @callback ChangeSceneCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -253,6 +261,38 @@ class SceneRegistry {
         }
     }
 
+    _addHierarchyToScene(url, data, callback) {
+        const self = this;
+
+        // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+        // Split loading into load and open
+        const handler = this._app.loader.getHandler("hierarchy");
+
+        // called after scripts are preloaded
+        const _loaded = function () {
+            self._app.systems.script.preloading = true;
+            const entity = handler.open(url, data);
+
+            self._app.systems.script.preloading = false;
+
+            // clear from cache because this data is modified by entity operations (e.g. destroy)
+            self._app.loader.clearCache(url, "hierarchy");
+
+            // add to hierarchy
+            self._app.root.addChild(entity);
+
+            // initialize components
+            self._app.systems.fire('initialize', entity);
+            self._app.systems.fire('postInitialize', entity);
+            self._app.systems.fire('postPostInitialize', entity);
+
+            if (callback) callback(null, entity);
+        };
+
+        // load priority and referenced scripts before opening scene
+        self._app._preloadScripts(data, _loaded);
+    }
+
     /**
      * Load a scene file, create and initialize the Entity hierarchy and add the hierarchy to the
      * application root Entity.
@@ -272,44 +312,13 @@ class SceneRegistry {
      * });
      */
     loadSceneHierarchy(sceneItem, callback) {
-        const self = this;
-
-        // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-        // Split loading into load and open
-        const handler = this._app.loader.getHandler("hierarchy");
-
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
                 if (callback) callback(err);
                 return;
             }
 
-            const url = sceneItem.url;
-            const data = sceneItem.data;
-
-            // called after scripts are preloaded
-            const _loaded = function () {
-                self._app.systems.script.preloading = true;
-                const entity = handler.open(url, data);
-
-                self._app.systems.script.preloading = false;
-
-                // clear from cache because this data is modified by entity operations (e.g. destroy)
-                self._app.loader.clearCache(url, "hierarchy");
-
-                // add to hierarchy
-                self._app.root.addChild(entity);
-
-                // initialize components
-                self._app.systems.fire('initialize', entity);
-                self._app.systems.fire('postInitialize', entity);
-                self._app.systems.fire('postPostInitialize', entity);
-
-                if (callback) callback(err, entity);
-            };
-
-            // load priority and referenced scripts before opening scene
-            self._app._preloadScripts(data, _loaded);
+            this._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
         });
     }
 
@@ -322,9 +331,9 @@ class SceneRegistry {
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
      * var sceneItem = app.scenes.find("Scene Name");
-     * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
+     * app.scenes.loadSceneSettings(sceneItem, function (err) {
      *     if (!err) {
-     *         var e = app.root.find("My New Entity");
+     *         // success
      *     } else {
      *         // error
      *     }
@@ -344,6 +353,55 @@ class SceneRegistry {
                     callback(err);
                 }
             }
+        });
+    }
+
+    /**
+     * Change to a new scene. Calling this function will load the scene data, delete all
+     * entities and graph nodes under `app.root` and load the scene settings and hierarchy.
+     *
+     * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
+     * {@link SceneRegistry#find} or name of the scene.".
+     * @param {ChangeSceneCallback} [callback] - The function to call after loading,
+     * passed (err, entity) where err is null if no errors occurred.
+     * @example
+     * app.scenes.ChangeScene("Scene Name", function (err, entity) {
+     *     if (!err) {
+     *         // success
+     *     } else {
+     *         // error
+     *     }
+     * });
+     */
+    changeScene(sceneItem, callback) {
+        if (!(sceneItem instanceof SceneRegistryItem)) {
+            sceneItem = this.find(sceneItem);
+        }
+
+        const self = this;
+
+        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+
+                return;
+            }
+
+            // Destroy/Remove all nodes on the app.root
+            const rootChildren = self._app.root.children;
+            while (rootChildren.length > 0) {
+                const child = rootChildren[0];
+                if (child instanceof Entity) {
+                    child.destroy();
+                } else {
+                    child.parent.removeChild(child);
+                }
+            }
+
+            self._app.applySceneSettings(sceneItem.data.settings);
+            self._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
         });
     }
 
