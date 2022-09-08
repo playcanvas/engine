@@ -421,6 +421,12 @@ class BoundingBox {
         return sq;
     }
 
+    area() {
+        const extents = this.halfExtents.clone();
+        extents.mulScalar(2);
+        return extents.x * extents.y + extents.z * extents.x + extents.y * extents.z;
+    }
+
     _expand(expandMin, expandMax) {
         tmpVecA.add2(this.getMin(), expandMin);
         tmpVecB.add2(this.getMax(), expandMax);

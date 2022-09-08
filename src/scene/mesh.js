@@ -1047,17 +1047,35 @@ class Mesh extends RefCountedObject {
         }
         console.log(isHit);*/
 
+        let first = false;
+
+
         if (!this.triangles) {
             this.buildTriangleArray();
+            first = true;
         }
+
+        const start = performance.now();
 
         if (!this.bvh) {
             this.bvh = new BVHGlobal();
             this.bvh.BuildBVH(this.triangles);
         }
 
+        const end  = performance.now();
+
         this.bvh.minDist = null;
         this.bvh.IntersectBVH(ray, 0);
+
+
+        if (first) {
+            console.log(end - start);
+        }
+
+        const intersectEnd = performance.now();
+
+        console.log(intersectEnd - end);
+
         return this.bvh.minDist;
     }
 }

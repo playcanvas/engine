@@ -45,13 +45,14 @@ class MeshPickerExample {
             //app.root.addChild(cubeEntities[0]);
 
             const box = assets.house.resource.instantiateRenderEntity();
+            // const box = new pc.Entity("cube");
             // box.addComponent("render", {
-            //     type: "box",
+            //     type: "box"
             // });
 
             box.setLocalScale(10, 10, 10);
 
-            box.setLocalPosition(2, 3, 0);
+            box.setLocalPosition(0, 0, 0);
 
             app.root.addChild(box);
 

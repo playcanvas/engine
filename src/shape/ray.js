@@ -45,6 +45,9 @@ class Ray {
      * @returns {Ray} Self for chaining.
      */
     set(origin, direction) {
+        this.rDx = null;
+        this.rDy = null;
+        this.rDz = null;
         this.origin.copy(origin);
         this.direction.copy(direction);
         return this;
