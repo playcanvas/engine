@@ -1238,7 +1238,7 @@ class LitShader {
                         code +=  ";\n";
                     }
                     if (options.sheen) {
-                        code += "    dSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color * sSpecularity";
+                        code += "    sSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color * sSpecularity";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code +=  ";\n";
                     }
