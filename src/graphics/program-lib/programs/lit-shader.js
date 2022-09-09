@@ -1026,8 +1026,10 @@ class LitShader {
                 if (options.clearCoat) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
-                        code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
+                        code += "    ccFresnel = dot(dViewDirW, ccNormalW);\n";
+                        code += "    ccReflection.rgb *= getFresnel(ccFresnel, vec3(ccSpecularity));\n";
                     }  else {
+                        code += "    ccFresnel = 0.0;\n";
                         code += "    ccReflection.rgb *= ccSpecularity;\n";
                     }
                 }
@@ -1354,6 +1356,7 @@ class LitShader {
         if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+        if (code.includes("ccFresnel")) structCode += "float ccFresnel;\n";
         if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
