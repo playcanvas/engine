@@ -725,6 +725,13 @@ class StandardMaterial extends Material {
             this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
         }
 
+        if (this.useIridescence) {
+            this._setParameter('material_iridescence', this.iridescence);
+            this._setParameter('material_iridescenceRefractionIndex', this.iridescenceRefractionIndex);
+            this._setParameter('material_iridescenceThicknessMin', this.iridescenceThicknessMin);
+            this._setParameter('material_iridescenceThicknessMax', this.iridescenceThicknessMax);
+        }
+
         this._setParameter('material_opacity', this.opacity);
 
         if (this.opacityFadesSpecular === false) {
@@ -1180,6 +1187,7 @@ function _defineMaterialProps() {
     _defineFlag('twoSidedLighting', false);
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
     _defineFlag('msdfTextAttribute', false);
+    _defineFlag('useIridescence', false);
 
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);

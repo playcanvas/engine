@@ -1249,6 +1249,7 @@ const extensionEmissiveStrength = function (data, material, textures) {
 };
 
 const extensionIridescence = function (data, material, textures) {
+    material.useIridescence = true;
     if (data.hasOwnProperty('iridescenceFactor')) {
         material.iridescence = data.iridescenceFactor;
     }
@@ -1439,7 +1440,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
-        "KHR_material_iridescence": extensionIridescence,
+        "KHR_materials_iridescence": extensionIridescence,
         "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_sheen": extensionSheen,
         "KHR_materials_specular": extensionSpecular,

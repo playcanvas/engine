@@ -349,6 +349,17 @@ const standard = {
                 func.append("getThickness();");
             }
 
+            if (options.iridescence) {
+                decl.append("vec3 dIridescenceFresnel;");
+                decl.append("float dIridescence;");
+                code.append(this._addMap("iridescence", "iridescencePS", options, litShader.chunks));
+                func.append("getIridescence();");
+
+                decl.append("float dIridescenceThickness;");
+                code.append(this._addMap("iridescenceThickness", "iridescenceThicknessPS", options, litShader.chunks));
+                func.append("getIridescenceThickness();");
+            }
+
             // specularity & glossiness
             if ((litShader.lighting && options.useSpecular) || litShader.reflections) {
                 decl.append("vec3 dSpecularity;");
