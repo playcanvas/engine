@@ -98,12 +98,6 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
     return max(i, vec3(0.0));
 }
 
-vec3 calcIridescenceF0(vec3 iridescence, float cosTheta) {
-    float x = clamp(1.0 - cosTheta, 0.0, 1.0);
-    float x5 = clamp(pow(x, 5.0), 0.0, 1.0);
-    return (iridescence - x5) / (1.0 - x5);
-}
-
 void getIridescence(float cosTheta) {
     dIridescenceFresnel = calcIridescence(1.0, cosTheta, dSpecularity);
 }
