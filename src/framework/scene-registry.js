@@ -4,7 +4,6 @@ import { Debug } from '../core/debug.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
-import { Entity } from './entity.js';
 
 /** @typedef {import('./app-base.js').AppBase} AppBase */
 
@@ -395,11 +394,8 @@ class SceneRegistry {
             const rootChildren = self._app.root.children;
             while (rootChildren.length > 0) {
                 const child = rootChildren[0];
-                if (child instanceof Entity) {
-                    child.destroy();
-                } else {
-                    child.parent.removeChild(child);
-                }
+                child.reparent(null);
+                child.destroy?.();
             }
 
             self._app.applySceneSettings(sceneItem.data.settings);
