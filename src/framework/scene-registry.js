@@ -178,7 +178,7 @@ class SceneRegistry {
         }
 
         if (!sceneItem.url) {
-            callback("URL or SceneRegistryItem is null when loading a scene");
+            callback("Cannot find scene when loading a scene");
             return;
         }
 
