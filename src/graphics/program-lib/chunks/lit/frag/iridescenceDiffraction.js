@@ -37,14 +37,14 @@ vec3 iridescence_sensitivity(float opd, vec3 shift) {
     return XYZ_TO_REC709 * xyz;
 }
 
-float iridescenceFresnel(float cosTheta, float f0) {
+float iridescence_fresnel(float cosTheta, float f0) {
     float x = clamp(1.0 - cosTheta, 0.0, 1.0);
     float x2 = x * x;
     float x5 = x * x2 * x2;
     return f0 + (1.0 - f0) * x5;
 } 
 
-vec3 iridescenceFresnel(float cosTheta, vec3 f0) {
+vec3 iridescence_fresnel(float cosTheta, vec3 f0) {
     float x = clamp(1.0 - cosTheta, 0.0, 1.0);
     float x2 = x * x;
     float x5 = x * x2 * x2; 
@@ -64,7 +64,7 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
     float cosTheta2 = sqrt(cosTheta2Sq);
 
     float r0 = iridescence_iorToFresnel(iridescenceIor, outsideIor);
-    float r12 = iridescenceFresnel(cosTheta, r0);
+    float r12 = iridescence_fresnel(cosTheta, r0);
     float r21 = r12;
     float t121 = 1.0 - r12;
 
@@ -73,7 +73,7 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
 
     vec3 baseIor = iridescence_fresnelToIor(base_f0 + vec3(0.0001));
     vec3 r1 = iridescence_iorToFresnel(baseIor, iridescenceIor);
-    vec3 r23 = iridescenceFresnel(cosTheta2, r1);
+    vec3 r23 = iridescence_fresnel(cosTheta2, r1);
 
     vec3 phi23 = vec3(0.0);
     if (baseIor[0] < iridescenceIor) phi23[0] = PI;
