@@ -781,15 +781,16 @@ class LitShader {
             if (options.clearCoat) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.refraction) {
-                if (options.useDynamicRefraction) {
-                    code += chunks.refractionDynamicPS;
-                } else {
-                    code += chunks.refractionCubePS;
-                }
-            }
             if (options.sheen) {
                 code += chunks.reflectionSheenPS;
+            }
+        }
+
+        if (options.refraction) {
+            if (options.useDynamicRefraction) {
+                code += chunks.refractionDynamicPS;
+            } else if (this.reflections) {
+                code += chunks.refractionCubePS;
             }
         }
 
@@ -1277,7 +1278,7 @@ class LitShader {
                 }
             }
 
-            if (this.reflections && options.refraction) {
+            if (options.refraction) {
                 code += "    addRefraction();\n";
             }
         }
