@@ -312,13 +312,15 @@ class SceneRegistry {
      * });
      */
     loadSceneHierarchy(sceneItem, callback) {
+        const self = this;
+
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
                 if (callback) callback(err);
                 return;
             }
 
-            this._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
+            self._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
         });
     }
 
