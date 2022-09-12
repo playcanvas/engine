@@ -717,8 +717,10 @@ class Light {
         let i = this._intensity;
         if (this._scene?.physicalUnits) {
             if (this._type === LIGHTTYPE_SPOT) {
-                const angleAsRadians = this._outerConeAngle * Math.PI / 180.0;
-                i = this._luminance / (2 * Math.PI * (1 - Math.cos(angleAsRadians / 2.0)));
+                const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
+                const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
+
+                i = this._luminance / (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
             } else if (this._type === LIGHTTYPE_OMNI) {
                 i = this._luminance / (4 * Math.PI);
             } else {
