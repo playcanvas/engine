@@ -466,6 +466,7 @@ const createVertexBufferInternal = function (device, sourceDesc, flipV) {
     }
     const numVertices = positionDesc.count;
 
+    if (numVertices === 0) return;
     // generate vertexDesc elements
     const vertexDesc = [];
     for (const semantic in sourceDesc) {
