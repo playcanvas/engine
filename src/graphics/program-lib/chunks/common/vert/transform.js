@@ -16,16 +16,17 @@ uniform vec4 morph_weights_b;
 uniform vec4 morph_tex_params;
 
 vec2 getTextureMorphCoords() {
-    float vertexId = morph_vertex_id;
-    vec2 textureSize = morph_tex_params.xy;
-    vec2 invTextureSize = morph_tex_params.zw;
+    return vec2(0.0);
+    //float vertexId = morph_vertex_id;
+    //vec2 textureSize = morph_tex_params.xy;
+    //vec2 invTextureSize = morph_tex_params.zw;
 
     // turn vertexId into int grid coordinates
-    float morphGridV = floor(vertexId * invTextureSize.x);
-    float morphGridU = vertexId - (morphGridV * textureSize.x);
+    //float morphGridV = floor(vertexId * invTextureSize.x);
+    //float morphGridU = vertexId - (morphGridV * textureSize.x);
 
     // convert grid coordinates to uv coordinates with half pixel offset
-    return (vec2(morphGridU, morphGridV) * invTextureSize) + (0.5 * invTextureSize);
+    //return (vec2(morphGridU, morphGridV) * invTextureSize) + (0.5 * invTextureSize);
 }
 #endif
 
