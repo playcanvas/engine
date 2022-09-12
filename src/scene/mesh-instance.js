@@ -476,7 +476,6 @@ class MeshInstance {
             e = this.node.getWorldTransform().clone().transformPoint(e);
             return e;
         }
-        
         return dist;
     }
 

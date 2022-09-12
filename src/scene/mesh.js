@@ -6,7 +6,6 @@ import { Tri } from '../math/tri.js';
 import { BVHGlobal } from '../math/bvh.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
-import { Ray } from '../shape/ray.js';
 
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
@@ -1047,34 +1046,20 @@ class Mesh extends RefCountedObject {
         }
         console.log(isHit);*/
 
-        let first = false;
-
-
         if (!this.triangles) {
             this.buildTriangleArray();
-            first = true;
         }
 
-        const start = performance.now();
+        this.buildTriangleArray();
 
         if (!this.bvh) {
-            this.bvh = new BVHGlobal();
-            this.bvh.BuildBVH(this.triangles);
+            this.bvh = new BVHGlobal(this.triangles);
+        } else {
+            this.bvh.RefitBVH(this.triangles);
         }
-
-        const end  = performance.now();
 
         this.bvh.minDist = null;
         this.bvh.IntersectBVH(ray, 0);
-
-
-        if (first) {
-            console.log(end - start);
-        }
-
-        const intersectEnd = performance.now();
-
-        console.log(intersectEnd - end);
 
         return this.bvh.minDist;
     }
