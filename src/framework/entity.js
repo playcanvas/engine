@@ -374,20 +374,91 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search all the entity descendants for the first component of specified type.
+     * Search the entity and all of its descendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @param {boolean} [includeSelf=true] - True to include self entity in the search.
-     * @returns {Component} A component of specified type, if any of entity descendants has one.
-     * Returns undefined otherwise.
+     * @returns {Component} A component of specified type, if the entity or any of its descendants
+     * has one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * var light = entity.findComponent("light");
      */
-    findComponent(type, includeSelf = true) {
+    findComponent(type) {
         const entity = this.findOne(function (node) {
             return node.c && node.c[type];
-        }, includeSelf);
+        });
+        return entity && entity.c[type];
+    }
+
+    /**
+     * Search the entity and all of its descendants for all components of specified type.
+     *
+     * @param {string} type - The name of the component type to retrieve.
+     * @returns {Component[]} All components of specified type in the entity or any of its
+     * descendants. Returns empty array if none found.
+     * @example
+     * // Get all light components in the hierarchy tree that starts with this entity
+     * var lights = entity.findComponents("light");
+     */
+    findComponents(type) {
+        const entities = this.find(function (node) {
+            return node.c && node.c[type];
+        });
+        return entities.map(function (entity) {
+            return entity.c[type];
+        });
+    }
+
+    /**
+     * Search the entity and all of its descendants for the first script instance of specified type.
+     *
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {ScriptType} A script instance of specified type, if the entity or any of its descendants
+     * has one. Returns undefined otherwise.
+     * @example
+     * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
+     * var controller = entity.findScript("playerController");
+     */
+    findScript(nameOrType) {
+        const entity = this.findOne(function (node) {
+            return node.c && node.c.script && node.c.script.has(nameOrType);
+        });
+        return entity && entity.c.script.get(nameOrType);
+    }
+
+    /**
+     * Search the entity and all of its descendants for all script instances of specified type.
+     *
+     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {ScriptType[]} All script instances of specified type in the entity or any of its
+     * descendants. Returns empty array if none found.
+     * @example
+     * // Get all "playerController" instances in the hierarchy tree that starts with this entity
+     * var controllers = entity.findScripts("playerController");
+     */
+    findScripts(nameOrType) {
+        const entities = this.find(function (node) {
+            return node.c && node.c.script && node.c.script.has(nameOrType);
+        });
+        return entities.map(function (entity) {
+            return entity.c.script.get(nameOrType);
+        });
+    }
+
+    /**
+     * Search all the entity descendants for the first component of specified type.
+     *
+     * @param {string} type - The name of the component type to retrieve.
+     * @returns {Component} A component of specified type, if any of entity descendants has one.
+     * Returns undefined otherwise.
+     * @example
+     * // Get the first found light component in the hierarchy tree excluding this entity
+     * var light = entity.findComponentInDescendants("light");
+     */
+    findComponentInDescendants(type) {
+        const entity = this.findDescendant(function (node) {
+            return node.c && node.c[type];
+        });
         return entity && entity.c[type];
     }
 
@@ -395,17 +466,16 @@ class Entity extends GraphNode {
      * Search all the entity descendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @param {boolean} [includeSelf=true] - True to include self entity in the search.
      * @returns {Component[]} All components of specified type in all of entity descendants.
      * Returns empty array if none found.
      * @example
-     * // Get all light components in the hierarchy tree that starts with this entity
-     * var lights = entity.findComponents("light");
+     * // Get all light components in the hierarchy tree excluding this entity
+     * var lights = entity.findComponentsInDescendants("lights");
      */
-    findComponents(type, includeSelf = true) {
-        const entities = this.find(function (node) {
+    findComponentsInDescendants(type) {
+        const entities = this.findDescendants(function (node) {
             return node.c && node.c[type];
-        }, includeSelf);
+        });
         return entities.map(function (entity) {
             return entity.c[type];
         });
@@ -415,17 +485,16 @@ class Entity extends GraphNode {
      * Search all the entity descendants for the first script instance of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @param {boolean} [includeSelf=true] - True to include self entity in the search.
      * @returns {ScriptType} A script instance of specified type, if any of entity descendants has one.
      * Returns undefined otherwise.
      * @example
-     * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
-     * var controller = entity.findScript("playerController");
+     * // Get the first found "playerController" instance in the hierarchy tree excluding this entity
+     * var controller = entity.findScriptInDescendants("playerController");
      */
-    findScript(nameOrType, includeSelf = true) {
-        const entity = this.findOne(function (node) {
+    findScriptInDescendants(nameOrType) {
+        const entity = this.findDescendant(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
-        }, includeSelf);
+        });
         return entity && entity.c.script.get(nameOrType);
     }
 
@@ -433,17 +502,16 @@ class Entity extends GraphNode {
      * Search all the entity descendants for all script instances of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @param {boolean} [includeSelf=true] - True to include self entity in the search.
      * @returns {ScriptType[]} All script instances of specified type in all of entity descendants.
      * Returns empty array if none found.
      * @example
-     * // Get all "playerController" instances in the hierarchy tree that starts with this entity
-     * var controllers = entity.findScripts("playerController");
+     * // Get all "playerController" instance in the hierarchy tree excluding this entity
+     * var controllers = entity.findScriptsInDescendants("playerController");
      */
-    findScripts(nameOrType, includeSelf = true) {
-        const entities = this.find(function (node) {
+    findScriptsInDescendants(nameOrType) {
+        const entities = this.findDescendants(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
-        }, includeSelf);
+        });
         return entities.map(function (entity) {
             return entity.c.script.get(nameOrType);
         });
@@ -453,17 +521,16 @@ class Entity extends GraphNode {
      * Search all the entity ascendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @param {boolean} [includeSelf=false] - True to include self entity in the search.
      * @returns {Component} A component of specified type, if any of entity ascendants has one.
      * Returns undefined otherwise.
      * @example
-     * // Get the first found light component in the ancestor tree that starts with this entity
+     * // Get the first found light component in the ancestor tree excluding this entity
      * var light = entity.findComponentInAncestors("light");
      */
-    findComponentInAncestors(type, includeSelf = false) {
+    findComponentInAncestors(type) {
         const entity = this.findAncestor(function (node) {
             return node.c && node.c[type];
-        }, includeSelf);
+        });
         return entity && entity.c[type];
     }
 
@@ -471,17 +538,16 @@ class Entity extends GraphNode {
      * Search all the entity ascendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @param {boolean} [includeSelf=false] - True to include self entity in the search.
      * @returns {Component[]} All components of specified type in all of entity ascendants.
      * Returns empty array if none found.
      * @example
-     * // Get all element components in the ancestor tree that starts with this entity
+     * // Get all element components in the ancestor tree excluding this entity
      * var elements = entity.findComponentsInAncestors("element");
      */
-    findComponentsInAncestors(type, includeSelf = false) {
+    findComponentsInAncestors(type) {
         const entities = this.findAncestors(function (node) {
             return node.c && node.c[type];
-        }, includeSelf);
+        });
         return entities.map(function (entity) {
             return entity.c[type];
         });
@@ -491,17 +557,16 @@ class Entity extends GraphNode {
      * Search all the entity ascendants for the first script instance of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @param {boolean} [includeSelf=false] - True to include self entity in the search.
      * @returns {ScriptType} A script instance of specified type, if any of entity ascendants has one.
      * Returns undefined otherwise.
      * @example
-     * // Get the first found "playerController" instance in the ancestor tree that starts with this entity
+     * // Get the first found "playerController" instance in the ancestor tree excluding this entity
      * var controller = entity.findScriptInAncestors("playerController");
      */
-    findScriptInAncestors(nameOrType, includeSelf = false) {
+    findScriptInAncestors(nameOrType) {
         const entity = this.findAncestor(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
-        }, includeSelf);
+        });
         return entity && entity.c.script.get(nameOrType);
     }
 
@@ -509,17 +574,16 @@ class Entity extends GraphNode {
      * Search all the entity ascendants for all script instances of specified type.
      *
      * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @param {boolean} [includeSelf=false] - True to include self entity in the search.
      * @returns {ScriptType[]} All script instances of specified type in all of entity ascendants.
      * Returns empty array if none found.
      * @example
-     * // Get all "playerController" instance in the ancestor tree that starts with this entity
+     * // Get all "playerController" instance in the ancestor tree excluding this entity
      * var controllers = entity.findScriptsInAncestors("playerController");
      */
-    findScriptsInAncestors(nameOrType, includeSelf = false) {
+    findScriptsInAncestors(nameOrType) {
         const entities = this.findAncestors(function (node) {
             return node.c && node.c.script && node.c.script.has(nameOrType);
-        }, includeSelf);
+        });
         return entities.map(function (entity) {
             return entity.c.script.get(nameOrType);
         });

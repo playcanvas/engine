@@ -219,9 +219,6 @@ describe('GraphNode', function () {
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(root);
 
-            res = root.find('name', 'Untitled', false);
-            expect(res).to.be.an('array').with.lengthOf(0);
-
             res = root.find('name', 'Child');
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
@@ -243,17 +240,100 @@ describe('GraphNode', function () {
             expect(res[0]).to.equal(root);
 
             res = root.find(function (node) {
-                return node.name === 'Untitled';
-            }, false);
-            expect(res).to.be.an('array').with.lengthOf(0);
-
-            res = root.find(function (node) {
                 return node.name === 'Child';
             });
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
 
             res = root.find(function (node) {
+                return node.name === 'Not Found';
+            });
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+    });
+
+    describe('#findDescendants()', function () {
+
+        it('finds a node by property', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = root.findDescendants('name', 'Untitled');
+            expect(res).to.be.an('array').with.lengthOf(0);
+
+            res = root.findDescendants('name', 'Child');
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+
+            res = root.findDescendants('name', 'Not Found');
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+        it('finds a node by filter function', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = root.findDescendants(function (node) {
+                return node.name === 'Untitled';
+            });
+            expect(res).to.be.an('array').with.lengthOf(0);
+
+            res = root.findDescendants(function (node) {
+                return node.name === 'Child';
+            });
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+
+            res = root.findDescendants(function (node) {
+                return node.name === 'Not Found';
+            });
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+    });
+
+    describe('#findAncestors()', function () {
+
+        it('finds a node by property', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findAncestors('name', 'Parent');
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(root);
+
+            res = child.findAncestors('name', 'Child');
+            expect(res).to.be.an('array').with.lengthOf(0);
+
+            res = child.findAncestors('name', 'Not Found');
+            expect(res).to.be.an('array').with.lengthOf(0);
+        });
+
+        it('finds a node by filter function', function () {
+            const root = new GraphNode('Parent');
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            let res;
+            res = child.findAncestors(function (node) {
+                return node.name === 'Parent';
+            });
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(root);
+
+            res = child.findAncestors(function (node) {
+                return node.name === 'Child';
+            });
+            expect(res).to.be.an('array').with.lengthOf(0);
+
+            res = child.findAncestors(function (node) {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.an('array').with.lengthOf(0);
@@ -268,13 +348,6 @@ describe('GraphNode', function () {
             const child = new GraphNode('child');
             root.addChild(child);
             expect(root.findByName('root')).to.equal(root);
-        });
-
-        it('does not search the root node', function () {
-            const root = new GraphNode('root');
-            const child = new GraphNode('child');
-            root.addChild(child);
-            expect(root.findByName('root', false)).to.be.null;
         });
 
         it('finds child by name', function () {
@@ -324,7 +397,7 @@ describe('GraphNode', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
-            expect(root.findByPath('not-found')).to.be.null;
+            expect(root.findByPath('not-found')).to.equal(null);
         });
 
     });
@@ -336,14 +409,6 @@ describe('GraphNode', function () {
             root.tags.add('tag');
             const result = root.findByTag('tag');
             expect(result).to.be.an('array').with.lengthOf(0);
-        });
-
-        it('search the root node if included', function () {
-            const root = new GraphNode('root');
-            root.tags.add('tag');
-            const result = root.findByTag('tag', true);
-            expect(result).to.be.an('array').with.lengthOf(1);
-            expect(result[0]).to.equal(root);
         });
 
         it('returns an array of nodes that have the query tag', function () {
@@ -405,9 +470,6 @@ describe('GraphNode', function () {
             res = root.findOne('name', 'Untitled');
             expect(res).to.equal(root);
 
-            res = root.findOne('name', 'Untitled', false);
-            expect(res).to.be.null;
-
             res = root.findOne('name', 'Child');
             expect(res).to.equal(child);
 
@@ -427,11 +489,6 @@ describe('GraphNode', function () {
             expect(res).to.equal(root);
 
             res = root.findOne(function (node) {
-                return node.name === 'Untitled';
-            }, false);
-            expect(res).to.be.null;
-
-            res = root.findOne(function (node) {
                 return node.name === 'Child';
             });
             expect(res).to.equal(child);
@@ -444,56 +501,44 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#findAncestors()', function () {
+    describe('#findDescendant()', function () {
 
         it('finds a node by property', function () {
-            const root = new GraphNode('Parent');
+            const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
 
             let res;
-            res = child.findAncestors('name', 'Parent');
-            expect(res).to.be.an('array').with.lengthOf(1);
-            expect(res[0]).to.equal(root);
+            res = root.findDescendant('name', 'Untitled');
+            expect(res).to.be.null;
 
-            res = child.findAncestors('name', 'Child');
-            expect(res).to.be.an('array').with.lengthOf(0);
+            res = root.findDescendant('name', 'Child');
+            expect(res).to.equal(child);
 
-            res = child.findAncestors('name', 'Child', true);
-            expect(res).to.be.an('array').with.lengthOf(1);
-            expect(res[0]).to.equal(child);
-
-            res = child.findAncestors('name', 'Not Found');
-            expect(res).to.be.an('array').with.lengthOf(0);
+            res = root.findDescendant('name', 'Not Found');
+            expect(res).to.be.null;
         });
 
         it('finds a node by filter function', function () {
-            const root = new GraphNode('Parent');
+            const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
 
             let res;
-            res = child.findAncestors(function (node) {
-                return node.name === 'Parent';
+            res = root.findDescendant(function (node) {
+                return node.name === 'Untitled';
             });
-            expect(res).to.be.an('array').with.lengthOf(1);
-            expect(res[0]).to.equal(root);
+            expect(res).to.be.null;
 
-            res = child.findAncestors(function (node) {
+            res = root.findDescendant(function (node) {
                 return node.name === 'Child';
             });
-            expect(res).to.be.an('array').with.lengthOf(0);
+            expect(res).to.equal(child);
 
-            res = child.findAncestors(function (node) {
-                return node.name === 'Child';
-            }, true);
-            expect(res).to.be.an('array').with.lengthOf(1);
-            expect(res[0]).to.equal(child);
-
-            res = child.findAncestors(function (node) {
+            res = root.findDescendant(function (node) {
                 return node.name === 'Not Found';
             });
-            expect(res).to.be.an('array').with.lengthOf(0);
+            expect(res).to.be.null;
         });
 
     });
@@ -511,9 +556,6 @@ describe('GraphNode', function () {
 
             res = child.findAncestor('name', 'Child');
             expect(res).to.be.null;
-
-            res = child.findAncestor('name', 'Child', true);
-            expect(res).to.equal(child);
 
             res = child.findAncestor('name', 'Not Found');
             expect(res).to.be.null;
@@ -536,46 +578,9 @@ describe('GraphNode', function () {
             expect(res).to.be.null;
 
             res = child.findAncestor(function (node) {
-                return node.name === 'Child';
-            }, true);
-            expect(res).to.equal(child);
-
-            res = child.findAncestor(function (node) {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.null;
-        });
-
-    });
-
-    describe('#findAncestorByName()', function () {
-
-        it('finds root by name', function () {
-            const root = new GraphNode('root');
-            const child = new GraphNode('child');
-            root.addChild(child);
-            expect(child.findAncestorByName('root')).to.equal(root);
-        });
-
-        it('does not search the child node', function () {
-            const root = new GraphNode('root');
-            const child = new GraphNode('child');
-            root.addChild(child);
-            expect(child.findAncestorByName('child')).to.be.null;
-        });
-
-        it('finds child by name if included', function () {
-            const root = new GraphNode('root');
-            const child = new GraphNode('child');
-            root.addChild(child);
-            expect(child.findAncestorByName('child', true)).to.equal(child);
-        });
-
-        it('returns null if no node is found', function () {
-            const root = new GraphNode('root');
-            const child = new GraphNode('child');
-            root.addChild(child);
-            expect(child.findAncestorByName('not-found')).to.be.null;
         });
 
     });
@@ -598,16 +603,20 @@ describe('GraphNode', function () {
             expect(visited[2]).to.equal(child2);
         });
 
-        it('iterates over all nodes but root', function () {
+    });
+
+    describe('#forEachDescendant()', function () {
+
+        it('iterates over all nodes', function () {
             const root = new GraphNode();
             const child1 = new GraphNode();
             const child2 = new GraphNode();
             root.addChild(child1);
             root.addChild(child2);
             const visited = [];
-            root.forEach((node) => {
+            root.forEachDescendant((node) => {
                 visited.push(node);
-            }, false);
+            });
             expect(visited).to.be.an('array').with.lengthOf(2);
             expect(visited[0]).to.equal(child1);
             expect(visited[1]).to.equal(child2);
@@ -617,7 +626,7 @@ describe('GraphNode', function () {
 
     describe('#forEachAncestor()', function () {
 
-        it('iterates over all nodes but grand child', function () {
+        it('iterates over all nodes but self', function () {
             const root = new GraphNode();
             const child = new GraphNode();
             const grandchild = new GraphNode();
@@ -630,22 +639,6 @@ describe('GraphNode', function () {
             expect(visited).to.be.an('array').with.lengthOf(2);
             expect(visited[0]).to.equal(child);
             expect(visited[1]).to.equal(root);
-        });
-
-        it('iterates over all nodes', function () {
-            const root = new GraphNode();
-            const child = new GraphNode();
-            const grandchild = new GraphNode();
-            root.addChild(child);
-            child.addChild(grandchild);
-            const visited = [];
-            grandchild.forEachAncestor((node) => {
-                visited.push(node);
-            }, true);
-            expect(visited).to.be.an('array').with.lengthOf(3);
-            expect(visited[0]).to.equal(grandchild);
-            expect(visited[1]).to.equal(child);
-            expect(visited[2]).to.equal(root);
         });
 
     });

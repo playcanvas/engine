@@ -36,26 +36,20 @@ function _createTest(attr, value) {
     };
 }
 
-function _getIncludeSelf(attr, value, includeSelf) {
-    if (attr instanceof Function && typeof value === 'boolean')
-        return value;
-
-    return includeSelf;
-}
-
 /**
  * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findAncestor}
  * and {@link GraphNode#findAncestors} to search through a graph node and all of its descendants or ascendants.
  *
  * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
- * @returns {boolean} Returning `true` will result in that node being returned from
- * {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findAncestor} or {@link GraphNode#findAncestors}.
+ * @returns {boolean} Returning `true` will result in that node being returned from {@link GraphNode#find},
+ * {@link GraphNode#findOne}, {@link GraphNode#findDescendants}, {@link GraphNode#findDescendant},
+ * {@link GraphNode#findAncestors} or {@link GraphNode#findAncestor}.
  */
 
 /**
- * Callback used by {@link GraphNode#forEach} and {@link GraphNode#forEachAncestor} to iterate through
- * a graph node and all of its descendants or ascendants.
+ * Callback used by {@link GraphNode#forEach}, {@link GraphNode#forEachDescendant} and {@link GraphNode#forEachAncestor}
+ * to iterate through a graph node and all of its descendants or ascendants.
  *
  * @callback ForEachNodeCallback
  * @param {GraphNode} node - The current graph node.
@@ -485,7 +479,8 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Search all the graph node descendants for the nodes that satisfy some search criteria.
+     * Search the graph node and all of its descendants for the nodes that satisfy some search
+     * criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
@@ -494,10 +489,8 @@ class GraphNode extends EventHandler {
      * of a field then the value passed as the second argument will be checked for equality. If
      * this is the name of a function then the return value of the function will be checked for
      * equality against the valued passed as the second argument to this function.
-     * @param {*} [value] - If the first argument (attr) is a property name then this value
-     * will be checked against the value of the property. If the first argument (attr) is a function
-     * then this argument can be skipped.
-     * @param {boolean} [includeSelf=true] - True to include self node in the search.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a model component and have `door` in their lower-cased name
@@ -508,57 +501,50 @@ class GraphNode extends EventHandler {
      * // Finds all nodes that have the name property set to 'Test'
      * var entities = parent.find('name', 'Test');
      */
-    find(attr, value, includeSelf = true) {
+    find(attr, value) {
         const results = [];
         const test = _createTest(attr, value);
 
         this.forEach((node) => {
             if (test(node))
                 results.push(node);
-        }, _getIncludeSelf(attr, value, includeSelf));
+        });
 
         return results;
     }
 
     /**
-     * Search all the graph node descendants for the first node that satisfies some search criteria.
+     * Search all the graph node descendants for the nodes that satisfy some search criteria.
      *
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each descendant node to test if node satisfies the search
-     * logic. Returning true from the function will result in that node being returned from
-     * findOne. If it's a string then it represents the name of a field or a method of the node. If
-     * this is the name of a field then the value passed as the second argument will be checked for
-     * equality. If this is the name of a function then the return value of the function will be
-     * checked for equality against the valued passed as the second argument to this function.
+     * logic. Returning true from the function will include the node into the results. If it's a
+     * string then it represents the name of a field or a method of the node. If this is the name
+     * of a field then the value passed as the second argument will be checked for equality. If
+     * this is the name of a function then the return value of the function will be checked for
+     * equality against the valued passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
-     * will be checked against the value of the property. If the first argument (attr) is a function
-     * then this argument can be skipped.
-     * @param {boolean} [includeSelf=true] - True to include self node in the search.
-     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
-     * node is found.
+     * will be checked against the value of the property.
+     * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
-     * // Find the first node that is called `head` and has a model component
-     * var head = player.findOne(function (node) {
-     *     return node.model && node.name === 'head';
+     * // Finds all nodes that have a model component and have `door` in their lower-cased name
+     * var doors = house.findDescendants(function (node) {
+     *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
      * @example
-     * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOne('name', 'Test');
+     * // Finds all nodes that have the name property set to 'Test'
+     * var entities = parent.findDescendants('name', 'Test');
      */
-    findOne(attr, value, includeSelf = true) {
+    findDescendants(attr, value) {
+        const results = [];
         const test = _createTest(attr, value);
-        const len = this._children.length;
 
-        if (_getIncludeSelf(attr, value, includeSelf) && test(this))
-            return this;
+        this.forEachDescendant((node) => {
+            if (test(node))
+                results.push(node);
+        });
 
-        for (let i = 0; i < len; ++i) {
-            const result = this._children[i].findOne(test, true);
-            if (result)
-                return result;
-        }
-
-        return null;
+        return results;
     }
 
     /**
@@ -572,29 +558,106 @@ class GraphNode extends EventHandler {
      * this is the name of a function then the return value of the function will be checked for
      * equality against the valued passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
-     * will be checked against the value of the property. If the first argument (attr) is a function
-     * then this argument can be skipped.
-     * @param {boolean} [includeSelf=false] - True to include self node in the search.
+     * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
      * // Finds all nodes that have a group element component
-     * var groups = element.findParents(function (node) {
+     * var groups = element.findAncestors(function (node) {
      *     return node.element && node.element.type === pc.ELEMENTTYPE_GROUP;
      * });
      * @example
      * // Finds all nodes that have the name property set to 'Test'
-     * var entities = entity.findParents('name', 'Test');
+     * var entities = entity.findAncestors('name', 'Test');
      */
-    findAncestors(attr, value, includeSelf = false) {
+    findAncestors(attr, value) {
         const results = [];
         const test = _createTest(attr, value);
 
         this.forEachAncestor((node) => {
             if (test(node))
                 results.push(node);
-        }, _getIncludeSelf(attr, value, includeSelf));
+        });
 
         return results;
+    }
+
+    /**
+     * Search the graph node and all of its descendants for the first node that satisfies some
+     * search criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each descendant node to test if node satisfies the search
+     * logic. Returning true from the function will result in that node being returned from
+     * findOne. If it's a string then it represents the name of a field or a method of the node. If
+     * this is the name of a field then the value passed as the second argument will be checked for
+     * equality. If this is the name of a function then the return value of the function will be
+     * checked for equality against the valued passed as the second argument to this function.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
+     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * node is found.
+     * @example
+     * // Find the first node that is called `head` and has a model component
+     * var head = player.findOne(function (node) {
+     *     return node.model && node.name === 'head';
+     * });
+     * @example
+     * // Finds the first node that has the name property set to 'Test'
+     * var node = parent.findOne('name', 'Test');
+     */
+    findOne(attr, value) {
+        const test = _createTest(attr, value);
+        const len = this._children.length;
+
+        if (test(this))
+            return this;
+
+        for (let i = 0; i < len; ++i) {
+            const result = this._children[i].findOne(test);
+            if (result)
+                return result;
+        }
+
+        return null;
+    }
+
+    /**
+     * Search all the graph node descendants for the first node that satisfies some search criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each descendant node to test if node satisfies the search
+     * logic. Returning true from the function will result in that node being returned from
+     * findDescendant. If it's a string then it represents the name of a field or a method of the node.
+     * If this is the name of a field then the value passed as the second argument will be checked for
+     * equality. If this is the name of a function then the return value of the function will be
+     * checked for equality against the valued passed as the second argument to this function.
+     * @param {*} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
+     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * node is found.
+     * @example
+     * // Find the first node that is called `head` and has a model component
+     * var head = player.findDescendant(function (node) {
+     *     return node.model && node.name === 'head';
+     * });
+     * @example
+     * // Finds the first node that has the name property set to 'Test'
+     * var node = parent.findDescendant('name', 'Test');
+     */
+    findDescendant(attr, value) {
+        const test = _createTest(attr, value);
+        const len = this._children.length;
+
+        for (let i = 0; i < len; ++i) {
+            if (test(this._children[i]))
+                return this._children[i];
+
+            const result = this._children[i].findDescendant(test);
+            if (result)
+                return result;
+        }
+
+        return null;
     }
 
     /**
@@ -603,32 +666,27 @@ class GraphNode extends EventHandler {
      * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
      * function, it is executed for each ascendant node to test if node satisfies the search
      * logic. Returning true from the function will result in that node being returned from
-     * findOne. If it's a string then it represents the name of a field or a method of the node. If
-     * this is the name of a field then the value passed as the second argument will be checked for
+     * findAncestor. If it's a string then it represents the name of a field or a method of the node.
+     * If this is the name of a field then the value passed as the second argument will be checked for
      * equality. If this is the name of a function then the return value of the function will be
      * checked for equality against the valued passed as the second argument to this function.
      * @param {*} [value] - If the first argument (attr) is a property name then this value
-     * will be checked against the value of the property. If the first argument (attr) is a function
-     * then this argument can be skipped.
-     * @param {boolean} [includeSelf=false] - True to include self node in the search.
+     * will be checked against the value of the property.
      * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
      * node is found.
      * @example
      * // Find the first node that is called `head` and has a model component
-     * var head = player.findOneParent(function (node) {
+     * var head = player.findAncestor(function (node) {
      *     return node.model && node.name === 'head';
      * });
      * @example
      * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOneParent('name', 'Test');
+     * var node = parent.findAncestor('name', 'Test');
      */
-    findAncestor(attr, value, includeSelf = false) {
+    findAncestor(attr, value) {
         const test = _createTest(attr, value);
 
-        let current = this;
-        if (!_getIncludeSelf(attr, value, includeSelf))
-            current = current._parent;
-
+        let current = this._parent;
         while (current) {
             if (test(current))
                 return current;
@@ -646,7 +704,6 @@ class GraphNode extends EventHandler {
      * of array.
      *
      * @param {...*} query - Name of a tag or array of tags.
-     * @param {boolean} [includeSelf=false] - True to include self node in the search.
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
@@ -662,35 +719,18 @@ class GraphNode extends EventHandler {
      * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag(...query) {
-        let includeSelf = false;
-        if (typeof query[query.length - 1] === 'boolean')
-            includeSelf = query.pop();
-
-        return this.find(node => node.tags.has(...query), includeSelf);
+        return this.findDescendants(node => node.tags.has(...query));
     }
 
     /**
      * Get the first node found in the graph with the name. The search is depth first.
      *
      * @param {string} name - The name of the graph.
-     * @param {boolean} [includeSelf=true] - True to include self node in the search.
      * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
      * null if no node is found.
      */
-    findByName(name, includeSelf = true) {
-        return this.findOne('name', name, includeSelf);
-    }
-
-    /**
-     * Get the first ancestor node found in the graph with the name.
-     *
-     * @param {string} name - The name of the graph.
-     * @param {boolean} [includeSelf=false] - True to include self node in the search.
-     * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
-     * null if no node is found.
-     */
-    findAncestorByName(name, includeSelf = false) {
-        return this.findAncestor('name', name, includeSelf);
+    findByName(name) {
+        return this.findOne('name', name);
     }
 
     /**
@@ -724,29 +764,42 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Executes a provided function once on all of this graph node descendants.
+     * Executes a provided function once on this graph node and all of its descendants.
      *
-     * @param {ForEachNodeCallback} callback - The function to execute on each graph node descendant.
+     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
+     * descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
-     * @param {boolean} [includeSelf=true] - True to also execute function on self node.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"
      * parent.forEach(function (node) {
      *     console.log(node.path + "/" + node.name);
      * });
      */
-    forEach(callback, thisArg, includeSelf = true) {
-        if (typeof thisArg === 'boolean') {
-            includeSelf = thisArg;
-            thisArg = undefined;
-        }
+    forEach(callback, thisArg) {
+        callback.call(thisArg, this);
 
         const children = this._children;
-        if (includeSelf)
-            callback.call(thisArg, this);
-
         for (let i = 0; i < children.length; i++) {
-            children[i].forEach(callback, thisArg, true);
+            children[i].forEach(callback, thisArg);
+        }
+    }
+
+    /**
+     * Executes a provided function once on all of this graph node descendants.
+     *
+     * @param {ForEachNodeCallback} callback - The function to execute on each graph node descendant.
+     * @param {object} [thisArg] - Optional value to use as this when executing callback function.
+     * @example
+     * // Log the path and name of each node in descendant tree
+     * parent.forEachDescendant(function (node) {
+     *     console.log(node.path + "/" + node.name);
+     * });
+     */
+    forEachDescendant(callback, thisArg) {
+        const children = this._children;
+        for (let i = 0; i < children.length; i++) {
+            callback.call(thisArg, children[i]);
+            children[i].forEachDescendant(callback, thisArg);
         }
     }
 
@@ -755,23 +808,14 @@ class GraphNode extends EventHandler {
      *
      * @param {ForEachNodeCallback} callback - The function to execute on each graph node ascendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
-     * @param {boolean} [includeSelf=false] - True to also execute function on self node.
      * @example
      * // Enable each node in ascendant tree
      * current.forEachParent(function (node) {
      *     node.enabled = true;
      * });
      */
-    forEachAncestor(callback, thisArg, includeSelf = false) {
-        if (typeof thisArg === 'boolean') {
-            includeSelf = thisArg;
-            thisArg = undefined;
-        }
-
-        let current = this;
-        if (!includeSelf)
-            current = this._parent;
-
+    forEachAncestor(callback, thisArg) {
+        let current = this._parent;
         while (current) {
             callback.call(thisArg, current);
             current = current._parent;
