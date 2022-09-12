@@ -37,8 +37,9 @@ function _createTest(attr, value) {
 }
 
 /**
- * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findAncestor}
- * and {@link GraphNode#findAncestors} to search through a graph node and all of its descendants or ascendants.
+ * Callback used by {@link GraphNode#find}, {@link GraphNode#findOne}, {@link GraphNode#findDescendants},
+ * {@link GraphNode#findDescendant}, {@link GraphNode#findAncestors} or {@link GraphNode#findAncestor}
+ * to search through a graph node and all of its descendants or ascendants.
  *
  * @callback FindNodeCallback
  * @param {GraphNode} node - The current graph node.
