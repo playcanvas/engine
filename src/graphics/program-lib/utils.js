@@ -19,9 +19,6 @@ const attrib2Semantic = {
     vertex_texCoord2: SEMANTIC_TEXCOORD2,
     vertex_texCoord3: SEMANTIC_TEXCOORD3,
     vertex_texCoord4: SEMANTIC_TEXCOORD4,
-    vertex_texCoord5: SEMANTIC_TEXCOORD5,
-    vertex_texCoord6: SEMANTIC_TEXCOORD6,
-    vertex_texCoord7: SEMANTIC_TEXCOORD7,
     vertex_color: SEMANTIC_COLOR,
     vertex_boneIndices: SEMANTIC_BLENDINDICES,
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT

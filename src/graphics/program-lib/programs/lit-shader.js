@@ -252,7 +252,7 @@ class LitShader {
             code += '#endif\n';
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
         }
-        this.options.useInstancing = false;
+
         if (this.options.useInstancing) {
             this.attributes.instance_line1 = SEMANTIC_ATTR12;
             this.attributes.instance_line2 = SEMANTIC_ATTR13;
