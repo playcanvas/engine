@@ -369,7 +369,7 @@ class MeshInstance {
             } else if (this.node._aabbVer !== this._aabbVer) {
 
                 // local space bounding box - either from mesh or empty
-                if (this.mesh) {
+                if (this.mesh?.aabb) {
                     localAabb.center.copy(this.mesh.aabb.center);
                     localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
                 } else {
