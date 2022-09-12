@@ -178,12 +178,6 @@ class VertexFormat {
                 this.hasUv3 = true;
             } else if (elementDesc.semantic === SEMANTIC_TEXCOORD4) {
                 this.hasUv4 = true;
-            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD5) {
-                this.hasUv5 = true;
-            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD6) {
-                this.hasUv6 = true;
-            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD7) {
-                this.hasUv7 = true;
             } else if (elementDesc.semantic === SEMANTIC_COLOR) {
                 this.hasColor = true;
             } else if (elementDesc.semantic === SEMANTIC_TANGENT) {

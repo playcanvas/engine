@@ -13,9 +13,6 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR,
     SPECULAR_PHONG,
-    SHADERDEF_UV2,
-    SHADERDEF_UV3,
-    SHADERDEF_UV4
 } from '../constants.js';
 
 import { Quat } from '../../math/quat.js';
@@ -107,9 +104,9 @@ class StandardMaterialOptionsBuilder {
         if (objDefs) {
             hasUv0 = (objDefs & SHADERDEF_UV0) !== 0;
             hasUv1 = (objDefs & SHADERDEF_UV1) !== 0;
-            hasUv2 = (objDefs & SHADERDEF_UV2) !== 0;
-            hasUv3 = (objDefs & SHADERDEF_UV3) !== 0;
-            hasUv4 = (objDefs & SHADERDEF_UV4) !== 0;
+            hasUv2 = hasUv1;
+            hasUv3 = hasUv1;
+            hasUv4 = hasUv1;
             hasVcolor = (objDefs & SHADERDEF_VCOLOR) !== 0;
         }
 
