@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../math/color.js';
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADER_PICK
 } from '../constants.js';
 
 import { basic } from '../../graphics/program-lib/programs/basic.js';
@@ -102,7 +102,7 @@ class BasicMaterial extends Material {
 
             alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,
-            diffuseMap: !!this.colorMap,
+            diffuseMap: pass === SHADER_PICK ? false : !!this.colorMap,
             pass: pass
         };
 
