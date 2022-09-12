@@ -15,7 +15,10 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
-    SORTKEY_FORWARD
+    SORTKEY_FORWARD,
+    SHADERDEF_UV2,
+    SHADERDEF_UV3,
+    SHADERDEF_UV4
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
@@ -163,6 +166,9 @@ class MeshInstance {
         this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? SHADERDEF_UV1 : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv2 ? SHADERDEF_UV2 : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv3 ? SHADERDEF_UV3 : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv4 ? SHADERDEF_UV4 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
 

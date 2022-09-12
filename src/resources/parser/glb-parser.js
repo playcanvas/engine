@@ -383,7 +383,13 @@ const flipTexCoordVs = function (vertexBuffer) {
     for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
         const element = vertexBuffer.format.elements[i];
         if (element.name === SEMANTIC_TEXCOORD0 ||
-            element.name === SEMANTIC_TEXCOORD1) {
+            element.name === SEMANTIC_TEXCOORD1||
+            element.name === SEMANTIC_TEXCOORD2||
+            element.name === SEMANTIC_TEXCOORD3||
+            element.name === SEMANTIC_TEXCOORD4||
+            element.name === SEMANTIC_TEXCOORD5||
+            element.name === SEMANTIC_TEXCOORD6||
+            element.name === SEMANTIC_TEXCOORD7) {
             switch (element.dataType) {
                 case TYPE_FLOAT32:
                     floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
@@ -489,7 +495,13 @@ const createVertexBufferInternal = function (device, sourceDesc, flipV) {
         SEMANTIC_BLENDINDICES,
         SEMANTIC_BLENDWEIGHT,
         SEMANTIC_TEXCOORD0,
-        SEMANTIC_TEXCOORD1
+        SEMANTIC_TEXCOORD1,
+        SEMANTIC_TEXCOORD2,
+        SEMANTIC_TEXCOORD3,
+        SEMANTIC_TEXCOORD4,
+        SEMANTIC_TEXCOORD5,
+        SEMANTIC_TEXCOORD6,
+        SEMANTIC_TEXCOORD7,
     ];
 
     // sort vertex elements by engine-ideal order
