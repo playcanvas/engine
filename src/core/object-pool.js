@@ -24,6 +24,7 @@ class ObjectPool {
 
     freeAll() {
         this._count = 0;
+        this._pool = [];
     }
 }
 
