@@ -61,13 +61,13 @@ class MeshPickerExample {
 
             const direction = new pc.Vec3(-1, -1, -1).normalize();
 
-            const originRay = new pc.Ray(start, direction);
+            const originRay = new pc.Ray(start.clone(), direction.clone());
 
             app.start();
 
-            const box = assets.house.resource.instantiateRenderEntity();
+            const box = assets.statue.resource.instantiateRenderEntity();
 
-            box.setLocalScale(10, 15, 10);
+            box.setLocalScale(1, 1, 1);
 
             box.setLocalPosition(0, 0, 0);
 
@@ -76,7 +76,7 @@ class MeshPickerExample {
             const boxRender = box.findComponent('render');
 
             boxRender._meshInstances.forEach((mi) => {
-                mi.rayCastToMesh(originRay);
+                mi.rayCast(originRay);
             });
 
             // Create an Entity with a camera component
@@ -121,6 +121,8 @@ class MeshPickerExample {
             // spin the meshes
             app.on("update", function (dt) {
 
+                let originRay = new pc.Ray(start.clone(), direction.clone());
+
                 d = originRay.direction.clone();
 
                 d.normalize();
@@ -134,7 +136,8 @@ class MeshPickerExample {
                 box.rotate(3 * dt, 10 * dt, 6 * dt);
 
                 boxRender._meshInstances.forEach((mi) => {
-                    e = mi.rayCastToMesh(originRay) || e;
+                    originRay = new pc.Ray(start.clone(), direction.clone());
+                    e = mi.rayCast(originRay) || e;
                 });
 
                 app.drawLine(originRay.origin, e);

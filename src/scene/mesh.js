@@ -25,6 +25,7 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 import { getApplication } from '../framework/globals.js';
 
 
+/** @typedef {import('../shape/ray.js').Ray} Ray */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
 /** @typedef {import('./skin.js').Skin} Skin */
@@ -180,6 +181,8 @@ class Mesh extends RefCountedObject {
         super();
         this.id = id++;
         this.device = graphicsDevice || getApplication().graphicsDevice;
+        this.points = null;
+        this.triangles = null;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -849,6 +852,11 @@ class Mesh extends RefCountedObject {
 
             // update other render states
             this.updateRenderStates();
+
+            if (this.bvh) {
+                this.buildTriangleArray();
+                this.bvh.RefitBVH(this.triangles);
+            }
         }
     }
 
@@ -1000,62 +1008,52 @@ class Mesh extends RefCountedObject {
         const numIndices = this.getIndices(indices);
         const points = [];
 
-        for (let i = 0; i < numPositions; i++) {
-            const v = new Vec3(positions[i*3], positions[i*3+1], positions[i*3+2]);
-            points.push(v);
+        if (points.length === 0) {
+            let j = 0;
+            for (let i = 0; i < numPositions; i++) {
+                const v = new Vec3(positions[j], positions[j + 1], positions[j + 2]);
+                points.push(v);
+                j += 3;
+            }
+        } else {
+            let j = 0;
+            for (let i = 0; i < numPositions; i++) {
+                const v = points[i];
+                v.set(positions[j], positions[j + 1], positions[j + 2]);
+                j += 3;
+            }
         }
 
-        for (let i = 0; i < numIndices/3; i++) {
-            const j = i * 3;
-            const triangle = new Tri(points[indices[j]], points[indices[j+1]], points[indices[j+2]]);
-            triangles.push(triangle);
+        if (triangles.length === 0) {
+            let j = 0;
+            for (let i = 0; i < numIndices / 3; i++) {
+                const triangle = new Tri(points[indices[j]], points[indices[j + 1]], points[indices[j + 2]]);
+                triangles.push(triangle);
+                j += 3;
+            }
+        } else {
+            let j = 0;
+            for (let i = 0; i < numIndices / 3; i++) {
+                const triangle = triangles[i];
+                triangle.vertex0.set(points[indices[j]].x, points[indices[j]].y, points[indices[j]].z);
+                triangle.vertex1.set(points[indices[j + 1]].x, points[indices[j + 1]].y, points[indices[j + 1]].z);
+                triangle.vertex2.set(points[indices[j + 2]].x, points[indices[j + 2]].y, points[indices[j + 2]].z);
+                j += 3;
+            }
         }
 
         this.triangles = triangles;
     }
 
     /**
-     * @param {Ray} ray - The ray to interesect with mesh
+     * @param {Ray} ray - The ray to interesect the mesh with
+     * @returns {number} The distance between the ray origin and closest point of intersection
      */
     rayCast(ray) {
 
-        // Brute Force
-        /*const triangles = [];
-        const positions = [];
-        const indices = [];
-        const numPositions = this.getPositions(positions);
-        const numIndices = this.getIndices(indices);
-        const distances = [];
-        const points = [];
-        let isHit = undefined;
-
-        for (let i = 0; i < numPositions; i++) {
-            const v = new Vec3(positions[i*3], positions[i*3+1], positions[i*3+2]);
-            points.push(v);
-        }
-
-        for (let i = 0; i < numIndices/3; i++) {
-            const j = i * 3;
-            const triangle = new Tri(points[indices[j]], points[indices[j+1]], points[indices[j+2]]);
-            triangles.push(triangle);
-            const distance = triangle.intersectWithRay(ray);
-            distances.push(distance);
-            if (distance !== undefined) {
-                isHit = distance;
-            }
-        }
-        console.log(isHit);*/
-
-        if (!this.triangles) {
-            this.buildTriangleArray();
-        }
-
-        this.buildTriangleArray();
-
         if (!this.bvh) {
+            this.buildTriangleArray();
             this.bvh = new BVHGlobal(this.triangles);
-        } else {
-            this.bvh.RefitBVH(this.triangles);
         }
 
         this.bvh.minDist = null;

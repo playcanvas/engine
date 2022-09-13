@@ -25,7 +25,7 @@ class MeshPickerAnimatedExample {
             app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
             // helper function to create a light
-            function createLight(color: pc.Color, scale: number, render) {
+            function createLight(color: pc.Color, scale: number, render: boolean) {
 
                 // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
                 const light = new pc.Entity();
@@ -57,9 +57,9 @@ class MeshPickerAnimatedExample {
                 return light;
             }
 
-            const rayMap = [];
+            const rayMap : any = [];
 
-            const numRays = 50;
+            const numRays = 100;
 
             const radius = 5;
 
@@ -87,9 +87,9 @@ class MeshPickerAnimatedExample {
 
             }
 
-            const rayMap2 = [];
+            const rayMap2 : any = [];
 
-            const numRays2 = 50;
+            const numRays2 = 100;
 
             const radius2 = 7;
 
@@ -207,17 +207,6 @@ class MeshPickerAnimatedExample {
                 meshInstances: [meshInstance]
             });
             app.root.addChild(entity);
-
-            const start = new pc.Vec3(5, 5, 2);
-
-            const end = new pc.Vec3(-5, -5, 2);
-
-            const direction = new pc.Vec3(-1, -1, -1).normalize();
-
-            const originRay = new pc.Ray(start, direction);
-
-            const endLight = createLight(pc.Color.BLUE, 0.5);
-
             let e;
 
             // Set an update function on the app's update event
@@ -260,12 +249,10 @@ class MeshPickerAnimatedExample {
                 // update the mesh
                 updateMesh(mesh);
 
-                const start = performance.now();
-
                 for (let i = 0; i < numRays; i++) {
                     e = rayMap[i].endLight.position.clone();
 
-                    e = meshInstance.rayCastToMesh(rayMap[i].ray) || e;
+                    e = meshInstance.rayCast(rayMap[i].ray) || e;
 
                     app.drawLine(rayMap[i].ray.origin, e, pc.Color.BLUE);
 
@@ -275,16 +262,12 @@ class MeshPickerAnimatedExample {
                 for (let i = 0; i < numRays2; i++) {
                     e = rayMap2[i].endLight.position.clone();
 
-                    e = meshInstance.rayCastToMesh(rayMap2[i].ray) || e;
+                    e = meshInstance.rayCast(rayMap2[i].ray) || e;
 
                     app.drawLine(rayMap2[i].ray.origin, e, pc.Color.RED);
 
                     rayMap2[i].endLight.setPosition(e);
                 }
-
-                const end = performance.now();
-
-                console.log(end - start);
 
             });
 

@@ -21,7 +21,8 @@ import {
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
-import { Ray } from 'src/index.js';
+import { Mat4 } from '../math/mat4.js';
+import { Ray } from '../shape/ray.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/shader.js').Shader} Shader */
@@ -40,6 +41,8 @@ const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
+const _worldTransformInverted = new Mat4();
+const _transformedRay = new Ray();
 
 
 /**
@@ -457,26 +460,28 @@ class MeshInstance {
     }
 
     /**
-     * @param {Ray} ray - The graphics device.
+     * Performs a raycast with a given ray against the mesh
+     *
+     * @param {Ray} ray - the ray to perform the intersect test with
+     * @returns {Vec3} Null if there is no intersection or the point of intersection 
+     * in world space
      */
-    rayCastToMesh(ray) {
-        const worldTransformInverted = this.node.getWorldTransform().clone();
-        worldTransformInverted.invert();
-        const transformedRay = ray.transform(worldTransformInverted);
-        const direction = transformedRay.direction;
-        direction.normalize();
-        transformedRay.set(transformedRay.origin, direction);
-        const dist = this._mesh.rayCast(transformedRay);
+    rayCast(ray) {
+        _worldTransformInverted.copy(this.node.getWorldTransform());
+        _worldTransformInverted.invert();
+        _transformedRay.set(ray.origin, ray.direction);
+        _transformedRay.direction.normalize();
+        const dist = this._mesh.rayCast(_transformedRay);
         if (dist != null) {
-            const d = transformedRay.direction.clone();
+            const d = _transformedRay.direction.clone();
             d.normalize();
-            let e = transformedRay.origin.clone();
+            let e = _transformedRay.origin.clone();
             d.mulScalar(dist);
             e.add(d);
-            e = this.node.getWorldTransform().clone().transformPoint(e);
+            e = this.node.getWorldTransform().transformPoint(e);
             return e;
         }
-        return dist;
+        return null;
     }
 
     /**

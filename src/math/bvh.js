@@ -1,70 +1,8 @@
 import { Vec3 } from '../math/vec3.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
-const INFINITY = Number.MAX_SAFE_INTEGER;
-
-class TLASNode {
-    constructor() {
-        this.aabbMin = null;
-        this.leftBLAS = null;
-        this.aabbMax = null;
-        this.isLeaf = null;
-    }
-}
-
-class TLAS {
-    constructor(bvhList, N) {
-        this.tlasNode = Array(2 * N);
-        this.blas = bvhList;
-        this.nodesUsed = 2;
-        this.blasCount = N;
-    }
-
-    Build() {
-        // assign a TLAS leaf node to each BLAS
-        this.tlasNode[2].leftBLAS = 0;
-        this.tlasNode[2].aabbMin = new Vec3(-100, -100, -100);
-        this.tlasNode[2].aabbMax = new Vec3(100, 100, 100);
-        this.tlasNode[2].isLeaf = true;
-        this.tlasNode[3].leftBLAS = 1;
-        this.tlasNode[3].aabbMin = new Vec3(-100, -100, -100);
-        this.tlasNode[3].aabbMax = new Vec3(100, 100, 100);
-        this.tlasNode[3].isLeaf = true;
-
-        // create a root node over the two leaf nodes
-        this.tlasNode[0].leftBLAS = 2;
-        this.tlasNode[0].aabbMin = new Vec3(-100, -100, -100);
-        this.tlasNode[0].aabbMax = new Vec3(100, 100, 100);
-        this.tlasNode[0].isLeaf = false;
-    }
-
-    Intersect(ray) {
-        let node = this.tlasNode[0];
-        const stack = [];
-        let stackPtr = 0;
-        while (1) {
-            if (node.isLeaf) {
-                this.blas[node.leftBLAS].Intersect(ray);
-                if (stackPtr === 0) break; else node = stack[--stackPtr];
-                continue;
-            }
-            let child1 = this.tlasNode[node.leftBLAS];
-            let child2 = this.tlasNode[node.leftBLAS + 1];
-            let dist1 = intersectAABB(ray, child1.aabbMin, child1.aabbMax);
-            let dist2 = intersectAABB(ray, child2.aabbMin, child2.aabbMax);
-            if (dist1 > dist2) {
-                [dist1, dist2] = [dist2, dist1];
-                [child1, child2] = [child2, child1];
-            }
-            if (dist1 === INFINITY) {
-                if (stackPtr === 0) break; else node = stack[--stackPtr];
-            } else {
-                node = child1;
-                if (dist2 !== INFINITY) stack[stackPtr++] = child2;
-            }
-        }
-    }
-}
+const INFINITY = Infinity;
+const BINS = 10;
 
 class BVHNode {
     /**
@@ -73,7 +11,7 @@ class BVHNode {
      * @param {Vec3} [aabbMin] - The bounds of the BVH node
      * @param {Vec3} [aabbMax] - The bounds of the BVH node
      * @param {number} [leftFirst] - The index of the left child of the BVH node
-     * @param {number} [triCount] - The number of primitives
+     * @param {number} [triCount] - The number of primitives 
      */
     constructor(aabbMin, aabbMax, leftFirst, triCount) {
         this.aabbMin = aabbMin || new Vec3();
@@ -82,11 +20,20 @@ class BVHNode {
         this.triCount = triCount || 0;
     }
 
+    /**
+     *
+     * @returns {boolean} whether the BVHNode is a leaf node
+     */
     isLeaf() {
         return this.triCount > 0;
     }
 }
 
+
+/**
+ * Bin used for BVH Tree construction
+ *
+ */
 class Bin {
     constructor(BINS) {
         this.BINS = BINS;
@@ -95,6 +42,9 @@ class Bin {
     }
 }
 
+/**
+ * Used to store the BVH, triangles and minimum ray intersection distance for a single mesh
+ */
 class BVHGlobal {
     constructor(triangles) {
         this.bvhNode = [];
@@ -113,18 +63,22 @@ class BVHGlobal {
 
     UpdateNodeBounds(nodeIdx) {
         const node = this.bvhNode[nodeIdx];
-        node.aabbMin = new Vec3(INFINITY, INFINITY, INFINITY);
-        node.aabbMax = new Vec3(-INFINITY, -INFINITY, -INFINITY);
+        node.aabbMin = new Vec3();
+        node.aabbbMax = new Vec3();
+        node.aabbMin.set(INFINITY, INFINITY, INFINITY);
+        node.aabbMax.set(-INFINITY, -INFINITY, -INFINITY);
         const first = node.leftFirst;
-        for (let i = 0; i < node.triCount; i++) {
-            const leafTriIdx = this.triIdx[first + i];
+        const triCount = node.triCount;
+        const triIdx = this.triIdx;
+        for (let i = 0; i < triCount; i++) {
+            const leafTriIdx = triIdx[first + i];
             const leafTri = this.triangles[leafTriIdx];
-            node.aabbMin = vec3Min(node.aabbMin, leafTri.vertex0);
-            node.aabbMin = vec3Min(node.aabbMin, leafTri.vertex1);
-            node.aabbMin = vec3Min(node.aabbMin, leafTri.vertex2);
-            node.aabbMax = vec3Max(node.aabbMax, leafTri.vertex0);
-            node.aabbMax = vec3Max(node.aabbMax, leafTri.vertex1);
-            node.aabbMax = vec3Max(node.aabbMax, leafTri.vertex2);
+            vec3Min(node.aabbMin, leafTri.vertex0, node.aabbMin);
+            vec3Min(node.aabbMin, leafTri.vertex1, node.aabbMin);
+            vec3Min(node.aabbMin, leafTri.vertex2, node.aabbMin);
+            vec3Max(node.aabbMax, leafTri.vertex0, node.aabbMax);
+            vec3Max(node.aabbMax, leafTri.vertex1, node.aabbMax);
+            vec3Max(node.aabbMax, leafTri.vertex2, node.aabbMax);
         }
     }
 
@@ -157,8 +111,6 @@ class BVHGlobal {
         let bestCost = INFINITY;
         for (let a = 0; a < 3; a++) {
             const b = ['x', 'y', 'z'][a];
-            // const boundsMin = node.aabbMin[b];
-            // const boundsMax = node.aabbMax[b];
             let boundsMin = INFINITY;
             let boundsMax = -1 * INFINITY;
             for (let i = 0; i < node.triCount; i++) {
@@ -168,7 +120,6 @@ class BVHGlobal {
             }
             if (boundsMin === boundsMax) continue;
 
-            const BINS = 8;
             const bin = Array.apply(null, Array(BINS)).map(function () {
                 return new Bin();
             });
@@ -246,7 +197,11 @@ class BVHGlobal {
 
         const noSplitCost = this.calculateNodeCost(node);
 
-        if (splitCost >= noSplitCost) {
+        // if (splitCost >= noSplitCost) {
+        //     return;
+        // }
+
+        if (node.triCount < 5) {
             return;
         }
 
@@ -261,10 +216,12 @@ class BVHGlobal {
                 j--;
             }
         }
+
         const leftCount = i - node.leftFirst;
         if (leftCount === 0 || leftCount === node.triCount) {
             return;
         }
+
         // Create child nodes for each half
         const leftChildIdx = this.nodesUsed++;
         const rightChildIdx = this.nodesUsed++;
@@ -276,6 +233,7 @@ class BVHGlobal {
         node.triCount = 0;
         this.UpdateNodeBounds(leftChildIdx);
         this.UpdateNodeBounds(rightChildIdx);
+
         // Recurse into each of the child nodes
         this.Subdivide(leftChildIdx);
         this.Subdivide(rightChildIdx);
@@ -395,72 +353,23 @@ class BVHGlobal {
         }
         return INFINITY;
     }
-
-    // IntersectAABB(ray, bmin, bmax) {
-    //     const tx1 = (bmin.x - ray.origin.x) / ray.direction.x;
-    //     const tx2 = (bmax.x - ray.origin.x) / ray.direction.x;
-    //     let tmin = Math.min(tx1, tx2);
-    //     let tmax = Math.max(tx1, tx2);
-    //     const ty1 = (bmin.y - ray.origin.y) / ray.direction.y;
-    //     const ty2 = (bmax.y - ray.origin.y) / ray.direction.y;
-    //     tmin = Math.max(tmin, Math.min(ty1, ty2));
-    //     tmax = Math.min(tmax, Math.max(ty1, ty2));
-    //     const tz1 = (bmin.z - ray.origin.z) / ray.direction.z;
-    //     const tz2 = (bmax.z - ray.origin.z) / ray.direction.z;
-    //     tmin = Math.max(tmin, Math.min(tz1, tz2));
-    //     tmax = Math.min(tmax, Math.max(tz1, tz2));
-    //     //return tmax >= tmin && tmin < ray.t && tmax > 0;
-    //     return tmax >= tmin  && tmax > 0 && (this.minDist != null && tmin < this.minDist);
-    // }
 }
 
-/**
- * Create a new BVHNode
- *
- * @param {Vec3} [a] - The bounds of the BVH node
- * @param {Vec3} [b] - The bounds of the BVH node
- */
-function vec3Min(a, b) {
-    const c = new Vec3();
+
+function vec3Min(a, b, c) {
+    if (c == null) {
+        c = new Vec3();
+    }
     c.set(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
     return c;
 }
 
-/**
- * Create a new BVHNode
- *
- * @param {Vec3} [a] - The bounds of the BVH node
- * @param {Vec3} [b] - The bounds of the BVH node
- * @param {Vec3} [c] - The bounds of the BVH node
- */
-function vec3Max(a, b) {
-    const c = new Vec3();
+function vec3Max(a, b, c) {
+    if (c == null) {
+        c = new Vec3();
+    }
     c.set(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
     return c;
-}
-
-function intersectAABB(ray, bmin, bmax) {
-    if (ray.rD == null) {
-        ray.rDx = 1 / ray.direction.x;
-        ray.rDy = 1 / ray.direction.y;
-        ray.rDz = 1 / ray.direction.z;
-    }
-    const tx1 = (bmin.x - ray.origin.x) * ray.rDx;
-    const tx2 = (bmax.x - ray.origin.x) * ray.rDx;
-    let tmin = Math.min(tx1, tx2);
-    let tmax = Math.max(tx1, tx2);
-    const ty1 = (bmin.y - ray.origin.y) * ray.rDy;
-    const ty2 = (bmax.y - ray.origin.y) * ray.rDy;
-    tmin = Math.max(tmin, Math.min(ty1, ty2));
-    tmax = Math.min(tmax, Math.max(ty1, ty2));
-    const tz1 = (bmin.z - ray.origin.z) * ray.rDz;
-    const tz2 = (bmax.z - ray.origin.z) * ray.rDz;
-    tmin = Math.max(tmin, Math.min(tz1, tz2));
-    tmax = Math.min(tmax, Math.max(tz1, tz2));
-    if (tmax >= tmin  && tmax > 0 && (this.minDist == null || (this.minDist != null && tmin < this.minDist))) {
-        return tmin;
-    }
-    return INFINITY;
 }
 
 export { BVHGlobal };

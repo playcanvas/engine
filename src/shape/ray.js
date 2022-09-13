@@ -1,6 +1,7 @@
-import { Mat4 } from 'src/math/mat4.js';
 import { Debug } from '../core/debug.js';
 import { Vec3 } from '../math/vec3.js';
+
+/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
 
 /**
  * An infinite ray.
@@ -54,9 +55,10 @@ class Ray {
     }
 
     /**
-     * Transforms the ray to a new one using a matrix
+     * Transforms the ray to a new space via Matrix
      *
      * @param {Mat4} matrix - The transformation matrix for the ray
+     * @returns {Ray} The transformed ray
      */
     transform(matrix) {
         const newOrigin = matrix.transformPoint(this.origin);
