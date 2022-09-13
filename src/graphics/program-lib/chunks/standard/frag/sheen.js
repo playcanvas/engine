@@ -4,10 +4,6 @@ export default /* glsl */`
 uniform vec3 material_sheen;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_sheenMap;
-#endif
-
 void getSheen() {
     vec3 sheenColor = vec3(1, 1, 1);
 
@@ -16,7 +12,7 @@ void getSheen() {
     #endif
 
     #ifdef MAPTEXTURE
-    sheenColor *= $DECODE(texture2DBias(texture_sheenMap, $UV, textureBias)).$CH;
+    sheenColor *= $DECODE(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

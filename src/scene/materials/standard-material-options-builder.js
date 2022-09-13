@@ -154,8 +154,9 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.emissiveEncoding = stdMat.emissiveMap ? stdMat.emissiveMap.encoding : null;
-        options.lightMapEncoding = stdMat.lightMap ? stdMat.lightMap.encoding : null;
+        options.diffuseEncoding = stdMat.diffuseMap?.encoding;
+        options.emissiveEncoding = stdMat.emissiveMap?.encoding;
+        options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
         options.alphaFade = stdMat.alphaFade;
@@ -316,6 +317,7 @@ class StandardMaterialOptionsBuilder {
         const cname = mname + 'Channel';
         const tname = mname + 'Transform';
         const uname = mname + 'Uv';
+        const iname = mname + 'Identifier';
 
         // Avoid overriding previous lightMap properties
         if (p !== 'light') {
@@ -345,6 +347,7 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
                     options[mname] = !!stdMat[mname];
+                    options[iname] = stdMat[mname].name;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];

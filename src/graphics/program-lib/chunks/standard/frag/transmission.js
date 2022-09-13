@@ -4,10 +4,6 @@ export default /* glsl */`
 uniform float material_refraction;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_refractionMap;
-#endif
-
 void getRefraction() {
     float refraction = 1.0;
 
@@ -16,7 +12,7 @@ void getRefraction() {
     #endif
 
     #ifdef MAPTEXTURE
-    refraction *= gammaCorrectInput(texture2DBias(texture_refractionMap, $UV, textureBias)).$CH;
+    refraction *= gammaCorrectInput(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX
