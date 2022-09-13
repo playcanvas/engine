@@ -190,6 +190,9 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 
+        options.iridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
+        options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
+
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
         options.sheenGlossinessTint = 1;
