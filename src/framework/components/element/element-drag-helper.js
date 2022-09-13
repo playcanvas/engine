@@ -83,7 +83,6 @@ class ElementDragHelper extends EventHandler {
 
     _toggleDragListeners(onOrOff) {
         const isOn = onOrOff === 'on';
-        const addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
 
         // Prevent multiple listeners
         if (this._hasDragListeners && isOn) {
@@ -94,18 +93,17 @@ class ElementDragHelper extends EventHandler {
             this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
         }
 
-        // Note that we handle release events directly on the window object, rather than
-        // on app.mouse or app.touch. This is in order to correctly handle cases where the
-        // user releases the mouse/touch outside of the window.
+        // mouse events, if mouse is available
         if (this._app.mouse) {
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mousemove', this._onMove, this);
+            this._element[onOrOff]('mouseup', this._handleMouseUpOrTouchEnd, false);
         }
 
+        // touch events, if touch is available
         if (platform.touch) {
-            this._app.touch[onOrOff]('touchmove', this._onMove, this);
-            window[addOrRemoveEventListener]('touchend', this._handleMouseUpOrTouchEnd, false);
-            window[addOrRemoveEventListener]('touchcancel', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('touchmove', this._onMove, this);
+            this._element[onOrOff]('touchend', this._handleMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._handleMouseUpOrTouchEnd, this);
         }
 
         this._hasDragListeners = isOn;

@@ -150,7 +150,8 @@ function buildTarget(buildType, moduleFormat) {
     const banner = {
         debug: ' (DEBUG PROFILER)',
         release: '',
-        profiler: ' (PROFILER)'
+        profiler: ' (PROFILER)',
+        min: null
     };
 
     const outputPlugins = {
@@ -190,14 +191,15 @@ function buildTarget(buildType, moduleFormat) {
     };
 
     const outputOptions = {
-        banner: getBanner(banner[buildType] || banner.release),
+        banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
         plugins: outputPlugins[buildType || outputPlugins.release],
-        file: `${outputFile[buildType]}${outputExtension[moduleFormat]}`,
         format: outputFormat[moduleFormat],
         indent: '\t',
         sourcemap: sourceMap[buildType] || sourceMap.release,
         name: 'pc'
     };
+
+    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = `${outputFile[buildType]}${outputExtension[moduleFormat]}`;
 
     const sdkVersion = {
         _CURRENT_SDK_VERSION: version,
@@ -241,6 +243,7 @@ function buildTarget(buildType, moduleFormat) {
     return {
         input: 'src/index.js',
         output: outputOptions,
+        preserveModules: moduleFormat === 'es6',
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
@@ -291,6 +294,8 @@ export default (args) => {
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
     if (envTarget === 'types') {
         targets.push(target_types);
+    } else if (envTarget === 'extras') {
+        targets = targets.concat(target_extras);
     } else {
         ['release', 'debug', 'profiler', 'min'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {

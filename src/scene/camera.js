@@ -42,6 +42,7 @@ class Camera {
         this._frustumCulling = true;
         this._horizontalFov = false;
         this._layers = [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE];
+        this._layersSet = new Set(this._layers);
         this._nearClip = 0.1;
         this._node = null;
         this._orthoHeight = 10;
@@ -50,6 +51,9 @@ class Camera {
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
+        this._aperture = 16.0;
+        this._shutter = 1.0 / 1000.0;
+        this._sensitivity = 1000;
 
         this._projMat = new Mat4();
         this._projMatDirty = true;
@@ -225,10 +229,15 @@ class Camera {
 
     set layers(newValue) {
         this._layers = newValue.slice(0);
+        this._layersSet = new Set(this._layers);
     }
 
     get layers() {
         return this._layers;
+    }
+
+    get layersSet() {
+        return this._layersSet;
     }
 
     set nearClip(newValue) {
@@ -310,6 +319,30 @@ class Camera {
         return this._viewMat;
     }
 
+    set aperture(newValue) {
+        this._aperture = newValue;
+    }
+
+    get aperture() {
+        return this._aperture;
+    }
+
+    set sensitivity(newValue) {
+        this._sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._sensitivity;
+    }
+
+    set shutter(newValue) {
+        this._shutter = newValue;
+    }
+
+    get shutter() {
+        return this._shutter;
+    }
+
     /**
      * Creates a duplicate of the camera.
      *
@@ -350,6 +383,9 @@ class Camera {
         this.rect = other.rect;
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
+        this.aperture = other.aperture;
+        this.shutter = other.shutter;
+        this.sensitivity = other.sensitivity;
         return this;
     }
 
@@ -457,6 +493,11 @@ class Camera {
     getProjectionMatrixSkybox() {
         this._evaluateProjectionMatrix();
         return this._projMatSkybox;
+    }
+
+    getExposure() {
+        const ev100 = Math.log2((this._aperture * this._aperture) / this._shutter * 100.0 / this._sensitivity);
+        return 1.0 / (Math.pow(2.0, ev100) * 1.2);
     }
 
     // returns estimated size of the sphere on the screen in range of [0..1]

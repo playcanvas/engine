@@ -21,11 +21,6 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
 
-import { basic } from '../graphics/program-lib/programs/basic.js';
-import { particle } from '../graphics/program-lib/programs/particle.js';
-import { skybox } from '../graphics/program-lib/programs/skybox.js';
-import { standard } from '../graphics/program-lib/programs/standard.js';
-
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
@@ -283,12 +278,6 @@ class AppBase extends EventHandler {
          * @type {GraphicsDevice}
          */
         this.graphicsDevice = device;
-
-        // register shader programs
-        device.programLib.register('basic', basic);
-        device.programLib.register('particle', particle);
-        device.programLib.register('skybox', skybox);
-        device.programLib.register('standard', standard);
 
         this._initDefaultMaterial();
         this.stats = new ApplicationStats(device);
@@ -1568,6 +1557,22 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      *
+     * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
+     * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
+     * @param {boolean} settings.render.lightingCookiesEnabled - If set to true, the clustered lighting will support cookie textures.
+     * @param {boolean} settings.render.lightingAreaLightsEnabled - If set to true, the clustered lighting will support area lights.
+     * @param {number} settings.render.lightingShadowAtlasResolution - Resolution of the atlas texture storing all non-directional shadow textures.
+     * @param {number} settings.render.lightingCookieAtlasResolution - Resolution of the atlas texture storing all non-directional cookie textures.
+     * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
+     * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
+     *
+     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
+     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
+     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     *
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * is subdivided into.
+     *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
@@ -1680,14 +1685,12 @@ class AppBase extends EventHandler {
 
     /** @private */
     _firstBake() {
-        if (this.lightmapper) {
-            this.lightmapper.bake(null, this.scene.lightmapMode);
-        }
+        this.lightmapper?.bake(null, this.scene.lightmapMode);
     }
 
     /** @private */
     _firstBatch() {
-        this.batcher.generate();
+        this.batcher?.generate();
     }
 
     /**

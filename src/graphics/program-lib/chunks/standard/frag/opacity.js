@@ -15,7 +15,7 @@ void getOpacity() {
     #endif
 
     #ifdef MAPTEXTURE
-    dAlpha *= texture2D(texture_opacityMap, $UV, textureBias).$CH;
+    dAlpha *= texture2DBias(texture_opacityMap, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

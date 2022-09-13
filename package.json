@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.56.0-dev",
+  "version": "1.57.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -18,8 +18,9 @@
   ],
   "license": "MIT",
   "main": "build/playcanvas.js",
-  "module": "build/playcanvas.mjs",
+  "module": "build/playcanvas.mjs/index.js",
   "types": "build/playcanvas.d.ts",
+  "sideEffects": false,
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -32,6 +33,11 @@
     "globals": {
       "Ammo": "readonly",
       "earcut": "readonly",
+      "glslang": "readonly",
+      "GPUBufferUsage": "readonly",
+      "GPUColorWrite": "readonly",
+      "GPUShaderStage": "readonly",
+      "GPUTextureUsage": "readonly",
       "opentype": "readonly",
       "pc": "readonly",
       "TWEEN": "readonly",
@@ -70,9 +76,9 @@
     "README-zh.md"
   ],
   "devDependencies": {
-    "@babel/core": "^7.18.9",
+    "@babel/core": "^7.18.13",
     "@babel/eslint-parser": "^7.18.9",
-    "@babel/preset-env": "^7.18.9",
+    "@babel/preset-env": "^7.18.10",
     "@playcanvas/canvas-mock": "^1.0.1",
     "@playcanvas/eslint-config": "^1.2.0",
     "@playcanvas/jsdoc-template": "^1.0.27",
@@ -81,7 +87,7 @@
     "@rollup/pluginutils": "^4.2.1",
     "c8": "^7.12.0",
     "chai": "^4.3.6",
-    "eslint": "^8.21.0",
+    "eslint": "^8.23.0",
     "jsdoc": "^3.6.11",
     "jsdoc-tsimport-plugin": "^1.0.5",
     "karma": "^6.4.0",
@@ -89,14 +95,14 @@
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.34",
     "mocha": "^10.0.0",
-    "rollup": "^2.77.2",
+    "rollup": "^2.79.0",
     "rollup-plugin-dts": "^4.2.2",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-terser": "7.0.2",
-    "rollup-plugin-visualizer": "^5.7.1",
+    "rollup-plugin-visualizer": "^5.8.0",
     "serve": "^14.0.1",
     "sinon": "^14.0.0",
-    "typescript": "^4.7.4",
+    "typescript": "^4.8.2",
     "xhr2": "^0.2.1"
   },
   "scripts": {
@@ -104,6 +110,7 @@
     "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
     "build:dts": "tsc src/index.js --outDir types --allowJs --declaration --emitDeclarationOnly",
+    "build:extras": "rollup -c --environment target:extras",
     "build:es5": "rollup -c --environment target:es5",
     "build:es6": "rollup -c --environment target:es6",
     "build:profiler": "rollup -c --environment target:profiler",

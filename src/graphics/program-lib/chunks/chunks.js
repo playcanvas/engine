@@ -8,8 +8,6 @@ import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
 import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
 import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
-import bakeDirLmEndPS from './lightmapper/frag/bakeDirLmEnd.js';
-import bakeLmEndPS from './lightmapper/frag/bakeLmEnd.js';
 import basePS from './lit/frag/base.js';
 import baseVS from './lit/vert/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
@@ -33,8 +31,6 @@ import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
 import diffusePS from './standard/frag/diffuse.js';
 import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
-import dilatePS from './lightmapper/frag/dilate.js';
-import bilateralDeNoisePS from './lightmapper/frag/bilateralDeNoise.js';
 import emissivePS from './standard/frag/emissive.js';
 import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
@@ -58,9 +54,13 @@ import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
 import gamma2_2PS from './common/frag/gamma2_2.js';
+import gles2PS from './common/frag/gles2.js';
 import gles3PS from './common/frag/gles3.js';
 import gles3VS from './common/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
+import iridescencePS from './standard/frag/iridescence.js';
+import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
 import instancingVS from './lit/vert/instancing.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -144,7 +144,8 @@ import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
 import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
-import refractionPS from './lit/frag/refraction.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
@@ -179,6 +180,7 @@ import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import textureSamplePS from './standard/frag/textureSample.js';
+import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
@@ -213,8 +215,6 @@ const shaderChunks = {
     aoSpecOccConstPS,
     aoSpecOccConstSimplePS,
     aoSpecOccSimplePS,
-    bakeDirLmEndPS,
-    bakeLmEndPS,
     basePS,
     baseVS,
     baseNineSlicedPS,
@@ -237,8 +237,6 @@ const shaderChunks = {
     detailModesPS,
     diffusePS,
     diffuseDetailMapPS,
-    dilatePS,
-    bilateralDeNoisePS,
     decodePS,
     emissivePS,
     encodePS,
@@ -263,9 +261,13 @@ const shaderChunks = {
     fullscreenQuadVS,
     gamma1_0PS,
     gamma2_2PS,
+    gles2PS,
     gles3PS,
     gles3VS,
     glossPS,
+    iridescenceDiffractionPS,
+    iridescencePS,
+    iridescenceThicknessPS,
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,
@@ -349,7 +351,8 @@ const shaderChunks = {
     reflectionSpherePS,
     reflectionSphereLowPS,
     reflectionSheenPS,
-    refractionPS,
+    refractionCubePS,
+    refractionDynamicPS,
     reprojectPS,
     screenDepthPS,
     shadowCascadesPS,
@@ -384,6 +387,7 @@ const shaderChunks = {
     TBNfastPS,
     TBNObjectSpacePS,
     textureSamplePS,
+    thicknessPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,

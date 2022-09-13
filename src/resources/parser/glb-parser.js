@@ -72,6 +72,9 @@ class GlbResources {
         this.animations = null;
         this.textures = null;
         this.materials = null;
+        this.variants = null;
+        this.meshVariants = null;
+        this.meshDefaultMaterials = null;
         this.renders = null;
         this.skins = null;
         this.lights = null;
@@ -753,7 +756,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -887,9 +890,18 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
-            // TODO: Refactor, we should not store temporary data on the mesh.
-            // The container should store some mapping table instead.
-            mesh.materialIndex = primitive.material;
+            if (primitive.hasOwnProperty("extensions") && primitive.extensions.hasOwnProperty("KHR_materials_variants")) {
+                const variants = primitive.extensions.KHR_materials_variants;
+                const tempMapping = {};
+                variants.mappings.forEach((mapping) => {
+                    mapping.variants.forEach((variant) => {
+                        tempMapping[variant] = mapping.material;
+                    });
+                });
+                meshVariants[mesh.id] = tempMapping;
+            }
+
+            meshDefaultMaterials[mesh.id] = primitive.material;
 
             let accessor = accessors[primitive.attributes.POSITION];
             mesh.aabb = getAccessorBoundingBox(accessor);
@@ -1069,7 +1081,7 @@ const extensionClearCoat = function (data, material, textures) {
         #endif
         
         #ifdef MAPTEXTURE
-            ccGlossiness *= texture2D(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+            ccGlossiness *= texture2DBias(texture_clearCoatGlossMap, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1112,6 +1124,9 @@ const extensionSpecular = function (data, material, textures) {
         material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
+
+        extractTextureTransform(data.specularColorTexture, material, ['specular']);
+
     }
     if (data.hasOwnProperty('specularColorFactor')) {
         const color = data.specularColorFactor;
@@ -1128,6 +1143,7 @@ const extensionSpecular = function (data, material, textures) {
     if (data.hasOwnProperty('specularTexture')) {
         material.specularityFactorMapChannel = 'a';
         material.specularityFactorMap = textures[data.specularTexture.index];
+        extractTextureTransform(data.specularTexture, material, ['specularityFactor']);
     }
 };
 
@@ -1139,12 +1155,15 @@ const extensionIor = function (data, material, textures) {
 
 const extensionTransmission = function (data, material, textures) {
     material.blendType = BLEND_NORMAL;
+    material.useDynamicRefraction = true;
+
     if (data.hasOwnProperty('transmissionFactor')) {
         material.refraction = data.transmissionFactor;
     }
     if (data.hasOwnProperty('transmissionTexture')) {
         material.refractionMapChannel = 'r';
         material.refractionMap = textures[data.transmissionTexture.index];
+        extractTextureTransform(data.transmissionTexture, material, ['refraction']);
     }
 };
 
@@ -1158,6 +1177,8 @@ const extensionSheen = function (data, material, textures) {
     }
     if (data.hasOwnProperty('sheenColorTexture')) {
         material.sheenMap = textures[data.sheenColorTexture.index];
+        material.sheenEncoding = 'srgb';
+        extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
     if (data.hasOwnProperty('sheenRoughnessFactor')) {
         material.sheenGlossiness = data.sheenRoughnessFactor;
@@ -1167,6 +1188,7 @@ const extensionSheen = function (data, material, textures) {
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
         material.sheenGlossinessMap = textures[data.sheenRoughnessTexture.index];
         material.sheenGlossinessMapChannel = 'a';
+        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGlossiness']);
     }
 
     const sheenGlossChunk = `
@@ -1186,7 +1208,7 @@ const extensionSheen = function (data, material, textures) {
         #endif
 
         #ifdef MAPTEXTURE
-        sheenGlossiness *= texture2D(texture_sheenGlossinessMap, $UV, textureBias).$CH;
+        sheenGlossiness *= texture2DBias(texture_sheenGlossinessMap, $UV, textureBias).$CH;
         #endif
 
         #ifdef MAPVERTEX
@@ -1199,6 +1221,58 @@ const extensionSheen = function (data, material, textures) {
     }
     `;
     material.chunks.sheenGlossPS = sheenGlossChunk;
+};
+
+const extensionVolume = function (data, material, textures) {
+    material.blendType = BLEND_NORMAL;
+    material.useDynamicRefraction = true;
+    if (data.hasOwnProperty('thicknessFactor')) {
+        material.thickness = data.thicknessFactor;
+    }
+    if (data.hasOwnProperty('thicknessTexture')) {
+        material.thicknessMap = textures[data.thicknessTexture.index];
+        extractTextureTransform(data.thicknessTexture, material, ['thickness']);
+    }
+    if (data.hasOwnProperty('attenuationDistance')) {
+        material.attenuationDistance = data.attenuationDistance;
+    }
+    if (data.hasOwnProperty('attenuationColor')) {
+        const color = data.attenuationColor;
+        material.attenuation.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
+    }
+};
+
+const extensionEmissiveStrength = function (data, material, textures) {
+    if (data.hasOwnProperty('emissiveStrength')) {
+        material.emissiveIntensity = data.emissiveStrength;
+    }
+};
+
+const extensionIridescence = function (data, material, textures) {
+    material.useIridescence = true;
+    if (data.hasOwnProperty('iridescenceFactor')) {
+        material.iridescence = data.iridescenceFactor;
+    }
+    if (data.hasOwnProperty('iridescenceTexture')) {
+        material.iridescenceMapChannel = 'r';
+        material.iridescenceMap = textures[data.iridescenceTexture.index];
+        extractTextureTransform(data.iridescenceTexture, material, ['iridescence']);
+
+    }
+    if (data.hasOwnProperty('iridescenceIor')) {
+        material.iridescenceRefractionIndex = data.iridescenceIor;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMinimum')) {
+        material.iridescenceThicknessMin = data.iridescenceThicknessMinimum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMaximum')) {
+        material.iridescenceThicknessMax = data.iridescenceThicknessMaximum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessTexture')) {
+        material.iridescenceThicknessMapChannel = 'g';
+        material.iridescenceThicknessMap = textures[data.iridescenceThicknessTexture.index];
+        extractTextureTransform(data.iridescenceThicknessTexture, material, ['iridescenceThickness']);
+    }
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
@@ -1220,7 +1294,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         #endif
         
         #ifdef MAPTEXTURE
-            dGlossiness *= texture2D(texture_glossMap, $UV, textureBias).$CH;
+            dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1363,13 +1437,16 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     // Provide list of supported extensions and their functions
     const extensions = {
-        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_clearcoat": extensionClearCoat,
-        "KHR_materials_unlit": extensionUnlit,
-        "KHR_materials_specular": extensionSpecular,
+        "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
+        "KHR_materials_iridescence": extensionIridescence,
+        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
+        "KHR_materials_sheen": extensionSheen,
+        "KHR_materials_specular": extensionSpecular,
         "KHR_materials_transmission": extensionTransmission,
-        "KHR_materials_sheen": extensionSheen
+        "KHR_materials_unlit": extensionUnlit,
+        "KHR_materials_volume": extensionVolume
     };
 
     // Handle extensions
@@ -1732,7 +1809,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1743,7 +1820,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV) {
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials);
     });
 };
 
@@ -1766,6 +1843,18 @@ const createMaterials = function (gltf, textures, options, flipV) {
         }
         return material;
     });
+};
+
+const createVariants = function (gltf) {
+    if (!gltf.hasOwnProperty("extensions") || !gltf.extensions.hasOwnProperty("KHR_materials_variants"))
+        return null;
+
+    const data = gltf.extensions.KHR_materials_variants.variants;
+    const variants = {};
+    for (let i = 0; i < data.length; i++) {
+        variants[data[i].name] = i;
+    }
+    return variants;
 };
 
 const createAnimations = function (gltf, nodes, bufferViews, options) {
@@ -1977,7 +2066,10 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const materials = createMaterials(gltf, textureAssets.map(function (textureAsset) {
         return textureAsset.resource;
     }), options, flipV);
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV);
+    const variants = createVariants(gltf);
+    const meshVariants = {};
+    const meshDefaultMaterials = {};
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -1996,6 +2088,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     result.animations = animations;
     result.textures = textureAssets;
     result.materials = materials;
+    result.variants = variants;
+    result.meshVariants = meshVariants;
+    result.meshDefaultMaterials = meshDefaultMaterials;
     result.renders = renders;
     result.skins = skins;
     result.lights = lights;

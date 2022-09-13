@@ -320,6 +320,17 @@ const standard = {
                 func.append("getNormal();");
             }
 
+            if (litShader.needsSceneColor) {
+                decl.append("uniform sampler2D uSceneColorMap;");
+            }
+            if (litShader.needsScreenSize) {
+                decl.append("uniform vec4 uScreenSize;");
+            }
+            if (litShader.needsTransforms) {
+                decl.append("uniform mat4 matrix_viewProjection;");
+                decl.append("uniform mat4 matrix_model;");
+            }
+
             // albedo
             decl.append("vec3 dAlbedo;");
             if (options.diffuseDetail) {
@@ -332,6 +343,21 @@ const standard = {
                 decl.append("float dTransmission;");
                 code.append(this._addMap("refraction", "transmissionPS", options, litShader.chunks));
                 func.append("getRefraction();");
+
+                decl.append("float dThickness;");
+                code.append(this._addMap("thickness", "thicknessPS", options, litShader.chunks));
+                func.append("getThickness();");
+            }
+
+            if (options.iridescence) {
+                decl.append("vec3 dIridescenceFresnel;");
+                decl.append("float dIridescence;");
+                code.append(this._addMap("iridescence", "iridescencePS", options, litShader.chunks));
+                func.append("getIridescence();");
+
+                decl.append("float dIridescenceThickness;");
+                code.append(this._addMap("iridescenceThickness", "iridescenceThicknessPS", options, litShader.chunks));
+                func.append("getIridescenceThickness();");
             }
 
             // specularity & glossiness
@@ -340,7 +366,7 @@ const standard = {
                 decl.append("float dGlossiness;");
                 if (options.sheen) {
                     decl.append("vec3 sSpecularity;");
-                    code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks));
+                    code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks, options.sheenEncoding));
                     func.append("getSheen();");
 
                     decl.append("float sGlossiness;");

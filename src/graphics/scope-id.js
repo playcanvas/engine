@@ -24,6 +24,13 @@ class ScopeId {
         this.versionObject = new VersionedObject();
     }
 
+    // Don't stringify ScopeId to JSON by JSON.stringify, as this stores 'value'
+    // which is not needed. This is used when stringifying a uniform buffer format, which
+    // internally stores the scope.
+    toJSON(key) {
+        return undefined;
+    }
+
     /**
      * Set variable value.
      *

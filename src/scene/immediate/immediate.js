@@ -210,7 +210,7 @@ class Immediate {
     }
 
     getGraphNode(matrix) {
-        const graphNode = new GraphNode();
+        const graphNode = new GraphNode('ImmediateDebug');
         graphNode.worldTransform = matrix;
         graphNode._dirtyWorld = graphNode._dirtyNormal = false;
 

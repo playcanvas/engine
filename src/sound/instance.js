@@ -218,6 +218,15 @@ class SoundInstance extends EventHandler {
              */
             this._lastNode = null;
 
+            /**
+             * Set to true if a play() request was issued when the AudioContext was still suspended,
+             * and will therefore wait until it is resumed to play the audio.
+             *
+             * @type {boolean}
+             * @private
+             */
+            this._waitingContextSuspension = false;
+
             this._initializeNodes();
 
             /** @private */
@@ -573,14 +582,51 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Begins playback of sound. If the sound is not loaded this will return false. If the sound is
-     * already playing this will restart the sound.
+     * Attempt to begin playback the sound.
+     * If the AudioContext is suspended, the audio will only start once it's resumed.
+     * If the sound is already playing, this will restart the sound.
      *
-     * @returns {boolean} True if the sound was started.
+     * @returns {boolean} True if the sound was started immediately.
      */
     play() {
         if (this._state !== STATE_STOPPED) {
             this.stop();
+        }
+        // set state to playing
+        this._state = STATE_PLAYING;
+        // no need for this anymore
+        this._playWhenLoaded = false;
+
+        // play() was already issued but hasn't actually started yet
+        if (this._waitingContextSuspension) {
+            return false;
+        }
+
+        // manager is suspended so audio cannot start now - wait for manager to resume
+        if (this._manager.suspended) {
+            this._manager.once('resume', this._playAudioImmediate, this);
+            this._waitingContextSuspension = true;
+
+            return false;
+        }
+
+        this._playAudioImmediate();
+
+        return true;
+    }
+
+    /**
+     * Immediately play the sound.
+     * This method assumes the AudioContext is ready (not suspended or locked).
+     *
+     * @private
+     */
+    _playAudioImmediate() {
+        this._waitingContextSuspension = false;
+
+        // between play() and the manager being ready to play, a stop() or pause() call was made
+        if (this._state !== STATE_PLAYING) {
+            return;
         }
 
         if (!this.source) {
@@ -605,11 +651,6 @@ class SoundInstance extends EventHandler {
         this._currentTime = 0;
         this._currentOffset = offset;
 
-        // set state to playing
-        this._state = STATE_PLAYING;
-        // no need for this anymore
-        this._playWhenLoaded = false;
-
         // Initialize volume and loop - note moved to be after start() because of Chrome bug
         this.volume = this._volume;
         this.loop = this._loop;
@@ -621,15 +662,9 @@ class SoundInstance extends EventHandler {
         this._manager.on('resume', this._onManagerResume, this);
         this._manager.on('destroy', this._onManagerDestroy, this);
 
-        // suspend immediately if manager is suspended
-        if (this._manager.suspended) {
-            this._onManagerSuspend();
-        }
-
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onPlay();
-
-        return true;
+        }
     }
 
     /**
@@ -641,14 +676,19 @@ class SoundInstance extends EventHandler {
         // no need for this anymore
         this._playWhenLoaded = false;
 
-        if (this._state !== STATE_PLAYING || !this.source)
+        if (this._state !== STATE_PLAYING)
             return false;
-
-        // store current time
-        this._updateCurrentTime();
 
         // set state to paused
         this._state = STATE_PAUSED;
+
+        // play() was issued but hasn't actually started yet.
+        if (this._waitingContextSuspension) {
+            return true;
+        }
+
+        // store current time
+        this._updateCurrentTime();
 
         // Stop the source and re-create it because we cannot reuse the same source.
         // Suspend the end event as we are manually stopping the source
@@ -675,6 +715,14 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
+        // set state back to playing
+        this._state = STATE_PLAYING;
+
+        // play() was issued but hasn't actually started yet
+        if (this._waitingContextSuspension) {
+            return true;
+        }
+
         if (!this.source) {
             this._createSource();
         }
@@ -698,9 +746,6 @@ class SoundInstance extends EventHandler {
         } else {
             this.source.start(0, offset);
         }
-
-        // set state back to playing
-        this._state = STATE_PLAYING;
 
         this._startedAt = this._manager.context.currentTime;
         this._currentOffset = offset;
@@ -726,8 +771,17 @@ class SoundInstance extends EventHandler {
     stop() {
         this._playWhenLoaded = false;
 
-        if (this._state === STATE_STOPPED || !this.source)
+        if (this._state === STATE_STOPPED)
             return false;
+
+        // set state to stopped
+        const wasPlaying = this._state === STATE_PLAYING;
+        this._state = STATE_STOPPED;
+
+        // play() was issued but hasn't actually started yet
+        if (this._waitingContextSuspension) {
+            return true;
+        }
 
         // unsubscribe from manager events
         this._manager.off('volumechange', this._onManagerVolumeChange, this);
@@ -743,13 +797,10 @@ class SoundInstance extends EventHandler {
         this._startOffset = null;
 
         this._suspendEndEvent++;
-        if (this._state === STATE_PLAYING) {
+        if (wasPlaying && this.source) {
             this.source.stop(0);
         }
         this.source = null;
-
-        // set the state to stopped
-        this._state = STATE_STOPPED;
 
         if (!this._suspendInstanceEvents)
             this._onStop();

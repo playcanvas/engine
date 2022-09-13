@@ -16,12 +16,13 @@ import {
     STENCILOP_KEEP,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
 } from '../../graphics/constants.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { UniformBuffer } from '../../graphics/uniform-buffer.js';
 import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat } from '../../graphics/bind-group-format.js';
+import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../graphics/bind-group-format.js';
 import { BindGroup } from '../../graphics/bind-group.js';
 import { RenderPass } from '../../graphics/render-pass.js';
 
@@ -72,7 +73,7 @@ const worldMatZ = new Vec3();
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 const tempSphere = new BoundingSphere();
 const boneTextureSize = [0, 0, 0, 0];
-let boneTexture, instancingData, modelMatrix, normalMatrix;
+let boneTexture, instancingData, modelMatrix;
 
 let keyA, keyB;
 
@@ -323,6 +324,7 @@ class ForwardRenderer {
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
             ]);
         }
     }
@@ -414,6 +416,12 @@ class ForwardRenderer {
         // Near and far clip values
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
+
+        if (this.scene.physicalUnits) {
+            this.exposureId.setValue(camera.getExposure());
+        } else {
+            this.exposureId.setValue(this.scene.exposure);
+        }
 
         const n = camera._nearClip;
         const f = camera._farClip;
@@ -566,7 +574,6 @@ class ForwardRenderer {
             }
         }
         this.ambientId.setValue(this.ambientColor);
-        this.exposureId.setValue(scene.exposure);
 
         if (scene.sky) {
             this.skyboxIntensityId.setValue(scene.skyboxIntensity);
@@ -1056,13 +1063,7 @@ class ForwardRenderer {
             this.modelMatrixId.setValue(modelMatrix.data);
 
             if (normal) {
-                normalMatrix = meshInstance.node.normalMatrix;
-                if (meshInstance.node._dirtyNormal) {
-                    modelMatrix.invertTo3x3(normalMatrix);
-                    normalMatrix.transpose();
-                    meshInstance.node._dirtyNormal = false;
-                }
-                this.normalMatrixId.setValue(normalMatrix.data);
+                this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
             }
 
             device.draw(mesh.primitive[style]);
@@ -1479,6 +1480,7 @@ class ForwardRenderer {
                     // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
                     // earlier here. This needs to be refactored for multi-view anyways.
                     this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
+                    this.normalMatrixId.setValue(drawCall.node.normalMatrix.data);
 
                     // update mesh bind group / uniform buffer
                     const meshBindGroup = drawCall.getBindGroup(device, pass);
@@ -2220,11 +2222,6 @@ class ForwardRenderer {
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
-            // Set the not very clever global variable which is only useful when there's just one camera
-            this.scene._activeCamera = camera.camera;
-
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
-
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
                 renderAction.lightClusters.activate(this.lightTextureAtlas);
@@ -2235,6 +2232,11 @@ class ForwardRenderer {
                     WorldClustersDebug.render(renderAction.lightClusters, this.scene);
                 }
             }
+
+            // Set the not very clever global variable which is only useful when there's just one camera
+            this.scene._activeCamera = camera.camera;
+
+            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
 
             // enable flip faces if either the camera has _flipFaces enabled or the render target
             // has flipY enabled

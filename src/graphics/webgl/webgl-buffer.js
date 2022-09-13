@@ -15,6 +15,10 @@ class WebglBuffer {
         }
     }
 
+    get initialized() {
+        return !!this.bufferId;
+    }
+
     loseContext() {
         this.bufferId = null;
     }

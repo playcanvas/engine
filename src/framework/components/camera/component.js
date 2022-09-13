@@ -33,7 +33,10 @@ const properties = [
     { name: 'nearClip', readonly: false },
     { name: 'orthoHeight', readonly: false },
     { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false }
+    { name: 'scissorRect', readonly: false },
+    { name: 'aperture', readonly: false },
+    { name: 'shutter', readonly: false },
+    { name: 'sensitivity', readonly: false }
 ];
 
 /**
@@ -347,6 +350,10 @@ class CameraComponent extends Component {
         return this._camera.layers;
     }
 
+    get layersSet() {
+        return this._camera.layersSet;
+    }
+
     /**
      * The post effects queue for this camera. Use this to add or remove post effects from the camera.
      *
@@ -382,6 +389,45 @@ class CameraComponent extends Component {
      */
     get projectionMatrix() {
         return this._camera.projectionMatrix;
+    }
+
+    /**
+     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
+     *
+     * @type {number}
+     */
+    set aperture(newValue) {
+        this._camera.aperture = newValue;
+    }
+
+    get aperture() {
+        return this._camera.aperture;
+    }
+
+    /**
+     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
+     *
+     * @type {number}
+     */
+    set sensitivity(newValue) {
+        this._camera.sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._camera.sensitivity;
+    }
+
+    /**
+     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
+     *
+     * @type {number}
+     */
+    set shutter(newValue) {
+        this._camera.shutter = newValue;
+    }
+
+    get shutter() {
+        return this._camera.shutter;
     }
 
     /**
@@ -690,6 +736,9 @@ class CameraComponent extends Component {
         this.priority = source.priority;
         this.renderTarget = source.renderTarget;
         this.rect = source.rect;
+        this.aperture = source.aperture;
+        this.sensitivity = source.sensitivity;
+        this.shutter = source.shutter;
     }
 }
 

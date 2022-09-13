@@ -15,7 +15,7 @@ void getAlbedo() {
 #endif
 
 #ifdef MAPTEXTURE
-    vec3 albedoBase = gammaCorrectInput(texture2D(texture_diffuseMap, $UV, textureBias).$CH);
+    vec3 albedoBase = gammaCorrectInput(texture2DBias(texture_diffuseMap, $UV, textureBias).$CH);
     dAlbedo *= addAlbedoDetail(albedoBase);
 #endif
 

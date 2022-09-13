@@ -513,8 +513,6 @@ class ElementInput {
             return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mouseup', event);
     }
@@ -526,8 +524,6 @@ class ElementInput {
             return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousedown', event);
     }
@@ -536,8 +532,6 @@ class ElementInput {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousemove', event);
 
@@ -549,8 +543,6 @@ class ElementInput {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousewheel', event);
     }
@@ -647,19 +639,17 @@ class ElementInput {
 
             // check if touch was released over previously touch
             // element in order to fire click event
-            if (event.touches.length === 0) {
-                const coords = this._calcTouchCoords(touch);
+            const coords = this._calcTouchCoords(touch);
 
-                for (let c = cameras.length - 1; c >= 0; c--) {
-                    const hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
-                    if (hovered === element) {
+            for (let c = cameras.length - 1; c >= 0; c--) {
+                const hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
+                if (hovered === element) {
 
-                        if (!this._clickedEntities[element.entity.getGuid()]) {
-                            this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
-                            this._clickedEntities[element.entity.getGuid()] = true;
-                        }
-
+                    if (!this._clickedEntities[element.entity.getGuid()]) {
+                        this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
+                        this._clickedEntities[element.entity.getGuid()] = true;
                     }
+
                 }
             }
         }
@@ -701,9 +691,9 @@ class ElementInput {
     }
 
     _onElementMouseEvent(eventType, event) {
-        let element;
+        let element = null;
 
-        const hovered = this._hoveredElement;
+        const lastHovered = this._hoveredElement;
         this._hoveredElement = null;
 
         const cameras = this.app.systems.camera.cameras;
@@ -720,21 +710,25 @@ class ElementInput {
                 break;
         }
 
-        // fire mouse event
-        if (element) {
-            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
+        // currently hovered element is whatever's being pointed by mouse (which may be null)
+        this._hoveredElement = element;
 
-            this._hoveredElement = element;
+        // if there was a pressed element, it takes full priority of 'move' and 'up' events
+        if ((eventType === 'mousemove' || eventType === 'mouseup') && this._pressedElement) {
+            this._fireEvent(eventType, new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY));
+        } else if (element) {
+            // otherwise, fire it to the currently hovered event
+            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
 
             if (eventType === 'mousedown') {
                 this._pressedElement = element;
             }
         }
 
-        if (hovered !== this._hoveredElement) {
+        if (lastHovered !== this._hoveredElement) {
             // mouseleave event
-            if (hovered) {
-                this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, camera, targetX, targetY, this._lastX, this._lastY));
+            if (lastHovered) {
+                this._fireEvent('mouseleave', new ElementMouseEvent(event, lastHovered, camera, targetX, targetY, this._lastX, this._lastY));
             }
 
             // mouseenter event
@@ -880,20 +874,8 @@ class ElementInput {
         const rect = this._target.getBoundingClientRect();
         const left = Math.floor(rect.left);
         const top = Math.floor(rect.top);
-
-        // mouse is outside of canvas
-        if (event.clientX < left ||
-            event.clientX >= left + this._target.clientWidth ||
-            event.clientY < top ||
-            event.clientY >= top + this._target.clientHeight) {
-
-            targetX = null;
-            targetY = null;
-        } else {
-            // calculate coords and scale them to the graphicsDevice size
-            targetX = (event.clientX - left);
-            targetY = (event.clientY - top);
-        }
+        targetX = (event.clientX - left);
+        targetY = (event.clientY - top);
     }
 
     _calcTouchCoords(touch) {
@@ -948,6 +930,11 @@ class ElementInput {
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
 
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
+                continue;
+            }
+
             if (element.screen && element.screen.screen.screenSpace) {
                 if (rayScreen === undefined) {
                     rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
@@ -998,6 +985,11 @@ class ElementInput {
 
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
+
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
+                continue;
+            }
 
             if (!element.screen || !element.screen.screen.screenSpace) {
                 if (this._checkElement(rayA, element, false) >= 0) {

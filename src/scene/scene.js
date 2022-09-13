@@ -58,7 +58,7 @@ class Scene extends EventHandler {
     ambientLight = new Color(0, 0, 0);
 
     /**
-     * The exposure value tweaks the overall brightness of the scene. Defaults to 1.
+     * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
      *
      * @type {number}
      */
@@ -151,6 +151,13 @@ class Scene extends EventHandler {
     sky = null;
 
     /**
+     * Use physically based units for cameras and lights. When used, the exposure value is ignored.
+     *
+     * @type {boolean}
+     */
+    physicalUnits = false;
+
+    /**
      * Create a new Scene instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
@@ -216,7 +223,7 @@ class Scene extends EventHandler {
         this._lightmapFilterSmoothness = 0.2;
 
         // clustered lighting
-        this._clusteredLightingEnabled = false;
+        this._clusteredLightingEnabled = true;
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
             this._layers._dirtyLights = true;
         });
@@ -324,10 +331,16 @@ class Scene extends EventHandler {
         return this._ambientBakeSpherePart;
     }
 
+    /**
+     * True if the clustered lighting is enabled. Set to false before the first frame is rendered
+     * to use non-clustered lighting. Defaults to true.
+     *
+     * @type {boolean}
+     */
     set clusteredLightingEnabled(value) {
 
-        if (this._clusteredLightingEnabled && !value) {
-            console.error('Turning off enabled clustered lighting is not currently supported');
+        if (!this._clusteredLightingEnabled && value) {
+            console.error('Turning on disabled clustered lighting is not currently supported');
             return;
         }
 
@@ -432,6 +445,11 @@ class Scene extends EventHandler {
         return this._layers;
     }
 
+    /**
+     * A {@link LightingParams} that defines lighting parameters.
+     *
+     * @type {LightingParams}
+     */
     get lighting() {
         return this._lightingParams;
     }
@@ -647,6 +665,9 @@ class Scene extends EventHandler {
         if (render.skyboxRotation) {
             this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
+
+        this.clusteredLightingEnabled = render.clusteredLightingEnabled;
+        this.lighting.applySettings(render);
 
         // bake settings
         [

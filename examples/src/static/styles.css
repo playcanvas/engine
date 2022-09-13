@@ -342,7 +342,6 @@ body {
     background-color: rgba(54, 67, 70, 0.64);
     backdrop-filter: blur(32px);
     border-radius: 6px;
-    overflow: auto;
     transition: opacity 500ms;
     opacity: 1;
     max-height: calc(100% - 16px);

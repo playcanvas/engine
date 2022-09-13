@@ -7,7 +7,7 @@ void getLightMap() {
     dLightmap = vec3(1.0);
 
     #ifdef MAPTEXTURE
-    dLightmap *= $DECODE(texture2D(texture_lightMap, $UV, textureBias)).$CH;
+    dLightmap *= $DECODE(texture2DBias(texture_lightMap, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

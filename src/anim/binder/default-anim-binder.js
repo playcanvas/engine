@@ -156,6 +156,10 @@ class DefaultAnimBinder {
         let node;
         if (this.graph) {
             node = this.graph.findByPath(path.entityPath);
+            // if the path is not found under the given root node, try to find the path using the root node as the base of the path instead
+            if (!node) {
+                node = this.graph.findByPath(path.entityPath.slice(1));
+            }
         }
         if (!node) {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
