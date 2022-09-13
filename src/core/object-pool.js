@@ -13,6 +13,7 @@ class ObjectPool {
                 this._pool[i] = new this._constructor();
             }
         }
+        this._size = size;
     }
 
     allocate() {
@@ -25,6 +26,7 @@ class ObjectPool {
     freeAll() {
         this._count = 0;
         this._pool = [];
+        this._resize(this._size);
     }
 }
 
