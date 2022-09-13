@@ -23,7 +23,15 @@ const matrix = new Mat4();
 const target = new Vec3();
 const up = new Vec3();
 
-function _createTest(attr, value) {
+/**
+ * Helper function that handles signature overloading to receive a test function.
+ *
+ * @param {Function|string} attr - Attribute or lambda.
+ * @param {*} [value] - Optional value in case of `attr` being a `string`
+ * @returns {Function} Test function that receives a GraphNode and returns a boolean.
+ * @ignore
+ */
+function createTest(attr, value) {
     if (attr instanceof Function) {
         return attr;
     }
@@ -504,7 +512,7 @@ class GraphNode extends EventHandler {
      */
     find(attr, value) {
         const results = [];
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
 
         this.forEach((node) => {
             if (test(node))
@@ -538,7 +546,7 @@ class GraphNode extends EventHandler {
      */
     findDescendants(attr, value) {
         const results = [];
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
 
         this.forEachDescendant((node) => {
             if (test(node))
@@ -572,7 +580,7 @@ class GraphNode extends EventHandler {
      */
     findAncestors(attr, value) {
         const results = [];
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
 
         this.forEachAncestor((node) => {
             if (test(node))
@@ -607,7 +615,7 @@ class GraphNode extends EventHandler {
      * var node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
         const len = this._children.length;
 
         if (test(this))
@@ -646,7 +654,7 @@ class GraphNode extends EventHandler {
      * var node = parent.findDescendant('name', 'Test');
      */
     findDescendant(attr, value) {
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
         const len = this._children.length;
 
         for (let i = 0; i < len; ++i) {
@@ -685,7 +693,7 @@ class GraphNode extends EventHandler {
      * var node = parent.findAncestor('name', 'Test');
      */
     findAncestor(attr, value) {
-        const test = _createTest(attr, value);
+        const test = createTest(attr, value);
 
         let current = this._parent;
         while (current) {
