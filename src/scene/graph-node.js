@@ -26,9 +26,9 @@ const up = new Vec3();
 /**
  * Helper function that handles signature overloading to receive a test function.
  *
- * @param {Function|string} attr - Attribute or lambda.
+ * @param {FindNodeCallback|string} attr - Attribute or lambda.
  * @param {*} [value] - Optional value in case of `attr` being a `string`
- * @returns {Function} Test function that receives a GraphNode and returns a boolean.
+ * @returns {FindNodeCallback} Test function that receives a GraphNode and returns a boolean.
  * @ignore
  */
 function createTest(attr, value) {
