@@ -188,14 +188,14 @@ class SceneRegistry {
             callback(null, sceneItem);
             return;
         }
-        
+
         // include asset prefix if present
         if (app.assets && app.assets.prefix && !ABSOLUTE_URL.test(url)) {
             url = path.join(app.assets.prefix, url);
         }
-        
+
         sceneItem._onLoadedCallbacks.push(callback);
-        
+
         if (!sceneItem._loading) {
             // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
             // Split loading into load and open
@@ -264,7 +264,7 @@ class SceneRegistry {
 
     _addHierarchyToScene(url, data, callback) {
         const app = this._app;
-        
+
         // called after scripts are preloaded
         const _loaded = function () {
             // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
