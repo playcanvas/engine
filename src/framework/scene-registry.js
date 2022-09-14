@@ -382,6 +382,7 @@ class SceneRegistry {
         }
 
         const app = this._app;
+        const self = this;
 
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
