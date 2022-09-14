@@ -158,6 +158,7 @@ class SceneRegistry {
     // This allows us to retain expected behavior of loadSceneSettings and loadSceneHierarchy where they
     // don't store loaded data which may be undesired behavior with projects that have many scenes.
     _loadSceneData(sceneItem, storeInCache, callback) {
+        const app = this._app;
         // If it's a sceneItem, we want to be able to cache the data
         // that is loaded so we don't do a subsequent http requests
         // on the same scene later
@@ -186,19 +187,19 @@ class SceneRegistry {
             callback(null, sceneItem);
             return;
         }
-
-        // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-        // Split loading into load and open
-        const handler = this._app.loader.getHandler("hierarchy");
-
+        
         // include asset prefix if present
-        if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
-            url = path.join(this._app.assets.prefix, url);
+        if (app.assets && app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+            url = path.join(app.assets.prefix, url);
         }
-
+        
         sceneItem._onLoadedCallbacks.push(callback);
-
+        
         if (!sceneItem._loading) {
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+            // Split loading into load and open
+            const handler = app.loader.getHandler("hierarchy");
+
             handler.load(url, function (err, data) {
                 sceneItem.data = data;
                 sceneItem._loading = false;
@@ -261,35 +262,36 @@ class SceneRegistry {
     }
 
     _addHierarchyToScene(url, data, callback) {
-        const self = this;
-
-        // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-        // Split loading into load and open
-        const handler = this._app.loader.getHandler("hierarchy");
-
+        const app = this._app;
+        
         // called after scripts are preloaded
         const _loaded = function () {
-            self._app.systems.script.preloading = true;
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+            // Split loading into load and open
+
+            const handler = app.loader.getHandler("hierarchy");
+
+            app.systems.script.preloading = true;
             const entity = handler.open(url, data);
 
-            self._app.systems.script.preloading = false;
+            app.systems.script.preloading = false;
 
             // clear from cache because this data is modified by entity operations (e.g. destroy)
-            self._app.loader.clearCache(url, "hierarchy");
+            app.loader.clearCache(url, "hierarchy");
 
             // add to hierarchy
-            self._app.root.addChild(entity);
+            app.root.addChild(entity);
 
             // initialize components
-            self._app.systems.fire('initialize', entity);
-            self._app.systems.fire('postInitialize', entity);
-            self._app.systems.fire('postPostInitialize', entity);
+            app.systems.fire('initialize', entity);
+            app.systems.fire('postInitialize', entity);
+            app.systems.fire('postPostInitialize', entity);
 
             if (callback) callback(null, entity);
         };
 
         // load priority and referenced scripts before opening scene
-        self._app._preloadScripts(data, _loaded);
+        app._preloadScripts(data, _loaded);
     }
 
     /**
@@ -341,11 +343,11 @@ class SceneRegistry {
      * });
      */
     loadSceneSettings(sceneItem, callback) {
-        const self = this;
+        const app = this._app;
 
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (!err) {
-                self._app.applySceneSettings(sceneItem.data.settings);
+                app.applySceneSettings(sceneItem.data.settings);
                 if (callback) {
                     callback(null);
                 }
@@ -379,7 +381,7 @@ class SceneRegistry {
             sceneItem = this.find(sceneItem);
         }
 
-        const self = this;
+        const app = this._app;
 
         this._loadSceneData(sceneItem, false, function (err, sceneItem) {
             if (err) {
@@ -391,14 +393,14 @@ class SceneRegistry {
             }
 
             // Destroy/Remove all nodes on the app.root
-            const rootChildren = self._app.root.children;
+            const rootChildren = app.root.children;
             while (rootChildren.length > 0) {
                 const child = rootChildren[0];
                 child.reparent(null);
                 child.destroy?.();
             }
 
-            self._app.applySceneSettings(sceneItem.data.settings);
+            app.applySceneSettings(sceneItem.data.settings);
             self._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
         });
     }
@@ -413,20 +415,21 @@ class SceneRegistry {
      * {@link Scene}.
      */
     loadScene(url, callback) {
+        const app = this._app;
         const self = this;
 
-        const handler = this._app.loader.getHandler("scene");
+        const handler = app.loader.getHandler("scene");
 
         // include asset prefix if present
-        if (this._app.assets && this._app.assets.prefix && !ABSOLUTE_URL.test(url)) {
-            url = path.join(this._app.assets.prefix, url);
+        if (app.assets && app.assets.prefix && !ABSOLUTE_URL.test(url)) {
+            url = path.join(app.assets.prefix, url);
         }
 
         handler.load(url, function (err, data) {
             if (!err) {
                 const _loaded = function () {
                     // parse and create scene
-                    self._app.systems.script.preloading = true;
+                    app.systems.script.preloading = true;
                     const scene = handler.open(url, data);
 
                     // Cache the data as we are loading via URL only
@@ -435,22 +438,22 @@ class SceneRegistry {
                         sceneItem.data = data;
                     }
 
-                    self._app.systems.script.preloading = false;
+                    app.systems.script.preloading = false;
 
                     // clear scene from cache because we'll destroy it when we load another one
                     // so data will be invalid
-                    self._app.loader.clearCache(url, "scene");
+                    app.loader.clearCache(url, "scene");
 
-                    self._app.loader.patch({
+                    app.loader.patch({
                         resource: scene,
                         type: "scene"
-                    }, self._app.assets);
+                    }, app.assets);
 
-                    self._app.root.addChild(scene.root);
+                    app.root.addChild(scene.root);
 
                     // Initialize pack settings
-                    if (self._app.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        self._app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                    if (app.systems.rigidbody && typeof Ammo !== 'undefined') {
+                        app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
 
                     if (callback) {
@@ -459,7 +462,7 @@ class SceneRegistry {
                 };
 
                 // preload scripts before opening scene
-                self._app._preloadScripts(data, _loaded);
+                app._preloadScripts(data, _loaded);
             } else {
                 if (callback) {
                     callback(err);
