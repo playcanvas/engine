@@ -128,8 +128,8 @@ const standard = {
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
+     * @param {object} mapping - The mapping between chunk and sampler
      * @param {string} encoding - The texture's encoding
-     * @param {Object} mapping - The mapping between chunk and sampler
      * @returns {string} The shader code to support this map.
      * @private
      */
