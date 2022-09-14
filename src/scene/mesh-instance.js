@@ -470,6 +470,7 @@ class MeshInstance {
         _worldTransformInverted.copy(this.node.getWorldTransform());
         _worldTransformInverted.invert();
         _transformedRay.set(ray.origin, ray.direction);
+        _transformedRay.transform(_worldTransformInverted);
         _transformedRay.direction.normalize();
         const dist = this._mesh.rayCast(_transformedRay);
         if (dist != null) {

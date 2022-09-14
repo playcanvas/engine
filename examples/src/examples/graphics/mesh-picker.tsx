@@ -52,12 +52,9 @@ class MeshPickerExample {
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-            const cubeEntities: pc.Entity[] = [];
+            app.scene.ambientLight = new pc.Color(0.9, 0.9, 0.9);
 
             const start = new pc.Vec3(5, 5, 5);
-
-            const end = new pc.Vec3(-5, -5, -5);
 
             const direction = new pc.Vec3(-1, -1, -1).normalize();
 
@@ -67,17 +64,13 @@ class MeshPickerExample {
 
             const box = assets.statue.resource.instantiateRenderEntity();
 
-            box.setLocalScale(1, 1, 1);
+            box.setLocalScale(0.5, 0.5, 0.5);
 
             box.setLocalPosition(0, 0, 0);
 
             app.root.addChild(box);
 
-            const boxRender = box.findComponent('render');
-
-            boxRender._meshInstances.forEach((mi) => {
-                mi.rayCast(originRay);
-            });
+            const boxRenders = box.findComponents('render');
 
             // Create an Entity with a camera component
             const camera = new pc.Entity();
@@ -87,41 +80,14 @@ class MeshPickerExample {
             });
             camera.translate(0, 0, 25);
             app.root.addChild(camera);
-
-            // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
-            // app.scene.setSkybox(assets["helipad.dds"].resources);
-            // app.scene.toneMapping = pc.TONEMAP_ACES;
-            // app.scene.skyboxMip = 1;
-
-            new pc.Keyboard(document.body).on(pc.EVENT_KEYDOWN, function (event: any) {
-                if (event.key === 68) {
-                    const o = originRay.direction;
-                    o.add(new pc.Vec3(0, 0.005, 0));
-                    originRay.set(originRay.origin, o);
-                }
-                if (event.key === 71) {
-                    const o = originRay.direction;
-                    o.add(new pc.Vec3(0, -0.005, 0));
-                    originRay.set(originRay.origin, o);
-                }
-            }, this);
-
-            let d = originRay.direction.clone();
-
-            d.normalize();
-
-            let e = originRay.origin.clone();
-
-            d.mulScalar(20);
-
-            e.add(d);
-
             const endLight = createLight(pc.Color.BLUE, 0.5);
+
+            let d;
+
+            let e;
 
             // spin the meshes
             app.on("update", function (dt) {
-
-                let originRay = new pc.Ray(start.clone(), direction.clone());
 
                 d = originRay.direction.clone();
 
@@ -135,10 +101,14 @@ class MeshPickerExample {
 
                 box.rotate(3 * dt, 10 * dt, 6 * dt);
 
-                boxRender._meshInstances.forEach((mi) => {
-                    originRay = new pc.Ray(start.clone(), direction.clone());
-                    e = mi.rayCast(originRay) || e;
-                });
+                boxRenders.forEach((render) => render._meshInstances.forEach((mi) => {
+                    let p =  mi.rayCast(originRay);
+                    if (p && p.distance(originRay.origin) < e.distance(originRay.origin)) {
+                        e.copy(p);
+                    }
+                }
+
+                ));
 
                 app.drawLine(originRay.origin, e);
 

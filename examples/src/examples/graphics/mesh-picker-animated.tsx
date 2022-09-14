@@ -59,13 +59,13 @@ class MeshPickerAnimatedExample {
 
             const rayMap : any = [];
 
-            const numRays = 100;
+            const numRays = 50;
 
             const radius = 5;
 
             const height = -5;
 
-            const center = new pc.Vec3(-3, 5, -2);
+            const center = new pc.Vec3(-4, 5, -3);
 
             for (let i = 0; i < numRays; i++) {
                 const start = center.clone();
@@ -89,7 +89,7 @@ class MeshPickerAnimatedExample {
 
             const rayMap2 : any = [];
 
-            const numRays2 = 100;
+            const numRays2 = 50;
 
             const radius2 = 7;
 
@@ -249,6 +249,8 @@ class MeshPickerAnimatedExample {
                 // update the mesh
                 updateMesh(mesh);
 
+                const start = performance.now();
+
                 for (let i = 0; i < numRays; i++) {
                     e = rayMap[i].endLight.position.clone();
 
@@ -268,6 +270,8 @@ class MeshPickerAnimatedExample {
 
                     rayMap2[i].endLight.setPosition(e);
                 }
+
+                const end = performance.now() - start;
 
             });
 

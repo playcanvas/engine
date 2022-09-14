@@ -181,8 +181,9 @@ class Mesh extends RefCountedObject {
         super();
         this.id = id++;
         this.device = graphicsDevice || getApplication().graphicsDevice;
-        this.points = null;
-        this.triangles = null;
+        this.dirtyBVH = true;
+        this.triangles = [];
+        this.points = [];
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -243,9 +244,6 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
-
-        // triangles array
-        this.triangles = null;
 
         // BVH
         this.bvh = null;
@@ -853,10 +851,7 @@ class Mesh extends RefCountedObject {
             // update other render states
             this.updateRenderStates();
 
-            if (this.bvh) {
-                this.buildTriangleArray();
-                this.bvh.RefitBVH(this.triangles);
-            }
+            this.dirtyBVH = true;
         }
     }
 
@@ -1000,13 +995,17 @@ class Mesh extends RefCountedObject {
         this.indexBuffer[RENDERSTYLE_WIREFRAME] = wireBuffer;
     }
 
+    /**
+     * Builds the array of triangles of the mesh
+     */
     buildTriangleArray() {
-        const triangles = [];
+        const triangles = this.triangles;
         const positions = [];
         const indices = [];
         const numPositions = this.getPositions(positions);
         const numIndices = this.getIndices(indices);
-        const points = [];
+        const points = this.points;
+        const numTriangles = numIndices / 3;
 
         if (points.length === 0) {
             let j = 0;
@@ -1024,25 +1023,26 @@ class Mesh extends RefCountedObject {
             }
         }
 
+
         if (triangles.length === 0) {
             let j = 0;
-            for (let i = 0; i < numIndices / 3; i++) {
+            for (let i = 0; i < numTriangles; i++) {
                 const triangle = new Tri(points[indices[j]], points[indices[j + 1]], points[indices[j + 2]]);
                 triangles.push(triangle);
                 j += 3;
             }
         } else {
             let j = 0;
-            for (let i = 0; i < numIndices / 3; i++) {
+            for (let i = 0; i < numTriangles; i++) {
                 const triangle = triangles[i];
-                triangle.vertex0.set(points[indices[j]].x, points[indices[j]].y, points[indices[j]].z);
-                triangle.vertex1.set(points[indices[j + 1]].x, points[indices[j + 1]].y, points[indices[j + 1]].z);
-                triangle.vertex2.set(points[indices[j + 2]].x, points[indices[j + 2]].y, points[indices[j + 2]].z);
+                triangle.vertex0.copy(points[indices[j]]);
+                triangle.vertex1.copy(points[indices[j + 1]]);
+                triangle.vertex2.copy(points[indices[j + 2]]);
+                triangle.resetEdges();
                 j += 3;
             }
         }
 
-        this.triangles = triangles;
     }
 
     /**
@@ -1051,9 +1051,18 @@ class Mesh extends RefCountedObject {
      */
     rayCast(ray) {
 
+        // if the BVH doesn't exist, build it
         if (!this.bvh) {
             this.buildTriangleArray();
             this.bvh = new BVHGlobal(this.triangles);
+        }
+
+
+        // Rebuild triangles and refit the BVH if the mesh has been altered
+        if (this.dirtyBVH) {
+            this.buildTriangleArray();
+            this.bvh.RefitBVH(this.triangles);
+            this.dirtyBVH = false;
         }
 
         this.bvh.minDist = null;

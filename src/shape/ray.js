@@ -55,15 +55,14 @@ class Ray {
     }
 
     /**
-     * Transforms the ray to a new space via Matrix
+     * Transforms the ray to a new space via Matrix in-place
      *
      * @param {Mat4} matrix - The transformation matrix for the ray
-     * @returns {Ray} The transformed ray
      */
     transform(matrix) {
         const newOrigin = matrix.transformPoint(this.origin);
         const newDirection = matrix.transformVector(this.direction);
-        return new Ray(newOrigin, newDirection);
+        this.set(newOrigin, newDirection);
     }
 }
 
