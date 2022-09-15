@@ -14,9 +14,9 @@ class Tri {
     /**
      * Creates a new Triangle Object.
      *
-     * @param {Vec3} [vertex0] - Vertex 0 value
-     * @param {Vec3} [vertex1] - Vertex 1 value
-     * @param {Vec3} [vertex2] - Vertex 2 value
+     * @param {Vec3} vertex0 - Vertex 0 value
+     * @param {Vec3} vertex1 - Vertex 1 value
+     * @param {Vec3} vertex2 - Vertex 2 value
      * @param {Vec3} [centroid] - Centroid value
      */
 
@@ -42,7 +42,7 @@ class Tri {
      * and returns the distance between the ray origin
      * and intersection point if there is an intersection.
      *
-     * @param {Ray} [ray] - Ray to interect triangle with
+     * @param {Ray} ray - Ray to interect triangle with
      * @returns {number} Distance between ray origin and intersection
      */
     intersectWithRay(ray) {

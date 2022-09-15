@@ -76,7 +76,7 @@ class BVHGlobal {
     /**
      * Updates the bounds of a leaf bvh node
      *
-     * @param {number} [nodeIdx] - The node to be updated
+     * @param {number} nodeIdx - The node to be updated
      * @ignore
      */
     updateNodeBounds(nodeIdx) {
@@ -99,11 +99,11 @@ class BVHGlobal {
     }
 
     /**
-     * Evaluates the surface area heuristic of a split in the BVH
+     * Evaluates the surface area heuristic of a split in the BVH - Not used currently
      *
-     * @param {BVHNode} [node] - The node at which the split is to be evaluated
-     * @param {number} [axis] - The axis to divide along
-     * @param {number} [pos] - The position to divide at
+     * @param {BVHNode} node - The node at which the split is to be evaluated
+     * @param {number} axis - The axis to divide along
+     * @param {number} pos - The position to divide at
      * @returns {number} The cost of the split
      * @ignore
      */
@@ -135,7 +135,7 @@ class BVHGlobal {
     /**
      * Finds the best split plane to split along at a particular node
      *
-     * @param {object} [splitDetails] - The object to assign the details of the most optimal split to,
+     * @param {object} splitDetails - The object to assign the details of the most optimal split to,
      * also contains the node to split at
      * @returns {number} The cost of the most optimal split
      * @ignore
@@ -204,7 +204,7 @@ class BVHGlobal {
     /**
      * Calculates the estimated cost of raycasting through a node
      *
-     * @param {BVHNode} [node] - The node to be evaluated
+     * @param {BVHNode} node - The node to be evaluated
      * @returns {number} The cost of the raycast
      * @ignore
      */
@@ -220,7 +220,7 @@ class BVHGlobal {
     /**
      * Subdivides the BVH on a node
      *
-     * @param {number} [nodeIdx] - The index of the node to subdivide at
+     * @param {number} nodeIdx - The index of the node to subdivide at
      * @ignore
      */
     Subdivide(nodeIdx) {
@@ -316,7 +316,7 @@ class BVHGlobal {
     /**
      * Refits the BVH
      *
-     * @param {Tri[]} [triangles] - The triangles to refit the BVH on
+     * @param {Tri[]} triangles - The triangles to refit the BVH on
      * @ignore
      */
     refitBVH(triangles) {
@@ -341,8 +341,8 @@ class BVHGlobal {
     /**
      * Calculates the shortest distance between the origin of a ray and its intersection with the mesh
      *
-     * @param {Ray} [ray] - The ray to be traced
-     * @param {number} [nodeIdx] - The index of the node to begin the raycast at (default is zero: the root)
+     * @param {Ray} ray - The ray to be traced
+     * @param {number} nodeIdx - The index of the node to begin the raycast at (default is zero: the root)
      * @ignore
      */
     intersectBVH(ray, nodeIdx = 0) {
@@ -396,10 +396,11 @@ class BVHGlobal {
 
     /**
      * Calculates whether a ray intersects an aabb and returns the distance between the ray origin and aabb if it does
+     * Ray.rdx, rdy and rdz must be calculated prior to this
      *
-     * @param {Ray} [ray] - The ray to be traced
-     * @param {Vec3} [bmin] - The min corner of the aabb
-     * @param {Vec3} [bmax] - The max corner of the aabb
+     * @param {Ray} ray - The ray to be traced
+     * @param {Vec3} bmin - The min corner of the aabb
+     * @param {Vec3} bmax - The max corner of the aabb
      * @returns {number} The distance between the ray origin and the aabb, Infinity if there is no intersection
      * @ignore
      */
@@ -427,8 +428,8 @@ class BVHGlobal {
 /**
  * Returns a vector with the minimum x, y and z coordinates of the two vectors passed in
  *
- * @param {Vec3} [a] - First Vector
- * @param {Vec3} [b] - Second Vector
+ * @param {Vec3} a - First Vector
+ * @param {Vec3} b - Second Vector
  * @param {Vec3} [c] - The vector to output the result to - default is new Vec3()
  * @returns {Vec3} Returns the vector result
  * @ignore
@@ -441,8 +442,8 @@ function vec3Min(a, b, c = new Vec3()) {
 /**
  * Returns a vector with the maximum x, y and z coordinates of the two vectors passed in
  *
- * @param {Vec3} [a] - First Vector
- * @param {Vec3} [b] - Second Vector
+ * @param {Vec3} a - First Vector
+ * @param {Vec3} b - Second Vector
  * @param {Vec3} [c] - The vector to output the result to - default is new Vec3()
  * @returns {Vec3} Returns the vector result
  * @ignore
