@@ -145,7 +145,7 @@ class UsdzExporter {
         this.addFile(null, ROOT_FILE_NAME, '', rootContent);
 
         // process requested textures
-        const textureArray = [...this.textureMap.keys()];
+        const textureArray = Array.from(this.textureMap.keys());
         const promises = [];
         for (let i = 0; i < textureArray.length; i++) {
 
