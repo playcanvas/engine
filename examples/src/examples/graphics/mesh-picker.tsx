@@ -14,7 +14,7 @@ class MeshPickerExample {
             'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
             'cube': new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
-            'house': new pc.Asset('house', 'container', {url: '/static/assets/models/house.glb'})
+            'house': new pc.Asset('house', 'container', { url: '/static/assets/models/house.glb' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -84,7 +84,7 @@ class MeshPickerExample {
 
             let d;
 
-            let e;
+            let e : any;
 
             // spin the meshes
             app.on("update", function (dt) {
@@ -101,8 +101,8 @@ class MeshPickerExample {
 
                 box.rotate(3 * dt, 10 * dt, 6 * dt);
 
-                boxRenders.forEach((render) => render._meshInstances.forEach((mi) => {
-                    let p =  mi.rayCast(originRay);
+                boxRenders.forEach((render : any) => render._meshInstances.forEach((mi : any) => {
+                    const p =  mi.rayCast(originRay);
                     if (p && p.distance(originRay.origin) < e.distance(originRay.origin)) {
                         e.copy(p);
                     }

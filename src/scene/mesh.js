@@ -1061,12 +1061,12 @@ class Mesh extends RefCountedObject {
         // Rebuild triangles and refit the BVH if the mesh has been altered
         if (this.dirtyBVH) {
             this.buildTriangleArray();
-            this.bvh.RefitBVH(this.triangles);
+            this.bvh.refitBVH(this.triangles);
             this.dirtyBVH = false;
         }
 
         this.bvh.minDist = null;
-        this.bvh.IntersectBVH(ray, 0);
+        this.bvh.intersectBVH(ray, 0);
 
         return this.bvh.minDist;
     }

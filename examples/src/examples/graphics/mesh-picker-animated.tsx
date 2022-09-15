@@ -199,7 +199,7 @@ class MeshPickerAnimatedExample {
             material.update();
 
             // Create the mesh instance
-            const meshInstance = new pc.MeshInstance(mesh, material);
+            const meshInstance : any = new pc.MeshInstance(mesh, material);
 
             // Create the entity with render component using meshInstances
             const entity = new pc.Entity();

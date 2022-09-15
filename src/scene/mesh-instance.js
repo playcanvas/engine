@@ -463,7 +463,7 @@ class MeshInstance {
      * Performs a raycast with a given ray against the mesh
      *
      * @param {Ray} ray - the ray to perform the intersect test with
-     * @returns {Vec3} Null if there is no intersection or the point of intersection 
+     * @returns {Vec3} Null if there is no intersection or the point of intersection
      * in world space
      */
     rayCast(ray) {
