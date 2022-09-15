@@ -122,7 +122,7 @@ class StandardMaterialOptionsBuilder {
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notBlack(stdMat.specular) || stdMat.specularityFactor > 0 ||
+                            notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
