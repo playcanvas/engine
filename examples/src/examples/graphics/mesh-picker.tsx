@@ -54,7 +54,7 @@ class MeshPickerExample {
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
             app.scene.ambientLight = new pc.Color(0.9, 0.9, 0.9);
 
-            const start = new pc.Vec3(5, 5, 5);
+            const start = new pc.Vec3(10, 10, 10);
 
             const direction = new pc.Vec3(-1, -1, -1).normalize();
 
@@ -64,9 +64,9 @@ class MeshPickerExample {
 
             const box = assets.statue.resource.instantiateRenderEntity();
 
-            box.setLocalScale(0.5, 0.5, 0.5);
+            // box.setLocalScale(10, 10, 10);
 
-            box.setLocalPosition(0, 0, 0);
+            // box.setLocalPosition(0, 0, 0);
 
             app.root.addChild(box);
 
@@ -101,7 +101,7 @@ class MeshPickerExample {
 
                 box.rotate(3 * dt, 10 * dt, 6 * dt);
 
-                boxRenders.forEach((render : any) => render._meshInstances.forEach((mi : any) => {
+                boxRenders.forEach((render) => render._meshInstances.forEach((mi) => {
                     const p =  mi.rayCast(originRay);
                     if (p && p.distance(originRay.origin) < e.distance(originRay.origin)) {
                         e.copy(p);

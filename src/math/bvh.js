@@ -346,9 +346,6 @@ class BVHGlobal {
      * @ignore
      */
     intersectBVH(ray, nodeIdx = 0) {
-        ray.rDx = 1 / ray.direction.x;
-        ray.rDy = 1 / ray.direction.y;
-        ray.rDz = 1 / ray.direction.z;
 
         let node = this.bvhNode[nodeIdx];
         const stack = [];
@@ -405,6 +402,9 @@ class BVHGlobal {
      * @ignore
      */
     intersectAABB(ray, bmin, bmax) {
+        ray.rDx = 1 / ray.direction.x;
+        ray.rDy = 1 / ray.direction.y;
+        ray.rDz = 1 / ray.direction.z;
         const tx1 = (bmin.x - ray.origin.x) * ray.rDx;
         const tx2 = (bmax.x - ray.origin.x) * ray.rDx;
         let tmin = Math.min(tx1, tx2);

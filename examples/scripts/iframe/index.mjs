@@ -34,6 +34,10 @@ function buildExample(category, filename) {
         "utf8"
     );
 
+    if (filename === '.DS_Store') {
+        return;
+    }
+
     const exampleClass = formatters.getExampleClassFromTextFile(Babel, exampleString);
     if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/${category}/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/${category}/`);

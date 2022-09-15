@@ -119,10 +119,10 @@ class MeshPickerAnimatedExample {
 
             // create 4 lights that will move in the scene and deform the mesh as well
             const lights = [
-                { radius: 7, speed: 1.0, scale: 2.5, light: createLight(new pc.Color(0.3, 0.9, 0.6), 1.0, false) },
-                { radius: 3, speed: 1.2, scale: 3.0, light: createLight(new pc.Color(0.7, 0.2, 0.3), 1.3, false) },
-                { radius: 5, speed: -0.8, scale: 4.0, light: createLight(new pc.Color(0.2, 0.2, 0.9), 1.5, false) },
-                { radius: 4, speed: -0.3, scale: 5.5, light: createLight(new pc.Color(0.8, 0.9, 0.4), 1.7, false) }
+                { radius: 7, speed: 1.0, scale: 2.5 },
+                { radius: 3, speed: 1.2, scale: 3.0 },
+                { radius: 5, speed: -0.8, scale: 4.0 },
+                { radius: 4, speed: -0.3, scale: 5.5 }
             ];
 
             // Create an Entity with a camera component
@@ -220,7 +220,6 @@ class MeshPickerAnimatedExample {
                     const element = lights[l];
                     const lightPos = new pc.Vec2(element.radius * Math.sin(time * element.speed), element.radius * Math.cos(time * element.speed));
                     lightPositions.push(lightPos);
-                    element.light.setLocalPosition(lightPos.x, 3, lightPos.y);
                 }
 
                 // animate .y coordinate of grid vertices by moving them up when lights are close
