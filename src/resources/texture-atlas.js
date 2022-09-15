@@ -13,33 +13,47 @@ import {
 
 import { TextureAtlas } from '../scene/texture-atlas.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+
 const JSON_ADDRESS_MODE = {
-    "repeat": ADDRESS_REPEAT,
-    "clamp": ADDRESS_CLAMP_TO_EDGE,
-    "mirror": ADDRESS_MIRRORED_REPEAT
+    'repeat': ADDRESS_REPEAT,
+    'clamp': ADDRESS_CLAMP_TO_EDGE,
+    'mirror': ADDRESS_MIRRORED_REPEAT
 };
 
 const JSON_FILTER_MODE = {
-    "nearest": FILTER_NEAREST,
-    "linear": FILTER_LINEAR,
-    "nearest_mip_nearest": FILTER_NEAREST_MIPMAP_NEAREST,
-    "linear_mip_nearest": FILTER_LINEAR_MIPMAP_NEAREST,
-    "nearest_mip_linear": FILTER_NEAREST_MIPMAP_LINEAR,
-    "linear_mip_linear": FILTER_LINEAR_MIPMAP_LINEAR
+    'nearest': FILTER_NEAREST,
+    'linear': FILTER_LINEAR,
+    'nearest_mip_nearest': FILTER_NEAREST_MIPMAP_NEAREST,
+    'linear_mip_nearest': FILTER_LINEAR_MIPMAP_NEAREST,
+    'nearest_mip_linear': FILTER_NEAREST_MIPMAP_LINEAR,
+    'linear_mip_linear': FILTER_LINEAR_MIPMAP_LINEAR
 };
 
 const regexFrame = /^data\.frames\.(\d+)$/;
 
 /**
- * @class
- * @name TextureAtlasHandler
+ * Resource handler used for loading {@link TextureAtlas} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link TextureAtlas} resources.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class TextureAtlasHandler {
-    constructor(loader) {
-        this._loader = loader;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "textureatlas";
+
+    /**
+     * Create a new TextureAtlasHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this._loader = app.loader;
         this.maxRetries = 0;
     }
 
@@ -53,7 +67,7 @@ class TextureAtlasHandler {
         }
 
         const self = this;
-        const handler = this._loader.getHandler("texture");
+        const handler = this._loader.getHandler('texture');
 
         // if supplied with a json file url (probably engine-only)
         // load json data then load texture of same name
@@ -65,7 +79,7 @@ class TextureAtlasHandler {
                 if (!err) {
                     // load texture
                     const textureUrl = url.original.replace('.json', '.png');
-                    self._loader.load(textureUrl, "texture", function (err, texture) {
+                    self._loader.load(textureUrl, 'texture', function (err, texture) {
                         if (err) {
                             callback(err);
                         } else {
@@ -91,7 +105,7 @@ class TextureAtlasHandler {
             resource.texture = data.texture;
             resource.__data = data.data; // store data temporarily to be copied into asset
         } else {
-            const handler = this._loader.getHandler("texture");
+            const handler = this._loader.getHandler('texture');
             const texture = handler.open(url, data);
             if (!texture) return null;
             resource.texture = texture;
@@ -100,6 +114,11 @@ class TextureAtlasHandler {
     }
 
     patch(asset, assets) {
+        // during editor update the underlying texture is temporarily null. just return in that case.
+        if (!asset.resource) {
+            return;
+        }
+
         if (asset.resource.__data) {
             // engine-only, so copy temporary asset data from texture atlas into asset and delete temp property
             if (asset.resource.__data.minfilter !== undefined) asset.data.minfilter = asset.resource.__data.minfilter;

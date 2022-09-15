@@ -7,19 +7,24 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = ['enabled'];
 
-var MAX_ITERATIONS = 100;
+const MAX_ITERATIONS = 100;
 
 /**
- * @class
- * @name LayoutGroupComponentSystem
+ * Manages creation of {@link LayoutGroupComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutGroupComponentSystem.
- * @classdesc Manages creation of {@link LayoutGroupComponent}s.
- * @param {Application} app - The application.
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutGroupComponentSystem instance.
+     *
+     * @param {AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -35,7 +40,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         this.on('beforeremove', this._onRemoveComponent, this);
 
         // Perform reflow when running in the engine
-        ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -44,40 +49,13 @@ class LayoutGroupComponentSystem extends ComponentSystem {
         if (data.reverseX !== undefined) component.reverseX = data.reverseX;
         if (data.reverseY !== undefined) component.reverseY = data.reverseY;
         if (data.alignment !== undefined) {
-            if (data.alignment instanceof Vec2) {
-                component.alignment.copy(data.alignment);
-            } else {
-                component.alignment.set(data.alignment[0], data.alignment[1]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.alignment = component.alignment;
-            /* eslint-enable no-self-assign */
+            component.alignment = Array.isArray(data.alignment) ? new Vec2(data.alignment) : data.alignment;
         }
         if (data.padding !== undefined) {
-            if (data.padding instanceof Vec4) {
-                component.padding.copy(data.padding);
-            } else {
-                component.padding.set(data.padding[0], data.padding[1], data.padding[2], data.padding[3]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.padding = component.padding;
-            /* eslint-enable no-self-assign */
+            component.padding = Array.isArray(data.padding) ? new Vec4(data.padding) : data.padding;
         }
         if (data.spacing !== undefined) {
-            if (data.spacing instanceof Vec2) {
-                component.spacing.copy(data.spacing);
-            } else {
-                component.spacing.set(data.spacing[0], data.spacing[1]);
-            }
-
-            /* eslint-disable no-self-assign */
-            // force update
-            component.spacing = component.spacing;
-            /* eslint-enable no-self-assign */
+            component.spacing = Array.isArray(data.spacing) ? new Vec2(data.spacing) : data.spacing;
         }
         if (data.widthFitting !== undefined) component.widthFitting = data.widthFitting;
         if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
@@ -87,7 +65,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var layoutGroup = entity.layoutgroup;
+        const layoutGroup = entity.layoutgroup;
 
         return this.addComponent(clone, {
             enabled: layoutGroup.enabled,
@@ -118,13 +96,13 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             return;
         }
 
-        var iterationCount = 0;
+        let iterationCount = 0;
 
         while (this._reflowQueue.length > 0) {
             // Create a copy of the queue to sort and process. If processing the reflow of any
             // layout groups results in additional groups being pushed to the queue, they will
             // be processed on the next iteration of the while loop.
-            var queue = this._reflowQueue.slice();
+            const queue = this._reflowQueue.slice();
             this._reflowQueue.length = 0;
 
             // Sort in ascending order of depth within the graph (i.e. outermost first), so that
@@ -134,7 +112,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
                 return (componentA.entity.graphDepth - componentB.entity.graphDepth);
             });
 
-            for (var i = 0; i < queue.length; ++i) {
+            for (let i = 0; i < queue.length; ++i) {
                 queue[i].reflow();
             }
 
@@ -147,6 +125,12 @@ class LayoutGroupComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 

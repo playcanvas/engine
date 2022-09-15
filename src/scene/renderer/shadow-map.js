@@ -80,6 +80,20 @@ class ShadowMap {
         return shadowMap;
     }
 
+    // creates a shadow map which is used by the light texture atlas for clustered lighting
+    static createAtlas(device, resolution, shadowType) {
+        const shadowMap = this.create2dMap(device, resolution, shadowType);
+
+        // copy the target 5 more times to allow unified access for point light faces
+        const targets = shadowMap.renderTargets;
+        const rt = targets[0];
+        for (let i = 0; i < 5; i++) {
+            targets.push(rt);
+        }
+
+        return shadowMap;
+    }
+
     static create2dMap(device, size, shadowType) {
 
         const format = this.getShadowFormat(device, shadowType);
@@ -96,12 +110,14 @@ class ShadowMap {
             minFilter: filter,
             magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMap2D'
         });
-        texture.name = 'ShadowMap2D';
 
         let target = null;
         if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2)) {
+
+            // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
             texture.compareFunc = FUNC_LESS;
 
@@ -133,9 +149,9 @@ class ShadowMap {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMapCube'
         });
-        cubemap.name = 'ShadowMapCube';
 
         const targets = [];
         for (let i = 0; i < 6; i++) {

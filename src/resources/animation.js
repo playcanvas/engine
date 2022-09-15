@@ -6,17 +6,27 @@ import { Vec3 } from '../math/vec3.js';
 import { http, Http } from '../net/http.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
+import { AnimEvents } from '../anim/evaluator/anim-events.js';
 
 import { GlbParser } from '../resources/parser/glb-parser.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name AnimationHandler
+ * Resource handler used for loading {@link Animation} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Animation} resources.
  */
 class AnimationHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animation";
+
+    /** @hideconstructor */
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -44,24 +54,32 @@ class AnimationHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error loading animation resource: " + url.original + " [" + err + "]");
+                callback(`Error loading animation resource: ${url.original} [${err}]`);
             } else {
                 callback(null, response);
             }
         });
     }
 
-    open(url, data) {
+    open(url, data, asset) {
         if (path.getExtension(url).toLowerCase() === '.glb') {
-            const glbResources = GlbParser.parse("filename.glb", data, null);
+            const glbResources = GlbParser.parse('filename.glb', data, null);
             if (glbResources) {
                 const animations = glbResources.animations;
+                if (asset?.data?.events) {
+                    for (let i = 0; i < animations.length; i++) {
+                        animations[i].events = new AnimEvents(Object.values(asset.data.events));
+                    }
+                }
                 glbResources.destroy();
                 return animations;
             }
             return null;
         }
-        return this["_parseAnimationV" + data.animation.version](data);
+        return this['_parseAnimationV' + data.animation.version](data);
+    }
+
+    patch(asset, assets) {
     }
 
     _parseAnimationV3(data) {

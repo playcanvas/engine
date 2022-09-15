@@ -1,46 +1,68 @@
 import { path } from '../../../core/path.js';
 import { http } from '../../../net/http.js';
 
-import { PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET } from '../../../graphics/constants.js';
+import {
+    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET
+} from '../../../graphics/constants.js';
 import { Texture } from '../../../graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 
+/** @typedef {import('../../texture.js').TextureParser} TextureParser */
+
 /**
- * @private
- * @class
- * @name ImgParser
+ * Parser for browser-supported image formats.
+ *
  * @implements {TextureParser}
- * @classdesc Parser for browser-supported image formats.
+ * @ignore
  */
 class ImgParser {
-    constructor(registry) {
+    constructor(registry, device) {
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
-        // As of today (9 Jul 2021) ImageBitmap only works on Chrome:
-        // - Firefox doesn't support options parameter to createImageBitmap (see https://bugzilla.mozilla.org/show_bug.cgi?id=1533680)
-        // - Safari supports ImageBitmap only as experimental feature.
-        this.useImageBitmap = false && typeof ImageBitmap !== 'undefined' && /Firefox/.test(navigator.userAgent) === false;
+        this.device = device;
     }
 
     load(url, callback, asset) {
+        const hasContents = !!asset?.file?.contents;
+
+        if (hasContents) {
+            // ImageBitmap interface can load iage
+            if (this.device.supportsImageBitmap) {
+                this._loadImageBitmapFromData(asset.file.contents, callback);
+                return;
+            }
+            url = {
+                load: URL.createObjectURL(new Blob([asset.file.contents])),
+                original: url.original
+            };
+        }
+
+        const handler = (err, result) => {
+            if (hasContents) {
+                URL.revokeObjectURL(url.load);
+            }
+            callback(err, result);
+        };
+
         let crossOrigin;
         if (asset && asset.options && asset.options.hasOwnProperty('crossOrigin')) {
             crossOrigin = asset.options.crossOrigin;
         } else if (ABSOLUTE_URL.test(url.load)) {
             crossOrigin = this.crossOrigin;
         }
-        if (this.useImageBitmap) {
-            this._loadImageBitmap(url.load, url.original, crossOrigin, callback);
+
+        if (this.device.supportsImageBitmap) {
+            this._loadImageBitmap(url.load, url.original, crossOrigin, handler);
         } else {
-            this._loadImage(url.load, url.original, crossOrigin, callback);
+            this._loadImage(url.load, url.original, crossOrigin, handler);
         }
     }
 
     open(url, data, device) {
         const ext = path.getExtension(url).toLowerCase();
-        const format = (ext === ".jpg" || ext === ".jpeg") ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
+        const format = (ext === '.jpg' || ext === '.jpeg') ? PIXELFORMAT_R8_G8_B8 : PIXELFORMAT_R8_G8_B8_A8;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -75,7 +97,7 @@ class ImgParser {
 
             if (maxRetries > 0 && ++retries <= maxRetries) {
                 const retryDelay = Math.pow(2, retries) * 100;
-                console.log("Error loading Texture from: '" + originalUrl + "' - Retrying in " + retryDelay + "ms...");
+                console.log(`Error loading Texture from: '${originalUrl}' - Retrying in ${retryDelay}ms...`);
 
                 const idx = url.indexOf('?');
                 const separator = idx >= 0 ? '&' : '?';
@@ -88,7 +110,7 @@ class ImgParser {
                 }, retryDelay);
             } else {
                 // Call error callback with details.
-                callback("Error loading Texture from: '" + originalUrl + "'");
+                callback(`Error loading Texture from: '${originalUrl}'`);
             }
         };
 
@@ -98,7 +120,7 @@ class ImgParser {
     _loadImageBitmap(url, originalUrl, crossOrigin, callback) {
         const options = {
             cache: true,
-            responseType: "blob",
+            responseType: 'blob',
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
@@ -109,14 +131,16 @@ class ImgParser {
                 createImageBitmap(blob, {
                     premultiplyAlpha: 'none'
                 })
-                    .then(function (imageBitmap) {
-                        callback(null, imageBitmap);
-                    })
-                    .catch(function (e) {
-                        callback(e);
-                    });
+                    .then(imageBitmap => callback(null, imageBitmap))
+                    .catch(e => callback(e));
             }
         });
+    }
+
+    _loadImageBitmapFromData(data, callback) {
+        createImageBitmap(new Blob([data]), { premultiplyAlpha: 'none' })
+            .then(imageBitmap => callback(null, imageBitmap))
+            .catch(e => callback(e));
     }
 }
 

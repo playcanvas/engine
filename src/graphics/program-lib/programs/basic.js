@@ -7,7 +7,7 @@ import {
     SHADER_DEPTH, SHADER_PICK
 } from '../../../scene/constants.js';
 
-import { begin, end, fogCode, precisionCode, skinCode } from './common.js';
+import { vertexIntro, fragmentIntro, begin, end, fogCode, skinCode } from './common.js';
 
 const basic = {
     generateKey: function (options) {
@@ -45,7 +45,7 @@ const basic = {
         }
 
         // GENERATE VERTEX SHADER
-        let code = '';
+        let code = vertexIntro(device, 'BasicShader', options.pass);
 
         // VERTEX SHADER DECLARATIONS
         code += shaderChunks.transformDeclVS;
@@ -99,7 +99,7 @@ const basic = {
         const vshader = code;
 
         // GENERATE FRAGMENT SHADER
-        code = precisionCode(device);
+        code = fragmentIntro(device, 'BasicMaterial', options.pass);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -114,7 +114,7 @@ const basic = {
         if (options.fog) {
             code += fogCode(options.fog);
         }
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += shaderChunks.alphaTestPS;
         }
 
@@ -137,7 +137,7 @@ const basic = {
             code += '    gl_FragColor *= texture2D(texture_diffuseMap, vUv0);\n';
         }
 
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 

@@ -1,10 +1,16 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
+import { BUFFER_STATIC, CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
-import { VertexIterator } from './vertex-iterator.js';
+import { DebugGraphics } from './debug-graphics.js';
+import { DeviceCache } from './device-cache.js';
+
+/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('./shader.js').Shader} Shader */
+/** @typedef {import('./texture.js').Texture} Texture */
 
 // Draws shaded full-screen quad in a single call
-let _postEffectQuadVB = null;
 const _postEffectQuadDraw = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
@@ -12,36 +18,39 @@ const _postEffectQuadDraw = {
     indexed: false
 };
 
-/**
- * @function
- * @name drawQuadWithShader
- * @description Draws a screen-space quad using a specific shader. Mostly used by post-effects.
- * @param {GraphicsDevice} device - The graphics device used to draw the quad.
- * @param {RenderTarget|undefined} target - The destination render target. If undefined, target is the frame buffer.
- * @param {Shader} shader - The shader used for rendering the quad. Vertex shader should contain `attribute vec2 vertex_position`.
- * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
- */
-function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
-    if (_postEffectQuadVB === null) {
+// Device cache storing a quad vertex buffer
+const postEffectDeviceCache = new DeviceCache();
+
+function getPostEffectQuadVB(device) {
+    return postEffectDeviceCache.get(device, () => {
         const vertexFormat = new VertexFormat(device, [{
             semantic: SEMANTIC_POSITION,
             components: 2,
             type: TYPE_FLOAT32
         }]);
-        _postEffectQuadVB = new VertexBuffer(device, vertexFormat, 4);
+        const positions = new Float32Array(8);
+        positions.set([-1, -1, 1, -1, -1, 1, 1, 1]);
+        return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, positions);
+    });
+}
 
-        const iterator = new VertexIterator(_postEffectQuadVB);
-        iterator.element[SEMANTIC_POSITION].set(-1.0, -1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(1.0, -1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(-1.0, 1.0);
-        iterator.next();
-        iterator.element[SEMANTIC_POSITION].set(1.0, 1.0);
-        iterator.end();
-    }
+/**
+ * Draws a screen-space quad using a specific shader. Mostly used by post-effects.
+ *
+ * @param {GraphicsDevice} device - The graphics device used to draw the quad.
+ * @param {RenderTarget|undefined} target - The destination render target. If undefined, target is
+ * the frame buffer.
+ * @param {Shader} shader - The shader used for rendering the quad. Vertex shader should contain
+ * `attribute vec2 vertex_position`.
+ * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen
+ * (`0, 0, target.width, target.height`).
+ * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to
+ * fullscreen (`0, 0, target.width, target.height`).
+ * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
+ */
+function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
+
+    DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
     const oldRt = device.renderTarget;
     device.setRenderTarget(target);
@@ -97,7 +106,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     device.setColorWrite(true, true, true, true);
     if (!useBlend) device.setBlending(false);
 
-    device.setVertexBuffer(_postEffectQuadVB, 0);
+    device.setVertexBuffer(getPostEffectQuadVB(device), 0);
     device.setShader(shader);
 
     device.draw(_postEffectQuadDraw);
@@ -114,25 +123,22 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
 
     device.setViewport(oldVx, oldVy, oldVw, oldVh);
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
-}
 
-function destroyPostEffectQuad() {
-    if (_postEffectQuadVB) {
-        _postEffectQuadVB.destroy();
-        _postEffectQuadVB = null;
-    }
+    DebugGraphics.popGpuMarker(device);
 }
 
 /**
- * @function
- * @name drawTexture
- * @description Draws a texture in screen-space. Mostly used by post-effects.
+ * Draws a texture in screen-space. Mostly used by post-effects.
+ *
  * @param {GraphicsDevice} device - The graphics device used to draw the texture.
- * @param {Texture} texture - The source texture to be drawn. Accessible as `uniform sampler2D source` in shader.
+ * @param {Texture} texture - The source texture to be drawn. Accessible as `uniform sampler2D
+ * source` in shader.
  * @param {RenderTarget} [target] - The destination render target. Defaults to the frame buffer.
  * @param {Shader} [shader] - The shader used for rendering the texture. Defaults to {@link GraphicsDevice#getCopyShader}.
- * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to
+ * fullscreen (`0, 0, target.width, target.height`).
+ * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults
+ * to fullscreen (`0, 0, target.width, target.height`).
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
 function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend = false) {
@@ -141,4 +147,4 @@ function drawTexture(device, texture, target, shader, rect, scissorRect, useBlen
     drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
 }
 
-export { destroyPostEffectQuad, drawQuadWithShader, drawTexture };
+export { drawQuadWithShader, drawTexture };

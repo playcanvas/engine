@@ -1,6 +1,8 @@
+import { Debug } from '../../core/debug.js';
+
 import { math } from '../../math/math.js';
 import { Vec3 } from '../../math/vec3.js';
-import { Quat } from '../../math/quat.js';
+import { Vec4 } from '../../math/vec4.js';
 import { Mat4 } from '../../math/mat4.js';
 import { Color } from '../../math/color.js';
 
@@ -9,31 +11,27 @@ import { BoundingBox } from '../../shape/bounding-box.js';
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32, SHADOW_COUNT,
+    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
+import { LightCamera } from './light-camera.js';
 
+import { FUNC_LESSEQUAL } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { Frustum } from '../../shape/frustum.js';
+import { ShaderPass } from '../shader-pass.js';
 
-// camera rotation angles used when rendering cubemap faces
-const pointLightRotations = [
-    new Quat().setFromEulerAngles(0, 90, 180),
-    new Quat().setFromEulerAngles(0, -90, 180),
-    new Quat().setFromEulerAngles(90, 0, 0),
-    new Quat().setFromEulerAngles(-90, 0, 0),
-    new Quat().setFromEulerAngles(0, 180, 180),
-    new Quat().setFromEulerAngles(0, 0, 180)
-];
+/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('../light.js').Light} Light */
+/** @typedef {import('./forward-renderer.js').ForwardRenderer} ForwardRenderer */
+/** @typedef {import('../lighting/light-texture-atlas.js').LightTextureAtlas} LightTextureAtlas */
 
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
@@ -94,7 +92,7 @@ const visibleSceneAabb = new BoundingBox();
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
-const blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
+const blurScissorRect = new Vec4(1, 1, 0, 0);
 const opChanId = { r: 1, g: 2, b: 3, a: 4 };
 const center = new Vec3();
 const viewportMatrix = new Mat4();
@@ -112,18 +110,34 @@ function getDepthKey(meshInstance) {
     return x + y;
 }
 
+/**
+ * @ignore
+ */
 class ShadowRenderer {
-    constructor(forwardRenderer) {
+    /**
+     * @param {ForwardRenderer} forwardRenderer - The forward renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
+     */
+    constructor(forwardRenderer, lightTextureAtlas) {
         this.device = forwardRenderer.device;
+
+        /** @type {ForwardRenderer} */
         this.forwardRenderer = forwardRenderer;
+
+        /** @type {LightTextureAtlas} */
+        this.lightTextureAtlas = lightTextureAtlas;
+
         const scope = this.device.scope;
 
+        this.polygonOffsetId = scope.resolve('polygonOffset');
+        this.polygonOffset = new Float32Array(2);
+
         // VSM
-        this.sourceId = scope.resolve("source");
-        this.pixelOffsetId = scope.resolve("pixelOffset");
-        this.weightId = scope.resolve("weight[0]");
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, "#define GAUSS\n" + shaderChunks.blurVSMPS];
-        const packed = "#define PACKED\n";
+        this.sourceId = scope.resolve('source');
+        this.pixelOffsetId = scope.resolve('pixelOffset');
+        this.weightId = scope.resolve('weight[0]');
+        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, '#define GAUSS\n' + shaderChunks.blurVSMPS];
+        const packed = '#define PACKED\n';
         this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
 
         // cache for vsm blur shaders
@@ -144,52 +158,37 @@ class ShadowRenderer {
         this.shadowMapCache = null;
     }
 
-    static scaleShiftMatrix = new Mat4().setViewport(0, 0, 1, 1);
-
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
 
-        const shadowCam = new Camera();
-        shadowCam.node = new GraphNode("ShadowCamera");
-        shadowCam.aspectRatio = 1;
-
-        // set up constant settings based on light type
-        switch (type) {
-            case LIGHTTYPE_OMNI:
-                shadowCam.node.setRotation(pointLightRotations[face]);
-                shadowCam.fov = 90;
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                break;
-
-            case LIGHTTYPE_SPOT:
-                shadowCam.projection = PROJECTION_PERSPECTIVE;
-                break;
-
-            case LIGHTTYPE_DIRECTIONAL:
-                shadowCam.projection = PROJECTION_ORTHOGRAPHIC;
-                break;
-        }
+        const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
         // don't clear the color buffer if rendering a depth map
-        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
-        if (type === LIGHTTYPE_OMNI) {
-            hwPcf = false;
-        }
-
         if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);
         }
 
-        shadowCam.clearColorBuffer = !hwPcf;
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
         return shadowCam;
     }
 
-    // culls the list of meshes instances by the camera, storing visible mesh instances in the speficied array
+    static setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered) {
+
+        // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
+        // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
+        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2);
+        if (type === LIGHTTYPE_OMNI && !isClustered) {
+            hwPcf = false;
+        }
+
+        shadowCam.clearColorBuffer = !hwPcf;
+    }
+
+    // culls the list of meshes instances by the camera, storing visible mesh instances in the specified array
     cullShadowCasters(meshInstances, visible, camera) {
 
         let count = 0;
@@ -213,11 +212,16 @@ class ShadowRenderer {
     // cull local shadow map
     cullLocal(light, drawCalls) {
 
+        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
 
-        if (!light._shadowMap) {
-            light._shadowMap = ShadowMap.create(this.device, light);
+        // allocate shadow map unless in clustered lighting mode
+        if (!isClustered) {
+            if (!light._shadowMap) {
+                light._shadowMap = ShadowMap.create(this.device, light);
+            }
         }
 
         const type = light._type;
@@ -242,10 +246,19 @@ class ShadowRenderer {
                 // Camera looks down the negative Z, and spot light points down the negative Y
                 shadowCamNode.setRotation(lightNode.getRotation());
                 shadowCamNode.rotateLocal(-90, 0, 0);
-            }
 
-            // assign render target for the face
-            shadowCam.renderTarget = light._shadowMap.renderTargets[face];
+            } else if (type === LIGHTTYPE_OMNI) {
+
+                // when rendering omni shadows to an atlas, use larger fov by few pixels to allow shadow filtering to stay on a single face
+                if (isClustered) {
+                    const tileSize = this.lightTextureAtlas.shadowAtlasResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
+                    const texelSize = 2 / tileSize;
+                    const filterSize = texelSize * this.lightTextureAtlas.shadowEdgePixels;
+                    shadowCam.fov = Math.atan(1 + filterSize) * math.RAD_TO_DEG * 2;
+                } else {
+                    shadowCam.fov = 90;
+                }
+            }
 
             // cull shadow casters
             this.forwardRenderer.updateCameraFrustum(shadowCam);
@@ -259,7 +272,7 @@ class ShadowRenderer {
         light._shadowCascadeDistances.fill(farDist);
         for (let i = 1; i < light.numCascades; i++) {
 
-            //  lerp between linear and logaritmic distance, called practical split distance
+            //  lerp between linear and logarithmic distance, called practical split distance
             const fraction = i / light.numCascades;
             const linearDist = nearDist + (farDist - nearDist) * fraction;
             const logDist = nearDist * (farDist / nearDist) ** fraction;
@@ -288,7 +301,14 @@ class ShadowRenderer {
             const shadowCam = lightRenderData.shadowCamera;
 
             // assign render target
+            // Note: this is done during rendering for all shadow maps, but do it here for the case shadow rendering for the directional light
+            // is disabled - we need shadow map to be assigned for rendering to work even in this case. This needs further refactoring - as when
+            // shadow rendering is set to SHADOWUPDATE_NONE, we should not even execute shadow map culling
             shadowCam.renderTarget = light._shadowMap.renderTargets[0];
+
+            // viewport
+            lightRenderData.shadowViewport.copy(light.cascades[cascade]);
+            lightRenderData.shadowScissor.copy(light.cascades[cascade]);
 
             const shadowCamNode = shadowCam._node;
             const lightNode = light._node;
@@ -374,25 +394,25 @@ class ShadowRenderer {
 
     setupRenderState(device, light) {
 
+        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+
         // depth bias
         if (device.webgl2) {
-            if (light._type === LIGHTTYPE_OMNI) {
+            if (light._type === LIGHTTYPE_OMNI && !isClustered) {
                 device.setDepthBias(false);
             } else {
                 device.setDepthBias(true);
                 device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
             }
         } else if (device.extStandardDerivatives) {
-            const forwardRenderer = this.forwardRenderer;
-
             if (light._type === LIGHTTYPE_OMNI) {
-                forwardRenderer.polygonOffset[0] = 0;
-                forwardRenderer.polygonOffset[1] = 0;
-                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+                this.polygonOffset[0] = 0;
+                this.polygonOffset[1] = 0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             } else {
-                forwardRenderer.polygonOffset[0] = light.shadowBias * -1000.0;
-                forwardRenderer.polygonOffset[1] = light.shadowBias * -1000.0;
-                forwardRenderer.polygonOffsetId.setValue(forwardRenderer.polygonOffset);
+                this.polygonOffset[0] = light.shadowBias * -1000.0;
+                this.polygonOffset[1] = light.shadowBias * -1000.0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             }
         }
 
@@ -400,10 +420,26 @@ class ShadowRenderer {
         device.setBlending(false);
         device.setDepthWrite(true);
         device.setDepthTest(true);
-        if (light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI) {
+        device.setDepthFunc(FUNC_LESSEQUAL);
+
+        const useShadowSampler = isClustered ?
+            light._isPcf && device.webgl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
+            light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
+        if (useShadowSampler) {
             device.setColorWrite(false, false, false, false);
         } else {
             device.setColorWrite(true, true, true, true);
+        }
+    }
+
+    restoreRenderState(device) {
+
+        if (device.webgl2) {
+            device.setDepthBias(false);
+        } else if (device.extStandardDerivatives) {
+            this.polygonOffset[0] = 0;
+            this.polygonOffset[1] = 0;
+            this.polygonOffsetId.setValue(this.polygonOffset);
         }
     }
 
@@ -417,48 +453,45 @@ class ShadowRenderer {
             this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
         }
 
-        // view-projection matrices
-        if (light._type !== LIGHTTYPE_OMNI) {
-            shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
-            shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
+        // view-projection shadow matrix
+        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), Vec3.ONE).invert();
+        shadowCamViewProj.mul2(shadowCam.projectionMatrix, shadowCamView);
 
-            // viewport handling
-            if (light._type === LIGHTTYPE_DIRECTIONAL) {
+        // viewport handling
+        const rectViewport = lightRenderData.shadowViewport;
+        shadowCam.rect = rectViewport;
+        shadowCam.scissorRect = lightRenderData.shadowScissor;
 
-                // cascade viewport
-                const rect = light.cascades[face];
-                shadowCam.rect = rect;
-                shadowCam.scissorRect = rect;
+        viewportMatrix.setViewport(rectViewport.x, rectViewport.y, rectViewport.z, rectViewport.w);
+        lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
 
-                // append viewport transform
-                viewportMatrix.setViewport(rect.x, rect.y, rect.z, rect.w);
-                lightRenderData.shadowMatrix.mul2(viewportMatrix, shadowCamViewProj);
-
-                // copy matrix to shadow cascade palette
-                light._shadowMatrixPalette.set(lightRenderData.shadowMatrix.data, face * 16);
-
-            } else {
-                // append viewport transform for spot light (to whole texture)
-                lightRenderData.shadowMatrix.mul2(ShadowRenderer.scaleShiftMatrix, shadowCamViewProj);
-            }
+        if (light._type === LIGHTTYPE_DIRECTIONAL) {
+            // copy matrix to shadow cascade palette
+            light._shadowMatrixPalette.set(lightRenderData.shadowMatrix.data, face * 16);
         }
     }
 
+    /**
+     * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
+     * @param {Light} light - The light.
+     */
     submitCasters(visibleCasters, light) {
 
         const device = this.device;
         const forwardRenderer = this.forwardRenderer;
-        const shadowPass = 1 << SHADER_SHADOW;
+        const scene = forwardRenderer.scene;
+        const passFlags = 1 << SHADER_SHADOW;
 
         // Sort shadow casters
-        const shadowType = light._shadowType;
-        const smode = shadowType + light._type * SHADOW_COUNT;
+        const shadowPass = ShaderPass.getShadow(light._type, light._shadowType);
 
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
             const meshInstance = visibleCasters[i];
             const mesh = meshInstance.mesh;
+
+            meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
             // set basic material states/parameters
@@ -466,7 +499,7 @@ class ShadowRenderer {
             forwardRenderer.setSkinning(device, meshInstance, material);
 
             if (material.dirty) {
-                material.updateUniforms();
+                material.updateUniforms(device, scene);
                 material.dirty = false;
             }
 
@@ -478,17 +511,19 @@ class ShadowRenderer {
                 material.setParameters(device);
 
                 // Uniforms II (shadow): meshInstance overrides
-                meshInstance.setParameters(device, shadowPass);
+                meshInstance.setParameters(device, passFlags);
             }
 
             // set shader
-            let shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+            let shadowShader = meshInstance._shader[shadowPass];
             if (!shadowShader) {
-                forwardRenderer.updateShader(meshInstance, meshInstance._shaderDefs, null, SHADER_SHADOW + smode);
-                shadowShader = meshInstance._shader[SHADER_SHADOW + smode];
+                meshInstance.updatePassShader(scene, shadowPass);
+                shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
-            device.setShader(shadowShader);
+            if (!shadowShader.failed && !device.setShader(shadowShader)) {
+                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
+            }
 
             // set buffers
             forwardRenderer.setVertexBuffers(device, mesh);
@@ -498,7 +533,7 @@ class ShadowRenderer {
             device.setIndexBuffer(mesh.indexBuffer[style]);
 
             // draw
-            i += forwardRenderer.drawInstance(device, meshInstance, mesh, style);
+            forwardRenderer.drawInstance(device, meshInstance, mesh, style);
             forwardRenderer._shadowDrawCalls++;
         }
     }
@@ -512,56 +547,57 @@ class ShadowRenderer {
                 light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
 
-            let faceCount = 1;
             const type = light._type;
-            if (type === LIGHTTYPE_DIRECTIONAL) {
-                faceCount = light.numCascades;
-            } else if (type === LIGHTTYPE_OMNI) {
-                faceCount = 6;
-            }
+            const shadowType = light._shadowType;
+            const faceCount = light.numShadowFaces;
 
             const forwardRenderer = this.forwardRenderer;
             forwardRenderer._shadowMapUpdates += faceCount;
+            const isClustered = forwardRenderer.scene.clusteredLightingEnabled;
 
-            // #if _DEBUG
-            this.device.pushMarker("SHADOW " + light._node.name);
-            // #endif
+            DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name}`);
 
             this.setupRenderState(device, light);
 
             for (let face = 0; face < faceCount; face++) {
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    this.device.pushMarker("FACE " + face);
-                }
-                // #endif
+                DebugGraphics.pushGpuMarker(device, `FACE ${face}`);
 
                 // directional shadows are per camera, so get appropriate render data
                 const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
                 const shadowCam = lightRenderData.shadowCamera;
 
+                // camera clear setting
+                // Note: when clustered lighting is the only light type, this code can be moved to createShadowCamera function
+                ShadowRenderer.setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered);
+
+                // assign render target for the face
+                const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
+                shadowCam.renderTarget = light._shadowMap.renderTargets[renderTargetIndex];
+
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
-                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true, faceCount === 1);
+
+                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true);
 
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);
 
-                // #if _DEBUG
-                if (faceCount > 1) {
-                    this.device.popMarker();
-                }
-                // #endif
+                DebugGraphics.popGpuMarker(device);
             }
 
             // VSM blur
             if (light._isVsm && light._vsmBlurSize > 1) {
-                this.applyVsmBlur(light, camera);
+
+                // all non-clustered and directional lights support vsm
+                const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+                if (!isClustered || type === LIGHTTYPE_DIRECTIONAL) {
+                    this.applyVsmBlur(light, camera);
+                }
             }
 
-            // #if _DEBUG
-            this.device.popMarker();
-            // #endif
+            this.restoreRenderState(device);
+
+            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -572,13 +608,13 @@ class ShadowRenderer {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = "#define SAMPLES " + filterSize + "\n";
+            let blurFS = '#define SAMPLES ' + filterSize + '\n';
             if (isVsm8) {
                 blurFS += this.blurPackedVsmShaderCode[blurMode];
             } else {
                 blurFS += this.blurVsmShaderCode[blurMode];
             }
-            const blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
+            const blurShaderName = 'blurVsm' + blurMode + '' + filterSize + '' + isVsm8;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
 
             if (isVsm8) {
@@ -595,9 +631,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        // #if _DEBUG
-        this.device.pushMarker("VSM");
-        // #endif
+        DebugGraphics.pushGpuMarker(device, 'VSM');
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;
@@ -605,7 +639,7 @@ class ShadowRenderer {
 
         // temporary render target for blurring
         // TODO: this is probably not optimal and shadow map could have depth buffer on in addition to color buffer,
-        // and for bluring only one buffer is needed.
+        // and for blurring only one buffer is needed.
         const tempShadowMap = this.shadowMapCache.get(device, light);
         const tempRt = tempShadowMap.renderTargets[0];
 
@@ -635,9 +669,7 @@ class ShadowRenderer {
         // return the temporary shadow map back to the cache
         this.shadowMapCache.add(light, tempShadowMap);
 
-        // #if _DEBUG
-        this.device.popMarker();
-        // #endif
+        DebugGraphics.popGpuMarker(device);
     }
 }
 

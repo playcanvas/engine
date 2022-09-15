@@ -1,7 +1,7 @@
 import { Entity } from '../../framework/entity.js';
 
-import { CompressUtils } from '../../compress/compress-utils';
-import { Decompress } from '../../compress/decompress';
+import { CompressUtils } from '../../compress/compress-utils.js';
+import { Decompress } from '../../compress/decompress.js';
 
 class SceneParser {
     constructor(app, isTemplate) {
@@ -49,9 +49,8 @@ class SceneParser {
     }
 
     _createEntity(data, compressed) {
-        const entity = new Entity();
+        const entity = new Entity(data.name, this._app);
 
-        entity.name = data.name;
         entity.setGuid(data.resource_id);
         this._setPosRotScale(entity, data, compressed);
         entity._enabled = data.enabled !== undefined ? data.enabled : true;

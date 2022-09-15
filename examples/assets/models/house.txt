@@ -1,0 +1,10 @@
+The house model has been obtained from this address:
+https://sketchfab.com/3d-models/house-scene-52772448c62348e0a4951b51758d5587
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/
+
+Modifications done to it:
+- uv1 channel has been generated for lightmapping
+- textures have been stripped out
+- converted to glb format

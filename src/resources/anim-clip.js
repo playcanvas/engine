@@ -4,15 +4,23 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name AnimClipHandler
+ * Resource handler used for loading {@link AnimClip} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link AnimClip} resources.
+ * @ignore
  */
 class AnimClipHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animclip";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -36,7 +44,7 @@ class AnimClipHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error loading animation clip resource: " + url.original + " [" + err + "]");
+                callback(`Error loading animation clip resource: ${url.original} [${err}]`);
             } else {
                 callback(null, response);
             }
@@ -67,6 +75,9 @@ class AnimClipHandler {
             outputs,
             curves
         );
+    }
+
+    patch(asset, assets) {
     }
 }
 

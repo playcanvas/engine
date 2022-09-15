@@ -1,21 +1,35 @@
+import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from './parser/scene.js';
-import { SceneUtils } from "./scene-utils.js";
+
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
- * @class
- * @name SceneHandler
+ * Resource handler used for loading {@link Scene} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Scene} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class SceneHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "scene";
+
+    /**
+     * Create a new SceneHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
     constructor(app) {
         this._app = app;
         this.maxRetries = 0;
     }
 
     load(url, callback) {
-        SceneUtils.load(url, callback);
+        SceneUtils.load(url, this.maxRetries, callback);
     }
 
     open(url, data) {

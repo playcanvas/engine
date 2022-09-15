@@ -1,0 +1,10 @@
+{
+    "env": {
+        "mocha": true
+    },
+    "rules": {
+        "no-unused-expressions": "off",
+        "no-var": "error",
+        "quotes": ["error", "single"]
+    }
+}

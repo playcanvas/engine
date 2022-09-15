@@ -1,12 +1,18 @@
 import { getApplication } from './globals.js';
 
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 /**
- * @private
- * @class
- * @name ApplicationStats
- * @param {GraphicsDevice} device - The graphics device.
+ * Records performance-related statistics related to the application.
+ *
+ * @ignore
  */
 class ApplicationStats {
+    /**
+     * Create a new ApplicationStats instance.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     */
     constructor(device) {
         this.frame = {
             fps: 0,
@@ -89,11 +95,12 @@ class ApplicationStats {
     }
 
     get lightmapper() {
-        return getApplication().lightmapper._stats;
+        return getApplication().lightmapper?.stats;
     }
 
     get batcher() {
-        return getApplication().batcher._stats;
+        const batcher = getApplication()._batcher;
+        return batcher ? batcher._stats : null;
     }
 }
 

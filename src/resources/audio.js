@@ -1,10 +1,14 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
 import { Sound } from '../sound/sound.js';
+
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // checks if user is running IE
 const ie = (function () {
@@ -30,36 +34,47 @@ const ie = (function () {
     return false;
 })();
 
-const toMIME = {
-    '.ogg': 'audio/ogg',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/x-wav',
-    '.mp4a': 'audio/mp4',
-    '.m4a': 'audio/mp4',
-    '.mp4': 'audio/mp4',
-    '.aac': 'audio/aac'
-};
+const supportedExtensions = [
+    '.ogg',
+    '.mp3',
+    '.wav',
+    '.mp4a',
+    '.m4a',
+    '.mp4',
+    '.aac',
+    '.opus'
+];
 
 /**
- * @class
- * @name AudioHandler
+ * Resource handler used for loading {@link Sound} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sound} resources.
- * @param {SoundManager} manager - The sound manager.
  */
 class AudioHandler {
-    constructor(manager) {
-        this.manager = manager;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "audio";
+
+    /**
+     * Create a new AudioHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+
         this.maxRetries = 0;
     }
 
     _isSupported(url) {
         const ext = path.getExtension(url);
 
-        if (toMIME[ext]) {
-            return true;
-        }
-        return false;
+        return supportedExtensions.indexOf(ext) > -1;
     }
 
     load(url, callback) {
@@ -85,7 +100,7 @@ class AudioHandler {
 
         if (this._createSound) {
             if (!this._isSupported(url.original)) {
-                error("Audio format for " + url.original + " not supported");
+                error(`Audio format for ${url.original} not supported`);
                 return;
             }
 
@@ -99,15 +114,19 @@ class AudioHandler {
         return data;
     }
 
+    patch(asset, assets) {
+    }
+
     /**
-     * @private
-     * @function
-     * @name SoundHandler._createSound
-     * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
+     * Loads an audio asset using an AudioContext by URL and calls success or error with the
+     * created resource or error respectively.
+     *
      * @param {string} url - The url of the audio asset.
      * @param {Function} success - Function to be called if the audio asset was loaded or if we
      * just want to continue without errors even if the audio is not loaded.
-     * @param {Function} error - Function to be called if there was an error while loading the audio asset.
+     * @param {Function} error - Function to be called if there was an error while loading the
+     * audio asset.
+     * @private
      */
     _createSound(url, success, error) {
         if (hasAudioContext()) {
@@ -144,7 +163,7 @@ class AudioHandler {
             } catch (e) {
                 // Some windows platforms will report Audio as available, then throw an exception when
                 // the object is created.
-                error("No support for Audio element");
+                error('No support for Audio element');
                 return;
             }
 

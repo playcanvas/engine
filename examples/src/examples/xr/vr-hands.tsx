@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class VRHandsExample extends Example {
+class VrHandsExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Hands';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
@@ -145,13 +143,13 @@ class VRHandsExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -216,4 +214,4 @@ class VRHandsExample extends Example {
     }
 }
 
-export default VRHandsExample;
+export default VrHandsExample;

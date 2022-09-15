@@ -4,64 +4,63 @@ import { Channel3d } from '../../../audio/channel3d.js';
 
 import { Component } from '../component.js';
 
+/** @typedef {import('./system.js').AudioSourceComponentSystem} AudioSourceComponentSystem */
+/** @typedef {import('../../entity.js').Entity} Entity */
+
 /**
- * @private
- * @component
- * @class
- * @name AudioSourceComponent
- * @augments Component
- * @classdesc The AudioSource Component controls playback of an audio sample. This
- * class will be deprecated in favor of {@link SoundComponent}.
- * @description Create a new AudioSource Component.
- * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
- * this component.
- * @param {Entity} entity - The entity that the Component is attached to.
- * @property {Asset[]} assets The list of audio assets - can also be an array of
- * asset ids.
- * @property {boolean} activate If true the audio will begin playing as soon as the
- * scene is loaded.
- * @property {number} volume The volume modifier to play the audio with. In range 0-1.
- * @property {number} pitch The pitch modifier to play the audio with. Must be larger
- * than 0.01.
- * @property {boolean} loop If true the audio will restart when it finishes playing.
- * @property {boolean} 3d If true the audio will play back at the location of the*
- * entity in space, so the audio will be affect by the position of the
- * {@link AudioListenerComponent}.
- * @property {string} distanceModel Determines which algorithm to use to reduce the
- * volume of the audio as it moves away from the listener. Can be:
+ * The AudioSource Component controls playback of an audio sample. This class will be deprecated
+ * in favor of {@link SoundComponent}.
  *
- * * "linear"
- * * "inverse"
- * * "exponential"
+ * @property {Asset[]} assets The list of audio assets - can also be an array of asset ids.
+ * @property {boolean} activate If true the audio will begin playing as soon as the scene is
+ * loaded.
+ * @property {number} volume The volume modifier to play the audio with. In range 0-1.
+ * @property {number} pitch The pitch modifier to play the audio with. Must be larger than 0.01.
+ * @property {boolean} loop If true the audio will restart when it finishes playing.
+ * @property {boolean} 3d If true the audio will play back at the location of the entity in space,
+ * so the audio will be affect by the position of the {@link AudioListenerComponent}.
+ * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the
+ * audio as it moves away from the listener. Can be:
+ *
+ * - "linear"
+ * - "inverse"
+ * - "exponential"
  *
  * Default is "inverse".
- * @property {number} minDistance The minimum distance from the listener at which
- * audio falloff begins.
- * @property {number} maxDistance The maximum distance from the listener at which
- * audio falloff stops. Note the volume of the audio is not 0 after this distance,
- * but just doesn't fall off anymore.
+ * @property {number} minDistance The minimum distance from the listener at which audio falloff
+ * begins.
+ * @property {number} maxDistance The maximum distance from the listener at which audio falloff
+ * stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off
+ * anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.
+ * @augments Component
+ * @ignore
  */
 class AudioSourceComponent extends Component {
+    /**
+     * Create a new AudioSource Component instance.
+     *
+     * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
+     * this component.
+     * @param {Entity} entity - The entity that the Component is attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
-        this.on("set_assets", this.onSetAssets, this);
-        this.on("set_loop", this.onSetLoop, this);
-        this.on("set_volume", this.onSetVolume, this);
-        this.on("set_pitch", this.onSetPitch, this);
-        this.on("set_minDistance", this.onSetMinDistance, this);
-        this.on("set_maxDistance", this.onSetMaxDistance, this);
-        this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
-        this.on("set_distanceModel", this.onSetDistanceModel, this);
-        this.on("set_3d", this.onSet3d, this);
+        this.on('set_assets', this.onSetAssets, this);
+        this.on('set_loop', this.onSetLoop, this);
+        this.on('set_volume', this.onSetVolume, this);
+        this.on('set_pitch', this.onSetPitch, this);
+        this.on('set_minDistance', this.onSetMinDistance, this);
+        this.on('set_maxDistance', this.onSetMaxDistance, this);
+        this.on('set_rollOffFactor', this.onSetRollOffFactor, this);
+        this.on('set_distanceModel', this.onSetDistanceModel, this);
+        this.on('set_3d', this.onSet3d, this);
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponent#play
-     * @description Begin playback of an audio asset in the component attached to an entity.
+     * Begin playback of an audio asset in the component attached to an entity.
+     *
      * @param {string} name - The name of the Asset to play.
      */
     play(name) {
@@ -74,15 +73,15 @@ class AudioSourceComponent extends Component {
             this.stop();
         }
 
-        var channel;
-        var componentData = this.data;
+        let channel;
+        const componentData = this.data;
         if (componentData.sources[name]) {
             if (!componentData['3d']) {
                 channel = this.system.manager.playSound(componentData.sources[name], componentData);
                 componentData.currentSource = name;
                 componentData.channel = channel;
             } else {
-                var pos = this.entity.getPosition();
+                const pos = this.entity.getPosition();
                 channel = this.system.manager.playSound3d(componentData.sources[name], pos, componentData);
                 componentData.currentSource = name;
                 componentData.channel = channel;
@@ -91,10 +90,8 @@ class AudioSourceComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponent#pause
-     * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link AudioSourceComponent#unpause}.
+     * Pause playback of the audio that is playing on the Entity. Playback can be resumed by
+     * calling {@link AudioSourceComponent#unpause}.
      */
     pause() {
         if (this.channel) {
@@ -103,10 +100,7 @@ class AudioSourceComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponent#unpause
-     * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
+     * Resume playback of the audio if paused. Playback is resumed at the time it was paused.
      */
     unpause() {
         if (this.channel && this.channel.paused) {
@@ -115,10 +109,7 @@ class AudioSourceComponent extends Component {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponent#stop
-     * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
+     * Stop playback on an Entity. Playback can not be resumed after being stopped.
      */
     stop() {
         if (this.channel) {
@@ -128,14 +119,14 @@ class AudioSourceComponent extends Component {
     }
 
     onSetAssets(name, oldValue, newValue) {
-        var newAssets = [];
-        var i, len = newValue.length;
+        const newAssets = [];
+        const len = newValue.length;
 
         if (oldValue && oldValue.length) {
-            for (i = 0; i < oldValue.length; i++) {
+            for (let i = 0; i < oldValue.length; i++) {
                 // unsubscribe from change event for old assets
                 if (oldValue[i]) {
-                    var asset = this.system.app.assets.get(oldValue[i]);
+                    const asset = this.system.app.assets.get(oldValue[i]);
                     if (asset) {
                         asset.off('change', this.onAssetChanged, this);
                         asset.off('remove', this.onAssetRemoved, this);
@@ -149,7 +140,7 @@ class AudioSourceComponent extends Component {
         }
 
         if (len) {
-            for (i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 if (oldValue.indexOf(newValue[i]) < 0) {
                     if (newValue[i] instanceof Asset) {
                         newAssets.push(newValue[i].id);
@@ -161,14 +152,15 @@ class AudioSourceComponent extends Component {
             }
         }
 
-        if (!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+         // Only load audio data if we are not in the tools and if changes have been made
+        if (!this.system._inTools && newAssets.length) {
             this.loadAudioSourceAssets(newAssets);
         }
     }
 
     onAssetChanged(asset, attribute, newValue, oldValue) {
         if (attribute === 'resource') {
-            var sources = this.data.sources;
+            const sources = this.data.sources;
             if (sources) {
                 this.data.sources[asset.name] = newValue;
                 if (this.data.currentSource === asset.name) {
@@ -256,8 +248,8 @@ class AudioSourceComponent extends Component {
     onSet3d(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (this.system.initialized && this.currentSource) {
-                var paused = false;
-                var suspended = false;
+                let paused = false;
+                let suspended = false;
                 if (this.channel) {
                     paused = this.channel.paused;
                     suspended = this.channel.suspended;
@@ -275,12 +267,12 @@ class AudioSourceComponent extends Component {
 
     onEnable() {
         // load assets that haven't been loaded yet
-        var assets = this.data.assets;
+        const assets = this.data.assets;
         if (assets) {
-            var registry = this.system.app.assets;
+            const registry = this.system.app.assets;
 
-            for (var i = 0, len = assets.length; i < len; i++) {
-                var asset = assets[i];
+            for (let i = 0, len = assets.length; i < len; i++) {
+                let asset = assets[i];
                 if (!(asset instanceof Asset))
                     asset = registry.get(asset);
 
@@ -304,33 +296,31 @@ class AudioSourceComponent extends Component {
     }
 
     loadAudioSourceAssets(ids) {
-        var self = this;
-
-        var assets = ids.map(function (id) {
+        const assets = ids.map((id) => {
             return this.system.app.assets.get(id);
-        }, this);
+        });
 
-        var sources = {};
-        var currentSource = null;
+        const sources = {};
+        let currentSource = null;
 
-        var count = assets.length;
+        let count = assets.length;
 
         // make sure progress continues even if some audio doesn't load
-        var _error = function (e) {
+        const _error = (e) => {
             count--;
         };
 
         // once all assets are accounted for continue
-        var _done = function () {
+        const _done = () => {
             this.data.sources = sources;
             this.data.currentSource = currentSource;
 
             if (this.enabled && this.activate && currentSource) {
                 this.onEnable();
             }
-        }.bind(this);
+        };
 
-        assets.forEach(function (asset, index) {
+        assets.forEach((asset, index) => {
             if (asset) {
                 // set the current source to the first entry (before calling set, so that it can play if needed)
                 currentSource = currentSource || asset.name;
@@ -344,7 +334,7 @@ class AudioSourceComponent extends Component {
 
                 asset.off('error', _error, this);
                 asset.on('error', _error, this);
-                asset.ready(function (asset) {
+                asset.ready((asset) => {
                     sources[asset.name] = asset.resource;
                     count--;
                     if (count === 0) {
@@ -352,7 +342,7 @@ class AudioSourceComponent extends Component {
                     }
                 });
 
-                if (!asset.resource && self.enabled && self.entity.enabled)
+                if (!asset.resource && this.enabled && this.entity.enabled)
                     this.system.app.assets.load(asset);
             } else {
                 // don't wait for assets that aren't in the registry
@@ -361,16 +351,16 @@ class AudioSourceComponent extends Component {
                     _done();
                 }
                 // but if they are added insert them into source list
-                this.system.app.assets.on("add:" + ids[index], function (asset) {
-                    asset.ready(function (asset) {
-                        self.data.sources[asset.name] = asset.resource;
+                this.system.app.assets.on('add:' + ids[index], (asset) => {
+                    asset.ready((asset) => {
+                        this.data.sources[asset.name] = asset.resource;
                     });
 
                     if (!asset.resource)
-                        self.system.app.assets.load(asset);
+                        this.system.app.assets.load(asset);
                 });
             }
-        }, this);
+        });
     }
 }
 

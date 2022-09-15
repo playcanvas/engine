@@ -8,17 +8,22 @@ import { ComponentSystem } from '../system.js';
 import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
 
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name ScreenComponentSystem
+ * Manages creation of {@link ScreenComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ScreenComponent}s.
- * @description Create a new ScreenComponentSystem.
- * @param {Application} app - The application.
  */
 class ScreenComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ScreenComponentSystem instance.
+     *
+     * @param {AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -34,9 +39,9 @@ class ScreenComponentSystem extends ComponentSystem {
         // queue of callbacks
         this._drawOrderSyncQueue = new IndexedList();
 
-        this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        this.app.graphicsDevice.on('resizecanvas', this._onResize, this);
 
-        ComponentSystem.bind('update', this._onUpdate, this);
+        this.app.systems.on('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
     }
@@ -70,14 +75,16 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        this.off();
-        this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        super.destroy();
+
+        this.app.graphicsDevice.off('resizecanvas', this._onResize, this);
+        this.app.systems.off('update', this._onUpdate, this);
     }
 
     _onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components[id].entity.screen.update) components[id].entity.screen.update(dt);
         }
     }
@@ -88,7 +95,7 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var screen = entity.screen;
+        const screen = entity.screen;
 
         return this.addComponent(clone, {
             enabled: screen.enabled,
@@ -104,10 +111,10 @@ class ScreenComponentSystem extends ComponentSystem {
     }
 
     processDrawOrderSyncQueue() {
-        var list = this._drawOrderSyncQueue.list();
+        const list = this._drawOrderSyncQueue.list();
 
-        for (var i = 0; i < list.length; i++) {
-            var item = list[i];
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
             item.callback.call(item.scope);
         }
         this._drawOrderSyncQueue.clear();

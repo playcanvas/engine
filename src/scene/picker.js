@@ -1,9 +1,10 @@
-import { Color } from "../math/color.js";
+import { Color } from '../math/color.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
 import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { Texture } from '../graphics/texture.js';
+import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';
@@ -13,10 +14,13 @@ import { LayerComposition } from './composition/layer-composition.js';
 
 import { getApplication } from '../framework/globals.js';
 import { Entity } from '../framework/entity.js';
+import { Debug } from '../core/debug.js';
 
-let _deviceDeprecationWarning = false;
-let _getSelectionDeprecationWarning = false;
-let _prepareDeprecationWarning = false;
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('./scene.js').Scene} Scene */
+
 const tempSet = new Set();
 
 const clearDepthOptions = {
@@ -25,27 +29,25 @@ const clearDepthOptions = {
 };
 
 /**
- * @class
- * @name Picker
- * @classdesc Picker object used to select mesh instances from screen coordinates.
- * @description Create a new instance of a Picker object.
- * @param {Application} app - The application managing this picker instance.
- * @param {number} width - The width of the pick buffer in pixels.
- * @param {number} height - The height of the pick buffer in pixels.
+ * Picker object used to select mesh instances from screen coordinates.
+ *
  * @property {number} width Width of the pick buffer in pixels (read-only).
  * @property {number} height Height of the pick buffer in pixels (read-only).
- * @property {RenderTarget} renderTarget The render target used by the picker internally (read-only).
+ * @property {RenderTarget} renderTarget The render target used by the picker internally
+ * (read-only).
  */
 class Picker {
+    /**
+     * Create a new Picker instance.
+     *
+     * @param {AppBase} app - The application managing this picker instance.
+     * @param {number} width - The width of the pick buffer in pixels.
+     * @param {number} height - The height of the pick buffer in pixels.
+     */
     constructor(app, width, height) {
         if (app instanceof GraphicsDevice) {
             app = getApplication();
-            if (!_deviceDeprecationWarning) {
-                _deviceDeprecationWarning = true;
-                // #if _DEBUG
-                console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
-                // #endif
-            }
+            Debug.deprecated('pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.');
         }
 
         this.app = app;
@@ -79,10 +81,9 @@ class Picker {
     }
 
     /**
-     * @function
-     * @name Picker#getSelection
-     * @description Return the list of mesh instances selected by the specified rectangle in the
-     * previously prepared pick buffer.The rectangle using top-left coordinate system.
+     * Return the list of mesh instances selected by the specified rectangle in the previously
+     * prepared pick buffer.The rectangle using top-left coordinate system.
+     *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
@@ -99,12 +100,7 @@ class Picker {
         const device = this.device;
 
         if (typeof x === 'object') {
-            // #if _DEBUG
-            if (!_prepareDeprecationWarning) {
-                _prepareDeprecationWarning = true;
-                console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
-            }
-            // #endif
+            Debug.deprecated('Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
             const rect = x;
             x = rect.x;
@@ -124,6 +120,8 @@ class Picker {
         // backup active render target
         const origRenderTarget = device.renderTarget;
 
+        DebugGraphics.pushGpuMarker(device, 'PICKER');
+
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this.renderTarget);
         device.updateBegin();
@@ -135,6 +133,8 @@ class Picker {
 
         // Restore render target
         device.setRenderTarget(origRenderTarget);
+
+        DebugGraphics.popGpuMarker(device);
 
         const mapping = this.mapping;
         for (let i = 0; i < width * height; i++) {
@@ -151,7 +151,7 @@ class Picker {
 
         // return the content of the set as an array
         const selection = [];
-        tempSet.forEach((meshInstance) => selection.push(meshInstance));
+        tempSet.forEach(meshInstance => selection.push(meshInstance));
         tempSet.clear();
 
         return selection;
@@ -167,9 +167,9 @@ class Picker {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'pick'
         });
-        colorBuffer.name = 'pick';
 
         this.renderTarget = new RenderTarget({
             colorBuffer: colorBuffer,
@@ -183,7 +183,7 @@ class Picker {
         this.cameraEntity.camera.renderTarget = null;
 
         if (this._renderTarget) {
-            this._renderTarget._colorBuffer.destroy();
+            this._renderTarget.destroyTextureBuffers();
             this._renderTarget.destroy();
             this._renderTarget = null;
         }
@@ -197,11 +197,11 @@ class Picker {
 
         // camera
         this.cameraEntity = new Entity();
-        this.cameraEntity.addComponent("camera");
+        this.cameraEntity.addComponent('camera');
 
         // layer all meshes rendered for picking at added to
         this.layer = new Layer({
-            name: "Picker",
+            name: 'Picker',
             shaderPass: SHADER_PICK,
             opaqueSortMode: SORTMODE_NONE,
 
@@ -220,17 +220,16 @@ class Picker {
         this.layer.addCamera(this.cameraEntity.camera);
 
         // composition
-        this.layerComp = new LayerComposition("picker");
+        this.layerComp = new LayerComposition('picker');
         this.layerComp.pushOpaque(this.layer);
     }
 
     /**
-     * @function
-     * @name Picker#prepare
-     * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, {@link Picker#prepare} does not need to be called again.
+     * Primes the pick buffer with a rendering of the specified models from the point of view of
+     * the supplied camera. Once the pick buffer has been prepared, {@link Picker#getSelection} can
+     * be called multiple times on the same picker object. Therefore, if the models or camera do
+     * not change in any way, {@link Picker#prepare} does not need to be called again.
+     *
      * @param {CameraComponent} camera - The camera component used to render the scene.
      * @param {Scene} scene - The scene containing the pickable mesh instances.
      * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
@@ -239,12 +238,7 @@ class Picker {
 
         // handle deprecated arguments
         if (camera instanceof Camera) {
-            // #if _DEBUG
-            if (!_getSelectionDeprecationWarning) {
-                _getSelectionDeprecationWarning = true;
-                console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
-            }
-            // #endif
+            Debug.deprecated('pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.');
 
             // Get the camera component
             camera = camera.node.camera;
@@ -307,14 +301,14 @@ class Picker {
         this.mapping.length = 0;
 
         // render
-        this.app.renderer.renderComposition(this.layerComp);
+        this.app.renderComposition(this.layerComp);
     }
 
     updateCamera(srcCamera) {
 
         // copy transform
         this.cameraEntity.copy(srcCamera.entity);
-        this.cameraEntity.name = "PickerCamera";
+        this.cameraEntity.name = 'PickerCamera';
 
         // copy camera component properties - which overwrites few properties we change to what is needed later
         const destCamera = this.cameraEntity.camera;
@@ -336,13 +330,12 @@ class Picker {
     }
 
     /**
-     * @function
-     * @name Picker#resize
-     * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
-     * to match the resolution of the corresponding frame buffer use for general rendering of the
-     * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers will
-     * yield greater performance, so there is a trade off.
+     * Sets the resolution of the pick buffer. The pick buffer resolution does not need to match
+     * the resolution of the corresponding frame buffer use for general rendering of the 3D scene.
+     * However, the lower the resolution of the pick buffer, the less accurate the selection
+     * results returned by {@link Picker#getSelection}. On the other hand, smaller pick buffers
+     * will yield greater performance, so there is a trade off.
+     *
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */

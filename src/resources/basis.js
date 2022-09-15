@@ -1,6 +1,9 @@
+import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../net/http.js';
+
+/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // get the list of the device's supported compression formats
 const getCompressionFormats = (device) => {
@@ -18,12 +21,12 @@ const getCompressionFormats = (device) => {
 const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = () => {
         const code = '(' + BasisWorker.toString() + ')()\n\n';
-        return new File([code], 'basis_worker.js', { type: 'application/javascript' });
+        return new Blob([code], { type: 'application/javascript' });
     };
 
     const wasmSupported = () => {
         try {
-            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+            if (typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function') {
                 const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
                 if (module instanceof WebAssembly.Module)
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
@@ -42,12 +45,18 @@ const prepareWorkerModules = (config, callback) => {
         });
     };
 
+    const options = {
+        responseType: 'blob',
+        retry: config.maxRetries > 0,
+        maxRetries: config.maxRetries
+    };
+
     if (config.glueUrl && config.wasmUrl && wasmSupported()) {
         let basisCode = null;
         let module = null;
 
         // download glue script
-        http.get(config.glueUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.glueUrl, options, (err, response) => {
             if (err) {
                 callback(err);
             } else {
@@ -63,8 +72,8 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-                .then((result) => result.arrayBuffer())
-                .then((buffer) => WebAssembly.compile(buffer))
+                .then(result => result.arrayBuffer())
+                .then(buffer => WebAssembly.compile(buffer))
                 .then((module_) => {
                     if (basisCode) {
                         sendResponse(basisCode, module_);
@@ -88,16 +97,14 @@ const prepareWorkerModules = (config, callback) => {
                     }
                 })
                 .catch((err) => {
-                    // #if _DEBUG
-                    console.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
-                    // #endif
+                    Debug.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
                     compileManual();
                 });
         } else {
             compileManual();
         }
     } else {
-        http.get(config.fallbackUrl, { responseType: 'blob' }, (err, response) => {
+        http.get(config.fallbackUrl, options, (err, response) => {
             if (err) {
                 callback(err, null);
             } else {
@@ -195,15 +202,17 @@ class BasisClient {
     }
 
     run(job) {
+        const transfer = [];
+        if (job.data instanceof ArrayBuffer) {
+            transfer.push(job.data);
+        }
         this.worker.postMessage({
             type: 'transcode',
             url: job.url,
             format: job.format,
             data: job.data,
             options: job.options
-        }, [
-            job.data
-        ]);
+        }, transfer);
         if (this.eager) {
             this.queue.enqueueClient(this);
         }
@@ -214,6 +223,7 @@ class BasisClient {
 const defaultNumWorkers = 1;
 const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
 const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
+const defaultMaxRetries = 5;
 
 // global state
 const queue = new BasisQueue();
@@ -221,28 +231,33 @@ let lazyConfig = null;
 let initializing = false;
 
 /**
- * @name basisInitialize
- * @function
- * @description Initialize the Basis transcode worker.
+ * Initialize the Basis transcode worker.
+ *
  * @param {object} [config] - The Basis configuration.
  * @param {string} [config.glueUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
- * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules aren't supported.
+ * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules
+ * aren't supported.
  * @param {boolean} [config.lazyInit] - Wait for first transcode request before initializing Basis
  * (default is false). Otherwise initialize Basis immediately.
- * @param {number} [config.numWorkers] - Number of workers to use for transcoding (default is 1). While it is
- * possible to improve transcode performance using multiple workers, this will likely depend on the runtime
- * platform. For example, desktop will likely benefit from more workers compared to mobile. Also
- * keep in mind that it takes time to initialize workers and increasing this value could impact application
- * startup time. Make sure to test your application performance on all target platforms when changing this parameter.
- * @param {boolean} [config.eagerWorkers] - Use eager workers (default is true). When enabled, jobs are assigned
- * to workers immediately, independent of their work load. This can result in unbalanced workloads, however there
- * is no delay between jobs. If disabled, new jobs are assigned to workers only when their previous job has
- * completed. This will result in balanced workloads across workers, however workers can be idle for a short time between jobs.
- * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order for textures without alpha.
- * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
- * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order for textures with alpha.
- * The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1', 'etc2', 'pvr'.
+ * @param {number} [config.numWorkers] - Number of workers to use for transcoding (default is 1).
+ * While it is possible to improve transcode performance using multiple workers, this will likely
+ * depend on the runtime platform. For example, desktop will likely benefit from more workers
+ * compared to mobile. Also keep in mind that it takes time to initialize workers and increasing
+ * this value could impact application startup time. Make sure to test your application performance
+ * on all target platforms when changing this parameter.
+ * @param {boolean} [config.eagerWorkers] - Use eager workers (default is true). When enabled, jobs
+ * are assigned to workers immediately, independent of their work load. This can result in
+ * unbalanced workloads, however there is no delay between jobs. If disabled, new jobs are assigned
+ * to workers only when their previous job has completed. This will result in balanced workloads
+ * across workers, however workers can be idle for a short time between jobs.
+ * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order
+ * for textures without alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
+ * 'etc2', 'pvr'.
+ * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order
+ * for textures with alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
+ * 'etc2', 'pvr'.
+ * @param {number} [config.maxRetries] - Number of http load retry attempts. Defaults to 5.
  */
 function basisInitialize(config) {
     if (initializing) {
@@ -264,7 +279,7 @@ function basisInitialize(config) {
             return m.moduleName === 'BASIS';
         });
         if (wasmModule) {
-            const urlBase = window.ASSET_PREFIX || "";
+            const urlBase = window.ASSET_PREFIX || '';
             if (!config.glueUrl) {
                 config.glueUrl = urlBase + wasmModule.glueUrl;
             }
@@ -285,6 +300,7 @@ function basisInitialize(config) {
 
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
+        config.maxRetries = config.hasOwnProperty('maxRetries') ? config.maxRetries : defaultMaxRetries;
 
         prepareWorkerModules(config, (err, clientConfig) => {
             if (err) {
@@ -301,10 +317,8 @@ function basisInitialize(config) {
 let deviceDetails = null;
 
 /**
- * @private
- * @name basisTranscode
- * @function
- * @description Enqueue a blob of basis data for transcoding.
+ * Enqueue a blob of basis data for transcoding.
+ *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
@@ -312,7 +326,10 @@ let deviceDetails = null;
  * @param {object} [options] - Options structure
  * @param {boolean} [options.isGGGR] - Indicates this is a GGGR swizzled texture. Under some
  * circumstances the texture will be unswizzled during transcoding.
+ * @param {boolean} [options.isKTX2] - Indicates the image is KTX2 format. Otherwise
+ * basis format is assumed.
  * @returns {boolean} True if the basis worker was initialized and false otherwise.
+ * @ignore
  */
 function basisTranscode(device, url, data, callback, options) {
     basisInitialize();
@@ -326,7 +343,8 @@ function basisTranscode(device, url, data, callback, options) {
 
     queue.enqueueJob(url, data, callback, {
         deviceDetails: deviceDetails,
-        isGGGR: !!options?.isGGGR
+        isGGGR: !!options?.isGGGR,
+        isKTX2: !!options?.isKTX2
     });
 
     return initializing;

@@ -3,8 +3,16 @@ import { http } from '../net/http.js';
 import { Template } from '../templates/template.js';
 
 class TemplateHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "template";
+
     constructor(app) {
         this._app = app;
+        this.maxRetries = 0;
     }
 
     load(url, callback) {
@@ -15,9 +23,15 @@ class TemplateHandler {
             };
         }
 
-        http.get(url.load, {}, function (err, response) {
+        // we need to specify JSON for blob URLs
+        const options = {
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
+        };
+
+        http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error requesting template: " + url.original);
+                callback('Error requesting template: ' + url.original);
             } else {
                 callback(err, response);
             }

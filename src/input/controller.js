@@ -10,24 +10,27 @@ import {
 import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';
 
+/** @typedef {import('./game-pads.js').GamePads} GamePads */
+
 /**
- * @class
- * @name Controller
- * @classdesc A general input handler which handles both mouse and keyboard input assigned to named actions.
+ * A general input handler which handles both mouse and keyboard input assigned to named actions.
  * This allows you to define input handlers separately to defining keyboard/mouse configurations.
- * @description Create a new instance of a Controller.
- * @param {Element} [element] - Element to attach Controller to.
- * @param {object} [options] - Optional arguments.
- * @param {Keyboard} [options.keyboard] - A Keyboard object to use.
- * @param {Mouse} [options.mouse] - A Mouse object to use.
- * @param {GamePads} [options.gamepads] - A Gamepads object to use.
- * @example
- * var c = new pc.Controller(document);
- *
- * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
- * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);
  */
 class Controller {
+    /**
+     * Create a new instance of a Controller.
+     *
+     * @param {Element} [element] - Element to attach Controller to.
+     * @param {object} [options] - Optional arguments.
+     * @param {Keyboard} [options.keyboard] - A Keyboard object to use.
+     * @param {Mouse} [options.mouse] - A Mouse object to use.
+     * @param {GamePads} [options.gamepads] - A Gamepads object to use.
+     * @example
+     * var c = new pc.Controller(document);
+     *
+     * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
+     * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);
+     */
     constructor(element, options = {}) {
         this._keyboard = options.keyboard || null;
         this._mouse = options.mouse || null;
@@ -45,9 +48,9 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#attach
-     * @description Attach Controller to a Element, this is required before you can monitor for key/mouse inputs.
+     * Attach Controller to an Element. This is required before you can monitor for key/mouse
+     * inputs.
+     *
      * @param {Element} element - The element to attach mouse and keyboard event handler too.
      */
     attach(element) {
@@ -62,9 +65,7 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#detach
-     * @description Detach Controller from an Element, this should be done before the Controller is destroyed.
+     * Detach Controller from an Element. This should be done before the Controller is destroyed.
      */
     detach() {
         if (this._keyboard) {
@@ -77,9 +78,7 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#disableContextMenu
-     * @description Disable the context menu usually activated with the right mouse button.
+     * Disable the context menu usually activated with the right mouse button.
      */
     disableContextMenu() {
         if (!this._mouse) {
@@ -90,9 +89,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#enableContextMenu
-     * @description Enable the context menu usually activated with the right mouse button. This is enabled by default.
+     * Enable the context menu usually activated with the right mouse button. This is enabled by
+     * default.
      */
     enableContextMenu() {
         if (!this._mouse) {
@@ -103,35 +101,48 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#update
-     * @description Update the Keyboard and Mouse handlers.
+     * Update the Keyboard and Mouse handlers.
+     *
      * @param {object} dt - The time since the last frame.
      */
     update(dt) {
         if (this._keyboard) {
-            this._keyboard.update(dt);
+            this._keyboard.update();
         }
 
         if (this._mouse) {
-            this._mouse.update(dt);
+            this._mouse.update();
         }
 
         if (this._gamepads) {
-            this._gamepads.update(dt);
+            this._gamepads.update();
         }
 
         // clear axes values
         this._axesValues = {};
-        for (var key in this._axes) {
+        for (const key in this._axes) {
             this._axesValues[key] = [];
         }
     }
 
     /**
-     * @function
-     * @name Controller#registerKeys
-     * @description Create or update a action which is enabled when the supplied keys are pressed.
+     * Helper function to append an action.
+     *
+     * @param {string} action_name - The name of the action.
+     * @param {object} action - An action object to add.
+     * @param {ACTION_KEYBOARD | ACTION_MOUSE | ACTION_GAMEPAD} action.type - The name of the action.
+     * @param {number[]} [action.keys] - Keyboard: A list of keycodes e.g. `[pc.KEY_A, pc.KEY_ENTER]`.
+     * @param {number} [action.button] - Mouse: e.g. `pc.MOUSEBUTTON_LEFT` - Gamepad: e.g. `pc.PAD_FACE_1`
+     * @param {number} [action.pad] - Gamepad: An index of the pad to register (use {@link PAD_1}, etc).
+     */
+    appendAction(action_name, action) {
+        this._actions[action_name] = this._actions[action_name] || [];
+        this._actions[action_name].push(action);
+    }
+
+    /**
+     * Create or update a action which is enabled when the supplied keys are pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number[]} keys - A list of keycodes.
      */
@@ -140,11 +151,11 @@ class Controller {
             this._enableKeyboard();
         }
         if (this._actions[action]) {
-            throw new Error("Action: " + action + " already registered");
+            throw new Error(`Action: ${action} already registered`);
         }
 
         if (keys === undefined) {
-            throw new Error("Invalid button");
+            throw new Error('Invalid button');
         }
 
         // convert to an array
@@ -152,23 +163,16 @@ class Controller {
             keys = [keys];
         }
 
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_KEYBOARD,
-                keys: keys
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_KEYBOARD,
-                keys: keys
-            }];
-        }
+        // add keys to actions
+        this.appendAction(action, {
+            type: ACTION_KEYBOARD,
+            keys
+        });
     }
 
     /**
-     * @function
-     * @name Controller#registerMouse
-     * @description Create or update an action which is enabled when the supplied mouse button is pressed.
+     * Create or update an action which is enabled when the supplied mouse button is pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number} button - The mouse button.
      */
@@ -181,24 +185,16 @@ class Controller {
             throw new Error('Invalid button');
         }
 
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_MOUSE,
-                button: button
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_MOUSE,
-                button: -button
-            }];
-        }
+        // add mouse button to actions
+        this.appendAction(action, {
+            type: ACTION_MOUSE,
+            button
+        });
     }
 
     /**
-     * @function
-     * @name Controller#registerPadButton
-     * @description Create or update an action which is enabled when the gamepad button is pressed.
+     * Create or update an action which is enabled when the gamepad button is pressed.
+     *
      * @param {string} action - The name of the action.
      * @param {number} pad - The index of the pad to register (use {@link PAD_1}, etc).
      * @param {number} button - The pad button.
@@ -207,40 +203,31 @@ class Controller {
         if (button === undefined) {
             throw new Error('Invalid button');
         }
-        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if (this._actions[action]) {
-            this._actions[action].push({
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            });
-        } else {
-            this._actions[action] = [{
-                type: ACTION_GAMEPAD,
-                button: button,
-                pad: pad
-            }];
-        }
+        // add gamepad button and pad to actions
+        this.appendAction(action, {
+            type: ACTION_GAMEPAD,
+            button,
+            pad
+        });
     }
 
     /**
-     * @function
-     * @name Controller#registerAxis
+     * Register an action against a controller axis.
+     *
      * @param {object} [options] - Optional options object.
-     * @param {object} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
+     * @param {number} [options.pad] - The index of the game pad to register for (use {@link PAD_1}, etc).
      */
     registerAxis(options) {
-        var name = options.name;
+        const name = options.name;
         if (!this._axes[name]) {
             this._axes[name] = [];
         }
-        var i = this._axes[name].push(name);
+        const i = this._axes[name].push(name);
 
-        //
         options = options || {};
         options.pad = options.pad || PAD_1;
 
-        var bind = function (controller, source, value, key) {
+        const bind = function (controller, source, value, key) {
             switch (source) {
                 case 'mousex':
                     controller._mouse.on(EVENT_MOUSEMOVE, function (e) {
@@ -289,9 +276,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#isPressed
-     * @description Returns true if the current action is enabled.
+     * Returns true if the current action is enabled.
+     *
      * @param {string} actionName - The name of the action.
      * @returns {boolean} True if the action is enabled.
      */
@@ -300,17 +286,15 @@ class Controller {
             return false;
         }
 
-        var action;
-        var index = 0;
-        var length = this._actions[actionName].length;
+        const length = this._actions[actionName].length;
 
-        for (index = 0; index < length; ++index) {
-            action = this._actions[actionName][index];
+        for (let index = 0; index < length; ++index) {
+            const action = this._actions[actionName][index];
             switch (action.type) {
                 case ACTION_KEYBOARD:
                     if (this._keyboard) {
-                        var i, len = action.keys.length;
-                        for (i = 0; i < len; i++) {
+                        const len = action.keys.length;
+                        for (let i = 0; i < len; i++) {
                             if (this._keyboard.isPressed(action.keys[i])) {
                                 return true;
                             }
@@ -333,9 +317,8 @@ class Controller {
     }
 
     /**
-     * @function
-     * @name Controller#wasPressed
-     * @description Returns true if the action was enabled this since the last update.
+     * Returns true if the action was enabled this since the last update.
+     *
      * @param {string} actionName - The name of the action.
      * @returns {boolean} True if the action was enabled this since the last update.
      */
@@ -344,16 +327,15 @@ class Controller {
             return false;
         }
 
-        var index = 0;
-        var length = this._actions[actionName].length;
+        const length = this._actions[actionName].length;
 
-        for (index = 0; index < length; ++index) {
-            var action = this._actions[actionName][index];
+        for (let index = 0; index < length; ++index) {
+            const action = this._actions[actionName][index];
             switch (action.type) {
                 case ACTION_KEYBOARD:
                     if (this._keyboard) {
-                        var i, len = action.keys.length;
-                        for (i = 0; i < len; i++) {
+                        const len = action.keys.length;
+                        for (let i = 0; i < len; i++) {
                             if (this._keyboard.wasPressed(action.keys[i])) {
                                 return true;
                             }
@@ -376,13 +358,13 @@ class Controller {
     }
 
     getAxis(name) {
-        var value = 0;
+        let value = 0;
 
         if (this._axes[name]) {
-            var i, len = this._axes[name].length;
-            for (i = 0; i < len; i++) {
+            const len = this._axes[name].length;
+            for (let i = 0; i < len; i++) {
                 if (type(this._axes[name][i]) === 'function') {
-                    var v = this._axes[name][i]();
+                    const v = this._axes[name][i]();
                     if (Math.abs(v) > Math.abs(value)) {
                         value = v;
                     }
@@ -400,7 +382,7 @@ class Controller {
     _enableMouse() {
         this._mouse = new Mouse();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._mouse.attach(this._element);
     }
@@ -408,7 +390,7 @@ class Controller {
     _enableKeyboard() {
         this._keyboard = new Keyboard();
         if (!this._element) {
-            throw new Error("Controller must be attached to an Element");
+            throw new Error('Controller must be attached to an Element');
         }
         this._keyboard.attach(this._element);
     }

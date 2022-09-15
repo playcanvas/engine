@@ -1,30 +1,40 @@
 import { SEMANTIC_POSITION } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
+import { ChunkUtils } from '../chunk-utils.js';
 
 import { gammaCode, precisionCode, tonemapCode } from './common.js';
 
 const skybox = {
     generateKey: function (options) {
-        const key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
-                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" +
-                  options.useCubeMapRotation + "" + options.useRightHandedCubeMap + "" + options.mip;
-        return key;
+        return options.type === 'cubemap' ?
+            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.fixSeams}-${options.mip}` :
+            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}`;
     },
 
     createShaderDefinition: function (device, options) {
-        const mip2size = [128, 64, 32, 16, 8, 4, 2];
+        let fshader;
+        if (options.type === 'cubemap') {
+            const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
 
-        let fshader = precisionCode(device);
-        fshader += options.useCubeMapRotation ? '#define CUBEMAP_ROTATION\n' : '';
-        fshader += options.useRightHandedCubeMap ? '#define RIGHT_HANDED_CUBEMAP\n' : '';
-        fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
-        fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
-        fshader += gammaCode(options.gamma);
-        fshader += tonemapCode(options.toneMapping);
-        fshader += shaderChunks.rgbmPS;
-        fshader += shaderChunks.skyboxHDRPS
-            .replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
-            .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
+            fshader = precisionCode(device);
+            fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
+            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.decodePS;
+            fshader += gammaCode(options.gamma);
+            fshader += tonemapCode(options.toneMapping);
+            fshader += shaderChunks.skyboxHDRPS
+                .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
+                .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
+        } else {
+            fshader = precisionCode(device);
+            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.decodePS;
+            fshader += gammaCode(options.gamma);
+            fshader += tonemapCode(options.toneMapping);
+            fshader += shaderChunks.sphericalPS;
+            fshader += shaderChunks.envAtlasPS;
+            fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
+        }
 
         return {
             attributes: {

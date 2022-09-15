@@ -1,7 +1,14 @@
 import { http } from '../net/http.js';
 
 class CssHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "css";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -20,7 +27,7 @@ class CssHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading css resource: " + url.original + " [" + err + "]");
+                callback(`Error loading css resource: ${url.original} [${err}]`);
             }
         });
     }
@@ -34,15 +41,14 @@ class CssHandler {
 }
 
 /**
- * @function
- * @name createStyle
- * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
+ * Creates a &lt;style&gt; DOM element from a string that contains CSS.
+ *
  * @param {string} cssString - A string that contains valid CSS.
+ * @returns {Element} The style DOM element.
  * @example
  * var css = 'body {height: 100;}';
  * var style = pc.createStyle(css);
  * document.head.appendChild(style);
- * @returns {Element} The style DOM element.
  */
 function createStyle(cssString) {
     const result = document.createElement('style');

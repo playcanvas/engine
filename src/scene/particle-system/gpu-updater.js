@@ -5,12 +5,13 @@ import { Vec3 } from '../../math/vec3.js';
 
 import { CULLFACE_NONE } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { DebugGraphics } from '../../graphics/debug-graphics.js';
 
 import { EMITTERSHAPE_BOX } from '../../scene/constants.js';
 
-var spawnMatrix3 = new Mat3();
-var emitterMatrix3 = new Mat3();
-var emitterMatrix3Inv = new Mat3();
+const spawnMatrix3 = new Mat3();
+const emitterMatrix3 = new Mat3();
+const emitterMatrix3Inv = new Mat3();
 
 // Wraps GPU particles render state and setup from ParticleEmitter
 class ParticleGPUUpdater {
@@ -25,43 +26,43 @@ class ParticleGPUUpdater {
         this.inBoundsSizeUniform = new Float32Array(3);
         this.inBoundsCenterUniform = new Float32Array(3);
 
-        this.constantParticleTexIN = gd.scope.resolve("particleTexIN");
-        this.constantParticleTexOUT = gd.scope.resolve("particleTexOUT");
-        this.constantEmitterPos = gd.scope.resolve("emitterPos");
-        this.constantEmitterScale = gd.scope.resolve("emitterScale");
-        this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
-        this.constantSpawnPosInnerRatio = gd.scope.resolve("spawnPosInnerRatio");
-        this.constantSpawnBoundsSphere = gd.scope.resolve("spawnBoundsSphere");
-        this.constantSpawnBoundsSphereInnerRatio = gd.scope.resolve("spawnBoundsSphereInnerRatio");
-        this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
-        this.constantFrameRandom = gd.scope.resolve("frameRandom");
-        this.constantDelta = gd.scope.resolve("delta");
-        this.constantRate = gd.scope.resolve("rate");
-        this.constantRateDiv = gd.scope.resolve("rateDiv");
-        this.constantLifetime = gd.scope.resolve("lifetime");
-        this.constantGraphSampleSize = gd.scope.resolve("graphSampleSize");
-        this.constantGraphNumSamples = gd.scope.resolve("graphNumSamples");
-        this.constantInternalTex0 = gd.scope.resolve("internalTex0");
-        this.constantInternalTex1 = gd.scope.resolve("internalTex1");
-        this.constantInternalTex2 = gd.scope.resolve("internalTex2");
-        this.constantInternalTex3 = gd.scope.resolve("internalTex3");
-        this.constantEmitterMatrix = gd.scope.resolve("emitterMatrix");
-        this.constantEmitterMatrixInv = gd.scope.resolve("emitterMatrixInv");
-        this.constantNumParticles = gd.scope.resolve("numParticles");
-        this.constantNumParticlesPot = gd.scope.resolve("numParticlesPot");
-        this.constantLocalVelocityDivMult = gd.scope.resolve("localVelocityDivMult");
-        this.constantVelocityDivMult = gd.scope.resolve("velocityDivMult");
-        this.constantRotSpeedDivMult = gd.scope.resolve("rotSpeedDivMult");
-        this.constantSeed = gd.scope.resolve("seed");
-        this.constantStartAngle = gd.scope.resolve("startAngle");
-        this.constantStartAngle2 = gd.scope.resolve("startAngle2");
-        this.constantOutBoundsMul = gd.scope.resolve("outBoundsMul");
-        this.constantOutBoundsAdd = gd.scope.resolve("outBoundsAdd");
-        this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
-        this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
-        this.constantMaxVel = gd.scope.resolve("maxVel");
-        this.constantFaceTangent = gd.scope.resolve("faceTangent");
-        this.constantFaceBinorm = gd.scope.resolve("faceBinorm");
+        this.constantParticleTexIN = gd.scope.resolve('particleTexIN');
+        this.constantParticleTexOUT = gd.scope.resolve('particleTexOUT');
+        this.constantEmitterPos = gd.scope.resolve('emitterPos');
+        this.constantEmitterScale = gd.scope.resolve('emitterScale');
+        this.constantSpawnBounds = gd.scope.resolve('spawnBounds');
+        this.constantSpawnPosInnerRatio = gd.scope.resolve('spawnPosInnerRatio');
+        this.constantSpawnBoundsSphere = gd.scope.resolve('spawnBoundsSphere');
+        this.constantSpawnBoundsSphereInnerRatio = gd.scope.resolve('spawnBoundsSphereInnerRatio');
+        this.constantInitialVelocity = gd.scope.resolve('initialVelocity');
+        this.constantFrameRandom = gd.scope.resolve('frameRandom');
+        this.constantDelta = gd.scope.resolve('delta');
+        this.constantRate = gd.scope.resolve('rate');
+        this.constantRateDiv = gd.scope.resolve('rateDiv');
+        this.constantLifetime = gd.scope.resolve('lifetime');
+        this.constantGraphSampleSize = gd.scope.resolve('graphSampleSize');
+        this.constantGraphNumSamples = gd.scope.resolve('graphNumSamples');
+        this.constantInternalTex0 = gd.scope.resolve('internalTex0');
+        this.constantInternalTex1 = gd.scope.resolve('internalTex1');
+        this.constantInternalTex2 = gd.scope.resolve('internalTex2');
+        this.constantInternalTex3 = gd.scope.resolve('internalTex3');
+        this.constantEmitterMatrix = gd.scope.resolve('emitterMatrix');
+        this.constantEmitterMatrixInv = gd.scope.resolve('emitterMatrixInv');
+        this.constantNumParticles = gd.scope.resolve('numParticles');
+        this.constantNumParticlesPot = gd.scope.resolve('numParticlesPot');
+        this.constantLocalVelocityDivMult = gd.scope.resolve('localVelocityDivMult');
+        this.constantVelocityDivMult = gd.scope.resolve('velocityDivMult');
+        this.constantRotSpeedDivMult = gd.scope.resolve('rotSpeedDivMult');
+        this.constantSeed = gd.scope.resolve('seed');
+        this.constantStartAngle = gd.scope.resolve('startAngle');
+        this.constantStartAngle2 = gd.scope.resolve('startAngle2');
+        this.constantOutBoundsMul = gd.scope.resolve('outBoundsMul');
+        this.constantOutBoundsAdd = gd.scope.resolve('outBoundsAdd');
+        this.constantInBoundsSize = gd.scope.resolve('inBoundsSize');
+        this.constantInBoundsCenter = gd.scope.resolve('inBoundsCenter');
+        this.constantMaxVel = gd.scope.resolve('maxVel');
+        this.constantFaceTangent = gd.scope.resolve('faceTangent');
+        this.constantFaceBinorm = gd.scope.resolve('faceBinorm');
     }
 
     _setInputBounds() {
@@ -84,11 +85,9 @@ class ParticleGPUUpdater {
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
 
-        // #if _DEBUG
-        device.pushMarker("ParticleGPU");
-        // #endif
+        DebugGraphics.pushGpuMarker(device, 'ParticleGPU');
 
-        var emitter = this._emitter;
+        const emitter = this._emitter;
 
         device.setBlending(false);
         device.setColorWrite(true, true, true, true);
@@ -107,8 +106,8 @@ class ParticleGPUUpdater {
         this.constantInternalTex2.setValue(emitter.internalTex2);
         this.constantInternalTex3.setValue(emitter.internalTex3);
 
-        var node = emitter.meshInstance.node;
-        var emitterScale = node === null ? Vec3.ONE : node.localScale;
+        const node = emitter.meshInstance.node;
+        const emitterScale = node === null ? Vec3.ONE : node.localScale;
 
         if (emitter.pack8) {
             this.worldBoundsMulUniform[0] = emitter.worldBoundsMul.x;
@@ -122,13 +121,13 @@ class ParticleGPUUpdater {
 
             this._setInputBounds();
 
-            var maxVel = emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
+            let maxVel = emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
             maxVel = Math.max(maxVel, 1);
             this.constantMaxVel.setValue(maxVel);
         }
 
-        var emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
-        var emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
+        const emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
+        const emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
         if (emitter.emitterShape === EMITTERSHAPE_BOX) {
             spawnMatrix3.setFromMat4(spawnMatrix);
             this.constantSpawnBounds.setValue(spawnMatrix3.data);
@@ -165,9 +164,9 @@ class ParticleGPUUpdater {
         this.constantVelocityDivMult.setValue(emitter.velocityUMax);
         this.constantRotSpeedDivMult.setValue(emitter.rotSpeedUMax[0]);
 
-        var texIN = emitter.swapTex ? emitter.particleTexOUT : emitter.particleTexIN;
+        let texIN = emitter.swapTex ? emitter.particleTexOUT : emitter.particleTexIN;
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
-        var texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
+        const texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
         drawQuadWithShader(
             device,
@@ -178,8 +177,8 @@ class ParticleGPUUpdater {
 
         // this.constantParticleTexOUT.setValue(texOUT);
 
-        emitter.material.setParameter("particleTexOUT", texIN);// OUT);
-        emitter.material.setParameter("particleTexIN", texOUT);// IN);
+        emitter.material.setParameter('particleTexOUT', texIN);// OUT);
+        emitter.material.setParameter('particleTexIN', texOUT);// IN);
         emitter.beenReset = false;
 
         emitter.swapTex = !emitter.swapTex;
@@ -192,9 +191,7 @@ class ParticleGPUUpdater {
         if (emitter.pack8)
             this._setInputBounds();
 
-        // #if _DEBUG
-        device.popMarker();
-        // #endif
+        DebugGraphics.popGpuMarker(device);
     }
 }
 

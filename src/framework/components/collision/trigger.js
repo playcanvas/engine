@@ -1,24 +1,27 @@
-var ammoVec1, ammoQuat, ammoTransform;
+let ammoVec1, ammoQuat, ammoTransform;
 
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
 /**
- * @private
- * @class
- * @name Trigger
- * @classdesc Creates a trigger object used to create internal physics objects that interact with
- * rigid bodies and trigger collision events with no collision response.
- * @param {Application} app - The running {@link Application}.
- * @param {Component} component - The component for which the trigger will be created.
- * @param {ComponentData} data - The data for the component.
+ * Creates a trigger object used to create internal physics objects that interact with rigid bodies
+ * and trigger collision events with no collision response.
+ *
+ * @ignore
  */
 class Trigger {
+    /**
+     * Create a new Trigger instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {Component} component - The component for which the trigger will be created.
+     * @param {ComponentData} data - The data for the component.
+     */
     constructor(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
 
-        if (typeof Ammo !== 'undefined' && ! ammoVec1) {
+        if (typeof Ammo !== 'undefined' && !ammoVec1) {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
             ammoTransform = new Ammo.btTransform();
@@ -28,18 +31,18 @@ class Trigger {
     }
 
     initialize(data) {
-        var entity = this.entity;
-        var shape = data.shape;
+        const entity = this.entity;
+        const shape = data.shape;
 
         if (shape && typeof Ammo !== 'undefined') {
             if (entity.trigger) {
                 entity.trigger.destroy();
             }
 
-            var mass = 1;
+            const mass = 1;
 
-            var pos = entity.getPosition();
-            var rot = entity.getRotation();
+            const pos = entity.getPosition();
+            const rot = entity.getRotation();
 
             ammoVec1.setValue(pos.x, pos.y, pos.z);
             ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -47,7 +50,7 @@ class Trigger {
             ammoTransform.setOrigin(ammoVec1);
             ammoTransform.setRotation(ammoQuat);
 
-            var body = this.app.systems.rigidbody.createBody(mass, shape, ammoTransform);
+            const body = this.app.systems.rigidbody.createBody(mass, shape, ammoTransform);
 
             body.setRestitution(0);
             body.setFriction(0);
@@ -68,7 +71,7 @@ class Trigger {
     }
 
     destroy() {
-        var body = this.body;
+        const body = this.body;
         if (!body) return;
 
         this.disable();
@@ -77,8 +80,8 @@ class Trigger {
     }
 
     _getEntityTransform(transform) {
-        var pos = this.entity.getPosition();
-        var rot = this.entity.getRotation();
+        const pos = this.entity.getPosition();
+        const rot = this.entity.getRotation();
 
         ammoVec1.setValue(pos.x, pos.y, pos.z);
         ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -90,16 +93,16 @@ class Trigger {
     updateTransform() {
         this._getEntityTransform(ammoTransform);
 
-        var body = this.body;
+        const body = this.body;
         body.setWorldTransform(ammoTransform);
         body.activate();
     }
 
     enable() {
-        var body = this.body;
+        const body = this.body;
         if (!body) return;
 
-        var systems = this.app.systems;
+        const systems = this.app.systems;
         systems.rigidbody.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
         systems.rigidbody._triggers.push(this);
 
@@ -111,11 +114,11 @@ class Trigger {
     }
 
     disable() {
-        var body = this.body;
+        const body = this.body;
         if (!body) return;
 
-        var systems = this.app.systems;
-        var idx = systems.rigidbody._triggers.indexOf(this);
+        const systems = this.app.systems;
+        const idx = systems.rigidbody._triggers.indexOf(this);
         if (idx > -1) {
             systems.rigidbody._triggers.splice(idx, 1);
         }

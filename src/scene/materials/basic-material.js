@@ -1,62 +1,75 @@
+import { Debug } from '../../core/debug.js';
 import { Color } from '../../math/color.js';
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 
+import { basic } from '../../graphics/program-lib/programs/basic.js';
+import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 import { Material } from './material.js';
 
+/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+
 /**
- * @class
- * @name BasicMaterial
+ * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
+ * modulated with a color.
+ *
  * @augments Material
- * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
- * color map modulated with a color.
- * @property {Color} color The flat color of the material (RGBA, where each component is 0 to 1).
- * @property {Texture|null} colorMap The color map of the material (default is null). If specified, the color map is
- * modulated by the color property.
- * @example
- * // Create a new Basic material
- * var material = new pc.BasicMaterial();
- *
- * // Set the material to have a texture map that is multiplied by a red color
- * material.color.set(1, 0, 0);
- * material.colorMap = diffuseMap;
- *
- * // Notify the material that it has been modified
- * material.update();
  */
 class BasicMaterial extends Material {
+    /**
+     * Create a new BasicMaterial instance.
+     *
+     * @example
+     * // Create a new Basic material
+     * var material = new pc.BasicMaterial();
+     *
+     * // Set the material to have a texture map that is multiplied by a red color
+     * material.color.set(1, 0, 0);
+     * material.colorMap = diffuseMap;
+     *
+     * // Notify the material that it has been modified
+     * material.update();
+     */
     constructor() {
         super();
 
+        /**
+         * The flat color of the material (RGBA, where each component is 0 to 1).
+         *
+         * @type {Color}
+         */
         this.color = new Color(1, 1, 1, 1);
         this.colorUniform = new Float32Array(4);
 
+        /**
+         * The color map of the material (default is null). If specified, the color map is
+         * modulated by the color property.
+         *
+         * @type {Texture|null}
+         */
         this.colorMap = null;
         this.vertexColors = false;
     }
 
     /**
-     * @function
-     * @name BasicMaterial#clone
-     * @description Duplicates a Basic material. All properties are duplicated except textures
-     * where only the references are copied.
-     * @returns {BasicMaterial} A cloned Basic material.
+     * Copy a `BasicMaterial`.
+     *
+     * @param {BasicMaterial} source - The material to copy from.
+     * @returns {BasicMaterial} The destination material.
      */
-    clone() {
-        var clone = new BasicMaterial();
+    copy(source) {
+        super.copy(source);
 
-        Material.prototype._cloneInternal.call(this, clone);
+        this.color.copy(source.color);
+        this.colorMap = source.colorMap;
+        this.vertexColors = source.vertexColors;
 
-        clone.color.copy(this.color);
-        clone.colorMap = this.colorMap;
-        clone.vertexColors = this.vertexColors;
-
-        return clone;
+        return this;
     }
 
-    updateUniforms() {
+    updateUniforms(device, scene) {
         this.clearParameters();
 
         this.colorUniform[0] = this.color.r;
@@ -69,8 +82,17 @@ class BasicMaterial extends Material {
         }
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        var options = {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+
+        // Note: this is deprecated function Editor and possibly other projects use: they define
+        // updateShader callback on their BasicMaterial, so we handle it here.
+        if (this.updateShader) {
+            Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
+            this.updateShader(device, scene, objDefs, staticLightList, pass, sortedLights);
+            return this.shader;
+        }
+
+        const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
             screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
             useInstancing: objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0,
@@ -78,12 +100,18 @@ class BasicMaterial extends Material {
             useMorphNormal: objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
             useMorphTextureBased: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0,
 
+            alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,
             diffuseMap: !!this.colorMap,
             pass: pass
         };
-        var library = device.getProgramLibrary();
-        this.shader = library.getProgram('basic', options);
+
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+
+        const library = device.getProgramLibrary();
+        library.register('basic', basic);
+
+        return library.getProgram('basic', options, processingOptions);
     }
 }
 

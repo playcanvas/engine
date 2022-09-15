@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -5,10 +7,29 @@ import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from './const
 import { hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
 
+/** @typedef {import('../sound/sound.js').Sound} Sound */
+/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
 
+/**
+ * 3D audio channel.
+ *
+ * @ignore
+ */
 class Channel3d extends Channel {
+    /**
+     * Create a new Channel3d instance.
+     *
+     * @param {SoundManager} manager - The SoundManager instance.
+     * @param {Sound} sound - The sound to playback.
+     * @param {object} [options] - Optional options object.
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
+     * end or not.
+     */
     constructor(manager, sound, options) {
         super(manager, sound, options);
 
@@ -29,79 +50,84 @@ class Channel3d extends Channel {
         return this.position;
     }
 
+    setPosition(position) {
+        this.position.copy(position);
+        const panner = this.panner;
+        if ('positionX' in panner) {
+            panner.positionX.value = position.x;
+            panner.positionY.value = position.y;
+            panner.positionZ.value = position.z;
+        } else if (panner.setPosition) { // Firefox (and legacy browsers)
+            panner.setPosition(position.x, position.y, position.z);
+        }
+    }
+
     getVelocity() {
+        Debug.warn('Channel3d#getVelocity is not implemented.');
         return this.velocity;
+    }
+
+    setVelocity(velocity) {
+        Debug.warn('Channel3d#setVelocity is not implemented.');
+        this.velocity.copy(velocity);
+    }
+
+    getMaxDistance() {
+        return this.panner.maxDistance;
+    }
+
+    setMaxDistance(max) {
+        this.panner.maxDistance = max;
+    }
+
+    getMinDistance() {
+        return this.panner.refDistance;
+    }
+
+    setMinDistance(min) {
+        this.panner.refDistance = min;
+    }
+
+    getRollOffFactor() {
+        return this.panner.rolloffFactor;
+    }
+
+    setRollOffFactor(factor) {
+        this.panner.rolloffFactor = factor;
+    }
+
+    getDistanceModel() {
+        return this.panner.distanceModel;
+    }
+
+    setDistanceModel(distanceModel) {
+        this.panner.distanceModel = distanceModel;
+    }
+
+    /**
+     * Create the buffer source and connect it up to the correct audio nodes.
+     *
+     * @private
+     */
+    _createSource() {
+        const context = this.manager.context;
+
+        this.source = context.createBufferSource();
+        this.source.buffer = this.sound.buffer;
+
+        // Connect up the nodes
+        this.source.connect(this.panner);
+        this.panner.connect(this.gain);
+        this.gain.connect(context.destination);
+
+        if (!this.loop) {
+            // mark source as paused when it ends
+            this.source.onended = this.pause.bind(this);
+        }
     }
 }
 
-if (hasAudioContext()) {
-    Object.assign(Channel3d.prototype, {
-        setPosition: function (position) {
-            this.position.copy(position);
-            this.panner.setPosition(position.x, position.y, position.z);
-        },
-
-        setVelocity: function (velocity) {
-            this.velocity.copy(velocity);
-            this.panner.setVelocity(velocity.x, velocity.y, velocity.z);
-        },
-
-        getMaxDistance: function () {
-            return this.panner.maxDistance;
-        },
-
-        setMaxDistance: function (max) {
-            this.panner.maxDistance = max;
-        },
-
-        getMinDistance: function () {
-            return this.panner.refDistance;
-        },
-
-        setMinDistance: function (min) {
-            this.panner.refDistance = min;
-        },
-
-        getRollOffFactor: function () {
-            return this.panner.rolloffFactor;
-        },
-
-        setRollOffFactor: function (factor) {
-            this.panner.rolloffFactor = factor;
-        },
-
-        getDistanceModel: function () {
-            return this.pannel.distanceModel;
-        },
-
-        setDistanceModel: function (distanceModel) {
-            this.panner.distanceModel = distanceModel;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name Channel3d#_createSource
-         * @description Create the buffer source and connect it up to the correct audio nodes.
-         */
-        _createSource: function () {
-            const context = this.manager.context;
-
-            this.source = context.createBufferSource();
-            this.source.buffer = this.sound.buffer;
-
-            // Connect up the nodes
-            this.source.connect(this.panner);
-            this.panner.connect(this.gain);
-            this.gain.connect(context.destination);
-
-            if (!this.loop) {
-                // mark source as paused when it ends
-                this.source.onended = this.pause.bind(this);
-            }
-        }
-    });
-} else {
+if (!hasAudioContext()) {
     // temp vector storage
     let offset = new Vec3();
 
@@ -142,10 +168,6 @@ if (hasAudioContext()) {
                 const v = this.getVolume();
                 this.source.volume = v * factor;
             }
-        },
-
-        setVelocity: function (velocity) {
-            this.velocity.copy(velocity);
         },
 
         getMaxDistance: function () {

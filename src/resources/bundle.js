@@ -6,17 +6,31 @@ import { Bundle } from '../bundles/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name BundleHandler
+ * Loads Bundle Assets.
+ *
  * @implements {ResourceHandler}
- * @param {AssetRegistry} assets - The asset registry.
- * @classdesc Loads Bundle Assets.
+ * @ignore
  */
 class BundleHandler {
-    constructor(assets) {
-        this._assets = assets;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "bundle";
+
+    /**
+     * Create a new BundleHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this._assets = app.assets;
         this._worker = null;
         this.maxRetries = 0;
     }
@@ -36,14 +50,14 @@ class BundleHandler {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         }, function (err, response) {
-            if (! err) {
+            if (!err) {
                 try {
                     self._untar(response, callback);
                 } catch (ex) {
-                    callback("Error loading bundle resource " + url.original + ": " + ex);
+                    callback('Error loading bundle resource ' + url.original + ': ' + ex);
                 }
             } else {
-                callback("Error loading bundle resource " + url.original + ": " + err);
+                callback('Error loading bundle resource ' + url.original + ': ' + err);
             }
         });
     }
@@ -64,7 +78,7 @@ class BundleHandler {
 
                 // if we have no more requests for this worker then
                 // destroy it
-                if (! self._worker.hasPendingRequests()) {
+                if (!self._worker.hasPendingRequests()) {
                     self._worker.destroy();
                     self._worker = null;
                 }

@@ -171,29 +171,7 @@ function BloomEffect(graphicsDevice) {
         fshader: bloomCombineFrag
     });
 
-    // Render targets
-    var width = graphicsDevice.width;
-    var height = graphicsDevice.height;
     this.targets = [];
-    for (var i = 0; i < 2; i++) {
-        var colorBuffer = new pc.Texture(graphicsDevice, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width >> 1,
-            height: height >> 1,
-            mipmaps: false
-        });
-        colorBuffer.minFilter = pc.FILTER_LINEAR;
-        colorBuffer.magFilter = pc.FILTER_LINEAR;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'pe-bloom';
-        var target = new pc.RenderTarget({
-            colorBuffer: colorBuffer,
-            depth: false
-        });
-
-        this.targets.push(target);
-    }
 
     // Effect defaults
     this.bloomThreshold = 0.25;
@@ -208,8 +186,61 @@ function BloomEffect(graphicsDevice) {
 BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
 BloomEffect.prototype.constructor = BloomEffect;
 
+BloomEffect.prototype._destroy = function () {
+    if (this.targets) {
+        var i;
+        for (i = 0; i < this.targets.length; i++) {
+            this.targets[i].destroyTextureBuffers();
+            this.targets[i].destroy();
+        }
+    }
+    this.targets.length = 0;
+};
+
+BloomEffect.prototype._resize = function (target) {
+
+
+    var width = target.colorBuffer.width;
+    var height = target.colorBuffer.height;
+
+    if (width === this.width && height === this.height)
+        return;
+
+    this.width = width;
+    this.height = height;
+
+    this._destroy();
+
+    // Render targets
+    var i;
+    for (i = 0; i < 2; i++) {
+        var colorBuffer = new pc.Texture(this.device, {
+            name: "Bloom Texture" + i,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            width: width >> 1,
+            height: height >> 1,
+            mipmaps: false
+        });
+        colorBuffer.minFilter = pc.FILTER_LINEAR;
+        colorBuffer.magFilter = pc.FILTER_LINEAR;
+        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.name = 'pe-bloom';
+        var bloomTarget = new pc.RenderTarget({
+            name: "Bloom Render Target " + i,
+            colorBuffer: colorBuffer,
+            depth: false
+        });
+
+        this.targets.push(bloomTarget);
+    }
+};
+
 Object.assign(BloomEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
@@ -295,5 +326,6 @@ Bloom.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this._destroy();
     });
 };

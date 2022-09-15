@@ -1,16 +1,28 @@
 /**
- * @class
- * @name AnimStateGraph
- * @classdesc Creates an AnimStateGraph asset resource from a blob of JSON data that represents an anim state graph.
+ * An asset resource which represents an anim state graph. It can be loaded into an anim component using the {@link AnimComponent#loadStateGraph} method.
+ *
+ * ## Usage
+ * Scripts can retrieve an AnimStateGraph instance from assets of type 'animstategraph'. An AnimStateGraph can then be loaded into an anim component as follows:
+ * ```javascript
+ * const animStateGraph = app.assets.get(ASSET_ID).resource;
+ * const entity = new pc.Entity();
+ * entity.addComponent('anim');
+ * entity.anim.loadStateGraph(animStateGraph);
+ * ```
  */
 class AnimStateGraph {
+    /**
+     * Create an AnimStateGraph instance from JSON data.
+     *
+     * @param {object} data - The JSON data to create the AnimStateGraph from.
+     * @hideconstructor
+     */
     constructor(data) {
         this._layers = [];
         this._parameters = {};
-        var i;
         if (!Array.isArray(data.layers)) {
             // Layers as an object
-            // var data = {
+            // const data = {
             //     "layers": {
             //         "0": {
             //             "name": "Base",
@@ -39,23 +51,25 @@ class AnimStateGraph {
             //     },
             //     "parameters": {}
             // };
-            for (var layerId in data.layers) {
-                var dataLayer = data.layers[layerId];
-                var layer = {
+            for (const layerId in data.layers) {
+                const dataLayer = data.layers[layerId];
+                const layer = {
                     name: dataLayer.name,
+                    blendType: dataLayer.blendType,
+                    weight: dataLayer.weight,
                     states: [],
                     transitions: []
                 };
-                for (i = 0; i < dataLayer.states.length; i++) {
+                for (let i = 0; i < dataLayer.states.length; i++) {
                     layer.states.push(data.states[dataLayer.states[i]]);
                 }
-                for (i = 0; i < dataLayer.transitions.length; i++) {
-                    var dataLayerTransition = data.transitions[dataLayer.transitions[i]];
+                for (let i = 0; i < dataLayer.transitions.length; i++) {
+                    const dataLayerTransition = data.transitions[dataLayer.transitions[i]];
                     if (dataLayerTransition.conditions && !Array.isArray(dataLayerTransition.conditions)) {
-                        var conditionKeys = Object.keys(dataLayerTransition.conditions);
-                        var conditions = [];
-                        for (var j = 0; j < conditionKeys.length; j++) {
-                            var condition = dataLayerTransition.conditions[conditionKeys[j]];
+                        const conditionKeys = Object.keys(dataLayerTransition.conditions);
+                        const conditions = [];
+                        for (let j = 0; j < conditionKeys.length; j++) {
+                            const condition = dataLayerTransition.conditions[conditionKeys[j]];
                             if (condition.parameterName) {
                                 conditions.push(condition);
                             }
@@ -74,7 +88,7 @@ class AnimStateGraph {
             }
         } else {
             // Layers as an array:
-            // var data = {
+            // const data = {
             //     "layers": [
             //         {
             //             "name": "Base",
@@ -103,8 +117,8 @@ class AnimStateGraph {
             // };
             this._layers = data.layers;
         }
-        for (var paramId in data.parameters) {
-            var param = data.parameters[paramId];
+        for (const paramId in data.parameters) {
+            const param = data.parameters[paramId];
             this._parameters[param.name] = { type: param.type, value: param.value };
         }
     }

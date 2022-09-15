@@ -1,7 +1,14 @@
 import { http, Http } from '../net/http.js';
 
 class BinaryHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "binary";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -21,7 +28,7 @@ class BinaryHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading binary resource: " + url.original + " [" + err + "]");
+                callback(`Error loading binary resource: ${url.original} [${err}]`);
             }
         });
     }

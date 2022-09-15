@@ -1,15 +1,23 @@
 import { http, Http } from '../net/http.js';
 import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @private
- * @class
- * @name AnimStateGraphHandler
+ * Resource handler used for loading {@link AnimStateGraph} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link AnimStateGraph} resources.
+ * @ignore
  */
 class AnimStateGraphHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "animstategraph";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -33,7 +41,7 @@ class AnimStateGraphHandler {
 
         http.get(url.load, options, function (err, response) {
             if (err) {
-                callback("Error loading animation state graph resource: " + url.original + " [" + err + "]");
+                callback(`Error loading animation state graph resource: ${url.original} [${err}]`);
             } else {
                 callback(null, response);
             }
@@ -42,6 +50,9 @@ class AnimStateGraphHandler {
 
     open(url, data) {
         return new AnimStateGraph(data);
+    }
+
+    patch(asset, assets) {
     }
 }
 

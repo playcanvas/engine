@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class OBJExample extends Example {
+class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the app and start the update loop
@@ -13,8 +11,8 @@ class OBJExample extends Example {
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        const objurl = "static/assets/models/monkey.obj";
-        const scripturl = "static/scripts/parsers/obj-model.js";
+        const objurl = "/static/assets/models/monkey.obj";
+        const scripturl = "/static/scripts/parsers/obj-model.js";
 
         let entity: pc.Entity;
         app.assets.loadFromUrl(scripturl, "script", function () {
@@ -36,12 +34,12 @@ class OBJExample extends Example {
                 app.root.addChild(entity);
 
                 // add a randomly generated material to all mesh instances
-                const mis = entity.model.model.meshInstances;
+                const mis = entity.model.meshInstances;
                 for (let i = 0; i < mis.length; i++) {
-                    mis[i].material = new pc.StandardMaterial();
-                    // @ts-ignore engine-tsd
-                    mis[i].material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
-                    mis[i].material.update();
+                    const material = new pc.StandardMaterial();
+                    material.diffuse = new pc.Color(pc.math.random(0, 1), pc.math.random(0, 1), pc.math.random(0, 1));
+                    material.update();
+                    mis[i].material = material;
                 }
             });
         });
@@ -72,4 +70,4 @@ class OBJExample extends Example {
     }
 }
 
-export default OBJExample;
+export default ObjExample;

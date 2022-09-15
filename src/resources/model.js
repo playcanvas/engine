@@ -1,29 +1,55 @@
 import { path } from '../core/path.js';
+import { Debug } from '../core/debug.js';
 
 import { http, Http } from '../net/http.js';
 
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';
 
+import { getDefaultMaterial } from '../scene/materials/default-material.js';
+
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name ModelHandler
+ * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
+ *
+ * @callback AddParserCallback
+ * @param {string} url - The resource url.
+ * @param {object} data - The raw model data.
+ * @returns {boolean} Return true if this parser should be used to parse the data into a
+ * {@link Model}.
+ */
+
+/**
+ * Resource handler used for loading {@link Model} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Model} resources.
- * @param {GraphicsDevice} device - The graphics device that will be rendering.
- * @param {StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
  */
 class ModelHandler {
-    constructor(device, defaultMaterial) {
-        this._device = device;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "model";
+
+    /**
+     * Create a new ModelHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this._device = app.graphicsDevice;
         this._parsers = [];
-        this._defaultMaterial = defaultMaterial;
+        this._defaultMaterial = getDefaultMaterial(this._device);
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device), function (url, data) {
+        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device), function (url, data) {
+        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
@@ -57,7 +83,7 @@ class ModelHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading model: " + url.original + " [" + err + "]");
+                callback(`Error loading model: ${url.original} [${err}]`);
             }
         });
     }
@@ -70,9 +96,7 @@ class ModelHandler {
                 return p.parser.parse(data);
             }
         }
-        // #if _DEBUG
-        console.warn("pc.ModelHandler#open: No model parser found for: " + url);
-        // #endif
+        Debug.warn('pc.ModelHandler#open: No model parser found for: ' + url);
         return null;
     }
 
@@ -136,14 +160,12 @@ class ModelHandler {
     }
 
     /**
-     * @function
-     * @name ModelHandler#addParser
-     * @description Add a parser that converts raw data into a {@link Model}
-     * Default parser is for JSON models.
+     * Add a parser that converts raw data into a {@link Model}. Default parser is for JSON models.
+     *
      * @param {object} parser - See JsonModelParser for example.
-     * @param {callbacks.AddParser} decider - Function that decides on which parser to use.
-     * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link Model}.
-     * The first parser to return true is used.
+     * @param {AddParserCallback} decider - Function that decides on which parser to use. Function
+     * should take (url, data) arguments and return true if this parser should be used to parse the
+     * data into a {@link Model}. The first parser to return true is used.
      */
     addParser(parser, decider) {
         this._parsers.push({

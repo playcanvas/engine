@@ -21,11 +21,11 @@ class SkinInstanceCache {
     // #if _DEBUG
     // function that logs out the state of the skin instances cache
     static logCachedSkinInstances() {
-        console.log("CachedSkinInstances");
+        console.log('CachedSkinInstances');
         SkinInstanceCache._skinInstanceCache.forEach(function (array, rootBone) {
             console.log(`${rootBone.name}: Array(${array.length})`);
             for (let i = 0; i < array.length; i++) {
-                console.log(`  ${i}: RefCount ${array[i].getRefCount()}`);
+                console.log(`  ${i}: RefCount ${array[i].refCount}`);
             }
         });
     }
@@ -33,7 +33,7 @@ class SkinInstanceCache {
 
     // returns cached or creates a skin instance for the skin and a rootBone, to be used by render component
     // on the specified entity
-    static createCachedSkinedInstance(skin, rootBone, entity) {
+    static createCachedSkinInstance(skin, rootBone, entity) {
 
         // try and get skin instance from the cache
         let skinInst = SkinInstanceCache.getCachedSkinInstance(skin, rootBone);
@@ -62,7 +62,7 @@ class SkinInstanceCache {
         if (cachedObjArray) {
 
             // find matching skin
-            const cachedObj = cachedObjArray.find((element) => element.skin === skin);
+            const cachedObj = cachedObjArray.find(element => element.skin === skin);
             if (cachedObj) {
                 cachedObj.incRefCount();
                 skinInstance = cachedObj.skinInstance;
@@ -83,7 +83,7 @@ class SkinInstanceCache {
         }
 
         // find entry for the skin
-        let cachedObj = cachedObjArray.find((element) => element.skin === skin);
+        let cachedObj = cachedObjArray.find(element => element.skin === skin);
         if (!cachedObj) {
             cachedObj = new SkinInstanceCachedObject(skin, skinInstance);
             cachedObjArray.push(cachedObj);
@@ -104,7 +104,7 @@ class SkinInstanceCache {
                 if (cachedObjArray) {
 
                     // actual skin instance
-                    const cachedObjIndex = cachedObjArray.findIndex((element) => element.skinInstance === skinInstance);
+                    const cachedObjIndex = cachedObjArray.findIndex(element => element.skinInstance === skinInstance);
                     if (cachedObjIndex >= 0) {
 
                         // dec ref on the object
@@ -112,7 +112,7 @@ class SkinInstanceCache {
                         cachedObj.decRefCount();
 
                         // last reference, needs to be destroyed
-                        if (cachedObj.getRefCount() === 0) {
+                        if (cachedObj.refCount === 0) {
                             cachedObjArray.splice(cachedObjIndex, 1);
 
                             // if the array is empty

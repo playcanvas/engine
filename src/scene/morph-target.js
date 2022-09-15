@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { BoundingBox } from '../shape/bounding-box.js';
 
 import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
@@ -5,26 +6,32 @@ import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';
 
 /**
- * @class
- * @name MorphTarget
- * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
- * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
- * @param {object} options - Object for passing optional arguments.
- * @param {ArrayBuffer} options.deltaPositions - An array of 3-dimensional vertex position offsets.
- * @param {number} options.deltaPositionsType - A format to store position offsets inside {@link VertexBuffer}. Defaults to {@link TYPE_FLOAT32} if not provided.
- * @param {ArrayBuffer} [options.deltaNormals] - An array of 3-dimensional vertex normal offsets.
- * @param {number} options.deltaNormalsType - A format to store normal offsets inside {@link VertexBuffer}. Defaults to {@link TYPE_FLOAT32} if not provided.
- * @param {string} [options.name] - Name.
- * @param {BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
- * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
+ * A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
+ * Multiple morph targets can be blended together on a mesh. This is useful for effects that are
+ * hard to achieve with conventional animation and skinning.
  */
 class MorphTarget {
+    /**
+     * Create a new MorphTarget instance.
+     *
+     * @param {object} options - Object for passing optional arguments.
+     * @param {ArrayBuffer} options.deltaPositions - An array of 3-dimensional vertex position
+     * offsets.
+     * @param {number} options.deltaPositionsType - A format to store position offsets inside
+     * {@link VertexBuffer}. Defaults to {@link TYPE_FLOAT32} if not provided.
+     * @param {ArrayBuffer} [options.deltaNormals] - An array of 3-dimensional vertex normal
+     * offsets.
+     * @param {number} options.deltaNormalsType - A format to store normal offsets inside
+     * {@link VertexBuffer}. Defaults to {@link TYPE_FLOAT32} if not provided.
+     * @param {string} [options.name] - Name.
+     * @param {BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if
+     * undefined.
+     * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
+     */
     constructor(options) {
 
         if (arguments.length === 2) {
-            // #if _DEBUG
-            console.warn('DEPRECATED: Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
-            // #endif
+            Debug.deprecated('Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
             options = arguments[1];
         }
 
@@ -45,20 +52,18 @@ class MorphTarget {
     }
 
     /**
-     * @name MorphTarget#name
+     * The name of the morph target.
+     *
      * @type {string}
-     * @readonly
-     * @description The name of the morph target.
      */
     get name() {
         return this._name;
     }
 
     /**
-     * @name MorphTarget#defaultWeight
+     * The default weight of the morph target.
+     *
      * @type {number}
-     * @readonly
-     * @description The default weight of the morph target.
      */
     get defaultWeight() {
         return this._defaultWeight;
@@ -80,7 +85,7 @@ class MorphTarget {
 
     _initVertexBuffers(graphicsDevice) {
 
-        var options = this.options;
+        const options = this.options;
         this._vertexBufferPositions = this._createVertexBuffer(graphicsDevice, options.deltaPositions, options.deltaPositionsType);
         this._vertexBufferNormals = this._createVertexBuffer(graphicsDevice, options.deltaNormals, options.deltaNormalsType);
 
@@ -95,7 +100,7 @@ class MorphTarget {
         if (data) {
 
             // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
-            var formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
+            const formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
             return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
         }
 

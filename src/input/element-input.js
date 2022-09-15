@@ -1,6 +1,5 @@
 import { platform } from '../core/platform.js';
 
-import { Vec2 } from '../math/vec2.js';
 import { Vec3 } from '../math/vec3.js';
 import { Vec4 } from '../math/vec4.js';
 
@@ -10,44 +9,52 @@ import { getApplication } from '../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
-var targetX, targetY;
-var vecA = new Vec3();
-var vecB = new Vec3();
+/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../framework/components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
 
-var rayA = new Ray();
-var rayB = new Ray();
-var rayC = new Ray();
+let targetX, targetY;
+const vecA = new Vec3();
+const vecB = new Vec3();
+
+const rayA = new Ray();
+const rayB = new Ray();
+const rayC = new Ray();
 
 rayA.end = new Vec3();
 rayB.end = new Vec3();
 rayC.end = new Vec3();
 
-var _pq = new Vec3();
-var _pa = new Vec3();
-var _pb = new Vec3();
-var _pc = new Vec3();
-var _pd = new Vec3();
-var _m = new Vec3();
-var _sct = new Vec3();
-var _accumulatedScale = new Vec2();
-var _paddingTop = new Vec3();
-var _paddingBottom = new Vec3();
-var _paddingLeft = new Vec3();
-var _paddingRight = new Vec3();
-var _cornerBottomLeft = new Vec3();
-var _cornerBottomRight = new Vec3();
-var _cornerTopRight = new Vec3();
-var _cornerTopLeft = new Vec3();
+const _pq = new Vec3();
+const _pa = new Vec3();
+const _pb = new Vec3();
+const _pc = new Vec3();
+const _pd = new Vec3();
+const _m = new Vec3();
+const _au = new Vec3();
+const _bv = new Vec3();
+const _cw = new Vec3();
+const _ir = new Vec3();
+const _sct = new Vec3();
+const _accumulatedScale = new Vec3();
+const _paddingTop = new Vec3();
+const _paddingBottom = new Vec3();
+const _paddingLeft = new Vec3();
+const _paddingRight = new Vec3();
+const _cornerBottomLeft = new Vec3();
+const _cornerBottomRight = new Vec3();
+const _cornerTopRight = new Vec3();
+const _cornerTopLeft = new Vec3();
 
-var ZERO_VEC4 = new Vec4();
+const ZERO_VEC4 = new Vec4();
 
 // pi x p2 * p3
 function scalarTriple(p1, p2, p3) {
     return _sct.cross(p1, p2).dot(p3);
 }
 
-// Given line pq and ccw corners of a quad, return whether the line
-// intersects it. (from Real-Time Collision Detection book)
+// Given line pq and ccw corners of a quad, return the square distance to the intersection point.
+// If the line and quad do not intersect, return -1. (from Real-Time Collision Detection book)
 function intersectLineQuad(p, q, corners) {
     _pq.sub2(q, p);
     _pa.sub2(corners[0], p);
@@ -56,57 +63,98 @@ function intersectLineQuad(p, q, corners) {
 
     // Determine which triangle to test against by testing against diagonal first
     _m.cross(_pc, _pq);
-    var v = _pa.dot(_m);
+    let v = _pa.dot(_m);
+    let u;
+    let w;
+
     if (v >= 0) {
         // Test intersection against triangle abc
-        if (-_pb.dot(_m) < 0)
-            return false;
+        u = -_pb.dot(_m);
+        if (u < 0)
+            return -1;
 
-        if (scalarTriple(_pq, _pb, _pa) < 0)
-            return false;
+        w = scalarTriple(_pq, _pb, _pa);
+        if (w < 0)
+            return -1;
+
+        const denom = 1.0 / (u + v + w);
+
+        _au.copy(corners[0]).mulScalar(u * denom);
+        _bv.copy(corners[1]).mulScalar(v * denom);
+        _cw.copy(corners[2]).mulScalar(w * denom);
+        _ir.copy(_au).add(_bv).add(_cw);
     } else {
         // Test intersection against triangle dac
         _pd.sub2(corners[3], p);
-        if (_pd.dot(_m) < 0)
-            return false;
+        u = _pd.dot(_m);
+        if (u < 0)
+            return -1;
 
-        if (scalarTriple(_pq, _pa, _pd) < 0)
-            return false;
+        w = scalarTriple(_pq, _pa, _pd);
+        if (w < 0)
+            return -1;
+
+        v = -v;
+
+        const denom = 1.0 / (u + v + w);
+
+        _au.copy(corners[0]).mulScalar(u * denom);
+        _bv.copy(corners[3]).mulScalar(v * denom);
+        _cw.copy(corners[2]).mulScalar(w * denom);
+        _ir.copy(_au).add(_bv).add(_cw);
     }
 
     // The algorithm above doesn't work if all the corners are the same
     // So do that test here by checking if the diagonals are 0 (since these are rectangles we're checking against)
-    if (_pq.sub2(corners[0], corners[2]).lengthSq() < 0.0001 * 0.0001) return false;
-    if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return false;
+    if (_pq.sub2(corners[0], corners[2]).lengthSq() < 0.0001 * 0.0001) return -1;
+    if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return -1;
 
-    return true;
+    return _ir.sub(p).lengthSq();
 }
 
 /**
- * @class
- * @name ElementInputEvent
- * @classdesc Represents an input event fired on a {@link ElementComponent}. When an event is raised
- * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
- * @description Create an instance of an ElementInputEvent.
- * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
- * @property {ElementComponent} element The ElementComponent that this event was originally raised on.
- * @property {CameraComponent} camera The CameraComponent that this event was originally raised via.
+ * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
+ * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
  */
 class ElementInputEvent {
+    /**
+     * Create a new ElementInputEvent instance.
+     *
+     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
+     * raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     */
     constructor(event, element, camera) {
+        /**
+         * The MouseEvent or TouchEvent that was originally raised.
+         *
+         * @type {MouseEvent|TouchEvent}
+         */
         this.event = event;
+
+        /**
+         * The ElementComponent that this event was originally raised on.
+         *
+         * @type {ElementComponent}
+         */
         this.element = element;
+
+        /**
+         * The CameraComponent that this event was originally raised via.
+         *
+         * @type {CameraComponent}
+         */
         this.camera = camera;
+
         this._stopPropagation = false;
     }
 
     /**
-     * @function
-     * @name ElementInputEvent#stopPropagation
-     * @description Stop propagation of the event to parent {@link ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
+     * Stop propagation of the event to parent {@link ElementComponent}s. This also stops
+     * propagation of the event to other event listeners of the original DOM Event.
      */
     stopPropagation() {
         this._stopPropagation = true;
@@ -118,52 +166,89 @@ class ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementMouseEvent
+ * Represents a Mouse event fired on a {@link ElementComponent}.
+ *
  * @augments ElementInputEvent
- * @classdesc Represents a Mouse event fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementMouseEvent.
- * @param {MouseEvent} event - The MouseEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate.
- * @param {number} y - The y coordinate.
- * @param {number} lastX - The last x coordinate.
- * @param {number} lastY - The last y coordinate.
- * @property {boolean} ctrlKey Whether the ctrl key was pressed.
- * @property {boolean} altKey Whether the alt key was pressed.
- * @property {boolean} shiftKey Whether the shift key was pressed.
- * @property {boolean} metaKey Whether the meta key was pressed.
- * @property {number} button The mouse button.
- * @property {number} dx The amount of horizontal movement of the cursor.
- * @property {number} dy The amount of vertical movement of the cursor.
- * @property {number} wheelDelta The amount of the wheel movement.
  */
 class ElementMouseEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementMouseEvent.
+     *
+     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} lastX - The last x coordinate.
+     * @param {number} lastY - The last y coordinate.
+     */
     constructor(event, element, camera, x, y, lastX, lastY) {
         super(event, element, camera);
 
         this.x = x;
         this.y = y;
 
+        /**
+         * Whether the ctrl key was pressed.
+         *
+         * @type {boolean}
+         */
         this.ctrlKey = event.ctrlKey || false;
+        /**
+         * Whether the alt key was pressed.
+         *
+         * @type {boolean}
+         */
         this.altKey = event.altKey || false;
+        /**
+         * Whether the shift key was pressed.
+         *
+         * @type {boolean}
+         */
         this.shiftKey = event.shiftKey || false;
+        /**
+         * Whether the meta key was pressed.
+         *
+         * @type {boolean}
+         */
         this.metaKey = event.metaKey || false;
 
+        /**
+         * The mouse button.
+         *
+         * @type {number}
+         */
         this.button = event.button;
 
         if (Mouse.isPointerLocked()) {
+            /**
+             * The amount of horizontal movement of the cursor.
+             *
+             * @type {number}
+             */
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+            /**
+             * The amount of vertical movement of the cursor.
+             *
+             * @type {number}
+             */
             this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
             this.dx = x - lastX;
             this.dy = y - lastY;
         }
 
+        /**
+         * The amount of the wheel movement.
+         *
+         * @type {number}
+         */
+        this.wheelDelta = 0;
+
         // deltaY is in a different range across different browsers. The only thing
         // that is consistent is the sign of the value so snap to -1/+1.
-        this.wheelDelta = 0;
         if (event.type === 'wheel') {
             if (event.deltaY > 0) {
                 this.wheelDelta = 1;
@@ -175,65 +260,94 @@ class ElementMouseEvent extends ElementInputEvent {
 }
 
 /**
- * @class
- * @name ElementTouchEvent
+ * Represents a TouchEvent fired on a {@link ElementComponent}.
+ *
  * @augments ElementInputEvent
- * @classdesc Represents a TouchEvent fired on a {@link ElementComponent}.
- * @description Create an instance of an ElementTouchEvent.
- * @param {TouchEvent} event - The TouchEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {number} x - The x coordinate of the touch that triggered the event.
- * @param {number} y - The y coordinate of the touch that triggered the event.
- * @param {Touch} touch - The touch object that triggered the event.
- * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
- * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
- * @property {Touch} touch The touch object that triggered the event.
  */
 class ElementTouchEvent extends ElementInputEvent {
+    /**
+     * Create an instance of an ElementTouchEvent.
+     *
+     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {number} x - The x coordinate of the touch that triggered the event.
+     * @param {number} y - The y coordinate of the touch that triggered the event.
+     * @param {Touch} touch - The touch object that triggered the event.
+     */
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
 
+        /**
+         * The Touch objects representing all current points of contact with the surface,
+         * regardless of target or changed status.
+         *
+         * @type {Touch[]}
+         */
         this.touches = event.touches;
+        /**
+         * The Touch objects representing individual points of contact whose states changed between
+         * the previous touch event and this one.
+         *
+         * @type {Touch[]}
+         */
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
+        /**
+         * The touch object that triggered the event.
+         *
+         * @type {Touch}
+         */
         this.touch = touch;
     }
 }
 
 /**
- * @class
- * @name ElementSelectEvent
+ * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
+ *
  * @augments ElementInputEvent
- * @classdesc Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
- * @description Create an instance of a ElementSelectEvent.
- * @param {object} event - The XRInputSourceEvent that was originally raised.
- * @param {ElementComponent} element - The ElementComponent that this event was originally raised on.
- * @param {CameraComponent} camera - The CameraComponent that this event was originally raised via.
- * @param {XrInputSource} inputSource - The XR input source that this event was originally raised from.
- * @property {XrInputSource} inputSource The XR input source that this event was originally raised from.
  */
 class ElementSelectEvent extends ElementInputEvent {
+    /**
+     * Create an instance of a ElementSelectEvent.
+     *
+     * @param {object} event - The XRInputSourceEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
+     * @param {XrInputSource} inputSource - The XR input source that this event was originally
+     * raised from.
+     */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
+
+        /**
+         * The XR input source that this event was originally raised from.
+         *
+         * @type {XrInputSource}
+         */
         this.inputSource = inputSource;
     }
 }
 
 /**
- * @class
- * @name ElementInput
- * @classdesc Handles mouse and touch events for {@link ElementComponent}s. When input events
- * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
- * @description Create a new ElementInput instance.
- * @param {Element} domElement - The DOM element.
- * @param {object} [options] - Optional arguments.
- * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
- * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
- * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+ * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
+ * ElementComponent this fires the appropriate events on the ElementComponent.
  */
 class ElementInput {
+    /**
+     * Create a new ElementInput instance.
+     *
+     * @param {Element} domElement - The DOM element.
+     * @param {object} [options] - Optional arguments.
+     * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
+     * @param {boolean} [options.useXr] - Whether to allow XR input sources. Defaults to true.
+     */
     constructor(domElement, options) {
         this._app = null;
         this._attached = false;
@@ -274,10 +388,25 @@ class ElementInput {
         this.attach(domElement);
     }
 
+    set enabled(value) {
+        this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set app(value) {
+        this._app = value;
+    }
+
+    get app() {
+        return this._app || getApplication();
+    }
+
     /**
-     * @function
-     * @name ElementInput#attach
-     * @description Attach mouse and touch events to a DOM element.
+     * Attach mouse and touch events to a DOM element.
+     *
      * @param {Element} domElement - The DOM element.
      */
     attach(domElement) {
@@ -289,7 +418,7 @@ class ElementInput {
         this._target = domElement;
         this._attached = true;
 
-        var opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = platform.passiveEvents ? { passive: true } : false;
         if (this._useMouse) {
             window.addEventListener('mouseup', this._upHandler, opts);
             window.addEventListener('mousedown', this._downHandler, opts);
@@ -310,8 +439,8 @@ class ElementInput {
     }
 
     attachSelectEvents() {
-        if (! this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
-            if (! this._clickedEntities)
+        if (!this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
+            if (!this._clickedEntities)
                 this._clickedEntities = {};
 
             this._selectEventsAttached = true;
@@ -320,15 +449,13 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#detach
-     * @description Remove mouse and touch events from the DOM element that it is attached to.
+     * Remove mouse and touch events from the DOM element that it is attached to.
      */
     detach() {
         if (!this._attached) return;
         this._attached = false;
 
-        var opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = platform.passiveEvents ? { passive: true } : false;
         if (this._useMouse) {
             window.removeEventListener('mouseup', this._upHandler, opts);
             window.removeEventListener('mousedown', this._downHandler, opts);
@@ -357,9 +484,9 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#addElement
-     * @description Add a {@link ElementComponent} to the internal list of ElementComponents that are being checked for input.
+     * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     addElement(element) {
@@ -368,13 +495,13 @@ class ElementInput {
     }
 
     /**
-     * @function
-     * @name ElementInput#removeElement
-     * @description Remove a {@link ElementComponent} from the internal list of ElementComponents that are being checked for input.
+     * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
+     * checked for input.
+     *
      * @param {ElementComponent} element - The ElementComponent.
      */
     removeElement(element) {
-        var idx = this._elements.indexOf(element);
+        const idx = this._elements.indexOf(element);
         if (idx !== -1)
             this._elements.splice(idx, 1);
     }
@@ -386,8 +513,6 @@ class ElementInput {
             return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mouseup', event);
     }
@@ -399,8 +524,6 @@ class ElementInput {
             return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousedown', event);
     }
@@ -409,8 +532,6 @@ class ElementInput {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousemove', event);
 
@@ -422,33 +543,31 @@ class ElementInput {
         if (!this._enabled) return;
 
         this._calcMouseCoords(event);
-        if (targetX === null)
-            return;
 
         this._onElementMouseEvent('mousewheel', event);
     }
 
     _determineTouchedElements(event) {
-        var touchedElements = {};
-        var cameras = this.app.systems.camera.cameras;
-        var i, j, len;
+        const touchedElements = {};
+        const cameras = this.app.systems.camera.cameras;
 
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
-        for (i = cameras.length - 1; i >= 0; i--) {
-            var camera = cameras[i];
+        for (let i = cameras.length - 1; i >= 0; i--) {
+            const camera = cameras[i];
 
-            var done = 0;
-            for (j = 0, len = event.changedTouches.length; j < len; j++) {
+            let done = 0;
+            const len = event.changedTouches.length;
+            for (let j = 0; j < len; j++) {
                 if (touchedElements[event.changedTouches[j].identifier]) {
                     done++;
                     continue;
                 }
 
-                var coords = this._calcTouchCoords(event.changedTouches[j]);
+                const coords = this._calcTouchCoords(event.changedTouches[j]);
 
-                var element = this._getTargetElement(camera, coords.x, coords.y);
+                const element = this._getTargetElement(camera, coords.x, coords.y);
                 if (element) {
                     done++;
                     touchedElements[event.changedTouches[j].identifier] = {
@@ -471,12 +590,12 @@ class ElementInput {
     _handleTouchStart(event) {
         if (!this._enabled) return;
 
-        var newTouchedElements = this._determineTouchedElements(event);
+        const newTouchedElements = this._determineTouchedElements(event);
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var newTouchInfo = newTouchedElements[touch.identifier];
-            var oldTouchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const newTouchInfo = newTouchedElements[touch.identifier];
+            const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
                 this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
@@ -484,7 +603,7 @@ class ElementInput {
             }
         }
 
-        for (var touchId in newTouchedElements) {
+        for (const touchId in newTouchedElements) {
             this._touchedElements[touchId] = newTouchedElements[touchId];
         }
     }
@@ -492,26 +611,26 @@ class ElementInput {
     _handleTouchEnd(event) {
         if (!this._enabled) return;
 
-        var cameras = this.app.systems.camera.cameras;
+        const cameras = this.app.systems.camera.cameras;
 
         // clear clicked entities first then store each clicked entity
         // in _clickedEntities so that we don't fire another click
         // on it in this handler or in the mouseup handler which is
         // fired later
-        for (var key in this._clickedEntities) {
+        for (const key in this._clickedEntities) {
             delete this._clickedEntities[key];
         }
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var touchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const touchInfo = this._touchedElements[touch.identifier];
             if (!touchInfo)
                 continue;
 
-            var element = touchInfo.element;
-            var camera = touchInfo.camera;
-            var x = touchInfo.x;
-            var y = touchInfo.y;
+            const element = touchInfo.element;
+            const camera = touchInfo.camera;
+            const x = touchInfo.x;
+            const y = touchInfo.y;
 
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
@@ -520,19 +639,17 @@ class ElementInput {
 
             // check if touch was released over previously touch
             // element in order to fire click event
-            if (event.touches.length === 0) {
-                var coords = this._calcTouchCoords(touch);
+            const coords = this._calcTouchCoords(touch);
 
-                for (var c = cameras.length - 1; c >= 0; c--) {
-                    var hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
-                    if (hovered === element) {
+            for (let c = cameras.length - 1; c >= 0; c--) {
+                const hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
+                if (hovered === element) {
 
-                        if (!this._clickedEntities[element.entity.getGuid()]) {
-                            this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
-                            this._clickedEntities[element.entity.getGuid()] = true;
-                        }
-
+                    if (!this._clickedEntities[element.entity.getGuid()]) {
+                        this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
+                        this._clickedEntities[element.entity.getGuid()] = true;
                     }
+
                 }
             }
         }
@@ -545,15 +662,15 @@ class ElementInput {
 
         if (!this._enabled) return;
 
-        var newTouchedElements = this._determineTouchedElements(event);
+        const newTouchedElements = this._determineTouchedElements(event);
 
-        for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-            var touch = event.changedTouches[i];
-            var newTouchInfo = newTouchedElements[touch.identifier];
-            var oldTouchInfo = this._touchedElements[touch.identifier];
+        for (let i = 0, len = event.changedTouches.length; i < len; i++) {
+            const touch = event.changedTouches[i];
+            const newTouchInfo = newTouchedElements[touch.identifier];
+            const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (oldTouchInfo) {
-                var coords = this._calcTouchCoords(touch);
+                const coords = this._calcTouchCoords(touch);
 
                 // Fire touchleave if we've left the previously touched element
                 if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
@@ -574,18 +691,18 @@ class ElementInput {
     }
 
     _onElementMouseEvent(eventType, event) {
-        var element;
+        let element = null;
 
-        var hovered = this._hoveredElement;
+        const lastHovered = this._hoveredElement;
         this._hoveredElement = null;
 
-        var cameras = this.app.systems.camera.cameras;
-        var camera;
+        const cameras = this.app.systems.camera.cameras;
+        let camera;
 
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
-        for (var i = cameras.length - 1; i >= 0; i--) {
+        for (let i = cameras.length - 1; i >= 0; i--) {
             camera = cameras[i];
 
             element = this._getTargetElement(camera, targetX, targetY);
@@ -593,21 +710,25 @@ class ElementInput {
                 break;
         }
 
-        // fire mouse event
-        if (element) {
-            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
+        // currently hovered element is whatever's being pointed by mouse (which may be null)
+        this._hoveredElement = element;
 
-            this._hoveredElement = element;
+        // if there was a pressed element, it takes full priority of 'move' and 'up' events
+        if ((eventType === 'mousemove' || eventType === 'mouseup') && this._pressedElement) {
+            this._fireEvent(eventType, new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY));
+        } else if (element) {
+            // otherwise, fire it to the currently hovered event
+            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
 
             if (eventType === 'mousedown') {
                 this._pressedElement = element;
             }
         }
 
-        if (hovered !== this._hoveredElement) {
+        if (lastHovered !== this._hoveredElement) {
             // mouseleave event
-            if (hovered) {
-                this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, camera, targetX, targetY, this._lastX, this._lastY));
+            if (lastHovered) {
+                this._fireEvent('mouseleave', new ElementMouseEvent(event, lastHovered, camera, targetX, targetY, this._lastX, this._lastY));
             }
 
             // mouseenter event
@@ -649,14 +770,14 @@ class ElementInput {
     _onXrUpdate() {
         if (!this._enabled) return;
 
-        var inputSources = this.app.xr.input.inputSources;
-        for (var i = 0; i < inputSources.length; i++) {
+        const inputSources = this.app.xr.input.inputSources;
+        for (let i = 0; i < inputSources.length; i++) {
             this._onElementSelectEvent('selectmove', inputSources[i], null);
         }
     }
 
     _onXrInputRemove(inputSource) {
-        var hovered = this._selectedElements[inputSource.id];
+        const hovered = this._selectedElements[inputSource.id];
         if (hovered) {
             inputSource._elementEntity = null;
             this._fireEvent('selectleave', new ElementSelectEvent(null, hovered, null, inputSource));
@@ -667,28 +788,28 @@ class ElementInput {
     }
 
     _onSelectStart(inputSource, event) {
-        if (! this._enabled) return;
+        if (!this._enabled) return;
         this._onElementSelectEvent('selectstart', inputSource, event);
     }
 
     _onSelectEnd(inputSource, event) {
-        if (! this._enabled) return;
+        if (!this._enabled) return;
         this._onElementSelectEvent('selectend', inputSource, event);
     }
 
     _onElementSelectEvent(eventType, inputSource, event) {
-        var element;
+        let element;
 
-        var hoveredBefore = this._selectedElements[inputSource.id];
-        var hoveredNow;
+        const hoveredBefore = this._selectedElements[inputSource.id];
+        let hoveredNow;
 
-        var cameras = this.app.systems.camera.cameras;
-        var camera;
+        const cameras = this.app.systems.camera.cameras;
+        let camera;
 
         if (inputSource.elementInput) {
             rayC.set(inputSource.getOrigin(), inputSource.getDirection());
 
-            for (var i = cameras.length - 1; i >= 0; i--) {
+            for (let i = cameras.length - 1; i >= 0; i--) {
                 camera = cameras[i];
 
                 element = this._getTargetElementByRay(rayC, camera);
@@ -716,8 +837,8 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
-        var pressed = this._selectedPressedElements[inputSource.id];
-        if (! inputSource.elementInput && pressed) {
+        const pressed = this._selectedPressedElements[inputSource.id];
+        if (!inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
             if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
         }
@@ -734,7 +855,7 @@ class ElementInput {
     }
 
     _fireEvent(name, evt) {
-        var element = evt.element;
+        let element = evt.element;
         while (true) {
             element.fire(name, evt);
             if (evt._stopPropagation)
@@ -750,33 +871,21 @@ class ElementInput {
     }
 
     _calcMouseCoords(event) {
-        var rect = this._target.getBoundingClientRect();
-        var left = Math.floor(rect.left);
-        var top = Math.floor(rect.top);
-
-        // mouse is outside of canvas
-        if (event.clientX < left ||
-            event.clientX >= left + this._target.clientWidth ||
-            event.clientY < top ||
-            event.clientY >= top + this._target.clientHeight) {
-
-            targetX = null;
-            targetY = null;
-        } else {
-            // calculate coords and scale them to the graphicsDevice size
-            targetX = (event.clientX - left);
-            targetY = (event.clientY - top);
-        }
+        const rect = this._target.getBoundingClientRect();
+        const left = Math.floor(rect.left);
+        const top = Math.floor(rect.top);
+        targetX = (event.clientX - left);
+        targetY = (event.clientY - top);
     }
 
     _calcTouchCoords(touch) {
-        var totalOffsetX = 0;
-        var totalOffsetY = 0;
-        var target = touch.target;
+        let totalOffsetX = 0;
+        let totalOffsetY = 0;
+        let target = touch.target;
         while (!(target instanceof HTMLElement)) {
             target = target.parentNode;
         }
-        var currentElement = target;
+        let currentElement = target;
 
         do {
             totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
@@ -792,7 +901,7 @@ class ElementInput {
     }
 
     _sortElements(a, b) {
-        var layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
+        const layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
 
         if (a.screen && !b.screen)
@@ -810,43 +919,54 @@ class ElementInput {
     }
 
     _getTargetElement(camera, x, y) {
-        var result = null;
+        let result = null;
+        let closestDistance3d = Infinity;
 
-        // sort elements
+        // sort elements based on layers and draw order
         this._elements.sort(this._sortHandler);
 
-        var rayScreen, ray3d;
+        let rayScreen, ray3d;
 
-        for (var i = 0, len = this._elements.length; i < len; i++) {
-            var element = this._elements[i];
-            var screen = false;
-            var ray;
+        for (let i = 0, len = this._elements.length; i < len; i++) {
+            const element = this._elements[i];
 
-            // cache rays
-            if (element.screen && element.screen.screen.screenSpace) {
-                // 2D screen
-                if (rayScreen === undefined) {
-                    rayScreen = rayA;
-                    if (this._calculateRayScreen(x, y, camera, rayScreen) === false) {
-                        rayScreen = null;
-                    }
-                }
-                ray = rayScreen;
-                screen = true;
-            } else {
-                // 3d
-                if (ray3d === undefined) {
-                    ray3d = rayB;
-                    if (this._calculateRay3d(x, y, camera, ray3d) === false) {
-                        ray3d = null;
-                    }
-                }
-                ray = ray3d;
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
+                continue;
             }
 
-            if (ray && this._checkElement(ray, element, screen)) {
-                result = element;
-                break;
+            if (element.screen && element.screen.screen.screenSpace) {
+                if (rayScreen === undefined) {
+                    rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
+                }
+                if (!rayScreen) continue;
+
+                // 2d screen elements take precedence - if hit, immediately return
+                const currentDistance = this._checkElement(rayScreen, element, true);
+                if (currentDistance >= 0) {
+                    result = element;
+                    break;
+                }
+            } else {
+                if (ray3d === undefined) {
+                    ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
+                }
+                if (!ray3d) continue;
+
+                const currentDistance = this._checkElement(ray3d, element, false);
+                if (currentDistance >= 0) {
+                    // store the closest one in world space
+                    if (currentDistance < closestDistance3d) {
+                        result = element;
+                        closestDistance3d = currentDistance;
+                    }
+
+                    // if the element is on a Screen, it takes precedence
+                    if (element.screen) {
+                        result = element;
+                        break;
+                    }
+                }
             }
         }
 
@@ -854,7 +974,7 @@ class ElementInput {
     }
 
     _getTargetElementByRay(ray, camera) {
-        var result = null;
+        let result = null;
 
         rayA.origin.copy(ray.origin);
         rayA.direction.copy(ray.direction);
@@ -863,11 +983,16 @@ class ElementInput {
         // sort elements
         this._elements.sort(this._sortHandler);
 
-        for (var i = 0, len = this._elements.length; i < len; i++) {
-            var element = this._elements[i];
+        for (let i = 0, len = this._elements.length; i < len; i++) {
+            const element = this._elements[i];
 
-            if (! element.screen || ! element.screen.screen.screenSpace) {
-                if (this._checkElement(rayA, element, false)) {
+            // check if any of the layers this element renders to is being rendered by the camera
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
+                continue;
+            }
+
+            if (!element.screen || !element.screen.screen.screenSpace) {
+                if (this._checkElement(rayA, element, false) >= 0) {
                     result = element;
                     break;
                 }
@@ -881,12 +1006,12 @@ class ElementInput {
     // screen corners. However, in cases where the element has additional hit
     // padding specified, we need to expand the screenCorners to incorporate the
     // padding.
-    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY) {
-        var hitCorners = screenOrWorldCorners;
-        var button = element.entity && element.entity.button;
+    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
+        let hitCorners = screenOrWorldCorners;
+        const button = element.entity && element.entity.button;
 
         if (button) {
-            var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
             _paddingTop.copy(element.entity.up);
             _paddingBottom.copy(_paddingTop).mulScalar(-1);
@@ -906,14 +1031,46 @@ class ElementInput {
             hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
         }
 
+        // make sure the corners are in the right order [bl, br, tr, tl]
+        // for x and y: simply invert what is considered "left/right" and "top/bottom"
+        if (scaleX < 0) {
+            const left = hitCorners[2].x;
+            const right = hitCorners[0].x;
+            hitCorners[0].x = left;
+            hitCorners[1].x = right;
+            hitCorners[2].x = right;
+            hitCorners[3].x = left;
+        }
+        if (scaleY < 0) {
+            const bottom = hitCorners[2].y;
+            const top = hitCorners[0].y;
+            hitCorners[0].y = bottom;
+            hitCorners[1].y = bottom;
+            hitCorners[2].y = top;
+            hitCorners[3].y = top;
+        }
+        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
+        if (scaleZ < 0) {
+            const x = hitCorners[2].x;
+            const y = hitCorners[2].y;
+            const z = hitCorners[2].z;
+
+            hitCorners[2].x = hitCorners[0].x;
+            hitCorners[2].y = hitCorners[0].y;
+            hitCorners[2].z = hitCorners[0].z;
+            hitCorners[0].x = x;
+            hitCorners[0].y = y;
+            hitCorners[0].z = z;
+        }
+
         return hitCorners;
     }
 
     _calculateScaleToScreen(element) {
-        var current = element.entity;
-        var screenScale = element.screen.screen.scale;
+        let current = element.entity;
+        const screenScale = element.screen.screen.scale;
 
-        _accumulatedScale.set(screenScale, screenScale);
+        _accumulatedScale.set(screenScale, screenScale, screenScale);
 
         while (current && !current.screen) {
             _accumulatedScale.mul(current.getLocalScale());
@@ -923,20 +1080,32 @@ class ElementInput {
         return _accumulatedScale;
     }
 
+    _calculateScaleToWorld(element) {
+        let current = element.entity;
+        _accumulatedScale.set(1, 1, 1);
+
+        while (current) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
+    }
+
     _calculateRayScreen(x, y, camera, ray) {
-        var sw = this.app.graphicsDevice.width;
-        var sh = this.app.graphicsDevice.height;
+        const sw = this.app.graphicsDevice.width;
+        const sh = this.app.graphicsDevice.height;
 
-        var cameraWidth = camera.rect.z * sw;
-        var cameraHeight = camera.rect.w * sh;
-        var cameraLeft = camera.rect.x * sw;
-        var cameraRight = cameraLeft + cameraWidth;
+        const cameraWidth = camera.rect.z * sw;
+        const cameraHeight = camera.rect.w * sh;
+        const cameraLeft = camera.rect.x * sw;
+        const cameraRight = cameraLeft + cameraWidth;
         // camera bottom (origin is bottom left of window)
-        var cameraBottom = (1 - camera.rect.y) * sh;
-        var cameraTop = cameraBottom - cameraHeight;
+        const cameraBottom = (1 - camera.rect.y) * sh;
+        const cameraTop = cameraBottom - cameraHeight;
 
-        var _x = x * sw / this._target.clientWidth;
-        var _y = y * sh / this._target.clientHeight;
+        let _x = x * sw / this._target.clientWidth;
+        let _y = y * sh / this._target.clientHeight;
 
         if (_x >= cameraLeft && _x <= cameraRight &&
             _y <= cameraBottom && _y >= cameraTop) {
@@ -958,19 +1127,19 @@ class ElementInput {
     }
 
     _calculateRay3d(x, y, camera, ray) {
-        var sw = this._target.clientWidth;
-        var sh = this._target.clientHeight;
+        const sw = this._target.clientWidth;
+        const sh = this._target.clientHeight;
 
-        var cameraWidth = camera.rect.z * sw;
-        var cameraHeight = camera.rect.w * sh;
-        var cameraLeft = camera.rect.x * sw;
-        var cameraRight = cameraLeft + cameraWidth;
+        const cameraWidth = camera.rect.z * sw;
+        const cameraHeight = camera.rect.w * sh;
+        const cameraLeft = camera.rect.x * sw;
+        const cameraRight = cameraLeft + cameraWidth;
         // camera bottom - origin is bottom left of window
-        var cameraBottom = (1 - camera.rect.y) * sh;
-        var cameraTop = cameraBottom - cameraHeight;
+        const cameraBottom = (1 - camera.rect.y) * sh;
+        const cameraTop = cameraBottom - cameraHeight;
 
-        var _x = x;
-        var _y = y;
+        let _x = x;
+        let _y = y;
 
         // check window coords are within camera rect
         if (x >= cameraLeft && x <= cameraRight &&
@@ -996,40 +1165,21 @@ class ElementInput {
     _checkElement(ray, element, screen) {
         // ensure click is contained by any mask first
         if (element.maskedBy) {
-            var result = this._checkElement(ray, element.maskedBy.element, screen);
-            if (!result) return false;
+            if (this._checkElement(ray, element.maskedBy.element, screen) < 0) {
+                return -1;
+            }
         }
 
-        var scale;
-
+        let scale;
         if (screen) {
             scale = this._calculateScaleToScreen(element);
         } else {
-            scale = element.entity.getWorldTransform().getScale();
+            scale = this._calculateScaleToWorld(element);
         }
 
-        var corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y);
+        const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
 
-        if (intersectLineQuad(ray.origin, ray.end, corners))
-            return true;
-
-        return false;
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(value) {
-        this._enabled = value;
-    }
-
-    get app() {
-        return this._app || getApplication();
-    }
-
-    set app(value) {
-        this._app = value;
+        return intersectLineQuad(ray.origin, ray.end, corners);
     }
 }
 

@@ -1,10 +1,14 @@
+import { Debug } from '../core/debug.js';
 import { Quat } from '../math/quat.js';
 import { Vec3 } from '../math/vec3.js';
+
+/** @typedef {import('./animation.js').Animation} Animation */
+/** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 
 class InterpolatedKey {
     constructor() {
         this._written = false;
-        this._name = "";
+        this._name = '';
         this._keyFrames = [];
 
         // Result of interpolation
@@ -26,17 +30,28 @@ class InterpolatedKey {
 }
 
 /**
- * @class
- * @name Skeleton
- * @classdesc Represents a skeleton used to play animations.
- * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
- * @property {boolean} looping Determines whether skeleton is looping its animation.
+ * Represents a skeleton used to play animations.
  */
 class Skeleton {
+    /**
+     * Determines whether skeleton is looping its animation.
+     *
+     * @type {boolean}
+     */
+    looping = true;
+
+    /**
+     * Create a new Skeleton instance.
+     *
+     * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
+     */
     constructor(graph) {
+        /**
+         * @type {Animation}
+         * @private
+         */
         this._animation = null;
         this._time = 0;
-        this.looping = true;
 
         this._interpolatedKeys = [];
         this._interpolatedKeyDict = {};
@@ -44,52 +59,46 @@ class Skeleton {
 
         this.graph = null;
 
-        var self = this;
-
-        function addInterpolatedKeys(node) {
-            var interpKey = new InterpolatedKey();
+        const addInterpolatedKeys = (node) => {
+            const interpKey = new InterpolatedKey();
             interpKey._name = node.name;
-            self._interpolatedKeys.push(interpKey);
-            self._interpolatedKeyDict[node.name] = interpKey;
-            self._currKeyIndices[node.name] = 0;
+            this._interpolatedKeys.push(interpKey);
+            this._interpolatedKeyDict[node.name] = interpKey;
+            this._currKeyIndices[node.name] = 0;
 
-            for (var i = 0; i < node._children.length; i++)
+            for (let i = 0; i < node._children.length; i++)
                 addInterpolatedKeys(node._children[i]);
-        }
+        };
 
         addInterpolatedKeys(graph);
     }
 
     /**
-     * @name Skeleton#animation
+     * Animation currently assigned to skeleton.
+     *
      * @type {Animation}
-     * @description Animation currently assigned to skeleton.
      */
-    get animation() {
-        return this._animation;
-    }
-
     set animation(value) {
         this._animation = value;
         this.currentTime = 0;
     }
 
-    /**
-     * @name Skeleton#currentTime
-     * @type {number}
-     * @description Current time of currently active animation in seconds.
-     * This value is between zero and the duration of the animation.
-     */
-    get currentTime() {
-        return this._time;
+    get animation() {
+        return this._animation;
     }
 
+    /**
+     * Current time of currently active animation in seconds. This value is between zero and the
+     * duration of the animation.
+     *
+     * @type {number}
+     */
     set currentTime(value) {
         this._time = value;
-        var numNodes = this._interpolatedKeys.length;
-        for (var i = 0; i < numNodes; i++) {
-            var node = this._interpolatedKeys[i];
-            var nodeName = node._name;
+        const numNodes = this._interpolatedKeys.length;
+        for (let i = 0; i < numNodes; i++) {
+            const node = this._interpolatedKeys[i];
+            const nodeName = node._name;
             this._currKeyIndices[nodeName] = 0;
         }
 
@@ -97,34 +106,31 @@ class Skeleton {
         this.updateGraph();
     }
 
+    get currentTime() {
+        return this._time;
+    }
+
     /**
-     * @readonly
-     * @name Skeleton#numNodes
+     * Read-only property that returns number of nodes of a skeleton.
+     *
      * @type {number}
-     * @description Read-only property that returns number of nodes of a skeleton.
      */
     get numNodes() {
         return this._interpolatedKeys.length;
     }
 
     /**
-     * @function
-     * @name Skeleton#addTime
-     * @description Progresses The animation assigned to The specified skeleton by The
-     * supplied time delta. If the delta takes the animation passed its end point, if
-     * the skeleton is set to loop, the animation will continue from the beginning.
-     * Otherwise, the animation's current time will remain at its duration (i.e. the
-     * end).
+     * Progresses the animation assigned to the specified skeleton by the supplied time delta. If
+     * the delta takes the animation passed its end point, if the skeleton is set to loop, the
+     * animation will continue from the beginning. Otherwise, the animation's current time will
+     * remain at its duration (i.e. the end).
+     *
      * @param {number} delta - The time in seconds to progress the skeleton's animation.
      */
     addTime(delta) {
         if (this._animation !== null) {
-            var i;
-            var node, nodeName;
-            var keys, interpKey;
-            var k1, k2, alpha;
-            var nodes = this._animation._nodes;
-            var duration = this._animation.duration;
+            const nodes = this._animation._nodes;
+            const duration = this._animation.duration;
 
             // Check if we can early out
             if ((this._time === duration) && !this.looping) {
@@ -136,16 +142,16 @@ class Skeleton {
 
             if (this._time > duration) {
                 this._time = this.looping ? 0.0 : duration;
-                for (i = 0; i < nodes.length; i++) {
-                    node = nodes[i];
-                    nodeName = node._name;
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    const nodeName = node._name;
                     this._currKeyIndices[nodeName] = 0;
                 }
             } else if (this._time < 0) {
                 this._time = this.looping ? duration : 0.0;
-                for (i = 0; i < nodes.length; i++) {
-                    node = nodes[i];
-                    nodeName = node._name;
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    const nodeName = node._name;
                     this._currKeyIndices[nodeName] = node._keys.length - 2;
                 }
             }
@@ -154,32 +160,29 @@ class Skeleton {
             // For each animated node...
 
             // keys index offset
-            var offset = (delta >= 0 ? 1 : -1);
+            const offset = (delta >= 0 ? 1 : -1);
 
-            var foundKey;
-            for (i = 0; i < nodes.length; i++) {
-                node = nodes[i];
-                nodeName = node._name;
-                keys = node._keys;
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                const nodeName = node._name;
+                const keys = node._keys;
 
                 // Determine the interpolated keyframe for this animated node
-                interpKey = this._interpolatedKeyDict[nodeName];
+                const interpKey = this._interpolatedKeyDict[nodeName];
                 if (interpKey === undefined) {
-                    // #if _DEBUG
-                    console.warn('Unknown skeleton node name: ' + nodeName);
-                    // #endif
+                    Debug.warn(`Unknown skeleton node name: ${nodeName}`);
                     continue;
                 }
                 // If there's only a single key, just copy the key to the interpolated key...
-                foundKey = false;
+                let foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
-                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
-                        k1 = keys[currKeyIndex];
-                        k2 = keys[currKeyIndex + 1];
+                    for (let currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
+                        const k1 = keys[currKeyIndex];
+                        const k2 = keys[currKeyIndex + 1];
 
                         if ((k1.time <= this._time) && (k2.time >= this._time)) {
-                            alpha = (this._time - k1.time) / (k2.time - k1.time);
+                            const alpha = (this._time - k1.time) / (k2.time - k1.time);
 
                             interpKey._pos.lerp(k1.position, k2.position, alpha);
                             interpKey._quat.slerp(k1.rotation, k2.rotation, alpha);
@@ -203,21 +206,20 @@ class Skeleton {
     }
 
     /**
-     * @function
-     * @name Skeleton#blend
-     * @description Blends two skeletons together.
+     * Blends two skeletons together.
+     *
      * @param {Skeleton} skel1 - Skeleton holding the first pose to be blended.
      * @param {Skeleton} skel2 - Skeleton holding the second pose to be blended.
      * @param {number} alpha - The value controlling the interpolation in relation to the two input
-     * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and anything
-     * in between generating a spherical interpolation between the two.
+     * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and
+     * anything in between generating a spherical interpolation between the two.
      */
     blend(skel1, skel2, alpha) {
-        var numNodes = this._interpolatedKeys.length;
-        for (var i = 0; i < numNodes; i++) {
-            var key1 = skel1._interpolatedKeys[i];
-            var key2 = skel2._interpolatedKeys[i];
-            var dstKey = this._interpolatedKeys[i];
+        const numNodes = this._interpolatedKeys.length;
+        for (let i = 0; i < numNodes; i++) {
+            const key1 = skel1._interpolatedKeys[i];
+            const key2 = skel2._interpolatedKeys[i];
+            const dstKey = this._interpolatedKeys[i];
 
             if (key1._written && key2._written) {
                 dstKey._quat.slerp(key1._quat, skel2._interpolatedKeys[i]._quat, alpha);
@@ -239,44 +241,39 @@ class Skeleton {
     }
 
     /**
-     * @function
-     * @name Skeleton#setGraph
-     * @description Links a skeleton to a node hierarchy. The nodes animated skeleton are
-     * then subsequently used to drive the local transformation matrices of the node
-     * hierarchy.
+     * Links a skeleton to a node hierarchy. The nodes animated skeleton are then subsequently used
+     * to drive the local transformation matrices of the node hierarchy.
+     *
      * @param {GraphNode} graph - The root node of the graph that the skeleton is to drive.
      */
     setGraph(graph) {
-        var i;
         this.graph = graph;
 
         if (graph) {
-            for (i = 0; i < this._interpolatedKeys.length; i++) {
-                var interpKey = this._interpolatedKeys[i];
-                var graphNode = graph.findByName(interpKey._name);
+            for (let i = 0; i < this._interpolatedKeys.length; i++) {
+                const interpKey = this._interpolatedKeys[i];
+                const graphNode = graph.findByName(interpKey._name);
                 this._interpolatedKeys[i].setTarget(graphNode);
             }
         } else {
-            for (i = 0; i < this._interpolatedKeys.length; i++) {
+            for (let i = 0; i < this._interpolatedKeys.length; i++) {
                 this._interpolatedKeys[i].setTarget(null);
             }
         }
     }
 
     /**
-     * @function
-     * @name Skeleton#updateGraph
-     * @description Synchronizes the currently linked node hierarchy with the current state of the
-     * skeleton. Internally, this function converts the interpolated keyframe at each node in the
-     * skeleton into the local transformation matrix at each corresponding node in the linked node
+     * Synchronizes the currently linked node hierarchy with the current state of the skeleton.
+     * Internally, this function converts the interpolated keyframe at each node in the skeleton
+     * into the local transformation matrix at each corresponding node in the linked node
      * hierarchy.
      */
     updateGraph() {
         if (this.graph) {
-            for (var i = 0; i < this._interpolatedKeys.length; i++) {
-                var interpKey = this._interpolatedKeys[i];
+            for (let i = 0; i < this._interpolatedKeys.length; i++) {
+                const interpKey = this._interpolatedKeys[i];
                 if (interpKey._written) {
-                    var transform = interpKey.getTarget();
+                    const transform = interpKey.getTarget();
 
                     transform.localPosition.copy(interpKey._pos);
                     transform.localRotation.copy(interpKey._quat);

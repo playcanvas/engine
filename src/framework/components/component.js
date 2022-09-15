@@ -1,19 +1,38 @@
 import { EventHandler } from '../../core/event-handler.js';
 
+/** @typedef {import('./system.js').ComponentSystem} ComponentSystem */
+/** @typedef {import('../entity.js').Entity} Entity */
+
 /**
- * @class
- * @name Component
- * @augments EventHandler
- * @classdesc Components are used to attach functionality on a {@link Entity}. Components
- * can receive update events each frame, and expose properties to the PlayCanvas Editor.
- * @description Base constructor for a Component.
- * @param {ComponentSystem} system - The ComponentSystem used to create this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {ComponentSystem} system The ComponentSystem used to create this Component.
- * @property {Entity} entity The Entity that this Component is attached to.
+ * Components are used to attach functionality on a {@link Entity}. Components can receive update
+ * events each frame, and expose properties to the PlayCanvas Editor.
+ *
  * @property {boolean} enabled Enables or disables the component.
+ * @augments EventHandler
  */
 class Component extends EventHandler {
+    /**
+     * The ComponentSystem used to create this Component.
+     *
+     * @type {ComponentSystem}
+     * @ignore
+     */
+    system;
+
+    /**
+     * The Entity that this Component is attached to.
+     *
+     * @type {Entity}
+     * @ignore
+     */
+    entity;
+
+    /**
+     * Base constructor for a Component.
+     *
+     * @param {ComponentSystem} system - The ComponentSystem used to create this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
+     */
     constructor(system, entity) {
         super();
 
@@ -24,8 +43,8 @@ class Component extends EventHandler {
             this.buildAccessors(this.system.schema);
         }
 
-        this.on("set", function (name, oldValue, newValue) {
-            this.fire("set_" + name, name, oldValue, newValue);
+        this.on('set', function (name, oldValue, newValue) {
+            this.fire('set_' + name, name, oldValue, newValue);
         });
 
         this.on('set_enabled', this.onSetEnabled, this);
@@ -36,15 +55,15 @@ class Component extends EventHandler {
         schema.forEach(function (descriptor) {
             // If the property descriptor is an object, it should have a `name`
             // member. If not, it should just be the plain property name.
-            var name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
+            const name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
 
             Object.defineProperty(obj, name, {
                 get: function () {
                     return this.data[name];
                 },
                 set: function (value) {
-                    var data = this.data;
-                    var oldValue = data[name];
+                    const data = this.data;
+                    const oldValue = data[name];
                     data[name] = value;
                     this.fire('set', name, oldValue, value);
                 },
@@ -81,15 +100,14 @@ class Component extends EventHandler {
     }
 
     /**
-     * @private
-     * @name Component#data
-     * @type {ComponentData}
-     * @description Access the component data directly.
-     * Usually you should access the data properties via the individual properties as
-     * modifying this data directly will not fire 'set' events.
+     * Access the component data directly. Usually you should access the data properties via the
+     * individual properties as modifying this data directly will not fire 'set' events.
+     *
+     * @type {*}
+     * @ignore
      */
     get data() {
-        var record = this.system.store[this.entity.getGuid()];
+        const record = this.system.store[this.entity.getGuid()];
         return record ? record.data : null;
     }
 }

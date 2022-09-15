@@ -9,14 +9,8 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/**
- * @class
- * @name LightComponentSystem
- * @augments ComponentSystem
- * @classdesc A Light Component is used to dynamically light the scene.
- * @description Create a new LightComponentSystem.
- * @param {Application} app - The application.
- */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const lightTypes = {
     'directional': LIGHTTYPE_DIRECTIONAL,
     'omni': LIGHTTYPE_OMNI,
@@ -24,7 +18,18 @@ const lightTypes = {
     'spot': LIGHTTYPE_SPOT
 };
 
+/**
+ * A Light Component is used to dynamically light the scene.
+ *
+ * @augments ComponentSystem
+ */
 class LightComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LightComponentSystem instance.
+     *
+     * @param {AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -37,12 +42,12 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, _data) {
-        var properties = _lightProps;
+        const properties = _lightProps;
 
         // duplicate because we're modifying the data
-        var data = {};
-        for (var i = 0, len = properties.length; i < len; i++) {
-            var property = properties[i];
+        const data = {};
+        for (let i = 0, len = properties.length; i < len; i++) {
+            const property = properties[i];
             data[property] = _data[property];
         }
 
@@ -65,7 +70,7 @@ class LightComponentSystem extends ComponentSystem {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
 
         if (data.enable) {
-            console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+            console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');
             data.enabled = data.enable;
         }
 
@@ -73,7 +78,7 @@ class LightComponentSystem extends ComponentSystem {
             data.shape = LIGHTSHAPE_PUNCTUAL;
         }
 
-        var light = new Light(this.app.graphicsDevice);
+        const light = new Light(this.app.graphicsDevice);
         light.type = lightTypes[data.type];
         light._node = component.entity;
         light._scene = this.app.scene;
@@ -87,14 +92,14 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var light = entity.light;
+        const light = entity.light;
 
-        var data = [];
-        var name;
-        var _props = _lightProps;
-        for (var i = 0; i < _props.length; i++) {
+        const data = [];
+        let name;
+        const _props = _lightProps;
+        for (let i = 0; i < _props.length; i++) {
             name = _props[i];
-            if (name === "light") continue;
+            if (name === 'light') continue;
             if (light[name] && light[name].clone) {
                 data[name] = light[name].clone();
             } else {
@@ -102,7 +107,7 @@ class LightComponentSystem extends ComponentSystem {
             }
         }
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     changeType(component, oldValue, newValue) {

@@ -1,3 +1,4 @@
+import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../math/color.js';
 import { Vec4 } from '../../../math/vec4.js';
 
@@ -7,19 +8,30 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name CameraComponentSystem
+ * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
+ * active cameras.
+ *
  * @augments ComponentSystem
- * @classdesc Used to add and remove {@link CameraComponent}s from Entities. It also holds an
- * array of all active cameras.
- * @description Create a new CameraComponentSystem.
- * @param {Application} app - The Application.
- * @property {CameraComponent[]} cameras Holds all the active camera components.
  */
 class CameraComponentSystem extends ComponentSystem {
+    /**
+     * Holds all the active camera components.
+     *
+     * @type {CameraComponent[]}
+     */
+    cameras = [];
+
+    /**
+     * Create a new CameraComponentSystem instance.
+     *
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -30,13 +42,10 @@ class CameraComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        // holds all the active camera components
-        this.cameras = [];
-
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.app.on("prerender", this.onAppPrerender, this);
+        this.app.on('prerender', this.onAppPrerender, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -62,13 +71,16 @@ class CameraComponentSystem extends ComponentSystem {
             'projection',
             'priority',
             'rect',
-            'scissorRect'
+            'scissorRect',
+            'aperture',
+            'shutter',
+            'sensitivity'
         ];
 
-        for (var i = 0; i < properties.length; i++) {
-            var property = properties[i];
+        for (let i = 0; i < properties.length; i++) {
+            const property = properties[i];
             if (data.hasOwnProperty(property)) {
-                var value = data[property];
+                const value = data[property];
                 switch (property) {
                     case 'rect':
                     case 'scissorRect':
@@ -96,8 +108,8 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var c = entity.camera;
-        this.addComponent(clone, {
+        const c = entity.camera;
+        return this.addComponent(clone, {
             aspectRatio: c.aspectRatio,
             aspectRatioMode: c.aspectRatioMode,
             calculateProjection: c.calculateProjection,
@@ -107,6 +119,7 @@ class CameraComponentSystem extends ComponentSystem {
             clearDepthBuffer: c.clearDepthBuffer,
             clearStencilBuffer: c.clearStencilBuffer,
             cullFaces: c.cullFaces,
+            enabled: c.enabled,
             farClip: c.farClip,
             flipFaces: c.flipFaces,
             fov: c.fov,
@@ -119,7 +132,10 @@ class CameraComponentSystem extends ComponentSystem {
             projection: c.projection,
             priority: c.priority,
             rect: c.rect,
-            scissorRect: c.scissorRect
+            scissorRect: c.scissorRect,
+            aperture: c.aperture,
+            sensitivity: c.sensitivity,
+            shutter: c.shutter
         });
     }
 
@@ -128,54 +144,31 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        if (this.app.vr) {
-            var components = this.store;
-
-            for (var id in components) {
-                var component = components[id];
-
-                if (component.data.enabled && component.entity.enabled) {
-                    var cameraComponent = component.entity.camera;
-                    var vrDisplay = cameraComponent.vrDisplay;
-                    if (vrDisplay) {
-                        // Change WebVR near/far planes based on the stereo camera
-                        vrDisplay.setClipPlanes(cameraComponent.nearClip, cameraComponent.farClip);
-
-                        // update camera node transform from VrDisplay
-                        if (component.entity) {
-                            component.entity.localTransform.copy(vrDisplay.combinedViewInv);
-                            component.entity._dirtyLocal = false;
-                            component.entity._dirtifyWorld();
-                        }
-                    }
-                }
-            }
-        }
     }
 
     onAppPrerender() {
-        for (var i = 0, len = this.cameras.length; i < len; i++) {
+        for (let i = 0, len = this.cameras.length; i < len; i++) {
             this.cameras[i].onAppPrerender();
         }
     }
 
     addCamera(camera) {
         this.cameras.push(camera);
-        this.sortCamerasByPriority();
+        sortPriority(this.cameras);
     }
 
     removeCamera(camera) {
-        var index = this.cameras.indexOf(camera);
+        const index = this.cameras.indexOf(camera);
         if (index >= 0) {
             this.cameras.splice(index, 1);
-            this.sortCamerasByPriority();
+            sortPriority(this.cameras);
         }
     }
 
-    sortCamerasByPriority() {
-        this.cameras.sort(function (a, b) {
-            return a.priority - b.priority;
-        });
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

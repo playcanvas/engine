@@ -1,25 +1,37 @@
 import {
-    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../graphics/constants.js';
 
 import { Asset } from '../asset/asset.js';
 import { Texture } from '../graphics/texture.js';
 
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+
 /**
- * @class
- * @name CubemapHandler
+ * Resource handler used for loading cubemap {@link Texture} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading cubemap {@link Texture} resources.
- * @param {GraphicsDevice} device - The graphics device.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class CubemapHandler {
-    constructor(device, assets, loader) {
-        this._device = device;
-        this._registry = assets;
-        this._loader = loader;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "cubemap";
+
+    /**
+     * Create a new CubemapHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this._device = app.graphicsDevice;
+        this._registry = app.assets;
+        this._loader = app.loader;
     }
 
     load(url, callback, asset) {
@@ -67,7 +79,7 @@ class CubemapHandler {
     // test whether two assets ids are the same
     compareAssetIds(assetIdA, assetIdB) {
         if (assetIdA && assetIdB) {
-            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === "string") {
+            if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === 'string') {
                 return assetIdA === assetIdB;           // id or url
             }
             // else {
@@ -105,29 +117,21 @@ class CubemapHandler {
             if (assets[0]) {
                 tex = assets[0].resource;
                 for (i = 0; i < 6; ++i) {
-                    const prelitLevels = [tex._levels[i]];
-
-                    // construct full prem chain on highest prefilter cubemap on ios
-                    if (i === 0 && this._device.useTexCubeLod) {
-                        for (mip = 1; mip < tex._levels.length; ++mip) {
-                            prelitLevels[mip] = tex._levels[mip];
-                        }
-                    }
-
-                    const prelit = new Texture(this._device, {
+                    resources[i + 1] = new Texture(this._device, {
                         name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
                         cubemap: true,
+                        // assume prefiltered data has same encoding as the faces asset
                         type: getType() || tex.type,
                         width: tex.width >> i,
                         height: tex.height >> i,
                         format: tex.format,
-                        levels: prelitLevels,
+                        levels: [tex._levels[i]],
                         fixCubemapSeams: true,
                         addressU: ADDRESS_CLAMP_TO_EDGE,
-                        addressV: ADDRESS_CLAMP_TO_EDGE
+                        addressV: ADDRESS_CLAMP_TO_EDGE,
+                        // generate cubemaps on the top level only
+                        mipmaps: i === 0
                     });
-
-                    resources[i + 1] = prelit;
                 }
             }
         } else {
@@ -155,13 +159,18 @@ class CubemapHandler {
                     }));
                 }
 
+                // Force RGBA8 if we are loading a RGB8 texture due to a bug on M1 Macs Monterey and Chrome not
+                // rendering the face on right of the cubemap (`faceAssets[0]` and `resources[1]`).
+                // Using a RGBA8 texture works around the issue https://github.com/playcanvas/engine/issues/4091
+                const format = faceTextures[0].format;
+
                 const faces = new Texture(this._device, {
                     name: cubemapAsset.name + '_faces',
                     cubemap: true,
                     type: getType() || faceTextures[0].type,
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
-                    format: faceTextures[0].format,
+                    format: format === PIXELFORMAT_R8_G8_B8 ? PIXELFORMAT_R8_G8_B8_A8 : format,
                     levels: faceLevels,
                     minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : faceTextures[0].minFilter,
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,
@@ -296,17 +305,17 @@ class CubemapHandler {
                         if (texAsset) {
                             processTexAsset(index, texAsset);
                         } else {
-                            onError(index, "failed to find dependent cubemap asset=" + assetId_);
+                            onError(index, 'failed to find dependent cubemap asset=' + assetId_);
                         }
                     }.bind(null, i, assetId));
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
-                const file = (typeof assetId === "string") ? {
+                const file = (typeof assetId === 'string') ? {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new Asset(cubemapAsset.name + "_part_" + i, "texture", file);
+                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
                 registry.add(texAsset);
                 registry.once('load:' + texAsset.id, onLoad.bind(self, i));
                 registry.once('error:' + texAsset.id, onError.bind(self, i));

@@ -1,21 +1,22 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class CompoundCollisionExample extends Example {
+class CompoundCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, wasmSupported: any, loadWasmModuleAsync: any): void {
-        if (wasmSupported()) {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.wasm.js', 'static/lib/ammo/ammo.wasm.wasm', demo);
-        } else {
-            loadWasmModuleAsync('Ammo', 'static/lib/ammo/ammo.js', '', demo);
-        }
+    example(canvas: HTMLCanvasElement): void {
+        // Create the application and start the update loop
+        const app = new pc.Application(canvas, {});
+
+        pc.WasmModule.setConfig('Ammo', {
+            glueUrl: '/static/lib/ammo/ammo.wasm.js',
+            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+            fallbackUrl: '/static/lib/ammo/ammo.js'
+        });
+
+        pc.WasmModule.getInstance('Ammo', demo);
 
         function demo() {
-            // Create the application and start the update loop
-            const app = new pc.Application(canvas, {});
             app.start();
 
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -29,7 +30,7 @@ class CompoundCollisionExample extends Example {
             }
 
             // Create a couple of materials for our objects
-            const red = createMaterial(new pc.Color(1, 0.3, 0.3));
+            const red = createMaterial(new pc.Color(0.7, 0.3, 0.3));
             const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
             // Define a scene hierarchy in JSON format. This is loaded/parsed in
@@ -262,7 +263,7 @@ class CompoundCollisionExample extends Example {
                     ]
                 }, {
                     name: 'Directional Light',
-                    rot: [45, 30, 0],
+                    rot: [45, 130, 0],
                     components: [
                         {
                             type: 'light',
@@ -271,6 +272,7 @@ class CompoundCollisionExample extends Example {
                                 castShadows: true,
                                 shadowDistance: 8,
                                 shadowBias: 0.1,
+                                intensity: 1,
                                 normalOffsetBias: 0.05
                             }
                         }

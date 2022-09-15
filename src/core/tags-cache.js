@@ -61,7 +61,7 @@ class TagsCache {
         // remove item from index list
         this._index[tag].list.splice(ind, 1);
 
-        // rmeove item from index keys
+        // remove item from index keys
         if (this._key)
             delete this._index[tag].keys[item[this._key]];
 

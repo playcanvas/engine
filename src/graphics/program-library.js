@@ -1,12 +1,28 @@
+import { Debug } from '../core/debug.js';
 import { version, revision } from '../core/core.js';
 
 import { Shader } from './shader.js';
 
-import { SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
+import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
+import { ShaderPass } from '../scene/shader-pass.js';
 
-// Public interface
+/**
+ * A class responsible for creation and caching of required shaders.
+ * There is a two level cache. The first level generates the shader based on the provided options.
+ * The second level processes this generated shader using processing options - in most cases
+ * modifies it to support uniform buffers.
+ *
+ * @ignore
+ */
 class ProgramLibrary {
+    /**
+     * A cache of shaders processed using processing options.
+     *
+     * @type {Map<string, Shader>}
+     */
+    processedCache = new Map();
+
     constructor(device) {
         this._device = device;
         this._cache = {};
@@ -18,11 +34,12 @@ class ProgramLibrary {
         this._programsCollection = [];
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
+
         const m = new StandardMaterial();
         m.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, device, {}, m, null, [], SHADER_FORWARD, null, null);
+            this._defaultStdMatOption, {}, m, null, [], SHADER_FORWARD, null);
         m.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, device, {}, m, null, [], SHADER_SHADOW, null, null);
+            this._defaultStdMatOptionMin, {}, m, null, [], SHADER_SHADOW, null);
     }
 
     register(name, generator) {
@@ -42,16 +59,7 @@ class ProgramLibrary {
         return (generator !== undefined);
     }
 
-    getProgram(name, options) {
-        const generator = this._generators[name];
-        if (generator === undefined) {
-            // #if _DEBUG
-            console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
-            // #endif
-            return null;
-        }
-        const gd = this._device;
-        const key = generator.generateKey(options);
+    generateShader(generator, name, key, options) {
         let shader = this._cache[key];
         if (!shader) {
             let lights;
@@ -71,12 +79,52 @@ class ProgramLibrary {
                 options.lights = lights;
 
             if (this._precached)
-                console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
+                Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
-            const shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new Shader(gd, shaderDefinition);
+            const device = this._device;
+            const shaderDefinition = generator.createShaderDefinition(device, options);
+            shaderDefinition.name = `${name}-pass:${options.pass}`;
+            shader = this._cache[key] = new Shader(device, shaderDefinition);
         }
         return shader;
+    }
+
+    getProgram(name, options, processingOptions) {
+        const generator = this._generators[name];
+        if (!generator) {
+            Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
+            return null;
+        }
+
+        // we have a key for shader source code generation, a key for its further processing to work with
+        // uniform buffers, and a final key to get the processed shader from the cache
+        const generationKey = generator.generateKey(options);
+        const processingKey = JSON.stringify(processingOptions);
+        const totalKey = `${generationKey}#${processingKey}`;
+
+        // do we have final processed shader
+        let processedShader = this.processedCache.get(totalKey);
+        if (!processedShader) {
+
+            // get generated shader
+            const generatedShader = this.generateShader(generator, name, generationKey, options);
+            Debug.assert(generatedShader);
+
+            // create a shader definition for the shader that will include the processingOptions
+            const generatedShaderDef = generatedShader.definition;
+            const shaderDefinition = {
+                attributes: generatedShaderDef.attributes,
+                vshader: generatedShaderDef.vshader,
+                fshader: generatedShaderDef.fshader,
+                processingOptions: processingOptions
+            };
+
+            // add new shader to the processed cache
+            processedShader = new Shader(this._device, shaderDefinition);
+            this.processedCache.set(totalKey, processedShader);
+        }
+
+        return processedShader;
     }
 
     storeNewProgram(name, options) {
@@ -146,7 +194,7 @@ class ProgramLibrary {
     }
 
     _getDefaultStdMatOptions(pass) {
-        return (pass > SHADER_FORWARDHDR && pass <= SHADER_PICK) ?
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass)) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 
@@ -154,6 +202,9 @@ class ProgramLibrary {
         if (cache) {
             const shaders = new Array(cache.length);
             for (let i = 0; i < cache.length; i++) {
+
+                // default options for the standard materials are not stored, and so they are inserted
+                // back into the loaded options
                 if (cache[i].name === "standard") {
                     const opt = cache[i].options;
                     const defaultMat = this._getDefaultStdMatOptions(opt.pass);
@@ -161,19 +212,10 @@ class ProgramLibrary {
                         if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
                             opt[p] = defaultMat[p];
                     }
-                    // Patch device specific properties
-                    opt.useTexCubeLod = this._device.useTexCubeLod;
                 }
+
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
-            // Uncomment to force finish linking after preload
-            // let device = this._device;
-            // let forceLink = function () {
-            //     for (let i = 0; i < shaders.length; i++) {
-            //         device.postLink(shaders[i]);
-            //     }
-            // };
-            // pc.Application.getApplication().on("preload:end", forceLink);
         }
         this._precached = true;
     }

@@ -13,9 +13,9 @@ import { StandardMaterialValidator } from '../../../scene/materials/standard-mat
 import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
 
 /**
- * @private
- * @name JsonStandardMaterialParser
- * @description Convert incoming JSON data into a {@link StandardMaterial}.
+ * Convert incoming JSON data into a {@link StandardMaterial}.
+ *
+ * @ignore
  */
 class JsonStandardMaterialParser {
     constructor() {
@@ -33,10 +33,8 @@ class JsonStandardMaterialParser {
     }
 
     /**
-     * @private
-     * @function
-     * @name JsonStandardMaterialParser#initialize
-     * @description Initialize material properties from the material data block e.g. Loading from server.
+     * Initialize material properties from the material data block e.g. Loading from server.
+     *
      * @param {StandardMaterial} material - The material to be initialized.
      * @param {object} data - The data block that is used to initialize.
      */
@@ -48,7 +46,7 @@ class JsonStandardMaterialParser {
         }
 
         if (data.chunks) {
-            material.chunks.copy(data.chunks);
+            material.chunks = { ...data.chunks };
         }
 
         // initialize material values from the input data
@@ -63,7 +61,7 @@ class JsonStandardMaterialParser {
             } else if (type === 'texture') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof(value) === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
                     material[key] = null;
                 }
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
@@ -71,9 +69,15 @@ class JsonStandardMaterialParser {
             } else if (type === 'cubemap') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof(value) === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
                     material[key] = null;
                 }
+
+                // clearing the cubemap must also clear the prefiltered data
+                if (key === 'cubeMap' && !value) {
+                    material.prefilteredCubemaps = null;
+                }
+
                 // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
                 // leave current texture (probably a placeholder) until the asset is loaded
             } else if (type === 'boundingbox') {
@@ -112,23 +116,23 @@ class JsonStandardMaterialParser {
         // list of properties that have been renamed in StandardMaterial
         // but may still exists in data in old format
         const RENAMED_PROPERTIES = [
-            ["bumpMapFactor", "bumpiness"],
+            ['bumpMapFactor', 'bumpiness'],
 
-            ["aoUvSet", "aoMapUv"],
+            ['aoUvSet', 'aoMapUv'],
 
-            ["aoMapVertexColor", "aoVertexColor"],
-            ["diffuseMapVertexColor", "diffuseVertexColor"],
-            ["emissiveMapVertexColor", "emissiveVertexColor"],
-            ["specularMapVertexColor", "specularVertexColor"],
-            ["metalnessMapVertexColor", "metalnessVertexColor"],
-            ["opacityMapVertexColor", "opacityVertexColor"],
-            ["glossMapVertexColor", "glossVertexColor"],
-            ["lightMapVertexColor", "lightVertexColor"],
+            ['aoMapVertexColor', 'aoVertexColor'],
+            ['diffuseMapVertexColor', 'diffuseVertexColor'],
+            ['emissiveMapVertexColor', 'emissiveVertexColor'],
+            ['specularMapVertexColor', 'specularVertexColor'],
+            ['metalnessMapVertexColor', 'metalnessVertexColor'],
+            ['opacityMapVertexColor', 'opacityVertexColor'],
+            ['glossMapVertexColor', 'glossVertexColor'],
+            ['lightMapVertexColor', 'lightVertexColor'],
 
-            ["diffuseMapTint", "diffuseTint"],
-            ["specularMapTint", "specularTint"],
-            ["emissiveMapTint", "emissiveTint"],
-            ["metalnessMapTint", "metalnessTint"]
+            ['diffuseMapTint', 'diffuseTint'],
+            ['specularMapTint', 'specularTint'],
+            ['emissiveMapTint', 'emissiveTint'],
+            ['metalnessMapTint', 'metalnessTint']
         ];
 
         // if an old property name exists without a new one,

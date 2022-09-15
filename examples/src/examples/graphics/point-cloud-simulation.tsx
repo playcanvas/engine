@@ -1,9 +1,11 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-const vshader = `
+
+class PointCloudSimulationExample {
+    static CATEGORY = 'Graphics';
+    static NAME = 'Point Cloud Simulation';
+    static FILES = {
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -31,10 +33,8 @@ void main(void)
 
     // color depends on position of particle
     outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1);
-}
-`;
-
-const fshader = `
+}`,
+        'shader.frag': /* glsl */`
 precision mediump float;
 varying vec4 outColor;
 
@@ -47,23 +47,11 @@ void main(void)
     vec2 dist = gl_PointCoord.xy - vec2(0.5, 0.5);
     gl_FragColor.a = 1.0 - smoothstep(0.4, 0.5, sqrt(dot(dist, dist)));
 
-}
-`;
+}`
+    };
 
-class PointCloudSimulationExample extends Example {
-    static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud Simulation';
 
-    load() {
-        return <>
-            <AssetLoader name='shader.vert' type='shader' data={vshader} />
-            <AssetLoader name='shader.frag' type='shader' data={fshader} />
-        </>;
-    }
-
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: any): void {
-
+    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
@@ -114,8 +102,8 @@ class PointCloudSimulationExample extends Example {
         // Create the shader from the vertex and fragment shaders
         const shader = new pc.Shader(app.graphicsDevice, {
             attributes: { aPosition: pc.SEMANTIC_POSITION },
-            vshader: assets['shader.vert'].data,
-            fshader: assets['shader.frag'].data
+            vshader: files['shader.vert'],
+            fshader: files['shader.frag']
         });
 
         // Create a new material with the new shader and additive alpha blending
@@ -143,7 +131,7 @@ class PointCloudSimulationExample extends Example {
             previousTime = time;
             time += dt;
 
-            // update particle positions using simple verlet integration, and keep them inside a sphere boundary
+            // update particle positions using simple Verlet integration, and keep them inside a sphere boundary
             let dist;
             const pos = new pc.Vec3();
             const old = new pc.Vec3();
@@ -159,14 +147,19 @@ class PointCloudSimulationExample extends Example {
                 delta.sub2(pos, old);
                 next.add2(pos, delta);
 
-                // boundary collision to keep them inside a sphere. If outside, simply move them in oposite direction
+                // boundary collision to keep them inside a sphere. If outside, simply move them in opposite direction
                 dist = next.length();
                 if (dist > 15)
                     next.copy(old);
 
                 // write out changed positions
-                positions[i * 3] = next.x;         positions[i * 3 + 1] = next.y;             positions[i * 3 + 2] = next.z;
-                oldPositions[i * 3] = pos.x;       oldPositions[i * 3 + 1] = pos.y;           oldPositions[i * 3 + 2] = pos.z;
+                positions[i * 3] = next.x;
+                positions[i * 3 + 1] = next.y;
+                positions[i * 3 + 2] = next.z;
+
+                oldPositions[i * 3] = pos.x;
+                oldPositions[i * 3 + 1] = pos.y;
+                oldPositions[i * 3 + 2] = pos.z;
             }
 
             // once a second change how many points are visible

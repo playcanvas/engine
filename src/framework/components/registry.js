@@ -1,26 +1,240 @@
+import { EventHandler } from '../../core/event-handler.js';
+
+/** @typedef {import('./anim/system.js').AnimComponentSystem} AnimComponentSystem */
+/** @typedef {import('./animation/system.js').AnimationComponentSystem} AnimationComponentSystem */
+/** @typedef {import('./audio-listener/system.js').AudioListenerComponentSystem} AudioListenerComponentSystem */
+/** @typedef {import('./audio-source/system.js').AudioSourceComponentSystem} AudioSourceComponentSystem */
+/** @typedef {import('./button/system.js').ButtonComponentSystem} ButtonComponentSystem */
+/** @typedef {import('./camera/system.js').CameraComponentSystem} CameraComponentSystem */
+/** @typedef {import('./collision/system.js').CollisionComponentSystem} CollisionComponentSystem */
+/** @typedef {import('./element/system.js').ElementComponentSystem} ElementComponentSystem */
+/** @typedef {import('./joint/system.js').JointComponentSystem} JointComponentSystem */
+/** @typedef {import('./layout-child/system.js').LayoutChildComponentSystem} LayoutChildComponentSystem */
+/** @typedef {import('./layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
+/** @typedef {import('./light/system.js').LightComponentSystem} LightComponentSystem */
+/** @typedef {import('./model/system.js').ModelComponentSystem} ModelComponentSystem */
+/** @typedef {import('./particle-system/system.js').ParticleSystemComponentSystem} ParticleSystemComponentSystem */
+/** @typedef {import('./render/system.js').RenderComponentSystem} RenderComponentSystem */
+/** @typedef {import('./rigid-body/system.js').RigidBodyComponentSystem} RigidBodyComponentSystem */
+/** @typedef {import('./screen/system.js').ScreenComponentSystem} ScreenComponentSystem */
+/** @typedef {import('./script/system.js').ScriptComponentSystem} ScriptComponentSystem */
+/** @typedef {import('./scrollbar/system.js').ScrollbarComponentSystem} ScrollbarComponentSystem */
+/** @typedef {import('./scroll-view/system.js').ScrollViewComponentSystem} ScrollViewComponentSystem */
+/** @typedef {import('./sound/system.js').SoundComponentSystem} SoundComponentSystem */
+/** @typedef {import('./sprite/system.js').SpriteComponentSystem} SpriteComponentSystem */
+/** @typedef {import('./zone/system.js').ZoneComponentSystem} ZoneComponentSystem */
+
 /**
- * @class
- * @name ComponentSystemRegistry
- * @classdesc Store, access and delete instances of the various ComponentSystems.
- * @description Create a new ComponentSystemRegistry.
+ * Store, access and delete instances of the various ComponentSystems.
  */
-class ComponentSystemRegistry {
+class ComponentSystemRegistry extends EventHandler {
+    /**
+     * Gets the {@link AnimComponentSystem} from the registry.
+     *
+     * @type {AnimComponentSystem|undefined}
+     * @readonly
+     */
+    anim;
+
+    /**
+     * Gets the {@link AnimationComponentSystem} from the registry.
+     *
+     * @type {AnimationComponentSystem|undefined}
+     * @readonly
+     */
+    animation;
+
+    /**
+     * Gets the {@link AudioListenerComponentSystem} from the registry.
+     *
+     * @type {AudioListenerComponentSystem|undefined}
+     * @readonly
+     */
+    audiolistener;
+
+    /**
+     * Gets the {@link AudioSourceComponentSystem} from the registry.
+     *
+     * @type {AudioSourceComponentSystem|undefined}
+     * @readonly
+     * @ignore
+     */
+    audiosource;
+
+    /**
+     * Gets the {@link ButtonComponentSystem} from the registry.
+     *
+     * @type {ButtonComponentSystem|undefined}
+     * @readonly
+     */
+    button;
+
+    /**
+     * Gets the {@link CameraComponentSystem} from the registry.
+     *
+     * @type {CameraComponentSystem|undefined}
+     * @readonly
+     */
+    camera;
+
+    /**
+     * Gets the {@link CollisionComponentSystem} from the registry.
+     *
+     * @type {CollisionComponentSystem|undefined}
+     * @readonly
+     */
+    collision;
+
+    /**
+     * Gets the {@link ElementComponentSystem} from the registry.
+     *
+     * @type {ElementComponentSystem|undefined}
+     * @readonly
+     */
+    element;
+
+    /**
+     * Gets the {@link JointComponentSystem} from the registry.
+     *
+     * @type {JointComponentSystem|undefined}
+     * @readonly
+     * @ignore
+     */
+    joint;
+
+    /**
+     * Gets the {@link LayoutChildComponentSystem} from the registry.
+     *
+     * @type {LayoutChildComponentSystem|undefined}
+     * @readonly
+     */
+    layoutchild;
+
+    /**
+     * Gets the {@link LayoutGroupComponentSystem} from the registry.
+     *
+     * @type {LayoutGroupComponentSystem|undefined}
+     * @readonly
+     */
+    layoutgroup;
+
+    /**
+     * Gets the {@link LightComponentSystem} from the registry.
+     *
+     * @type {LightComponentSystem|undefined}
+     * @readonly
+     */
+    light;
+
+    /**
+     * Gets the {@link ModelComponentSystem} from the registry.
+     *
+     * @type {ModelComponentSystem|undefined}
+     * @readonly
+     */
+    model;
+
+    /**
+     * Gets the {@link ParticleSystemComponentSystem} from the registry.
+     *
+     * @type {ParticleSystemComponentSystem|undefined}
+     * @readonly
+     */
+    particlesystem;
+
+    /**
+     * Gets the {@link RenderComponentSystem} from the registry.
+     *
+     * @type {RenderComponentSystem|undefined}
+     * @readonly
+     */
+    render;
+
+    /**
+     * Gets the {@link RigidBodyComponentSystem} from the registry.
+     *
+     * @type {RigidBodyComponentSystem|undefined}
+     * @readonly
+     */
+    rigidbody;
+
+    /**
+     * Gets the {@link ScreenComponentSystem} from the registry.
+     *
+     * @type {ScreenComponentSystem|undefined}
+     * @readonly
+     */
+    screen;
+
+    /**
+     * Gets the {@link ScriptComponentSystem} from the registry.
+     *
+     * @type {ScriptComponentSystem|undefined}
+     * @readonly
+     */
+    script;
+
+    /**
+     * Gets the {@link ScrollbarComponentSystem} from the registry.
+     *
+     * @type {ScrollbarComponentSystem|undefined}
+     * @readonly
+     */
+    scrollbar;
+
+    /**
+     * Gets the {@link ScrollViewComponentSystem} from the registry.
+     *
+     * @type {ScrollViewComponentSystem|undefined}
+     * @readonly
+     */
+    scrollview;
+
+    /**
+     * Gets the {@link SoundComponentSystem} from the registry.
+     *
+     * @type {SoundComponentSystem|undefined}
+     * @readonly
+     */
+    sound;
+
+    /**
+     * Gets the {@link SpriteComponentSystem} from the registry.
+     *
+     * @type {SpriteComponentSystem|undefined}
+     * @readonly
+     */
+    sprite;
+
+    /**
+     * Gets the {@link ZoneComponentSystem} from the registry.
+     *
+     * @type {ZoneComponentSystem|undefined}
+     * @readonly
+     * @ignore
+     */
+    zone;
+
+     /**
+      * Create a new ComponentSystemRegistry instance.
+      */
     constructor() {
+        super();
+
         // An array of pc.ComponentSystem objects
         this.list = [];
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystemRegistry#add
-     * @description Add a component system to the registry.
+     * Add a component system to the registry.
+     *
      * @param {object} system - The {@link ComponentSystem} instance.
+     * @ignore
      */
     add(system) {
-        var id = system.id;
+        const id = system.id;
         if (this[id]) {
-            throw new Error("ComponentSystem name '" + id + "' already registered or not allowed");
+            throw new Error(`ComponentSystem name '${id}' already registered or not allowed`);
         }
 
         this[id] = system;
@@ -30,24 +244,31 @@ class ComponentSystemRegistry {
     }
 
     /**
-     * @private
-     * @function
-     * @name ComponentSystemRegistry#remove
-     * @description Remove a component system from the registry.
+     * Remove a component system from the registry.
+     *
      * @param {object} system - The {@link ComponentSystem} instance.
+     * @ignore
      */
     remove(system) {
-        var id = system.id;
+        const id = system.id;
         if (!this[id]) {
-            throw new Error("No ComponentSystem named '" + id + "' registered");
+            throw new Error(`No ComponentSystem named '${id}' registered`);
         }
 
         delete this[id];
 
         // Update the component system array
-        var index = this.list.indexOf(this[id]);
+        const index = this.list.indexOf(this[id]);
         if (index !== -1) {
             this.list.splice(index, 1);
+        }
+    }
+
+    destroy() {
+        this.off();
+
+        for (let i = 0; i < this.list.length; i++) {
+            this.list[i].destroy();
         }
     }
 }

@@ -17,23 +17,25 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
     this.ssaoScript = ssaoScript;
     this.needsDepthBuffer = true;
 
+    var vshader = [
+        (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
+        graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
+        "attribute vec2 aPosition;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main(void)",
+        "{",
+        "   vUv0 = (aPosition.xy + 1.0) * 0.5;",
+        "   gl_Position = vec4(aPosition, 0.0, 1.0);",
+        "}"
+    ].join("\n");
+
     this.ssaoShader = new pc.Shader(graphicsDevice, {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -250,8 +252,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "",
             "    vec4 inCol = vec4(1.0, 1.0, 1.0, 1.0); //texture2D( uColorBuffer,  uv );",
             "",
-            "    gl_FragColor.rgb = inCol.rgb * vec3(aoVisibility); //postProcess.color.rgb = vec3(aoVisibility, pack(origin.z));",
-            "    gl_FragColor.a = 1.0;",
+            "    gl_FragColor.r = aoVisibility; //postProcess.color.rgb = vec3(aoVisibility, pack(origin.z));",
             "}",
             "",
             "void main_old()",
@@ -259,8 +260,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    vec2 aspectCorrect = vec2( 1.0, uAspect );",
             "",
             "    float depth = getLinearScreenDepth(vUv0);",
-            "    gl_FragColor.rgb = vec3(fract(floor(depth*256.0*256.0)),fract(floor(depth*256.0)),fract(depth));",
-            "    gl_FragColor.a = 1.0;",
+            "    gl_FragColor.r = fract(floor(depth*256.0*256.0)),fract(floor(depth*256.0)),fract(depth);",
             "}"
         ].join("\n")
     });
@@ -269,19 +269,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         attributes: {
             aPosition: pc.SEMANTIC_POSITION
         },
-        vshader: [
-            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3VS) : "",
-            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
+        vshader: vshader,
         fshader: [
             (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
             graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
@@ -354,45 +342,115 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
             "    // this is most useful with high quality/large blurs",
             "    // ao += ((random(gl_FragCoord.xy) - 0.5) / 255.0);",
             "",
-            "    vec4 inCol = texture2D( uColorBuffer,  vUv0 );",
-            "",
             "    ao = mix(ao, 1.0, uBrightness);",
-            "    gl_FragColor.rgb = inCol.rgb * ao;",
-            "    gl_FragColor.a = 1.0;",
+            "    gl_FragColor.a = ao;",
             "}"
         ].join("\n")
     });
 
-    // Render targets
-    var width = graphicsDevice.width;
-    var height = graphicsDevice.height;
-    var colorBuffer = new pc.Texture(graphicsDevice, {
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-        width: width,
-        height: height,
-        mipmaps: false
-    });
-    colorBuffer.name = 'ssao';
-    this.target = new pc.RenderTarget({
-        colorBuffer: colorBuffer,
-        depth: false
+    this.outputShader = new pc.Shader(graphicsDevice, {
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION
+        },
+        vshader: vshader,
+        fshader: [
+            (graphicsDevice.webgl2) ? ("#version 300 es\n\n" + pc.shaderChunks.gles3PS) : "",
+            graphicsDevice.webgl2 ? "" : "#extension GL_OES_standard_derivatives: enable\n",
+            "precision " + graphicsDevice.precision + " float;",
+            "varying vec2 vUv0;",
+            "uniform sampler2D uColorBuffer;",
+            "uniform sampler2D uSSAOBuffer;",
+            "",
+            "void main(void)",
+            "{",
+            "    vec4 inCol = texture2D( uColorBuffer,  vUv0 );",
+            "    float ssao = texture2D( uSSAOBuffer,  vUv0 ).a;",
+            "    gl_FragColor.rgb = inCol.rgb * ssao;",
+            "    gl_FragColor.a = inCol.a;",
+            "}"
+        ].join("\n")
     });
 
     // Uniforms
     this.radius = 4;
     this.brightness = 0;
     this.samples = 20;
+    this.downscale = 1.0;
 }
 
 SSAOEffect.prototype = Object.create(pc.PostEffect.prototype);
 SSAOEffect.prototype.constructor = SSAOEffect;
 
+SSAOEffect.prototype._destroy = function () {
+    if (this.target) {
+        this.target.destroyTextureBuffers();
+        this.target.destroy();
+        this.target = null;
+
+    }
+
+    if (this.blurTarget) {
+        this.blurTarget.destroyTextureBuffers();
+        this.blurTarget.destroy();
+        this.blurTarget = null;
+    }
+};
+
+SSAOEffect.prototype._resize = function (target) {
+
+    var width = Math.ceil(target.colorBuffer.width / this.downscale);
+    var height = Math.ceil(target.colorBuffer.height / this.downscale);
+
+    // If no change, skip resize
+    if (width === this.width && height === this.height)
+        return;
+
+    // Render targets
+    this.width = width;
+    this.height = height;
+
+    this._destroy();
+
+    var ssaoResultBuffer = new pc.Texture(this.device, {
+        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        minFilter: pc.FILTER_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        width: this.width,
+        height: this.height,
+        mipmaps: false
+    });
+    ssaoResultBuffer.name = 'SSAO Result';
+    this.target = new pc.RenderTarget({
+        name: "SSAO Result Render Target",
+        colorBuffer: ssaoResultBuffer,
+        depth: false
+    });
+
+    var ssaoBlurBuffer = new pc.Texture(this.device, {
+        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        minFilter: pc.FILTER_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+        width: this.width,
+        height: this.height,
+        mipmaps: false
+    });
+    ssaoBlurBuffer.name = 'SSAO Blur';
+    this.blurTarget = new pc.RenderTarget({
+        name: "SSAO Blur Render Target",
+        colorBuffer: ssaoBlurBuffer,
+        depth: false
+    });
+};
+
 Object.assign(SSAOEffect.prototype, {
     render: function (inputTarget, outputTarget, rect) {
+
+        this._resize(inputTarget);
+
         var device = this.device;
         var scope = device.scope;
 
@@ -407,9 +465,8 @@ Object.assign(SSAOEffect.prototype, {
         var projectionScale = 0.5 * device.height;
         var cameraFarClip = this.ssaoScript.entity.camera.farClip;
 
-        scope.resolve("uAspect").setValue(device.width / device.height);
-        scope.resolve("uResolution").setValue([device.width, device.height, 1.0 / device.width, 1.0 / device.height]);
-        scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
+        scope.resolve("uAspect").setValue(this.width / this.height);
+        scope.resolve("uResolution").setValue([this.width, this.height, 1.0 / this.width, 1.0 / this.height]);
         scope.resolve("uBrightness").setValue(this.brightness);
 
         scope.resolve("uInvFarPlane").setValue(1.0 / cameraFarClip);
@@ -425,6 +482,7 @@ Object.assign(SSAOEffect.prototype, {
         scope.resolve("uPower").setValue(1.0);
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
 
+        // Render SSAO
         pc.drawFullscreenQuad(device, this.target, this.vertexBuffer, this.ssaoShader, rect);
 
         scope.resolve("uSSAOBuffer").setValue(this.target.colorBuffer);
@@ -434,7 +492,13 @@ Object.assign(SSAOEffect.prototype, {
 
         scope.resolve("uBilatSampleCount").setValue(4);
 
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.blurShader, rect);
+        // Perform the blur
+        pc.drawFullscreenQuad(device, this.blurTarget, this.vertexBuffer, this.blurShader, rect);
+
+        // Finally output to screen
+        scope.resolve("uSSAOBuffer").setValue(this.blurTarget.colorBuffer);
+        scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
+        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.outputShader, rect);
     }
 });
 
@@ -465,11 +529,20 @@ SSAO.attributes.add('samples', {
     title: 'Samples'
 });
 
+SSAO.attributes.add('downscale', {
+    type: 'number',
+    default: 1,
+    min: 1,
+    max: 4,
+    title: "Downscale"
+});
+
 SSAO.prototype.initialize = function () {
     this.effect = new SSAOEffect(this.app.graphicsDevice, this);
     this.effect.radius = this.radius;
     this.effect.brightness = this.brightness;
     this.effect.samples = this.samples;
+    this.effect.downscale = this.downscale;
 
     this.on('attr', function (name, value) {
         this.effect[name] = value;
@@ -488,5 +561,6 @@ SSAO.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
+        this.effect._destroy();
     });
 };

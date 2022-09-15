@@ -6,18 +6,23 @@ import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name ZoneComponentSystem
- * @classdesc Defines zone in world.
- * @description Create a new ZoneComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages {@link ZoneComponent} instances.
+ *
  * @augments ComponentSystem
+ * @ignore
  */
 class ZoneComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ZoneComponentSystem.
+     *
+     * @param {AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -44,7 +49,7 @@ class ZoneComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             size: entity.zone.size
         };
 

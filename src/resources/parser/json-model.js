@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { Mat4 } from '../../math/mat4.js';
 import { Vec3 } from '../../math/vec3.js';
 
@@ -26,32 +28,31 @@ import { MorphTarget } from '../../scene/morph-target.js';
 import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 
-import { Material } from '../../scene/materials/material.js';
-
 const JSON_PRIMITIVE_TYPE = {
-    "points": PRIMITIVE_POINTS,
-    "lines": PRIMITIVE_LINES,
-    "lineloop": PRIMITIVE_LINELOOP,
-    "linestrip": PRIMITIVE_LINESTRIP,
-    "triangles": PRIMITIVE_TRIANGLES,
-    "trianglestrip": PRIMITIVE_TRISTRIP,
-    "trianglefan": PRIMITIVE_TRIFAN
+    'points': PRIMITIVE_POINTS,
+    'lines': PRIMITIVE_LINES,
+    'lineloop': PRIMITIVE_LINELOOP,
+    'linestrip': PRIMITIVE_LINESTRIP,
+    'triangles': PRIMITIVE_TRIANGLES,
+    'trianglestrip': PRIMITIVE_TRISTRIP,
+    'trianglefan': PRIMITIVE_TRIFAN
 };
 
 const JSON_VERTEX_ELEMENT_TYPE = {
-    "int8": TYPE_INT8,
-    "uint8": TYPE_UINT8,
-    "int16": TYPE_INT16,
-    "uint16": TYPE_UINT16,
-    "int32": TYPE_INT32,
-    "uint32": TYPE_UINT32,
-    "float32": TYPE_FLOAT32
+    'int8': TYPE_INT8,
+    'uint8': TYPE_UINT8,
+    'int16': TYPE_INT16,
+    'uint16': TYPE_UINT16,
+    'int32': TYPE_INT32,
+    'uint32': TYPE_UINT32,
+    'float32': TYPE_FLOAT32
 };
 
 // Take PlayCanvas JSON model data and create pc.Model
 class JsonModelParser {
-    constructor(device) {
+    constructor(device, defaultMaterial) {
         this._device = device;
+        this._defaultMaterial = defaultMaterial;
     }
 
     parse(data) {
@@ -61,9 +62,7 @@ class JsonModelParser {
         }
 
         if (modelData.version <= 1) {
-            // #if _DEBUG
-            console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
-            // #endif
+            Debug.warn('JsonModelParser#parse: Trying to parse unsupported model format.');
             return null;
         }
 
@@ -408,7 +407,7 @@ class JsonModelParser {
             const node = nodes[meshInstanceData.node];
             const mesh = meshes[meshInstanceData.mesh];
 
-            const meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
+            const meshInstance = new MeshInstance(mesh, this._defaultMaterial, node);
 
             if (mesh.skin) {
                 const skinIndex = skins.indexOf(mesh.skin);

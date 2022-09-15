@@ -1,198 +1,198 @@
-import alphaTestPS from './alphaTest.frag';
-import ambientConstantPS from './ambientConstant.frag';
-import ambientPrefilteredCubePS from './ambientPrefilteredCube.frag';
-import ambientPrefilteredCubeLodPS from './ambientPrefilteredCubeLod.frag';
-import ambientSHPS from './ambientSH.frag';
-import aoPS from './ao.frag';
-import aoSpecOccPS from './aoSpecOcc.frag';
-import aoSpecOccConstPS from './aoSpecOccConst.frag';
-import aoSpecOccConstSimplePS from './aoSpecOccConstSimple.frag';
-import aoSpecOccSimplePS from './aoSpecOccSimple.frag';
-import bakeDirLmEndPS from './bakeDirLmEnd.frag';
-import bakeLmEndPS from './bakeLmEnd.frag';
-import basePS from './base.frag';
-import baseVS from './base.vert';
-import baseNineSlicedPS from './baseNineSliced.frag';
-import baseNineSlicedVS from './baseNineSliced.vert';
-import baseNineSlicedTiledPS from './baseNineSlicedTiled.frag';
-import biasConstPS from './biasConst.frag';
-import blurVSMPS from './blurVSM.frag';
-import clearCoatPS from './clearCoat.frag';
-import clearCoatGlossPS from './clearCoatGloss.frag';
-import clearCoatNormalPS from './clearCoatNormal.frag';
-import clusteredLightLoopPS from './clusteredLightLoop.frag';
-import clusteredLightPS from './clusteredLight.frag';
-import combineClearCoatPS from './combineClearCoat.frag';
-import combineDiffusePS from './combineDiffuse.frag';
-import combineDiffuseSpecularPS from './combineDiffuseSpecular.frag';
-import combineDiffuseSpecularNoConservePS from './combineDiffuseSpecularNoConserve.frag';
-import combineDiffuseSpecularNoReflPS from './combineDiffuseSpecularNoRefl.frag';
-import combineDiffuseSpecularNoReflSeparateAmbientPS from './combineDiffuseSpecularNoReflSeparateAmbient.frag';
-import combineDiffuseSpecularOldPS from './combineDiffuseSpecularOld.frag';
-import cookiePS from './cookie.frag';
-import cubeMapProjectBoxPS from './cubeMapProjectBox.frag';
-import cubeMapProjectNonePS from './cubeMapProjectNone.frag';
-import cubeMapRotatePS from './cubeMapRotate.frag';
-import detailModesPS from './detailModes.frag';
-import diffusePS from './diffuse.frag';
-import diffuseDetailMapPS from './diffuseDetailMap.frag';
-import dilatePS from './dilate.frag';
-import dpAtlasQuadPS from './dpAtlasQuad.frag';
-import emissivePS from './emissive.frag';
-import endPS from './end.frag';
-import endVS from './end.vert';
-import envConstPS from './envConst.frag';
-import envMultiplyPS from './envMultiply.frag';
-import extensionPS from './extension.frag';
-import extensionVS from './extension.vert';
-import falloffInvSquaredPS from './falloffInvSquared.frag';
-import falloffLinearPS from './falloffLinear.frag';
-import fixCubemapSeamsNonePS from './fixCubemapSeamsNone.frag';
-import fixCubemapSeamsStretchPS from './fixCubemapSeamsStretch.frag';
-import fogExpPS from './fogExp.frag';
-import fogExp2PS from './fogExp2.frag';
-import fogLinearPS from './fogLinear.frag';
-import fogNonePS from './fogNone.frag';
-import fresnelSchlickPS from './fresnelSchlick.frag';
-import fullscreenQuadPS from './fullscreenQuad.frag';
-import fullscreenQuadVS from './fullscreenQuad.vert';
-import gamma1_0PS from './gamma1_0.frag';
-import gamma2_2PS from './gamma2_2.frag';
-import genParaboloidPS from './genParaboloid.frag';
-import gles3PS from './gles3.frag';
-import gles3VS from './gles3.vert';
-import glossPS from './gloss.frag';
-import instancingVS from './instancing.vert';
-import lightDiffuseLambertPS from './lightDiffuseLambert.frag';
-import lightDirPointPS from './lightDirPoint.frag';
-import lightmapDirPS from './lightmapDir.frag';
-import lightmapSinglePS from './lightmapSingle.frag';
-import lightmapSingleVertPS from './lightmapSingleVert.frag';
-import lightSpecularAnisoGGXPS from './lightSpecularAnisoGGX.frag';
-import lightSpecularBlinnPS from './lightSpecularBlinn.frag';
-import lightSpecularPhongPS from './lightSpecularPhong.frag';
-import ltc from './ltc.frag';
-import metalnessPS from './metalness.frag';
-import msdfPS from './msdf.frag';
-import normalVS from './normal.vert';
-import normalDetailMapPS from './normalDetailMap.frag';
-import normalInstancedVS from './normalInstanced.vert';
-import normalMapPS from './normalMap.frag';
-import normalMapFastPS from './normalMapFast.frag';
-import normalSkinnedVS from './normalSkinned.vert';
-import normalVertexPS from './normalVertex.frag';
-import normalXYPS from './normalXY.frag';
-import normalXYZPS from './normalXYZ.frag';
-import opacityPS from './opacity.frag';
-import outputAlphaPS from './outputAlpha.frag';
-import outputAlphaOpaquePS from './outputAlphaOpaque.frag';
-import outputAlphaPremulPS from './outputAlphaPremul.frag';
-import outputCubemapPS from './outputCubemap.frag';
-import outputTex2DPS from './outputTex2D.frag';
-import packDepthPS from './packDepth.frag';
-import packDepthMaskPS from './packDepthMask.frag';
-import parallaxPS from './parallax.frag';
-import particlePS from './particle.frag';
-import particleVS from './particle.vert';
-import particleAnimFrameClampVS from './particleAnimFrameClamp.vert';
-import particleAnimFrameLoopVS from './particleAnimFrameLoop.vert';
-import particleAnimTexVS from './particleAnimTex.vert';
-import particleInputFloatPS from './particleInputFloat.frag';
-import particleInputRgba8PS from './particleInputRgba8.frag';
-import particleOutputFloatPS from './particleOutputFloat.frag';
-import particleOutputRgba8PS from './particleOutputRgba8.frag';
-import particleUpdaterAABBPS from './particleUpdaterAABB.frag';
-import particleUpdaterEndPS from './particleUpdaterEnd.frag';
-import particleUpdaterInitPS from './particleUpdaterInit.frag';
-import particleUpdaterNoRespawnPS from './particleUpdaterNoRespawn.frag';
-import particleUpdaterOnStopPS from './particleUpdaterOnStop.frag';
-import particleUpdaterRespawnPS from './particleUpdaterRespawn.frag';
-import particleUpdaterSpherePS from './particleUpdaterSphere.frag';
-import particleUpdaterStartPS from './particleUpdaterStart.frag';
-import particle_billboardVS from './particle_billboard.vert';
-import particle_blendAddPS from './particle_blendAdd.frag';
-import particle_blendMultiplyPS from './particle_blendMultiply.frag';
-import particle_blendNormalPS from './particle_blendNormal.frag';
-import particle_cpuVS from './particle_cpu.vert';
-import particle_cpu_endVS from './particle_cpu_end.vert';
-import particle_customFaceVS from './particle_customFace.vert';
-import particle_endPS from './particle_end.frag';
-import particle_endVS from './particle_end.vert';
-import particle_halflambertPS from './particle_halflambert.frag';
-import particle_initVS from './particle_init.vert';
-import particle_lambertPS from './particle_lambert.frag';
-import particle_lightingPS from './particle_lighting.frag';
-import particle_localShiftVS from './particle_localShift.vert';
-import particle_meshVS from './particle_mesh.vert';
-import particle_normalVS from './particle_normal.vert';
-import particle_normalMapPS from './particle_normalMap.frag';
-import particle_pointAlongVS from './particle_pointAlong.vert';
-import particle_softPS from './particle_soft.frag';
-import particle_softVS from './particle_soft.vert';
-import particle_stretchVS from './particle_stretch.vert';
-import particle_TBNVS from './particle_TBN.vert';
-import particle_wrapVS from './particle_wrap.vert';
-import precisionTestPS from './precisionTest.frag';
-import precisionTest2PS from './precisionTest2.frag';
-import prefilterCubemapPS from './prefilterCubemap.frag';
-import reflDirPS from './reflDir.frag';
-import reflDirAnisoPS from './reflDirAniso.frag';
-import reflectionCCPS from './reflectionCC.frag';
-import reflectionCubePS from './reflectionCube.frag';
-import reflectionDpAtlasPS from './reflectionDpAtlas.frag';
-import reflectionPrefilteredCubePS from './reflectionPrefilteredCube.frag';
-import reflectionPrefilteredCubeLodPS from './reflectionPrefilteredCubeLod.frag';
-import reflectionSpherePS from './reflectionSphere.frag';
-import reflectionSphereLowPS from './reflectionSphereLow.frag';
-import refractionPS from './refraction.frag';
-import reprojectPS from './reproject.frag';
-import rgbmPS from './rgbm.frag';
-import screenDepthPS from './screenDepth.frag';
-import shadowCascadesPS from './shadowCascades.frag';
-import shadowCommonPS from './shadowCommon.frag';
-import shadowCoordPS from './shadowCoord.frag';
-import shadowCoordPerspZbufferPS from './shadowCoordPerspZbuffer.frag';
-import shadowEVSMPS from './shadowEVSM.frag';
-import shadowEVSMnPS from './shadowEVSMn.frag';
-import shadowStandardPS from './shadowStandard.frag';
-import shadowStandardGL2PS from './shadowStandardGL2.frag';
-import shadowVSM8PS from './shadowVSM8.frag';
-import shadowVSM_commonPS from './shadowVSM_common.frag';
-import skinBatchConstVS from './skinBatchConst.vert';
-import skinBatchTexVS from './skinBatchTex.vert';
-import skinConstVS from './skinConst.vert';
-import skinTexVS from './skinTex.vert';
-import skyboxPS from './skybox.frag';
-import skyboxVS from './skybox.vert';
-import skyboxHDRPS from './skyboxHDR.frag';
-import skyboxPrefilteredCubePS from './skyboxPrefilteredCube.frag';
-import specularPS from './specular.frag';
-import specularAaNonePS from './specularAaNone.frag';
-import specularAaToksvigPS from './specularAaToksvig.frag';
-import specularAaToksvigFastPS from './specularAaToksvigFast.frag';
-import spotPS from './spot.frag';
-import startPS from './start.frag';
-import startVS from './start.vert';
-import startNineSlicedPS from './startNineSliced.frag';
-import startNineSlicedTiledPS from './startNineSlicedTiled.frag';
-import storeEVSMPS from './storeEVSM.frag';
-import tangentBinormalVS from './tangentBinormal.vert';
-import TBNPS from './TBN.frag';
-import TBNderivativePS from './TBNderivative.frag';
-import TBNfastPS from './TBNfast.frag';
-import TBNObjectSpacePS from './TBNObjectSpace.frag';
-import tonemappingAcesPS from './tonemappingAces.frag';
-import tonemappingAces2PS from './tonemappingAces2.frag';
-import tonemappingFilmicPS from './tonemappingFilmic.frag';
-import tonemappingHejlPS from './tonemappingHejl.frag';
-import tonemappingLinearPS from './tonemappingLinear.frag';
-import tonemappingNonePS from './tonemappingNone.frag';
-import transformVS from './transform.vert';
-import transformDeclVS from './transformDecl.vert';
-import uv0VS from './uv0.vert';
-import uv1VS from './uv1.vert';
-import viewDirPS from './viewDir.frag';
-import viewNormalVS from './viewNormal.vert';
+import alphaTestPS from './standard/frag/alphaTest.js';
+import ambientConstantPS from './lit/frag/ambientConstant.js';
+import ambientEnvPS from './lit/frag/ambientEnv.js';
+import ambientSHPS from './lit/frag/ambientSH.js';
+import aoPS from './standard/frag/ao.js';
+import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
+import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
+import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
+import aoSpecOccConstSimplePS from './lit/frag/aoSpecOccConstSimple.js';
+import aoSpecOccSimplePS from './lit/frag/aoSpecOccSimple.js';
+import basePS from './lit/frag/base.js';
+import baseVS from './lit/vert/base.js';
+import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
+import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
+import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
+import biasConstPS from './lit/frag/biasConst.js';
+import blurVSMPS from './lit/frag/blurVSM.js';
+import clearCoatPS from './standard/frag/clearCoat.js';
+import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
+import clearCoatNormalPS from './standard/frag/clearCoatNormal.js';
+import clusteredLightUtilsPS from './lit/frag/clusteredLightUtils.js';
+import clusteredLightCookiesPS from './lit/frag/clusteredLightCookies.js';
+import clusteredLightShadowsPS from './lit/frag/clusteredLightShadows.js';
+import clusteredLightPS from './lit/frag/clusteredLight.js';
+import combinePS from './lit/frag/combine.js';
+import cookiePS from './lit/frag/cookie.js';
+import cubeMapProjectBoxPS from './lit/frag/cubeMapProjectBox.js';
+import cubeMapProjectNonePS from './lit/frag/cubeMapProjectNone.js';
+import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
+import decodePS from './common/frag/decode.js';
+import detailModesPS from './standard/frag/detailModes.js';
+import diffusePS from './standard/frag/diffuse.js';
+import diffuseDetailMapPS from './standard/frag/diffuseDetailMap.js';
+import emissivePS from './standard/frag/emissive.js';
+import encodePS from './common/frag/encode.js';
+import endPS from './lit/frag/end.js';
+import endVS from './lit/vert/end.js';
+import envAtlasPS from './common/frag/envAtlas.js';
+import envConstPS from './common/frag/envConst.js';
+import envMultiplyPS from './common/frag/envMultiply.js';
+import extensionPS from './lit/frag/extension.js';
+import extensionVS from './lit/vert/extension.js';
+import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
+import falloffLinearPS from './lit/frag/falloffLinear.js';
+import fixCubemapSeamsNonePS from './common/frag/fixCubemapSeamsNone.js';
+import fixCubemapSeamsStretchPS from './common/frag/fixCubemapSeamsStretch.js';
+import floatUnpackingPS from './lit/frag/float-unpacking.js';
+import fogExpPS from './lit/frag/fogExp.js';
+import fogExp2PS from './lit/frag/fogExp2.js';
+import fogLinearPS from './lit/frag/fogLinear.js';
+import fogNonePS from './lit/frag/fogNone.js';
+import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
+import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
+import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
+import gamma1_0PS from './common/frag/gamma1_0.js';
+import gamma2_2PS from './common/frag/gamma2_2.js';
+import gles2PS from './common/frag/gles2.js';
+import gles3PS from './common/frag/gles3.js';
+import gles3VS from './common/vert/gles3.js';
+import glossPS from './standard/frag/gloss.js';
+import instancingVS from './lit/vert/instancing.js';
+import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
+import lightDirPointPS from './lit/frag/lightDirPoint.js';
+import lightmapAddPS from './lit/frag/lightmapAdd.js';
+import lightmapDirAddPS from './lit/frag/lightmapDirAdd.js';
+import lightmapDirPS from './standard/frag/lightmapDir.js';
+import lightmapSinglePS from './standard/frag/lightmapSingle.js';
+import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
+import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
+import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
+import lightSheenPS from './lit/frag/lightSheen.js';
+import ltc from './lit/frag/ltc.js';
+import metalnessPS from './standard/frag/metalness.js';
+import msdfPS from './common/frag/msdf.js';
+import metalnessModulatePS from './lit/frag/metalnessModulate.js';
+import msdfVS from './common/vert/msdf.js';
+import normalVS from './lit/vert/normal.js';
+import normalDetailMapPS from './standard/frag/normalDetailMap.js';
+import normalInstancedVS from './lit/vert/normalInstanced.js';
+import normalMapPS from './standard/frag/normalMap.js';
+import normalSkinnedVS from './lit/vert/normalSkinned.js';
+import normalXYPS from './standard/frag/normalXY.js';
+import normalXYZPS from './standard/frag/normalXYZ.js';
+import opacityPS from './standard/frag/opacity.js';
+import outputAlphaPS from './lit/frag/outputAlpha.js';
+import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
+import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
+import outputTex2DPS from './common/frag/outputTex2D.js';
+import packDepthPS from './common/frag/packDepth.js';
+import sheenPS from './standard/frag/sheen.js';
+import sheenGlossPS from './standard/frag/sheenGloss.js';
+import parallaxPS from './standard/frag/parallax.js';
+import particlePS from './particle/frag/particle.js';
+import particleVS from './particle/vert/particle.js';
+import particleAnimFrameClampVS from './particle/vert/particleAnimFrameClamp.js';
+import particleAnimFrameLoopVS from './particle/vert/particleAnimFrameLoop.js';
+import particleAnimTexVS from './particle/vert/particleAnimTex.js';
+import particleInputFloatPS from './particle/frag/particleInputFloat.js';
+import particleInputRgba8PS from './particle/frag/particleInputRgba8.js';
+import particleOutputFloatPS from './particle/frag/particleOutputFloat.js';
+import particleOutputRgba8PS from './particle/frag/particleOutputRgba8.js';
+import particleUpdaterAABBPS from './particle/frag/particleUpdaterAABB.js';
+import particleUpdaterEndPS from './particle/frag/particleUpdaterEnd.js';
+import particleUpdaterInitPS from './particle/frag/particleUpdaterInit.js';
+import particleUpdaterNoRespawnPS from './particle/frag/particleUpdaterNoRespawn.js';
+import particleUpdaterOnStopPS from './particle/frag/particleUpdaterOnStop.js';
+import particleUpdaterRespawnPS from './particle/frag/particleUpdaterRespawn.js';
+import particleUpdaterSpherePS from './particle/frag/particleUpdaterSphere.js';
+import particleUpdaterStartPS from './particle/frag/particleUpdaterStart.js';
+import particle_billboardVS from './particle/vert/particle_billboard.js';
+import particle_blendAddPS from './particle/frag/particle_blendAdd.js';
+import particle_blendMultiplyPS from './particle/frag/particle_blendMultiply.js';
+import particle_blendNormalPS from './particle/frag/particle_blendNormal.js';
+import particle_cpuVS from './particle/vert/particle_cpu.js';
+import particle_cpu_endVS from './particle/vert/particle_cpu_end.js';
+import particle_customFaceVS from './particle/vert/particle_customFace.js';
+import particle_endPS from './particle/frag/particle_end.js';
+import particle_endVS from './particle/vert/particle_end.js';
+import particle_halflambertPS from './particle/frag/particle_halflambert.js';
+import particle_initVS from './particle/vert/particle_init.js';
+import particle_lambertPS from './particle/frag/particle_lambert.js';
+import particle_lightingPS from './particle/frag/particle_lighting.js';
+import particle_localShiftVS from './particle/vert/particle_localShift.js';
+import particle_meshVS from './particle/vert/particle_mesh.js';
+import particle_normalVS from './particle/vert/particle_normal.js';
+import particle_normalMapPS from './particle/frag/particle_normalMap.js';
+import particle_pointAlongVS from './particle/vert/particle_pointAlong.js';
+import particle_softPS from './particle/frag/particle_soft.js';
+import particle_softVS from './particle/vert/particle_soft.js';
+import particle_stretchVS from './particle/vert/particle_stretch.js';
+import particle_TBNVS from './particle/vert/particle_TBN.js';
+import particle_wrapVS from './particle/vert/particle_wrap.js';
+import precisionTestPS from './common/frag/precisionTest.js';
+import precisionTest2PS from './common/frag/precisionTest2.js';
+import reflDirPS from './lit/frag/reflDir.js';
+import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
+import reflectionCCPS from './lit/frag/reflectionCC.js';
+import reflectionCubePS from './lit/frag/reflectionCube.js';
+import reflectionEnvHQPS from './lit/frag/reflectionEnvHQ.js';
+import reflectionEnvPS from './lit/frag/reflectionEnv.js';
+import reflectionSpherePS from './lit/frag/reflectionSphere.js';
+import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
+import reflectionSheenPS from './lit/frag/reflectionSheen.js';
+import refractionCubePS from './lit/frag/refractionCube.js';
+import refractionDynamicPS from './lit/frag/refractionDynamic.js';
+import reprojectPS from './common/frag/reproject.js';
+import screenDepthPS from './common/frag/screenDepth.js';
+import shadowCascadesPS from './lit/frag/shadowCascades.js';
+import shadowCommonPS from './lit/frag/shadowCommon.js';
+import shadowCoordPS from './lit/frag/shadowCoord.js';
+import shadowCoordPerspZbufferPS from './lit/frag/shadowCoordPerspZbuffer.js';
+import shadowEVSMPS from './lit/frag/shadowEVSM.js';
+import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
+import shadowStandardPS from './lit/frag/shadowStandard.js';
+import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
+import shadowVSM8PS from './lit/frag/shadowVSM8.js';
+import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
+import skinBatchConstVS from './common/vert/skinBatchConst.js';
+import skinBatchTexVS from './common/vert/skinBatchTex.js';
+import skinConstVS from './common/vert/skinConst.js';
+import skinTexVS from './common/vert/skinTex.js';
+import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
+import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
+import skyboxVS from './skybox/vert/skybox.js';
+import specularPS from './standard/frag/specular.js';
+import sphericalPS from './common/frag/spherical.js';
+import specularityFactorPS from './standard/frag/specularityFactor.js';
+import spotPS from './lit/frag/spot.js';
+import startPS from './lit/frag/start.js';
+import startVS from './lit/vert/start.js';
+import startNineSlicedPS from './lit/frag/startNineSliced.js';
+import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
+import storeEVSMPS from './lit/frag/storeEVSM.js';
+import tangentBinormalVS from './lit/vert/tangentBinormal.js';
+import TBNPS from './lit/frag/TBN.js';
+import TBNderivativePS from './lit/frag/TBNderivative.js';
+import TBNfastPS from './lit/frag/TBNfast.js';
+import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
+import textureSamplePS from './standard/frag/textureSample.js';
+import thicknessPS from './standard/frag/thickness.js';
+import tonemappingAcesPS from './common/frag/tonemappingAces.js';
+import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
+import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
+import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
+import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
+import tonemappingNonePS from './common/frag/tonemappingNone.js';
+import transformVS from './common/vert/transform.js';
+import transformDeclVS from './common/vert/transformDecl.js';
+import transmissionPS from './standard/frag/transmission.js';
+import uv0VS from './lit/vert/uv0.js';
+import uv1VS from './lit/vert/uv1.js';
+import viewDirPS from './lit/frag/viewDir.js';
+import viewNormalVS from './lit/vert/viewNormal.js';
+import webgpuPS from './common/frag/webgpu.js';
+import webgpuVS from './common/vert/webgpu.js';
 
 /**
  * @static
@@ -202,201 +202,201 @@ import viewNormalVS from './viewNormal.vert';
  * @description Object containing all default shader chunks used by shader generators.
  */
 const shaderChunks = {
-    alphaTestPS: alphaTestPS,
-    ambientConstantPS: ambientConstantPS,
-    ambientPrefilteredCubePS: ambientPrefilteredCubePS,
-    ambientPrefilteredCubeLodPS: ambientPrefilteredCubeLodPS,
-    ambientSHPS: ambientSHPS,
-    aoPS: aoPS,
-    aoSpecOccPS: aoSpecOccPS,
-    aoSpecOccConstPS: aoSpecOccConstPS,
-    aoSpecOccConstSimplePS: aoSpecOccConstSimplePS,
-    aoSpecOccSimplePS: aoSpecOccSimplePS,
-    bakeDirLmEndPS: bakeDirLmEndPS,
-    bakeLmEndPS: bakeLmEndPS,
-    basePS: basePS,
-    baseVS: baseVS,
-    baseNineSlicedPS: baseNineSlicedPS,
-    baseNineSlicedVS: baseNineSlicedVS,
-    baseNineSlicedTiledPS: baseNineSlicedTiledPS,
-    biasConstPS: biasConstPS,
-    blurVSMPS: blurVSMPS,
-    clearCoatPS: clearCoatPS,
-    clearCoatGlossPS: clearCoatGlossPS,
-    clearCoatNormalPS: clearCoatNormalPS,
-    clusteredLightLoopPS: clusteredLightLoopPS,
-    clusteredLightPS: clusteredLightPS,
-    combineClearCoatPS: combineClearCoatPS,
-    combineDiffusePS: combineDiffusePS,
-    combineDiffuseSpecularPS: combineDiffuseSpecularPS,
-    combineDiffuseSpecularNoConservePS: combineDiffuseSpecularNoConservePS,
-    combineDiffuseSpecularNoReflPS: combineDiffuseSpecularNoReflPS,
-    combineDiffuseSpecularNoReflSeparateAmbientPS: combineDiffuseSpecularNoReflSeparateAmbientPS,
-    combineDiffuseSpecularOldPS: combineDiffuseSpecularOldPS,
-    cookiePS: cookiePS,
-    cubeMapProjectBoxPS: cubeMapProjectBoxPS,
-    cubeMapProjectNonePS: cubeMapProjectNonePS,
-    cubeMapRotatePS: cubeMapRotatePS,
-    detailModesPS: detailModesPS,
-    diffusePS: diffusePS,
-    diffuseDetailMapPS: diffuseDetailMapPS,
-    dilatePS: dilatePS,
-    dpAtlasQuadPS: dpAtlasQuadPS,
-    emissivePS: emissivePS,
-    endPS: endPS,
-    endVS: endVS,
-    envConstPS: envConstPS,
-    envMultiplyPS: envMultiplyPS,
-    extensionPS: extensionPS,
-    extensionVS: extensionVS,
-    falloffInvSquaredPS: falloffInvSquaredPS,
-    falloffLinearPS: falloffLinearPS,
-    fixCubemapSeamsNonePS: fixCubemapSeamsNonePS,
-    fixCubemapSeamsStretchPS: fixCubemapSeamsStretchPS,
-    fogExpPS: fogExpPS,
-    fogExp2PS: fogExp2PS,
-    fogLinearPS: fogLinearPS,
-    fogNonePS: fogNonePS,
-    fresnelSchlickPS: fresnelSchlickPS,
-    fullscreenQuadPS: fullscreenQuadPS,
-    fullscreenQuadVS: fullscreenQuadVS,
-    gamma1_0PS: gamma1_0PS,
-    gamma2_2PS: gamma2_2PS,
-    genParaboloidPS: genParaboloidPS,
-    gles3PS: gles3PS,
-    gles3VS: gles3VS,
-    glossPS: glossPS,
-    instancingVS: instancingVS,
-    lightDiffuseLambertPS: lightDiffuseLambertPS,
-    lightDirPointPS: lightDirPointPS,
-    lightmapDirPS: lightmapDirPS,
-    lightmapSinglePS: lightmapSinglePS,
-    lightmapSingleVertPS: lightmapSingleVertPS,
-    lightSpecularAnisoGGXPS: lightSpecularAnisoGGXPS,
-    lightSpecularBlinnPS: lightSpecularBlinnPS,
-    lightSpecularPhongPS: lightSpecularPhongPS,
-    ltc: ltc,
-    metalnessPS: metalnessPS,
-    msdfPS: msdfPS,
-    normalVS: normalVS,
-    normalDetailMapPS: normalDetailMapPS,
-    normalInstancedVS: normalInstancedVS,
-    normalMapPS: normalMapPS,
-    normalMapFastPS: normalMapFastPS,
-    normalSkinnedVS: normalSkinnedVS,
-    normalVertexPS: normalVertexPS,
-    normalXYPS: normalXYPS,
-    normalXYZPS: normalXYZPS,
-    opacityPS: opacityPS,
-    outputAlphaPS: outputAlphaPS,
-    outputAlphaOpaquePS: outputAlphaOpaquePS,
-    outputAlphaPremulPS: outputAlphaPremulPS,
-    outputCubemapPS: outputCubemapPS,
-    outputTex2DPS: outputTex2DPS,
-    packDepthPS: packDepthPS,
-    packDepthMaskPS: packDepthMaskPS,
-    parallaxPS: parallaxPS,
-    particlePS: particlePS,
-    particleVS: particleVS,
-    particleAnimFrameClampVS: particleAnimFrameClampVS,
-    particleAnimFrameLoopVS: particleAnimFrameLoopVS,
-    particleAnimTexVS: particleAnimTexVS,
-    particleInputFloatPS: particleInputFloatPS,
-    particleInputRgba8PS: particleInputRgba8PS,
-    particleOutputFloatPS: particleOutputFloatPS,
-    particleOutputRgba8PS: particleOutputRgba8PS,
-    particleUpdaterAABBPS: particleUpdaterAABBPS,
-    particleUpdaterEndPS: particleUpdaterEndPS,
-    particleUpdaterInitPS: particleUpdaterInitPS,
-    particleUpdaterNoRespawnPS: particleUpdaterNoRespawnPS,
-    particleUpdaterOnStopPS: particleUpdaterOnStopPS,
-    particleUpdaterRespawnPS: particleUpdaterRespawnPS,
-    particleUpdaterSpherePS: particleUpdaterSpherePS,
-    particleUpdaterStartPS: particleUpdaterStartPS,
-    particle_billboardVS: particle_billboardVS,
-    particle_blendAddPS: particle_blendAddPS,
-    particle_blendMultiplyPS: particle_blendMultiplyPS,
-    particle_blendNormalPS: particle_blendNormalPS,
-    particle_cpuVS: particle_cpuVS,
-    particle_cpu_endVS: particle_cpu_endVS,
-    particle_customFaceVS: particle_customFaceVS,
-    particle_endPS: particle_endPS,
-    particle_endVS: particle_endVS,
-    particle_halflambertPS: particle_halflambertPS,
-    particle_initVS: particle_initVS,
-    particle_lambertPS: particle_lambertPS,
-    particle_lightingPS: particle_lightingPS,
-    particle_localShiftVS: particle_localShiftVS,
-    particle_meshVS: particle_meshVS,
-    particle_normalVS: particle_normalVS,
-    particle_normalMapPS: particle_normalMapPS,
-    particle_pointAlongVS: particle_pointAlongVS,
-    particle_softPS: particle_softPS,
-    particle_softVS: particle_softVS,
-    particle_stretchVS: particle_stretchVS,
-    particle_TBNVS: particle_TBNVS,
-    particle_wrapVS: particle_wrapVS,
-    precisionTestPS: precisionTestPS,
-    precisionTest2PS: precisionTest2PS,
-    prefilterCubemapPS: prefilterCubemapPS,
-    reflDirPS: reflDirPS,
-    reflDirAnisoPS: reflDirAnisoPS,
-    reflectionCCPS: reflectionCCPS,
-    reflectionCubePS: reflectionCubePS,
-    reflectionDpAtlasPS: reflectionDpAtlasPS,
-    reflectionPrefilteredCubePS: reflectionPrefilteredCubePS,
-    reflectionPrefilteredCubeLodPS: reflectionPrefilteredCubeLodPS,
-    reflectionSpherePS: reflectionSpherePS,
-    reflectionSphereLowPS: reflectionSphereLowPS,
-    refractionPS: refractionPS,
-    reprojectPS: reprojectPS,
-    rgbmPS: rgbmPS,
-    screenDepthPS: screenDepthPS,
-    shadowCascadesPS: shadowCascadesPS,
-    shadowCommonPS: shadowCommonPS,
-    shadowCoordPS: shadowCoordPS,
-    shadowCoordPerspZbufferPS: shadowCoordPerspZbufferPS,
-    shadowEVSMPS: shadowEVSMPS,
-    shadowEVSMnPS: shadowEVSMnPS,
-    shadowStandardPS: shadowStandardPS,
-    shadowStandardGL2PS: shadowStandardGL2PS,
-    shadowVSM8PS: shadowVSM8PS,
-    shadowVSM_commonPS: shadowVSM_commonPS,
-    skinBatchConstVS: skinBatchConstVS,
-    skinBatchTexVS: skinBatchTexVS,
-    skinConstVS: skinConstVS,
-    skinTexVS: skinTexVS,
-    skyboxPS: skyboxPS,
-    skyboxVS: skyboxVS,
-    skyboxHDRPS: skyboxHDRPS,
-    skyboxPrefilteredCubePS: skyboxPrefilteredCubePS,
-    specularPS: specularPS,
-    specularAaNonePS: specularAaNonePS,
-    specularAaToksvigPS: specularAaToksvigPS,
-    specularAaToksvigFastPS: specularAaToksvigFastPS,
-    spotPS: spotPS,
-    startPS: startPS,
-    startVS: startVS,
-    startNineSlicedPS: startNineSlicedPS,
-    startNineSlicedTiledPS: startNineSlicedTiledPS,
-    storeEVSMPS: storeEVSMPS,
-    tangentBinormalVS: tangentBinormalVS,
-    TBNPS: TBNPS,
-    TBNderivativePS: TBNderivativePS,
-    TBNfastPS: TBNfastPS,
-    TBNObjectSpacePS: TBNObjectSpacePS,
-    tonemappingAcesPS: tonemappingAcesPS,
-    tonemappingAces2PS: tonemappingAces2PS,
-    tonemappingFilmicPS: tonemappingFilmicPS,
-    tonemappingHejlPS: tonemappingHejlPS,
-    tonemappingLinearPS: tonemappingLinearPS,
-    tonemappingNonePS: tonemappingNonePS,
-    transformVS: transformVS,
-    transformDeclVS: transformDeclVS,
-    uv0VS: uv0VS,
-    uv1VS: uv1VS,
-    viewDirPS: viewDirPS,
-    viewNormalVS: viewNormalVS
+    alphaTestPS,
+    ambientConstantPS,
+    ambientEnvPS,
+    ambientSHPS,
+    aoPS,
+    aoDiffuseOccPS,
+    aoSpecOccPS,
+    aoSpecOccConstPS,
+    aoSpecOccConstSimplePS,
+    aoSpecOccSimplePS,
+    basePS,
+    baseVS,
+    baseNineSlicedPS,
+    baseNineSlicedVS,
+    baseNineSlicedTiledPS,
+    biasConstPS,
+    blurVSMPS,
+    clearCoatPS,
+    clearCoatGlossPS,
+    clearCoatNormalPS,
+    clusteredLightCookiesPS,
+    clusteredLightShadowsPS,
+    clusteredLightUtilsPS,
+    clusteredLightPS,
+    combinePS,
+    cookiePS,
+    cubeMapProjectBoxPS,
+    cubeMapProjectNonePS,
+    cubeMapRotatePS,
+    detailModesPS,
+    diffusePS,
+    diffuseDetailMapPS,
+    decodePS,
+    emissivePS,
+    encodePS,
+    endPS,
+    endVS,
+    envAtlasPS,
+    envConstPS,
+    envMultiplyPS,
+    extensionPS,
+    extensionVS,
+    falloffInvSquaredPS,
+    falloffLinearPS,
+    fixCubemapSeamsNonePS,
+    fixCubemapSeamsStretchPS,
+    floatUnpackingPS,
+    fogExpPS,
+    fogExp2PS,
+    fogLinearPS,
+    fogNonePS,
+    fresnelSchlickPS,
+    fullscreenQuadPS,
+    fullscreenQuadVS,
+    gamma1_0PS,
+    gamma2_2PS,
+    gles2PS,
+    gles3PS,
+    gles3VS,
+    glossPS,
+    instancingVS,
+    lightDiffuseLambertPS,
+    lightDirPointPS,
+    lightmapAddPS,
+    lightmapDirAddPS,
+    lightmapDirPS,
+    lightmapSinglePS,
+    lightSpecularAnisoGGXPS,
+    lightSpecularBlinnPS,
+    lightSpecularPhongPS,
+    lightSheenPS,
+    ltc,
+    metalnessPS,
+    metalnessModulatePS,
+    msdfPS,
+    msdfVS,
+    normalVS,
+    normalDetailMapPS,
+    normalInstancedVS,
+    normalMapPS,
+    normalSkinnedVS,
+    normalXYPS,
+    normalXYZPS,
+    opacityPS,
+    outputAlphaPS,
+    outputAlphaOpaquePS,
+    outputAlphaPremulPS,
+    outputTex2DPS,
+    packDepthPS,
+    sheenPS,
+    sheenGlossPS,
+    parallaxPS,
+    particlePS,
+    particleVS,
+    particleAnimFrameClampVS,
+    particleAnimFrameLoopVS,
+    particleAnimTexVS,
+    particleInputFloatPS,
+    particleInputRgba8PS,
+    particleOutputFloatPS,
+    particleOutputRgba8PS,
+    particleUpdaterAABBPS,
+    particleUpdaterEndPS,
+    particleUpdaterInitPS,
+    particleUpdaterNoRespawnPS,
+    particleUpdaterOnStopPS,
+    particleUpdaterRespawnPS,
+    particleUpdaterSpherePS,
+    particleUpdaterStartPS,
+    particle_billboardVS,
+    particle_blendAddPS,
+    particle_blendMultiplyPS,
+    particle_blendNormalPS,
+    particle_cpuVS,
+    particle_cpu_endVS,
+    particle_customFaceVS,
+    particle_endPS,
+    particle_endVS,
+    particle_halflambertPS,
+    particle_initVS,
+    particle_lambertPS,
+    particle_lightingPS,
+    particle_localShiftVS,
+    particle_meshVS,
+    particle_normalVS,
+    particle_normalMapPS,
+    particle_pointAlongVS,
+    particle_softPS,
+    particle_softVS,
+    particle_stretchVS,
+    particle_TBNVS,
+    particle_wrapVS,
+    precisionTestPS,
+    precisionTest2PS,
+    reflDirPS,
+    reflDirAnisoPS,
+    reflectionCCPS,
+    reflectionCubePS,
+    reflectionEnvHQPS,
+    reflectionEnvPS,
+    reflectionSpherePS,
+    reflectionSphereLowPS,
+    reflectionSheenPS,
+    refractionCubePS,
+    refractionDynamicPS,
+    reprojectPS,
+    screenDepthPS,
+    shadowCascadesPS,
+    shadowCommonPS,
+    shadowCoordPS,
+    shadowCoordPerspZbufferPS,
+    shadowEVSMPS,
+    shadowEVSMnPS,
+    shadowStandardPS,
+    shadowStandardGL2PS,
+    shadowVSM8PS,
+    shadowVSM_commonPS,
+    skinBatchConstVS,
+    skinBatchTexVS,
+    skinConstVS,
+    skinTexVS,
+    skyboxEnvPS,
+    skyboxHDRPS,
+    skyboxVS,
+    specularPS,
+    sphericalPS,
+    specularityFactorPS,
+    spotPS,
+    startPS,
+    startVS,
+    startNineSlicedPS,
+    startNineSlicedTiledPS,
+    storeEVSMPS,
+    tangentBinormalVS,
+    TBNPS,
+    TBNderivativePS,
+    TBNfastPS,
+    TBNObjectSpacePS,
+    textureSamplePS,
+    thicknessPS,
+    tonemappingAcesPS,
+    tonemappingAces2PS,
+    tonemappingFilmicPS,
+    tonemappingHejlPS,
+    tonemappingLinearPS,
+    tonemappingNonePS,
+    transformVS,
+    transformDeclVS,
+    transmissionPS,
+    uv0VS,
+    uv1VS,
+    viewDirPS,
+    viewNormalVS,
+    webgpuPS,
+    webgpuVS
 };
 
 export { shaderChunks };

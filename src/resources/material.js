@@ -10,12 +10,22 @@ import { AssetReference } from '../asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
     diffuseMap: 'gray',
     specularMap: 'gray',
+    specularityFactorMap: 'white',
     metalnessMap: 'black',
     glossMap: 'gray',
+    sheenMap: 'black',
+    sheenGlossinessMap: 'gray',
+    clearCoatMap: 'black',
+    clearCoatGlossMap: 'gray',
+    clearCoatNormalMap: 'normal',
+    refractionMap: 'white',
     emissiveMap: 'gray',
     normalMap: 'normal',
     heightMap: 'gray',
@@ -25,13 +35,24 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * @class
- * @name MaterialHandler
+ * Resource handler used for loading {@link Material} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Material} resources.
- * @param {Application} app - The running {@link Application}.
  */
 class MaterialHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "material";
+
+    /**
+     * Create a new MaterialHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
     constructor(app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;
@@ -62,7 +83,7 @@ class MaterialHandler {
                 }
             } else {
                 if (callback) {
-                    callback("Error loading material: " + url.original + " [" + err + "]");
+                    callback(`Error loading material: ${url.original} [${err}]`);
                 }
             }
         });
@@ -100,9 +121,9 @@ class MaterialHandler {
             this._placeholderTextures[key] = new Texture(this._device, {
                 width: 2,
                 height: 2,
-                format: PIXELFORMAT_R8_G8_B8_A8
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                name: 'material_placeholder'
             });
-            this._placeholderTextures[key].name = 'placeholder';
 
             // fill pixels with color
             const pixels = this._placeholderTextures[key].lock();
@@ -160,7 +181,7 @@ class MaterialHandler {
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset) {
 
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset);
+        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName);
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
@@ -183,16 +204,12 @@ class MaterialHandler {
     }
 
     _assignCubemap(parameterName, materialAsset, textures) {
-        // NB we now set resource directly (like textures)
-        materialAsset.resource[parameterName] = textures[0]; // the primary cubemap texture
-        if (textures.length === 7) {
-            // the prefiltered textures
-            materialAsset.resource.prefilteredCubeMap128 = textures[1];
-            materialAsset.resource.prefilteredCubeMap64 = textures[2];
-            materialAsset.resource.prefilteredCubeMap32 = textures[3];
-            materialAsset.resource.prefilteredCubeMap16 = textures[4];
-            materialAsset.resource.prefilteredCubeMap8 = textures[5];
-            materialAsset.resource.prefilteredCubeMap4 = textures[6];
+        // the primary cubemap texture
+        materialAsset.resource[parameterName] = textures[0];
+
+        // set prefiltered textures
+        if (parameterName === 'cubeMap') {
+            materialAsset.resource.prefilteredCubemaps = textures.slice(1);
         }
     }
 
@@ -225,7 +242,7 @@ class MaterialHandler {
 
         const material = materialAsset.resource;
 
-        const pathMapping = (data.mappingFormat === "path");
+        const pathMapping = (data.mappingFormat === 'path');
 
         const TEXTURES = standardMaterialTextureParameters;
 
@@ -242,7 +259,7 @@ class MaterialHandler {
             const dataAssetId = data[name];
 
             const materialTexture = material[name];
-            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name, materialAsset);
+            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name);
             const dataValidated = data.validated;
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {

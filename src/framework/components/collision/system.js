@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Mat4 } from '../../../math/mat4.js';
 import { Quat } from '../../../math/quat.js';
 import { Vec3 } from '../../../math/vec3.js';
@@ -14,10 +16,12 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
-var mat4 = new Mat4();
-var vec3 = new Vec3();
-var quat = new Quat();
-var tempGraphNode = new GraphNode();
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
+const mat4 = new Mat4();
+const vec3 = new Vec3();
+const quat = new Quat();
+const tempGraphNode = new GraphNode();
 
 const _schema = [
     'enabled',
@@ -61,8 +65,8 @@ class CollisionSystemImpl {
 
     // Re-creates rigid bodies / triggers
     recreatePhysicalShapes(component) {
-        var entity = component.entity;
-        var data = component.data;
+        const entity = component.entity;
+        const data = component.data;
 
         if (typeof Ammo !== 'undefined') {
             if (entity.trigger) {
@@ -84,9 +88,9 @@ class CollisionSystemImpl {
 
             data.shape = this.createPhysicalShape(component.entity, data);
 
-            var firstCompoundChild = ! component._compoundParent;
+            const firstCompoundChild = !component._compoundParent;
 
-            if (data.type === 'compound' && (! component._compoundParent || component === component._compoundParent)) {
+            if (data.type === 'compound' && (!component._compoundParent || component === component._compoundParent)) {
                 component._compoundParent = component;
 
                 entity.forEach(this._addEachDescendant, component);
@@ -95,9 +99,9 @@ class CollisionSystemImpl {
                     entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
                 }
 
-                if (! component.rigidbody) {
+                if (!component.rigidbody) {
                     component._compoundParent = null;
-                    var parent = entity.parent;
+                    let parent = entity.parent;
                     while (parent) {
                         if (parent.collision && parent.collision.type === 'compound') {
                             component._compoundParent = parent.collision;
@@ -128,8 +132,8 @@ class CollisionSystemImpl {
                 if (entity.enabled && entity.rigidbody.enabled) {
                     entity.rigidbody.enableSimulation();
                 }
-            } else if (! component._compoundParent) {
-                if (! entity.trigger) {
+            } else if (!component._compoundParent) {
+                if (!entity.trigger) {
                     entity.trigger = new Trigger(this.system.app, component, data);
                 } else {
                     entity.trigger.initialize(data);
@@ -153,7 +157,7 @@ class CollisionSystemImpl {
 
     beforeRemove(entity, component) {
         if (component.data.shape) {
-            if (component._compoundParent && ! component._compoundParent.entity._destroying) {
+            if (component._compoundParent && !component._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(component._compoundParent, component.data.shape);
 
                 if (component._compoundParent.entity.rigidbody)
@@ -169,7 +173,6 @@ class CollisionSystemImpl {
 
     // Called when the collision is removed
     remove(entity, data) {
-        var app = this.system.app;
         if (entity.rigidbody && entity.rigidbody.body) {
             entity.rigidbody.disableSimulation();
         }
@@ -178,18 +181,13 @@ class CollisionSystemImpl {
             entity.trigger.destroy();
             delete entity.trigger;
         }
-
-        if (app.scene.containsModel(data.model)) {
-            app.root.removeChild(data.model.graph);
-            app.scene.removeModel(data.model);
-        }
     }
 
     // Called when the collision is cloned to another entity
     clone(entity, clone) {
-        var src = this.system.store[entity.getGuid()];
+        const src = this.system.store[entity.getGuid()];
 
-        var data = {
+        const data = {
             enabled: src.data.enabled,
             type: src.data.type,
             halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
@@ -210,9 +208,9 @@ class CollisionSystemImpl {
 class CollisionBoxSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
         if (typeof Ammo !== 'undefined') {
-            var he = data.halfExtents;
-            var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
-            var shape = new Ammo.btBoxShape(ammoHe);
+            const he = data.halfExtents;
+            const ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
+            const shape = new Ammo.btBoxShape(ammoHe);
             Ammo.destroy(ammoHe);
             return shape;
         }
@@ -233,10 +231,11 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        var shape = null;
-        var axis = (data.axis !== undefined) ? data.axis : 1;
-        var radius = data.radius || 0.5;
-        var height = Math.max((data.height || 2) - 2 * radius, 0);
+        const axis = (data.axis !== undefined) ? data.axis : 1;
+        const radius = data.radius || 0.5;
+        const height = Math.max((data.height || 2) - 2 * radius, 0);
+
+        let shape = null;
 
         if (typeof Ammo !== 'undefined') {
             switch (axis) {
@@ -251,6 +250,7 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
                     break;
             }
         }
+
         return shape;
     }
 }
@@ -258,11 +258,12 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        var halfExtents = null;
-        var shape = null;
-        var axis = (data.axis !== undefined) ? data.axis : 1;
-        var radius = (data.radius !== undefined) ? data.radius : 0.5;
-        var height = (data.height !== undefined) ? data.height : 1;
+        const axis = (data.axis !== undefined) ? data.axis : 1;
+        const radius = (data.radius !== undefined) ? data.radius : 0.5;
+        const height = (data.height !== undefined) ? data.height : 1;
+
+        let halfExtents = null;
+        let shape = null;
 
         if (typeof Ammo !== 'undefined') {
             switch (axis) {
@@ -291,10 +292,11 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        var shape = null;
-        var axis = (data.axis !== undefined) ? data.axis : 1;
-        var radius = (data.radius !== undefined) ? data.radius : 0.5;
-        var height = (data.height !== undefined) ? data.height : 1;
+        const axis = (data.axis !== undefined) ? data.axis : 1;
+        const radius = (data.radius !== undefined) ? data.radius : 0.5;
+        const height = (data.height !== undefined) ? data.height : 1;
+
+        let shape = null;
 
         if (typeof Ammo !== 'undefined') {
             switch (axis) {
@@ -309,6 +311,7 @@ class CollisionConeSystemImpl extends CollisionSystemImpl {
                     break;
             }
         }
+
         return shape;
     }
 }
@@ -320,19 +323,18 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     beforeInitialize(component, data) {}
 
     createAmmoMesh(mesh, node, shape) {
-        var triMesh;
-        var i;
+        let triMesh;
 
         if (this.system._triMeshCache[mesh.id]) {
             triMesh = this.system._triMeshCache[mesh.id];
         } else {
-            var vb = mesh.vertexBuffer;
+            const vb = mesh.vertexBuffer;
 
-            var format = vb.getFormat();
-            var stride;
-            var positions;
-            for (i = 0; i < format.elements.length; i++) {
-                var element = format.elements[i];
+            const format = vb.getFormat();
+            let stride;
+            let positions;
+            for (let i = 0; i < format.elements.length; i++) {
+                const element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
                     positions = new Float32Array(vb.lock(), element.offset);
                     stride = element.stride / 4;
@@ -340,20 +342,20 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 }
             }
 
-            var indices = [];
+            const indices = [];
             mesh.getIndices(indices);
-            var numTriangles = mesh.primitive[0].count / 3;
+            const numTriangles = mesh.primitive[0].count / 3;
 
-            var v1 = new Ammo.btVector3();
-            var v2 = new Ammo.btVector3();
-            var v3 = new Ammo.btVector3();
-            var i1, i2, i3;
+            const v1 = new Ammo.btVector3();
+            const v2 = new Ammo.btVector3();
+            const v3 = new Ammo.btVector3();
+            let i1, i2, i3;
 
-            var base = mesh.primitive[0].base;
+            const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
             this.system._triMeshCache[mesh.id] = triMesh;
 
-            for (i = 0; i < numTriangles; i++) {
+            for (let i = 0; i < numTriangles; i++) {
                 i1 = indices[base + i * 3] * stride;
                 i2 = indices[base + i * 3 + 1] * stride;
                 i3 = indices[base + i * 3 + 2] * stride;
@@ -368,49 +370,51 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             Ammo.destroy(v3);
         }
 
-        var useQuantizedAabbCompression = true;
-        var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+        const useQuantizedAabbCompression = true;
+        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
-        var scaling = this.system._getNodeScaling(node);
+        const scaling = this.system._getNodeScaling(node);
         triMeshShape.setLocalScaling(scaling);
         Ammo.destroy(scaling);
 
-        var transform = this.system._getNodeTransform(node);
+        const transform = this.system._getNodeTransform(node);
         shape.addChildShape(transform, triMeshShape);
         Ammo.destroy(transform);
     }
 
     createPhysicalShape(entity, data) {
-        if (typeof Ammo === 'undefined') return;
+        if (typeof Ammo === 'undefined') return undefined;
 
         if (data.model || data.render) {
 
-            var shape = new Ammo.btCompoundShape();
+            const shape = new Ammo.btCompoundShape();
 
             if (data.model) {
-                var meshInstances = data.model.meshInstances;
+                const meshInstances = data.model.meshInstances;
                 for (let i = 0; i < meshInstances.length; i++) {
                     this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
                 }
             } else if (data.render) {
-                var meshes = data.render.meshes;
+                const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
                     this.createAmmoMesh(meshes[i], tempGraphNode, shape);
                 }
             }
 
-            var entityTransform = entity.getWorldTransform();
-            var scale = entityTransform.getScale();
-            var vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
+            const entityTransform = entity.getWorldTransform();
+            const scale = entityTransform.getScale();
+            const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
             shape.setLocalScaling(vec);
             Ammo.destroy(vec);
 
             return shape;
         }
+
+        return undefined;
     }
 
     recreatePhysicalShapes(component) {
-        var data = component.data;
+        const data = component.data;
 
         if (data.renderAsset || data.asset) {
             if (component.enabled && component.entity.enabled) {
@@ -427,22 +431,21 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     loadAsset(component, id, property) {
-        var self = this;
-        var data = component.data;
-        var assets = this.system.app.assets;
+        const data = component.data;
+        const assets = this.system.app.assets;
 
-        var asset = assets.get(id);
+        const asset = assets.get(id);
         if (asset) {
-            asset.ready(function (asset) {
+            asset.ready((asset) => {
                 data[property] = asset.resource;
-                self.doRecreatePhysicalShape(component);
+                this.doRecreatePhysicalShape(component);
             });
             assets.load(asset);
         } else {
-            assets.once("add:" + id, function (asset) {
-                asset.ready(function (asset) {
+            assets.once('add:' + id, (asset) => {
+                asset.ready((asset) => {
                     data[property] = asset.resource;
-                    self.doRecreatePhysicalShape(component);
+                    this.doRecreatePhysicalShape(component);
                 });
                 assets.load(asset);
             });
@@ -450,8 +453,8 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     doRecreatePhysicalShape(component) {
-        var entity = component.entity;
-        var data = component.data;
+        const entity = component.entity;
+        const data = component.data;
 
         if (data.model || data.render) {
             this.destroyShape(data);
@@ -480,11 +483,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
     updateTransform(component, position, rotation, scale) {
         if (component.shape) {
-            var entityTransform = component.entity.getWorldTransform();
-            var worldScale = entityTransform.getScale();
+            const entityTransform = component.entity.getWorldTransform();
+            const worldScale = entityTransform.getScale();
 
             // if the scale changed then recreate the shape
-            var previousScale = component.shape.getLocalScaling();
+            const previousScale = component.shape.getLocalScaling();
             if (worldScale.x !== previousScale.x() ||
                 worldScale.y !== previousScale.y() ||
                 worldScale.z !== previousScale.z()) {
@@ -499,9 +502,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         if (!data.shape)
             return;
 
-        var numShapes = data.shape.getNumChildShapes();
-        for (var i = 0; i < numShapes; i++) {
-            var shape = data.shape.getChildShape(i);
+        const numShapes = data.shape.getNumChildShapes();
+        for (let i = 0; i < numShapes; i++) {
+            const shape = data.shape.getChildShape(i);
             Ammo.destroy(shape);
         }
 
@@ -525,7 +528,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _addEachDescendant(entity) {
-        if (! entity.collision || entity.rigidbody)
+        if (!entity.collision || entity.rigidbody)
             return;
 
         entity.collision._compoundParent = this;
@@ -536,7 +539,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _updateEachDescendant(entity) {
-        if (! entity.collision)
+        if (!entity.collision)
             return;
 
         if (entity.collision._compoundParent !== this)
@@ -544,13 +547,13 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 
         entity.collision._compoundParent = null;
 
-        if (entity !== this.entity && ! entity.rigidbody) {
+        if (entity !== this.entity && !entity.rigidbody) {
             entity.collision.system.recreatePhysicalShapes(entity.collision);
         }
     }
 
     _updateEachDescendantTransform(entity) {
-        if (! entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
+        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
             return;
 
         this.collision.system.updateCompoundChildTransform(entity);
@@ -558,18 +561,21 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 }
 
 /**
- * @class
- * @name CollisionComponentSystem
+ * Manages creation of {@link CollisionComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link CollisionComponent}s.
- * @description Creates a new CollisionComponentSystem.
- * @param {Application} app - The running {@link Application}.
  */
 class CollisionComponentSystem extends ComponentSystem {
+    /**
+     * Creates a new CollisionComponentSystem instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
-        this.id = "collision";
+        this.id = 'collision';
 
         this.ComponentType = CollisionComponent;
         this.DataType = CollisionComponentData;
@@ -600,16 +606,16 @@ class CollisionComponentSystem extends ComponentSystem {
         ];
 
         // duplicate the input data because we are modifying it
-        var data = {};
-        for (var i = 0, len = properties.length; i < len; i++) {
-            var property = properties[i];
+        const data = {};
+        for (let i = 0, len = properties.length; i < len; i++) {
+            const property = properties[i];
             data[property] = _data[property];
         }
 
         // asset takes priority over model
         // but they are both trying to change the mesh
         // so remove one of them to avoid conflicts
-        var idx;
+        let idx;
         if (_data.hasOwnProperty('asset')) {
             idx = properties.indexOf('model');
             if (idx !== -1) {
@@ -635,7 +641,7 @@ class CollisionComponentSystem extends ComponentSystem {
             data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
         }
 
-        var impl = this._createImplementation(data.type);
+        const impl = this._createImplementation(data.type);
         impl.beforeInitialize(component, data);
 
         super.initializeComponentData(component, data, properties);
@@ -647,7 +653,7 @@ class CollisionComponentSystem extends ComponentSystem {
     // in an internal implementations structure, before returning it.
     _createImplementation(type) {
         if (this.implementations[type] === undefined) {
-            var impl;
+            let impl;
             switch (type) {
                 case 'box':
                     impl = new CollisionBoxSystemImpl(this);
@@ -671,9 +677,7 @@ class CollisionComponentSystem extends ComponentSystem {
                     impl = new CollisionCompoundSystemImpl(this);
                     break;
                 default:
-                    // #if _DEBUG
-                    console.error("_createImplementation: Invalid collision system type: " + type);
-                    // #endif
+                    Debug.error(`_createImplementation: Invalid collision system type: ${type}`);
             }
             this.implementations[type] = impl;
         }
@@ -706,7 +710,7 @@ class CollisionComponentSystem extends ComponentSystem {
         this._removeCompoundChild(entity.collision._compoundParent, entity.collision.data.shape);
 
         if (entity.enabled && entity.collision.enabled) {
-            var transform = this._getNodeTransform(entity, entity.collision._compoundParent.entity);
+            const transform = this._getNodeTransform(entity, entity.collision._compoundParent.entity);
             entity.collision._compoundParent.shape.addChildShape(transform, entity.collision.data.shape);
             Ammo.destroy(transform);
         }
@@ -716,7 +720,7 @@ class CollisionComponentSystem extends ComponentSystem {
         if (collision.shape.removeChildShape) {
             collision.shape.removeChildShape(shape);
         } else {
-            var ind = collision._getCompoundChildShapeIndex(shape);
+            const ind = collision._getCompoundChildShapeIndex(shape);
             if (ind !== null) {
                 collision.shape.removeChildShapeByIndex(ind);
             }
@@ -741,7 +745,7 @@ class CollisionComponentSystem extends ComponentSystem {
 
     _calculateNodeRelativeTransform(node, relative) {
         if (node === relative) {
-            var scale = node.getWorldTransform().getScale();
+            const scale = node.getWorldTransform().getScale();
             mat4.setScale(scale.x, scale.y, scale.z);
         } else {
             this._calculateNodeRelativeTransform(node.parent, relative);
@@ -750,13 +754,13 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     _getNodeScaling(node) {
-        var wtm = node.getWorldTransform();
-        var scl = wtm.getScale();
+        const wtm = node.getWorldTransform();
+        const scl = wtm.getScale();
         return new Ammo.btVector3(scl.x, scl.y, scl.z);
     }
 
     _getNodeTransform(node, relative) {
-        var pos, rot;
+        let pos, rot;
 
         if (relative) {
             this._calculateNodeRelativeTransform(node, relative);
@@ -771,12 +775,12 @@ class CollisionComponentSystem extends ComponentSystem {
             rot = node.getRotation();
         }
 
-        var transform = new Ammo.btTransform();
+        const transform = new Ammo.btTransform();
         transform.setIdentity();
-        var origin = transform.getOrigin();
+        const origin = transform.getOrigin();
         origin.setValue(pos.x, pos.y, pos.z);
 
-        var ammoQuat = new Ammo.btQuaternion();
+        const ammoQuat = new Ammo.btQuaternion();
         ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
@@ -786,7 +790,7 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        for (var key in this._triMeshCache) {
+        for (const key in this._triMeshCache) {
             Ammo.destroy(this._triMeshCache[key]);
         }
 

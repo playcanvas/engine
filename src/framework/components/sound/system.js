@@ -1,3 +1,5 @@
+import { Debug } from '../../../core/debug.js';
+
 import { hasAudioContext } from '../../../audio/capabilities.js';
 
 import { Component } from '../component.js';
@@ -6,37 +8,74 @@ import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
+/** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name SoundComponentSystem
+ * Manages creation of {@link SoundComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link SoundComponent}s.
- * @description Create a SoundComponentSystem.
- * @param {Application} app - The Application.
- * @param {SoundManager} manager - The sound manager.
- * @property {number} volume Sets / gets the volume for the entire Sound system. All sounds will have their volume
- * multiplied by this value. Valid between [0, 1].
- * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
- * @property {SoundManager} manager Gets / sets the sound manager.
+ * @ignore
  */
-class SoundComponentSystem extends ComponentSystem  {
-    constructor(app, manager) {
+class SoundComponentSystem extends ComponentSystem {
+    /**
+     * Create a SoundComponentSystem.
+     *
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
+     */
+    constructor(app) {
         super(app);
 
-        this.id = "sound";
+        this.id = 'sound';
 
         this.ComponentType = SoundComponent;
         this.DataType = SoundComponentData;
 
         this.schema = _schema;
 
-        this.manager = manager;
+        /**
+         * Gets / sets the sound manager.
+         *
+         * @type {SoundManager}
+         */
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
+    }
+
+    /**
+     * Sets / gets the volume for the entire Sound system. All sounds will have their volume
+     * multiplied by this value. Valid between [0, 1].
+     *
+     * @type {number}
+     */
+    set volume(volume) {
+        this.manager.volume = volume;
+    }
+
+    get volume() {
+        return this.manager.volume;
+    }
+
+    /**
+     * Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
+     * Returns null if the device does not support the Web Audio API.
+     *
+     * @type {AudioContext|null}
+     */
+    get context() {
+        if (!hasAudioContext()) {
+            Debug.warn('WARNING: Audio context is not supported on this browser');
+            return null;
+        }
+
+        return this.manager.context;
     }
 
     initializeComponentData(component, data, properties) {
@@ -51,7 +90,7 @@ class SoundComponentSystem extends ComponentSystem  {
             'slots'
         ];
 
-        for (var i = 0; i < properties.length; i++) {
+        for (let i = 0; i < properties.length; i++) {
             if (data.hasOwnProperty(properties[i])) {
                 component[properties[i]] = data[properties[i]];
             }
@@ -61,14 +100,14 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     cloneComponent(entity, clone) {
-        var srcComponent = entity.sound;
-        var srcSlots = srcComponent.slots;
+        const srcComponent = entity.sound;
+        const srcSlots = srcComponent.slots;
 
         // convert 'slots' back to
         // simple option objects
-        var slots = {};
-        for (var key in srcSlots) {
-            var srcSlot = srcSlots[key];
+        const slots = {};
+        for (const key in srcSlots) {
+            const srcSlot = srcSlots[key];
             slots[key] = {
                 name: srcSlot.name,
                 volume: srcSlot.volume,
@@ -82,7 +121,7 @@ class SoundComponentSystem extends ComponentSystem  {
             };
         }
 
-        var cloneData = {
+        const cloneData = {
             distanceModel: srcComponent.distanceModel,
             enabled: srcComponent.enabled,
             maxDistance: srcComponent.maxDistance,
@@ -99,21 +138,21 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     onUpdate(dt) {
-        var store = this.store;
+        const store = this.store;
 
-        for (var id in store) {
+        for (const id in store) {
             if (store.hasOwnProperty(id)) {
-                var item = store[id];
-                var entity = item.entity;
+                const item = store[id];
+                const entity = item.entity;
 
                 if (entity.enabled) {
-                    var component = entity.sound;
+                    const component = entity.sound;
 
                     // Update slot position if this is a 3d sound
                     if (component.enabled && component.positional) {
-                        var position = entity.getPosition();
-                        var slots = component.slots;
-                        for (var key in slots) {
+                        const position = entity.getPosition();
+                        const slots = component.slots;
+                        for (const key in slots) {
                             slots[key].updatePosition(position);
                         }
                     }
@@ -123,9 +162,9 @@ class SoundComponentSystem extends ComponentSystem  {
     }
 
     onBeforeRemove(entity, component) {
-        var slots = component.slots;
+        const slots = component.slots;
         // stop non overlapping sounds
-        for (var key in slots) {
+        for (const key in slots) {
             if (!slots[key].overlap) {
                 slots[key].stop();
             }
@@ -134,23 +173,10 @@ class SoundComponentSystem extends ComponentSystem  {
         component.onRemove();
     }
 
-    get volume() {
-        return this.manager.volume;
-    }
+    destroy() {
+        super.destroy();
 
-    set volume(volume) {
-        this.manager.volume = volume;
-    }
-
-    get context() {
-        if (!hasAudioContext()) {
-            // #if _DEBUG
-            console.warn('WARNING: Audio context is not supported on this browser');
-            // #endif
-            return null;
-        }
-
-        return this.manager.context;
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class HelloWorldExample extends Example {
+class HelloWorldExample {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         const app = new pc.Application(canvas, {});

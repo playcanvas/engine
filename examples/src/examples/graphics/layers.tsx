@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class LayersExample extends Example {
+class LayersExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Layers';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the app and start the update loop
@@ -95,7 +93,6 @@ class LayersExample extends Example {
                 blueBox.rotate(0, -10 * dt, 0);
             }
 
-            // @ts-ignore engine-tsd
             blueBox.model.meshInstances[0].layer = 10;
         });
     }

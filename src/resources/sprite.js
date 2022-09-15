@@ -4,6 +4,9 @@ import { http } from '../net/http.js';
 
 import { Sprite } from '../scene/sprite.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
     const spriteAsset = this;
@@ -19,17 +22,27 @@ function onTextureAtlasAdded(atlasAsset) {
 }
 
 /**
- * @class
- * @name SpriteHandler
+ * Resource handler used for loading {@link Sprite} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading {@link Sprite} resources.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {GraphicsDevice} device - The graphics device.
  */
 class SpriteHandler {
-    constructor(assets, device) {
-        this._assets = assets;
-        this._device = device;
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "sprite";
+
+    /**
+     * Create a new SpriteHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        this._assets = app.assets;
+        this._device = app.graphicsDevice;
         this.maxRetries = 0;
     }
 
@@ -84,7 +97,7 @@ class SpriteHandler {
                 if (atlas) {
                     asset.data.textureAtlasAsset = atlas.id;
                 } else {
-                    console.warn("Could not find textureatlas with url: " + sprite.__data.textureAtlasAsset);
+                    console.warn('Could not find textureatlas with url: ' + sprite.__data.textureAtlasAsset);
                 }
             }
 

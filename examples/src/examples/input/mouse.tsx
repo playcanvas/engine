@@ -1,58 +1,58 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class MouseExample extends Example {
+
+class MouseExample {
     static CATEGORY = 'Input';
     static NAME = 'Mouse';
 
-    load() {
-        return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-        </>;
-    }
 
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset }): void {
+    example(canvas: HTMLCanvasElement): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
-        app.start();
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        const assets = {
+            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
+        };
 
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
-        camera.translate(0, 7, 25);
-        app.root.addChild(camera);
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
+            app.start();
 
-        // Create an Entity with a omni light component and a sphere model component.
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(1, 1, 1),
-            range: 100
-        });
-        light.translate(5, 5, 10);
-        app.root.addChild(light);
+            app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        const entity = assets.statue.resource.instantiateRenderEntity();
-        app.root.addChild(entity);
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5)
+            });
+            camera.translate(0, 7, 25);
+            app.root.addChild(camera);
 
-        const mouse = new pc.Mouse(document.body);
+            // Create an Entity with a omni light component and a sphere model component.
+            const light = new pc.Entity();
+            light.addComponent("light", {
+                type: "omni",
+                color: new pc.Color(1, 1, 1),
+                range: 100
+            });
+            light.translate(5, 5, 10);
+            app.root.addChild(light);
 
-        let x = 0;
-        const y = 0;
+            const entity = assets.statue.resource.instantiateRenderEntity();
+            app.root.addChild(entity);
 
-        mouse.on('mousemove', function (event) {
-            if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
-                x += event.dx;
+            const mouse = new pc.Mouse(document.body);
 
-                entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
-            }
+            let x = 0;
+            const y = 0;
+
+            mouse.on('mousemove', function (event) {
+                if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
+                    x += event.dx;
+
+                    entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
+                }
+            });
         });
     }
 }

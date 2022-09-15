@@ -1,5 +1,6 @@
 import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../math/vec3.js';
 
@@ -10,60 +11,121 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-var ammoRayStart, ammoRayEnd;
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+/** @typedef {import('../../entity.js').Entity} Entity */
 
-var collisions = {};
-var frameCollisions = {};
+let ammoRayStart, ammoRayEnd;
 
 /**
- * @class
- * @name RaycastResult
- * @classdesc Object holding the result of a successful raycast hit.
- * @description Create a new RaycastResult.
- * @param {Entity} entity - The entity that was hit.
- * @param {Vec3} point - The point at which the ray hit the entity in world space.
- * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
- * @property {Entity} entity The entity that was hit.
- * @property {Vec3} point The point at which the ray hit the entity in world space.
- * @property {Vec3} normal The normal vector of the surface where the ray hit in world space.
+ * Object holding the result of a successful raycast hit.
  */
 class RaycastResult {
+    /**
+     * Create a new RaycastResult instance.
+     *
+     * @param {Entity} entity - The entity that was hit.
+     * @param {Vec3} point - The point at which the ray hit the entity in world space.
+     * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     * @hideconstructor
+     */
     constructor(entity, point, normal) {
+        /**
+         * The entity that was hit.
+         *
+         * @type {Entity}
+         */
         this.entity = entity;
+
+        /**
+         * The point at which the ray hit the entity in world space.
+         *
+         * @type {Vec3}
+         */
         this.point = point;
+
+        /**
+         * The normal vector of the surface where the ray hit in world space.
+         *
+         * @type {Vec3}
+         */
         this.normal = normal;
     }
 }
 
 /**
- * @class
- * @name SingleContactResult
- * @classdesc Object holding the result of a contact between two rigid bodies.
- * @description Create a new SingleContactResult.
- * @param {Entity} a - The first entity involved in the contact.
- * @param {Entity} b - The second entity involved in the contact.
- * @param {ContactPoint} contactPoint - The contact point between the two entities.
- * @property {Entity} a The first entity involved in the contact.
- * @property {Entity} b The second entity involved in the contact.
- * @property {Vec3} localPointA The point on Entity A where the contact occurred, relative to A.
- * @property {Vec3} localPointB The point on Entity B where the contact occurred, relative to B.
- * @property {Vec3} pointA The point on Entity A where the contact occurred, in world space.
- * @property {Vec3} pointB The point on Entity B where the contact occurred, in world space.
- * @property {Vec3} normal The normal vector of the contact on Entity B, in world space.
+ * Object holding the result of a contact between two rigid bodies.
  */
 class SingleContactResult {
+    /**
+     * Create a new SingleContactResult instance.
+     *
+     * @param {Entity} a - The first entity involved in the contact.
+     * @param {Entity} b - The second entity involved in the contact.
+     * @param {ContactPoint} contactPoint - The contact point between the two entities.
+     * @hideconstructor
+     */
     constructor(a, b, contactPoint) {
         if (arguments.length === 0) {
+            /**
+             * The first entity involved in the contact.
+             *
+             * @type {Entity}
+             */
             this.a = null;
+
+            /**
+             * The second entity involved in the contact.
+             *
+             * @type {Entity}
+             */
             this.b = null;
+
+            /**
+             * The total accumulated impulse applied by the constraint solver during the last
+             * sub-step. Describes how hard two bodies collided.
+             *
+             * @type {number}
+             */
+            this.impulse = 0;
+
+            /**
+             * The point on Entity A where the contact occurred, relative to A.
+             *
+             * @type {Vec3}
+             */
             this.localPointA = new Vec3();
+
+            /**
+             * The point on Entity B where the contact occurred, relative to B.
+             *
+             * @type {Vec3}
+             */
             this.localPointB = new Vec3();
+
+            /**
+             * The point on Entity A where the contact occurred, in world space.
+             *
+             * @type {Vec3}
+             */
             this.pointA = new Vec3();
+
+            /**
+             * The point on Entity B where the contact occurred, in world space.
+             *
+             * @type {Vec3}
+             */
             this.pointB = new Vec3();
+
+            /**
+             * The normal vector of the contact on Entity B, in world space.
+             *
+             * @type {Vec3}
+             */
             this.normal = new Vec3();
         } else {
             this.a = a;
             this.b = b;
+            this.impulse = contactPoint.impulse;
             this.localPointA = contactPoint.localPoint;
             this.localPointB = contactPoint.localPointOther;
             this.pointA = contactPoint.point;
@@ -74,72 +136,160 @@ class SingleContactResult {
 }
 
 /**
- * @class
- * @name ContactPoint
- * @classdesc Object holding the result of a contact between two Entities.
- * @description Create a new ContactPoint.
- * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, relative to the entity.
- * @param {Vec3} [localPointOther] - The point on the other entity where the contact occurred, relative to the other entity.
- * @param {Vec3} [point] - The point on the entity where the contact occurred, in world space.
- * @param {Vec3} [pointOther] - The point on the other entity where the contact occurred, in world space.
- * @param {Vec3} [normal] - The normal vector of the contact on the other entity, in world space.
- * @property {Vec3} localPoint The point on the entity where the contact occurred, relative to the entity.
- * @property {Vec3} localPointOther The point on the other entity where the contact occurred, relative to the other entity.
- * @property {Vec3} point The point on the entity where the contact occurred, in world space.
- * @property {Vec3} pointOther The point on the other entity where the contact occurred, in world space.
- * @property {Vec3} normal The normal vector of the contact on the other entity, in world space.
+ * Object holding the result of a contact between two Entities.
  */
 class ContactPoint {
-    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3()) {
+    /**
+     * Create a new ContactPoint instance.
+     *
+     * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, relative to
+     * the entity.
+     * @param {Vec3} [localPointOther] - The point on the other entity where the contact occurred,
+     * relative to the other entity.
+     * @param {Vec3} [point] - The point on the entity where the contact occurred, in world space.
+     * @param {Vec3} [pointOther] - The point on the other entity where the contact occurred, in
+     * world space.
+     * @param {Vec3} [normal] - The normal vector of the contact on the other entity, in world
+     * space.
+     * @param {number} [impulse] - The total accumulated impulse applied by the constraint solver
+     * during the last sub-step. Describes how hard two objects collide. Defaults to 0.
+     * @hideconstructor
+     */
+    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
+        /**
+         * The point on the entity where the contact occurred, relative to the entity.
+         *
+         * @type {Vec3}
+         */
         this.localPoint = localPoint;
+
+        /**
+         * The point on the other entity where the contact occurred, relative to the other entity.
+         *
+         * @type {Vec3}
+         */
         this.localPointOther = localPointOther;
+
+        /**
+         * The point on the entity where the contact occurred, in world space.
+         *
+         * @type {Vec3}
+         */
         this.point = point;
+
+        /**
+         * The point on the other entity where the contact occurred, in world space.
+         *
+         * @type {Vec3}
+         */
         this.pointOther = pointOther;
+
+        /**
+         * The normal vector of the contact on the other entity, in world space.
+         *
+         * @type {Vec3}
+         */
         this.normal = normal;
+
+        /**
+         * The total accumulated impulse applied by the constraint solver during the last sub-step.
+         * Describes how hard two objects collide.
+         *
+         * @type {number}
+         */
+        this.impulse = impulse;
     }
 }
 
 /**
- * @class
- * @name ContactResult
- * @classdesc Object holding the result of a contact between two Entities.
- * @description Create a new ContactResult.
- * @param {Entity} other - The entity that was involved in the contact with this entity.
- * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
- * @property {Entity} other The entity that was involved in the contact with this entity.
- * @property {ContactPoint[]} contacts An array of ContactPoints with the other entity.
+ * Object holding the result of a contact between two Entities.
  */
 class ContactResult {
+    /**
+     * Create a new ContactResult instance.
+     *
+     * @param {Entity} other - The entity that was involved in the contact with this entity.
+     * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
+     * @hideconstructor
+     */
     constructor(other, contacts) {
+        /**
+         * The entity that was involved in the contact with this entity.
+         *
+         * @type {Entity}
+         */
         this.other = other;
+
+        /**
+         * An array of ContactPoints with the other entity.
+         *
+         * @type {ContactPoint[]}
+         */
         this.contacts = contacts;
     }
 }
 
-// Events Documentation
-/**
- * @event
- * @name RigidBodyComponentSystem#contact
- * @description Fired when a contact occurs between two rigid bodies.
- * @param {SingleContactResult} result - Details of the contact between the two bodies.
- */
-
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name RigidBodyComponentSystem
- * @augments ComponentSystem
- * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
- * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
- * is only valid if 3D Physics is enabled in your application. You can enable this in the application
+ * The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also
+ * controls global values for the world such as gravity. Note: The RigidBodyComponentSystem is only
+ * valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
- * @description Create a new RigidBodyComponentSystem.
- * @param {Application} app - The Application.
- * @property {Vec3} gravity The world space vector representing global gravity in the physics simulation.
- * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
+ *
+ * @augments ComponentSystem
  */
 class RigidBodyComponentSystem extends ComponentSystem {
+    /**
+     * @type {number}
+     * @ignore
+     */
+    maxSubSteps = 10;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    fixedTimeStep = 1 / 60;
+
+    /**
+     * The world space vector representing global gravity in the physics simulation. Defaults to
+     * [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
+     *
+     * @type {Vec3}
+     */
+    gravity = new Vec3(0, -9.81, 0);
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _dynamic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _kinematic = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _triggers = [];
+
+    /**
+     * @type {RigidBodyComponent[]}
+     * @private
+     */
+    _compounds = [];
+
+    /**
+     * Create a new RigidBodyComponentSystem.
+     *
+     * @param {AppBase} app - The Application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -155,20 +305,25 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
-        this.maxSubSteps = 10;
-        this.fixedTimeStep = 1 / 60;
-        this.gravity = new Vec3(0, -9.81, 0);
-
-        // Arrays of pc.RigidBodyComponents filtered on body type
-        this._dynamic = [];
-        this._kinematic = [];
-        this._triggers = [];
-        this._compounds = [];
+        this.collisions = {};
+        this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
     }
 
+    /**
+     * Fired when a contact occurs between two rigid bodies.
+     *
+     * @event RigidBodyComponentSystem#contact
+     * @param {SingleContactResult} result - Details of the contact between the two bodies.
+     */
+
+    /**
+     * Called once Ammo has been loaded. Responsible for creating the physics world.
+     *
+     * @ignore
+     */
     onLibraryLoaded() {
         // Create the Ammo physics world
         if (typeof Ammo !== 'undefined') {
@@ -182,23 +337,22 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
                 this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
             } else {
-                // #if _DEBUG
-                console.warn("WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.");
-                // #endif
+                Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
             }
 
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
+            RigidBodyComponent.onLibraryLoaded();
 
             this.contactPointPool = new ObjectPool(ContactPoint, 1);
             this.contactResultPool = new ObjectPool(ContactResult, 1);
             this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
 
-            ComponentSystem.bind('update', this.onUpdate, this);
+            this.app.systems.on('update', this.onUpdate, this);
         } else {
             // Unbind the update function if we haven't loaded Ammo by now
-            ComponentSystem.unbind('update', this.onUpdate, this);
+            this.app.systems.off('update', this.onUpdate, this);
         }
     }
 
@@ -249,7 +403,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             mask: rigidbody.mask
         };
 
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
@@ -305,10 +459,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastFirst
-     * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-     * if the ray hits an entity with a collision component, it returns a {@link RaycastResult}, otherwise returns null.
+     * Raycast the world and return the first entity the ray hits. Fire a ray into the world from
+     * start to end, if the ray hits an entity with a collision component, it returns a
+     * {@link RaycastResult}, otherwise returns null.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
@@ -336,9 +490,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // keeping for backwards compatibility
                 if (arguments.length > 2) {
-                    // #if _DEBUG
-                    console.warn('DEPRECATED: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-                    // #endif
+                    Debug.deprecated('pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
 
                     const callback = arguments[2];
                     callback(result);
@@ -352,21 +504,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @function
-     * @name RigidBodyComponentSystem#raycastAll
-     * @description Raycast the world and return all entities the ray hits. It returns an array
-     * of {@link RaycastResult}, one for each hit. If no hits are detected, the returned
-     * array will be of length 0.
+     * Raycast the world and return all entities the ray hits. It returns an array of
+     * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
+     * of length 0.
+     *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
-        // #if _DEBUG
-        if (!Ammo.AllHitsRayResultCallback) {
-            console.error("pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.");
-        }
-        // #endif
+        Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -402,27 +549,27 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_storeCollision
-     * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision.
+     * Stores a collision between the entity and other in the contacts map and returns true if it
+     * is a new collision.
+     *
      * @param {Entity} entity - The entity.
      * @param {Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
+     * @private
      */
     _storeCollision(entity, other) {
         let isNewCollision = false;
         const guid = entity.getGuid();
 
-        collisions[guid] = collisions[guid] || { others: [], entity: entity };
+        this.collisions[guid] = this.collisions[guid] || { others: [], entity: entity };
 
-        if (collisions[guid].others.indexOf(other) < 0) {
-            collisions[guid].others.push(other);
+        if (this.collisions[guid].others.indexOf(other) < 0) {
+            this.collisions[guid].others.push(other);
             isNewCollision = true;
         }
 
-        frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
-        frameCollisions[guid].others.push(other);
+        this.frameCollisions[guid] = this.frameCollisions[guid] || { others: [], entity: entity };
+        this.frameCollisions[guid].others.push(other);
 
         return isNewCollision;
     }
@@ -440,6 +587,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -456,6 +604,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
         contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
         contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
+        contact.impulse = contactPoint.getAppliedImpulse();
         return contact;
     }
 
@@ -469,6 +618,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         result.pointA = contactPoint.point;
         result.pointB = contactPoint.pointOther;
         result.normal = contactPoint.normal;
+        result.impulse = contactPoint.impulse;
 
         return result;
     }
@@ -481,17 +631,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
+     * Removes collisions that no longer exist from the collisions list and fires collisionend
+     * events to the related entities.
+     *
      * @private
-     * @function
-     * @name RigidBodyComponentSystem#_cleanOldCollisions
-     * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
-     * related entities.
      */
     _cleanOldCollisions() {
-        for (const guid in collisions) {
-            if (collisions.hasOwnProperty(guid)) {
-                const frameCollision = frameCollisions[guid];
-                const collision = collisions[guid];
+        for (const guid in this.collisions) {
+            if (this.collisions.hasOwnProperty(guid)) {
+                const frameCollision = this.frameCollisions[guid];
+                const collision = this.collisions[guid];
                 const entity = collision.entity;
                 const entityCollision = entity.collision;
                 const entityRigidbody = entity.rigidbody;
@@ -508,7 +657,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         if (entity.trigger) {
                             // handle a trigger entity
                             if (entityCollision) {
-                                entityCollision.fire("triggerleave", other);
+                                entityCollision.fire('triggerleave', other);
                             }
                             if (other.rigidbody) {
                                 other.rigidbody.fire('triggerleave', entity);
@@ -516,47 +665,45 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         } else if (!other.trigger) {
                             // suppress events if the other entity is a trigger
                             if (entityRigidbody) {
-                                entityRigidbody.fire("collisionend", other);
+                                entityRigidbody.fire('collisionend', other);
                             }
                             if (entityCollision) {
-                                entityCollision.fire("collisionend", other);
+                                entityCollision.fire('collisionend', other);
                             }
                         }
                     }
                 }
 
                 if (others.length === 0) {
-                    delete collisions[guid];
+                    delete this.collisions[guid];
                 }
             }
         }
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_hasContactEvent
-     * @description Returns true if the entity has a contact event attached and false otherwise.
+     * Returns true if the entity has a contact event attached and false otherwise.
+     *
      * @param {object} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
+     * @private
      */
     _hasContactEvent(entity) {
         const c = entity.collision;
-        if (c && (c.hasEvent("collisionstart") || c.hasEvent("collisionend") || c.hasEvent("contact"))) {
+        if (c && (c.hasEvent('collisionstart') || c.hasEvent('collisionend') || c.hasEvent('contact'))) {
             return true;
         }
 
         const r = entity.rigidbody;
-        return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
+        return r && (r.hasEvent('collisionstart') || r.hasEvent('collisionend') || r.hasEvent('contact'));
     }
 
     /**
-     * @private
-     * @function
-     * @name RigidBodyComponentSystem#_checkForCollisions
-     * @description Checks for collisions and fires collision events.
+     * Checks for collisions and fires collision events.
+     *
      * @param {number} world - The pointer to the dynamics world that invoked this callback.
      * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
+     * @private
      */
     _checkForCollisions(world, timeStep) {
         const dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);
@@ -565,7 +712,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         const dispatcher = dynamicsWorld.getDispatcher();
         const numManifolds = dispatcher.getNumManifolds();
 
-        frameCollisions = {};
+        this.frameCollisions = {};
 
         // loop through the all contacts and fire events
         for (let i = 0; i < numManifolds; i++) {
@@ -598,50 +745,50 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 if ((flags0 & BODYFLAG_NORESPONSE_OBJECT) ||
                     (flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
 
-                    const e0Events = e0.collision && (e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave"));
-                    const e1Events = e1.collision && (e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave"));
-                    const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent("triggerenter") || e0.rigidbody.hasEvent("triggerleave"));
-                    const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent("triggerenter") || e1.rigidbody.hasEvent("triggerleave"));
+                    const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
+                    const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
+                    const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
+                    const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
 
                     // fire triggerenter events for triggers
                     if (e0Events) {
                         newCollision = this._storeCollision(e0, e1);
                         if (newCollision && !(flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e0.collision.fire("triggerenter", e1);
+                            e0.collision.fire('triggerenter', e1);
                         }
                     }
 
                     if (e1Events) {
                         newCollision = this._storeCollision(e1, e0);
                         if (newCollision && !(flags0 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e1.collision.fire("triggerenter", e0);
+                            e1.collision.fire('triggerenter', e0);
                         }
                     }
 
                     // fire triggerenter events for rigidbodies
                     if (e0BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e1, e0);
                         }
 
                         if (newCollision) {
-                            e0.rigidbody.fire("triggerenter", e1);
+                            e0.rigidbody.fire('triggerenter', e1);
                         }
                     }
 
                     if (e1BodyEvents) {
-                        if (! newCollision) {
+                        if (!newCollision) {
                             newCollision = this._storeCollision(e0, e1);
                         }
 
                         if (newCollision) {
-                            e1.rigidbody.fire("triggerenter", e0);
+                            e1.rigidbody.fire('triggerenter', e0);
                         }
                     }
                 } else {
                     const e0Events = this._hasContactEvent(e0);
                     const e1Events = this._hasContactEvent(e1);
-                    const globalEvents = this.hasEvent("contact");
+                    const globalEvents = this.hasEvent('contact');
 
                     if (globalEvents || e0Events || e1Events) {
                         for (let j = 0; j < numContacts; j++) {
@@ -657,7 +804,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             if (globalEvents) {
                                 // fire global contact event for every contact
                                 const result = this._createSingleContactResult(e0, e1, contactPoint);
-                                this.fire("contact", result);
+                                this.fire('contact', result);
                             }
                         }
 
@@ -666,16 +813,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             newCollision = this._storeCollision(e0, e1);
 
                             if (e0.collision) {
-                                e0.collision.fire("contact", forwardResult);
+                                e0.collision.fire('contact', forwardResult);
                                 if (newCollision) {
-                                    e0.collision.fire("collisionstart", forwardResult);
+                                    e0.collision.fire('collisionstart', forwardResult);
                                 }
                             }
 
                             if (e0.rigidbody) {
-                                e0.rigidbody.fire("contact", forwardResult);
+                                e0.rigidbody.fire('contact', forwardResult);
                                 if (newCollision) {
-                                    e0.rigidbody.fire("collisionstart", forwardResult);
+                                    e0.rigidbody.fire('collisionstart', forwardResult);
                                 }
                             }
                         }
@@ -685,16 +832,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             newCollision = this._storeCollision(e1, e0);
 
                             if (e1.collision) {
-                                e1.collision.fire("contact", reverseResult);
+                                e1.collision.fire('contact', reverseResult);
                                 if (newCollision) {
-                                    e1.collision.fire("collisionstart", reverseResult);
+                                    e1.collision.fire('collisionstart', reverseResult);
                                 }
                             }
 
                             if (e1.rigidbody) {
-                                e1.rigidbody.fire("contact", reverseResult);
+                                e1.rigidbody.fire('contact', reverseResult);
                                 if (newCollision) {
-                                    e1.rigidbody.fire("collisionstart", reverseResult);
+                                    e1.rigidbody.fire('collisionstart', reverseResult);
                                 }
                             }
                         }
@@ -760,6 +907,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (typeof Ammo !== 'undefined') {
             Ammo.destroy(this.dynamicsWorld);
             Ammo.destroy(this.solver);

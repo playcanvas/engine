@@ -3,6 +3,8 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
+/** @typedef {import('./quat.js').Quat} Quat */
+
 const _halfSize = new Vec2();
 const x = new Vec3();
 const y = new Vec3();
@@ -11,18 +13,23 @@ const scale = new Vec3();
 
 
 /**
- * @class
- * @name Mat4
- * @classdesc A 4x4 matrix.
- * @description Creates a new identity Mat4 object.
- * @property {Float32Array} data Matrix elements in the form of a flat array.
+ * A 4x4 matrix.
  */
 class Mat4 {
+    /**
+     * Create a new Mat4 instance. It is initialized to the identity matrix.
+     */
     constructor() {
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.
         const data = new Float32Array(16);
         data[0] = data[5] = data[10] = data[15] = 1;
+
+        /**
+         * Matrix elements in the form of a flat array.
+         *
+         * @type {Float32Array}
+         */
         this.data = data;
     }
 
@@ -38,10 +45,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#add2
-     * @description Adds the specified 4x4 matrices together and stores the result in
-     * the current instance.
+     * Adds the specified 4x4 matrices together and stores the result in the current instance.
+     *
      * @param {Mat4} lhs - The 4x4 matrix used as the first operand of the addition.
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
      * @returns {Mat4} Self for chaining.
@@ -78,9 +83,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#add
-     * @description Adds the specified 4x4 matrix to the current instance.
+     * Adds the specified 4x4 matrix to the current instance.
+     *
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
      * @returns {Mat4} Self for chaining.
      * @example
@@ -95,23 +99,23 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#clone
-     * @description Creates a duplicate of the specified matrix.
-     * @returns {Mat4} A duplicate matrix.
+     * Creates a duplicate of the specified matrix.
+     *
+     * @returns {this} A duplicate matrix.
      * @example
      * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      * var dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
-        return new Mat4().copy(this);
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 
     /**
-     * @function
-     * @name Mat4#copy
-     * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
+     * Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
+     *
      * @param {Mat4} rhs - A 4x4 matrix to be copied.
      * @returns {Mat4} Self for chaining.
      * @example
@@ -145,9 +149,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#equals
-     * @description Reports whether two matrices are equal.
+     * Reports whether two matrices are equal.
+     *
      * @param {Mat4} rhs - The other matrix.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
@@ -178,9 +181,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#isIdentity
-     * @description Reports whether the specified matrix is the identity matrix.
+     * Reports whether the specified matrix is the identity matrix.
+     *
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
      * var m = new pc.Mat4();
@@ -208,10 +210,9 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#mul2
-     * @description Multiplies the specified 4x4 matrices together and stores the result in
-     * the current instance.
+     * Multiplies the specified 4x4 matrices together and stores the result in the current
+     * instance.
+     *
      * @param {Mat4} lhs - The 4x4 matrix used as the first multiplicand of the operation.
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
      * @returns {Mat4} Self for chaining.
@@ -289,14 +290,17 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#mulAffine2
-     * @description Multiplies the specified 4x4 matrices together and stores the result in
-     * the current instance. This function assumes the matrices are affine transformation matrices, where the upper left 3x3 elements
-     * are a rotation matrix, and the bottom left 3 elements are translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters
-     * are not verified to be in the expected format. This function is faster than general {@link Mat4#mul2}.
-     * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of the operation.
-     * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of the operation.
+     * Multiplies the specified 4x4 matrices together and stores the result in the current
+     * instance. This function assumes the matrices are affine transformation matrices, where the
+     * upper left 3x3 elements are a rotation matrix, and the bottom left 3 elements are
+     * translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters are not
+     * verified to be in the expected format. This function is faster than general
+     * {@link Mat4#mul2}.
+     *
+     * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of
+     * the operation.
+     * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of
+     * the operation.
      * @returns {Mat4} Self for chaining.
      */
     mulAffine2(lhs, rhs) {
@@ -355,9 +359,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#mul
-     * @description Multiplies the current instance by the specified 4x4 matrix.
+     * Multiplies the current instance by the specified 4x4 matrix.
+     *
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
      * @returns {Mat4} Self for chaining.
      * @example
@@ -374,11 +377,11 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#transformPoint
-     * @description Transforms a 3-dimensional point by a 4x4 matrix.
+     * Transforms a 3-dimensional point by a 4x4 matrix.
+     *
      * @param {Vec3} vec - The 3-dimensional point to be transformed.
-     * @param {Vec3} [res] - An optional 3-dimensional point to receive the result of the transformation.
+     * @param {Vec3} [res] - An optional 3-dimensional point to receive the result of the
+     * transformation.
      * @returns {Vec3} The input point v transformed by the current instance.
      * @example
      * // Create a 3-dimensional point
@@ -404,11 +407,11 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#transformVector
-     * @description Transforms a 3-dimensional vector by a 4x4 matrix.
+     * Transforms a 3-dimensional vector by a 4x4 matrix.
+     *
      * @param {Vec3} vec - The 3-dimensional vector to be transformed.
-     * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
+     * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the
+     * transformation.
      * @returns {Vec3} The input vector v transformed by the current instance.
      * @example
      * // Create a 3-dimensional vector
@@ -434,11 +437,11 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#transformVec4
-     * @description Transforms a 4-dimensional vector by a 4x4 matrix.
+     * Transforms a 4-dimensional vector by a 4x4 matrix.
+     *
      * @param {Vec4} vec - The 4-dimensional vector to be transformed.
-     * @param {Vec4} [res] - An optional 4-dimensional vector to receive the result of the transformation.
+     * @param {Vec4} [res] - An optional 4-dimensional vector to receive the result of the
+     * transformation.
      * @returns {Vec4} The input vector v transformed by the current instance.
      * @example
      * // Create an input 4-dimensional vector
@@ -469,14 +472,14 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setLookAt
-     * @description Sets the specified matrix to a viewing matrix derived from an eye point, a target point
-     * and an up vector. The matrix maps the target point to the negative z-axis and the eye point to the
-     * origin, so that when you use a typical projection matrix, the center of the scene maps to the center
-     * of the viewport. Similarly, the direction described by the up vector projected onto the viewing plane
-     * is mapped to the positive y-axis so that it points upward in the viewport. The up vector must not be
-     * parallel to the line of sight from the eye to the reference point.
+     * Sets the specified matrix to a viewing matrix derived from an eye point, a target point and
+     * an up vector. The matrix maps the target point to the negative z-axis and the eye point to
+     * the origin, so that when you use a typical projection matrix, the center of the scene maps
+     * to the center of the viewport. Similarly, the direction described by the up vector projected
+     * onto the viewing plane is mapped to the positive y-axis so that it points upward in the
+     * viewport. The up vector must not be parallel to the line of sight from the eye to the
+     * reference point.
+     *
      * @param {Vec3} position - 3-d vector holding view position.
      * @param {Vec3} target - 3-d vector holding reference point.
      * @param {Vec3} up - 3-d vector holding the up direction.
@@ -516,21 +519,24 @@ class Mat4 {
     }
 
     /**
-     * @private
-     * @function
-     * @name Mat4#setFrustum
-     * @description Sets the specified matrix to a perspective projection matrix. The function's parameters define
-     * the shape of a frustum.
-     * @param {number} left - The x-coordinate for the left edge of the camera's projection plane in eye space.
-     * @param {number} right - The x-coordinate for the right edge of the camera's projection plane in eye space.
-     * @param {number} bottom - The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-     * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in eye space.
+     * Sets the specified matrix to a perspective projection matrix. The function's parameters
+     * define the shape of a frustum.
+     *
+     * @param {number} left - The x-coordinate for the left edge of the camera's projection plane
+     * in eye space.
+     * @param {number} right - The x-coordinate for the right edge of the camera's projection plane
+     * in eye space.
+     * @param {number} bottom - The y-coordinate for the bottom edge of the camera's projection
+     * plane in eye space.
+     * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in
+     * eye space.
      * @param {number} znear - The near clip plane in eye coordinates.
      * @param {number} zfar - The far clip plane in eye coordinates.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
      * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
+     * @ignore
      */
     setFrustum(left, right, bottom, top, znear, zfar) {
         const temp1 = 2 * znear;
@@ -560,18 +566,18 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setPerspective
-     * @description Sets the specified matrix to a perspective projection matrix. The function's
-     * parameters define the shape of a frustum.
+     * Sets the specified matrix to a perspective projection matrix. The function's parameters
+     * define the shape of a frustum.
+     *
      * @param {number} fov - The frustum's field of view in degrees. The fovIsHorizontal parameter
      * controls whether this is a vertical or horizontal field of view. By default, it's a vertical
      * field of view.
-     * @param {number} aspect - The aspect ratio of the frustum's projection plane (width / height).
+     * @param {number} aspect - The aspect ratio of the frustum's projection plane
+     * (width / height).
      * @param {number} znear - The near clip plane in eye coordinates.
      * @param {number} zfar - The far clip plane in eye coordinates.
-     * @param {boolean} [fovIsHorizontal=false] - Set to true to treat the fov as horizontal (x-axis)
-     * and false for vertical (y-axis). Defaults to false.
+     * @param {boolean} [fovIsHorizontal=false] - Set to true to treat the fov as horizontal
+     * (x-axis) and false for vertical (y-axis). Defaults to false.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
@@ -583,14 +589,17 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setOrtho
-     * @description Sets the specified matrix to an orthographic projection matrix. The function's parameters
+     * Sets the specified matrix to an orthographic projection matrix. The function's parameters
      * define the shape of a cuboid-shaped frustum.
-     * @param {number} left - The x-coordinate for the left edge of the camera's projection plane in eye space.
-     * @param {number} right - The x-coordinate for the right edge of the camera's projection plane in eye space.
-     * @param {number} bottom - The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-     * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in eye space.
+     *
+     * @param {number} left - The x-coordinate for the left edge of the camera's projection plane
+     * in eye space.
+     * @param {number} right - The x-coordinate for the right edge of the camera's projection plane
+     * in eye space.
+     * @param {number} bottom - The y-coordinate for the bottom edge of the camera's projection
+     * plane in eye space.
+     * @param {number} top - The y-coordinate for the top edge of the camera's projection plane in
+     * eye space.
      * @param {number} near - The near clip plane in eye coordinates.
      * @param {number} far - The far clip plane in eye coordinates.
      * @returns {Mat4} Self for chaining.
@@ -622,10 +631,9 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setFromAxisAngle
-     * @description Sets the specified matrix to a rotation matrix equivalent to a rotation around
-     * an axis. The axis must be normalized (unit length) and the angle must be specified in degrees.
+     * Sets the specified matrix to a rotation matrix equivalent to a rotation around an axis. The
+     * axis must be normalized (unit length) and the angle must be specified in degrees.
+     *
      * @param {Vec3} axis - The normalized axis vector around which to rotate.
      * @param {number} angle - The angle of rotation in degrees.
      * @returns {Mat4} Self for chaining.
@@ -667,10 +675,8 @@ class Mat4 {
     }
 
     /**
-     * @private
-     * @function
-     * @name Mat4#setTranslate
-     * @description Sets the specified matrix to a translation matrix.
+     * Sets the specified matrix to a translation matrix.
+     *
      * @param {number} x - The x-component of the translation.
      * @param {number} y - The y-component of the translation.
      * @param {number} z - The z-component of the translation.
@@ -678,6 +684,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 translation matrix
      * var tm = new pc.Mat4().setTranslate(10, 10, 10);
+     * @ignore
      */
     setTranslate(x, y, z) {
         const m = this.data;
@@ -703,10 +710,8 @@ class Mat4 {
     }
 
     /**
-     * @private
-     * @function
-     * @name Mat4#setScale
-     * @description Sets the specified matrix to a scale matrix.
+     * Sets the specified matrix to a scale matrix.
+     *
      * @param {number} x - The x-component of the scale.
      * @param {number} y - The y-component of the scale.
      * @param {number} z - The z-component of the scale.
@@ -714,6 +719,7 @@ class Mat4 {
      * @example
      * // Create a 4x4 scale matrix
      * var sm = new pc.Mat4().setScale(10, 10, 10);
+     * @ignore
      */
     setScale(x, y, z) {
         const m = this.data;
@@ -739,20 +745,19 @@ class Mat4 {
     }
 
     /**
-     * @private
-     * @function
-     * @name Mat4#setViewport
-     * @description Sets the specified matrix to a matrix transforming a normalized view volume (in range of -1 .. 1)
-     * to their position inside a viewport (in range of 0 .. 1). This encapsulates a scaling to the size of the viewport
-     * and a translation to the position of the viewport.
+     * Sets the specified matrix to a matrix transforming a normalized view volume (in range of
+     * -1 .. 1) to their position inside a viewport (in range of 0 .. 1). This encapsulates a
+     * scaling to the size of the viewport and a translation to the position of the viewport.
+     *
      * @param {number} x - The x-component of the position of the viewport (in 0..1 range).
      * @param {number} y - The y-component of the position of the viewport (in 0..1 range).
      * @param {number} width - The width of the viewport (in 0..1 range).
      * @param {number} height - The height of the viewport (in 0..1 range).
      * @returns {Mat4} Self for chaining.
      * @example
-     * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport.
+     * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport
      * var vm = new pc.Mat4().setViewport(0, 0, 1, 1);
+     * @ignore
      */
     setViewport(x, y, width, height) {
         const m = this.data;
@@ -778,9 +783,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#invert
-     * @description Sets the specified matrix to its inverse.
+     * Sets the specified matrix to its inverse.
+     *
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
@@ -850,9 +854,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#set
-     * @description Sets matrix data from an array.
+     * Sets matrix data from an array.
+     *
      * @param {number[]} src - Source array. Must have 16 values.
      * @returns {Mat4} Self for chaining.
      */
@@ -880,9 +883,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setIdentity
-     * @description Sets the specified matrix to the identity matrix.
+     * Sets the specified matrix to the identity matrix.
+     *
      * @returns {Mat4} Self for chaining.
      * @example
      * m.setIdentity();
@@ -912,10 +914,9 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setTRS
-     * @description Sets the specified matrix to the concatenation of a translation, a
-     * quaternion rotation and a scale.
+     * Sets the specified matrix to the concatenation of a translation, a quaternion rotation and a
+     * scale.
+     *
      * @param {Vec3} t - A 3-d vector translation.
      * @param {Quat} r - A quaternion rotation.
      * @param {Vec3} s - A 3-d vector scale.
@@ -977,9 +978,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#transpose
-     * @description Sets the specified matrix to its transpose.
+     * Sets the specified matrix to its transpose.
+     *
      * @returns {Mat4} Self for chaining.
      * @example
      * var m = new pc.Mat4();
@@ -1065,9 +1065,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getTranslation
-     * @description Extracts the translational component from the specified 4x4 matrix.
+     * Extracts the translational component from the specified 4x4 matrix.
+     *
      * @param {Vec3} [t] - The vector to receive the translation of the matrix.
      * @returns {Vec3} The translation of the specified 4x4 matrix.
      * @example
@@ -1083,9 +1082,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getX
-     * @description Extracts the x-axis from the specified 4x4 matrix.
+     * Extracts the x-axis from the specified 4x4 matrix.
+     *
      * @param {Vec3} [x] - The vector to receive the x axis of the matrix.
      * @returns {Vec3} The x-axis of the specified 4x4 matrix.
      * @example
@@ -1101,9 +1099,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getY
-     * @description Extracts the y-axis from the specified 4x4 matrix.
+     * Extracts the y-axis from the specified 4x4 matrix.
+     *
      * @param {Vec3} [y] - The vector to receive the y axis of the matrix.
      * @returns {Vec3} The y-axis of the specified 4x4 matrix.
      * @example
@@ -1119,9 +1116,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getZ
-     * @description Extracts the z-axis from the specified 4x4 matrix.
+     * Extracts the z-axis from the specified 4x4 matrix.
+     *
      * @param {Vec3} [z] - The vector to receive the z axis of the matrix.
      * @returns {Vec3} The z-axis of the specified 4x4 matrix.
      * @example
@@ -1137,9 +1133,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getScale
-     * @description Extracts the scale component from the specified 4x4 matrix.
+     * Extracts the scale component from the specified 4x4 matrix.
+     *
      * @param {Vec3} [scale] - Vector to receive the scale.
      * @returns {Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
      * @example
@@ -1156,10 +1151,9 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#setFromEulerAngles
-     * @description Sets the specified matrix to a rotation matrix defined by
-     * Euler angles. The Euler angles are specified in XYZ order and in degrees.
+     * Sets the specified matrix to a rotation matrix defined by Euler angles. The Euler angles are
+     * specified in XYZ order and in degrees.
+     *
      * @param {number} ex - Angle to rotate around X axis in degrees.
      * @param {number} ey - Angle to rotate around Y axis in degrees.
      * @param {number} ez - Angle to rotate around Z axis in degrees.
@@ -1168,10 +1162,10 @@ class Mat4 {
      * var m = new pc.Mat4();
      * m.setFromEulerAngles(45, 90, 180);
      */
-    // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
-    // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
-    // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
     setFromEulerAngles(ex, ey, ez) {
+        // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
+        // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
+        // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         ex *= math.DEG_TO_RAD;
         ey *= math.DEG_TO_RAD;
         ez *= math.DEG_TO_RAD;
@@ -1211,10 +1205,9 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#getEulerAngles
-     * @description Extracts the Euler angles equivalent to the rotational portion
-     * of the specified matrix. The returned Euler angles are in XYZ order an in degrees.
+     * Extracts the Euler angles equivalent to the rotational portion of the specified matrix. The
+     * returned Euler angles are in XYZ order an in degrees.
+     *
      * @param {Vec3} [eulers] - A 3-d vector to receive the Euler angles.
      * @returns {Vec3} A 3-d vector containing the Euler angles.
      * @example
@@ -1258,9 +1251,8 @@ class Mat4 {
     }
 
     /**
-     * @function
-     * @name Mat4#toString
-     * @description Converts the specified matrix to string form.
+     * Converts the specified matrix to string form.
+     *
      * @returns {string} The matrix in string form.
      * @example
      * var m = new pc.Mat4();
@@ -1268,32 +1260,22 @@ class Mat4 {
      * console.log(m.toString());
      */
     toString() {
-        let t = '[';
-        for (let i = 0; i < 16; i += 1) {
-            t += this.data[i];
-            t += (i !== 15) ? ', ' : '';
-        }
-        t += ']';
-        return t;
+        return '[' + this.data.join(', ') + ']';
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Mat4.IDENTITY
+     * A constant matrix set to the identity.
+     *
      * @type {Mat4}
-     * @description A constant matrix set to the identity.
+     * @readonly
      */
     static IDENTITY = Object.freeze(new Mat4());
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name Mat4.ZERO
+     * A constant matrix with all elements set to 0.
+     *
      * @type {Mat4}
-     * @description A constant matrix with all elements set to 0.
+     * @readonly
      */
     static ZERO = Object.freeze(new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
 }

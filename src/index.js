@@ -6,6 +6,7 @@ import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
 import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
+import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
@@ -13,8 +14,8 @@ import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
+export * from './core/constants.js';
 export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
-export { debug } from './core/debug.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
@@ -22,10 +23,13 @@ export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
 export { IndexedList } from './core/indexed-list.js';
+export { WasmModule } from './core/wasm-module.js';
+export { ReadStream } from './core/read-stream.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
 export { Timer, now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
+export { Tracing } from './core/tracing.js';
 
 // NET
 export { http, Http } from './net/http.js';
@@ -54,11 +58,12 @@ export { Ray } from './shape/ray.js';
 // GRAPHICS
 export * from './graphics/constants.js';
 export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
-export { prefilterCubemap, shFromCubemap } from './graphics/prefilter-cubemap.js';
+export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
-export { programlib } from './graphics/program-lib/program-lib.js';
+export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
+export { EnvLighting } from './graphics/env-lighting.js';
 export { IndexBuffer } from './graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
 export { ProgramLibrary } from './graphics/program-library.js';
@@ -72,6 +77,9 @@ export { VertexBuffer } from './graphics/vertex-buffer.js';
 export { VertexFormat } from './graphics/vertex-format.js';
 export { VertexIterator } from './graphics/vertex-iterator.js';
 
+// GRAPHICS / webgl
+export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
@@ -81,14 +89,14 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { WorldClusters } from './scene/world-clusters.js';
-export { DepthMaterial } from './scene/materials/depth-material.js';
+export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
-export { Lightmapper } from './scene/lightmapper.js';
+export { LightingParams } from './scene/lighting/lighting-params.js';
+export { Lightmapper } from './scene/lightmapper/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance, Command } from './scene/mesh-instance.js';
@@ -207,10 +215,11 @@ export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js'
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { app, Application } from './framework/application.js';
+export { AppBase, app } from './framework/app-base.js';
+export { AppOptions } from './framework/app-options.js';
+export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
 export { AnimationComponentSystem } from './framework/components/animation/system.js';
-export * from './anim/controller/constants.js';
 export { AnimComponent } from './framework/components/anim/component.js';
 export { AnimComponentLayer } from './framework/components/anim/component-layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';
@@ -284,10 +293,6 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 // TEMPLATES
 export { Template } from './templates/template.js';
 
-// VR
-export { VrDisplay } from './vr/vr-display.js';
-export { VrManager } from './vr/vr-manager.js';
-
 // XR
 export * from './xr/constants.js';
 export { XrInput } from './xr/xr-input.js';
@@ -304,4 +309,4 @@ export { XrPlaneDetection } from './xr/xr-plane-detection.js';
 export { XrPlane } from './xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
-export * from './deprecated.js';
+export * from './deprecated/deprecated.js';

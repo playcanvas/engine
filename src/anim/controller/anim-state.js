@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
 import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
@@ -8,18 +10,26 @@ import {
 } from './constants.js';
 
 /**
- * @private
- * @class
- * @name AnimState
- * @classdesc Defines a single state that the controller can be in. Each state contains either a single AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity while the state is active. An AnimState will stay active and play as long as there is no AnimTransition with it's conditions met that has that AnimState as it's source state.
- * @description Create a new AnimState.
- * @param {AnimController} controller - The controller this AnimState is associated with.
- * @param {string} name - The name of the state. Used to find this state when the controller transitions between states and links animations.
- * @param {number} speed - The speed animations in the state should play at. Individual {@link AnimNodes} can override this value.
- * @param {boolean} loop - Determines whether animations in this state should loop.
- * @param {object|null} blendTree - If supplied, the AnimState will recursively build a {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
+ * Defines a single state that the controller can be in. Each state contains either a single
+ * AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity
+ * while the state is active. An AnimState will stay active and play as long as there is no
+ * AnimTransition with its conditions met that has that AnimState as its source state.
+ *
+ * @ignore
  */
 class AnimState {
+    /**
+     * Create a new AnimState instance.
+     *
+     * @param {AnimController} controller - The controller this AnimState is associated with.
+     * @param {string} name - The name of the state. Used to find this state when the controller
+     * transitions between states and links animations.
+     * @param {number} speed - The speed animations in the state should play at. Individual
+     * {@link AnimNodes} can override this value.
+     * @param {boolean} loop - Determines whether animations in this state should loop.
+     * @param {object|null} blendTree - If supplied, the AnimState will recursively build a
+     * {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
+     */
     constructor(controller, name, speed, loop, blendTree) {
         this._controller = controller;
         this._name = name;
@@ -27,7 +37,7 @@ class AnimState {
         this._animationList = [];
         this._speed = speed || 1.0;
         this._loop = loop === undefined ? true : loop;
-        var findParameter = this._controller.findParameter.bind(this._controller);
+        const findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
             this._blendTree = this._createTree(
                 blendTree.type,
@@ -57,25 +67,28 @@ class AnimState {
             case ANIM_BLEND_DIRECT:
                 return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
         }
+
+        Debug.error(`Invalid anim blend type: ${type}`);
+        return undefined;
     }
 
     _getNodeFromPath(path) {
-        var currNode = this._blendTree;
-        for (var i = 1; i < path.length; i++) {
+        let currNode = this._blendTree;
+        for (let i = 1; i < path.length; i++) {
             currNode = currNode.getChild(path[i]);
         }
         return currNode;
     }
 
     addAnimation(path, animTrack) {
-        var pathString = path.join('.');
-        var indexOfAnimation = this._animationList.findIndex(function (animation) {
+        const pathString = path.join('.');
+        const indexOfAnimation = this._animationList.findIndex(function (animation) {
             return animation.path === pathString;
         });
         if (indexOfAnimation >= 0) {
             this._animationList[indexOfAnimation].animTrack = animTrack;
         } else {
-            var node = this._getNodeFromPath(path);
+            const node = this._getNodeFromPath(path);
             node.animTrack = animTrack;
             this._animationList.push(node);
         }
@@ -85,28 +98,28 @@ class AnimState {
         return this._name;
     }
 
-    get animations() {
-        return this._animationList;
-    }
-
     set animations(value) {
         this._animationList = value;
     }
 
-    get speed() {
-        return this._speed;
+    get animations() {
+        return this._animationList;
     }
 
     set speed(value) {
         this._speed = value;
     }
 
-    get loop() {
-        return this._loop;
+    get speed() {
+        return this._speed;
     }
 
     set loop(value) {
         this._loop = value;
+    }
+
+    get loop() {
+        return this._loop;
     }
 
     get nodeCount() {
@@ -120,8 +133,8 @@ class AnimState {
 
     get looping() {
         if (this.animations.length > 0) {
-            var trackClipName = this.name + '.' + this.animations[0].animTrack.name;
-            var trackClip = this._controller.animEvaluator.findClip(trackClipName);
+            const trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+            const trackClip = this._controller.animEvaluator.findClip(trackClipName);
             if (trackClip) {
                 return trackClip.loop;
             }
@@ -130,19 +143,17 @@ class AnimState {
     }
 
     get totalWeight() {
-        var sum = 0;
-        var i;
-        for (i = 0; i < this.animations.length; i++) {
+        let sum = 0;
+        for (let i = 0; i < this.animations.length; i++) {
             sum += this.animations[i].weight;
         }
         return sum;
     }
 
     get timelineDuration() {
-        var duration = 0;
-        var i;
-        for (i = 0; i < this.animations.length; i++) {
-            var animation = this.animations[i];
+        let duration = 0;
+        for (let i = 0; i < this.animations.length; i++) {
+            const animation = this.animations[i];
             if (animation.animTrack.duration > duration) {
                 duration = animation.animTrack.duration;
             }

@@ -1,11 +1,13 @@
 import babel from '@rollup/plugin-babel';
-import replace from '@rollup/plugin-replace';
+import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
+import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { execSync } from 'child_process';
 
-const execSync = require('child_process').execSync;
 let revision;
 try {
     revision = execSync('git rev-parse --short HEAD').toString().trim();
@@ -23,55 +25,63 @@ function getBanner(config) {
     ].join('\n');
 }
 
-function spacesToTabs() {
+function spacesToTabs(enable) {
     const filter = createFilter([
         '**/*.js'
     ], []);
 
     return {
         transform(code, id) {
-            if (!filter(id)) return;
+            if (!enable || !filter(id)) return undefined;
             return {
-                code: code.replace(/  /g, '\t'), // eslint-disable-line no-regex-spaces
-                map: { mappings: '' }
+                code: code.replace(/\G {4}/g, '\t'),
+                map: null
             };
         }
     };
 }
 
-function shaderChunks(removeComments) {
+function shaderChunks(enable) {
     const filter = createFilter([
-        '**/*.vert',
-        '**/*.frag'
+        '**/*.vert.js',
+        '**/*.frag.js'
     ], []);
 
     return {
         transform(code, id) {
-            if (!filter(id)) return;
+            if (!enable || !filter(id)) return undefined;
 
-            // Remove carriage returns
-            code = code.replace(/\r/g, '');
+            code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
 
-            // 4 spaces to tabs
-            code = code.replace(/    /g, '\t'); // eslint-disable-line no-regex-spaces
+                // Remove carriage returns
+                glsl = glsl.replace(/\r/g, '');
 
-            if (removeComments) {
+                // 4 spaces to tabs
+                glsl = glsl.replace(/ {4}/g, '\t');
+
                 // Remove comments
-                code = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+                glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 
                 // Trim all whitespace from line endings
-                code = code.split('\n').map((line) => line.trimEnd()).join('\n');
+                glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
 
                 // Restore final new line
-                code += '\n';
+                glsl += '\n';
 
                 // Comment removal can leave an empty line so condense 2 or more to 1
-                code = code.replace(/\n{2,}/g, '\n');
-            }
+                glsl = glsl.replace(/\n{2,}/g, '\n');
+
+                // Remove new line character at the start of the string
+                if (glsl.length > 1 && glsl[0] === '\n') {
+                    glsl = glsl.substr(1);
+                }
+
+                return JSON.stringify(glsl);
+            });
 
             return {
-                code: `export default ${JSON.stringify(code)};`,
-                map: { mappings: '' }
+                code: code,
+                map: null
             };
         }
     };
@@ -89,15 +99,8 @@ const es5Options = {
                 loose: true,
                 modules: false,
                 targets: {
-                    ie: "11"
+                    ie: '11'
                 }
-            }
-        ]
-    ],
-    plugins: [
-        [
-            '@babel/plugin-proposal-class-properties', {
-                loose: true
             }
         ]
     ]
@@ -120,184 +123,193 @@ const moduleOptions = {
                 }
             }
         ]
-    ],
-    plugins: [
-        [
-            '@babel/plugin-proposal-class-properties', {
-                loose: true
-            }
-        ]
     ]
 };
 
-const target_release_es5 = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
-
-const target_release_es5min = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.min.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(es5Options),
-        terser()
-    ]
-};
-
-const target_release_es6 = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas.mjs',
-        format: 'es',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {}
-        }),
-        shaderChunks(true),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(moduleOptions),
-        spacesToTabs()
-    ]
-};
-
-const target_debug = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (DEBUG PROFILER)'),
-        file: 'build/playcanvas.dbg.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {
-                _DEBUG: 1,
-                _PROFILER: 1
-            }
-        }),
-        shaderChunks(false),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
-
-const target_profiler = {
-    input: 'src/index.js',
-    output: {
-        banner: getBanner(' (PROFILER)'),
-        file: 'build/playcanvas.prf.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pc'
-    },
-    plugins: [
-        jscc({
-            values: {
-                _PROFILER: 1
-            }
-        }),
-        shaderChunks(false),
-        replace({
-            values: {
-                __REVISION__: revision,
-                __CURRENT_SDK_VERSION__: version
-            },
-            preventAssignment: true
-        }),
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
-
-const target_extras = {
-    input: 'extras/index.js',
-    output: {
-        banner: getBanner(''),
-        file: 'build/playcanvas-extras.js',
-        format: 'umd',
-        indent: '\t',
-        name: 'pcx'
-    },
-    plugins: [
-        babel(es5Options),
-        spacesToTabs()
-    ]
-};
-
-let targets = [
-    target_release_es5,
-    target_release_es5min,
-    target_release_es6,
-    target_debug,
-    target_profiler,
-    target_extras
+const stripFunctions = [
+    'Debug.assert',
+    'Debug.call',
+    'Debug.deprecated',
+    'Debug.warn',
+    'Debug.warnOnce',
+    'Debug.error',
+    'Debug.errorOnce',
+    'Debug.log',
+    'Debug.logOnce',
+    'Debug.trace',
+    'DebugHelper.setName',
+    'DebugHelper.setLabel',
+    'DebugGraphics.pushGpuMarker',
+    'DebugGraphics.popGpuMarker',
+    'WorldClustersDebug.render'
 ];
 
-// Build all targets by default, unless a specific target is chosen
-if (process.env.target) {
-    switch (process.env.target.toLowerCase()) {
-        case "es5":      targets = [target_release_es5,    target_extras]; break;
-        case "es5min":   targets = [target_release_es5min, target_extras]; break;
-        case "es6":      targets = [target_release_es6,    target_extras]; break;
-        case "debug":    targets = [target_debug,          target_extras]; break;
-        case "profiler": targets = [target_profiler,       target_extras]; break;
+// buildType is: 'debug', 'release', 'profiler', 'min'
+// moduleFormat is: 'es5', 'es6'
+function buildTarget(buildType, moduleFormat) {
+    const banner = {
+        debug: ' (DEBUG PROFILER)',
+        release: '',
+        profiler: ' (PROFILER)',
+        min: null
+    };
+
+    const outputPlugins = {
+        release: [],
+        min: [
+            terser()
+        ]
+    };
+
+    if (process.env.treemap) {
+        outputPlugins.min.push(visualizer({
+            brotliSize: true,
+            gzipSize: true
+        }));
     }
+
+    const outputFile = {
+        debug: 'build/playcanvas.dbg',
+        release: 'build/playcanvas',
+        profiler: 'build/playcanvas.prf',
+        min: 'build/playcanvas.min'
+    };
+
+    const outputExtension = {
+        es5: '.js',
+        es6: '.mjs'
+    };
+
+    const outputFormat = {
+        es5: 'umd',
+        es6: 'es'
+    };
+
+    const sourceMap = {
+        debug: 'inline',
+        release: null
+    };
+
+    const outputOptions = {
+        banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
+        plugins: outputPlugins[buildType || outputPlugins.release],
+        format: outputFormat[moduleFormat],
+        indent: '\t',
+        sourcemap: sourceMap[buildType] || sourceMap.release,
+        name: 'pc'
+    };
+
+    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = `${outputFile[buildType]}${outputExtension[moduleFormat]}`;
+
+    const sdkVersion = {
+        _CURRENT_SDK_VERSION: version,
+        _CURRENT_SDK_REVISION: revision
+    };
+
+    const jsccOptions = {
+        debug: {
+            values: {
+                ...sdkVersion,
+                _DEBUG: 1,
+                _PROFILER: 1
+            },
+            keepLines: true
+        },
+        release: {
+            values: sdkVersion
+        },
+        profiler: {
+            values: {
+                ...sdkVersion,
+                _PROFILER: 1
+            }
+        }
+    };
+
+    const stripOptions = {
+        debug: {
+            functions: []
+        },
+        release: {
+            functions: stripFunctions
+        }
+    };
+
+    const babelOptions = {
+        es5: es5Options,
+        es6: moduleOptions
+    };
+
+    return {
+        input: 'src/index.js',
+        output: outputOptions,
+        preserveModules: moduleFormat === 'es6',
+        plugins: [
+            jscc(jsccOptions[buildType] || jsccOptions.release),
+            shaderChunks(buildType !== 'debug'),
+            strip(stripOptions[buildType] || stripOptions.release),
+            babel(babelOptions[moduleFormat]),
+            spacesToTabs(buildType !== 'debug')
+        ]
+    };
 }
 
-export default targets;
+function scriptTarget(name, input, output) {
+    return {
+        input: input,
+        output: {
+            banner: getBanner(''),
+            file: output || input.replace('.mjs', '.js'),
+            format: 'umd',
+            indent: '\t',
+            name: name
+        },
+        plugins: [
+            babel(es5Options),
+            spacesToTabs()
+        ]
+    };
+}
+
+const target_extras = [
+    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
+];
+
+const target_types = {
+    input: 'types/index.d.ts',
+    output: [{
+        file: 'build/playcanvas.d.ts',
+        footer: 'export as namespace pc;',
+        format: 'es'
+    }],
+    plugins: [
+        dts()
+    ]
+};
+
+export default (args) => {
+    let targets = [];
+
+    const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+    if (envTarget === 'types') {
+        targets.push(target_types);
+    } else if (envTarget === 'extras') {
+        targets = targets.concat(target_extras);
+    } else {
+        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
+            ['es5', 'es6'].forEach((m) => {
+                if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
+                    targets.push(buildTarget(t, m));
+                }
+            });
+        });
+
+        if (envTarget === null) {
+            // no targets specified, build them all
+            targets = targets.concat(target_extras);
+        }
+    }
+
+    return targets;
+};

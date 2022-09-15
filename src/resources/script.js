@@ -1,15 +1,29 @@
 import { script } from '../framework/script.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+
 /**
- * @class
- * @name ScriptHandler
+ * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
+ * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
+ * files, such as third-party libraries.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler for loading JavaScript files dynamically
- * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link createScript},
- * or regular JavaScript files, such as third-party libraries.
- * @param {Application} app - The running {@link Application}.
  */
 class ScriptHandler {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "script";
+
+    /**
+     * Create a new ScriptHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
     constructor(app) {
         this._app = app;
         this._scripts = { };
@@ -20,7 +34,7 @@ class ScriptHandler {
 
     static _push(Type) {
         if (script.legacy && ScriptHandler._types.length > 0) {
-            console.assert("Script Ordering Error. Contact support@playcanvas.com");
+            console.assert('Script Ordering Error. Contact support@playcanvas.com');
         } else {
             ScriptHandler._types.push(Type);
         }
@@ -38,7 +52,7 @@ class ScriptHandler {
         const self = this;
         script.app = this._app;
 
-        this._loadScript(url.load, function (err, url, extra) {
+        this._loadScript(url.load, (err, url, extra) => {
             if (!err) {
                 if (script.legacy) {
                     let Type = null;
@@ -72,7 +86,7 @@ class ScriptHandler {
             } else {
                 callback(err);
             }
-        }.bind(this));
+        });
     }
 
     open(url, data) {
@@ -90,12 +104,12 @@ class ScriptHandler {
         element.async = false;
 
         element.addEventListener('error', function (e) {
-            callback("Script: " + e.target.src + " failed to load");
+            callback(`Script: ${e.target.src} failed to load`);
         }, false);
 
         let done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState === "loaded" || this.readyState === "complete"))) {
+            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }

@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 import { math } from '../math/math.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -6,137 +8,187 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { SoundInstance } from './instance.js';
 
+/** @typedef {import('./sound.js').Sound} Sound */
+/** @typedef {import('./manager.js').SoundManager} SoundManager */
+
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
 
 /**
- * @class
- * @name SoundInstance3d
+ * A SoundInstance3d plays a {@link Sound} in 3D.
+ *
  * @augments SoundInstance
- * @classdesc A SoundInstance3d plays a {@link Sound} in 3D.
- * @param {SoundManager} manager - The sound manager.
- * @param {Sound} sound - The sound to play.
- * @param {object} options - Options for the instance.
- * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
- * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
- * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
- * @param {number} [options.startTime=0] - The time from which the playback will start. Default is 0 to start at the beginning.
- * @param {number} [options.duration=null] - The total time after the startTime when playback will stop or restart if loop is true.
- * @param {Vec3} [options.position=null] - The position of the sound in 3D space.
- * @param {Vec3} [options.velocity=null] - The velocity of the sound.
- * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
- *
- * * {@link DISTANCE_LINEAR}
- * * {@link DISTANCE_INVERSE}
- * * {@link DISTANCE_EXPONENTIAL}
- *
- * Default is {@link DISTANCE_LINEAR}.
- * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the sound source moves further from the listener.
- * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
- * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
- * @property {Vec3} position The position of the sound in 3D space.
- * @property {Vec3} velocity The velocity of the sound.
- * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
- *
- * * {@link DISTANCE_LINEAR}
- * * {@link DISTANCE_INVERSE}
- * * {@link DISTANCE_EXPONENTIAL}
- *
- * Default is {@link DISTANCE_LINEAR}.
- * @property {number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.
- * @property {number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
- * @property {number} rollOffFactor The factor used in the falloff equation.
  */
 class SoundInstance3d extends SoundInstance {
-    constructor(manager, sound, options) {
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _velocity = new Vec3();
+
+    /**
+     * Create a new SoundInstance3d instance.
+     *
+     * @param {SoundManager} manager - The sound manager.
+     * @param {Sound} sound - The sound to play.
+     * @param {object} options - Options for the instance.
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
+     * end or not.
+     * @param {number} [options.startTime=0] - The time from which the playback will start. Default
+     * is 0 to start at the beginning.
+     * @param {number} [options.duration=null] - The total time after the startTime when playback
+     * will stop or restart if loop is true.
+     * @param {Vec3} [options.position=null] - The position of the sound in 3D space.
+     * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use
+     * to reduce the volume of the audio as it moves away from the listener. Can be:
+     *
+     * - {@link DISTANCE_LINEAR}
+     * - {@link DISTANCE_INVERSE}
+     * - {@link DISTANCE_EXPONENTIAL}
+     *
+     * Default is {@link DISTANCE_LINEAR}.
+     * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the
+     * sound source moves further from the listener.
+     * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which
+     * audio falloff stops. Note the volume of the audio is not 0 after this distance, but just
+     * doesn't fall off anymore.
+     * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
+     */
+    constructor(manager, sound, options = {}) {
         super(manager, sound, options);
 
-        options = options || {};
-
-        this._position = new Vec3();
         if (options.position)
             this.position = options.position;
-
-        this._velocity = new Vec3();
-        if (options.velocity)
-            this.velocity = options.velocity;
 
         this.maxDistance = options.maxDistance !== undefined ? Number(options.maxDistance) : MAX_DISTANCE;
         this.refDistance = options.refDistance !== undefined ? Number(options.refDistance) : 1;
         this.rollOffFactor = options.rollOffFactor !== undefined ? Number(options.rollOffFactor) : 1;
         this.distanceModel = options.distanceModel !== undefined ? options.distanceModel : DISTANCE_LINEAR;
     }
+
+    /**
+     * Allocate Web Audio resources for this instance.
+     *
+     * @private
+     */
+    _initializeNodes() {
+        this.gain = this._manager.context.createGain();
+        this.panner = this._manager.context.createPanner();
+        this.panner.connect(this.gain);
+        this._inputNode = this.panner;
+        this._connectorNode = this.gain;
+        this._connectorNode.connect(this._manager.context.destination);
+    }
+
+    /**
+     * The position of the sound in 3D space.
+     *
+     * @type {Vec3}
+     */
+    set position(value) {
+        this._position.copy(value);
+        const panner = this.panner;
+        if ('positionX' in panner) {
+            panner.positionX.value = value.x;
+            panner.positionY.value = value.y;
+            panner.positionZ.value = value.z;
+        } else if (panner.setPosition) { // Firefox (and legacy browsers)
+            panner.setPosition(value.x, value.y, value.z);
+        }
+    }
+
+    get position() {
+        return this._position;
+    }
+
+    /**
+     * The velocity of the sound.
+     *
+     * @type {Vec3}
+     * @deprecated
+     * @ignore
+     */
+    set velocity(velocity) {
+        Debug.warn('SoundInstance3d#velocity is not implemented.');
+        this._velocity.copy(velocity);
+    }
+
+    get velocity() {
+        Debug.warn('SoundInstance3d#velocity is not implemented.');
+        return this._velocity;
+    }
+
+    /**
+     * The maximum distance from the listener at which audio falloff stops. Note the volume of the
+     * audio is not 0 after this distance, but just doesn't fall off anymore.
+     *
+     * @type {number}
+     */
+    set maxDistance(value) {
+        this.panner.maxDistance = value;
+    }
+
+    get maxDistance() {
+        return this.panner.maxDistance;
+    }
+
+    /**
+     * The reference distance for reducing volume as the sound source moves further from the
+     * listener.
+     *
+     * @type {number}
+     */
+    set refDistance(value) {
+        this.panner.refDistance = value;
+    }
+
+    get refDistance() {
+        return this.panner.refDistance;
+    }
+
+    /**
+     * The factor used in the falloff equation.
+     *
+     * @type {number}
+     */
+    set rollOffFactor(value) {
+        this.panner.rolloffFactor = value;
+    }
+
+    get rollOffFactor() {
+        return this.panner.rolloffFactor;
+    }
+
+    /**
+     * Determines which algorithm to use to reduce the volume of the audio as it moves away from
+     * the listener. Can be:
+     *
+     * - {@link DISTANCE_LINEAR}
+     * - {@link DISTANCE_INVERSE}
+     * - {@link DISTANCE_EXPONENTIAL}
+     *
+     * Default is {@link DISTANCE_LINEAR}.
+     *
+     * @type {string}
+     */
+    set distanceModel(value) {
+        this.panner.distanceModel = value;
+    }
+
+    get distanceModel() {
+        return this.panner.distanceModel;
+    }
 }
 
-if (hasAudioContext()) {
-    Object.assign(SoundInstance3d.prototype, {
-        _initializeNodes: function () {
-            this.gain = this._manager.context.createGain();
-            this.panner = this._manager.context.createPanner();
-            this.panner.connect(this.gain);
-            this._inputNode = this.panner;
-            this._connectorNode = this.gain;
-            this._connectorNode.connect(this._manager.context.destination);
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'position', {
-        get: function () {
-            return this._position;
-        },
-        set: function (position) {
-            this._position.copy(position);
-            this.panner.setPosition(position.x, position.y, position.z);
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'velocity', {
-        get: function () {
-            return this._velocity;
-        },
-        set: function (velocity) {
-            this._velocity.copy(velocity);
-            this.panner.setVelocity(velocity.x, velocity.y, velocity.z);
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'maxDistance', {
-        get: function () {
-            return this.panner.maxDistance;
-        },
-        set: function (value) {
-            this.panner.maxDistance = value;
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'refDistance', {
-        get: function () {
-            return this.panner.refDistance;
-        },
-        set: function (value) {
-            this.panner.refDistance = value;
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'rollOffFactor', {
-        get: function () {
-            return this.panner.rolloffFactor;
-        },
-        set: function (value) {
-            this.panner.rolloffFactor = value;
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'distanceModel', {
-        get: function () {
-            return this.panner.distanceModel;
-        },
-        set: function (value) {
-            this.panner.distanceModel = value;
-        }
-    });
-
-} else {
+if (!hasAudioContext()) {
     // temp vector storage
     let offset = new Vec3();
 
@@ -181,15 +233,6 @@ if (hasAudioContext()) {
 
                 this.source.volume = v * factor * this._manager.volume;
             }
-        }
-    });
-
-    Object.defineProperty(SoundInstance3d.prototype, 'velocity', {
-        get: function () {
-            return this._velocity;
-        },
-        set: function (velocity) {
-            this._velocity.copy(velocity);
         }
     });
 

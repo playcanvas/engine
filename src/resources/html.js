@@ -1,7 +1,14 @@
 import { http } from '../net/http.js';
 
 class HtmlHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "html";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -20,7 +27,7 @@ class HtmlHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading html resource: " + url.original + " [" + err + "]");
+                callback(`Error loading html resource: ${url.original} [${err}]`);
             }
         });
     }

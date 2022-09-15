@@ -1,15 +1,12 @@
-// @ts-ignore: library file import
-import * as pc from 'playcanvas/build/playcanvas.dbg.js';
-// @ts-ignore: library file import
-import * as pcx from 'playcanvas/build/playcanvas-extras.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class MiniStatsExample extends Example {
+
+class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
-    static ENGINE = 'DEBUG';
+    static ENGINE = 'PERFORMANCE';
+    static MINISTATS = true;
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement, pcx: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -159,12 +156,12 @@ class MiniStatsExample extends Example {
         let adding = true;
         const step = 10, max = 2000;
         let entity: pc.GraphNode, vertexBuffer: pc.VertexBuffer, texture: { destroy: () => void; };
-        app.on("update", function (dt: any) {
+        app.on("update", function () {
 
             // execute some tasks multiple times per frame
             for (let i = 0; i < step; i++) {
 
-                // allocating resouces
+                // allocating resources
                 if (adding) {
 
                     // add entity (they used shared geometry internally, and we create individual material for each)
@@ -195,7 +192,7 @@ class MiniStatsExample extends Example {
                     });
                     textures.push(texture);
 
-                    // ensure texture is uploaded    (actual VRAM is allocated)
+                    // ensure texture is uploaded (actual VRAM is allocated)
                     texture.lock();
                     texture.unlock();
                     // @ts-ignore engine-tsd
@@ -205,7 +202,7 @@ class MiniStatsExample extends Example {
 
                     if (entities.length > 0) {
 
-                        // desotry entities
+                        // destroy entities
                         entity = entities[entities.length - 1];
                         // @ts-ignore engine-tsd
                         entity.destroy();

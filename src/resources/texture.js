@@ -4,36 +4,43 @@ import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
 
 import { BasisParser } from './parser/texture/basis.js';
 import { ImgParser } from './parser/texture/img.js';
 import { KtxParser } from './parser/texture/ktx.js';
-import { LegacyDdsParser } from './parser/texture/legacy-dds.js';
+import { Ktx2Parser } from './parser/texture/ktx2.js';
+import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
+/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
+
 const JSON_ADDRESS_MODE = {
-    "repeat": ADDRESS_REPEAT,
-    "clamp": ADDRESS_CLAMP_TO_EDGE,
-    "mirror": ADDRESS_MIRRORED_REPEAT
+    'repeat': ADDRESS_REPEAT,
+    'clamp': ADDRESS_CLAMP_TO_EDGE,
+    'mirror': ADDRESS_MIRRORED_REPEAT
 };
 
 const JSON_FILTER_MODE = {
-    "nearest": FILTER_NEAREST,
-    "linear": FILTER_LINEAR,
-    "nearest_mip_nearest": FILTER_NEAREST_MIPMAP_NEAREST,
-    "linear_mip_nearest": FILTER_LINEAR_MIPMAP_NEAREST,
-    "nearest_mip_linear": FILTER_NEAREST_MIPMAP_LINEAR,
-    "linear_mip_linear": FILTER_LINEAR_MIPMAP_LINEAR
+    'nearest': FILTER_NEAREST,
+    'linear': FILTER_LINEAR,
+    'nearest_mip_nearest': FILTER_NEAREST_MIPMAP_NEAREST,
+    'linear_mip_nearest': FILTER_LINEAR_MIPMAP_NEAREST,
+    'nearest_mip_linear': FILTER_NEAREST_MIPMAP_LINEAR,
+    'linear_mip_linear': FILTER_LINEAR_MIPMAP_LINEAR
 };
 
 const JSON_TEXTURE_TYPE = {
-    "default": TEXTURETYPE_DEFAULT,
-    "rgbm": TEXTURETYPE_RGBM,
-    "rgbe": TEXTURETYPE_RGBE,
-    "swizzleGGGR": TEXTURETYPE_SWIZZLEGGGR
+    'default': TEXTURETYPE_DEFAULT,
+    'rgbm': TEXTURETYPE_RGBM,
+    'rgbe': TEXTURETYPE_RGBE,
+    'rgbp': TEXTURETYPE_RGBP,
+    'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
 };
 
 /**
@@ -43,6 +50,7 @@ const JSON_TEXTURE_TYPE = {
  * and opening of texture assets.
  */
 class TextureParser {
+    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name TextureParser#load
@@ -51,14 +59,12 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {callbacks.ResourceHandler} callback - The callback used when the resource is loaded or an error occurs.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     load(url, callback, asset) {
         throw new Error('not implemented');
     }
-    /* eslint-enable jsdoc/require-returns-check */
 
     /**
      * @function
@@ -66,11 +72,9 @@ class TextureParser {
      * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset|null} asset - Optional asset which is passed in by ResourceLoader.
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {Texture} The parsed resource data.
      */
-    /* eslint-disable jsdoc/require-returns-check */
     open(url, data, device) {
         throw new Error('not implemented');
     }
@@ -148,42 +152,51 @@ const _completePartialMipmapChain = function (texture) {
 };
 
 /**
- * @class
- * @name TextureHandler
+ * Resource handler used for loading 2D and 3D {@link Texture} resources.
+ *
  * @implements {ResourceHandler}
- * @classdesc Resource handler used for loading 2D and 3D {@link Texture} resources.
- * @param {GraphicsDevice} device - The graphics device.
- * @param {AssetRegistry} assets - The asset registry.
- * @param {ResourceLoader} loader - The resource loader.
  */
 class TextureHandler {
-    constructor(device, assets, loader) {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "texture";
+
+    /**
+     * Create a new TextureHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
+    constructor(app) {
+        const assets = app.assets;
+        const device = app.graphicsDevice;
+
         this._device = device;
         this._assets = assets;
-        this._loader = loader;
+        this._loader = app.loader;
 
-        // img parser handles all broswer-supported image formats, this
+        // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.
-        this.imgParser = new ImgParser(assets);
+        this.imgParser = new ImgParser(assets, device);
 
         this.parsers = {
-            dds: new LegacyDdsParser(assets),
+            dds: new DdsParser(assets),
             ktx: new KtxParser(assets),
+            ktx2: new Ktx2Parser(assets, device),
             basis: new BasisParser(assets, device),
             hdr: new HdrParser(assets)
         };
-    }
-
-    get crossOrigin() {
-        return this.imgParser.crossOrigin;
     }
 
     set crossOrigin(value) {
         this.imgParser.crossOrigin = value;
     }
 
-    get maxRetries() {
-        return this.imgParser.maxRetries;
+    get crossOrigin() {
+        return this.imgParser.crossOrigin;
     }
 
     set maxRetries(value) {
@@ -193,6 +206,10 @@ class TextureHandler {
                 this.parsers[parser].maxRetries = value;
             }
         }
+    }
+
+    get maxRetries() {
+        return this.imgParser.maxRetries;
     }
 
     _getUrlWithoutParams(url) {
@@ -217,7 +234,7 @@ class TextureHandler {
 
     open(url, data, asset) {
         if (!url)
-            return;
+            return undefined;
 
         let texture = this._getParser(url).open(url, data, this._device);
 
@@ -288,14 +305,9 @@ class TextureHandler {
             texture.type = JSON_TEXTURE_TYPE[assetData.type];
         } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
             texture.type = TEXTURETYPE_RGBM;
-        } else if (asset.file && asset.getPreferredFile) {
+        } else if (asset.file && (asset.file.opt & 8) !== 0) {
             // basis normalmaps flag the variant as swizzled
-            const preferredFile = asset.getPreferredFile();
-            if (preferredFile) {
-                if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
-                    texture.type = TEXTURETYPE_SWIZZLEGGGR;
-                }
-            }
+            texture.type = TEXTURETYPE_SWIZZLEGGGR;
         }
     }
 }

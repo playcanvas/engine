@@ -1,77 +1,37 @@
+import { Debug } from '../core/debug.js';
 import { hashCode } from '../core/hash.js';
 
 import { math } from '../math/math.js';
 
 import {
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
 } from './constants.js';
 
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
 /**
- * @class
- * @name VertexFormat
- * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
- * a {@link VertexBuffer}.
- * @description Returns a new VertexFormat object.
- * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
- * @param {object[]} description - An array of vertex attribute descriptions.
- * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
- * the vertex data to a shader input. Can be:
+ * A vertex format is a descriptor that defines the layout of vertex data inside a
+ * {@link VertexBuffer}.
  *
- * * {@link SEMANTIC_POSITION}
- * * {@link SEMANTIC_NORMAL}
- * * {@link SEMANTIC_TANGENT}
- * * {@link SEMANTIC_BLENDWEIGHT}
- * * {@link SEMANTIC_BLENDINDICES}
- * * {@link SEMANTIC_COLOR}
- * * {@link SEMANTIC_TEXCOORD0}
- * * {@link SEMANTIC_TEXCOORD1}
- * * {@link SEMANTIC_TEXCOORD2}
- * * {@link SEMANTIC_TEXCOORD3}
- * * {@link SEMANTIC_TEXCOORD4}
- * * {@link SEMANTIC_TEXCOORD5}
- * * {@link SEMANTIC_TEXCOORD6}
- * * {@link SEMANTIC_TEXCOORD7}
- *
- * If vertex data has a meaning other that one of those listed above, use the user-defined
- * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
- * @param {number} description[].components - The number of components of the vertex attribute.
- * Can be 1, 2, 3 or 4.
- * @param {number} description[].type - The data type of the attribute. Can be:
- *
- * * {@link TYPE_INT8}
- * * {@link TYPE_UINT8}
- * * {@link TYPE_INT16}
- * * {@link TYPE_UINT16}
- * * {@link TYPE_INT32}
- * * {@link TYPE_UINT32}
- * * {@link TYPE_FLOAT32}
- *
- * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped from a
- * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
- * unchanged. If this property is unspecified, false is assumed.
- * @param {number} [vertexCount] - When specified, vertex format will be set up for non-interleaved format with a specified
- * number of vertices. (example: PPPPNNNNCCCC), where arrays of individual attributes will be stored one right after the other (subject to alignment requirements).
- * Note that in this case, the format depends on the number of vertices, and needs to change when the number of vertices changes.
- * When not specified, vertex format will be interleaved. (example: PNCPNCPNCPNC).
  * @property {object[]} elements The vertex attribute elements.
- * @property {string} elements[].name The meaning of the vertex element. This is used to link
- * the vertex data to a shader input. Can be:
+ * @property {string} elements[].name The meaning of the vertex element. This is used to link the
+ * vertex data to a shader input. Can be:
  *
- * * {@link SEMANTIC_POSITION}
- * * {@link SEMANTIC_NORMAL}
- * * {@link SEMANTIC_TANGENT}
- * * {@link SEMANTIC_BLENDWEIGHT}
- * * {@link SEMANTIC_BLENDINDICES}
- * * {@link SEMANTIC_COLOR}
- * * {@link SEMANTIC_TEXCOORD0}
- * * {@link SEMANTIC_TEXCOORD1}
- * * {@link SEMANTIC_TEXCOORD2}
- * * {@link SEMANTIC_TEXCOORD3}
- * * {@link SEMANTIC_TEXCOORD4}
- * * {@link SEMANTIC_TEXCOORD5}
- * * {@link SEMANTIC_TEXCOORD6}
- * * {@link SEMANTIC_TEXCOORD7}
+ * - {@link SEMANTIC_POSITION}
+ * - {@link SEMANTIC_NORMAL}
+ * - {@link SEMANTIC_TANGENT}
+ * - {@link SEMANTIC_BLENDWEIGHT}
+ * - {@link SEMANTIC_BLENDINDICES}
+ * - {@link SEMANTIC_COLOR}
+ * - {@link SEMANTIC_TEXCOORD0}
+ * - {@link SEMANTIC_TEXCOORD1}
+ * - {@link SEMANTIC_TEXCOORD2}
+ * - {@link SEMANTIC_TEXCOORD3}
+ * - {@link SEMANTIC_TEXCOORD4}
+ * - {@link SEMANTIC_TEXCOORD5}
+ * - {@link SEMANTIC_TEXCOORD6}
+ * - {@link SEMANTIC_TEXCOORD7}
  *
  * If vertex data has a meaning other that one of those listed above, use the user-defined
  * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
@@ -79,35 +39,84 @@ import {
  * Can be 1, 2, 3 or 4.
  * @property {number} elements[].dataType The data type of the attribute. Can be:
  *
- * * {@link TYPE_INT8}
- * * {@link TYPE_UINT8}
- * * {@link TYPE_INT16}
- * * {@link TYPE_UINT16}
- * * {@link TYPE_INT32}
- * * {@link TYPE_UINT32}
- * * {@link TYPE_FLOAT32}
- * @property {boolean} elements[].normalize If true, vertex attribute data will be mapped from a
- * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+ * - {@link TYPE_INT8}
+ * - {@link TYPE_UINT8}
+ * - {@link TYPE_INT16}
+ * - {@link TYPE_UINT16}
+ * - {@link TYPE_INT32}
+ * - {@link TYPE_UINT32}
+ * - {@link TYPE_FLOAT32}
+ * @property {boolean} elements[].normalize If true, vertex attribute data will be mapped from a 0
+ * to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
  * unchanged. If this property is unspecified, false is assumed.
- * @property {number} elements[].offset The number of initial bytes at the start of a vertex that are not relevant to this attribute.
- * @property {number} elements[].stride The number of total bytes that are between the start of one vertex, and the start of the next.
+ * @property {number} elements[].offset The number of initial bytes at the start of a vertex that
+ * are not relevant to this attribute.
+ * @property {number} elements[].stride The number of total bytes that are between the start of one
+ * vertex, and the start of the next.
  * @property {number} elements[].size The size of the attribute in bytes.
- * @example
- * // Specify 3-component positions (x, y, z)
- * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
- *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
- * ]);
- * @example
- * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)
- * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
- *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 },
- *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
- *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
- * ]);
  */
 class VertexFormat {
+    /**
+     * Create a new VertexFormat instance.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {object[]} description - An array of vertex attribute descriptions.
+     * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
+     * the vertex data to a shader input. Can be:
+     *
+     * - {@link SEMANTIC_POSITION}
+     * - {@link SEMANTIC_NORMAL}
+     * - {@link SEMANTIC_TANGENT}
+     * - {@link SEMANTIC_BLENDWEIGHT}
+     * - {@link SEMANTIC_BLENDINDICES}
+     * - {@link SEMANTIC_COLOR}
+     * - {@link SEMANTIC_TEXCOORD0}
+     * - {@link SEMANTIC_TEXCOORD1}
+     * - {@link SEMANTIC_TEXCOORD2}
+     * - {@link SEMANTIC_TEXCOORD3}
+     * - {@link SEMANTIC_TEXCOORD4}
+     * - {@link SEMANTIC_TEXCOORD5}
+     * - {@link SEMANTIC_TEXCOORD6}
+     * - {@link SEMANTIC_TEXCOORD7}
+     *
+     * If vertex data has a meaning other that one of those listed above, use the user-defined
+     * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
+     * @param {number} description[].components - The number of components of the vertex attribute.
+     * Can be 1, 2, 3 or 4.
+     * @param {number} description[].type - The data type of the attribute. Can be:
+     *
+     * - {@link TYPE_INT8}
+     * - {@link TYPE_UINT8}
+     * - {@link TYPE_INT16}
+     * - {@link TYPE_UINT16}
+     * - {@link TYPE_INT32}
+     * - {@link TYPE_UINT32}
+     * - {@link TYPE_FLOAT32}
+     *
+     * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped
+     * from a 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data
+     * is left unchanged. If this property is unspecified, false is assumed.
+     * @param {number} [vertexCount] - When specified, vertex format will be set up for
+     * non-interleaved format with a specified number of vertices. (example: PPPPNNNNCCCC), where
+     * arrays of individual attributes will be stored one right after the other (subject to
+     * alignment requirements). Note that in this case, the format depends on the number of
+     * vertices, and needs to change when the number of vertices changes. When not specified,
+     * vertex format will be interleaved. (example: PNCPNCPNCPNC).
+     * @example
+     * // Specify 3-component positions (x, y, z)
+     * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
+     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
+     * ]);
+     * @example
+     * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)
+     * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
+     *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
+     * ]);
+     */
     constructor(graphicsDevice, description, vertexCount) {
-        this.elements = [];
+        this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
         this.hasColor = false;
@@ -122,7 +131,7 @@ class VertexFormat {
         }, 0);
 
         let offset = 0, elementSize;
-        for (var i = 0, len = description.length; i < len; i++) {
+        for (let i = 0, len = description.length; i < len; i++) {
             const elementDesc = description[i];
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
@@ -130,12 +139,10 @@ class VertexFormat {
             if (vertexCount) {
                 offset = math.roundUp(offset, elementSize);
 
-                // #if _DEBUG
                 // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
                 // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
-                if ((elementSize % 4) !== 0)
-                    console.warn("Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: " + elementSize);
-                // #endif
+                Debug.assert((elementSize % 4) === 0,
+                             `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`);
             }
 
             const element = {
@@ -147,7 +154,7 @@ class VertexFormat {
                 normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
                 size: elementSize
             };
-            this.elements.push(element);
+            this._elements.push(element);
 
             if (vertexCount) {
                 offset += elementSize * vertexCount;
@@ -170,52 +177,51 @@ class VertexFormat {
             this.verticesByteSize = offset;
         }
 
-        this.update();
+        this._evaluateHash();
     }
 
-    static _defaultInstancingFormat = null;
-
-    static init(graphicsDevice) {
-        const formatDesc = [
-            { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD3, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD4, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD5, components: 4, type: TYPE_FLOAT32 }
-        ];
-
-        VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, formatDesc);
+    get elements() {
+        return this._elements;
     }
 
     /**
-     * @field
-     * @static
-     * @readonly
-     * @name VertexFormat.defaultInstancingFormat
      * @type {VertexFormat}
-     * @description Returns {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
+     * @private
+     */
+    static _defaultInstancingFormat = null;
+
+    /**
+     * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
+     *
+     * @type {VertexFormat}
      */
     static get defaultInstancingFormat() {
+
+        if (!VertexFormat._defaultInstancingFormat) {
+            VertexFormat._defaultInstancingFormat = new VertexFormat(null, [
+                { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
+            ]);
+        }
+
         return VertexFormat._defaultInstancingFormat;
     }
 
     /**
-     * @function
-     * @name VertexFormat#update
-     * @description Applies any changes made to the VertexFormat's properties.
+     * Evaluates hash values for the format allowing fast compare of batching / rendering compatibility.
+     *
+     * @private
      */
-    update() {
-        this._evaluateHash();
-    }
-
-    // evaluates hash valuees for the format allowing fast compare of batching / rendering compatibility
     _evaluateHash() {
         let stringElementBatch;
         const stringElementsBatch = [];
         let stringElementRender;
         const stringElementsRender = [];
-        const len = this.elements.length;
+        const len = this._elements.length;
         for (let i = 0; i < len; i++) {
-            const element = this.elements[i];
+            const element = this._elements[i];
 
             // create string description of each element that is relevant for batching
             stringElementBatch = element.name;
@@ -232,12 +238,13 @@ class VertexFormat {
             stringElementsRender.push(stringElementRender);
         }
 
-        // sort batching ones them alphabetically to make hash order independent
+        // sort batching ones alphabetically to make the hash order independent
         stringElementsBatch.sort();
         this.batchingHash = hashCode(stringElementsBatch.join());
 
         // rendering hash
-        this.renderingingHash = hashCode(stringElementsRender.join());
+        this.renderingingHashString = stringElementsRender.join('_');
+        this.renderingingHash = hashCode(this.renderingingHashString);
     }
 }
 

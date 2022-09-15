@@ -1,7 +1,14 @@
 import { http } from '../net/http.js';
 
 class ShaderHandler {
-    constructor() {
+    /**
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = "shader";
+
+    constructor(app) {
         this.maxRetries = 0;
     }
 
@@ -20,7 +27,7 @@ class ShaderHandler {
             if (!err) {
                 callback(null, response);
             } else {
-                callback("Error loading shader resource: " + url.original + " [" + err + "]");
+                callback(`Error loading shader resource: ${url.original} [${err}]`);
             }
         });
     }

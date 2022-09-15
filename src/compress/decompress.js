@@ -1,15 +1,18 @@
-import { CompressUtils } from './compress-utils';
+import { CompressUtils } from './compress-utils.js';
 
 /**
- * @private
- * @class
- * @name Decompress
- * @classdesc Reconstruct original object field names in a compressed scene.
- * @param {object} node - The current node of the object being decompressed,
- * initially the 'entities' field of a scene.
- * @param {object} data - Compression metadata.
+ * Reconstruct original object field names in a compressed scene.
+ *
+ * @ignore
  */
 class Decompress {
+    /**
+     * Create a new Decompress instance.
+     *
+     * @param {object} node - The current node of the object being decompressed, initially the
+     * 'entities' field of a scene.
+     * @param {object} data - Compression metadata.
+     */
     constructor(node, data) {
         this._node = node;
 
@@ -17,7 +20,7 @@ class Decompress {
     }
 
     run() {
-        var type = Object.prototype.toString.call(this._node);
+        const type = Object.prototype.toString.call(this._node);
 
         if (type === '[object Object]') {
             this._handleMap();
@@ -35,15 +38,15 @@ class Decompress {
     _handleMap() {
         this._result = {};
 
-        var a = Object.keys(this._node);
+        const a = Object.keys(this._node);
 
         a.forEach(this._handleKey, this);
     }
 
     _handleKey(origKey) {
-        var newKey = origKey;
+        let newKey = origKey;
 
-        var len = origKey.length;
+        const len = origKey.length;
 
         if (len === 1) {
             newKey = CompressUtils.oneCharToKey(origKey, this._data);
@@ -61,7 +64,7 @@ class Decompress {
     }
 
     _handleArElt(elt) {
-        var v = new Decompress(elt, this._data).run();
+        const v = new Decompress(elt, this._data).run();
 
         this._result.push(v);
     }

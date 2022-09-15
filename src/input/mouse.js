@@ -4,52 +4,31 @@ import { EventHandler } from '../core/event-handler.js';
 import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
-// Events Documentation
 /**
- * @event
- * @name Mouse#mousemove
- * @description Fired when the mouse is moved.
- * @param {MouseEvent} event - The MouseEvent object.
+ * Callback used by {@link Mouse#enablePointerLock} and {@link Application#disablePointerLock}.
+ *
+ * @callback LockMouseCallback
  */
 
 /**
- * @event
- * @name Mouse#mousedown
- * @description Fired when a mouse button is pressed.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @event
- * @name Mouse#mouseup
- * @description Fired when a mouse button is released.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @event
- * @name Mouse#mousewheel
- * @description Fired when a mouse wheel is moved.
- * @param {MouseEvent} event - The MouseEvent object.
- */
-
-/**
- * @class
- * @name Mouse
+ * A Mouse Device, bound to a DOM Element.
+ *
  * @augments EventHandler
- * @classdesc A Mouse Device, bound to a DOM Element.
- * @description Create a new Mouse device.
- * @param {Element} [element] - The Element that the mouse events are attached to.
  */
 class Mouse extends EventHandler {
+    /**
+     * Create a new Mouse instance.
+     *
+     * @param {Element} [element] - The Element that the mouse events are attached to.
+     */
     constructor(element) {
         super();
 
         // Clear the mouse state
-        this._lastX      = 0;
-        this._lastY      = 0;
-        this._buttons      = [false, false, false];
-        this._lastbuttons  = [false, false, false];
+        this._lastX = 0;
+        this._lastY = 0;
+        this._buttons = [false, false, false];
+        this._lastbuttons = [false, false, false];
 
 
         // Setup event handlers so they are bound to the correct 'this'
@@ -57,7 +36,7 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = function (event) {
+        this._contextMenuHandler = (event) => {
             event.preventDefault();
         };
 
@@ -68,10 +47,36 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @static
-     * @function
-     * @name Mouse.isPointerLocked
-     * @description Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
+     * Fired when the mouse is moved.
+     *
+     * @event Mouse#mousemove
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse button is pressed.
+     *
+     * @event Mouse#mousedown
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse button is released.
+     *
+     * @event Mouse#mouseup
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Fired when a mouse wheel is moved.
+     *
+     * @event Mouse#mousewheel
+     * @param {MouseEvent} event - The MouseEvent object.
+     */
+
+    /**
+     * Check if the mouse pointer has been locked, using {@link Mouse#enabledPointerLock}.
+     *
      * @returns {boolean} True if locked.
      */
     static isPointerLocked() {
@@ -79,9 +84,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#attach
-     * @description Attach mouse events to an Element.
+     * Attach mouse events to an Element.
+     *
      * @param {Element} element - The DOM element to attach the mouse to.
      */
     attach(element) {
@@ -90,62 +94,58 @@ class Mouse extends EventHandler {
         if (this._attached) return;
         this._attached = true;
 
-        var opts = platform.passiveEvents ? { passive: false } : false;
-        window.addEventListener("mouseup", this._upHandler, opts);
-        window.addEventListener("mousedown", this._downHandler, opts);
-        window.addEventListener("mousemove", this._moveHandler, opts);
-        window.addEventListener("wheel", this._wheelHandler, opts);
+        const opts = platform.passiveEvents ? { passive: false } : false;
+        window.addEventListener('mouseup', this._upHandler, opts);
+        window.addEventListener('mousedown', this._downHandler, opts);
+        window.addEventListener('mousemove', this._moveHandler, opts);
+        window.addEventListener('wheel', this._wheelHandler, opts);
     }
 
     /**
-     * @function
-     * @name Mouse#detach
-     * @description Remove mouse events from the element that it is attached to.
+     * Remove mouse events from the element that it is attached to.
      */
     detach() {
         if (!this._attached) return;
         this._attached = false;
         this._target = null;
 
-        var opts = platform.passiveEvents ? { passive: false } : false;
-        window.removeEventListener("mouseup", this._upHandler, opts);
-        window.removeEventListener("mousedown", this._downHandler, opts);
-        window.removeEventListener("mousemove", this._moveHandler, opts);
-        window.removeEventListener("wheel", this._wheelHandler, opts);
+        const opts = platform.passiveEvents ? { passive: false } : false;
+        window.removeEventListener('mouseup', this._upHandler, opts);
+        window.removeEventListener('mousedown', this._downHandler, opts);
+        window.removeEventListener('mousemove', this._moveHandler, opts);
+        window.removeEventListener('wheel', this._wheelHandler, opts);
     }
 
     /**
-     * @function
-     * @name Mouse#disableContextMenu
-     * @description Disable the context menu usually activated with right-click.
+     * Disable the context menu usually activated with right-click.
      */
     disableContextMenu() {
         if (!this._target) return;
-        this._target.addEventListener("contextmenu", this._contextMenuHandler);
+        this._target.addEventListener('contextmenu', this._contextMenuHandler);
     }
 
     /**
-     * @function
-     * @name Mouse#enableContextMenu
-     * @description Enable the context menu usually activated with right-click. This option is active by default.
+     * Enable the context menu usually activated with right-click. This option is active by
+     * default.
      */
     enableContextMenu() {
         if (!this._target) return;
-        this._target.removeEventListener("contextmenu", this._contextMenuHandler);
+        this._target.removeEventListener('contextmenu', this._contextMenuHandler);
     }
 
     /**
-     * @function
-     * @name Mouse#enablePointerLock
-     * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
-     * Allowing raw access to mouse movement input without risking the mouse exiting the element.
-     * Notes:
+     * Request that the browser hides the mouse cursor and locks the mouse to the element. Allowing
+     * raw access to mouse movement input without risking the mouse exiting the element. Notes:
      *
-     * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link Application#enableFullscreen}
-     * * Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+     * - In some browsers this will only work when the browser is running in fullscreen mode. See
+     * {@link Application#enableFullscreen}
+     * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for
+     * a mouse or keyboard input.
      *
-     * @param {callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
-     * @param {callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
+     * @param {LockMouseCallback} [success] - Function called if the request for mouse lock is
+     * successful.
+     * @param {LockMouseCallback} [error] - Function called if the request for mouse lock is
+     * unsuccessful.
      */
     enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
@@ -155,11 +155,11 @@ class Mouse extends EventHandler {
             return;
         }
 
-        var s = function () {
+        const s = () => {
             success();
             document.removeEventListener('pointerlockchange', s);
         };
-        var e = function () {
+        const e = () => {
             error();
             document.removeEventListener('pointerlockerror', e);
         };
@@ -176,17 +176,16 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#disablePointerLock
-     * @description Return control of the mouse cursor to the user.
-     * @param {callbacks.LockMouse} [success] - Function called when the mouse lock is disabled.
+     * Return control of the mouse cursor to the user.
+     *
+     * @param {LockMouseCallback} [success] - Function called when the mouse lock is disabled.
      */
     disablePointerLock(success) {
         if (!document.exitPointerLock) {
             return;
         }
 
-        var s = function () {
+        const s = () => {
             success();
             document.removeEventListener('pointerlockchange', s);
         };
@@ -197,9 +196,7 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#update
-     * @description Update method, should be called once per frame.
+     * Update method, should be called once per frame.
      */
     update() {
         // Copy current button state
@@ -209,14 +206,13 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#isPressed
-     * @description Returns true if the mouse button is currently pressed.
+     * Returns true if the mouse button is currently pressed.
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button is current pressed.
      */
@@ -225,14 +221,13 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#wasPressed
-     * @description Returns true if the mouse button was pressed this frame (since the last call to update).
+     * Returns true if the mouse button was pressed this frame (since the last call to update).
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
@@ -241,14 +236,13 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * @function
-     * @name Mouse#wasReleased
-     * @description Returns true if the mouse button was released this frame (since the last call to update).
+     * Returns true if the mouse button was released this frame (since the last call to update).
+     *
      * @param {number} button - The mouse button to test. Can be:
      *
-     * * {@link MOUSEBUTTON_LEFT}
-     * * {@link MOUSEBUTTON_MIDDLE}
-     * * {@link MOUSEBUTTON_RIGHT}
+     * - {@link MOUSEBUTTON_LEFT}
+     * - {@link MOUSEBUTTON_MIDDLE}
+     * - {@link MOUSEBUTTON_RIGHT}
      *
      * @returns {boolean} True if the mouse button was released since the last update.
      */
@@ -260,7 +254,7 @@ class Mouse extends EventHandler {
         // disable released button
         this._buttons[event.button] = false;
 
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         // send 'mouseup' event
@@ -271,14 +265,14 @@ class Mouse extends EventHandler {
         // Store which button has affected
         this._buttons[event.button] = true;
 
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEDOWN, e);
     }
 
     _handleMove(event) {
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEMOVE, e);
@@ -289,16 +283,16 @@ class Mouse extends EventHandler {
     }
 
     _handleWheel(event) {
-        var e = new MouseEvent(this, event);
+        const e = new MouseEvent(this, event);
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEWHEEL, e);
     }
 
     _getTargetCoords(event) {
-        var rect = this._target.getBoundingClientRect();
-        var left = Math.floor(rect.left);
-        var top = Math.floor(rect.top);
+        const rect = this._target.getBoundingClientRect();
+        const left = Math.floor(rect.left);
+        const top = Math.floor(rect.top);
 
         // mouse is outside of canvas
         if (event.clientX < left ||

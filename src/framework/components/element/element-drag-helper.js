@@ -7,13 +7,13 @@ import { Vec3 } from '../../../math/vec3.js';
 
 import { ElementComponent } from './component.js';
 
-var _inputScreenPosition = new Vec2();
-var _inputWorldPosition = new Vec3();
-var _rayOrigin = new Vec3();
-var _rayDirection = new Vec3();
-var _planeOrigin = new Vec3();
-var _planeNormal = new Vec3();
-var _entityRotation = new Quat();
+const _inputScreenPosition = new Vec2();
+const _inputWorldPosition = new Vec3();
+const _rayOrigin = new Vec3();
+const _rayDirection = new Vec3();
+const _planeOrigin = new Vec3();
+const _planeNormal = new Vec3();
+const _entityRotation = new Quat();
 
 const OPPOSITE_AXIS = {
     x: 'y',
@@ -21,15 +21,17 @@ const OPPOSITE_AXIS = {
 };
 
 /**
- * @class
- * @name ElementDragHelper
+ * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
+ *
  * @augments EventHandler
- * @description Create a new ElementDragHelper.
- * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
- * @param {ElementComponent} element - The Element that should become draggable.
- * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
  */
 class ElementDragHelper extends EventHandler {
+    /**
+     * Create a new ElementDragHelper instance.
+     *
+     * @param {ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
+     */
     constructor(element, axis) {
         super();
 
@@ -55,14 +57,32 @@ class ElementDragHelper extends EventHandler {
         this._toggleLifecycleListeners('on');
     }
 
+    /**
+     * Fired when a new drag operation starts.
+     *
+     * @event ElementDragHelper#drag:start
+     */
+
+    /**
+     * Fired when the current new drag operation ends.
+     *
+     * @event ElementDragHelper#drag:end
+     */
+
+    /**
+     * Fired whenever the position of the dragged element changes.
+     *
+     * @event ElementDragHelper#drag:move
+     * @param {Vec3} value - The current position.
+     */
+
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
     }
 
     _toggleDragListeners(onOrOff) {
-        var isOn = onOrOff === 'on';
-        var addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
+        const isOn = onOrOff === 'on';
 
         // Prevent multiple listeners
         if (this._hasDragListeners && isOn) {
@@ -73,18 +93,17 @@ class ElementDragHelper extends EventHandler {
             this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
         }
 
-        // Note that we handle release events directly on the window object, rather than
-        // on app.mouse or app.touch. This is in order to correctly handle cases where the
-        // user releases the mouse/touch outside of the window.
+        // mouse events, if mouse is available
         if (this._app.mouse) {
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mousemove', this._onMove, this);
+            this._element[onOrOff]('mouseup', this._handleMouseUpOrTouchEnd, false);
         }
 
+        // touch events, if touch is available
         if (platform.touch) {
-            this._app.touch[onOrOff]('touchmove', this._onMove, this);
-            window[addOrRemoveEventListener]('touchend', this._handleMouseUpOrTouchEnd, false);
-            window[addOrRemoveEventListener]('touchcancel', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('touchmove', this._onMove, this);
+            this._element[onOrOff]('touchend', this._handleMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._handleMouseUpOrTouchEnd, this);
         }
 
         this._hasDragListeners = isOn;
@@ -95,7 +114,7 @@ class ElementDragHelper extends EventHandler {
             this._dragCamera = event.camera;
             this._calculateDragScale();
 
-            var currentMousePosition = this._screenToLocal(event);
+            const currentMousePosition = this._screenToLocal(event);
 
             if (currentMousePosition) {
                 this._toggleDragListeners('on');
@@ -124,13 +143,13 @@ class ElementDragHelper extends EventHandler {
         _planeOrigin.copy(this._element.entity.getPosition());
         _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
 
-        var denominator = _planeNormal.dot(_rayDirection);
+        const denominator = _planeNormal.dot(_rayDirection);
 
         // If the ray and plane are not parallel
         if (Math.abs(denominator) > 0) {
-            var rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
-            var collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            var position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
+            const rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
+            const collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
+            const position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
 
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
 
@@ -143,7 +162,7 @@ class ElementDragHelper extends EventHandler {
     }
 
     _determineInputPosition(event) {
-        var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+        const devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
 
         if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
             _inputScreenPosition.x = event.x * devicePixelRatio;
@@ -168,11 +187,11 @@ class ElementDragHelper extends EventHandler {
     }
 
     _calculateDragScale() {
-        var current = this._element.entity.parent;
-        var screen = this._element.screen && this._element.screen.screen;
-        var isWithin2DScreen = screen && screen.screenSpace;
-        var screenScale = isWithin2DScreen ? screen.scale : 1;
-        var dragScale = this._dragScale;
+        let current = this._element.entity.parent;
+        const screen = this._element.screen && this._element.screen.screen;
+        const isWithin2DScreen = screen && screen.screenSpace;
+        const screenScale = isWithin2DScreen ? screen.scale : 1;
+        const dragScale = this._dragScale;
 
         dragScale.set(screenScale, screenScale, screenScale);
 
@@ -192,15 +211,15 @@ class ElementDragHelper extends EventHandler {
 
     _onMove(event) {
         if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
-            var currentMousePosition = this._screenToLocal(event);
+            const currentMousePosition = this._screenToLocal(event);
 
             if (this._dragStartMousePosition && currentMousePosition) {
                 this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
                 this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
 
                 if (this._axis) {
-                    var currentPosition = this._element.entity.getLocalPosition();
-                    var constrainedAxis = OPPOSITE_AXIS[this._axis];
+                    const currentPosition = this._element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[this._axis];
                     this._deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 
@@ -215,36 +234,17 @@ class ElementDragHelper extends EventHandler {
         this._toggleDragListeners('off');
     }
 
-    get enabled() {
-        return this._enabled;
-    }
-
     set enabled(value) {
         this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     get isDragging() {
         return this._isDragging;
     }
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:start
-     * @description Fired when a new drag operation starts.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:end
-     * @description Fired when the current new drag operation ends.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:move
-     * @description Fired whenever the position of the dragged element changes.
-     * @param {Vec3} value - The current position.
-     */
 }
 
 export { ElementDragHelper };

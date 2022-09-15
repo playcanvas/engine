@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class XRPickingExample extends Example {
+class XrPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
@@ -86,13 +84,13 @@ class XRPickingExample extends Example {
             };
 
             app.mouse.on("mousedown", function () {
-                if (! app.xr.active)
+                if (!app.xr.active)
                     activate();
             });
 
             if (app.touch) {
                 app.touch.on("touchend", function (evt) {
-                    if (! app.xr.active) {
+                    if (!app.xr.active) {
                         // if not in VR, activate
                         activate();
                     } else {
@@ -156,12 +154,12 @@ class XRPickingExample extends Example {
             app.on('update', function () {
                 for (let i = 0; i < app.xr.input.inputSources.length; i++) {
                     const inputSource = app.xr.input.inputSources[i];
+                    const direction = inputSource.getDirection();
+                    const origin = inputSource.getOrigin();
 
-                    tmpVec.copy(inputSource.getDirection());
-                    // @ts-ignore engine-tsd
-                    tmpVec.scale(100).add(inputSource.getOrigin());
+                    tmpVec.copy(direction).mulScalar(100).add(origin);
 
-                    app.renderLine(inputSource.getOrigin(), tmpVec, lineColor);
+                    app.drawLine(inputSource.getOrigin(), tmpVec, lineColor);
                 }
             });
         } else {
@@ -170,4 +168,4 @@ class XRPickingExample extends Example {
     }
 }
 
-export default XRPickingExample;
+export default XrPickingExample;

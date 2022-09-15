@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class BatchingDynamicExample extends Example {
+class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
 
-    // @ts-ignore: override class function
     example(canvas: HTMLCanvasElement): void {
 
         // Create the application and start the update loop
@@ -38,7 +36,7 @@ class BatchingDynamicExample extends Example {
         // create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
         const batchGroup = app.batcher.addGroup("Meshes", true, 100);
 
-        // create constious primitive instances using one of the two materials
+        // create various primitive instances using one of the two materials
         const numInstances = 500;
         const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
         const entities: any = [];
@@ -99,7 +97,7 @@ class BatchingDynamicExample extends Example {
 
         // Set an update function on the app's update event
         let time = 0;
-        app.on("update", function (dt) {
+        app.on("update", function (dt: number) {
             time += dt;
 
             // move all entities along orbits

@@ -4,6 +4,8 @@ import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
 
+/** @typedef {import('../../app-base.js').AppBase} AppBase */
+
 const _schema = [
     'enabled',
     'active',
@@ -23,14 +25,17 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name ButtonComponentSystem
+ * Manages creation of {@link ButtonComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link ButtonComponent}s.
- * @description Create a new ButtonComponentSystem.
- * @param {Application} app - The application.
  */
 class ButtonComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ButtonComponentSystem.
+     *
+     * @param {AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -43,7 +48,7 @@ class ButtonComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this._onRemoveComponent, this);
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -51,11 +56,11 @@ class ButtonComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
-            var entity = components[id].entity;
-            var component = entity.button;
+        for (const id in components) {
+            const entity = components[id].entity;
+            const component = entity.button;
             if (component.enabled && entity.enabled) {
                 component.onUpdate();
             }
@@ -64,6 +69,12 @@ class ButtonComponentSystem extends ComponentSystem {
 
     _onRemoveComponent(entity, component) {
         component.onRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 
