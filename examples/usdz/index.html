@@ -12,8 +12,10 @@
 
         }
     </style>
+
     <script src="../../build/playcanvas.dbg.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
+
 </head>
 <body style="margin: 0px;">
     <div style="width:100%; position:absolute; top:10px">
@@ -25,43 +27,11 @@
     </div>
     <canvas id='application'></canvas>
     <script type="module">
-        //import { UsdzExporter } from "../../extras/exporters/usdz-exporter.js";
-
-        // import * as pcx from '../../build/playcanvas-extras.js';
-        // import * as pc from '../../build/playcanvas.dbg.js';
-
-
-
-
-        import { Asset } from "../../src/asset/asset.js";
-        import { AssetListLoader } from "../../src/asset/asset-list-loader.js";
-        import { FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from "../../src/framework/constants.js";
-        import { Entity } from "../../src/framework/entity.js";
-        import { Application } from "../../src/framework/application.js";
-        import { Color } from "../../src/math/color.js";
-        import { TEXTURETYPE_RGBM } from "../../src/graphics/constants.js";
 
         const assets = {
-            'helipad': new Asset('helipad.dds', 'cubemap', { url: '../assets/cubemaps/helipad.dds' }, { type: TEXTURETYPE_RGBM }),
-
-            'glb': new Asset('model', 'container', { url: '../assets/models/playcanvas-cube.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/Buggy.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/MetalRoughSpheres.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/house.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/statue.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/SheenChair.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/avocado.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/hornet.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/helmet/DamagedHelmet.gltf' }),
-            // 'glb': new Asset('model', 'container', { url: '../assets/models/allan_pinkerton_electric_horse.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/game_ready_pbr_microscope.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/stylized_tresure_chest.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/WaterBottle.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/TextureTransformMultiTest.glb' }),
-//            'glb': new Asset('model', 'container', { url: '../assets/models/AlphaBlendModeTest.glb' }),
-//                'glb': new Asset('model', 'container', { url: '../assets/models/medieval_mortier.glb' }),
-//                'glb': new Asset('model', 'container', { url: '../assets/models/bench_wooden_01.glb' }),
-};
+            'helipad': new pc.Asset('helipad.dds', 'cubemap', { url: '../assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
+            'glb': new pc.Asset('model', 'container', { url: '../assets/models/bench_wooden_01.glb' }),
+        };
 
         function onLoaded(app) {
 
@@ -71,16 +41,15 @@
             app.scene.setSkybox(assets['helipad'].resources);
             app.scene.skyboxIntensity = 1;
 
-            const camera = new Entity();
+            const camera = new pc.Entity();
             camera.addComponent("camera", {
-                clearColor: new Color(0.4, 0.4, 0.4, 1)
+                clearColor: new pc.Color(0.4, 0.4, 0.4, 1)
             });
             app.root.addChild(camera);
             camera.setLocalPosition(0, 0, 25);
 
             const modelEntity = assets.glb.resource.instantiateRenderEntity({
             });
-            //modelEntity.setLocalScale(0.03, 0.03, 0.03);
             app.root.addChild(modelEntity);
 
             new pcx.UsdzExporter().build(modelEntity).then((arrayBuffer) => {
@@ -93,11 +62,11 @@
         function main() {
 
             const canvas = document.getElementById('application');
-            const app = new Application(canvas);
-            app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(RESOLUTION_AUTO);
+            const app = new pc.Application(canvas);
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
             assetListLoader.load(() => {
                 onLoaded(app);
             });
