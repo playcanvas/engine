@@ -1,5 +1,4 @@
 import { zipSync, strToU8 } from '../../node_modules/fflate/esm/browser.js';
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_NORMAL } from '../../src/graphics/constants.js';
 
 const ROOT_FILE_NAME = 'root';
 
@@ -475,10 +474,10 @@ ${inputs.join('\n')}
         let uv0 = [];
         let uv1 = [];
 
-        mesh.getVertexStream(SEMANTIC_POSITION, positions);
-        mesh.getVertexStream(SEMANTIC_NORMAL, normals);
-        mesh.getVertexStream(SEMANTIC_TEXCOORD0, uv0);
-        mesh.getVertexStream(SEMANTIC_TEXCOORD1, uv1);
+        mesh.getVertexStream(pc.SEMANTIC_POSITION, positions);
+        mesh.getVertexStream(pc.SEMANTIC_NORMAL, normals);
+        mesh.getVertexStream(pc.SEMANTIC_TEXCOORD0, uv0);
+        mesh.getVertexStream(pc.SEMANTIC_TEXCOORD1, uv1);
         mesh.getIndices(indices);
 
         // vertex counts for each faces (all are triangles)
