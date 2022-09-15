@@ -99,11 +99,11 @@ describe('SceneRegistry', function () {
 
     });
 
-    const promisedLoadSceneData = function (registry, sceneItemOrUrl) {
+    const promisedLoadSceneData = function (registry, sceneItemOrNameOrUrl) {
         return new Promise(function (resolve, reject) {
-            registry.loadSceneData(sceneItemOrUrl, function (err, sceneItem) {
+            registry.loadSceneData(sceneItemOrNameOrUrl, function (err, sceneItem) {
                 if (err) {
-                    reject(err);
+                    resolve(err);
                 }
 
                 resolve(sceneItem);
@@ -146,6 +146,37 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
+        it('try to load scene data that does not exist by name', async function () {
+            const registry = new SceneRegistry(app);
+            registry.add('New Scene 1', `${assetPath}scene.json`);
+
+            const err = await promisedLoadSceneData(registry, 'Scene 2');
+
+            expect(err).to.exist;
+            expect(err).to.equal('Cannot find scene to load');
+        });
+
+        it('try to load scene data that by name', async function () {
+            const registry = new SceneRegistry(app);
+            registry.add('New Scene 1', `${assetPath}scene.json`);
+
+            const sceneItem = await promisedLoadSceneData(registry, 'New Scene 1');
+
+            expect(sceneItem).to.exist;
+            expect(sceneItem.data).to.exist;
+            expect(sceneItem._loading).to.equal(false);
+        });
+
+        it('try to load scene data that by URL', async function () {
+            const registry = new SceneRegistry(app);
+            registry.add('New Scene 1', `${assetPath}scene.json`);
+
+            const sceneItem = await promisedLoadSceneData(registry, `${assetPath}scene.json`);
+
+            expect(sceneItem).to.exist;
+            expect(sceneItem.data).to.exist;
+            expect(sceneItem._loading).to.equal(false);
+        });
     });
 
     describe('#remove', function () {
