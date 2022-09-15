@@ -131,5 +131,8 @@
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.js -- --single-run --release",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
+  },
+  "dependencies": {
+    "fflate": "^0.7.3"
   }
 }
