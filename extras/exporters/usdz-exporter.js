@@ -1,11 +1,4 @@
-// https://www.npmjs.com/package/fflate
-//import * as fflate from 'fflate';
-//import * as fflate from 'fflate/esm/browser.js';
-
-//import { strToU8 } from 'fflate';
-import * as fflate from 'fflate/esm/browser.js';
-
-
+import { zipSync, strToU8 } from '../../node_modules/fflate/esm/browser.js';
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_NORMAL } from '../../src/graphics/constants.js';
 
 const ROOT_FILE_NAME = 'root';
@@ -185,7 +178,7 @@ class UsdzExporter {
 
             // generate usdz
             this.alignFiles();
-            const arraybuffer = fflate.zipSync(this.files, { level: 0 });
+            const arraybuffer = zipSync(this.files, { level: 0 });
 
             this.done();
 
@@ -240,7 +233,7 @@ class UsdzExporter {
         let contentU8 = null;
         if (content) {
             content = header + '\n' + content;
-            contentU8 = fflate.strToU8(content);
+            contentU8 = strToU8(content);
         }
 
         const ids = this.getFileIds(category, uniqueId, refName);

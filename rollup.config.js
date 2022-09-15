@@ -257,18 +257,12 @@ function buildTarget(buildType, moduleFormat) {
 function scriptTarget(name, input, output) {
     return {
         input: input,
-        external: [
-            'fflate'
-        ],
         output: {
             banner: getBanner(''),
             file: output || input.replace('.mjs', '.js'),
             format: 'umd',
             indent: '\t',
             name: name,
-            globals: {
-                'fflate': 'fflate'
-            }
         },
         plugins: [
             babel(es5Options),
