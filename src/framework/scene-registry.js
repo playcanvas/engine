@@ -164,19 +164,15 @@ class SceneRegistry {
         // that is loaded so we don't do a subsequent http requests
         // on the same scene later
 
-        // If it's just a URL then attempt to find the scene item in
-        // the registry else create a temp SceneRegistryItem to use
-        // for this function
+        // If it's just a URL or scene name then attempt to find
+        // the scene item in the registry else create a temp
+        // SceneRegistryItem to use for this function
         let url = sceneItem;
-
-        if (sceneItem instanceof SceneRegistryItem) {
-            url = sceneItem.url;
-        } else {
-            sceneItem = this.findByUrl(url);
-            if (!sceneItem) {
-                sceneItem = new SceneRegistryItem('Untitled', url);
-            }
+        if (typeof sceneItem === 'string') {
+            sceneItem = this.findByUrl(url) || this.find(url) || new SceneRegistryItem('Untitled', null);
         }
+
+        url = sceneItem.url;
 
         if (!sceneItem.url) {
             callback("Cannot find scene to load");
@@ -228,7 +224,7 @@ class SceneRegistry {
      * scene loading quicker for the user.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
@@ -300,7 +296,7 @@ class SceneRegistry {
      * application root Entity.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadHierarchyCallback} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
@@ -330,7 +326,7 @@ class SceneRegistry {
      * Load a scene file and apply the scene settings to the current scene.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {LoadSettingsCallback} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
@@ -365,7 +361,7 @@ class SceneRegistry {
      * entities and graph nodes under `app.root` and load the scene settings and hierarchy.
      *
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
-     * {@link SceneRegistry#find} or name of the scene.".
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
      * @param {ChangeSceneCallback} [callback] - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
@@ -378,10 +374,6 @@ class SceneRegistry {
      * });
      */
     changeScene(sceneItem, callback) {
-        if (!(sceneItem instanceof SceneRegistryItem)) {
-            sceneItem = this.find(sceneItem);
-        }
-
         const app = this._app;
         const self = this;
 
