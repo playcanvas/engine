@@ -1,4 +1,4 @@
-import * as pc from '../../../../build/playcanvas';
+import * as pc from '../../../../';
 
 
 class MeshPickerAnimatedExample {
@@ -65,7 +65,7 @@ class MeshPickerAnimatedExample {
 
             const height = -5;
 
-            const center = new pc.Vec3(-4, 5, -3);
+            const center = new pc.Vec3(-4, 5, 3);
 
             for (let i = 0; i < numRays; i++) {
                 const start = center.clone();
@@ -259,6 +259,8 @@ class MeshPickerAnimatedExample {
                     app.drawLine(rayMap[i].ray.origin, e, pc.Color.BLUE);
 
                     rayMap[i].endLight.setPosition(e);
+
+                    // e = meshInstance.rayCast(rayMap[i].ray);
                 }
 
                 for (let i = 0; i < numRays2; i++) {
@@ -269,6 +271,8 @@ class MeshPickerAnimatedExample {
                     app.drawLine(rayMap2[i].ray.origin, e, pc.Color.RED);
 
                     rayMap2[i].endLight.setPosition(e);
+
+                    // e = meshInstance.rayCast(rayMap2[i].ray);
                 }
 
                 const end = performance.now() - start;

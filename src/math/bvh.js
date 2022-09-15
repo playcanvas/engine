@@ -143,13 +143,13 @@ class BVHGlobal {
     findBestSplitPlane(splitDetails) {
         const node = splitDetails.node;
         let bestCost = Infinity;
-        const { triangles } = this;
+        const { triangles, triIdx } = this;
         for (let a = 0; a < 3; a++) {
             const b = ['x', 'y', 'z'][a];
             let boundsMin = Infinity;
             let boundsMax = -1 * Infinity;
             for (let i = 0; i < node.triCount; i++) {
-                const triangle = triangles[this.triIdx[node.leftFirst + i]];
+                const triangle = triangles[triIdx[node.leftFirst + i]];
                 boundsMin = Math.min(boundsMin, triangle.centroid[b]);
                 boundsMax = Math.max(boundsMax, triangle.centroid[b]);
             }
@@ -160,7 +160,7 @@ class BVHGlobal {
             });
             let scale = this.bins / (boundsMax - boundsMin);
             for (let i = 0; i < node.triCount; i++) {
-                const triangle = triangles[this.triIdx[node.leftFirst + i]];
+                const triangle = triangles[triIdx[node.leftFirst + i]];
                 const binIdx = Math.min(this.bins - 1, Math.floor((triangle.centroid[b] - boundsMin) * scale));
                 bin[binIdx].triCount++;
                 bin[binIdx].bounds.setMinMax(vec3Min(bin[binIdx].bounds.getMin(), triangle.vertex0), vec3Max(bin[binIdx].bounds.getMax(), triangle.vertex0));
@@ -189,7 +189,7 @@ class BVHGlobal {
             }
 
             scale = (boundsMax - boundsMin) / this.bins;
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < this.bins - 1; i++) {
                 const planeCost = leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
                 if (planeCost < bestCost) {
                     splitDetails.axis = b;
@@ -209,10 +209,8 @@ class BVHGlobal {
      * @ignore
      */
     calculateNodeCost(node) {
-        const negativeAabbMin = node.aabbMin.clone();
-        negativeAabbMin.mulScalar(-1);
         const extent = new Vec3();
-        extent.add2(node.aabbMax, negativeAabbMin);
+        extent.sub2(node.aabbMax, node.aabbMin);
 
         const surfaceArea = extent.x * extent.y + extent.y * extent.z + extent.z * extent.x;
 
