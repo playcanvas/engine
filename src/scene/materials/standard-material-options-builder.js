@@ -155,6 +155,7 @@ class StandardMaterialOptionsBuilder {
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
+        options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.conserveEnergy = stdMat.conserveEnergy;
