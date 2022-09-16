@@ -115,6 +115,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../resources/basis.js';
+import { set } from 'src/core/set-utils.js';
 
 // CORE
 
@@ -1171,50 +1172,6 @@ Application.prototype.setAreaLightLuts = function(asset) {
 
 AreaLightLuts.prototype.set = function (device, resource) {
 
-    function buildTexture(device, data, format) {
-        const texture = AreaLightLuts.createTexture(device, format, 64);
-
-        texture.lock().set(data);
-        texture.unlock();
-        texture.upload();
-
-        return texture;
-    }
-
-    function offsetScale(data, offset, scale) {
-
-        const count = data.length;
-        const ret = new Float32Array(count);
-        for (let i = 0; i < count; i++) {
-            const n = i % 4;
-            ret[i] = (data[i] + offset[n]) * scale[n];
-        }
-        return ret;
-    }
-
-    function convertToHalfFloat(data) {
-
-        const count = data.length;
-        const ret = new Uint16Array(count);
-        const float2Half = FloatPacking.float2Half;
-        for (let i = 0; i < count; i++) {
-            ret[i] = float2Half(data[i]);
-        }
-
-        return ret;
-    }
-
-    function convertToUint(data) {
-
-        const count = data.length;
-        const ret = new Uint8ClampedArray(count);
-        for (let i = 0; i < count; i++) {
-            ret[i] = data[i] * 255;
-        }
-
-        return ret;
-    }
-
     const versions = new Int16Array(resource, 0, 2);
     const majorVersion = versions[0];
     const minorVersion = versions[1];
@@ -1226,41 +1183,12 @@ AreaLightLuts.prototype.set = function (device, resource) {
         const srcData1 = new Float32Array(resource, 4, 16384);
         const srcData2 = new Float32Array(resource, 4 + 16384 * 4, 16384);
 
-        // pick format for lut texture
-        let data1, data2;
-        const format = device.areaLightLutFormat;
-        if (format === PIXELFORMAT_RGBA32F) {
+        const version = {
+            major: majorVersion,
+            minor: minorVersion
+        };
 
-            // float
-            data1 = srcData1;
-            data2 = srcData2;
-
-        } else if (format === PIXELFORMAT_RGBA16F) {
-
-            // half float
-            data1 = convertToHalfFloat(srcData1);
-            data2 = convertToHalfFloat(srcData2);
-
-        } else {
-
-            // low precision format
-            // offset and scale to avoid clipping and increase precision - this is undone in the shader
-            const o1 = [0.0, 0.2976, 0.01381, 0.0];
-            const s1 = [0.999, 3.08737, 1.6546, 0.603249];
-
-            const o2 = [-0.306897, 0.0, 0.0, 0.0];
-            const s2 = [1.442787, 1.0, 1.0, 1.0];
-
-            data1 = convertToUint(offsetScale(srcData1, o1, s1));
-            data2 = convertToUint(offsetScale(srcData2, o2, s2));
-        }
-
-        // create lut textures
-        const tex1 = buildTexture(device, data1, format);
-        const tex2 = buildTexture(device, data2, format);
-
-        // assign to uniforms
-        AreaLightLuts.applyTextures(device, tex1, tex2);
+        set(device, version, srcData1, srcData2);
     }
 };
 
