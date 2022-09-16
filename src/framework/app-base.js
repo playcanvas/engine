@@ -1610,7 +1610,7 @@ class AppBase extends EventHandler {
     /**
      * Sets the area light LUT asset for this app.
      *
-     * @param {Object} version - version of the LUT table.
+     * @param {object} version - version of the LUT table.
      * @param {Array} LTC_MAT_1 - LUT table of type `array` to be set.
      * @param {Array} LTC_MAT_2 - LUT table of type `array` to be set.
      */
