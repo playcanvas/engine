@@ -425,7 +425,7 @@ class BoundingBox {
      * @example
      * const halfExtents = new pc.Vec3(2, 3, 4);
      * const aabb = new pc.BoundingBox(undefined, halfExtents);
-     * console.log("Half surface area of bounding box is", aabb.area); // 208
+     * console.log("Half surface area of bounding box is", aabb.area); // 104
      * @returns {number} Half the surface area of the bounding box.
      */
     get halfArea() {
