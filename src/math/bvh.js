@@ -287,17 +287,18 @@ class Bvh {
      */
     refit(triangles) {
         this.triangles = triangles;
+        const bvhNode = this.bvhNode;
         for (let i = this.nodesUsed - 1; i >= 0; i--) {
             if (i !== 1) {
-                const node = this.bvhNode[i];
+                const node = bvhNode[i];
                 if (node.isLeaf()) {
                     // adjust bounds to contained triangles for leaf nodes
                     this.updateNodeBounds(i);
                     continue;
                 }
                 // adjust boudns to child node bounds in interior nodes
-                const leftChild = this.bvhNode[node.leftFirst];
-                const rightChild = this.bvhNode[node.leftFirst + 1];
+                const leftChild = bvhNode[node.leftFirst];
+                const rightChild = bvhNode[node.leftFirst + 1];
                 node.aabbMin.min2(leftChild.aabbMin, rightChild.aabbMin);
                 node.aabbMax.max2(leftChild.aabbMax, rightChild.aabbMax);
             }
