@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform float material_metalness;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_metalnessMap;
-#endif
-
 void getMetalness() {
     float metalness = 1.0;
 
@@ -15,7 +11,7 @@ void getMetalness() {
     #endif
 
     #ifdef MAPTEXTURE
-    metalness *= texture2DBias(texture_metalnessMap, $UV, textureBias).$CH;
+    metalness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

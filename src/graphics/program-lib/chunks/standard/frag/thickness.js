@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform float material_thickness;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_thicknessMap;
-#endif
-
 void getThickness() {
     dThickness = 1.0;
 
@@ -15,7 +11,7 @@ void getThickness() {
     #endif
 
     #ifdef MAPTEXTURE
-    dThickness *= texture2DBias(texture_thicknessMap, $UV, textureBias).$CH;
+    dThickness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

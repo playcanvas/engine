@@ -1069,10 +1069,6 @@ const extensionClearCoat = function (data, material, textures) {
         uniform float material_clearCoatGlossiness;
         #endif
         
-        #ifdef MAPTEXTURE
-        uniform sampler2D texture_clearCoatGlossMap;
-        #endif
-        
         void getClearCoatGlossiness() {
             ccGlossiness = 1.0;
         
@@ -1081,7 +1077,7 @@ const extensionClearCoat = function (data, material, textures) {
         #endif
         
         #ifdef MAPTEXTURE
-            ccGlossiness *= texture2DBias(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+            ccGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1282,10 +1278,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         uniform float material_shininess;
         #endif
         
-        #ifdef MAPTEXTURE
-        uniform sampler2D texture_glossMap;
-        #endif
-        
         void getGlossiness() {
             dGlossiness = 1.0;
         
@@ -1294,7 +1286,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         #endif
         
         #ifdef MAPTEXTURE
-            dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
+            dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX

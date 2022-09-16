@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform float material_clearCoat;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_clearCoatMap;
-#endif
-
 void getClearCoat() {
     ccSpecularity = 1.0;
 
@@ -15,7 +11,7 @@ void getClearCoat() {
     #endif
 
     #ifdef MAPTEXTURE
-    ccSpecularity *= texture2DBias(texture_clearCoatMap, $UV, textureBias).$CH;
+    ccSpecularity *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
