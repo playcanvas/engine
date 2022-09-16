@@ -129,6 +129,7 @@ class AreaLightsExample {
             app.start();
 
             // set the loaded area light LUT data
+            // @ts-ignore
             app.setAreaLightLuts(assets.luts);
 
             // set up some general scene rendering properties
