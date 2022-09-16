@@ -327,7 +327,7 @@ class SceneRegistry {
      * });
      */
     loadSceneHierarchy(sceneItem, callback) {
-        this._loadSceneHierarchy(sceneItem, callback);
+        this._loadSceneHierarchy(sceneItem, null, callback);
     }
 
     /**
