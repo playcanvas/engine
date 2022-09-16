@@ -30,12 +30,12 @@
         import { RenderTarget } from '../../src/graphics/render-target.js';
         import {
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
-            PIXELFORMAT_R8_G8_B8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+            PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
         } from '../../src/graphics/constants.js';
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 
-            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC
         } from "../../src/core/constants.js";
         import { Color } from "../../src/math/color.js";
         import { Vec3 } from "../../src/math/vec3.js";
@@ -52,8 +52,8 @@
         import { ContainerHandler } from '../../src/resources/container.js';
 
         const assets = {
-            'playcanvas': new Asset('color', 'texture', { url: '../assets/textures/playcanvas.png' }),
-            'rocks': new Asset('color', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' }),
+            'playcanvas': new Asset('playcanvas.png', 'texture', { url: '../assets/textures/playcanvas.png' }),
+            'rocks': new Asset('seaside-rocks01-diffuse-alpha.png', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' }),
             'model': new Asset('model', 'container', { url: '../assets/models/house.glb' }),
         };
 
@@ -163,10 +163,6 @@ void main() {
 
         function onLoaded(app) {
 
-            // Tracing.set(TRACEID_RENDER_FRAME, true);
-            // Tracing.set(TRACEID_RENDER_PASS, true);
-            Tracing.set(TRACEID_SHADER_ALLOC, true);
-
             app.start();
 
             // Create the shader definition and shader from the vertex and fragment shaders
@@ -222,7 +218,7 @@ void main() {
                 name: 'RT-Texture',
                 width: 512,
                 height: 256,
-                format: PIXELFORMAT_R8_G8_B8,
+                format: PIXELFORMAT_R8_G8_B8_A8,
                 mipmaps: true,
                 minFilter: FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,
@@ -261,22 +257,35 @@ void main() {
             const modelEntity = assets.model.resource.instantiateRenderEntity({
             });
 
-            const renders = modelEntity.findComponents("render");
-            renders.forEach((render) => {
-                const meshInstances = render.meshInstances;
-                for (let i = 0; i < meshInstances.length; i++) {
-                    const meshInstance = meshInstances[i];
-                    meshInstance.material.useLighting = false;
-                }
-            });
+            // const renders = modelEntity.findComponents("render");
+            // renders.forEach((render) => {
+            //     const meshInstances = render.meshInstances;
+            //     for (let i = 0; i < meshInstances.length; i++) {
+            //         const meshInstance = meshInstances[i];
+            //         meshInstance.material.useLighting = false;
+            //     }
+            // });
 
             const modelEntityParent = new Entity();
             modelEntityParent.setLocalScale(20, 20, 20);
             modelEntityParent.addChild(modelEntity);
             app.root.addChild(modelEntityParent);
 
-            ///////////////
+            // LIGHT 
 
+            const lightOmni = new Entity("Omni");
+            lightOmni.addComponent("light", {
+                type: "omni",
+                color: Color.WHITE,
+                intensity: 10,
+                range: 350,
+                castShadows: false,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.2,
+            });
+            app.root.addChild(lightOmni);
+
+            ///////////
 
             let time = 0;
             const rot = new Quat();
@@ -315,6 +324,11 @@ void main() {
         function main() {
 
             console.log("example start");
+
+            // Tracing.set(TRACEID_RENDER_FRAME, true);
+            // Tracing.set(TRACEID_RENDER_PASS, true);
+            Tracing.set(TRACEID_TEXTURE_ALLOC, true);
+            //Tracing.set(TRACEID_SHADER_ALLOC, true);
 
             const canvas = document.querySelector('#gpuCanvas');
 

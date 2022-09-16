@@ -122,7 +122,7 @@ class StandardMaterialOptionsBuilder {
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notBlack(stdMat.specular) || stdMat.specularityFactor > 0 ||
+                            notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
@@ -168,7 +168,7 @@ class StandardMaterialOptionsBuilder {
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
-        options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
+        options.refraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
         options.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
@@ -189,6 +189,9 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
         options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
+
+        options.iridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
+        options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
