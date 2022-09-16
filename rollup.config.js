@@ -262,7 +262,7 @@ function scriptTarget(name, input, output) {
             file: output || input.replace('.mjs', '.js'),
             format: 'umd',
             indent: '\t',
-            name: name,
+            name: name
         },
         plugins: [
             babel(es5Options),
