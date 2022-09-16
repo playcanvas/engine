@@ -59,7 +59,7 @@ class MeshPickerAnimatedExample {
 
             const rayMap : any = [];
 
-            const numRays = 50;
+            const numRays = 100;
 
             const radius = 5;
 
@@ -89,7 +89,7 @@ class MeshPickerAnimatedExample {
 
             const rayMap2 : any = [];
 
-            const numRays2 = 50;
+            const numRays2 = 100;
 
             const radius2 = 7;
 

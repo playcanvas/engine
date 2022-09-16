@@ -159,11 +159,11 @@ class Bvh {
                 leftSum += bin[i].triCount;
                 leftCount[i]  = leftSum;
                 leftBox.setMinMax(_tempVec1.min2(leftBox.getMin(), bin[i].bounds.getMin()), _tempVec1.max2(leftBox.getMax(), bin[i].bounds.getMax()));
-                leftArea[i] = leftBox.area();
+                leftArea[i] = leftBox.halfArea;
                 rightSum += bin[this.bins - 1 - i].triCount;
                 rightCount[this.bins - 2 - i] = rightSum;
                 rightBox.setMinMax(_tempVec1.min2(rightBox.getMin(), bin[this.bins - 1 - i].bounds.getMin()), _tempVec1.max2(rightBox.getMax(), bin[this.bins - 1 - i].bounds.getMax()));
-                rightArea[this.bins - 2 - i] = rightBox.area();
+                rightArea[this.bins - 2 - i] = rightBox.halfArea;
             }
 
             scale = (boundsMax - boundsMin) / this.bins;

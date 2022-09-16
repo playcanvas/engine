@@ -421,9 +421,22 @@ class BoundingBox {
         return sq;
     }
 
-    area() {
-        const halfExtents = this.halfExtents;
-        return 4 * (halfExtents.x * halfExtents.y + halfExtents.z * halfExtents.x + halfExtents.y * halfExtents.z);
+    /**
+     * @example
+     * const halfExtents = new pc.Vec3(2, 3, 4);
+     * const aabb = new pc.BoundingBox(undefined, halfExtents);
+     * console.log("Half surface area of bounding box is", aabb.area); // 208
+     * @returns {number} Half the surface area of the bounding box.
+     */
+    get halfArea() {
+        const { x, y, z } = this.halfExtents;
+        // Multiply halfExtents by 2 and simplify to least amount of add/mul:
+        // == (x*2)*(y*2) + (z*2)*(x*2) + (y*2)*(z*2)
+        // == 4 * x * y   + 4 * z * x   + 4 * y * z
+        // == 4 * (x * y  + z * x       + y * z)
+        // == 4 * (x * (y + z)          + y * z)
+        // This is for three perpendicular sides, but each side exists twice, so 4 turns into 8:
+        return 8 * (x * (y + z) + y * z);
     }
 
     _expand(expandMin, expandMax) {

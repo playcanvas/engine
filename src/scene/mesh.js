@@ -181,10 +181,8 @@ class Mesh extends RefCountedObject {
         super();
         this.id = id++;
         this.device = graphicsDevice || getApplication().graphicsDevice;
-        this.dirtyBVH = true;
         this.triangles = [];
         this.points = [];
-        this.dirtyCount = 0;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -248,6 +246,7 @@ class Mesh extends RefCountedObject {
 
         // BVH
         this.bvh = null;
+        this.dirtyBVH = true;
     }
 
     /**
@@ -852,9 +851,8 @@ class Mesh extends RefCountedObject {
             // update other render states
             this.updateRenderStates();
 
-            // bvh must be rebuilt
+            // BVH must be rebuilt
             this.dirtyBVH = true;
-            this.dirtyCount += 1;
         }
     }
 
@@ -1059,15 +1057,10 @@ class Mesh extends RefCountedObject {
     rayCast(ray) {
 
         // if the BVH doesn't exist, build it
-        // TODO: rebuilding bvh when dirtyCount exceeds limit
-        // dirtyCount is the number of time the bvh has been refitted since the last build
-        // Currently bvh building is not efficient enough for this to be feasible in real-time
-        if (!this.bvh || this.dirtyCount > Infinity) {
+        if (!this.bvh) {
             this.buildTriangleArray();
             this.bvh = new Bvh(this.triangles);
-            this.dirtyCount = 0;
         }
-
 
         // Rebuild triangles and refit the BVH if the mesh has been altered
         if (this.dirtyBVH) {
