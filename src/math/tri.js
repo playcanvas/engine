@@ -47,8 +47,7 @@ class Tri {
      * @returns {number} Distance between ray origin and intersection
      */
     intersectWithRay(ray) {
-        const edge1 = this.edge1;
-        const edge2 = this.edge2;
+        const { edge1, edge2 } = this;
         h.cross(ray.direction, edge2);
         const a = edge1.dot(h);
         if (a > -0.0001 && a < 0.0001) {
