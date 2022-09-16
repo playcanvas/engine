@@ -101,7 +101,7 @@ class MeshPickerExample {
 
                 box.rotate(3 * dt, 10 * dt, 6 * dt);
 
-                boxRenders.forEach((render) => render._meshInstances.forEach((mi) => {
+                boxRenders.forEach((render : any) => render._meshInstances.forEach((mi : any) => {
                     const p =  mi.rayCast(originRay);
                     if (p && p.distance(originRay.origin) < e.distance(originRay.origin)) {
                         e.copy(p);
