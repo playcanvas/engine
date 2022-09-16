@@ -6,7 +6,7 @@ const header =
 `#usda 1.0
 (
     customLayerData = {
-        string creator = "Playcanvas UsdzExporter"
+        string creator = "PlayCanvas UsdzExporter"
     }
     metersPerUnit = 1
     upAxis = "Y"
