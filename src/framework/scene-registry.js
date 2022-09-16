@@ -197,7 +197,7 @@ class SceneRegistry {
             // Split loading into load and open
             const handler = app.loader.getHandler("hierarchy");
 
-            handler.load(url, function (err, data) {
+            handler.load(url, (err, data) => {
                 sceneItem.data = data;
                 sceneItem._loading = false;
 
@@ -262,7 +262,7 @@ class SceneRegistry {
         const app = this._app;
 
         // called after scripts are preloaded
-        const _loaded = function () {
+        const _loaded = () => {
             // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
             // Split loading into load and open
 
@@ -312,7 +312,7 @@ class SceneRegistry {
     loadSceneHierarchy(sceneItem, callback) {
         const self = this;
 
-        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
+        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
             if (err) {
                 if (callback) callback(err);
                 return;
@@ -342,7 +342,7 @@ class SceneRegistry {
     loadSceneSettings(sceneItem, callback) {
         const app = this._app;
 
-        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
+        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
             if (!err) {
                 app.applySceneSettings(sceneItem.data.settings);
                 if (callback) {
@@ -377,7 +377,7 @@ class SceneRegistry {
         const app = this._app;
         const self = this;
 
-        this._loadSceneData(sceneItem, false, function (err, sceneItem) {
+        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
             if (err) {
                 if (callback) {
                     callback(err);
@@ -419,7 +419,7 @@ class SceneRegistry {
             url = path.join(app.assets.prefix, url);
         }
 
-        handler.load(url, function (err, data) {
+        handler.load(url, (err, data) => {
             if (!err) {
                 const _loaded = function () {
                     // parse and create scene
