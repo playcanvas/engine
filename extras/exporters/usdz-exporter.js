@@ -91,7 +91,7 @@ class UsdzExporter {
     nodeNames;
 
     /**
-     * An object, storing a mapping between the file name and a its content. Used as input to fflate to
+     * An object, storing a mapping between the file name and its content. Used as input to fflate to
      * zip up the data.
      *
      * @type {object}
