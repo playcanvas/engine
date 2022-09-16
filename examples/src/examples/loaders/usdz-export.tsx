@@ -1,5 +1,5 @@
 import React from 'react';
-import * as pc from '../../../../build/playcanvas';
+import * as pc from '../../../../';
 import { Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
