@@ -291,6 +291,23 @@ class SceneRegistry {
         app._preloadScripts(data, _loaded);
     }
 
+    _loadSceneHierarchy(sceneItem, onBeforeAddHierarchy, callback) {
+        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+                return;
+            }
+
+            if (onBeforeAddHierarchy) {
+                onBeforeAddHierarchy(sceneItem);
+            }
+
+            this._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
+        });
+    }
+
     /**
      * Load a scene file, create and initialize the Entity hierarchy and add the hierarchy to the
      * application root Entity.
@@ -310,16 +327,7 @@ class SceneRegistry {
      * });
      */
     loadSceneHierarchy(sceneItem, callback) {
-        const self = this;
-
-        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
-            if (err) {
-                if (callback) callback(err);
-                return;
-            }
-
-            self._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
-        });
+        this._loadSceneHierarchy(sceneItem, callback);
     }
 
     /**
@@ -375,17 +383,8 @@ class SceneRegistry {
      */
     changeScene(sceneItem, callback) {
         const app = this._app;
-        const self = this;
 
-        this._loadSceneData(sceneItem, false, (err, sceneItem) => {
-            if (err) {
-                if (callback) {
-                    callback(err);
-                }
-
-                return;
-            }
-
+        const onBeforeAddHierarchy = (sceneItem) => {
             // Destroy/Remove all nodes on the app.root
             const rootChildren = app.root.children;
             while (rootChildren.length > 0) {
@@ -395,8 +394,9 @@ class SceneRegistry {
             }
 
             app.applySceneSettings(sceneItem.data.settings);
-            self._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
-        });
+        };
+
+        this._loadSceneHierarchy(sceneItem, onBeforeAddHierarchy, callback);
     }
 
     /**
@@ -410,7 +410,6 @@ class SceneRegistry {
      */
     loadScene(url, callback) {
         const app = this._app;
-        const self = this;
 
         const handler = app.loader.getHandler("scene");
 
@@ -427,7 +426,7 @@ class SceneRegistry {
                     const scene = handler.open(url, data);
 
                     // Cache the data as we are loading via URL only
-                    const sceneItem = self.findByUrl(url);
+                    const sceneItem = this.findByUrl(url);
                     if (sceneItem && !sceneItem.loaded) {
                         sceneItem.data = data;
                     }
