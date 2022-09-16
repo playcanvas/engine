@@ -1005,6 +1005,17 @@ export const TEXHINT_SHADOWMAP = 1;
 export const TEXHINT_ASSET = 2;
 export const TEXHINT_LIGHTMAP = 3;
 
+export const TEXTUREDIMENSION_1D = '1d';
+export const TEXTUREDIMENSION_2D = '2d';
+export const TEXTUREDIMENSION_2D_ARRAY = '2d-array';
+export const TEXTUREDIMENSION_CUBE = 'cube';
+export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
+export const TEXTUREDIMENSION_3D = '3d';
+
+export const SAMPLETYPE_FLOAT = 'float';
+export const SAMPLETYPE_UNFILTERABLE_FLOAT = 'unfilterable-float';
+export const SAMPLETYPE_DEPTH = 'depth';
+
 /**
  * Texture data is not stored a specific projection format.
  *
@@ -1222,3 +1233,4 @@ semanticToLocation[SEMANTIC_ATTR15] = 15;
 export const CHUNKAPI_1_51 = '1.51';
 export const CHUNKAPI_1_55 = '1.55';
 export const CHUNKAPI_1_56 = '1.56';
+export const CHUNKAPI_1_57 = '1.57';

@@ -1,21 +1,29 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56 } from '../../constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57 } from '../../constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
 const chunkVersions = {
     // frontend
-    aoPS: CHUNKAPI_1_51,
-    clearCoatNormalPS: CHUNKAPI_1_55,
-    diffusePS: CHUNKAPI_1_55,
-    diffuseDetailMapPS: CHUNKAPI_1_55,
-    emissivePS: CHUNKAPI_1_55,
+    aoPS: CHUNKAPI_1_57,
+    clearCoatPS: CHUNKAPI_1_57,
+    clearCoatGlossPS: CHUNKAPI_1_57,
+    clearCoatNormalPS: CHUNKAPI_1_57,
+    diffusePS: CHUNKAPI_1_57,
+    diffuseDetailMapPS: CHUNKAPI_1_57,
+    emissivePS: CHUNKAPI_1_57,
     lightmapDirPS: CHUNKAPI_1_55,
     lightmapSinglePS: CHUNKAPI_1_55,
-    metalnessPS: CHUNKAPI_1_55,
-    specularPS: CHUNKAPI_1_55,
-    normalMapPS: CHUNKAPI_1_55,
-    normalDetailMapPS: CHUNKAPI_1_55,
-    reflectionEnvPS: CHUNKAPI_1_56,
+    metalnessPS: CHUNKAPI_1_57,
+    normalMapPS: CHUNKAPI_1_57,
+    normalDetailMapPS: CHUNKAPI_1_57,
+    opacityPS: CHUNKAPI_1_57,
+    parallaxPS: CHUNKAPI_1_57,
+    sheenPS: CHUNKAPI_1_57,
+    sheenGlossPS: CHUNKAPI_1_57,
+    specularPS: CHUNKAPI_1_57,
+    specularityFactorPS: CHUNKAPI_1_57,
+    thicknessPS: CHUNKAPI_1_57,
+    transmissionPS: CHUNKAPI_1_57,
 
     // backend
     clusteredLightPS: CHUNKAPI_1_55,
@@ -27,7 +35,8 @@ const chunkVersions = {
     lightSpecularBlinnPS: CHUNKAPI_1_55,
     lightSpecularPhongPS: CHUNKAPI_1_55,
     normalVertexPS: CHUNKAPI_1_55,
-    startPS: CHUNKAPI_1_55
+    startPS: CHUNKAPI_1_55,
+    reflectionEnvPS: CHUNKAPI_1_56
 };
 
 // removed

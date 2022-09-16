@@ -7,10 +7,6 @@ uniform vec3 material_emissive;
 uniform float material_emissiveIntensity;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_emissiveMap;
-#endif
-
 void getEmission() {
     dEmission = vec3(1.0);
 
@@ -23,7 +19,7 @@ void getEmission() {
     #endif
 
     #ifdef MAPTEXTURE
-    dEmission *= $DECODE(texture2DBias(texture_emissiveMap, $UV, textureBias)).$CH;
+    dEmission *= $DECODE(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
     #endif
 
     #ifdef MAPVERTEX

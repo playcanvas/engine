@@ -585,6 +585,10 @@ class LitShader {
             if (options.sheen) {
                 this.defines.push("LIT_SHEEN");
             }
+
+            if (options.iridescence) {
+                this.defines.push("LIT_IRIDESCENCE");
+            }
         }
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -744,6 +748,10 @@ class LitShader {
             if (options.fresnelModel === FRESNEL_SCHLICK) {
                 code += chunks.fresnelSchlickPS;
             }
+
+            if (options.iridescence) {
+                code += chunks.iridescenceDiffractionPS;
+            }
         }
 
         const useAo = options.aoMap || options.aoVertexColor;
@@ -781,15 +789,16 @@ class LitShader {
             if (options.clearCoat) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.refraction) {
-                if (options.useDynamicRefraction) {
-                    code += chunks.refractionDynamicPS;
-                } else {
-                    code += chunks.refractionCubePS;
-                }
-            }
             if (options.sheen) {
                 code += chunks.reflectionSheenPS;
+            }
+        }
+
+        if (options.refraction) {
+            if (options.useDynamicRefraction) {
+                code += chunks.refractionDynamicPS;
+            } else if (this.reflections) {
+                code += chunks.refractionCubePS;
             }
         }
 
@@ -991,9 +1000,12 @@ class LitShader {
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
-
             if (options.useMetalness) {
                 code += "    getMetalnessModulate();\n";
+            }
+
+            if (options.iridescence) {
+                code += "    getIridescence(saturate(dot(dViewDirW, dNormalW)));\n";
             }
         }
 
@@ -1026,8 +1038,10 @@ class LitShader {
                 if (options.clearCoat) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
-                        code += "    ccReflection.rgb *= getFresnel(dot(dViewDirW, ccNormalW), vec3(ccSpecularity));\n";
+                        code += "    ccFresnel = dot(dViewDirW, ccNormalW);\n";
+                        code += "    ccReflection.rgb *= getFresnel(ccFresnel, vec3(ccSpecularity));\n";
                     }  else {
+                        code += "    ccFresnel = 0.0;\n";
                         code += "    ccReflection.rgb *= ccSpecularity;\n";
                     }
                 }
@@ -1238,7 +1252,7 @@ class LitShader {
                         code +=  ";\n";
                     }
                     if (options.sheen) {
-                        code += "    dSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color * sSpecularity";
+                        code += "    sSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color * sSpecularity";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code +=  ";\n";
                     }
@@ -1275,7 +1289,7 @@ class LitShader {
                 }
             }
 
-            if (this.reflections && options.refraction) {
+            if (options.refraction) {
                 code += "    addRefraction();\n";
             }
         }
@@ -1354,6 +1368,7 @@ class LitShader {
         if (code.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+        if (code.includes("ccFresnel")) structCode += "float ccFresnel;\n";
         if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";

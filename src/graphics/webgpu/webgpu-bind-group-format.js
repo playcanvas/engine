@@ -1,7 +1,15 @@
+import { Debug } from '../../core/debug.js';
+import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
+
 /** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
 
 import { WebgpuUtils } from './webgpu-utils.js';
+
+const samplerTypes = { };
+samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
+samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
+samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
@@ -91,8 +99,8 @@ class WebgpuBindGroupFormat {
             const visibility = WebgpuUtils.shaderStage(textureFormat.visibility);
 
             // texture
-            const sampleType = 'float';
-            const viewDimension = '2d';
+            const sampleType = textureFormat.sampleType;
+            const viewDimension = textureFormat.textureDimension;
             const multisampled = false;
 
             key += `#${index}T:${visibility}-${sampleType}-${viewDimension}-${multisampled}`;
@@ -115,7 +123,8 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const type = 'filtering';
+            const type = samplerTypes[sampleType];
+            Debug.assert(type);
 
             key += `#${index}S:${visibility}-${type}`;
 

@@ -725,6 +725,13 @@ class StandardMaterial extends Material {
             this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
         }
 
+        if (this.useIridescence) {
+            this._setParameter('material_iridescence', this.iridescence);
+            this._setParameter('material_iridescenceRefractionIndex', this.iridescenceRefractionIndex);
+            this._setParameter('material_iridescenceThicknessMin', this.iridescenceThicknessMin);
+            this._setParameter('material_iridescenceThicknessMax', this.iridescenceThicknessMax);
+        }
+
         this._setParameter('material_opacity', this.opacity);
 
         if (this.opacityFadesSpecular === false) {
@@ -1117,6 +1124,11 @@ function _defineMaterialProps() {
     _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
 
+    _defineFloat('iridescence', 0);
+    _defineFloat('iridescenceRefractionIndex', 1.0 / 1.5);
+    _defineFloat('iridescenceThicknessMin', 0);
+    _defineFloat('iridescenceThicknessMax', 0);
+
     _defineObject('ambientSH');
 
     _defineObject('cubeMapProjectionBox', (material, device, scene) => {
@@ -1175,6 +1187,7 @@ function _defineMaterialProps() {
     _defineFlag('twoSidedLighting', false);
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
     _defineFlag('msdfTextAttribute', false);
+    _defineFlag('useIridescence', false);
 
     _defineTex2D('diffuse', 0, 3, '', true);
     _defineTex2D('specular', 0, 3, '', true);
@@ -1197,6 +1210,9 @@ function _defineMaterialProps() {
     _defineTex2D('clearCoatNormal', 0, -1, '', false);
     _defineTex2D('sheen', 0, 3, '', true);
     _defineTex2D('sheenGloss', 0, 1, '', true);
+
+    _defineTex2D('iridescence', 0, 1, '', true);
+    _defineTex2D('iridescenceThickness', 0, 1, '', true);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');

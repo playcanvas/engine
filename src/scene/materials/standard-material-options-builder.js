@@ -122,7 +122,7 @@ class StandardMaterialOptionsBuilder {
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notBlack(stdMat.specular) || stdMat.specularityFactor > 0 ||
+                            notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
@@ -154,8 +154,10 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.emissiveEncoding = stdMat.emissiveMap ? stdMat.emissiveMap.encoding : null;
-        options.lightMapEncoding = stdMat.lightMap ? stdMat.lightMap.encoding : null;
+        options.diffuseEncoding = stdMat.diffuseMap?.encoding;
+        options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
+        options.emissiveEncoding = stdMat.emissiveMap?.encoding;
+        options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
         options.alphaFade = stdMat.alphaFade;
@@ -168,7 +170,7 @@ class StandardMaterialOptionsBuilder {
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
-        options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
+        options.refraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
         options.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
@@ -189,6 +191,9 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
         options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
+
+        options.iridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
+        options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
@@ -313,6 +318,7 @@ class StandardMaterialOptionsBuilder {
         const cname = mname + 'Channel';
         const tname = mname + 'Transform';
         const uname = mname + 'Uv';
+        const iname = mname + 'Identifier';
 
         // Avoid overriding previous lightMap properties
         if (p !== 'light') {
@@ -342,6 +348,7 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
                     options[mname] = !!stdMat[mname];
+                    options[iname] = stdMat[mname].name;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];

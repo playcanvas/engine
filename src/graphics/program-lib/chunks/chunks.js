@@ -58,6 +58,9 @@ import gles2PS from './common/frag/gles2.js';
 import gles3PS from './common/frag/gles3.js';
 import gles3VS from './common/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
+import iridescencePS from './standard/frag/iridescence.js';
+import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
 import instancingVS from './lit/vert/instancing.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -262,6 +265,9 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    iridescenceDiffractionPS,
+    iridescencePS,
+    iridescenceThicknessPS,
     instancingVS,
     lightDiffuseLambertPS,
     lightDirPointPS,

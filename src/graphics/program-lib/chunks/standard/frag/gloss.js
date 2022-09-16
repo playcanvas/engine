@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform float material_shininess;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_glossMap;
-#endif
-
 void getGlossiness() {
     dGlossiness = 1.0;
 
@@ -15,7 +11,7 @@ void getGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-    dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
+    dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

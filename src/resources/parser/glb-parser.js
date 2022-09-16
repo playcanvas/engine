@@ -1069,10 +1069,6 @@ const extensionClearCoat = function (data, material, textures) {
         uniform float material_clearCoatGlossiness;
         #endif
         
-        #ifdef MAPTEXTURE
-        uniform sampler2D texture_clearCoatGlossMap;
-        #endif
-        
         void getClearCoatGlossiness() {
             ccGlossiness = 1.0;
         
@@ -1081,7 +1077,7 @@ const extensionClearCoat = function (data, material, textures) {
         #endif
         
         #ifdef MAPTEXTURE
-            ccGlossiness *= texture2DBias(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+            ccGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1248,15 +1244,38 @@ const extensionEmissiveStrength = function (data, material, textures) {
     }
 };
 
+const extensionIridescence = function (data, material, textures) {
+    material.useIridescence = true;
+    if (data.hasOwnProperty('iridescenceFactor')) {
+        material.iridescence = data.iridescenceFactor;
+    }
+    if (data.hasOwnProperty('iridescenceTexture')) {
+        material.iridescenceMapChannel = 'r';
+        material.iridescenceMap = textures[data.iridescenceTexture.index];
+        extractTextureTransform(data.iridescenceTexture, material, ['iridescence']);
+
+    }
+    if (data.hasOwnProperty('iridescenceIor')) {
+        material.iridescenceRefractionIndex = data.iridescenceIor;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMinimum')) {
+        material.iridescenceThicknessMin = data.iridescenceThicknessMinimum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessMaximum')) {
+        material.iridescenceThicknessMax = data.iridescenceThicknessMaximum;
+    }
+    if (data.hasOwnProperty('iridescenceThicknessTexture')) {
+        material.iridescenceThicknessMapChannel = 'g';
+        material.iridescenceThicknessMap = textures[data.iridescenceThicknessTexture.index];
+        extractTextureTransform(data.iridescenceThicknessTexture, material, ['iridescenceThickness']);
+    }
+};
+
 const createMaterial = function (gltfMaterial, textures, flipV) {
     // TODO: integrate these shader chunks into the native engine
     const glossChunk = `
         #ifdef MAPFLOAT
         uniform float material_shininess;
-        #endif
-        
-        #ifdef MAPTEXTURE
-        uniform sampler2D texture_glossMap;
         #endif
         
         void getGlossiness() {
@@ -1267,7 +1286,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         #endif
         
         #ifdef MAPTEXTURE
-            dGlossiness *= texture2DBias(texture_glossMap, $UV, textureBias).$CH;
+            dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
         #endif
         
         #ifdef MAPVERTEX
@@ -1413,6 +1432,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
+        "KHR_materials_iridescence": extensionIridescence,
         "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_sheen": extensionSheen,
         "KHR_materials_specular": extensionSpecular,

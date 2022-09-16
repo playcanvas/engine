@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform vec3 material_diffuse;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_diffuseMap;
-#endif
-
 void getAlbedo() {
     dAlbedo = vec3(1.0);
 
@@ -15,7 +11,7 @@ void getAlbedo() {
 #endif
 
 #ifdef MAPTEXTURE
-    vec3 albedoBase = gammaCorrectInput(texture2DBias(texture_diffuseMap, $UV, textureBias).$CH);
+    vec3 albedoBase = $DECODE(texture2DBias($SAMPLER, $UV, textureBias).$CH);
     dAlbedo *= addAlbedoDetail(albedoBase);
 #endif
 

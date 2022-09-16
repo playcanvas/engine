@@ -4,10 +4,6 @@ export default /* glsl */`
 uniform float material_specularityFactor;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_specularityFactorMap;
-#endif
-
 void getSpecularityFactor() {
     float specularityFactor = 1.0;
 
@@ -16,7 +12,7 @@ void getSpecularityFactor() {
     #endif
 
     #ifdef MAPTEXTURE
-    specularityFactor *= texture2DBias(texture_specularityFactorMap, $UV, textureBias).$CH;
+    specularityFactor *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX

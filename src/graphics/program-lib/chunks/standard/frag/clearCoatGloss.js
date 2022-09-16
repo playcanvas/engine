@@ -3,10 +3,6 @@ export default /* glsl */`
 uniform float material_clearCoatGlossiness;
 #endif
 
-#ifdef MAPTEXTURE
-uniform sampler2D texture_clearCoatGlossMap;
-#endif
-
 void getClearCoatGlossiness() {
     ccGlossiness = 1.0;
 
@@ -15,7 +11,7 @@ void getClearCoatGlossiness() {
     #endif
 
     #ifdef MAPTEXTURE
-    ccGlossiness *= texture2DBias(texture_clearCoatGlossMap, $UV, textureBias).$CH;
+    ccGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
