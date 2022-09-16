@@ -52,11 +52,11 @@ class UsdzExportExample {
             app.scene.skyboxMip = 1;
 
             // a link element, created in the html part of the examples.
-            const link = document.getElementById( 'ar-link' );
+            const link = document.getElementById('ar-link');
 
             // convert the loaded entity into asdz file
             new pcx.UsdzExporter().build(entity).then((arrayBuffer: any) => {
-                const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' } );
+                const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
                 // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
                 // the download of the .asdz file triggers its opening in QuickLook AT mode.
@@ -66,7 +66,7 @@ class UsdzExportExample {
                 link.download = "bench.usdz";
 
                 // @ts-ignore
-                link.href = URL.createObjectURL( blob );
+                link.href = URL.createObjectURL(blob);
             }).catch(console.error);
 
             // when clicking on the download UI button, trigger the download
