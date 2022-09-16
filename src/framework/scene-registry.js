@@ -258,39 +258,6 @@ class SceneRegistry {
         }
     }
 
-    _addHierarchyToScene(url, data, callback) {
-        const app = this._app;
-
-        // called after scripts are preloaded
-        const _loaded = () => {
-            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-            // Split loading into load and open
-
-            const handler = app.loader.getHandler("hierarchy");
-
-            app.systems.script.preloading = true;
-            const entity = handler.open(url, data);
-
-            app.systems.script.preloading = false;
-
-            // clear from cache because this data is modified by entity operations (e.g. destroy)
-            app.loader.clearCache(url, "hierarchy");
-
-            // add to hierarchy
-            app.root.addChild(entity);
-
-            // initialize components
-            app.systems.fire('initialize', entity);
-            app.systems.fire('postInitialize', entity);
-            app.systems.fire('postPostInitialize', entity);
-
-            if (callback) callback(null, entity);
-        };
-
-        // load priority and referenced scripts before opening scene
-        app._preloadScripts(data, _loaded);
-    }
-
     _loadSceneHierarchy(sceneItem, onBeforeAddHierarchy, callback) {
         this._loadSceneData(sceneItem, false, (err, sceneItem) => {
             if (err) {
@@ -304,7 +271,35 @@ class SceneRegistry {
                 onBeforeAddHierarchy(sceneItem);
             }
 
-            this._addHierarchyToScene(sceneItem.url, sceneItem.data, callback);
+            const app = this._app;
+
+            // called after scripts are preloaded
+            const _loaded = () => {
+                // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+                // Split loading into load and open
+                const handler = app.loader.getHandler("hierarchy");
+
+                app.systems.script.preloading = true;
+                const entity = handler.open(sceneItem.url, sceneItem.data);
+
+                app.systems.script.preloading = false;
+
+                // clear from cache because this data is modified by entity operations (e.g. destroy)
+                app.loader.clearCache(sceneItem.url, "hierarchy");
+
+                // add to hierarchy
+                app.root.addChild(entity);
+
+                // initialize components
+                app.systems.fire('initialize', entity);
+                app.systems.fire('postInitialize', entity);
+                app.systems.fire('postPostInitialize', entity);
+
+                if (callback) callback(null, entity);
+            };
+
+            // load priority and referenced scripts before opening scene
+            app._preloadScripts(sceneItem.data, _loaded);
         });
     }
 
