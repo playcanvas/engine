@@ -70,7 +70,7 @@ class AreaLightLuts {
     }
 
     // creates LUT texture used by area lights
-    static set(device, resource) {
+    static set(device, version, LTC_MAT_1, LTC_MAT_2) {
 
         function buildTexture(device, data, format) {
             const texture = AreaLightLuts.createTexture(device, format, 64);
@@ -116,16 +116,12 @@ class AreaLightLuts {
             return ret;
         }
 
-        const versions = new Int16Array(resource, 0, 2);
-        const majorVersion = versions[0];
-        const minorVersion = versions[1];
-
-        if (majorVersion !== 0 || minorVersion !== 1) {
-            Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
+        if (version.major !== 0 || version.minor !== 1) {
+            Debug.warn(`areaLightLuts asset version: ${version.major}.${version.minor} is not supported in current engine version!`);
         } else {
 
-            const srcData1 = new Float32Array(resource, 4, 16384);
-            const srcData2 = new Float32Array(resource, 4 + 16384 * 4, 16384);
+            const srcData1 = LTC_MAT_1;
+            const srcData2 = LTC_MAT_2;
 
             // pick format for lut texture
             let data1, data2;

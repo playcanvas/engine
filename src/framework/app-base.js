@@ -863,16 +863,6 @@ class AppBase extends EventHandler {
         }
     }
 
-    // handle area light property
-    _handleAreaLightDataProperty(prop) {
-        const asset = this.assets.get(prop);
-        if (asset) {
-            this.setAreaLightLuts(asset);
-        } else {
-            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
-        }
-    }
-
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         // configure retrying assets
@@ -942,10 +932,6 @@ class AppBase extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
-        }
-
-        if (props.areaLightDataAsset) {
-            this._handleAreaLightDataProperty(props.areaLightDataAsset);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1624,17 +1610,16 @@ class AppBase extends EventHandler {
     /**
      * Sets the area light LUT asset for this app.
      *
-     * @param {Asset} asset - LUT asset of type `binary` to be set.
+     * @param {Object} version - version of the LUT table.
+     * @param {Array} LTC_MAT_1 - LUT table of type `array` to be set.
+     * @param {Array} LTC_MAT_2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(asset) {
-        if (asset) {
+    setAreaLightLuts(version, LTC_MAT_1, LTC_MAT_2) {
+        if (LTC_MAT_1 && LTC_MAT_2) {
             const device = this.graphicsDevice;
-            asset.ready((asset) => {
-                AreaLightLuts.set(device, asset.resource);
-            });
-            this.assets.load(asset);
+            AreaLightLuts.set(device, version, LTC_MAT_1, LTC_MAT_2);
         } else {
-            Debug.warn("setAreaLightLuts: asset is not valid");
+            Debug.warn("setAreaLightLuts: LUT is not valid");
         }
     }
 

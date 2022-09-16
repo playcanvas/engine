@@ -15,6 +15,9 @@ import { BoundingSphere } from '../shape/bounding-sphere.js';
 import { Frustum } from '../shape/frustum.js';
 import { Plane } from '../shape/plane.js';
 
+import { AreaLightLuts } from '../scene/area-light-luts.js';
+import { FloatPacking } from '../math/float-packing.js';
+
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
@@ -25,7 +28,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
     PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
@@ -1152,6 +1155,113 @@ Application.prototype.renderLines = function (position, color, options) {
 
 Application.prototype.enableVr = function () {
     Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
+};
+
+Application.prototype.setAreaLightLuts = function(asset) {
+    if (asset) {
+        const device = this.graphicsDevice;
+        asset.ready((asset) => {
+            AreaLightLuts.set(device, asset.resource);
+        });
+        this.assets.load(asset);
+    } else {
+        Debug.warn("setAreaLightLuts: asset is not valid");
+    }
+};
+
+AreaLightLuts.prototype.set = function (device, resource) {
+
+    function buildTexture(device, data, format) {
+        const texture = AreaLightLuts.createTexture(device, format, 64);
+
+        texture.lock().set(data);
+        texture.unlock();
+        texture.upload();
+
+        return texture;
+    }
+
+    function offsetScale(data, offset, scale) {
+
+        const count = data.length;
+        const ret = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            const n = i % 4;
+            ret[i] = (data[i] + offset[n]) * scale[n];
+        }
+        return ret;
+    }
+
+    function convertToHalfFloat(data) {
+
+        const count = data.length;
+        const ret = new Uint16Array(count);
+        const float2Half = FloatPacking.float2Half;
+        for (let i = 0; i < count; i++) {
+            ret[i] = float2Half(data[i]);
+        }
+
+        return ret;
+    }
+
+    function convertToUint(data) {
+
+        const count = data.length;
+        const ret = new Uint8ClampedArray(count);
+        for (let i = 0; i < count; i++) {
+            ret[i] = data[i] * 255;
+        }
+
+        return ret;
+    }
+
+    const versions = new Int16Array(resource, 0, 2);
+    const majorVersion = versions[0];
+    const minorVersion = versions[1];
+
+    if (majorVersion !== 0 || minorVersion !== 1) {
+        Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
+    } else {
+
+        const srcData1 = new Float32Array(resource, 4, 16384);
+        const srcData2 = new Float32Array(resource, 4 + 16384 * 4, 16384);
+
+        // pick format for lut texture
+        let data1, data2;
+        const format = device.areaLightLutFormat;
+        if (format === PIXELFORMAT_RGBA32F) {
+
+            // float
+            data1 = srcData1;
+            data2 = srcData2;
+
+        } else if (format === PIXELFORMAT_RGBA16F) {
+
+            // half float
+            data1 = convertToHalfFloat(srcData1);
+            data2 = convertToHalfFloat(srcData2);
+
+        } else {
+
+            // low precision format
+            // offset and scale to avoid clipping and increase precision - this is undone in the shader
+            const o1 = [0.0, 0.2976, 0.01381, 0.0];
+            const s1 = [0.999, 3.08737, 1.6546, 0.603249];
+
+            const o2 = [-0.306897, 0.0, 0.0, 0.0];
+            const s2 = [1.442787, 1.0, 1.0, 1.0];
+
+            data1 = convertToUint(offsetScale(srcData1, o1, s1));
+            data2 = convertToUint(offsetScale(srcData2, o2, s2));
+        }
+
+        // create lut textures
+        const tex1 = buildTexture(device, data1, format);
+        const tex2 = buildTexture(device, data2, format);
+
+        // assign to uniforms
+        AreaLightLuts.applyTextures(device, tex1, tex2);
+    }
 };
 
 Object.defineProperty(CameraComponent.prototype, 'node', {
