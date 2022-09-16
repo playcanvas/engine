@@ -1161,33 +1161,27 @@ Application.prototype.setAreaLightLuts = function (asset) {
     if (asset) {
         const device = this.graphicsDevice;
         asset.ready((asset) => {
-            AreaLightLuts.set(device, asset.resource);
+            const versions = new Int16Array(asset.resource, 0, 2);
+            const majorVersion = versions[0];
+            const minorVersion = versions[1];
+
+            if (majorVersion !== 0 || minorVersion !== 1) {
+                Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
+            } else {
+
+                const srcData1 = new Float32Array(asset.resource, 4, 16384);
+                const srcData2 = new Float32Array(asset.resource, 4 + 16384 * 4, 16384);
+
+                const version = {
+                    major: majorVersion,
+                    minor: minorVersion
+                };
+                AreaLightLuts.set(device, version, srcData1, srcData2);
+            }
         });
         this.assets.load(asset);
     } else {
         Debug.warn("setAreaLightLuts: asset is not valid");
-    }
-};
-
-AreaLightLuts.prototype.set = function (device, resource) {
-
-    const versions = new Int16Array(resource, 0, 2);
-    const majorVersion = versions[0];
-    const minorVersion = versions[1];
-
-    if (majorVersion !== 0 || minorVersion !== 1) {
-        Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
-    } else {
-
-        const srcData1 = new Float32Array(resource, 4, 16384);
-        const srcData2 = new Float32Array(resource, 4 + 16384 * 4, 16384);
-
-        const version = {
-            major: majorVersion,
-            minor: minorVersion
-        };
-
-        set(device, version, srcData1, srcData2);
     }
 };
 
