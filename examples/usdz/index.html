@@ -4,15 +4,6 @@
     <meta charset="utf-8" />
     <title>USDZ Test</title>
     <meta name="description" content="WebGPU Test" />
-    <style>
-        #button {
-            position: absolute;
-            top: 200px;
-            left: calc(50% - 400px);
-
-        }
-    </style>
-
     <script src="../../build/playcanvas.dbg.js"></script>
     <script src="../../build/playcanvas-extras.js"></script>
 
@@ -20,7 +11,7 @@
 <body style="margin: 0px;">
     <div style="width:100%; position:absolute; top:10px">
         <div style="text-align: center;">
-            <a id="link" rel="ar" href="" download="asset.usdz">
+            <a id="ar-link" rel="ar" download="asset.usdz">
                 <img id="button" width="500" src="arkit.png">
             </a>    
         </div>
@@ -54,7 +45,7 @@
 
             new pcx.UsdzExporter().build(modelEntity).then((arrayBuffer) => {
                 const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' } );
-                const link = document.getElementById( 'link' );
+                const link = document.getElementById( 'ar-link' );
                 link.href = URL.createObjectURL( blob );
             }).catch(console.error);
         }
