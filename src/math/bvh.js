@@ -326,7 +326,7 @@ class Bvh {
             if (node.isLeaf()) {
                 for (let i = 0; i < node.triCount; i++) {
                     const dist = this.triangles[this.triIdx[node.leftFirst + i]].intersectWithRay(ray);
-                    if (dist != null) {
+                    if (dist) {
                         if (this.minDist == null) {
                             this.minDist = dist;
                         }
