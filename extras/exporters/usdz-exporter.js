@@ -344,7 +344,7 @@ class UsdzExporter {
 
         const buildTexture = (texture, textureIds, mapType, uvChannel, tiling, offset, rotation) => {
 
-            // TODO: texture transform values are passed in but do not work corretly in many cases
+            // TODO: texture transform values are passed in but do not work correctly in many cases
 
             return `
                 def Shader "Transform2d_${mapType}" (
