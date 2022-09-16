@@ -355,7 +355,7 @@ class GltfExporter {
         return json;
     }
 
-    buildGlb(entity) {
+    build(entity) {
         const resources = this.collectResources(entity);
 
         const json = this.buildJson(resources);
@@ -431,3 +431,5 @@ class GltfExporter {
         return glbBuffer;
     }
 }
+
+export { GltfExporter };
