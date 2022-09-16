@@ -63,7 +63,7 @@ class UsdzExportExample {
                 // In other browsers, this simply downloads the generated .asdz file.
 
                 // @ts-ignore
-                link.download="bench.usdz";
+                link.download = "bench.usdz";
 
                 // @ts-ignore
                 link.href = URL.createObjectURL( blob );
