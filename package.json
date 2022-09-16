@@ -88,6 +88,7 @@
     "c8": "^7.12.0",
     "chai": "^4.3.6",
     "eslint": "^8.23.1",
+    "fflate": "^0.7.3",
     "jsdoc": "^3.6.11",
     "jsdoc-tsimport-plugin": "^1.0.5",
     "karma": "^6.4.0",

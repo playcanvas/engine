@@ -19,7 +19,13 @@ Object.keys(exampleData).forEach((categorySlug) => {
     };
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
         const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
-        const ExampleClass = exampleClassesForCategory[`${name}Example`];
+        const className = `${name}Example`;
+        const ExampleClass = exampleClassesForCategory[className];
+
+        if (!ExampleClass) {
+            console.error(`Failed to find example class: ${className}`, exampleClassesForCategory);
+        }
+
         if (i === 0) categories[categorySlug].name = ExampleClass.CATEGORY;
         if (ExampleClass.HIDDEN) return;
         const example = new ExampleClass();
