@@ -3,7 +3,7 @@ import { RefCountedObject } from '../core/ref-counted-object.js';
 
 import { Vec3 } from '../math/vec3.js';
 import { Tri } from '../math/tri.js';
-import { BVHGlobal } from '../math/bvh.js';
+import { Bvh } from '../math/bvh.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 
@@ -1000,6 +1000,8 @@ class Mesh extends RefCountedObject {
 
     /**
      * Builds the array of triangles of the mesh
+     *
+     * @ignore
      */
     buildTriangleArray() {
         const triangles = this.triangles;
@@ -1049,6 +1051,8 @@ class Mesh extends RefCountedObject {
     }
 
     /**
+     * Performs a rayCast on the mesh
+     *
      * @param {Ray} ray - The ray to interesect the mesh with
      * @returns {number} The distance between the ray origin and closest point of intersection
      */
@@ -1056,10 +1060,11 @@ class Mesh extends RefCountedObject {
 
         // if the BVH doesn't exist, build it
         // TODO: rebuilding bvh when dirtyCount exceeds limit
+        // dirtyCount is the number of time the bvh has been refitted since the last build
         // Currently bvh building is not efficient enough for this to be feasible in real-time
         if (!this.bvh || this.dirtyCount > Infinity) {
             this.buildTriangleArray();
-            this.bvh = new BVHGlobal(this.triangles);
+            this.bvh = new Bvh(this.triangles);
             this.dirtyCount = 0;
         }
 
@@ -1067,12 +1072,11 @@ class Mesh extends RefCountedObject {
         // Rebuild triangles and refit the BVH if the mesh has been altered
         if (this.dirtyBVH) {
             this.buildTriangleArray();
-            this.bvh.refitBVH(this.triangles);
+            this.bvh.refit(this.triangles);
             this.dirtyBVH = false;
         }
 
-        this.bvh.minDist = null;
-        this.bvh.intersectBVH(ray, 0);
+        this.bvh.intersect(ray, 0);
 
         return this.bvh.minDist;
     }

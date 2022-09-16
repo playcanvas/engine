@@ -64,9 +64,9 @@ class MeshPickerExample {
 
             const box = assets.statue.resource.instantiateRenderEntity();
 
-            // box.setLocalScale(10, 10, 10);
+            box.setLocalScale(0.5, 0.5, 0.5);
 
-            // box.setLocalPosition(0, 0, 0);
+            box.setLocalPosition(0, -4, 0);
 
             app.root.addChild(box);
 

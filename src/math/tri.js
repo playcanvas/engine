@@ -7,6 +7,9 @@ const h = new Vec3();
 const s = new Vec3();
 const q = new Vec3();
 
+// Constants
+const third = 1 / 3;
+
 /**
  * Class for representing a triangle in 3D space
  */
@@ -17,14 +20,12 @@ class Tri {
      * @param {Vec3} vertex0 - Vertex 0 value
      * @param {Vec3} vertex1 - Vertex 1 value
      * @param {Vec3} vertex2 - Vertex 2 value
-     * @param {Vec3} [centroid] - Centroid value
      */
-
-    constructor(vertex0, vertex1, vertex2, centroid) {
+    constructor(vertex0, vertex1, vertex2) {
         this.vertex0 = vertex0;
         this.vertex1 = vertex1;
         this.vertex2 = vertex2;
-        this.centroid = centroid;
+        this.centroid = new Vec3();
         this.edge1 = new Vec3();
         this.edge1.sub2(this.vertex1, this.vertex0);
         this.edge2 = new Vec3();
@@ -66,6 +67,17 @@ class Tri {
         if (t > 0.0001) {
             return t;
         }
+    }
+
+    /**
+     * Calculates the centroid for the triangle
+     */
+    calculateCentroid() {
+        this.centroid.set(0, 0, 0);
+        this.centroid.add(this.vertex0);
+        this.centroid.add(this.vertex1);
+        this.centroid.add(this.vertex2);
+        this.centroid.mulScalar(third);
     }
 }
 

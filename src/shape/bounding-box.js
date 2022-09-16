@@ -422,9 +422,8 @@ class BoundingBox {
     }
 
     area() {
-        const extents = this.halfExtents.clone();
-        extents.mulScalar(2);
-        return extents.x * extents.y + extents.z * extents.x + extents.y * extents.z;
+        const halfExtents = this.halfExtents;
+        return 4 * (halfExtents.x * halfExtents.y + halfExtents.z * halfExtents.x + halfExtents.y * halfExtents.z);
     }
 
     _expand(expandMin, expandMax) {

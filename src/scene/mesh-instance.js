@@ -23,7 +23,6 @@ import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './lightmapper/lightmap-cache.js';
 import { Mat4 } from '../math/mat4.js';
 import { Ray } from '../shape/ray.js';
-import { Vec3 } from '../math/vec3.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/shader.js').Shader} Shader */
@@ -44,8 +43,7 @@ const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
 const _worldTransformInverted = new Mat4();
 const _transformedRay = new Ray();
-const _direction = new Vec3();
-const _hitPoint = new Vec3();
+
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -475,14 +473,11 @@ class MeshInstance {
         _transformedRay.transform(_worldTransformInverted);
         _transformedRay.direction.normalize();
         const dist = this._mesh.rayCast(_transformedRay);
-        if (dist != null) {
-            _direction.copy(_transformedRay.direction);
-            _direction.normalize();
-            _hitPoint.copy(_transformedRay.origin);
-            _direction.mulScalar(dist);
-            _hitPoint.add(_direction);
-            this.node.getWorldTransform().transformPoint(_hitPoint);
-            return _hitPoint;
+        if (dist) {
+            _transformedRay.direction.mulScalar(dist);
+            _transformedRay.origin.add(_transformedRay.direction);
+            this.node.getWorldTransform().transformPoint(_transformedRay.origin, _transformedRay.origin);
+            return _transformedRay.origin;
         }
         return null;
     }

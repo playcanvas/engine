@@ -495,6 +495,34 @@ class Vec3 {
     }
 
     /**
+     * Performs a min with two vectors and outputs the product to this
+     *
+     * @param {Vec3} lhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @param {Vec3} rhs - A second 3-dimensional vector used as the source of elements to compare the first with
+     * @returns {Vec3} Self for chaining.
+     */
+    min2(lhs, rhs) {
+        this.x = Math.min(lhs.x, rhs.x);
+        this.y = Math.min(lhs.y, rhs.y);
+        this.z = Math.min(lhs.z, rhs.z);
+        return this;
+    }
+
+    /**
+     * Performs a max with two vectors and outputs the product to this
+     *
+     * @param {Vec3} lhs - The 3-dimensional vector used as the source of elements to compare to.
+     * @param {Vec3} rhs - A second 3-dimensional vector used as the source of elements to compare the first with
+     * @returns {Vec3} Self for chaining.
+     */
+    max2(lhs, rhs) {
+        this.x = Math.max(lhs.x, rhs.x);
+        this.y = Math.max(lhs.y, rhs.y);
+        this.z = Math.max(lhs.z, rhs.z);
+        return this;
+    }
+
+    /**
      * Projects this 3-dimensional vector onto the specified vector.
      *
      * @param {Vec3} rhs - The vector onto which the original vector will be projected on.

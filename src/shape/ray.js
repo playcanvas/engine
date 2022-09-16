@@ -57,8 +57,8 @@ class Ray {
      * @param {Mat4} matrix - The transformation matrix for the ray
      */
     transform(matrix) {
-        matrix.transformPoint(this.origin);
-        matrix.transformVector(this.direction);
+        matrix.transformPoint(this.origin, this.origin);
+        matrix.transformVector(this.direction, this.direction);
     }
 }
 

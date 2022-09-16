@@ -4,6 +4,14 @@ import { BoundingBox } from '../shape/bounding-box.js';
 /** @typedef {import('../shape/ray.js').Ray} Ray */
 /** @typedef {import('../math/tri.js').Tri} Tri */
 
+// Temporary variables for calculations
+const _tempVec1 = new Vec3();
+
+/**
+ * Class for storing a single BVH node
+ *
+ * @ignore
+ */
 class BVHNode {
     /**
      * Create a new BVHNode
@@ -14,7 +22,7 @@ class BVHNode {
      * @param {number} [triCount] - The number of primitives
      * @ignore
      */
-    constructor(aabbMin, aabbMax, leftFirst, triCount) {
+    constructor(aabbMin = new Vec3(), aabbMax = new Vec3(), leftFirst = null, triCount = 0) {
         this.aabbMin = aabbMin || new Vec3();
         this.aabbMax = aabbMax || new Vec3();
         this.leftFirst = leftFirst || null;
@@ -47,8 +55,10 @@ class Bin {
 
 /**
  * Used to store the BVH, triangles and minimum ray intersection distance for a single mesh
+ *
+ * @ignore
  */
-class BVHGlobal {
+class Bvh {
     /**
      * Create a new array to store the BVH and helpers
      *
@@ -63,14 +73,16 @@ class BVHGlobal {
         this.minDist = null;
 
         this.updateNodeBounds = this.updateNodeBounds.bind(this);
-        this.Subdivide = this.Subdivide.bind(this);
-        this.buildBVH = this.buildBVH.bind(this);
+        this.subdivide = this.subdivide.bind(this);
+        this.build = this.build.bind(this);
         this.intersectAABB = this.intersectAABB.bind(this);
-        this.intersectBVH = this.intersectBVH.bind(this);
+        this.intersect = this.intersect.bind(this);
 
         this.bins = args.bins || 10;
 
-        this.buildBVH();
+        this.stack = [];
+
+        this.build();
     }
 
     /**
@@ -89,47 +101,13 @@ class BVHGlobal {
         for (let i = 0; i < triCount; i++) {
             const leafTriIdx = this.triIdx[first + i];
             const leafTri = triangles[leafTriIdx];
-            vec3Min(node.aabbMin, leafTri.vertex0, node.aabbMin);
-            vec3Min(node.aabbMin, leafTri.vertex1, node.aabbMin);
-            vec3Min(node.aabbMin, leafTri.vertex2, node.aabbMin);
-            vec3Max(node.aabbMax, leafTri.vertex0, node.aabbMax);
-            vec3Max(node.aabbMax, leafTri.vertex1, node.aabbMax);
-            vec3Max(node.aabbMax, leafTri.vertex2, node.aabbMax);
+            node.aabbMin.min(leafTri.vertex0);
+            node.aabbMin.min(leafTri.vertex1);
+            node.aabbMin.min(leafTri.vertex2);
+            node.aabbMax.max(leafTri.vertex0);
+            node.aabbMax.max(leafTri.vertex1);
+            node.aabbMax.max(leafTri.vertex2);
         }
-    }
-
-    /**
-     * Evaluates the surface area heuristic of a split in the BVH - Not used currently
-     *
-     * @param {BVHNode} node - The node at which the split is to be evaluated
-     * @param {number} axis - The axis to divide along
-     * @param {number} pos - The position to divide at
-     * @returns {number} The cost of the split
-     * @ignore
-     */
-    evaluateSAH(node, axis, pos) {
-        const leftBox = new BoundingBox(new Vec3(), new Vec3());
-        const rightBox = new BoundingBox(new Vec3(), new Vec3());
-        let leftCount = 0, rightCount = 0;
-        const lAxis = ['x', 'y', 'z'][axis];
-        const { triangles } = this;
-
-        for (let i = 0; i < node.triCount; i++) {
-            const triangle = triangles[this.triIdx[node.leftFirst + i]];
-            if (triangle.centroid[lAxis] < pos) {
-                leftCount++;
-                leftBox.setMinMax(vec3Min(leftBox.getMin(), triangle.vertex0), vec3Max(leftBox.getMax(), triangle.vertex0));
-                leftBox.setMinMax(vec3Min(leftBox.getMin(), triangle.vertex1), vec3Max(leftBox.getMax(), triangle.vertex1));
-                leftBox.setMinMax(vec3Min(leftBox.getMin(), triangle.vertex2), vec3Max(leftBox.getMax(), triangle.vertex2));
-            } else {
-                rightCount++;
-                rightBox.setMinMax(vec3Min(rightBox.getMin(), triangle.vertex0), vec3Max(rightBox.getMax(), triangle.vertex0));
-                rightBox.setMinMax(vec3Min(rightBox.getMin(), triangle.vertex1), vec3Max(rightBox.getMax(), triangle.vertex1));
-                rightBox.setMinMax(vec3Min(rightBox.getMin(), triangle.vertex2), vec3Max(rightBox.getMax(), triangle.vertex2));
-            }
-        }
-        const cost = leftCount * leftBox.area() + rightCount * rightBox.area();
-        return cost > 0 ? cost : Infinity;
     }
 
     /**
@@ -163,9 +141,9 @@ class BVHGlobal {
                 const triangle = triangles[triIdx[node.leftFirst + i]];
                 const binIdx = Math.min(this.bins - 1, Math.floor((triangle.centroid[b] - boundsMin) * scale));
                 bin[binIdx].triCount++;
-                bin[binIdx].bounds.setMinMax(vec3Min(bin[binIdx].bounds.getMin(), triangle.vertex0), vec3Max(bin[binIdx].bounds.getMax(), triangle.vertex0));
-                bin[binIdx].bounds.setMinMax(vec3Min(bin[binIdx].bounds.getMin(), triangle.vertex1), vec3Max(bin[binIdx].bounds.getMax(), triangle.vertex1));
-                bin[binIdx].bounds.setMinMax(vec3Min(bin[binIdx].bounds.getMin(), triangle.vertex2), vec3Max(bin[binIdx].bounds.getMax(), triangle.vertex2));
+                bin[binIdx].bounds.setMinMax(_tempVec1.min2(bin[binIdx].bounds.getMin(), triangle.vertex0), _tempVec1.max2(bin[binIdx].bounds.getMax(), triangle.vertex0));
+                bin[binIdx].bounds.setMinMax(_tempVec1.min2(bin[binIdx].bounds.getMin(), triangle.vertex1), _tempVec1.max2(bin[binIdx].bounds.getMax(), triangle.vertex1));
+                bin[binIdx].bounds.setMinMax(_tempVec1.min2(bin[binIdx].bounds.getMin(), triangle.vertex2), _tempVec1.max2(bin[binIdx].bounds.getMax(), triangle.vertex2));
             }
             const leftArea = Array(this.bins - 1);
             const rightArea = Array(this.bins - 1);
@@ -180,11 +158,11 @@ class BVHGlobal {
             for (let i = 0; i < this.bins - 1; i++) {
                 leftSum += bin[i].triCount;
                 leftCount[i]  = leftSum;
-                leftBox.setMinMax(vec3Min(leftBox.getMin(), bin[i].bounds.getMin()), vec3Max(leftBox.getMax(), bin[i].bounds.getMax()));
+                leftBox.setMinMax(_tempVec1.min2(leftBox.getMin(), bin[i].bounds.getMin()), _tempVec1.max2(leftBox.getMax(), bin[i].bounds.getMax()));
                 leftArea[i] = leftBox.area();
                 rightSum += bin[this.bins - 1 - i].triCount;
                 rightCount[this.bins - 2 - i] = rightSum;
-                rightBox.setMinMax(vec3Min(rightBox.getMin(), bin[this.bins - 1 - i].bounds.getMin()), vec3Max(rightBox.getMax(), bin[this.bins - 1 - i].bounds.getMax()));
+                rightBox.setMinMax(_tempVec1.min2(rightBox.getMin(), bin[this.bins - 1 - i].bounds.getMin()), _tempVec1.max2(rightBox.getMax(), bin[this.bins - 1 - i].bounds.getMax()));
                 rightArea[this.bins - 2 - i] = rightBox.area();
             }
 
@@ -209,10 +187,10 @@ class BVHGlobal {
      * @ignore
      */
     calculateNodeCost(node) {
-        const extent = new Vec3();
-        extent.sub2(node.aabbMax, node.aabbMin);
+        // Calculate the extent of the node's aabb
+        _tempVec1.sub2(node.aabbMax, node.aabbMin);
 
-        const surfaceArea = extent.x * extent.y + extent.y * extent.z + extent.z * extent.x;
+        const surfaceArea = _tempVec1.x * _tempVec1.y + _tempVec1.y * _tempVec1.z + _tempVec1.z * _tempVec1.x;
 
         return node.triCount * surfaceArea;
     }
@@ -223,7 +201,7 @@ class BVHGlobal {
      * @param {number} nodeIdx - The index of the node to subdivide at
      * @ignore
      */
-    Subdivide(nodeIdx) {
+    subdivide(nodeIdx) {
         const node = this.bvhNode[nodeIdx];
 
         const { triangles, triIdx } = this;
@@ -237,14 +215,7 @@ class BVHGlobal {
 
         const splitPos = splitDetails.splitPos;
 
-        // const noSplitCost = this.calculateNodeCost(node);
-
-        // terminates tree building based on split cost
-        // if (splitCost >= noSplitCost) {
-        //     return;
-        // }
-
-        // terminates tree building when number of leafnodes is less than 5
+        // terminates tree building when number of leafnodes is less than a threshold
         if (node.triCount < 10) {
             return;
         }
@@ -279,8 +250,8 @@ class BVHGlobal {
         this.updateNodeBounds(rightChildIdx);
 
         // Recurse into each of the child nodes
-        this.Subdivide(leftChildIdx);
-        this.Subdivide(rightChildIdx);
+        this.subdivide(leftChildIdx);
+        this.subdivide(rightChildIdx);
     }
 
     /**
@@ -288,29 +259,24 @@ class BVHGlobal {
      *
      * @ignore
      */
-    buildBVH() {
+    build() {
         const { triangles } = this;
-        const N = triangles.length;
-        this.triIdx = Array.from({ length: N }, (x, i) => i);
-        this.bvhNode = Array.apply(null, Array(N * 2)).map(function () {
+        const n = triangles.length;
+        this.triIdx = Array.from({ length: n }, (x, i) => i);
+        this.bvhNode = Array.apply(null, Array(n * 2)).map(function () {
             return new BVHNode();
         });
         const rootNodeIdx = 0;
         this.nodesUsed = 1;
 
-        for (let i = 0; i < N; i++) {
-            triangles[i].centroid = new Vec3();
-            triangles[i].centroid.add(triangles[i].vertex0);
-            triangles[i].centroid.add(triangles[i].vertex1);
-            triangles[i].centroid.add(triangles[i].vertex2);
-            triangles[i].centroid.mulScalar(1 / 3);
+        for (let i = 0; i < n; i++) {
+            triangles[i].calculateCentroid();
         }
-
         const root = this.bvhNode[0];
         root.leftFirst = 0;
-        root.triCount = N;
+        root.triCount = n;
         this.updateNodeBounds(rootNodeIdx);
-        this.Subdivide(rootNodeIdx);
+        this.subdivide(rootNodeIdx);
     }
 
     /**
@@ -319,7 +285,7 @@ class BVHGlobal {
      * @param {Tri[]} triangles - The triangles to refit the BVH on
      * @ignore
      */
-    refitBVH(triangles) {
+    refit(triangles) {
         this.triangles = triangles;
         for (let i = this.nodesUsed - 1; i >= 0; i--) {
             if (i !== 1) {
@@ -332,8 +298,8 @@ class BVHGlobal {
                 // adjust boudns to child node bounds in interior nodes
                 const leftChild = this.bvhNode[node.leftFirst];
                 const rightChild = this.bvhNode[node.leftFirst + 1];
-                vec3Min(leftChild.aabbMin, rightChild.aabbMin, node.aabbMin);
-                vec3Max(leftChild.aabbMax, rightChild.aabbMax, node.aabbMax);
+                node.aabbMin.min2(leftChild.aabbMin, rightChild.aabbMin);
+                node.aabbMax.max2(leftChild.aabbMax, rightChild.aabbMax);
             }
         }
     }
@@ -345,10 +311,16 @@ class BVHGlobal {
      * @param {number} nodeIdx - The index of the node to begin the raycast at (default is zero: the root)
      * @ignore
      */
-    intersectBVH(ray, nodeIdx = 0) {
+    intersect(ray, nodeIdx = 0) {
+        this.minDist = null;
+        const stack = this.stack;
+        stack.length = 0;
+
+        ray.rDx = 1 / ray.direction.x;
+        ray.rDy = 1 / ray.direction.y;
+        ray.rDz = 1 / ray.direction.z;
 
         let node = this.bvhNode[nodeIdx];
-        const stack = [];
         let stackPtr = 0;
         while (true) {
             if (node.isLeaf()) {
@@ -402,9 +374,7 @@ class BVHGlobal {
      * @ignore
      */
     intersectAABB(ray, bmin, bmax) {
-        ray.rDx = 1 / ray.direction.x;
-        ray.rDy = 1 / ray.direction.y;
-        ray.rDz = 1 / ray.direction.z;
+
         const tx1 = (bmin.x - ray.origin.x) * ray.rDx;
         const tx2 = (bmax.x - ray.origin.x) * ray.rDx;
         let tmin = Math.min(tx1, tx2);
@@ -424,33 +394,4 @@ class BVHGlobal {
     }
 }
 
-
-/**
- * Returns a vector with the minimum x, y and z coordinates of the two vectors passed in
- *
- * @param {Vec3} a - First Vector
- * @param {Vec3} b - Second Vector
- * @param {Vec3} [c] - The vector to output the result to - default is new Vec3()
- * @returns {Vec3} Returns the vector result
- * @ignore
- */
-function vec3Min(a, b, c = new Vec3()) {
-    c.set(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
-    return c;
-}
-
-/**
- * Returns a vector with the maximum x, y and z coordinates of the two vectors passed in
- *
- * @param {Vec3} a - First Vector
- * @param {Vec3} b - Second Vector
- * @param {Vec3} [c] - The vector to output the result to - default is new Vec3()
- * @returns {Vec3} Returns the vector result
- * @ignore
- */
-function vec3Max(a, b, c = new Vec3()) {
-    c.set(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
-    return c;
-}
-
-export { BVHGlobal };
+export { Bvh };
