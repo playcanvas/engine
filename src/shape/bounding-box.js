@@ -435,8 +435,7 @@ class BoundingBox {
         // == 4 * x * y   + 4 * z * x   + 4 * y * z
         // == 4 * (x * y  + z * x       + y * z)
         // == 4 * (x * (y + z)          + y * z)
-        // This is for three perpendicular sides, but each side exists twice, so 4 turns into 8:
-        return 8 * (x * (y + z) + y * z);
+        return 4 * (x * (y + z) + y * z);
     }
 
     _expand(expandMin, expandMax) {
