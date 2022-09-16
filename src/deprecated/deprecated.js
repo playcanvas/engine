@@ -16,7 +16,6 @@ import { Frustum } from '../shape/frustum.js';
 import { Plane } from '../shape/plane.js';
 
 import { AreaLightLuts } from '../scene/area-light-luts.js';
-import { FloatPacking } from '../math/float-packing.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -28,7 +27,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
     PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
@@ -1158,7 +1157,7 @@ Application.prototype.enableVr = function () {
     Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
 };
 
-Application.prototype.setAreaLightLuts = function(asset) {
+Application.prototype.setAreaLightLuts = function (asset) {
     if (asset) {
         const device = this.graphicsDevice;
         asset.ready((asset) => {
