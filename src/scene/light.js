@@ -715,16 +715,28 @@ class Light {
         const b = color.b;
 
         let i = this._intensity;
-        if (this._scene?.physicalUnits) {
-            if (this._type === LIGHTTYPE_SPOT) {
-                const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
-                const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
 
-                i = this._luminance / (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
-            } else if (this._type === LIGHTTYPE_OMNI) {
-                i = this._luminance / (4 * Math.PI);
-            } else {
-                i = this._luminance;
+        // To calculate the lux, which is lm/m^2, we need to convert from luminous power
+        if (this._scene?.physicalUnits) {
+            switch (this._type) {
+                case LIGHTTYPE_SPOT: {
+                    
+                    const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
+                    const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
+
+                    // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
+                    i = this._luminance / (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
+                    break;
+                }
+                case LIGHTTYPE_OMNI:
+                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
+                    i = this._luminance / (4 * Math.PI);
+                    break;
+                case LIGHTTYPE_DIRECTIONAL:
+                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
+                    // Directional light luminance is already in lux
+                    i = this._luminance;
+                    break;
             }
         }
 
