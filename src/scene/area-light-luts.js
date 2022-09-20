@@ -1,4 +1,3 @@
-import { Debug } from '../core/debug.js';
 import { FloatPacking } from '../math/float-packing.js';
 import { Texture } from '../graphics/texture.js';
 import { DeviceCache } from '../graphics/device-cache.js';
