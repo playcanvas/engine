@@ -414,7 +414,7 @@ class SceneRegistry {
 
         handler.load(url, (err, data) => {
             if (!err) {
-                const _loaded = function () {
+                const _loaded = () => {
                     // parse and create scene
                     app.systems.script.preloading = true;
                     const scene = handler.open(url, data);
