@@ -174,7 +174,6 @@ class AreaLightsExample {
             app.start();
 
             // set the loaded area light LUT data
-            // @ts-ignore
             const luts = assets.luts.resource;
             app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
