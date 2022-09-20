@@ -343,11 +343,9 @@ class SceneRegistry {
      * });
      */
     loadSceneSettings(sceneItem, callback) {
-        const app = this._app;
-
         this._loadSceneData(sceneItem, false, (err, sceneItem) => {
             if (!err) {
-                app.applySceneSettings(sceneItem.data.settings);
+                this._app.applySceneSettings(sceneItem.data.settings);
                 if (callback) {
                     callback(null);
                 }
