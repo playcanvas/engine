@@ -153,6 +153,8 @@ class Light {
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
+        this._usesPhysicalUnits = false;
+
         // Shadow mapping resources
         this._shadowMap = null;
         this._shadowRenderParams = [];
