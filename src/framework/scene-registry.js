@@ -166,10 +166,11 @@ class SceneRegistry {
 
         // If it's just a URL or scene name then attempt to find
         // the scene item in the registry else create a temp
-        // SceneRegistryItem to use for this function
+        // SceneRegistryItem to use for this function as the scene
+        // may not have been added to the registry
         let url = sceneItem;
         if (typeof sceneItem === 'string') {
-            sceneItem = this.findByUrl(url) || this.find(url) || new SceneRegistryItem('Untitled', null);
+            sceneItem = this.findByUrl(url) || this.find(url) || new SceneRegistryItem('Untitled', url);
         }
 
         url = sceneItem.url;
