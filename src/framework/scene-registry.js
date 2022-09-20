@@ -367,7 +367,7 @@ class SceneRegistry {
      * @param {ChangeSceneCallback} [callback] - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
-     * app.scenes.ChangeScene("Scene Name", function (err, entity) {
+     * app.scenes.changeScene("Scene Name", function (err, entity) {
      *     if (!err) {
      *         // success
      *     } else {
