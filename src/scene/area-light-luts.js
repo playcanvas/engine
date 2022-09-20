@@ -119,7 +119,6 @@ class AreaLightLuts {
         if (version.major !== 0 || version.minor !== 1) {
             Debug.warn(`areaLightLuts asset version: ${version.major}.${version.minor} is not supported in current engine version!`);
         } else {
-
             const srcData1 = LTC_MAT_1;
             const srcData2 = LTC_MAT_2;
 

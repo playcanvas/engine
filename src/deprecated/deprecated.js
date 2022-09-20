@@ -16,6 +16,7 @@ import { Frustum } from '../shape/frustum.js';
 import { Plane } from '../shape/plane.js';
 
 import { AreaLightLuts } from '../scene/area-light-luts.js';
+import { AppBase } from '../framework/app-base.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -114,7 +115,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../resources/basis.js';
-import { set } from 'src/core/set-utils.js';
 
 // CORE
 
@@ -1157,7 +1157,8 @@ Application.prototype.enableVr = function () {
     Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
 };
 
-Application.prototype.setAreaLightLuts = function (asset) {
+AppBase.prototype.setAreaLightLuts = function (asset) {
+    Debug.deprecated('pc.setAreaLightLuts(asset) is deprecated. Use pc.AppBase.setAreaLightLuts(version, LTC_MAT_1, LTC_MAT_2) instead.');
     if (asset) {
         const device = this.graphicsDevice;
         asset.ready((asset) => {
