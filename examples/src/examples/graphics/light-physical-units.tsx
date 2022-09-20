@@ -127,7 +127,7 @@ class LightPhysicalUnitsExample {
             material.update();
 
             const plane = new pc.Entity();
-            plane.addComponent('model', {
+            plane.addComponent('render', {
                 type: 'plane',
                 material: material
             });
