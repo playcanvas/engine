@@ -146,16 +146,6 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('try to load scene data that does not exist by name', async function () {
-            const registry = new SceneRegistry(app);
-            registry.add('New Scene 1', `${assetPath}scene.json`);
-
-            const err = await promisedLoadSceneData(registry, 'Scene 2');
-
-            expect(err).to.exist;
-            expect(err).to.equal('Cannot find scene to load');
-        });
-
         it('try to load scene data that by name', async function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
