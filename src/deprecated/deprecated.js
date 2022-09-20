@@ -1172,12 +1172,7 @@ AppBase.prototype.setAreaLightLuts = function (asset) {
 
                 const srcData1 = new Float32Array(asset.resource, 4, 16384);
                 const srcData2 = new Float32Array(asset.resource, 4 + 16384 * 4, 16384);
-
-                const version = {
-                    major: majorVersion,
-                    minor: minorVersion
-                };
-                AreaLightLuts.set(device, version, srcData1, srcData2);
+                AreaLightLuts.set(device, srcData1, srcData2);
             }
         });
         this.assets.load(asset);

@@ -176,7 +176,7 @@ class AreaLightsExample {
             // set the loaded area light LUT data
             // @ts-ignore
             const luts = assets.luts.resource;
-            app.setAreaLightLuts(luts.version, luts.LTC_MAT_1, luts.LTC_MAT_2);
+            app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
             // set up some general scene rendering properties
             app.scene.toneMapping = pc.TONEMAP_ACES;

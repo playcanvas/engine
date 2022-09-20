@@ -1610,14 +1610,13 @@ class AppBase extends EventHandler {
     /**
      * Sets the area light LUT asset for this app.
      *
-     * @param {object} version - version of the LUT table.
      * @param {Array} LTC_MAT_1 - LUT table of type `array` to be set.
      * @param {Array} LTC_MAT_2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(version, LTC_MAT_1, LTC_MAT_2) {
+    setAreaLightLuts(LTC_MAT_1, LTC_MAT_2) {
         if (LTC_MAT_1 && LTC_MAT_2) {
             const device = this.graphicsDevice;
-            AreaLightLuts.set(device, version, LTC_MAT_1, LTC_MAT_2);
+            AreaLightLuts.set(device, LTC_MAT_1, LTC_MAT_2);
         } else {
             Debug.warn("setAreaLightLuts: LUT is not valid");
         }
