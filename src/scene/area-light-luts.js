@@ -69,7 +69,7 @@ class AreaLightLuts {
     }
 
     // creates LUT texture used by area lights
-    static set(device, LTC_MAT_1, LTC_MAT_2) {
+    static set(device, ltcMat1, ltcMat2) {
 
         function buildTexture(device, data, format) {
             const texture = AreaLightLuts.createTexture(device, format, 64);
@@ -115,8 +115,8 @@ class AreaLightLuts {
             return ret;
         }
 
-        const srcData1 = LTC_MAT_1;
-        const srcData2 = LTC_MAT_2;
+        const srcData1 = ltcMat1;
+        const srcData2 = ltcMat2;
 
         // pick format for lut texture
         let data1, data2;

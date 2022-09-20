@@ -15,9 +15,6 @@ import { BoundingSphere } from '../shape/bounding-sphere.js';
 import { Frustum } from '../shape/frustum.js';
 import { Plane } from '../shape/plane.js';
 
-import { AreaLightLuts } from '../scene/area-light-luts.js';
-import { AppBase } from '../framework/app-base.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
@@ -1155,30 +1152,6 @@ Application.prototype.renderLines = function (position, color, options) {
 
 Application.prototype.enableVr = function () {
     Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
-};
-
-AppBase.prototype.setAreaLightLuts = function (asset) {
-    Debug.deprecated('pc.setAreaLightLuts(asset) is deprecated. Use pc.AppBase.setAreaLightLuts(version, LTC_MAT_1, LTC_MAT_2) instead.');
-    if (asset) {
-        const device = this.graphicsDevice;
-        asset.ready((asset) => {
-            const versions = new Int16Array(asset.resource, 0, 2);
-            const majorVersion = versions[0];
-            const minorVersion = versions[1];
-
-            if (majorVersion !== 0 || minorVersion !== 1) {
-                Debug.warn(`areaLightLuts asset version: ${majorVersion}.${minorVersion} is not supported in current engine version!`);
-            } else {
-
-                const srcData1 = new Float32Array(asset.resource, 4, 16384);
-                const srcData2 = new Float32Array(asset.resource, 4 + 16384 * 4, 16384);
-                AreaLightLuts.set(device, srcData1, srcData2);
-            }
-        });
-        this.assets.load(asset);
-    } else {
-        Debug.warn("setAreaLightLuts: asset is not valid");
-    }
 };
 
 Object.defineProperty(CameraComponent.prototype, 'node', {

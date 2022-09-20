@@ -59,6 +59,7 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneGrab } from './scene-grab.js';
+
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
@@ -1610,15 +1611,16 @@ class AppBase extends EventHandler {
     /**
      * Sets the area light LUT tables for this app.
      *
-     * @param {Array} LTC_MAT_1 - LUT table of type `array` to be set.
-     * @param {Array} LTC_MAT_2 - LUT table of type `array` to be set.
+     * @param {Array.<number>} ltcMat1 - LUT table of type `array` to be set.
+     * @param {Array.<number>} ltcMat2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(LTC_MAT_1, LTC_MAT_2) {
-        if (LTC_MAT_1 && LTC_MAT_2) {
+    setAreaLightLuts(ltcMat1, ltcMat2) {
+
+        if (ltcMat1 && ltcMat2) {
             const device = this.graphicsDevice;
-            AreaLightLuts.set(device, LTC_MAT_1, LTC_MAT_2);
+            AreaLightLuts.set(device, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: LUT is not valid");
+            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
         }
     }
 
