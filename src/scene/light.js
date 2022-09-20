@@ -382,6 +382,9 @@ class Light {
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        if (this._scene?.physicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get innerConeAngle() {
