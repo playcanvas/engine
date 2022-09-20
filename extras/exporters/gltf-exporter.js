@@ -333,7 +333,7 @@ class GltfExporter {
         const json = {
             asset: {
                 version: "2.0",
-                generator: "PlayCanvas"
+                generator: "PlayCanvas GltfExporter"
             },
             scenes: [
                 {
@@ -428,7 +428,7 @@ class GltfExporter {
             });
         }
 
-        return glbBuffer;
+        return Promise.resolve(glbBuffer);
     }
 }
 

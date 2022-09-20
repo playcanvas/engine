@@ -54,29 +54,16 @@ class GltfExportExample {
             // a link element, created in the html part of the examples.
             const link = document.getElementById('ar-link');
 
+            new pcx.GltfExporter().build(entity).then((arrayBuffer: any) => {
 
+                const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
-            // convert the loaded entity into asdz file
-            const arrayBuffer = new pcx.GltfExporter().build(entity);
-            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+                // @ts-ignore
+                link.download = "bench.glb";
 
-            // @ts-ignore
-            link.download = "bench.glb";
-
-            // @ts-ignore
-            link.href = URL.createObjectURL(blob);
-
-
-            // new pcx.GltfExporter().build(entity).then((arrayBuffer: any) => {
-
-            //     const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-
-            //     // @ts-ignore
-            //     link.download = "bench.glb";
-
-            //     // @ts-ignore
-            //     link.href = URL.createObjectURL(blob);
-            // }).catch(console.error);
+                // @ts-ignore
+                link.href = URL.createObjectURL(blob);
+            }).catch(console.error);
 
             // when clicking on the download UI button, trigger the download
             data.on('download', function () {
