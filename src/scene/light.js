@@ -720,7 +720,6 @@ class Light {
         if (this._scene?.physicalUnits) {
             switch (this._type) {
                 case LIGHTTYPE_SPOT: {
-                    
                     const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
                     const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
 
