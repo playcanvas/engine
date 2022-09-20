@@ -175,7 +175,7 @@ class SceneRegistry {
 
         url = sceneItem.url;
 
-        if (!sceneItem.url) {
+        if (!url) {
             callback("Cannot find scene to load");
             return;
         }
