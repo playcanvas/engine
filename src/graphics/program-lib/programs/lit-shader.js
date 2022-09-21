@@ -1038,8 +1038,8 @@ class LitShader {
                 if (options.clearCoat) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
-                        code += "    ccFresnel = dot(dViewDirW, ccNormalW);\n";
-                        code += "    ccReflection.rgb *= getFresnel(ccFresnel, vec3(ccSpecularity));\n";
+                        code += "    ccFresnel = getFresnelCC(dot(dViewDirW, ccNormalW));\n";
+                        code += "    ccReflection.rgb *= ccFresnel;\n";
                     }  else {
                         code += "    ccFresnel = 0.0;\n";
                         code += "    ccReflection.rgb *= ccSpecularity;\n";
