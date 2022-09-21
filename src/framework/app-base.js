@@ -1617,7 +1617,6 @@ class AppBase extends EventHandler {
     setAreaLightLuts(ltcMat1, ltcMat2) {
 
         if (ltcMat1 && ltcMat2) {
-            const device = this.graphicsDevice;
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
             Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
