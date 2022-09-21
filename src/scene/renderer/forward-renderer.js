@@ -576,7 +576,11 @@ class ForwardRenderer {
         this.ambientId.setValue(this.ambientColor);
 
         if (scene.sky) {
-            this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+            if (scene.physicalUnits) {
+                this.skyboxIntensityId.setValue(scene.skyboxLuminance);
+            } else {
+                this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+            }
         }
     }
 
