@@ -43,7 +43,11 @@ class LightPhysicalUnitsExample {
                 <LabelGroup text='Animate'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
                 </LabelGroup>
-
+            </Panel>
+            <Panel headerText='Scene'>
+                <LabelGroup text='Toggle physical light and camera units'>
+                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
+                </LabelGroup>
             </Panel>
         </>;
     }
@@ -82,7 +86,6 @@ class LightPhysicalUnitsExample {
             app.scene.setSkybox(assets.helipad.resources);
             app.scene.toneMapping = pc.TONEMAP_ACES;
             app.scene.skyboxMip = 1;
-            app.scene.physicalUnits = true;
 
             // set the loaded area light LUT data
             app.setAreaLightLuts(assets.luts);
@@ -158,8 +161,13 @@ class LightPhysicalUnitsExample {
                     shutter: 1000,
                     sensitivity: 1000,
                     animate: false
+                },
+                scene: {
+                    physicalUnits: true
                 }
             });
+
+            app.scene.physicalUnits = data.get('script.scene.physicalUnits');
 
             // Create an Entity with a camera component
             const camera = new pc.Entity();
@@ -186,8 +194,7 @@ class LightPhysicalUnitsExample {
             camera.script.create("orbitCameraInputTouch");
             app.root.addChild(camera);
 
-            app.scene.skyboxIntensity = data.get('script.sky.luminance');
-
+            app.scene.skyboxLuminance = data.get('script.sky.luminance');
 
             const directionalLight = new pc.Entity();
             directionalLight.addComponent("light", {
@@ -269,7 +276,7 @@ class LightPhysicalUnitsExample {
                 if (path === 'script.sun.luminance') {
                     directionalLight.light.luminance = value;
                 } else if (path === 'script.sky.luminance') {
-                    app.scene.skyboxIntensity = value;
+                    app.scene.skyboxLuminance = value;
                 } else if (path === 'script.spot.luminance') {
                     spotLight.light.luminance = value;
                 } else if (path === 'script.spot.aperture') {
@@ -286,6 +293,8 @@ class LightPhysicalUnitsExample {
                     camera.camera.shutter = 1 / value;
                 } else if (path === 'script.camera.sensitivity') {
                     camera.camera.sensitivity = value;
+                } else if (path === 'script.scene.physicalUnits') {
+                    app.scene.physicalUnits = value;
                 }
             });
 
