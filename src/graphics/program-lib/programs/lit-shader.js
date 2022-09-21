@@ -334,8 +334,8 @@ class LitShader {
                 }
 
                 // vertex ids attributes
-               // this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                //code += "attribute float morph_vertex_id;\n";
+                this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
+                code += "attribute float morph_vertex_id;\n";
 
             } else {
 
