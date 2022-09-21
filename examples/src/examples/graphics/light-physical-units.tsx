@@ -88,7 +88,7 @@ class LightPhysicalUnitsExample {
             app.scene.skyboxMip = 1;
 
             // set the loaded area light LUT data
-            app.setAreaLightLuts(assets.luts);
+            app.setAreaLightLuts(assets.luts.resource.LTC_MAT_1, assets.luts.resource.LTC_MAT_2);
 
             const sheen1 = assets.sheen.resource.instantiateRenderEntity({
                 castShadows: true
