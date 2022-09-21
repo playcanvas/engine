@@ -54,6 +54,7 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneGrab } from './scene-grab.js';
+
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
@@ -852,16 +853,6 @@ class AppBase extends EventHandler {
         }
     }
 
-    // handle area light property
-    _handleAreaLightDataProperty(prop) {
-        const asset = this.assets.get(prop);
-        if (asset) {
-            this.setAreaLightLuts(asset);
-        } else {
-            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
-        }
-    }
-
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         // configure retrying assets
@@ -931,10 +922,6 @@ class AppBase extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
-        }
-
-        if (props.areaLightDataAsset) {
-            this._handleAreaLightDataProperty(props.areaLightDataAsset);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1627,19 +1614,17 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Sets the area light LUT asset for this app.
+     * Sets the area light LUT tables for this app.
      *
-     * @param {Asset} asset - LUT asset of type `binary` to be set.
+     * @param {number[]} ltcMat1 - LUT table of type `array` to be set.
+     * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(asset) {
-        if (asset) {
-            const device = this.graphicsDevice;
-            asset.ready((asset) => {
-                AreaLightLuts.set(device, asset.resource);
-            });
-            this.assets.load(asset);
+    setAreaLightLuts(ltcMat1, ltcMat2) {
+
+        if (ltcMat1 && ltcMat2) {
+            AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: asset is not valid");
+            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
         }
     }
 
