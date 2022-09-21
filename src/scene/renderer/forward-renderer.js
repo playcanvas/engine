@@ -930,18 +930,12 @@ class ForwardRenderer {
             const light = lights[i];
 
             if (light.enabled) {
-
-                // make sure the lights update their final color if the scene
-                // use of physical units mismatch the lights internal flag
-                if (this.scene.physicalUnits !== light._usesPhysicalUnits) {
-                    light._updateFinalColor();
-                    light._usesPhysicalUnits = this.scene.physicalUnits;
-                }
                 // directional lights are marked visible at the start of the frame
                 if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+                        light.usePhysicalUnits = this.scene.physicalUnits;
 
                         // maximum screen area taken by the light
                         const screenSize = camera.getScreenSize(tempSphere);
@@ -957,6 +951,8 @@ class ForwardRenderer {
                             }
                         }
                     }
+                } else {
+                    light.usePhysicalUnits = this.scene.physicalUnits;
                 }
             }
         }

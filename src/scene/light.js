@@ -153,7 +153,7 @@ class Light {
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
-        this._usesPhysicalUnits = false;
+        this._usePhysicalUnits = undefined;
 
         // Shadow mapping resources
         this._shadowMap = null;
@@ -267,6 +267,17 @@ class Light {
 
     get shape() {
         return this._shape;
+    }
+
+    set usePhysicalUnits(value) {
+        if (this._usePhysicalUnits !== value) {
+            this._usePhysicalUnits = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get usePhysicalUnits() {
+        return this._usePhysicalUnits;
     }
 
     set shadowType(value) {
@@ -384,7 +395,7 @@ class Light {
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
-        if (this._scene?.physicalUnits) {
+        if (this._usePhysicalUnits) {
             this._updateFinalColor();
         }
     }
@@ -399,7 +410,7 @@ class Light {
 
         this._outerConeAngle = value;
         this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
-        if (this._scene?.physicalUnits) {
+        if (this._usePhysicalUnits) {
             this._updateFinalColor();
         }
     }
@@ -722,7 +733,7 @@ class Light {
         let i = this._intensity;
 
         // To calculate the lux, which is lm/m^2, we need to convert from luminous power
-        if (this._scene?.physicalUnits) {
+        if (this._usePhysicalUnits) {
             switch (this._type) {
                 case LIGHTTYPE_SPOT: {
                     const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
