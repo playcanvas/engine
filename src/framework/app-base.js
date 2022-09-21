@@ -1611,8 +1611,8 @@ class AppBase extends EventHandler {
     /**
      * Sets the area light LUT tables for this app.
      *
-     * @param {Array.<number>} ltcMat1 - LUT table of type `array` to be set.
-     * @param {Array.<number>} ltcMat2 - LUT table of type `array` to be set.
+     * @param {number[]} ltcMat1 - LUT table of type `array` to be set.
+     * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
     setAreaLightLuts(ltcMat1, ltcMat2) {
 

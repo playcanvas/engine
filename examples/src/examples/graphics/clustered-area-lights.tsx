@@ -44,7 +44,7 @@ class AreaLightsExample {
             'color': new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
             'gloss': new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-            'luts': new pc.Asset('luts', 'json', { url: '/static/assets/binary/area-light-luts.json' })
+            'luts': new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
