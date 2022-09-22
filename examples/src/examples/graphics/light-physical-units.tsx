@@ -88,6 +88,8 @@ class LightPhysicalUnitsExample {
 
             app.scene.toneMapping = pc.TONEMAP_ACES;
             app.scene.skyboxMip = 1;
+            app.scene.ambientLight.set(1, 0, 0);
+            app.scene.ambientLuminance = 20000;
 
             // set the loaded area light LUT data
             const luts = assets.luts.resource;
@@ -200,6 +202,7 @@ class LightPhysicalUnitsExample {
             app.root.addChild(camera);
 
             app.scene.skyboxLuminance = data.get('script.sky.luminance');
+            
 
             const directionalLight = new pc.Entity();
             directionalLight.addComponent("light", {
