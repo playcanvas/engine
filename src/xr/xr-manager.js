@@ -688,7 +688,7 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthNew = pose ? pose.views.length : 0;
+        const lengthNew = pose.views.length;
 
         if (lengthNew > this.views.length) {
             // add new views into list
