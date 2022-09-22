@@ -929,7 +929,7 @@ class ForwardRenderer {
     cullLights(camera, lights) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-
+        const physicalUnits = this.scene.physicalUnits;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
@@ -939,7 +939,7 @@ class ForwardRenderer {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
-                        light.usePhysicalUnits = this.scene.physicalUnits;
+                        light.usePhysicalUnits = physicalUnits;
 
                         // maximum screen area taken by the light
                         const screenSize = camera.getScreenSize(tempSphere);
