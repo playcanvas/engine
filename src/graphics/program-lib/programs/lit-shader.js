@@ -1311,7 +1311,7 @@ class LitShader {
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
                 code += "float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));\n";
-                code += "#ifdef LIT_CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccReflection.a * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
+                code += "#ifdef LIT_CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif\n";
                 code += "dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);\n";
             }
             code += "dAlpha *= material_alphaFade;\n";
@@ -1369,7 +1369,7 @@ class LitShader {
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
         if (code.includes("ccFresnel")) structCode += "float ccFresnel;\n";
-        if (code.includes("ccReflection")) structCode += "vec4 ccReflection;\n";
+        if (code.includes("ccReflection")) structCode += "vec3 ccReflection;\n";
         if (code.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (code.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         if (code.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
