@@ -14,7 +14,7 @@ import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
  */
 class WebglShader {
     constructor(shader) {
-        this.loseContext();
+        this.init();
         this.compileAndLink(shader.device, shader);
         shader.device.shaders.push(shader);
     }
@@ -39,10 +39,7 @@ class WebglShader {
         }
     }
 
-    /**
-     * Dispose the shader when the context has been lost.
-     */
-    loseContext() {
+    init() {
         this.uniforms = [];
         this.samplers = [];
         this.attributes = [];
@@ -50,6 +47,13 @@ class WebglShader {
         this.glProgram = null;
         this.glVertexShader = null;
         this.glFragmentShader = null;
+    }
+
+    /**
+     * Dispose the shader when the context has been lost.
+     */
+    loseContext() {
+        this.init();
     }
 
     /**
