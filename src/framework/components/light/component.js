@@ -58,7 +58,7 @@ const _lightPropsDefault = [];
  * @property {Color} color The Color of the light. The alpha component of the color is ignored.
  * Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
- * @property {number} luminance The physically based luminance. Defaults to 0.
+ * @property {number} luminance The physically based luminance. Only used if scene.physicalUnits is true. Defaults to 0.
  * @property {number} shape The light source shape. Can be:
  *
  * - {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
