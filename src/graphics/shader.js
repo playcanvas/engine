@@ -117,6 +117,7 @@ class Shader {
      */
     loseContext() {
         this.init();
+        this.impl.loseContext();
     }
 
     restoreContext() {
