@@ -62,6 +62,7 @@ export { shFromCubemap } from './graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './graphics/reproject-texture.js';
 export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
 export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
+export { shaderChunksLightmapper } from './graphics/program-lib/chunks/chunks-lightmapper.js';
 export { GraphicsDevice } from './graphics/graphics-device.js';
 export { EnvLighting } from './graphics/env-lighting.js';
 export { IndexBuffer } from './graphics/index-buffer.js';

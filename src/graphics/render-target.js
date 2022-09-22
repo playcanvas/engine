@@ -163,6 +163,10 @@ class RenderTarget {
                 device.targets.splice(idx, 1);
             }
 
+            if (device.renderTarget === this) {
+                device.setRenderTarget(null);
+            }
+
             this.destroyFrameBuffers();
         }
     }

@@ -87,6 +87,12 @@ class WebgpuShader {
     }
 
     /**
+     * Dispose the shader when the context has been lost.
+     */
+    loseContext() {
+    }
+
+    /**
      * Restore shader after the context has been obtained.
      *
      * @param {GraphicsDevice} device - The graphics device.

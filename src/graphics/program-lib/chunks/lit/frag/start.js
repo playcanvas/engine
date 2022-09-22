@@ -4,6 +4,6 @@ void main(void) {
 
     #ifdef LIT_CLEARCOAT
     ccSpecularLight = vec3(0);
-    ccReflection = vec4(0);
+    ccReflection = vec3(0);
     #endif
 `;

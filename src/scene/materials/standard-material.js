@@ -701,7 +701,6 @@ class StandardMaterial extends Material {
         if (this.clearCoat > 0) {
             this._setParameter('material_clearCoat', this.clearCoat);
             this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
-            this._setParameter('material_clearCoatReflectivity', this.clearCoat); // for now don't separate this
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
