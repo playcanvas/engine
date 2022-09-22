@@ -48,6 +48,9 @@ class LightPhysicalUnitsExample {
                 <LabelGroup text='Toggle physical light and camera units'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
                 </LabelGroup>
+                <LabelGroup text='Toggle sky'>
+                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.sky' }}/>
+                </LabelGroup>
             </Panel>
         </>;
     }
@@ -83,12 +86,12 @@ class LightPhysicalUnitsExample {
 
             app.start();
 
-            app.scene.setSkybox(assets.helipad.resources);
             app.scene.toneMapping = pc.TONEMAP_ACES;
             app.scene.skyboxMip = 1;
 
             // set the loaded area light LUT data
-            app.setAreaLightLuts(assets.luts.resource.LTC_MAT_1, assets.luts.resource.LTC_MAT_2);
+            const luts = assets.luts.resource;
+            app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
             const sheen1 = assets.sheen.resource.instantiateRenderEntity({
                 castShadows: true
@@ -163,11 +166,13 @@ class LightPhysicalUnitsExample {
                     animate: false
                 },
                 scene: {
-                    physicalUnits: true
+                    physicalUnits: true,
+                    sky: true
                 }
             });
 
             app.scene.physicalUnits = data.get('script.scene.physicalUnits');
+            app.scene.setSkybox(assets.helipad.resources);
 
             // Create an Entity with a camera component
             const camera = new pc.Entity();
@@ -295,6 +300,12 @@ class LightPhysicalUnitsExample {
                     camera.camera.sensitivity = value;
                 } else if (path === 'script.scene.physicalUnits') {
                     app.scene.physicalUnits = value;
+                } else if (path === 'script.scene.sky') {
+                    if (value) {
+                        app.scene.setSkybox(assets.helipad.resources);
+                    } else {
+                        app.scene.setSkybox(null);
+                    }
                 }
             });
 
