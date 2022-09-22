@@ -58,7 +58,7 @@ class Scene extends EventHandler {
     ambientLight = new Color(0, 0, 0);
 
     /**
-     * The luminosity of the scene's ambient light. Used if physicalUnits is true. Defaults to 0.
+     * The luminosity of the scene's ambient light in lux (lm/m^2). Used if physicalUnits is true. Defaults to 0.
      *
      * @type {number}
      */
