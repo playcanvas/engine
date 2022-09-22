@@ -1544,6 +1544,7 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
      * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
      * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
