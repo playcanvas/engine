@@ -17,7 +17,7 @@ vec3 combineColor() {
     ret = ret * sheenScaling + sSpecularLight + sReflection.rgb * sReflection.a;
 #endif
 #ifdef LIT_CLEARCOAT
-    float clearCoatScaling = 1.0 - ccFresnel * ccSpecularity * max(max(ccReflection.r, ccReflection.g), ccReflection.b);
+    float clearCoatScaling = 1.0 - ccFresnel * ccSpecularity;
     ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * ccSpecularity;
 #endif
 
