@@ -1528,6 +1528,7 @@ class AppBase extends EventHandler {
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
+     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
      * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
      * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
