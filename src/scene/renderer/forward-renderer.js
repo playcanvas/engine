@@ -573,14 +573,15 @@ class ForwardRenderer {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
         }
+        if (scene.physicalUnits) {
+            for (let i = 0; i < 3; i++) {
+                this.ambientColor[i] *= scene.ambientLuminance;
+            }
+        }
         this.ambientId.setValue(this.ambientColor);
 
         if (scene.sky) {
-            if (scene.physicalUnits) {
-                this.skyboxIntensityId.setValue(scene.skyboxLuminance);
-            } else {
-                this.skyboxIntensityId.setValue(scene.skyboxIntensity);
-            }
+            this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
         }
     }
 

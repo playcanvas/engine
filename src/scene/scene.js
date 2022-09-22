@@ -58,6 +58,13 @@ class Scene extends EventHandler {
     ambientLight = new Color(0, 0, 0);
 
     /**
+     * The luminosity of the scene's ambient light. Used if physicalUnits is true. Defaults to 0.
+     *
+     * @type {number}
+     */
+    ambientLuminance = 0;
+
+    /**
      * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
      *
      * @type {number}
@@ -551,7 +558,7 @@ class Scene extends EventHandler {
 
     /**
      * Multiplier for skybox intensity. Defaults to 1. Unused if
-     * physical units are used
+     * physical units are used.
      *
      * @type {number}
      */
