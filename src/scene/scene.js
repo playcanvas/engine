@@ -674,11 +674,7 @@ class Scene extends EventHandler {
         // settings
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
-        if (this.physicalUnits) {
-            for (let i = 0; i < 3; i++) {
-                this.ambientLight[i] *= render.ambientLuminance;
-            }
-        }
+        this.ambientLuminance = render.ambientLuminance;
         this._fog = render.fog;
         this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
         this.fogStart = render.fog_start;
