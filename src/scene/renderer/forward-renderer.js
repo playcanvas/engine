@@ -573,10 +573,15 @@ class ForwardRenderer {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
         }
+        if (scene.physicalUnits) {
+            for (let i = 0; i < 3; i++) {
+                this.ambientColor[i] *= scene.ambientLuminance;
+            }
+        }
         this.ambientId.setValue(this.ambientColor);
 
         if (scene.sky) {
-            this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+            this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
         }
     }
 
@@ -925,17 +930,17 @@ class ForwardRenderer {
     cullLights(camera, lights) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-
+        const physicalUnits = this.scene.physicalUnits;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
             if (light.enabled) {
-
                 // directional lights are marked visible at the start of the frame
                 if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+                        light.usePhysicalUnits = physicalUnits;
 
                         // maximum screen area taken by the light
                         const screenSize = camera.getScreenSize(tempSphere);
@@ -951,6 +956,8 @@ class ForwardRenderer {
                             }
                         }
                     }
+                } else {
+                    light.usePhysicalUnits = this.scene.physicalUnits;
                 }
             }
         }

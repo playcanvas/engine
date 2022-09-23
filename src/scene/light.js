@@ -100,6 +100,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
         this.mask = MASK_AFFECT_DYNAMIC;
@@ -151,6 +152,8 @@ class Light {
         this._direction = new Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
+
+        this._usePhysicalUnits = undefined;
 
         // Shadow mapping resources
         this._shadowMap = null;
@@ -264,6 +267,17 @@ class Light {
 
     get shape() {
         return this._shape;
+    }
+
+    set usePhysicalUnits(value) {
+        if (this._usePhysicalUnits !== value) {
+            this._usePhysicalUnits = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get usePhysicalUnits() {
+        return this._usePhysicalUnits;
     }
 
     set shadowType(value) {
@@ -381,6 +395,9 @@ class Light {
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        if (this._usePhysicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get innerConeAngle() {
@@ -393,6 +410,9 @@ class Light {
 
         this._outerConeAngle = value;
         this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
+        if (this._usePhysicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get outerConeAngle() {
@@ -408,6 +428,17 @@ class Light {
 
     get intensity() {
         return this._intensity;
+    }
+
+    set luminance(value) {
+        if (this._luminance !== value) {
+            this._luminance = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get luminance() {
+        return this._luminance;
     }
 
     get cookieMatrix() {
@@ -562,6 +593,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
 
@@ -698,7 +730,30 @@ class Light {
         const g = color.g;
         const b = color.b;
 
-        const i = this._intensity;
+        let i = this._intensity;
+
+        // To calculate the lux, which is lm/m^2, we need to convert from luminous power
+        if (this._usePhysicalUnits) {
+            switch (this._type) {
+                case LIGHTTYPE_SPOT: {
+                    const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
+                    const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
+
+                    // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
+                    i = this._luminance / (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
+                    break;
+                }
+                case LIGHTTYPE_OMNI:
+                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
+                    i = this._luminance / (4 * Math.PI);
+                    break;
+                case LIGHTTYPE_DIRECTIONAL:
+                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
+                    // Directional light luminance is already in lux
+                    i = this._luminance;
+                    break;
+            }
+        }
 
         const finalColor = this._finalColor;
         const linearFinalColor = this._linearFinalColor;

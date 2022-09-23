@@ -131,7 +131,7 @@ class StandardMaterialOptionsBuilder {
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalness &&
+        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
                                       (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
 
         const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
@@ -145,7 +145,7 @@ class StandardMaterialOptionsBuilder {
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
-        options.useSpecularityFactor = specularityFactorTint || !!stdMat.specularityFactorMap;
+        options.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.useSpecularColor = useSpecularColor;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
@@ -256,7 +256,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1);
+        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0);
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 

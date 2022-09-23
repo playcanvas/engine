@@ -10,4 +10,9 @@ vec3 getFresnel(float cosTheta, vec3 f0) {
         return ret;
     #endif    
 }
+
+float getFresnelCC(float cosTheta) {
+    float fresnel = pow(1.0 - max(cosTheta, 0.0), 5.0);
+    return 0.04 + (1.0 - 0.04) * fresnel;
+}
 `;

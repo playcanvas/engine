@@ -54,6 +54,7 @@ import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { SceneGrab } from './scene-grab.js';
+
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
@@ -852,16 +853,6 @@ class AppBase extends EventHandler {
         }
     }
 
-    // handle area light property
-    _handleAreaLightDataProperty(prop) {
-        const asset = this.assets.get(prop);
-        if (asset) {
-            this.setAreaLightLuts(asset);
-        } else {
-            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
-        }
-    }
-
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         // configure retrying assets
@@ -931,10 +922,6 @@ class AppBase extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
-        }
-
-        if (props.areaLightDataAsset) {
-            this._handleAreaLightDataProperty(props.areaLightDataAsset);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1541,6 +1528,7 @@ class AppBase extends EventHandler {
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
+     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
      * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
      * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
@@ -1556,6 +1544,7 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
      * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
      * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
@@ -1627,19 +1616,17 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Sets the area light LUT asset for this app.
+     * Sets the area light LUT tables for this app.
      *
-     * @param {Asset} asset - LUT asset of type `binary` to be set.
+     * @param {number[]} ltcMat1 - LUT table of type `array` to be set.
+     * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(asset) {
-        if (asset) {
-            const device = this.graphicsDevice;
-            asset.ready((asset) => {
-                AreaLightLuts.set(device, asset.resource);
-            });
-            this.assets.load(asset);
+    setAreaLightLuts(ltcMat1, ltcMat2) {
+
+        if (ltcMat1 && ltcMat2) {
+            AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: asset is not valid");
+            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
         }
     }
 
@@ -2182,30 +2169,34 @@ const makeTick = function (_app) {
         application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
+        let shouldRenderFrame = true;
+
         if (frame) {
-            application.xr?.update(frame);
+            shouldRenderFrame = application.xr?.update(frame);
             application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        application.update(dt);
+        if (shouldRenderFrame) {
+            application.update(dt);
 
-        application.fire("framerender");
+            application.fire("framerender");
 
-        Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
-        if (application.autoRender || application.renderNextFrame) {
-            application.updateCanvasSize();
-            application.render();
-            application.renderNextFrame = false;
+            if (application.autoRender || application.renderNextFrame) {
+                application.updateCanvasSize();
+                application.render();
+                application.renderNextFrame = false;
+            }
+
+            // set event data
+            _frameEndData.timestamp = now();
+            _frameEndData.target = application;
+
+            application.fire("frameend", _frameEndData);
         }
-
-        // set event data
-        _frameEndData.timestamp = now();
-        _frameEndData.target = application;
-
-        application.fire("frameend", _frameEndData);
 
         application._inFrameUpdate = false;
 
