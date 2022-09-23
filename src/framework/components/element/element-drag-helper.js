@@ -6,13 +6,13 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 
 import { ElementComponent } from './component.js';
+import { Ray } from '../../../shape/ray';
+import { Plane } from '../../../shape/plane';
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
-const _rayOrigin = new Vec3();
-const _rayDirection = new Vec3();
-const _planeOrigin = new Vec3();
-const _planeNormal = new Vec3();
+const _ray = new Ray();
+const _plane = new Plane();
 const _entityRotation = new Quat();
 
 const OPPOSITE_AXIS = {
@@ -140,16 +140,16 @@ class ElementDragHelper extends EventHandler {
         this._determineInputPosition(event);
         this._chooseRayOriginAndDirection();
 
-        _planeOrigin.copy(this._element.entity.getPosition());
-        _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
+        _plane.point.copy(this._element.entity.getPosition());
+        _plane.normal.copy(this._element.entity.forward).mulScalar(-1);
 
-        const denominator = _planeNormal.dot(_rayDirection);
+        const denominator = _plane.normal.dot(_ray.direction);
 
         // If the ray and plane are not parallel
         if (Math.abs(denominator) > 0) {
-            const rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
-            const collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            const position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
+            const rayOriginToPlaneOrigin = _plane.point.sub(_ray.origin);
+            const collisionDistance = rayOriginToPlaneOrigin.dot(_plane.normal) / denominator;
+            const position = _ray.origin.add(_ray.direction.mulScalar(collisionDistance));
 
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
 
@@ -177,12 +177,12 @@ class ElementDragHelper extends EventHandler {
 
     _chooseRayOriginAndDirection() {
         if (this._element.screen && this._element.screen.screen.screenSpace) {
-            _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
-            _rayDirection.set(0, 0, -1);
+            _ray.origin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
+            _ray.direction.set(0, 0, -1);
         } else {
             _inputWorldPosition.copy(this._dragCamera.screenToWorld(_inputScreenPosition.x, _inputScreenPosition.y, 1));
-            _rayOrigin.copy(this._dragCamera.entity.getPosition());
-            _rayDirection.copy(_inputWorldPosition).sub(_rayOrigin).normalize();
+            _ray.origin.copy(this._dragCamera.entity.getPosition());
+            _ray.direction.copy(_inputWorldPosition).sub(_ray.origin).normalize();
         }
     }
 
