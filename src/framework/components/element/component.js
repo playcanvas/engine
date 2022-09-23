@@ -674,27 +674,33 @@ class ElementComponent extends Component {
      * The position of the pivot of the component relative to its anchor. Each value ranges from 0
      * to 1 where [0,0] is the bottom left and [1,1] is the top right.
      *
-     * @type {Vec2}
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
+     * 
+     * @type {Vec2 | number[]}
      */
     set pivot(value) {
-        const prevX = this._pivot.x;
-        const prevY = this._pivot.y;
+        const { _pivot, _margin } = this;
+        const prevX = _pivot.x;
+        const prevY = _pivot.y;
 
         if (value instanceof Vec2) {
-            this._pivot.set(value.x, value.y);
+            _pivot.copy(value);
         } else {
-            this._pivot.set(value[0], value[1]);
+            _pivot.set(...value);
         }
 
-        const mx = this._margin.x + this._margin.z;
-        const dx = this._pivot.x - prevX;
-        this._margin.x += mx * dx;
-        this._margin.z -= mx * dx;
+        const mx = _margin.x + _margin.z;
+        const dx = _pivot.x - prevX;
+        _margin.x += mx * dx;
+        _margin.z -= mx * dx;
 
-        const my = this._margin.y + this._margin.w;
-        const dy = this._pivot.y - prevY;
-        this._margin.y += my * dy;
-        this._margin.w -= my * dy;
+        const my = _margin.y + _margin.w;
+        const dy = _pivot.y - prevY;
+        _margin.y += my * dy;
+        _margin.w -= my * dy;
 
         this._anchorDirty = true;
         this._cornersDirty = true;
@@ -706,7 +712,7 @@ class ElementComponent extends Component {
         // in order for them to update their position
         this._flagChildrenAsDirty();
 
-        this.fire('set:pivot', this._pivot);
+        this.fire('set:pivot', _pivot);
     }
 
     get pivot() {
