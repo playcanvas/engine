@@ -140,7 +140,7 @@ class ElementDragHelper extends EventHandler {
         this._determineInputPosition(event);
         this._chooseRayOriginAndDirection();
 
-        _plane.point.copy(this._element.entity.getPosition());
+        _plane.point.copy(this._element.entity.getLocalPosition());
         _plane.normal.copy(this._element.entity.forward).mulScalar(-1);
 
         const denominator = _plane.normal.dot(_ray.direction);
