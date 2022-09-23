@@ -6,8 +6,8 @@ import { Vec2 } from '../../../math/vec2.js';
 import { Vec3 } from '../../../math/vec3.js';
 
 import { ElementComponent } from './component.js';
-import { Ray } from '../../../shape/ray';
-import { Plane } from '../../../shape/plane';
+import { Ray } from '../../../shape/ray.js';
+import { Plane } from '../../../shape/plane.js';
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
@@ -178,7 +178,7 @@ class ElementDragHelper extends EventHandler {
     _chooseRayOriginAndDirection() {
         if (this._element.screen && this._element.screen.screen.screenSpace) {
             _ray.origin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
-            _ray.direction.set(0, 0, -1);
+            _ray.direction.copy(Vec3.FORWARD);
         } else {
             _inputWorldPosition.copy(this._dragCamera.screenToWorld(_inputScreenPosition.x, _inputScreenPosition.y, 1));
             _ray.origin.copy(this._dragCamera.entity.getPosition());
@@ -214,8 +214,8 @@ class ElementDragHelper extends EventHandler {
         if (_element && this._isDragging && this.enabled && _element.enabled && _element.entity.enabled) {
             const currentMousePosition = this._screenToLocal(event);
             if (currentMousePosition) {
-                _deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
-                _deltaHandlePosition.copy(this._dragStartHandlePosition).add(_deltaMousePosition);
+                _deltaMousePosition.sub2(currentMousePosition, this._dragStartMousePosition);
+                _deltaHandlePosition.add2(this._dragStartHandlePosition, _deltaMousePosition);
 
                 if (_axis) {
                     const currentPosition = _element.entity.getLocalPosition();
