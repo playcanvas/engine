@@ -1626,7 +1626,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
-        if (curveData.paths[0].propertyPath[0] === 'localRotation' && curveData.interpolation !== INTERPOLATION_CUBIC) {
+        if (curveData.paths.length > 0 && curveData.paths[0].propertyPath[0] === 'localRotation' && curveData.interpolation !== INTERPOLATION_CUBIC) {
             quatArrays.push(curves[curves.length - 1].output);
         }
     }
