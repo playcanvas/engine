@@ -574,8 +574,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Luminance (in lm/m^2) of skybox. Defaults to 0. Only used if
-     * physical units are used
+     * Luminance (in lm/m^2) of skybox. Defaults to 0. Only used if physical units are used.
      *
      * @type {number}
      */
