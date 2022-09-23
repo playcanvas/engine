@@ -1563,10 +1563,15 @@ class ElementComponent extends Component {
         this.off();
     }
 
-    // recalculates
-    // localAnchor, width, height, (local position is updated if anchors are split)
-    // assumes these properties are up to date
-    // _margin
+    /**
+     * recalculates
+     * localAnchor, width, height, (local position is updated if anchors are split)
+     * assumes these properties are up to date
+     * _margin
+     * 
+     * @param {boolean} propagateCalculatedWidth 
+     * @param {boolean} propagateCalculatedHeight 
+     */
     _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
         if (!this.entity._parent && !this.screen) return;
@@ -1597,7 +1602,11 @@ class ElementComponent extends Component {
         this._sizeDirty = false;
     }
 
-    // internal set width without updating margin
+    /**
+     * Internal set width without updating margin.
+     * 
+     * @param {number} w 
+     */
     _setWidth(w) {
         this._width = w;
         this._setCalculatedWidth(w, false);
@@ -1605,7 +1614,11 @@ class ElementComponent extends Component {
         this.fire('set:width', this._width);
     }
 
-    // internal set height without updating margin
+    /**
+     * Internal set height without updating margin.
+     * 
+     * @param {number} h 
+     */
     _setHeight(h) {
         this._height = h;
         this._setCalculatedHeight(h, false);
@@ -1613,6 +1626,11 @@ class ElementComponent extends Component {
         this.fire('set:height', this._height);
     }
 
+    /**
+     * 
+     * @param {number} value 
+     * @param {boolean} updateMargins 
+     */
     _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
             return;
@@ -1632,6 +1650,12 @@ class ElementComponent extends Component {
         this.fire('resize', this._calculatedWidth, this._calculatedHeight);
     }
 
+    /**
+     * 
+     * @param {number} value 
+     * @param {boolean} updateMargins 
+     * @returns 
+     */
     _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
             return;
