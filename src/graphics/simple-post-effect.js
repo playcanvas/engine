@@ -53,8 +53,10 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
     const oldRt = device.renderTarget;
-    device.setRenderTarget(target);
-    device.updateBegin();
+    if (target !== oldRt) {
+        device.setRenderTarget(target);
+        device.updateBegin();
+    }
 
     let x, y, w, h;
     let sx, sy, sw, sh;
@@ -111,15 +113,18 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
 
     device.draw(_postEffectQuadDraw);
 
+    // restore
     device.setDepthTest(oldDepthTest);
     device.setDepthWrite(oldDepthWrite);
     device.setCullMode(oldCullMode);
     device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
-    device.updateEnd();
+    if (target !== oldRt) {
+        device.updateEnd();
 
-    device.setRenderTarget(oldRt);
-    device.updateBegin();
+        device.setRenderTarget(oldRt);
+        device.updateBegin();
+    }
 
     device.setViewport(oldVx, oldVy, oldVw, oldVh);
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
