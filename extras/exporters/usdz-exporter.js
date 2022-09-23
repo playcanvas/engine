@@ -342,7 +342,7 @@ class UsdzExporter {
         const materialPath = `/Materials/${materialName}`;
         const materialPropertyPath = property => `<${materialPath}${property}>`;
 
-        const buildTexture = (texture, textureIds, mapType, uvChannel, tiling, offset, rotation) => {
+        const buildTexture = (texture, textureIds, mapType, uvChannel, tiling, offset, rotation, tintColor) => {
 
             // TODO: texture transform values are passed in but do not work correctly in many cases
 
@@ -368,6 +368,7 @@ class UsdzExporter {
                     float2 inputs:st.connect = ${materialPropertyPath(`/Transform2d_${mapType}.outputs:result`)}
                     token inputs:wrapS = "repeat"
                     token inputs:wrapT = "repeat"
+                    float4 inputs:scale = (${tintColor.r}, ${tintColor.g}, ${tintColor.b}, ${tintColor.a})
                     float outputs:r
                     float outputs:g
                     float outputs:b
@@ -380,7 +381,7 @@ class UsdzExporter {
         const inputs = [];
         const samplers = [];
 
-        const addTexture = (textureSlot, uniform, propType, propName, valueName, handleOpacity = false) => {
+        const addTexture = (textureSlot, uniform, propType, propName, valueName, handleOpacity = false, tintTexture = false) => {
 
             const texture = material[textureSlot];
             if (texture) {
@@ -407,7 +408,10 @@ class UsdzExporter {
                 // which texture coordinate set to use
                 const uvChannel = material[textureSlot + 'Uv'] === 1 ? 'st1' : 'st';
 
-                samplers.push(buildTexture(texture, textureIds, valueName, uvChannel, tiling, offset, rotation));
+                // texture tint
+                const tintColor = tintTexture && uniform ? uniform : pc.Color.WHITE;
+
+                samplers.push(buildTexture(texture, textureIds, valueName, uvChannel, tiling, offset, rotation, tintColor));
 
             } else if (uniform) {
 
@@ -417,12 +421,12 @@ class UsdzExporter {
         };
 
         // add textures / material properties to the material
-        addTexture('diffuseMap', material.diffuse, 'color3f', 'diffuseColor', 'diffuse');
+        addTexture('diffuseMap', material.diffuse, 'color3f', 'diffuseColor', 'diffuse', false, true);
         if (material.transparent || material.alphaTest > 0.0) {
             addTexture('opacityMap', material.opacity, 'float', 'opacity', 'opacity', true);
         }
         addTexture('normalMap', null, 'normal3f', 'normal', 'normal');
-        addTexture('emissiveMap', material.emissive, 'color3f', 'emissiveColor', 'emissive');
+        addTexture('emissiveMap', material.emissive, 'color3f', 'emissiveColor', 'emissive', false, true);
         addTexture('aoMap', null, 'float', 'occlusion', 'occlusion');
         addTexture('metalnessMap', material.metalness, 'float', 'metallic', 'metallic');
         addTexture('glossMap', material.shininess / 100, 'float', 'roughness', 'roughness');
