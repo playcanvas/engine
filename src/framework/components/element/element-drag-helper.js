@@ -210,21 +210,21 @@ class ElementDragHelper extends EventHandler {
     }
 
     _onMove(event) {
-        if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
+        const { _element, _deltaMousePosition, _deltaHandlePosition, _axis } = this;
+        if (_element && this._isDragging && this.enabled && _element.enabled && _element.entity.enabled) {
             const currentMousePosition = this._screenToLocal(event);
+            if (currentMousePosition) {
+                _deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
+                _deltaHandlePosition.copy(this._dragStartHandlePosition).add(_deltaMousePosition);
 
-            if (this._dragStartMousePosition && currentMousePosition) {
-                this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
-                this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
-
-                if (this._axis) {
-                    const currentPosition = this._element.entity.getLocalPosition();
-                    const constrainedAxis = OPPOSITE_AXIS[this._axis];
-                    this._deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
+                if (_axis) {
+                    const currentPosition = _element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[_axis];
+                    _deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 
-                this._element.entity.setLocalPosition(this._deltaHandlePosition);
-                this.fire('drag:move', this._deltaHandlePosition);
+                _element.entity.setLocalPosition(_deltaHandlePosition);
+                this.fire('drag:move', _deltaHandlePosition);
             }
         }
     }
