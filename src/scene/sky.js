@@ -52,7 +52,7 @@ class Sky {
                 return library.getProgram('skybox', {
                     type: 'cubemap',
                     encoding: texture.encoding,
-                    useIntensity: scene.skyboxIntensity !== 1,
+                    useIntensity: scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0,
                     mip: texture.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: texture.fixCubemapSeams,
                     gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
@@ -63,7 +63,7 @@ class Sky {
             return library.getProgram('skybox', {
                 type: 'envAtlas',
                 encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1,
+                useIntensity: scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
             });

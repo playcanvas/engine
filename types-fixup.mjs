@@ -169,6 +169,7 @@ const lightComponentProps = [
     ['falloffMode', 'number'],
     ['innerConeAngle', 'number'],
     ['intensity', 'number'],
+    ['luminance', 'number'],
     ['isStatic', 'boolean'],
     ['layers', 'number[]'],
     ['mask', 'number'],

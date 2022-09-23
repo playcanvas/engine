@@ -58,6 +58,13 @@ class Scene extends EventHandler {
     ambientLight = new Color(0, 0, 0);
 
     /**
+     * The luminosity of the scene's ambient light in lux (lm/m^2). Used if physicalUnits is true. Defaults to 0.
+     *
+     * @type {number}
+     */
+    ambientLuminance = 0;
+
+    /**
      * The exposure value tweaks the overall brightness of the scene. Ignored if physicalUnits is true. Defaults to 1.
      *
      * @type {number}
@@ -209,6 +216,7 @@ class Scene extends EventHandler {
         this._internalEnvAtlas = null;
 
         this._skyboxIntensity = 1;
+        this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
         this._skyboxRotation = new Quat();
@@ -549,7 +557,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Multiplier for skybox intensity. Defaults to 1.
+     * Multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
      *
      * @type {number}
      */
@@ -562,6 +570,22 @@ class Scene extends EventHandler {
 
     get skyboxIntensity() {
         return this._skyboxIntensity;
+    }
+
+    /**
+     * Luminance (in lm/m^2) of skybox. Defaults to 0. Only used if physical units are used.
+     *
+     * @type {number}
+     */
+    set skyboxLuminance(value) {
+        if (value !== this._skyboxLuminance) {
+            this._skyboxLuminance = value;
+            this._resetSky();
+        }
+    }
+
+    get skyboxLuminance() {
+        return this._skyboxLuminance;
     }
 
     /**
@@ -648,6 +672,7 @@ class Scene extends EventHandler {
         // settings
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
+        this.ambientLuminance = render.ambientLuminance;
         this._fog = render.fog;
         this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
         this.fogStart = render.fog_start;
@@ -660,6 +685,7 @@ class Scene extends EventHandler {
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
         this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
+        this._skyboxLuminance = render.skyboxLuminance === undefined ? 20000 : render.skyboxLuminance;
         this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
 
         if (render.skyboxRotation) {
