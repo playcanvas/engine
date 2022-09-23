@@ -25,7 +25,7 @@ Visit [http://localhost:5000]() to view the examples browser.
 
 To create the side bar thumbnails run the following script:
 ```
-npm run thumbnails
+npm run build:thumbnails
 ```
 
 Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.

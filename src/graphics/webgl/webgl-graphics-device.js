@@ -1438,6 +1438,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Unset the render target
         const target = this.renderTarget;
         if (target) {
+            // Resolve MSAA if needed
+            if (this.webgl2 && target._samples > 1 && target.autoResolve) {
+                target.resolve();
+            }
+
             // If the active render target is auto-mipmapped, generate its mip chain
             const colorBuffer = target._colorBuffer;
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
@@ -1446,11 +1451,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 this.gl.generateMipmap(colorBuffer.impl._glTarget);
-            }
-
-            // Resolve MSAA if needed
-            if (this.webgl2 && target._samples > 1 && target.autoResolve) {
-                target.resolve();
             }
         }
 

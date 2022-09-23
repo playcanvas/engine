@@ -15,6 +15,7 @@ import LayersExample from "./layers";
 import LightsBakedAOExample from "./lights-baked-a-o";
 import LightsBakedExample from "./lights-baked";
 import LightsExample from "./lights";
+import LightPhysicalUnitsExample from "./light-physical-units";
 import LinesExample from "./lines";
 import MaterialAnisotropicExample from "./material-anisotropic";
 import MaterialBasicExample from "./material-basic";
@@ -69,6 +70,7 @@ export {
     LightsBakedAOExample,
     LightsBakedExample,
     LightsExample,
+    LightPhysicalUnitsExample,
     LinesExample,
     MaterialAnisotropicExample,
     MaterialBasicExample,
