@@ -567,10 +567,6 @@ class MeshInstance {
         // release existing
         this._morphInstance?.destroy();
 
-
-console.log("assign morph instance", val);
-
-
         // assign new
         this._morphInstance = val;
 
