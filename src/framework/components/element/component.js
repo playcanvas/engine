@@ -397,13 +397,18 @@ class ElementComponent extends Component {
      * of the anchor are not equal. In that case the component will be resized to cover that entire
      * area. e.g. a value of [0, 0, 1, 1] will make the component resize exactly as its parent.
      *
-     * @type {Vec4}
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = [Math.random() * 0.1, 0, 1, 0];
+     * 
+     * @type {Vec4 | number[]}
      */
     set anchor(value) {
         if (value instanceof Vec4) {
-            this._anchor.set(value.x, value.y, value.z, value.w);
+            this._anchor.copy(value);
         } else {
-            this._anchor.set(value[0], value[1], value[2], value[3]);
+            this._anchor.set(...value);
         }
 
         if (!this.entity._parent && !this.screen) {
