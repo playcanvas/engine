@@ -139,6 +139,10 @@ class ContainerResource {
  * |---------------------------------------------------------------------|
  * ```
  *
+ * Additional options that can be passed for glTF files:
+ * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
+ * allowing the clone operation.
+ *
  * For example, to receive a texture preprocess callback:
  *
  * ```javascript
