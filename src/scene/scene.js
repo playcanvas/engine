@@ -557,8 +557,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Multiplier for skybox intensity. Defaults to 1. Unused if
-     * physical units are used.
+     * Multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
      *
      * @type {number}
      */
