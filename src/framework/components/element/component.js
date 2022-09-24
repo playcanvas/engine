@@ -401,7 +401,7 @@ class ElementComponent extends Component {
      * pc.app.root.findByName("Inventory").element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
      * @example
      * pc.app.root.findByName("Inventory").element.anchor = [Math.random() * 0.1, 0, 1, 0];
-     * 
+     *
      * @type {Vec4 | number[]}
      */
     set anchor(value) {
@@ -683,7 +683,7 @@ class ElementComponent extends Component {
      * pc.app.root.findByName("Inventory").element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
      * @example
      * pc.app.root.findByName("Inventory").element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
-     * 
+     *
      * @type {Vec2 | number[]}
      */
     set pivot(value) {
@@ -1012,6 +1012,14 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition = Entity.prototype.setLocalPosition;
     }
 
+    /**
+     * Patched method for setting the position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     * @returns {void}
+     */
     _setPosition(x, y, z) {
         if (!this.element.screen)
             return Entity.prototype.setPosition.call(this, x, y, z);
@@ -1030,6 +1038,13 @@ class ElementComponent extends Component {
             this._dirtifyLocal();
     }
 
+    /**
+     * Patched method for setting the local position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     */
     _setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
             this.localPosition.copy(x);
@@ -1579,7 +1594,7 @@ class ElementComponent extends Component {
      * localAnchor, width, height, (local position is updated if anchors are split)
      * assumes these properties are up to date
      * _margin
-     * 
+     *
      * @param {boolean} propagateCalculatedWidth 
      * @param {boolean} propagateCalculatedHeight 
      */
@@ -1615,8 +1630,8 @@ class ElementComponent extends Component {
 
     /**
      * Internal set width without updating margin.
-     * 
-     * @param {number} w 
+     *
+     * @param {number} w - The new width.
      */
     _setWidth(w) {
         this._width = w;
@@ -1627,8 +1642,8 @@ class ElementComponent extends Component {
 
     /**
      * Internal set height without updating margin.
-     * 
-     * @param {number} h 
+     *
+     * @param {number} h - The new height.
      */
     _setHeight(h) {
         this._height = h;
@@ -1638,9 +1653,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * 
-     * @param {number} value 
-     * @param {boolean} updateMargins 
+     * This method sets the calculated width value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated width.
+     * @param {boolean} updateMargins - Update margins or not.
      */
     _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
@@ -1662,10 +1678,10 @@ class ElementComponent extends Component {
     }
 
     /**
-     * 
-     * @param {number} value 
-     * @param {boolean} updateMargins 
-     * @returns 
+     * This method sets the calculated height value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated height.
+     * @param {boolean} updateMargins - Update margins or not.
      */
     _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
