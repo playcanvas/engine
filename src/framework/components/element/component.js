@@ -1595,8 +1595,8 @@ class ElementComponent extends Component {
      * assumes these properties are up to date
      * _margin
      *
-     * @param {boolean} propagateCalculatedWidth 
-     * @param {boolean} propagateCalculatedHeight 
+     * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead of `_setCalculatedWidth`
+     * @param {boolean} propagateCalculatedHeight - If true, call `_setHeight` instead of `_setCalculatedHeight`
      */
     _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
