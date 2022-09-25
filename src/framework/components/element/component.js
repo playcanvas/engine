@@ -1018,7 +1018,7 @@ class ElementComponent extends Component {
      * @param {number|Vec3} x - The x coordinate or Vec3
      * @param {number} y - The y coordinate
      * @param {number} z - The z coordinate
-     * @returns {void}
+     * @private
      */
     _setPosition(x, y, z) {
         if (!this.element.screen)
@@ -1044,6 +1044,7 @@ class ElementComponent extends Component {
      * @param {number|Vec3} x - The x coordinate or Vec3
      * @param {number} y - The y coordinate
      * @param {number} z - The z coordinate
+     * @private
      */
     _setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
@@ -1595,8 +1596,11 @@ class ElementComponent extends Component {
      * assumes these properties are up to date
      * _margin
      *
-     * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead of `_setCalculatedWidth`
-     * @param {boolean} propagateCalculatedHeight - If true, call `_setHeight` instead of `_setCalculatedHeight`
+     * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead
+     * of `_setCalculatedWidth`
+     * @param {boolean} propagateCalculatedHeight - If true, call `_setHeight` instead
+     * of `_setCalculatedHeight`
+     * @private
      */
     _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
@@ -1632,6 +1636,7 @@ class ElementComponent extends Component {
      * Internal set width without updating margin.
      *
      * @param {number} w - The new width.
+     * @private
      */
     _setWidth(w) {
         this._width = w;
@@ -1644,6 +1649,7 @@ class ElementComponent extends Component {
      * Internal set height without updating margin.
      *
      * @param {number} h - The new height.
+     * @private
      */
     _setHeight(h) {
         this._height = h;
@@ -1657,6 +1663,7 @@ class ElementComponent extends Component {
      *
      * @param {number} value - The new calculated width.
      * @param {boolean} updateMargins - Update margins or not.
+     * @private
      */
     _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
@@ -1682,6 +1689,7 @@ class ElementComponent extends Component {
      *
      * @param {number} value - The new calculated height.
      * @param {boolean} updateMargins - Update margins or not.
+     * @private
      */
     _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
