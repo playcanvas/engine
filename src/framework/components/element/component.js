@@ -1021,8 +1021,10 @@ class ElementComponent extends Component {
      * @private
      */
     _setPosition(x, y, z) {
-        if (!this.element.screen)
-            return Entity.prototype.setPosition.call(this, x, y, z);
+        if (!this.element.screen) {
+            Entity.prototype.setPosition.call(this, x, y, z);
+            return;
+        }
 
         if (x instanceof Vec3) {
             position.copy(x);
