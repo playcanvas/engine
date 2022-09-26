@@ -541,11 +541,15 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN);
-        for (let i = 0; i < this._shader.length; i++) {
-            this._shader[i] = null;
-        }
 
+        let shaderDefs = this._shaderDefs;
+        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
+
+        // if shaderDefs have changed
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }
         this._setupSkinUpdate();
     }
 
@@ -559,16 +563,22 @@ class MeshInstance {
      * @type {MorphInstance}
      */
     set morphInstance(val) {
-        this._morphInstance = val;
-        if (this._morphInstance) {
-            this._morphInstance.meshInstance = this;
-        }
 
-        this._shaderDefs = (val && val.morph.useTextureMorph) ? (this._shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (this._shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
-        this._shaderDefs = (val && val.morph.morphPositions) ? (this._shaderDefs | SHADERDEF_MORPH_POSITION) : (this._shaderDefs & ~SHADERDEF_MORPH_POSITION);
-        this._shaderDefs = (val && val.morph.morphNormals) ? (this._shaderDefs | SHADERDEF_MORPH_NORMAL) : (this._shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-        for (let i = 0; i < this._shader.length; i++) {
-            this._shader[i] = null;
+        // release existing
+        this._morphInstance?.destroy();
+
+        // assign new
+        this._morphInstance = val;
+
+        let shaderDefs = this._shaderDefs;
+        shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
+        shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
+        shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
+
+        // if shaderDefs have changed
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
         }
     }
 
@@ -643,17 +653,13 @@ class MeshInstance {
         this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
         this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
 
-        if (this._skinInstance) {
-            this._skinInstance.destroy();
-            this._skinInstance = null;
-        }
+        this._skinInstance?.destroy();
+        this._skinInstance = null;
 
-        if (this.morphInstance) {
-            this.morphInstance.destroy();
-            this.morphInstance = null;
-        }
+        this.morphInstance?.destroy();
+        this.morphInstance = null;
 
-        this.destroyBindGroups();
+        this.clearShaders();
 
         // make sure material clears references to this meshInstance
         this.material = null;

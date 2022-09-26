@@ -756,7 +756,7 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials) {
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
@@ -940,6 +940,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                         options.defaultWeight = gltfMesh.weights[index];
                     }
 
+                    options.preserveData = assetOptions.morphPreserveData;
                     targets.push(new MorphTarget(options));
                 });
 
@@ -1801,7 +1802,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1812,7 +1813,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options);
     });
 };
 
@@ -2061,7 +2062,7 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const variants = createVariants(gltf);
     const meshVariants = {};
     const meshDefaultMaterials = {};
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials);
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options);
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
