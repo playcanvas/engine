@@ -157,7 +157,7 @@ const standard = {
 
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
-            if (mapping && subCode.search(/\$SAMPLER/g)) {
+            if (mapping && subCode.search(/\$SAMPLER/g) !== -1) {
                 let samplerName = "texture_" + mapPropName;
                 const alias = mapping[textureIdentifier];
                 if (alias) {
