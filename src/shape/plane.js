@@ -19,8 +19,8 @@ class Plane {
      * parameter.
      */
     constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
-        this.normal = normal;
         this.point = point;
+        this.normal = normal;
     }
 
     /**
