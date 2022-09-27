@@ -687,25 +687,25 @@ class ElementComponent extends Component {
      * @type {Vec2 | number[]}
      */
     set pivot(value) {
-        const { _pivot, _margin } = this;
-        const prevX = _pivot.x;
-        const prevY = _pivot.y;
+        const { pivot, margin } = this;
+        const prevX = pivot.x;
+        const prevY = pivot.y;
 
         if (value instanceof Vec2) {
-            _pivot.copy(value);
+            pivot.copy(value);
         } else {
-            _pivot.set(...value);
+            pivot.set(...value);
         }
 
-        const mx = _margin.x + _margin.z;
-        const dx = _pivot.x - prevX;
-        _margin.x += mx * dx;
-        _margin.z -= mx * dx;
+        const mx = margin.x + margin.z;
+        const dx = pivot.x - prevX;
+        margin.x += mx * dx;
+        margin.z -= mx * dx;
 
-        const my = _margin.y + _margin.w;
-        const dy = _pivot.y - prevY;
-        _margin.y += my * dy;
-        _margin.w -= my * dy;
+        const my = margin.y + margin.w;
+        const dy = pivot.y - prevY;
+        margin.y += my * dy;
+        margin.w -= my * dy;
 
         this._anchorDirty = true;
         this._cornersDirty = true;
@@ -717,7 +717,7 @@ class ElementComponent extends Component {
         // in order for them to update their position
         this._flagChildrenAsDirty();
 
-        this.fire('set:pivot', _pivot);
+        this.fire('set:pivot', pivot);
     }
 
     get pivot() {
