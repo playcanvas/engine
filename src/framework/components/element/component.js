@@ -1593,10 +1593,14 @@ class ElementComponent extends Component {
     }
 
     /**
-     * recalculates
-     * localAnchor, width, height, (local position is updated if anchors are split)
-     * assumes these properties are up to date
-     * _margin
+     * Recalculates these properties:
+     *   - `_localAnchor`
+     *   - `width`
+     *   - `height`
+     *   - Local position is updated if anchors are split
+     *
+     * Assumes these properties are up to date:
+     *   - `_margin`
      *
      * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead
      * of `_setCalculatedWidth`
