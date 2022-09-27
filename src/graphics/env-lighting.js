@@ -230,7 +230,8 @@ class EnvLighting {
      */
     static generatePrefilteredAtlas(sources, options) {
         const device = sources[0].device;
-        const format = lightingPixelFormat(device);
+        const format = sources[0].format;
+        const type = sources[0].type;
 
         DebugGraphics.pushGpuMarker(device, "genPrefilteredAtlas");
 
@@ -239,7 +240,7 @@ class EnvLighting {
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+            type: type,
             projection: TEXTUREPROJECTION_EQUIRECT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
