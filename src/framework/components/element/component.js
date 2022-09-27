@@ -397,13 +397,18 @@ class ElementComponent extends Component {
      * of the anchor are not equal. In that case the component will be resized to cover that entire
      * area. e.g. a value of [0, 0, 1, 1] will make the component resize exactly as its parent.
      *
-     * @type {Vec4}
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = [Math.random() * 0.1, 0, 1, 0];
+     *
+     * @type {Vec4 | number[]}
      */
     set anchor(value) {
         if (value instanceof Vec4) {
-            this._anchor.set(value.x, value.y, value.z, value.w);
+            this._anchor.copy(value);
         } else {
-            this._anchor.set(value[0], value[1], value[2], value[3]);
+            this._anchor.set(...value);
         }
 
         if (!this.entity._parent && !this.screen) {
@@ -674,27 +679,33 @@ class ElementComponent extends Component {
      * The position of the pivot of the component relative to its anchor. Each value ranges from 0
      * to 1 where [0,0] is the bottom left and [1,1] is the top right.
      *
-     * @type {Vec2}
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
+     *
+     * @type {Vec2 | number[]}
      */
     set pivot(value) {
-        const prevX = this._pivot.x;
-        const prevY = this._pivot.y;
+        const { pivot, margin } = this;
+        const prevX = pivot.x;
+        const prevY = pivot.y;
 
         if (value instanceof Vec2) {
-            this._pivot.set(value.x, value.y);
+            pivot.copy(value);
         } else {
-            this._pivot.set(value[0], value[1]);
+            pivot.set(...value);
         }
 
-        const mx = this._margin.x + this._margin.z;
-        const dx = this._pivot.x - prevX;
-        this._margin.x += mx * dx;
-        this._margin.z -= mx * dx;
+        const mx = margin.x + margin.z;
+        const dx = pivot.x - prevX;
+        margin.x += mx * dx;
+        margin.z -= mx * dx;
 
-        const my = this._margin.y + this._margin.w;
-        const dy = this._pivot.y - prevY;
-        this._margin.y += my * dy;
-        this._margin.w -= my * dy;
+        const my = margin.y + margin.w;
+        const dy = pivot.y - prevY;
+        margin.y += my * dy;
+        margin.w -= my * dy;
 
         this._anchorDirty = true;
         this._cornersDirty = true;
@@ -706,7 +717,7 @@ class ElementComponent extends Component {
         // in order for them to update their position
         this._flagChildrenAsDirty();
 
-        this.fire('set:pivot', this._pivot);
+        this.fire('set:pivot', pivot);
     }
 
     get pivot() {
@@ -1001,9 +1012,19 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition = Entity.prototype.setLocalPosition;
     }
 
+    /**
+     * Patched method for setting the position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     * @private
+     */
     _setPosition(x, y, z) {
-        if (!this.element.screen)
-            return Entity.prototype.setPosition.call(this, x, y, z);
+        if (!this.element.screen) {
+            Entity.prototype.setPosition.call(this, x, y, z);
+            return;
+        }
 
         if (x instanceof Vec3) {
             position.copy(x);
@@ -1019,6 +1040,14 @@ class ElementComponent extends Component {
             this._dirtifyLocal();
     }
 
+    /**
+     * Patched method for setting the local position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     * @private
+     */
     _setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
             this.localPosition.copy(x);
@@ -1563,10 +1592,22 @@ class ElementComponent extends Component {
         this.off();
     }
 
-    // recalculates
-    // localAnchor, width, height, (local position is updated if anchors are split)
-    // assumes these properties are up to date
-    // _margin
+    /**
+     * Recalculates these properties:
+     *   - `_localAnchor`
+     *   - `width`
+     *   - `height`
+     *   - Local position is updated if anchors are split
+     *
+     * Assumes these properties are up to date:
+     *   - `_margin`
+     *
+     * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead
+     * of `_setCalculatedWidth`
+     * @param {boolean} propagateCalculatedHeight - If true, call `_setHeight` instead
+     * of `_setCalculatedHeight`
+     * @private
+     */
     _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
         if (!this.entity._parent && !this.screen) return;
@@ -1597,7 +1638,12 @@ class ElementComponent extends Component {
         this._sizeDirty = false;
     }
 
-    // internal set width without updating margin
+    /**
+     * Internal set width without updating margin.
+     *
+     * @param {number} w - The new width.
+     * @private
+     */
     _setWidth(w) {
         this._width = w;
         this._setCalculatedWidth(w, false);
@@ -1605,7 +1651,12 @@ class ElementComponent extends Component {
         this.fire('set:width', this._width);
     }
 
-    // internal set height without updating margin
+    /**
+     * Internal set height without updating margin.
+     *
+     * @param {number} h - The new height.
+     * @private
+     */
     _setHeight(h) {
         this._height = h;
         this._setCalculatedHeight(h, false);
@@ -1613,6 +1664,13 @@ class ElementComponent extends Component {
         this.fire('set:height', this._height);
     }
 
+    /**
+     * This method sets the calculated width value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated width.
+     * @param {boolean} updateMargins - Update margins or not.
+     * @private
+     */
     _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
             return;
@@ -1632,6 +1690,13 @@ class ElementComponent extends Component {
         this.fire('resize', this._calculatedWidth, this._calculatedHeight);
     }
 
+    /**
+     * This method sets the calculated height value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated height.
+     * @param {boolean} updateMargins - Update margins or not.
+     * @private
+     */
     _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
             return;
