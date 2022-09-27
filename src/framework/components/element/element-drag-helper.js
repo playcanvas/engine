@@ -9,6 +9,8 @@ import { ElementComponent } from './component.js';
 import { Ray } from '../../../shape/ray.js';
 import { Plane } from '../../../shape/plane.js';
 
+/** @typedef {import('../../../input/element-input').ElementTouchEvent} ElementTouchEvent */
+
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
 const _ray = new Ray();
@@ -136,6 +138,15 @@ class ElementDragHelper extends EventHandler {
         }
     }
 
+    /**
+     * This method calculates the `Vec3` intersection point of plane/ray intersection based on
+     * the mouse/touch input event. If there is no intersection, it returns `null`.
+     *
+     * @param {ElementTouchEvent} event - The event.
+     * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
+     * is an intersection, otherwise `null`
+     * @private
+     */
     _screenToLocal(event) {
         this._determineInputPosition(event);
         this._chooseRayOriginAndDirection();
@@ -209,22 +220,33 @@ class ElementDragHelper extends EventHandler {
         dragScale.z = 1 / dragScale.z;
     }
 
+    /**
+     * This method is linked to `_element` events: `mousemove` and `touchmove`
+     *
+     * @param {ElementTouchEvent} event - The event.
+     * @private
+     */
     _onMove(event) {
-        const { _element, _deltaMousePosition, _deltaHandlePosition, _axis } = this;
-        if (_element && this._isDragging && this.enabled && _element.enabled && _element.entity.enabled) {
+        const {
+            _element: element,
+            _deltaMousePosition: deltaMousePosition,
+            _deltaHandlePosition: deltaHandlePosition,
+            _axis: axis
+        } = this;
+        if (element && this._isDragging && this.enabled && element.enabled && element.entity.enabled) {
             const currentMousePosition = this._screenToLocal(event);
             if (currentMousePosition) {
-                _deltaMousePosition.sub2(currentMousePosition, this._dragStartMousePosition);
-                _deltaHandlePosition.add2(this._dragStartHandlePosition, _deltaMousePosition);
+                deltaMousePosition.sub2(currentMousePosition, this._dragStartMousePosition);
+                deltaHandlePosition.add2(this._dragStartHandlePosition, deltaMousePosition);
 
-                if (_axis) {
-                    const currentPosition = _element.entity.getLocalPosition();
-                    const constrainedAxis = OPPOSITE_AXIS[_axis];
-                    _deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
+                if (axis) {
+                    const currentPosition = element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[axis];
+                    deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 
-                _element.entity.setLocalPosition(_deltaHandlePosition);
-                this.fire('drag:move', _deltaHandlePosition);
+                element.entity.setLocalPosition(deltaHandlePosition);
+                this.fire('drag:move', deltaHandlePosition);
             }
         }
     }
