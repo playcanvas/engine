@@ -147,7 +147,11 @@ class GltfExporter {
 
                 if (buffer instanceof pc.VertexBuffer) {
                     bufferView.target = ARRAY_BUFFER;
-                    bufferView.byteStride = buffer.getFormat().size;
+                    const format = buffer.getFormat();
+
+                    if (format.interleaved) {
+                        bufferView.byteStride = format.size;
+                    }
                 } else {
                     bufferView.target = ELEMENT_ARRAY_BUFFER;
                 }
