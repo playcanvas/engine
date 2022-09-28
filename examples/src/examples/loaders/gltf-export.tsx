@@ -84,7 +84,7 @@ class GltfExportExample {
                     const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
                     // @ts-ignore
-                    link.download = "bench.glb";
+                    link.download = "scene.glb";
 
                     // @ts-ignore
                     link.href = URL.createObjectURL(blob);

@@ -305,12 +305,6 @@ class GltfExporter {
                     material: resources.materials.indexOf(meshInstance.material)
                 };
 
-                // let byteOffset = 0;
-                // resources.buffers.forEach((buffer) => {
-                //     const arrayBuffer = buffer.lock();
-                //     byteOffset += arrayBuffer.byteLength;
-                // });
-
                 // An accessor is a vertex attribute
                 const writeAccessor = (element) => {
 
