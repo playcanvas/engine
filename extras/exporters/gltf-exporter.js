@@ -62,20 +62,20 @@ class GltfExporter {
             meshInstances: []
         };
 
+        const { materials, buffers } = resources;
+
         // Collect entities
         root.forEach((entity) => {
             resources.entities.push(entity);
         });
 
         // Collect materials
-        const collectMaterials = (meshInstances) => {
+        const collectMeshInstances = (meshInstances) => {
             meshInstances.forEach((meshInstance) => {
-                let idx;
 
                 // Collect material
                 const material = meshInstance.material;
-                idx = resources.materials.indexOf(material);
-                if (idx === -1) {
+                if (materials.indexOf(material) < 0) {
                     resources.materials.push(material);
                 }
 
@@ -85,15 +85,13 @@ class GltfExporter {
                 // Collect buffers
                 const mesh = meshInstance.mesh;
                 const vertexBuffer = mesh.vertexBuffer;
-                idx = resources.buffers.indexOf(vertexBuffer);
-                if (idx === -1) {
-                    resources.buffers.unshift(vertexBuffer);
+                if (buffers.indexOf(vertexBuffer) < 0) {
+                    buffers.unshift(vertexBuffer);
                 }
 
                 const indexBuffer = mesh.indexBuffer[0];
-                idx = resources.buffers.indexOf(indexBuffer);
-                if (idx === -1) {
-                    resources.buffers.push(indexBuffer);
+                if (buffers.indexOf(indexBuffer) < 0) {
+                    buffers.push(indexBuffer);
                 }
             });
         };
@@ -104,11 +102,11 @@ class GltfExporter {
             }
 
             if (entity.render) {
-                collectMaterials(entity.render.meshInstances);
+                collectMeshInstances(entity.render.meshInstances);
             }
 
             if (entity.model) {
-                collectMaterials(entity.model.meshInstances);
+                collectMeshInstances(entity.model.meshInstances);
             }
         });
 
@@ -197,13 +195,7 @@ class GltfExporter {
     writeMaterials(resources, json) {
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
-                const name = mat.name;
-                const diffuse = mat.diffuse;
-                const emissive = mat.emissive;
-                const opacity = mat.opacity;
-                const blendType = mat.blendType;
-                const cull = mat.cull;
-
+                const { name, diffuse, emissive, opacity, blendType, cull } = mat;
                 const material = {};
 
                 if (name && name.length > 0) {
