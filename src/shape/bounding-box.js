@@ -350,12 +350,12 @@ class BoundingBox {
      *
      * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
      * AABB.
-     * @param {Vec3} min - Computed min value.
-     * @param {Vec3} max - Computed max value.
+     * @param {Vec3} min - Stored computed min value.
+     * @param {Vec3} max - Stored computed max value.
      * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
      * All vertices are used if not specified.
      */
-    static computeMinMax(vertices, min = new Vec3(), max = new Vec3(), numVerts = vertices.length / 3) {
+    static computeMinMax(vertices, min, max, numVerts = vertices.length / 3) {
         if (numVerts > 0) {
 
             min.set(vertices[0], vertices[1], vertices[2]);
