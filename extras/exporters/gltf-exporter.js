@@ -316,10 +316,15 @@ class GltfExporter {
 
                     // Position accessor also requires min and max properties
                     if (element.name === pc.SEMANTIC_POSITION) {
-                        const min = meshInstance.mesh.aabb.getMin();
-                        accessor.min = [min.x, min.y, min.z];
 
-                        const max = meshInstance.mesh.aabb.getMax();
+                        // compute min and max from positions, as the BoundingBox stores center and extents,
+                        // and we get precision warnings from gltf validator
+                        const positions = [];
+                        meshInstance.mesh.getPositions(positions);
+                        const min = new pc.Vec3(), max = new pc.Vec3();
+                        pc.BoundingBox.computeMinMax(positions, min, max);
+
+                        accessor.min = [min.x, min.y, min.z];
                         accessor.max = [max.x, max.y, max.z];
                     }
                 };
