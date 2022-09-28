@@ -106,8 +106,11 @@ class StandardMaterialOptionsBuilder {
 
         options.vertexColors = false;
         this._mapXForms = [];
+
+        const textureMappingCounter = { value: 0 };
+        const textureMap = {};
         for (const p in _matTex2D) {
-            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
+            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, textureMappingCounter, textureMap);
         }
         this._mapXForms = null;
     }
@@ -311,7 +314,7 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
+    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, textureMappingCounter, textureMap) {
         const mname = p + 'Map';
         const vname = p + 'VertexColor';
         const vcname = p + 'VertexColorChannel';
@@ -348,8 +351,17 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
+
+                    const mapId = stdMat[mname].id;
+                    let identifier = textureMap[mapId];
+                    if (identifier === undefined) {
+                        textureMap[mapId] = textureMappingCounter.value;
+                        identifier = textureMappingCounter.value;
+                        textureMappingCounter.value++;
+                    }
+
                     options[mname] = !!stdMat[mname];
-                    options[iname] = stdMat[mname].id;
+                    options[iname] = identifier;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];
