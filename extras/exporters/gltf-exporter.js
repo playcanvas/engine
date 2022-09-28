@@ -1,12 +1,56 @@
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
 
-const BYTE = 5120;
-const UNSIGNED_BYTE = 5121;
-const SHORT = 5122;
-const UNSIGNED_SHORT = 5123;
-const UNSIGNED_INT = 5125;
-const FLOAT = 5126;
+const getIndexComponentType = (indexFormat) => {
+    switch (indexFormat) {
+        case pc.INDEXFORMAT_UINT8: return 5121;
+        case pc.INDEXFORMAT_UINT16: return 5123;
+        case pc.INDEXFORMAT_UINT32: return 5125;
+    }
+    return 0;
+};
+
+const getComponentType = (dataType) => {
+    switch (dataType) {
+        case pc.TYPE_INT8: return 5120;
+        case pc.TYPE_UINT8: return 5121;
+        case pc.TYPE_INT16: return 5122;
+        case pc.TYPE_UINT16: return 5123;
+        case pc.TYPE_INT32: return 5124;
+        case pc.TYPE_UINT32: return 5125;
+        case pc.TYPE_FLOAT32: return 5126;
+    }
+    return 0;
+};
+
+const getAccessorType = (componentCount) => {
+    switch (componentCount) {
+        case 1: return 'SCALAR';
+        case 2: return 'VEC2';
+        case 3: return 'VEC3';
+        case 4: return 'VEC4';
+    }
+    return 0;
+};
+
+const getSemantic = (engineSemantic) => {
+    switch (engineSemantic) {
+        case pc.SEMANTIC_POSITION: return 'POSITION';
+        case pc.SEMANTIC_NORMAL: return 'NORMAL';
+        case pc.SEMANTIC_TANGENT: return 'TANGENT';
+        case pc.SEMANTIC_COLOR: return 'COLOR_0';
+        case pc.SEMANTIC_BLENDINDICES: return 'JOINTS_0';
+        case pc.SEMANTIC_BLENDWEIGHT: return 'WEIGHTS_0';
+        case pc.SEMANTIC_TEXCOORD0: return 'TEXCOORD_0';
+        case pc.SEMANTIC_TEXCOORD1: return 'TEXCOORD_1';
+        case pc.SEMANTIC_TEXCOORD2: return 'TEXCOORD_2';
+        case pc.SEMANTIC_TEXCOORD3: return 'TEXCOORD_3';
+        case pc.SEMANTIC_TEXCOORD4: return 'TEXCOORD_4';
+        case pc.SEMANTIC_TEXCOORD5: return 'TEXCOORD_5';
+        case pc.SEMANTIC_TEXCOORD6: return 'TEXCOORD_6';
+        case pc.SEMANTIC_TEXCOORD7: return 'TEXCOORD_7';
+    }
+};
 
 class GltfExporter {
     collectResources(root) {
@@ -261,45 +305,36 @@ class GltfExporter {
                     material: resources.materials.indexOf(meshInstance.material)
                 };
 
-                let byteOffset = 0;
-
-                resources.buffers.forEach((buffer) => {
-                    const arrayBuffer = buffer.lock();
-                    byteOffset += arrayBuffer.byteLength;
-                });
+                // let byteOffset = 0;
+                // resources.buffers.forEach((buffer) => {
+                //     const arrayBuffer = buffer.lock();
+                //     byteOffset += arrayBuffer.byteLength;
+                // });
 
                 // An accessor is a vertex attribute
                 const writeAccessor = (element) => {
+
                     const accessor = {
                         bufferView: resources.buffers.indexOf(vertexBuffer),
                         byteOffset: element.offset,
-                        componentType: FLOAT,
+                        componentType: getComponentType(element.dataType),
+                        type: getAccessorType(element.numComponents),
                         count: numVertices
                     };
 
+                    const idx = json.accessors.length;
                     json.accessors.push(accessor);
 
-                    const idx = json.accessors.indexOf(accessor);
+                    const semantic = getSemantic(element.name);
+                    primitive.attributes[semantic] = idx;
 
+                    // Position accessor also requires min and max properties
                     if (element.name === pc.SEMANTIC_POSITION) {
-                        primitive.attributes.POSITION = idx;
-                        accessor.type = "VEC3";
-
-                        // Position accessor also requires min and max properties
                         const min = meshInstance.mesh.aabb.getMin();
                         accessor.min = [min.x, min.y, min.z];
 
                         const max = meshInstance.mesh.aabb.getMax();
                         accessor.max = [max.x, max.y, max.z];
-                    } else if (element.name === pc.SEMANTIC_NORMAL) {
-                        primitive.attributes.NORMAL = idx;
-                        accessor.type = "VEC3";
-                    } else if (element.name === pc.SEMANTIC_TEXCOORD0) {
-                        primitive.attributes.TEXCOORD_0 = idx;
-                        accessor.type = "VEC2";
-                    } else if (element.name === pc.SEMANTIC_TEXCOORD1) {
-                        primitive.attributes.TEXCOORD_1 = idx;
-                        accessor.type = "VEC2";
                     }
                 };
 
@@ -310,7 +345,7 @@ class GltfExporter {
 
                     const accessor = {
                         bufferView: ibIdx,
-                        componentType: UNSIGNED_SHORT,
+                        componentType: getIndexComponentType(indexBuffer.getFormat()),
                         count: indexBuffer.getNumIndices(),
                         type: "SCALAR"
                     };
