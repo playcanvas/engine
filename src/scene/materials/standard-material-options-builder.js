@@ -326,6 +326,7 @@ class StandardMaterialOptionsBuilder {
             options[cname] = '';
             options[tname] = 0;
             options[uname] = 0;
+            options[iname] = undefined;
         }
         options[vname] = false;
         options[vcname] = '';
@@ -348,7 +349,7 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
                     options[mname] = !!stdMat[mname];
-                    options[iname] = stdMat[mname].name;
+                    options[iname] = stdMat[mname].id;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];

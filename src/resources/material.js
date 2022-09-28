@@ -186,7 +186,8 @@ class MaterialHandler {
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
         this._assignTexture(parameterName, materialAsset, textureAsset.resource);
-        materialAsset.resource.update();
+        if (--materialAsset.textureLoadCount === 0)
+            materialAsset.resource.update();
     }
 
     _onTextureAdd(parameterName, materialAsset, textureAsset) {
@@ -247,6 +248,8 @@ class MaterialHandler {
         const TEXTURES = standardMaterialTextureParameters;
 
         let i, name, assetReference;
+        materialAsset.textureLoadCount = 0;
+
         // iterate through all texture parameters
         for (i = 0; i < TEXTURES.length; i++) {
             name = TEXTURES[i];
@@ -264,6 +267,7 @@ class MaterialHandler {
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {
                 if (!assetReference) {
+                    materialAsset.textureLoadCount++;
                     assetReference = new AssetReference(name, materialAsset, assets, {
                         load: this._onTextureLoad,
                         add: this._onTextureAdd,
@@ -284,6 +288,7 @@ class MaterialHandler {
                 if (assetReference.asset) {
                     if (assetReference.asset.resource) {
                         // asset is already loaded
+                        materialAsset.textureLoadCount--;
                         this._assignTexture(name, materialAsset, assetReference.asset.resource);
                     } else {
                         this._assignPlaceholderTexture(name, materialAsset);
