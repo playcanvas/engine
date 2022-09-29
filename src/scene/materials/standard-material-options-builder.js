@@ -106,8 +106,11 @@ class StandardMaterialOptionsBuilder {
 
         options.vertexColors = false;
         this._mapXForms = [];
+
+        const uniqueTextureMap = {};
+        this.uniqueTextureMappingCounter = 0;
         for (const p in _matTex2D) {
-            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
+            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
         this._mapXForms = null;
     }
@@ -311,7 +314,7 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
+    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
         const mname = p + 'Map';
         const vname = p + 'VertexColor';
         const vcname = p + 'VertexColorChannel';
@@ -326,6 +329,7 @@ class StandardMaterialOptionsBuilder {
             options[cname] = '';
             options[tname] = 0;
             options[uname] = 0;
+            options[iname] = undefined;
         }
         options[vname] = false;
         options[vcname] = '';
@@ -347,8 +351,20 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
+
+                    // create an intermediate map between the textures and their slots
+                    // to ensure the unique texture mapping isn't dependent on the texture id
+                    // as that will change when textures are changed, even if the sharing is the same
+                    const mapId = stdMat[mname].id;
+                    let identifier = uniqueTextureMap[mapId];
+                    if (identifier === undefined) {
+                        uniqueTextureMap[mapId] = this.uniqueTextureMappingCounter;
+                        identifier = this.uniqueTextureMappingCounter;
+                        this.uniqueTextureMappingCounter++;
+                    }
+
                     options[mname] = !!stdMat[mname];
-                    options[iname] = stdMat[mname].name;
+                    options[iname] = identifier;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];
