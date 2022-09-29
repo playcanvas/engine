@@ -108,7 +108,6 @@ class StandardMaterialOptionsBuilder {
         this._mapXForms = [];
 
         const uniqueTextureMap = {};
-        this.uniqueTextureMappingCounter = 0;
         for (const p in _matTex2D) {
             this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
@@ -358,9 +357,8 @@ class StandardMaterialOptionsBuilder {
                     const mapId = stdMat[mname].id;
                     let identifier = uniqueTextureMap[mapId];
                     if (identifier === undefined) {
-                        uniqueTextureMap[mapId] = this.uniqueTextureMappingCounter;
-                        identifier = this.uniqueTextureMappingCounter;
-                        this.uniqueTextureMappingCounter++;
+                        uniqueTextureMap[mapId] = p;
+                        identifier = p;
                     }
 
                     options[mname] = !!stdMat[mname];
