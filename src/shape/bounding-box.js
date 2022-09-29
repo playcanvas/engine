@@ -346,18 +346,20 @@ class BoundingBox {
     }
 
     /**
-     * Compute the size of the AABB to encapsulate all specified vertices.
+     * Compute the min and max bounding values to encapsulate all specified vertices.
      *
      * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
      * AABB.
+     * @param {Vec3} min - Stored computed min value.
+     * @param {Vec3} max - Stored computed max value.
      * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
      * All vertices are used if not specified.
      */
-    compute(vertices, numVerts) {
-        numVerts = numVerts === undefined ? vertices.length / 3 : numVerts;
+    static computeMinMax(vertices, min, max, numVerts = vertices.length / 3) {
         if (numVerts > 0) {
-            const min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
-            const max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
+
+            min.set(vertices[0], vertices[1], vertices[2]);
+            max.set(vertices[0], vertices[1], vertices[2]);
 
             for (let i = 1; i < numVerts; i++) {
                 const x = vertices[i * 3 + 0];
@@ -370,9 +372,20 @@ class BoundingBox {
                 if (y > max.y) max.y = y;
                 if (z > max.z) max.z = z;
             }
-
-            this.setMinMax(min, max);
         }
+    }
+
+    /**
+     * Compute the size of the AABB to encapsulate all specified vertices.
+     *
+     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
+     * AABB.
+     * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
+     * All vertices are used if not specified.
+     */
+    compute(vertices, numVerts) {
+        BoundingBox.computeMinMax(vertices, tmpVecA, tmpVecB, numVerts);
+        this.setMinMax(tmpVecA, tmpVecB);
     }
 
     /**
