@@ -45,10 +45,10 @@ class LightPhysicalUnitsExample {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Scene'>
-                <LabelGroup text='Toggle physical light and camera units'>
+                <LabelGroup text='Physical'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
                 </LabelGroup>
-                <LabelGroup text='Toggle sky'>
+                <LabelGroup text='Skylight'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.sky' }}/>
                 </LabelGroup>
             </Panel>
@@ -90,6 +90,9 @@ class LightPhysicalUnitsExample {
             app.scene.skyboxMip = 1;
             app.scene.ambientLight.set(1, 0, 0);
             app.scene.ambientLuminance = 20000;
+
+            // enable area lights which are disabled by default for clustered lighting
+            app.scene.lighting.areaLightsEnabled = true;
 
             // set the loaded area light LUT data
             const luts = assets.luts.resource;
@@ -159,7 +162,7 @@ class LightPhysicalUnitsExample {
                     luminance: 100000
                 },
                 rect: {
-                    luminance: 100000
+                    luminance: 200000
                 },
                 camera: {
                     aperture: 16.0,
@@ -184,7 +187,7 @@ class LightPhysicalUnitsExample {
                 shutter: 1 / data.get('script.camera.shutter'),
                 sensitivity: data.get('script.camera.sensitivity')
             });
-            camera.setLocalPosition(0, 5, 30);
+            camera.setLocalPosition(0, 5, 11);
 
             camera.camera.requestSceneColorMap(true);
             camera.addComponent("script");
@@ -202,7 +205,6 @@ class LightPhysicalUnitsExample {
             app.root.addChild(camera);
 
             app.scene.skyboxLuminance = data.get('script.sky.luminance');
-            
 
             const directionalLight = new pc.Entity();
             directionalLight.addComponent("light", {
@@ -250,7 +252,7 @@ class LightPhysicalUnitsExample {
             areaLight.addComponent("light", {
                 type: "spot",
                 shape: pc.LIGHTSHAPE_RECT,
-                color: pc.Color.WHITE,
+                color: pc.Color.YELLOW,
                 range: 9999,
                 luminance: data.get('script.rect.luminance'),
                 falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
@@ -258,13 +260,13 @@ class LightPhysicalUnitsExample {
                 outerConeAngle: 85,
                 normalOffsetBias: 0.1
             });
-            areaLight.setLocalScale(2, 2, 2);
-            areaLight.setEulerAngles(90, 180, 0);
-            areaLight.setLocalPosition(5, 0, -5);
+            areaLight.setLocalScale(4, 1, 5);
+            areaLight.setEulerAngles(70, 180, 0);
+            areaLight.setLocalPosition(5, 3, -5);
 
             // emissive material that is the light source color
             const brightMaterial = new pc.StandardMaterial();
-            brightMaterial.emissive = pc.Color.WHITE;
+            brightMaterial.emissive = pc.Color.YELLOW;
             brightMaterial.emissiveIntensity = areaLight.light.luminance;
             brightMaterial.useLighting = false;
             brightMaterial.cull = pc.CULLFACE_NONE;
