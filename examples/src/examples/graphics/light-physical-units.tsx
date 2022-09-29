@@ -25,10 +25,10 @@ class LightPhysicalUnitsExample {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Camera'>
-                <LabelGroup text='Aperture'>
+                <LabelGroup text='Aperture (F/x)'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.aperture' }} min={1.0} max={16.0}/>
                 </LabelGroup>
-                <LabelGroup text='Shutter'>
+                <LabelGroup text='Shutter (1/x) s'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.shutter' }} min={1.0} max={1000.0}/>
                 </LabelGroup>
                 <LabelGroup text='ISO'>
@@ -179,31 +179,6 @@ class LightPhysicalUnitsExample {
             app.scene.physicalUnits = data.get('script.scene.physicalUnits');
             app.scene.setSkybox(assets.helipad.resources);
 
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5),
-                aperture: data.get('script.camera.aperture'),
-                shutter: 1 / data.get('script.camera.shutter'),
-                sensitivity: data.get('script.camera.sensitivity')
-            });
-            camera.setLocalPosition(0, 5, 11);
-
-            camera.camera.requestSceneColorMap(true);
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
-                attributes: {
-                    inertiaFactor: 0.2,
-                    focusEntity: sheen1,
-                    distanceMin: 1,
-                    distanceMax: 400,
-                    frameOnStart: false
-                }
-            });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
-            app.root.addChild(camera);
-
             app.scene.skyboxLuminance = data.get('script.sky.luminance');
 
             const directionalLight = new pc.Entity();
@@ -219,9 +194,9 @@ class LightPhysicalUnitsExample {
             directionalLight.setEulerAngles(45, 35, 0);
             app.root.addChild(directionalLight);
 
-            const pointLight = new pc.Entity();
-            pointLight.addComponent("light", {
-                type: "point",
+            const omniLight = new pc.Entity();
+            omniLight.addComponent("light", {
+                type: "omni",
                 color: pc.Color.WHITE,
                 castShadows: false,
                 luminance: data.get('script.point.luminance'),
@@ -229,8 +204,8 @@ class LightPhysicalUnitsExample {
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
-            pointLight.setLocalPosition(0, 5, 0);
-            app.root.addChild(pointLight);
+            omniLight.setLocalPosition(0, 5, 0);
+            app.root.addChild(omniLight);
 
             const spotLight = new pc.Entity();
             spotLight.addComponent("light", {
@@ -282,6 +257,31 @@ class LightPhysicalUnitsExample {
             areaLight.addChild(brightShape);
             app.root.addChild(areaLight);
 
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5),
+                aperture: data.get('script.camera.aperture'),
+                shutter: 1 / data.get('script.camera.shutter'),
+                sensitivity: data.get('script.camera.sensitivity')
+            });
+            camera.setLocalPosition(0, 5, 11);
+
+            camera.camera.requestSceneColorMap(true);
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2,
+                    focusEntity: sheen1,
+                    distanceMin: 1,
+                    distanceMax: 400,
+                    frameOnStart: false
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
+
             data.on('*:set', (path: string, value: any) => {
                 if (path === 'script.sun.luminance') {
                     directionalLight.light.luminance = value;
@@ -292,7 +292,7 @@ class LightPhysicalUnitsExample {
                 } else if (path === 'script.spot.aperture') {
                     spotLight.light.outerConeAngle = value;
                 } else if (path === 'script.point.luminance') {
-                    pointLight.light.luminance = value;
+                    omniLight.light.luminance = value;
                 } else if (path === 'script.rect.luminance') {
                     areaLight.light.luminance = value;
                     brightMaterial.emissiveIntensity = value;
