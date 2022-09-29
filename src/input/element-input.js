@@ -567,7 +567,7 @@ class ElementInput {
 
                 const coords = this._calcTouchCoords(event.changedTouches[j]);
 
-                const element = this._getTargetElement(camera, coords.x, coords.y);
+                const element = this._getTargetElementByCoords(camera, coords.x, coords.y);
                 if (element) {
                     done++;
                     touchedElements[event.changedTouches[j].identifier] = {
@@ -642,7 +642,7 @@ class ElementInput {
             const coords = this._calcTouchCoords(touch);
 
             for (let c = cameras.length - 1; c >= 0; c--) {
-                const hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
+                const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
                 if (hovered === element) {
 
                     if (!this._clickedEntities[element.entity.getGuid()]) {
@@ -705,7 +705,7 @@ class ElementInput {
         for (let i = cameras.length - 1; i >= 0; i--) {
             camera = cameras[i];
 
-            element = this._getTargetElement(camera, targetX, targetY);
+            element = this._getTargetElementByCoords(camera, targetX, targetY);
             if (element)
                 break;
         }
@@ -918,14 +918,34 @@ class ElementInput {
         return b.drawOrder - a.drawOrder;
     }
 
-    _getTargetElement(camera, x, y) {
+    _getTargetElementByCoords(camera, x, y) {
+        // calculate screen-space and 3d-space rays
+        const rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
+        const ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
+
+        return this._getTargetElement(camera, rayScreen, ray3d);
+    }
+
+    _getTargetElementByRay(ray, camera) {
+        // 3d ray is copied from input ray
+        rayA.origin.copy(ray.origin);
+        rayA.direction.copy(ray.direction);
+        rayA.end.copy(rayA.direction).mulScalar(camera.farClip * 2).add(rayA.origin);
+        const ray3d = rayA;
+
+        // screen-space ray is built from input ray's origin, converted to screen-space
+        const screenPos = camera.worldToScreen(ray3d.origin, vecA);
+        const rayScreen = this._calculateRayScreen(screenPos.x, screenPos.y, camera, rayB) ? rayB : null;
+
+        return this._getTargetElement(camera, rayScreen, ray3d);
+    }
+
+    _getTargetElement(camera, rayScreen, ray3d) {
         let result = null;
         let closestDistance3d = Infinity;
 
         // sort elements based on layers and draw order
         this._elements.sort(this._sortHandler);
-
-        let rayScreen, ray3d;
 
         for (let i = 0, len = this._elements.length; i < len; i++) {
             const element = this._elements[i];
@@ -936,10 +956,9 @@ class ElementInput {
             }
 
             if (element.screen && element.screen.screen.screenSpace) {
-                if (rayScreen === undefined) {
-                    rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
+                if (!rayScreen) {
+                    continue;
                 }
-                if (!rayScreen) continue;
 
                 // 2d screen elements take precedence - if hit, immediately return
                 const currentDistance = this._checkElement(rayScreen, element, true);
@@ -948,10 +967,9 @@ class ElementInput {
                     break;
                 }
             } else {
-                if (ray3d === undefined) {
-                    ray3d = this._calculateRay3d(x, y, camera, rayB) ? rayB : null;
+                if (!ray3d) {
+                    continue;
                 }
-                if (!ray3d) continue;
 
                 const currentDistance = this._checkElement(ray3d, element, false);
                 if (currentDistance >= 0) {
@@ -966,35 +984,6 @@ class ElementInput {
                         result = element;
                         break;
                     }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    _getTargetElementByRay(ray, camera) {
-        let result = null;
-
-        rayA.origin.copy(ray.origin);
-        rayA.direction.copy(ray.direction);
-        rayA.end.copy(rayA.direction).mulScalar(camera.farClip * 2).add(rayA.origin);
-
-        // sort elements
-        this._elements.sort(this._sortHandler);
-
-        for (let i = 0, len = this._elements.length; i < len; i++) {
-            const element = this._elements[i];
-
-            // check if any of the layers this element renders to is being rendered by the camera
-            if (!element.layers.some(v => camera.layersSet.has(v))) {
-                continue;
-            }
-
-            if (!element.screen || !element.screen.screen.screenSpace) {
-                if (this._checkElement(rayA, element, false) >= 0) {
-                    result = element;
-                    break;
                 }
             }
         }

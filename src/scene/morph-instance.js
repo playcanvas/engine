@@ -8,7 +8,6 @@ import { Debug } from '../core/debug.js';
 import { Morph } from './morph.js';
 
 /** @typedef {import('../graphics/shader.js').Shader} Shader */
-/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
@@ -39,13 +38,6 @@ class MorphInstance {
         this.morph = morph;
         morph.incRefCount();
         this.device = morph.device;
-
-        /**
-         * The mesh instance this morph instance controls the morphing of.
-         *
-         * @type {MeshInstance}
-         */
-        this.meshInstance = null;
 
         // weights
         this._weights = [];
@@ -126,8 +118,6 @@ class MorphInstance {
      */
     destroy() {
 
-        this.meshInstance = null;
-
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
@@ -172,8 +162,7 @@ class MorphInstance {
      * @returns {MorphInstance} A clone of the specified MorphInstance.
      */
     clone() {
-        const clone = new MorphInstance(this.morph);
-        return clone;
+        return new MorphInstance(this.morph);
     }
 
     _getWeightIndex(key) {

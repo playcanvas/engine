@@ -11,45 +11,45 @@ class LightPhysicalUnitsExample {
     controls(data: Observer) {
         return <>
             <Panel headerText='Lights'>
-                <LabelGroup text='Sun (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sun.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Sky (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sky.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.luminance' }} min={0.0} max={200000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot aperture'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.aperture' }} min={1.0} max={90.0}/>
+                <LabelGroup text='Rect (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.luminance' }} min={0.0} max={800000.0}/>
                 </LabelGroup>
                 <LabelGroup text='Point (lm)'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.luminance' }} min={0.0} max={800000.0}/>
                 </LabelGroup>
-                <LabelGroup text='Rect (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.luminance' }} min={0.0} max={800000.0}/>
+                <LabelGroup text='Spot (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.luminance' }} min={0.0} max={200000.0}/>
+                </LabelGroup>
+                <LabelGroup text='Spot angle'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.aperture' }} min={1.0} max={90.0}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Camera'>
-                <LabelGroup text='Aperture (f-stop)'>
+                <LabelGroup text='Aperture (F/x)'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.aperture' }} min={1.0} max={16.0}/>
                 </LabelGroup>
-                <LabelGroup text='Shutter Speed (1/x)'>
+                <LabelGroup text='Shutter (1/x) s'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.shutter' }} min={1.0} max={1000.0}/>
                 </LabelGroup>
-                <LabelGroup text='Sensitivity (ISO)'>
+                <LabelGroup text='ISO'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.sensitivity' }} min={100.0} max={1000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Animate'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Scene'>
-                <LabelGroup text='Toggle physical light and camera units'>
+                <LabelGroup text='Animate'>
+                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
+                </LabelGroup>
+                <LabelGroup text='Physical'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
                 </LabelGroup>
-                <LabelGroup text='Toggle sky'>
+                <LabelGroup text='Skylight'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.sky' }}/>
+                </LabelGroup>
+                <LabelGroup text='Sky (lm/m2)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sky.luminance' }} min={0.0} max={100000.0}/>
+                </LabelGroup>
+                <LabelGroup text='Sun (lm/m2)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sun.luminance' }} min={0.0} max={100000.0}/>
                 </LabelGroup>
             </Panel>
         </>;
@@ -90,6 +90,9 @@ class LightPhysicalUnitsExample {
             app.scene.skyboxMip = 1;
             app.scene.ambientLight.set(1, 0, 0);
             app.scene.ambientLuminance = 20000;
+
+            // enable area lights which are disabled by default for clustered lighting
+            app.scene.lighting.areaLightsEnabled = true;
 
             // set the loaded area light LUT data
             const luts = assets.luts.resource;
@@ -159,7 +162,7 @@ class LightPhysicalUnitsExample {
                     luminance: 100000
                 },
                 rect: {
-                    luminance: 100000
+                    luminance: 200000
                 },
                 camera: {
                     aperture: 16.0,
@@ -176,33 +179,7 @@ class LightPhysicalUnitsExample {
             app.scene.physicalUnits = data.get('script.scene.physicalUnits');
             app.scene.setSkybox(assets.helipad.resources);
 
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5),
-                aperture: data.get('script.camera.aperture'),
-                shutter: 1 / data.get('script.camera.shutter'),
-                sensitivity: data.get('script.camera.sensitivity')
-            });
-            camera.setLocalPosition(0, 5, 30);
-
-            camera.camera.requestSceneColorMap(true);
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
-                attributes: {
-                    inertiaFactor: 0.2,
-                    focusEntity: sheen1,
-                    distanceMin: 1,
-                    distanceMax: 400,
-                    frameOnStart: false
-                }
-            });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
-            app.root.addChild(camera);
-
             app.scene.skyboxLuminance = data.get('script.sky.luminance');
-            
 
             const directionalLight = new pc.Entity();
             directionalLight.addComponent("light", {
@@ -217,9 +194,9 @@ class LightPhysicalUnitsExample {
             directionalLight.setEulerAngles(45, 35, 0);
             app.root.addChild(directionalLight);
 
-            const pointLight = new pc.Entity();
-            pointLight.addComponent("light", {
-                type: "point",
+            const omniLight = new pc.Entity();
+            omniLight.addComponent("light", {
+                type: "omni",
                 color: pc.Color.WHITE,
                 castShadows: false,
                 luminance: data.get('script.point.luminance'),
@@ -227,8 +204,8 @@ class LightPhysicalUnitsExample {
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
-            pointLight.setLocalPosition(0, 5, 0);
-            app.root.addChild(pointLight);
+            omniLight.setLocalPosition(0, 5, 0);
+            app.root.addChild(omniLight);
 
             const spotLight = new pc.Entity();
             spotLight.addComponent("light", {
@@ -250,7 +227,7 @@ class LightPhysicalUnitsExample {
             areaLight.addComponent("light", {
                 type: "spot",
                 shape: pc.LIGHTSHAPE_RECT,
-                color: pc.Color.WHITE,
+                color: pc.Color.YELLOW,
                 range: 9999,
                 luminance: data.get('script.rect.luminance'),
                 falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
@@ -258,13 +235,13 @@ class LightPhysicalUnitsExample {
                 outerConeAngle: 85,
                 normalOffsetBias: 0.1
             });
-            areaLight.setLocalScale(2, 2, 2);
-            areaLight.setEulerAngles(90, 180, 0);
-            areaLight.setLocalPosition(5, 0, -5);
+            areaLight.setLocalScale(4, 1, 5);
+            areaLight.setEulerAngles(70, 180, 0);
+            areaLight.setLocalPosition(5, 3, -5);
 
             // emissive material that is the light source color
             const brightMaterial = new pc.StandardMaterial();
-            brightMaterial.emissive = pc.Color.WHITE;
+            brightMaterial.emissive = pc.Color.YELLOW;
             brightMaterial.emissiveIntensity = areaLight.light.luminance;
             brightMaterial.useLighting = false;
             brightMaterial.cull = pc.CULLFACE_NONE;
@@ -280,6 +257,31 @@ class LightPhysicalUnitsExample {
             areaLight.addChild(brightShape);
             app.root.addChild(areaLight);
 
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5),
+                aperture: data.get('script.camera.aperture'),
+                shutter: 1 / data.get('script.camera.shutter'),
+                sensitivity: data.get('script.camera.sensitivity')
+            });
+            camera.setLocalPosition(0, 5, 11);
+
+            camera.camera.requestSceneColorMap(true);
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2,
+                    focusEntity: sheen1,
+                    distanceMin: 1,
+                    distanceMax: 400,
+                    frameOnStart: false
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
+
             data.on('*:set', (path: string, value: any) => {
                 if (path === 'script.sun.luminance') {
                     directionalLight.light.luminance = value;
@@ -290,7 +292,7 @@ class LightPhysicalUnitsExample {
                 } else if (path === 'script.spot.aperture') {
                     spotLight.light.outerConeAngle = value;
                 } else if (path === 'script.point.luminance') {
-                    pointLight.light.luminance = value;
+                    omniLight.light.luminance = value;
                 } else if (path === 'script.rect.luminance') {
                     areaLight.light.luminance = value;
                     brightMaterial.emissiveIntensity = value;
@@ -312,9 +314,20 @@ class LightPhysicalUnitsExample {
                 }
             });
 
+            let resizeControlPanel = true;
             let time = 0;
             app.on("update", function (dt) {
                 time += dt;
+
+                // resize control panel to fit the content better
+                if (resizeControlPanel) {
+                    const panel = window.top.document.getElementById('controlPanel');
+                    if (panel) {
+                        panel.style.width = '360px';
+                        resizeControlPanel = false;
+                    }
+                }
+
                 if (data.get('script.camera.animate')) {
                     data.set('script.camera.aperture', 3 + (1 + Math.sin(time)) * 5.0);
                 }

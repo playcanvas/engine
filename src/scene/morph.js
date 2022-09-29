@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../math/vec3.js';
 import { FloatPacking } from '../math/float-packing.js';
@@ -29,8 +30,11 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
         super();
 
+        // validation
+        targets.forEach(target => Debug.assert(!target.used, 'The target specified has already been used to create a Morph, use its clone instead.'));
+
         this.device = graphicsDevice || getApplication().graphicsDevice;
-        this._targets = targets;
+        this._targets = targets.slice();
 
         // default to texture based morphing if available
         if (this.device.supportsMorphTargetTexturesCore) {
@@ -212,10 +216,8 @@ class Morph extends RefCountedObject {
      * Frees video memory allocated by this object.
      */
     destroy() {
-        if (this.vertexBufferIds) {
-            this.vertexBufferIds.destroy();
-            this.vertexBufferIds = null;
-        }
+        this.vertexBufferIds?.destroy();
+        this.vertexBufferIds = null;
 
         for (let i = 0; i < this._targets.length; i++) {
             this._targets[i].destroy();

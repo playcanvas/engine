@@ -11,7 +11,7 @@ void getAlbedo() {
 #endif
 
 #ifdef MAPTEXTURE
-    vec3 albedoBase = $DECODE(texture2DBias($SAMPLER, $UV, textureBias).$CH);
+    vec3 albedoBase = $DECODE(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
     dAlbedo *= addAlbedoDetail(albedoBase);
 #endif
 
