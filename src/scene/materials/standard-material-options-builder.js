@@ -107,7 +107,6 @@ class StandardMaterialOptionsBuilder {
         options.vertexColors = false;
         this._mapXForms = [];
 
-        const uniqueTextureMappingCounter = { value: 0 };
         const uniqueTextureMap = {};
         this.uniqueTextureMappingCounter = 0;
         for (const p in _matTex2D) {
