@@ -11,45 +11,45 @@ class LightPhysicalUnitsExample {
     controls(data: Observer) {
         return <>
             <Panel headerText='Lights'>
-                <LabelGroup text='Sun (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sun.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Sky (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sky.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.luminance' }} min={0.0} max={200000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot aperture'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.aperture' }} min={1.0} max={90.0}/>
+                <LabelGroup text='Rect (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.luminance' }} min={0.0} max={800000.0}/>
                 </LabelGroup>
                 <LabelGroup text='Point (lm)'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.luminance' }} min={0.0} max={800000.0}/>
                 </LabelGroup>
-                <LabelGroup text='Rect (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.luminance' }} min={0.0} max={800000.0}/>
+                <LabelGroup text='Spot (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.luminance' }} min={0.0} max={200000.0}/>
+                </LabelGroup>
+                <LabelGroup text='Spot angle'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.aperture' }} min={1.0} max={90.0}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Camera'>
-                <LabelGroup text='Aperture (f-stop)'>
+                <LabelGroup text='Aperture'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.aperture' }} min={1.0} max={16.0}/>
                 </LabelGroup>
-                <LabelGroup text='Shutter Speed (1/x)'>
+                <LabelGroup text='Shutter'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.shutter' }} min={1.0} max={1000.0}/>
                 </LabelGroup>
-                <LabelGroup text='Sensitivity (ISO)'>
+                <LabelGroup text='ISO'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.sensitivity' }} min={100.0} max={1000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Animate'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Scene'>
+                <LabelGroup text='Animate'>
+                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
+                </LabelGroup>
                 <LabelGroup text='Physical'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
                 </LabelGroup>
                 <LabelGroup text='Skylight'>
                     <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.sky' }}/>
+                </LabelGroup>
+                <LabelGroup text='Sky (lm/m2)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sky.luminance' }} min={0.0} max={100000.0}/>
+                </LabelGroup>
+                <LabelGroup text='Sun (lm/m2)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sun.luminance' }} min={0.0} max={100000.0}/>
                 </LabelGroup>
             </Panel>
         </>;
@@ -314,9 +314,20 @@ class LightPhysicalUnitsExample {
                 }
             });
 
+            let resizeControlPanel = true;
             let time = 0;
             app.on("update", function (dt) {
                 time += dt;
+
+                // resize control panel to fit the content better
+                if (resizeControlPanel) {
+                    const panel = window.top.document.getElementById('controlPanel');
+                    if (panel) {
+                        panel.style.width = '360px';
+                        resizeControlPanel = false;
+                    }
+                }
+
                 if (data.get('script.camera.animate')) {
                     data.set('script.camera.aperture', 3 + (1 + Math.sin(time)) * 5.0);
                 }
