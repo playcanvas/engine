@@ -59,17 +59,18 @@ class GltfExporter {
             cameras: [],
             entities: [],
             materials: [],
-            meshInstances: []
+
+            // entry: { node, meshInstances}
+            entityMeshInstances: []
         };
 
-        const { materials, buffers } = resources;
+        const { materials, buffers, entityMeshInstances } = resources;
 
         // Collect entities
         root.forEach((entity) => {
             resources.entities.push(entity);
         });
 
-        // Collect materials
         const collectMeshInstances = (meshInstances) => {
             meshInstances.forEach((meshInstance) => {
 
@@ -79,8 +80,14 @@ class GltfExporter {
                     resources.materials.push(material);
                 }
 
-                // Collect mesh instance
-                resources.meshInstances.push(meshInstance);
+                // collect mesh instances per node
+                const node = meshInstance.node;
+                let nodeMeshInstances = entityMeshInstances.find(e => e.node === node);
+                if (!nodeMeshInstances) {
+                    nodeMeshInstances = { node: node, meshInstances: [] };
+                    entityMeshInstances.push(nodeMeshInstances);
+                }
+                nodeMeshInstances.meshInstances.push(meshInstance);
 
                 // Collect buffers
                 const mesh = meshInstance.mesh;
@@ -101,11 +108,11 @@ class GltfExporter {
                 resources.cameras.push(entity.camera);
             }
 
-            if (entity.render) {
+            if (entity.render && entity.render.enabled) {
                 collectMeshInstances(entity.render.meshInstances);
             }
 
-            if (entity.model) {
+            if (entity.model && entity.model.enabled) {
                 collectMeshInstances(entity.model.meshInstances);
             }
         });
@@ -258,17 +265,11 @@ class GltfExporter {
                     node.camera = resources.cameras.indexOf(entity.camera);
                 }
 
-                if (entity.render && entity.render.enabled) {
-                    entity.render.meshInstances.forEach((meshInstance) => {
-                        node.mesh = resources.meshInstances.indexOf(meshInstance);
-                    });
+                const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
+                if (entityMeshInstance) {
+                    node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
                 }
 
-                if (entity.model && entity.model.enabled) {
-                    entity.model.meshInstances.forEach((meshInstance) => {
-                        node.mesh = resources.meshInstances.indexOf(meshInstance);
-                    });
-                }
                 if (entity.children.length > 0) {
                     node.children = [];
 
@@ -283,76 +284,81 @@ class GltfExporter {
     }
 
     writeMeshes(resources, json) {
-        if (resources.meshInstances.length > 0) {
+        if (resources.entityMeshInstances.length > 0) {
             json.accessors = [];
             json.meshes = [];
 
-            resources.meshInstances.forEach((meshInstance) => {
-                const indexBuffer = meshInstance.mesh.indexBuffer[0];
-                const vertexBuffer = meshInstance.mesh.vertexBuffer;
-                const vertexFormat = vertexBuffer.getFormat();
-                const numVertices = vertexBuffer.getNumVertices();
+            resources.entityMeshInstances.forEach((entityMeshInstances) => {
 
                 const mesh = {
                     primitives: []
                 };
-                const primitive = {
-                    attributes: {},
-                    material: resources.materials.indexOf(meshInstance.material)
-                };
 
-                // An accessor is a vertex attribute
-                const writeAccessor = (element) => {
+                // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
+                const meshInstances = entityMeshInstances.meshInstances;
+                meshInstances.forEach((meshInstance) => {
+                    const indexBuffer = meshInstance.mesh.indexBuffer[0];
+                    const vertexBuffer = meshInstance.mesh.vertexBuffer;
+                    const vertexFormat = vertexBuffer.getFormat();
+                    const numVertices = vertexBuffer.getNumVertices();
 
-                    const accessor = {
-                        bufferView: resources.buffers.indexOf(vertexBuffer),
-                        byteOffset: element.offset,
-                        componentType: getComponentType(element.dataType),
-                        type: getAccessorType(element.numComponents),
-                        count: numVertices
+                    const primitive = {
+                        attributes: {},
+                        material: resources.materials.indexOf(meshInstance.material)
+                    };
+                    mesh.primitives.push(primitive);
+
+                    // An accessor is a vertex attribute
+                    const writeAccessor = (element) => {
+
+                        const accessor = {
+                            bufferView: resources.buffers.indexOf(vertexBuffer),
+                            byteOffset: element.offset,
+                            componentType: getComponentType(element.dataType),
+                            type: getAccessorType(element.numComponents),
+                            count: numVertices
+                        };
+
+                        const idx = json.accessors.length;
+                        json.accessors.push(accessor);
+
+                        const semantic = getSemantic(element.name);
+                        primitive.attributes[semantic] = idx;
+
+                        // Position accessor also requires min and max properties
+                        if (element.name === pc.SEMANTIC_POSITION) {
+
+                            // compute min and max from positions, as the BoundingBox stores center and extents,
+                            // and we get precision warnings from gltf validator
+                            const positions = [];
+                            meshInstance.mesh.getPositions(positions);
+                            const min = new pc.Vec3(), max = new pc.Vec3();
+                            pc.BoundingBox.computeMinMax(positions, min, max);
+
+                            accessor.min = [min.x, min.y, min.z];
+                            accessor.max = [max.x, max.y, max.z];
+                        }
                     };
 
-                    const idx = json.accessors.length;
-                    json.accessors.push(accessor);
+                    vertexFormat.elements.forEach(writeAccessor);
 
-                    const semantic = getSemantic(element.name);
-                    primitive.attributes[semantic] = idx;
+                    if (indexBuffer) {
+                        const ibIdx = resources.buffers.indexOf(indexBuffer);
 
-                    // Position accessor also requires min and max properties
-                    if (element.name === pc.SEMANTIC_POSITION) {
+                        const accessor = {
+                            bufferView: ibIdx,
+                            componentType: getIndexComponentType(indexBuffer.getFormat()),
+                            count: indexBuffer.getNumIndices(),
+                            type: "SCALAR"
+                        };
 
-                        // compute min and max from positions, as the BoundingBox stores center and extents,
-                        // and we get precision warnings from gltf validator
-                        const positions = [];
-                        meshInstance.mesh.getPositions(positions);
-                        const min = new pc.Vec3(), max = new pc.Vec3();
-                        pc.BoundingBox.computeMinMax(positions, min, max);
+                        json.accessors.push(accessor);
 
-                        accessor.min = [min.x, min.y, min.z];
-                        accessor.max = [max.x, max.y, max.z];
+                        const idx = json.accessors.indexOf(accessor);
+
+                        primitive.indices = idx;
                     }
-                };
-
-                vertexFormat.elements.forEach(writeAccessor);
-
-                if (indexBuffer) {
-                    const ibIdx = resources.buffers.indexOf(indexBuffer);
-
-                    const accessor = {
-                        bufferView: ibIdx,
-                        componentType: getIndexComponentType(indexBuffer.getFormat()),
-                        count: indexBuffer.getNumIndices(),
-                        type: "SCALAR"
-                    };
-
-                    json.accessors.push(accessor);
-
-                    const idx = json.accessors.indexOf(accessor);
-
-                    primitive.indices = idx;
-                }
-
-                mesh.primitives.push(primitive);
+                });
 
                 json.meshes.push(mesh);
             });
