@@ -122,7 +122,7 @@ class UsdzExporter extends CoreExporter {
      *
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {Color} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {ArrayBuffer} - The USDZ file content.
      */
     build(entity, options = {}) {
