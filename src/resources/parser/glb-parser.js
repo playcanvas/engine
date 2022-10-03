@@ -30,7 +30,6 @@ import { VertexFormat } from '../../graphics/vertex-format.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
