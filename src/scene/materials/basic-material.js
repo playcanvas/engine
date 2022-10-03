@@ -7,6 +7,7 @@ import {
 
 import { basic } from '../../graphics/program-lib/programs/basic.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { getProgramLibrary } from '../../graphics/program-library.js';
 import { Material } from './material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -108,7 +109,7 @@ class BasicMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
-        const library = device.getProgramLibrary();
+        const library = getProgramLibrary(device);
         library.register('basic', basic);
 
         return library.getProgram('basic', options, processingOptions);

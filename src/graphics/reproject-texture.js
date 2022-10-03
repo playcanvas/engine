@@ -11,6 +11,7 @@ import { ChunkUtils } from './program-lib/chunk-utils.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
+import { getProgramLibrary } from './program-library.js';
 import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { DeviceCache } from './device-cache.js';
@@ -437,7 +438,7 @@ function reprojectTexture(source, target, options = {}) {
 
     const device = source.device;
 
-    let shader = device.programLib._cache[shaderKey];
+    let shader = getProgramLibrary(device)._cache[shaderKey];
     if (!shader) {
         const defines =
             `#define PROCESS_FUNC ${processFunc}\n` +

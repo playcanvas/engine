@@ -41,7 +41,7 @@ import { GraphicsDevice } from '../graphics/graphics-device.js';
 import { IndexBuffer } from '../graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
-import { ProgramLibrary } from '../graphics/program-library.js';
+import { getProgramLibrary, ProgramLibrary } from '../graphics/program-library.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { ScopeId } from '../graphics/scope-id.js';
 import { Shader } from '../graphics/shader.js';
@@ -491,6 +491,15 @@ Object.defineProperties(Texture.prototype, {
         }
     }
 });
+
+GraphicsDevice.prototype.getProgramLibrary = function () {
+    Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
+    return getProgramLibrary(this);
+};
+
+GraphicsDevice.prototype.setProgramLibrary = function () {
+    Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
+};
 
 // SCENE
 

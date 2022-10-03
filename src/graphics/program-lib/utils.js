@@ -7,6 +7,7 @@ import {
 import { Shader } from '../shader.js';
 
 import { shaderChunks } from './chunks/chunks.js';
+import { getProgramLibrary } from '../program-library.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
@@ -102,7 +103,7 @@ function createShader(device, vsName, psName, useTransformFeedback = false) {
  * @returns {Shader} The newly created shader.
  */
 function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedback = false, psPreamble = "") {
-    const shaderCache = device.programLib._cache;
+    const shaderCache = getProgramLibrary(device)._cache;
     const cached = shaderCache[uName];
     if (cached !== undefined) return cached;
 

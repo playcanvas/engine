@@ -6,6 +6,12 @@ import { Shader } from './shader.js';
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { ShaderPass } from '../scene/shader-pass.js';
+import { DeviceCache } from './device-cache.js';
+
+/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+
+// Device cache storing a program library
+const programLibraryDeviceCache = new DeviceCache();
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -40,6 +46,10 @@ class ProgramLibrary {
             this._defaultStdMatOption, {}, m, null, [], SHADER_FORWARD, null);
         m.shaderOptBuilder.updateMinRef(
             this._defaultStdMatOptionMin, {}, m, null, [], SHADER_SHADOW, null);
+    }
+
+    destroy() {
+        this.clearCache();
     }
 
     register(name, generator) {
@@ -145,7 +155,7 @@ class ProgramLibrary {
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
     }
 
-    // run pc.app.graphicsDevice.programLib.dumpPrograms(); from browser console to build shader options script
+    // run pc.app.graphicsDevice.getProgramLibrary().dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
         let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
@@ -155,7 +165,7 @@ class ProgramLibrary {
             text += ',\n\t' + this._programsCollection[i];
         }
         text += '\n];\n';
-        text += 'device.programLib.precompile(shaders);\n';
+        text += 'device.getProgramLibrary().precompile(shaders);\n';
         text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
@@ -221,4 +231,17 @@ class ProgramLibrary {
     }
 }
 
-export { ProgramLibrary };
+/**
+ * Returns program library for a specified instance of a device.
+ *
+ * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @returns {ProgramLibrary} The instance of {@link ProgramLibrary}
+ * @ignore
+ */
+function getProgramLibrary(device) {
+    return programLibraryDeviceCache.get(device, () => {
+        return new ProgramLibrary(device);
+    });
+}
+
+export { ProgramLibrary, getProgramLibrary };
