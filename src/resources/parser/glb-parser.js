@@ -1794,8 +1794,7 @@ const createLight = function (gltfLight, node) {
                 lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_OMNI);
                 break;
             case "directional":
-                // Directional light luminance is already in lux
-                lightProps.luminance = gltfLight.intensity;
+                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_DIRECTIONAL);
                 break;
         }
     }
