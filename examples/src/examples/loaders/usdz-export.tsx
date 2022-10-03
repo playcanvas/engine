@@ -55,7 +55,11 @@ class UsdzExportExample {
             const link = document.getElementById('ar-link');
 
             // convert the loaded entity into asdz file
-            new pcx.UsdzExporter().build(entity).then((arrayBuffer: any) => {
+            const options = {
+                maxTextureSize: 1024
+            };
+
+            new pcx.UsdzExporter().build(entity, options).then((arrayBuffer: any) => {
                 const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
                 // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,

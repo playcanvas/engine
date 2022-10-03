@@ -1,3 +1,4 @@
+import { CoreExporter } from "./core-exporter.js";
 import { zipSync, strToU8 } from '../../node_modules/fflate/esm/browser.js';
 
 const ROOT_FILE_NAME = 'root';
@@ -56,7 +57,7 @@ def Xform "${nodeName}" (
 
 const materialValueTemplate = (type, name, value) => `                    ${type} inputs:${name} = ${value}`;
 
-class UsdzExporter {
+class UsdzExporter extends CoreExporter {
     /**
      * Maps a mesh to a reference (path) inside the usdz container
      *
@@ -116,7 +117,15 @@ class UsdzExporter {
         this.nodeNames = null;
     }
 
-    build(root) {
+    /**
+     * Converts a hierarchy of entities to USDZ format.
+     *
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {object} options - Object for passing optional arguments.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @returns {ArrayBuffer} - The USDZ file content.
+     */
+    build(entity, options = {}) {
 
         this.init();
 
@@ -125,8 +134,8 @@ class UsdzExporter {
 
         // find all mesh instances
         const allMeshInstances = [];
-        if (root) {
-            const renders = root.findComponents("render");
+        if (entity) {
+            const renders = entity.findComponents("render");
             renders.forEach((render) => {
                 allMeshInstances.push(...render.meshInstances);
             });
@@ -144,6 +153,10 @@ class UsdzExporter {
         this.addFile(null, ROOT_FILE_NAME, '', rootContent);
 
         // process requested textures
+        const textureOptions = {
+            maxTextureSize: options.maxTextureSize
+        };
+
         const textureArray = Array.from(this.textureMap.keys());
         const promises = [];
         for (let i = 0; i < textureArray.length; i++) {
@@ -151,16 +164,17 @@ class UsdzExporter {
             // for now store all textures as png
             // TODO: consider jpg if the alpha channel is not used
             const isRGBA = true;
+            const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
             const texture = textureArray[i];
             const mipObject = texture._levels[0];
 
             // convert texture data to canvas
-            const canvas = this.imageToCanvas(mipObject, undefined);
+            const canvas = this.imageToCanvas(mipObject, textureOptions);
 
             // async convert them to blog and then to array buffer
             // eslint-disable-next-line no-promise-executor-return
-            promises.push(new Promise(resolve => canvas.toBlob(resolve, isRGBA ? 'image/png' : 'image/jpeg', 1)).then(
+            promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
                 blob => blob.arrayBuffer()
             ));
         }
@@ -241,47 +255,6 @@ class UsdzExporter {
         this.files[ids.fileName] = contentU8;
 
         return ids.refName;
-    }
-
-    imageToCanvas(image, color) {
-
-        if ((typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) ||
-            (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
-            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas) ||
-            (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap)) {
-
-            const scale = 1024 / Math.max(image.width, image.height);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = image.width * Math.min(1, scale);
-            canvas.height = image.height * Math.min(1, scale);
-
-            const context = canvas.getContext('2d');
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-            if (color !== undefined) {
-
-                const hex = parseInt(color, 16);
-
-                const r = (hex >> 16 & 255) / 255;
-                const g = (hex >> 8 & 255) / 255;
-                const b = (hex & 255) / 255;
-
-                const imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imagedata.data;
-
-                for (let i = 0; i < data.length; i += 4) {
-
-                    data[i + 0] = data[i + 0] * r;
-                    data[i + 1] = data[i + 1] * g;
-                    data[i + 2] = data[i + 2] * b;
-                }
-
-                context.putImageData(imagedata, 0, 0);
-            }
-
-            return canvas;
-        }
     }
 
     getMaterialRef(material) {
