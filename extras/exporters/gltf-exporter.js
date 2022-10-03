@@ -112,7 +112,7 @@ class GltfExporter {
                 collectMeshInstances(entity.render.meshInstances);
             }
 
-            if (entity.model && entity.model.enabled) {
+            if (entity.model && entity.model.enabled && entity.model.meshInstances) {
                 collectMeshInstances(entity.model.meshInstances);
             }
         });
