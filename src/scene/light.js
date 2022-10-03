@@ -640,8 +640,8 @@ class Light {
     /**
      * Get conversion factor for luminance -> light specific light unit
      * @param {number} type - The type of light
-     * @param {number} outerAngle - The outer angle of a spot light
-     * @param {number} innerAngle - The inner angle of a spot light
+     * @param {number} [outerAngle] - The outer angle of a spot light
+     * @param {number} [innerAngle] - The inner angle of a spot light
      * @returns {number} The scaling factor to multiply with the luminance value
      */
     static getLightUnitConversion(type, outerAngle = 1, innerAngle = 0) {
