@@ -1,3 +1,5 @@
+import { CoreExporter } from "./core-exporter.js";
+
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
 
@@ -52,19 +54,44 @@ const getSemantic = (engineSemantic) => {
     }
 };
 
-class GltfExporter {
+const getFilter = function (filter) {
+    switch (filter) {
+        case pc.FILTER_NEAREST: return 9728;
+        case pc.FILTER_LINEAR: return 9729;
+        case pc.FILTER_NEAREST_MIPMAP_NEAREST: return 9984;
+        case pc.FILTER_LINEAR_MIPMAP_NEAREST: return 9985;
+        case pc.FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
+        case pc.FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
+    }
+};
+
+const getWrap = function (wrap) {
+    switch (wrap) {
+        case pc.ADDRESS_CLAMP_TO_EDGE: return 33071;
+        case pc.ADDRESS_MIRRORED_REPEAT: return 33648;
+        case pc.ADDRESS_REPEAT: return 10497;
+    }
+};
+
+// supported texture semantics on a material
+const textureSemantics = [
+    'diffuseMap'
+];
+
+class GltfExporter extends CoreExporter {
     collectResources(root) {
         const resources = {
             buffers: [],
             cameras: [],
             entities: [],
             materials: [],
+            textures: [],
 
             // entry: { node, meshInstances}
             entityMeshInstances: []
         };
 
-        const { materials, buffers, entityMeshInstances } = resources;
+        const { materials, buffers, entityMeshInstances, textures } = resources;
 
         // Collect entities
         root.forEach((entity) => {
@@ -78,6 +105,14 @@ class GltfExporter {
                 const material = meshInstance.material;
                 if (materials.indexOf(material) < 0) {
                     resources.materials.push(material);
+
+                    // collect textures
+                    textureSemantics.forEach((semantic) => {
+                        const texture = material[semantic];
+                        if (texture && textures.indexOf(texture) < 0) {
+                            textures.push(texture);
+                        }
+                    });
                 }
 
                 // collect mesh instances per node
@@ -204,19 +239,35 @@ class GltfExporter {
     }
 
     writeMaterials(resources, json) {
+
+        const attachTexture = (material, destination, name, textureSemantic) => {
+            const texture = material[textureSemantic];
+            if (texture) {
+                const textureIndex = resources.textures.indexOf(texture);
+                if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+                destination[name] = {
+                    "index": textureIndex
+                };
+            }
+        };
+
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
                 const { name, diffuse, emissive, opacity, blendType, cull } = mat;
-                const material = {};
+                const material = {
+                    pbrMetallicRoughness: {}
+                };
+                const pbr = material.pbrMetallicRoughness;
 
                 if (name && name.length > 0) {
                     material.name = name;
                 }
 
                 if (!diffuse.equals(pc.Color.WHITE) || opacity !== 1) {
-                    material.pbrMetallicRoughness = {};
-                    material.pbrMetallicRoughness.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+                    pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
                 }
+
+                attachTexture(mat, pbr, 'baseColorTexture', 'diffuseMap');
 
                 if (!emissive.equals(pc.Color.BLACK)) {
                     material.emissiveFactor = [emissive.r, emissive.g, emissive.b];
@@ -365,7 +416,45 @@ class GltfExporter {
         }
     }
 
-    buildJson(resources) {
+    convertTextures(textures, json, options) {
+
+        const textureOptions = {
+            maxTextureSize: options.maxTextureSize
+        };
+
+        for (let i = 0; i < textures.length; i++) {
+
+            // for now store all textures as png
+            // TODO: consider jpg if the alpha channel is not used
+            const isRGBA = true;
+            const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
+
+            const texture = textures[i];
+            const mipObject = texture._levels[0];
+
+            // convert texture data to uri
+            const canvas = this.imageToCanvas(mipObject, textureOptions);
+            const uri = canvas.toDataURL(mimeType);
+
+            json.images[i] = {
+                'uri': uri
+            };
+
+            json.samplers[i] = {
+                'minFilter': getFilter(texture.minFilter),
+                'magFilter': getFilter(texture.magFilter),
+                'wrapS': getWrap(texture.addressU),
+                'wrapT': getWrap(texture.addressV)
+            };
+
+            json.textures[i] = {
+                'sampler': i,
+                'source': i
+            };
+        }
+    }
+
+    buildJson(resources, options) {
         const json = {
             asset: {
                 version: "2.0",
@@ -378,6 +467,12 @@ class GltfExporter {
                     ]
                 }
             ],
+            images: [
+            ],
+            samplers: [
+            ],
+            textures: [
+            ],
             scene: 0
         };
 
@@ -387,14 +482,23 @@ class GltfExporter {
         this.writeNodes(resources, json);
         this.writeMaterials(resources, json);
         this.writeMeshes(resources, json);
+        this.convertTextures(resources.textures, json, options);
 
         return json;
     }
 
-    build(entity) {
+    /**
+     * Converts a hierarchy of entities to GLB format.
+     *
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {object} options - Object for passing optional arguments.
+     * @param {Color} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @returns {ArrayBuffer} - The GLB file content.
+     */
+    build(entity, options = {}) {
         const resources = this.collectResources(entity);
 
-        const json = this.buildJson(resources);
+        const json = this.buildJson(resources, options);
         const jsonText = JSON.stringify(json);
 
         const headerLength = 12;
