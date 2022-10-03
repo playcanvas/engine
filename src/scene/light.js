@@ -639,6 +639,7 @@ class Light {
 
     /**
      * Get conversion factor for luminance -> light specific light unit
+     *
      * @param {number} type - The type of light
      * @param {number} [outerAngle] - The outer angle of a spot light
      * @param {number} [innerAngle] - The inner angle of a spot light
