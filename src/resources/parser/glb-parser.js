@@ -1775,6 +1775,7 @@ const createLight = function (gltfLight, node) {
         // - Omni and spot lights use luminous intensity in candela (lm/sr)
         // - Directional lights use illuminance in lux (lm/m2).
         // Current implementation: clapms specified intensity to 0..2 range
+        luminance: gltfLight.intensity,
         intensity: gltfLight.hasOwnProperty('intensity') ? math.clamp(gltfLight.intensity, 0, 2) : 1
     };
 
