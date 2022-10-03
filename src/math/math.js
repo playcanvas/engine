@@ -183,6 +183,16 @@ const math = {
     },
 
     /**
+     * Returns the nearest (smaller or larger) power of 2 for the specified value.
+     *
+     * @param {number} val - The value for which to calculate the nearest power of 2.
+     * @returns {number} The nearest power of 2.
+     */
+    nearestPowerOfTwo: function (val) {
+        return Math.pow(2, Math.round(Math.log(val) / Math.log(2)));
+    },
+
+    /**
      * Return a pseudo-random number between min and max. The number generated is in the range
      * [min, max), that is inclusive of the minimum but exclusive of the maximum.
      *
