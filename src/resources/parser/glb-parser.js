@@ -31,11 +31,12 @@ import { VertexFormat } from '../../graphics/vertex-format.js';
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
-    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
+    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO, LIGHTTYPE_SPOT, LIGHTTYPE_OMNI, LIGHTTYPE_DIRECTIONAL
 } from '../../scene/constants.js';
 
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Light } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
@@ -1774,7 +1775,6 @@ const createLight = function (gltfLight, node) {
         // - Omni and spot lights use luminous intensity in candela (lm/sr)
         // - Directional lights use illuminance in lux (lm/m2).
         // Current implementation: clapms specified intensity to 0..2 range
-        luminance: gltfLight.intensity,
         intensity: gltfLight.hasOwnProperty('intensity') ? math.clamp(gltfLight.intensity, 0, 2) : 1
     };
 
@@ -1785,20 +1785,19 @@ const createLight = function (gltfLight, node) {
 
     // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
     // so we need the intensities in candela back to lumen
-    switch (gltfLight.type) {
-        case "spot": {
-            const falloffEnd = Math.cos(gltfLight.spot.innerConeAngle);
-            const falloffStart = Math.cos(gltfLight.spot.outerConeAngle);
-            lightProps.luminance = gltfLight.intensity * (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
-            break;
+    if (gltfLight.hasOwnProperty("intensity")) {
+        switch (gltfLight.type) {
+            case "spot":
+                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_SPOT, gltfLight.spot.outerConeAngle, gltfLight.spot.innerConeAngle);
+                break;
+            case "point":
+                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_OMNI);
+                break;
+            case "directional":
+                // Directional light luminance is already in lux
+                lightProps.luminance = gltfLight.intensity;
+                break;
         }
-        case "point":
-            lightProps.luminance = gltfLight.intensity * (4 * Math.PI);
-            break;
-        case "directional":
-            // Directional light luminance is already in lux
-            lightProps.luminance = gltfLight.intensity;
-            break;
     }
 
     // Rotate to match light orientation in glTF specification
