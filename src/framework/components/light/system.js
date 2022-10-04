@@ -11,8 +11,6 @@ import { LightComponentData } from './data.js';
 
 /** @typedef {import('../../app-base.js').AppBase} AppBase */
 
-
-
 /**
  * A Light Component is used to dynamically light the scene.
  *
