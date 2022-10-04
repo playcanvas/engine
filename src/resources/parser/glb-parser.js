@@ -36,6 +36,7 @@ import {
 
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
@@ -1780,6 +1781,12 @@ const createLight = function (gltfLight, node) {
     if (gltfLight.hasOwnProperty('spot')) {
         lightProps.innerConeAngle = gltfLight.spot.hasOwnProperty('innerConeAngle') ? gltfLight.spot.innerConeAngle * math.RAD_TO_DEG : 0;
         lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : Math.PI / 4;
+    }
+
+    // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
+    // so we need the intensities in candela back to lumen
+    if (gltfLight.hasOwnProperty("intensity")) {
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
     }
 
     // Rotate to match light orientation in glTF specification
