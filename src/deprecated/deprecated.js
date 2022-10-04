@@ -42,7 +42,7 @@ import { IndexBuffer } from '../graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../graphics/program-library.js';
-import { getProgramLibrary } from '../graphics/get-program-library.js';
+import { getProgramLibrary, setProgramLibrary } from '../graphics/get-program-library.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { ScopeId } from '../graphics/scope-id.js';
 import { Shader } from '../graphics/shader.js';
@@ -498,8 +498,9 @@ GraphicsDevice.prototype.getProgramLibrary = function () {
     return getProgramLibrary(this);
 };
 
-GraphicsDevice.prototype.setProgramLibrary = function () {
+GraphicsDevice.prototype.setProgramLibrary = function (lib) {
     Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
+    setProgramLibrary(this, lib);
 };
 
 GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
