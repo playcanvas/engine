@@ -767,15 +767,7 @@ class Light {
 
         // To calculate the lux, which is lm/m^2, we need to convert from luminous power
         if (this._usePhysicalUnits) {
-            switch (this._type) {
-                case LIGHTTYPE_SPOT:
-                    i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
-                    break;
-                case LIGHTTYPE_OMNI:
-                case LIGHTTYPE_DIRECTIONAL:
-                    i = this._luminance / Light.getLightUnitConversion(this._type);
-                    break;
-            }
+            i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
         }
 
         const finalColor = this._finalColor;
