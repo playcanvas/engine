@@ -645,7 +645,7 @@ class Light {
      * @param {number} [innerAngle] - The inner angle of a spot light.
      * @returns {number} The scaling factor to multiply with the luminance value.
      */
-    static getLightUnitConversion(type, outerAngle = 1, innerAngle = 0) {
+    static getLightUnitConversion(type, outerAngle = Math.PI / 4, innerAngle = 0) {
         switch (type) {
             case LIGHTTYPE_SPOT: {
                 const falloffEnd = Math.cos(outerAngle);
@@ -762,7 +762,7 @@ class Light {
         if (this._usePhysicalUnits) {
             switch (this._type) {
                 case LIGHTTYPE_SPOT:
-                    i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * Math.PI / 180.0, this._innerConeAngle * Math.PI / 180.0);
+                    i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
                     break;
                 case LIGHTTYPE_OMNI:
                 case LIGHTTYPE_DIRECTIONAL:

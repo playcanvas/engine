@@ -117,4 +117,4 @@ class LightComponentSystem extends ComponentSystem {
     }
 }
 
-export { LightComponentSystem };
+export { LightComponentSystem, lightTypes };

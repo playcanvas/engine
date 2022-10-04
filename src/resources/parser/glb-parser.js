@@ -31,8 +31,10 @@ import { VertexFormat } from '../../graphics/vertex-format.js';
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
-    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO, LIGHTTYPE_SPOT, LIGHTTYPE_OMNI, LIGHTTYPE_DIRECTIONAL
+    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
+
+import { lightTypes } from '../../framework/components/light/system.js';
 
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -1786,17 +1788,7 @@ const createLight = function (gltfLight, node) {
     // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
     // so we need the intensities in candela back to lumen
     if (gltfLight.hasOwnProperty("intensity")) {
-        switch (gltfLight.type) {
-            case "spot":
-                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_SPOT, gltfLight.spot.outerConeAngle, gltfLight.spot.innerConeAngle);
-                break;
-            case "point":
-                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_OMNI);
-                break;
-            case "directional":
-                lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(LIGHTTYPE_DIRECTIONAL);
-                break;
-        }
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
     }
 
     // Rotate to match light orientation in glTF specification
