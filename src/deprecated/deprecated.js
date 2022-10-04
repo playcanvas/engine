@@ -502,7 +502,7 @@ GraphicsDevice.prototype.setProgramLibrary = function () {
     Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
 };
 
-GraphicsDevice.prototype.removeShaderFromCache = function(shader) {
+GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
     Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
     getProgramLibrary(this).removeFromCache(shader);
 };
