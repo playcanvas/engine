@@ -34,11 +34,9 @@ import {
     ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
 
-import { lightTypes } from '../../framework/components/light/system.js';
-
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
-import { Light } from '../../scene/light.js';
+import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';

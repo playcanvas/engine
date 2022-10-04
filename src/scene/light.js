@@ -25,6 +25,13 @@ const tmpBiases = {
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
+const lightTypes = {
+    'directional': LIGHTTYPE_DIRECTIONAL,
+    'omni': LIGHTTYPE_OMNI,
+    'point': LIGHTTYPE_OMNI,
+    'spot': LIGHTTYPE_SPOT
+};
+
 // viewport in shadows map for cascades for directional light
 const directionalCascades = [
     [new Vec4(0, 0, 1, 1)],
@@ -855,4 +862,4 @@ class Light {
     }
 }
 
-export { Light };
+export { Light, lightTypes };

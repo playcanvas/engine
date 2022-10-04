@@ -1,8 +1,8 @@
 import { Color } from '../../../math/color.js';
 import { Vec2 } from '../../../math/vec2.js';
 
-import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../../../scene/constants.js';
-import { Light } from '../../../scene/light.js';
+import { LIGHTSHAPE_PUNCTUAL } from '../../../scene/constants.js';
+import { Light, lightTypes } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
 
@@ -11,12 +11,7 @@ import { LightComponentData } from './data.js';
 
 /** @typedef {import('../../app-base.js').AppBase} AppBase */
 
-const lightTypes = {
-    'directional': LIGHTTYPE_DIRECTIONAL,
-    'omni': LIGHTTYPE_OMNI,
-    'point': LIGHTTYPE_OMNI,
-    'spot': LIGHTTYPE_SPOT
-};
+
 
 /**
  * A Light Component is used to dynamically light the scene.
@@ -117,4 +112,4 @@ class LightComponentSystem extends ComponentSystem {
     }
 }
 
-export { LightComponentSystem, lightTypes };
+export { LightComponentSystem };
