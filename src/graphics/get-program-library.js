@@ -10,7 +10,7 @@ const programLibraryDeviceCache = new DeviceCache();
 /**
  * Returns program library for a specified instance of a device.
  *
- * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @param {GraphicsDevice} device - The graphics device used to own the program library.
  * @returns {ProgramLibrary} The instance of {@link ProgramLibrary}
  * @ignore
  */
