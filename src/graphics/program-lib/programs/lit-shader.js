@@ -1247,7 +1247,7 @@ class LitShader {
                     if (options.clearCoat) {
                         code += "    ccSpecularLight += getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), vec3(ccSpecularity))" : " * vec3(ccSpecularity)";
+                        code += calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW))" : "";
                         code +=  ";\n";
                     }
                     if (options.sheen) {
