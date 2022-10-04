@@ -1042,7 +1042,6 @@ class LitShader {
                         code += "    ccReflection.rgb *= ccFresnel;\n";
                     }  else {
                         code += "    ccFresnel = 0.0;\n";
-                        code += "    ccReflection.rgb *= ccSpecularity;\n";
                     }
                 }
                 if (options.useSpecularityFactor) {
