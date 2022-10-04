@@ -7,7 +7,7 @@ import {
 
 import { basic } from '../../graphics/program-lib/programs/basic.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../../graphics/program-library.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 import { Material } from './material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */

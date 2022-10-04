@@ -7,7 +7,7 @@ import {
 import { Shader } from '../shader.js';
 
 import { shaderChunks } from './chunks/chunks.js';
-import { getProgramLibrary } from '../program-library.js';
+import { getProgramLibrary } from '../get-program-library.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 

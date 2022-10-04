@@ -20,7 +20,7 @@ import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../../graphics/program-library.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 

@@ -29,7 +29,6 @@ import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
-import { getProgramLibrary } from '../program-library.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
@@ -2734,8 +2733,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteShader(this.vertexShaderCache[shaderSrc]);
             delete this.vertexShaderCache[shaderSrc];
         }
-
-        getProgramLibrary(this).clearCache();
     }
 
     /**
@@ -2750,16 +2747,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
 
         this._vaoMap.clear();
-    }
-
-    /**
-     * Removes a shader from the cache.
-     *
-     * @param {Shader} shader - The shader to remove from the cache.
-     * @ignore
-     */
-    removeShaderFromCache(shader) {
-        getProgramLibrary(this).removeFromCache(shader);
     }
 
     /**

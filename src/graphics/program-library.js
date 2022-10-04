@@ -4,14 +4,7 @@ import { version, revision } from '../core/core.js';
 import { Shader } from './shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { ShaderPass } from '../scene/shader-pass.js';
-import { DeviceCache } from './device-cache.js';
-
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
-// Device cache storing a program library
-const programLibraryDeviceCache = new DeviceCache();
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -29,7 +22,7 @@ class ProgramLibrary {
      */
     processedCache = new Map();
 
-    constructor(device) {
+    constructor(device, standardMaterial) {
         this._device = device;
         this._cache = {};
         this._generators = {};
@@ -41,11 +34,10 @@ class ProgramLibrary {
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
 
-        const m = new StandardMaterial();
-        m.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, {}, m, null, [], SHADER_FORWARD, null);
-        m.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, {}, m, null, [], SHADER_SHADOW, null);
+        standardMaterial.shaderOptBuilder.updateRef(
+            this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
+        standardMaterial.shaderOptBuilder.updateMinRef(
+            this._defaultStdMatOptionMin, {}, standardMaterial, null, [], SHADER_SHADOW, null);
     }
 
     destroy() {
@@ -231,17 +223,4 @@ class ProgramLibrary {
     }
 }
 
-/**
- * Returns program library for a specified instance of a device.
- *
- * @param {GraphicsDevice} device - The graphics device used to own the material.
- * @returns {ProgramLibrary} The instance of {@link ProgramLibrary}
- * @ignore
- */
-function getProgramLibrary(device) {
-    return programLibraryDeviceCache.get(device, () => {
-        return new ProgramLibrary(device);
-    });
-}
-
-export { ProgramLibrary, getProgramLibrary };
+export { ProgramLibrary };
