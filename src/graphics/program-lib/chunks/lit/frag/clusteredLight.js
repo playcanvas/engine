@@ -530,7 +530,7 @@ void evaluateLight(ClusterLightData light) {
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir) * dAtten * light.color * dAtten3 * sSpecularity;
+                    sSpecularLight += getLightSpecularSheen(halfDir) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif
