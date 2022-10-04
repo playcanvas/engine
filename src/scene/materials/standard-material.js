@@ -20,6 +20,7 @@ import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
@@ -832,7 +833,7 @@ class StandardMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
-        const library = device.getProgramLibrary();
+        const library = getProgramLibrary(device);
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions);
 

@@ -104,6 +104,7 @@ class ForwardRenderer {
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        const device = this.device;
 
         /** @type {Scene|null} */
         this.scene = null;
@@ -126,10 +127,6 @@ class ForwardRenderer {
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
-
-        // Shaders
-        const device = this.device;
-        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);

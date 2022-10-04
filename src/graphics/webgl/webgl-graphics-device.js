@@ -2733,8 +2733,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteShader(this.vertexShaderCache[shaderSrc]);
             delete this.vertexShaderCache[shaderSrc];
         }
-
-        this.programLib.clearCache();
     }
 
     /**
@@ -2749,16 +2747,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
 
         this._vaoMap.clear();
-    }
-
-    /**
-     * Removes a shader from the cache.
-     *
-     * @param {Shader} shader - The shader to remove from the cache.
-     * @ignore
-     */
-    removeShaderFromCache(shader) {
-        this.programLib.removeFromCache(shader);
     }
 
     /**
