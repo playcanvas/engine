@@ -24,7 +24,7 @@ function getProgramLibrary(device) {
  * Assigns the program library to device cache.
  *
  * @param {GraphicsDevice} device - The graphics device used to own the program library.
- * @param {ProgramLibrary} library - The instance of {@link ProgramLibrary}
+ * @param {ProgramLibrary} library - The instance of {@link ProgramLibrary}.
  * @ignore
  */
 function setProgramLibrary(device, library) {
