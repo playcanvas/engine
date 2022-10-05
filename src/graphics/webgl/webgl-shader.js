@@ -231,7 +231,7 @@ class WebglShader {
             const location = gl.getAttribLocation(glProgram, info.name);
 
             // a built-in attributes for which we do not need to provide any data
-            if (_vertexShaderBuiltins.find(name => name === info.name) !== undefined)
+            if (_vertexShaderBuiltins.indexOf(info.name) !== -1)
                 continue;
 
             // Check attributes are correctly linked up
