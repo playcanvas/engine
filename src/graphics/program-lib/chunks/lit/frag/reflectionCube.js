@@ -8,10 +8,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return $DECODE(textureCube(texture_cubeMap, lookupVec));
 }
 
-vec3 calcReflectionMipOffset(vec3 tReflDirW, float tGlossiness, float offset) {
-    return calcReflection(vec3 tReflDirW, float tGlossiness);
-}
-
 void addReflection() {   
     dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }

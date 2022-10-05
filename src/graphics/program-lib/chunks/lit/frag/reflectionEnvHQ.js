@@ -22,23 +22,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return processEnvironment(mix(sharp, mix(roughA, roughB, flevel), min(level, 1.0)));
 }
 
-vec3 calcReflectionMipOffset(vec3 tReflDirW, float tGlossiness, float offset) {
-    vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
-    vec2 uv = toSphericalUv(dir);
-
-    // calculate roughness level
-    float level = offset + saturate(1.0 - tGlossiness) * 5.0;
-    float ilevel = max(0.0, floor(level));
-    float flevel = level - ilevel;
-
-    vec3 sharp = $DECODE(textureCube(texture_cubeMap, fixSeams(dir)));
-    vec3 roughA = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
-    vec3 roughB = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
-
-    return processEnvironment(mix(sharp, mix(roughA, roughB, flevel), min(level, 1.0)));
-}
-
-
 void addReflection() {   
     dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
 }
