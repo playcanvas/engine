@@ -224,6 +224,7 @@ class WebglShader {
             info = gl.getActiveAttrib(glProgram, i++);
             location = gl.getAttribLocation(glProgram, info.name);
 
+            // a built-in attribute for which we do not need to provide any data
             if (info.name === 'gl_VertexID')
                 continue;
 
