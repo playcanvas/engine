@@ -8,12 +8,6 @@ import { getProgramLibrary } from '../get-program-library.js';
 /** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
 
-/**
- * A WebGL implementation of the Shader.
- *
- * @ignore
- */
-
 const _vertexShaderBuiltins = [
     'gl_VertexID',
     'gl_InstanceID',
@@ -21,6 +15,12 @@ const _vertexShaderBuiltins = [
     'gl_BaseVertex',
     'gl_BaseInstance'
 ];
+
+/**
+ * A WebGL implementation of the Shader.
+ *
+ * @ignore
+ */
 class WebglShader {
     constructor(shader) {
         this.init();
