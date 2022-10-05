@@ -224,6 +224,9 @@ class WebglShader {
             info = gl.getActiveAttrib(glProgram, i++);
             location = gl.getAttribLocation(glProgram, info.name);
 
+            if (info.name === 'gl_VertexID')
+                continue;
+
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
