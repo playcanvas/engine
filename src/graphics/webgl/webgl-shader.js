@@ -8,6 +8,14 @@ import { getProgramLibrary } from '../get-program-library.js';
 /** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
 
+const _vertexShaderBuiltins = [
+    'gl_VertexID',
+    'gl_InstanceID',
+    'gl_DrawID',
+    'gl_BaseVertex',
+    'gl_BaseInstance'
+];
+
 /**
  * A WebGL implementation of the Shader.
  *
@@ -215,21 +223,23 @@ class WebglShader {
             return false;
         }
 
-        let i, info, location, shaderInput;
-
         // Query the program for each vertex buffer input (GLSL 'attribute')
-        i = 0;
+        let i = 0;
         const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
         while (i < numAttributes) {
-            info = gl.getActiveAttrib(glProgram, i++);
-            location = gl.getAttribLocation(glProgram, info.name);
+            const info = gl.getActiveAttrib(glProgram, i++);
+            const location = gl.getAttribLocation(glProgram, info.name);
+
+            // a built-in attributes for which we do not need to provide any data
+            if (_vertexShaderBuiltins.indexOf(info.name) !== -1)
+                continue;
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
             }
 
-            shaderInput = new ShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
+            const shaderInput = new ShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
 
             this.attributes.push(shaderInput);
         }
@@ -238,10 +248,10 @@ class WebglShader {
         i = 0;
         const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
         while (i < numUniforms) {
-            info = gl.getActiveUniform(glProgram, i++);
-            location = gl.getUniformLocation(glProgram, info.name);
+            const info = gl.getActiveUniform(glProgram, i++);
+            const location = gl.getUniformLocation(glProgram, info.name);
 
-            shaderInput = new ShaderInput(device, info.name, device.pcUniformType[info.type], location);
+            const shaderInput = new ShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                 (device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
