@@ -213,7 +213,7 @@ class GltfExporter extends CoreExporter {
                     const bufferViewIndices = [];
                     format.elements.forEach((element) => {
 
-                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset);
+                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
                         bufferViewIndices.push(bufferViewIndex);
 
                     });
