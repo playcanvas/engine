@@ -184,24 +184,28 @@ class GltfExporter extends CoreExporter {
 
         resources.buffers.forEach((buffer) => {
 
+            const addBufferView = (target, byteLength, byteOffset, byteStride) => {
+
+                const bufferView =  {
+                    target: target,
+                    buffer: 0,
+                    byteLength: byteLength,
+                    byteOffset: byteOffset,
+                    byteStride: byteStride
+                };
+
+                return json.bufferViews.push(bufferView) - 1;
+            };
+
             const arrayBuffer = buffer.lock();
 
             if (buffer instanceof pc.VertexBuffer) {
 
                 const format = buffer.getFormat();
-
                 if (format.interleaved) {
 
-                    const bufferView = {
-                        target: ARRAY_BUFFER,
-                        buffer: 0,
-                        byteLength: arrayBuffer.byteLength,
-                        byteOffset: offset,
-                        byteStride: format.size
-                    };
-
-                    const count = json.bufferViews.push(bufferView);
-                    resources.bufferViewMap.set(buffer, [count - 1]);
+                    const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
+                    resources.bufferViewMap.set(buffer, [bufferViewIndex]);
 
                 } else {
 
@@ -209,31 +213,18 @@ class GltfExporter extends CoreExporter {
                     const bufferViewIndices = [];
                     format.elements.forEach((element) => {
 
-                        const bufferView = {
-                            target: ARRAY_BUFFER,
-                            buffer: 0,
-                            byteLength: element.size * format.vertexCount,
-                            byteOffset: offset + element.offset
-                        };
+                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset);
+                        bufferViewIndices.push(bufferViewIndex);
 
-                        const count = json.bufferViews.push(bufferView);
-                        bufferViewIndices.push(count - 1);
                     });
 
                     resources.bufferViewMap.set(buffer, bufferViewIndices);
                 }
 
-            } else {
+            } else {    // index buffer
 
-                const bufferView = {
-                    target: ELEMENT_ARRAY_BUFFER,
-                    buffer: 0,
-                    byteLength: arrayBuffer.byteLength,
-                    byteOffset: offset
-                };
-
-                const count = json.bufferViews.push(bufferView);
-                resources.bufferViewMap.set(buffer, [count - 1]);
+                const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+                resources.bufferViewMap.set(buffer, [bufferViewIndex]);
 
             }
 
