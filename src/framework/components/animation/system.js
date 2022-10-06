@@ -49,7 +49,11 @@ class AnimationComponentSystem extends ComponentSystem {
      * @ignore
      */
     initializeComponentData(component, data, properties) {
-        for (const property in data) {
+        // properties need to be set in a specific order due to some setters in the component
+        // having extra logic. `assets` need to be last as it checks other properties
+        // to see if it should play the animation
+        properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
+        for (const property of properties) {
             if (data.hasOwnProperty(property)) {
                 component[property] = data[property];
             }
