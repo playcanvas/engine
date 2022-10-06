@@ -508,6 +508,11 @@ class GltfExporter extends CoreExporter {
         this.writeMeshes(resources, json);
         this.convertTextures(resources.textures, json, options);
 
+        // delete unused properties
+        if (!json.images.length) delete json.images;
+        if (!json.samplers.length) delete json.samplers;
+        if (!json.textures.length) delete json.textures;
+
         return json;
     }
 
