@@ -1,4 +1,4 @@
-import { math } from '../../src/math/math.js';
+import { math } from '../../src/core/math/math.js';
 
 import { expect } from 'chai';
 
