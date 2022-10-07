@@ -46,7 +46,7 @@ import { AssetRegistry } from '../asset/asset-registry.js';
 
 import { BundleRegistry } from '../bundles/bundle-registry.js';
 
-import { ScriptRegistry } from '../script/script-registry.js';
+import { ScriptRegistry } from './script/script-registry.js';
 
 import { I18n } from '../i18n/i18n.js';
 

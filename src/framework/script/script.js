@@ -1,10 +1,10 @@
-import { Debug } from '../core/debug.js';
-import { EventHandler } from '../core/event-handler.js';
+import { Debug } from '../../core/debug.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptHandler } from '../resources/script.js';
+import { ScriptHandler } from '../../resources/script.js';
 
-import { script } from '../framework/script.js';
-import { AppBase } from '../framework/app-base.js';
+import { script } from '../script.js';
+import { AppBase } from '../app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
