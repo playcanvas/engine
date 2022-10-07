@@ -4,7 +4,7 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 
-import { Frustum } from '../shape/frustum.js';
+import { Frustum } from '../core/shape/frustum.js';
 
 import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,

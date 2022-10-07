@@ -1,4 +1,4 @@
-import { Vec3 } from '../core/math/vec3.js';
+import { Vec3 } from '../math/vec3.js';
 
 /** @typedef {import('./ray.js').Ray} Ray */
 

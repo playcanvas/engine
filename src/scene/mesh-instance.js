@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
+import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 
 import { BindGroup } from '../graphics/bind-group.js';
 import { UniformBuffer } from '../graphics/uniform-buffer.js';

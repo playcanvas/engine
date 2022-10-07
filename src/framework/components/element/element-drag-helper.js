@@ -6,8 +6,8 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
 import { ElementComponent } from './component.js';
-import { Ray } from '../../../shape/ray.js';
-import { Plane } from '../../../shape/plane.js';
+import { Ray } from '../../../core/shape/ray.js';
+import { Plane } from '../../../core/shape/plane.js';
 
 /** @typedef {import('../../../input/element-input').ElementTouchEvent} ElementTouchEvent */
 

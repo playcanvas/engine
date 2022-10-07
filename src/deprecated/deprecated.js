@@ -10,10 +10,10 @@ import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
-import { Frustum } from '../shape/frustum.js';
-import { Plane } from '../shape/plane.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
+import { BoundingSphere } from '../core/shape/bounding-sphere.js';
+import { Frustum } from '../core/shape/frustum.js';
+import { Plane } from '../core/shape/plane.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,

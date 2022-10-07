@@ -5,7 +5,7 @@ import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../shape/ray.js').Ray} Ray */
+/** @typedef {import('../core/shape/ray.js').Ray} Ray */
 
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.

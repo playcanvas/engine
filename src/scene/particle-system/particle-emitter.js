@@ -6,7 +6,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import { Curve } from '../../core/math/curve.js';
 import { CurveSet } from '../../core/math/curve-set.js';

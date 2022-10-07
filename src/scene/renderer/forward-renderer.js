@@ -6,7 +6,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
+import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
