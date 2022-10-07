@@ -44,43 +44,43 @@ import { Color } from '../../math/color.js';
 const invalidateAttachments = [];
 
 const _fullScreenQuadVS = /* glsl */`
-    attribute vec2 vertex_position;
-    varying vec2 vUv0;
-    void main(void)
-    {
-        gl_Position = vec4(vertex_position, 0.5, 1.0);
-        vUv0 = vertex_position.xy*0.5+0.5;
-    }
+attribute vec2 vertex_position;
+varying vec2 vUv0;
+void main(void)
+{
+    gl_Position = vec4(vertex_position, 0.5, 1.0);
+    vUv0 = vertex_position.xy*0.5+0.5;
+}
 `;
 
 const _precisionTest1PS = /* glsl */`
-    void main(void) {
-        gl_FragColor = vec4(2147483648.0);
-    }
+void main(void) { 
+    gl_FragColor = vec4(2147483648.0);
+}
 `;
 
 const _precisionTest2PS = /* glsl */`
-    uniform sampler2D source;
-    vec4 packFloat(float depth) {
-        const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
-        const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
-        vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);
-        res -= res.xxyz * bit_mask;
-        return res;
-    }
-    void main(void) {
-        float c = texture2D(source, vec2(0.0)).r;
-        float diff = abs(c - 2147483648.0) / 2147483648.0;
-        gl_FragColor = packFloat(diff);
-    }
+uniform sampler2D source;
+vec4 packFloat(float depth) {
+    const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
+    const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
+    vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);
+    res -= res.xxyz * bit_mask;
+    return res;
+}
+void main(void) {
+    float c = texture2D(source, vec2(0.0)).r;
+    float diff = abs(c - 2147483648.0) / 2147483648.0;
+    gl_FragColor = packFloat(diff);
+}
 `;
 
 const _outputTexture2D = /* glsl */`
-    varying vec2 vUv0;
-    uniform sampler2D source;
-    void main(void) {
-        gl_FragColor = texture2D(source, vUv0);
-    }
+varying vec2 vUv0;
+uniform sampler2D source;
+void main(void) {
+    gl_FragColor = texture2D(source, vUv0);
+}
 `;
 
 function testRenderable(gl, pixelFormat) {
