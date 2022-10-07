@@ -2,7 +2,7 @@ import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../core/math/vec3.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,

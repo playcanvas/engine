@@ -25,7 +25,7 @@ import { getProgramLibrary } from '../../graphics/get-program-library.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
 const _props = {};

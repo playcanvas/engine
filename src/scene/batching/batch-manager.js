@@ -4,7 +4,7 @@ import { Debug } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat3 } from '../../core/math/mat3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,

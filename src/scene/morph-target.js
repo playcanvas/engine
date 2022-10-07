@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 
 import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';

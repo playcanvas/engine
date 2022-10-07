@@ -4,7 +4,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Texture } from '../../../graphics/texture.js';
 
-import { BoundingBox } from '../../../shape/bounding-box.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
 

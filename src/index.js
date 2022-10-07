@@ -48,12 +48,12 @@ export { Vec3 } from './core/math/vec3.js';
 export { Vec4 } from './core/math/vec4.js';
 
 // SHAPE
-export { BoundingBox } from './shape/bounding-box.js';
-export { BoundingSphere } from './shape/bounding-sphere.js';
-export { Frustum } from './shape/frustum.js';
-export { OrientedBox } from './shape/oriented-box.js';
-export { Plane } from './shape/plane.js';
-export { Ray } from './shape/ray.js';
+export { BoundingBox } from './core/shape/bounding-box.js';
+export { BoundingSphere } from './core/shape/bounding-sphere.js';
+export { Frustum } from './core/shape/frustum.js';
+export { OrientedBox } from './core/shape/oriented-box.js';
+export { Plane } from './core/shape/plane.js';
+export { Ray } from './core/shape/ray.js';
 
 // GRAPHICS
 export * from './graphics/constants.js';
