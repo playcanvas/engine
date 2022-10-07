@@ -1,7 +1,6 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32 } from './constants.js';
+import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32, BUFFER_STATIC } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
-import { VertexIterator } from './vertex-iterator.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -88,14 +87,8 @@ function createFullscreenQuad(device) {
     ]);
 
     // Create a vertex buffer
-    const vertexBuffer = new VertexBuffer(device, vertexFormat, 4);
-
-    // Fill the vertex buffer
-    const iterator = new VertexIterator(vertexBuffer);
-    iterator.writeData(SEMANTIC_POSITION, [-1, -1, 1, -1, -1, 1, 1, 1], 4);
-    iterator.end();
-
-    return vertexBuffer;
+    const data = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, data.buffer);
 }
 
 /**
