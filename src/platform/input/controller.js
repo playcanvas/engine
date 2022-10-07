@@ -1,4 +1,4 @@
-import { type } from '../core/core.js';
+import { type } from '../../core/core.js';
 
 import {
     ACTION_GAMEPAD, ACTION_KEYBOARD, ACTION_MOUSE,
