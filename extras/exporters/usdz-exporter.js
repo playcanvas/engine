@@ -167,7 +167,7 @@ class UsdzExporter extends CoreExporter {
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
             const texture = textureArray[i];
-            const mipObject = texture._levels[0];
+            const mipObject = texture.getSource();
 
             // convert texture data to canvas
             const canvas = this.imageToCanvas(mipObject, textureOptions);

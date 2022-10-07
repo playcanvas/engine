@@ -383,11 +383,11 @@ class GltfExporter extends CoreExporter {
                     mesh.primitives.push(primitive);
 
                     // vertex buffer
-                    const vertexBuffer = meshInstance.mesh.vertexBuffer;
+                    const { vertexBuffer } = meshInstance.mesh;
+                    const { format } = vertexBuffer;
+                    const { interleaved, elements } = format;
                     const numVertices = vertexBuffer.getNumVertices();
-                    const vertexFormat = vertexBuffer.getFormat();
-                    const interleaved = vertexFormat.interleaved;
-                    vertexFormat.elements.forEach((element, elementIndex) => {
+                    elements.forEach((element, elementIndex) => {
 
                         const viewIndex = resources.bufferViewMap.get(vertexBuffer)[interleaved ? 0 : elementIndex];
 
@@ -454,7 +454,7 @@ class GltfExporter extends CoreExporter {
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
             const texture = textures[i];
-            const mipObject = texture._levels[0];
+            const mipObject = texture.getSource();
 
             // convert texture data to uri
             const canvas = this.imageToCanvas(mipObject, textureOptions);
