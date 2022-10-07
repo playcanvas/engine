@@ -92,13 +92,7 @@ function createFullscreenQuad(device) {
 
     // Fill the vertex buffer
     const iterator = new VertexIterator(vertexBuffer);
-    iterator.element[SEMANTIC_POSITION].set(-1.0, -1.0);
-    iterator.next();
-    iterator.element[SEMANTIC_POSITION].set(1.0, -1.0);
-    iterator.next();
-    iterator.element[SEMANTIC_POSITION].set(-1.0, 1.0);
-    iterator.next();
-    iterator.element[SEMANTIC_POSITION].set(1.0, 1.0);
+    iterator.writeData(SEMANTIC_POSITION, [-1, -1, 1, -1, -1, 1, 1, 1], 4);
     iterator.end();
 
     return vertexBuffer;
