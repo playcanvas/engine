@@ -3,7 +3,6 @@ import { now } from '../../core/time.js';
 
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
-import { getProgramLibrary } from '../get-program-library.js';
 
 /** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -34,17 +33,9 @@ class WebglShader {
      * @param {Shader} shader - The shader to free.
      */
     destroy(shader) {
-        /** @type {WebglGraphicsDevice} */
-        const device = shader.device;
-        const idx = device.shaders.indexOf(shader);
-        if (idx !== -1) {
-            device.shaders.splice(idx, 1);
-        }
-
         if (this.glProgram) {
-            device.gl.deleteProgram(this.glProgram);
+            shader.device.gl.deleteProgram(this.glProgram);
             this.glProgram = null;
-            getProgramLibrary(device).removeFromCache(shader);
         }
     }
 
