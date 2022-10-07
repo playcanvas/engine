@@ -292,7 +292,7 @@ export { ZoneComponent } from './framework/components/zone/component.js';
 export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
-export { Template } from './templates/template.js';
+export { Template } from './framework/template.js';
 
 // XR
 export * from './xr/constants.js';

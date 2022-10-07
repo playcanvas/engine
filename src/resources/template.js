@@ -1,6 +1,6 @@
 import { http } from '../net/http.js';
 
-import { Template } from '../templates/template.js';
+import { Template } from '../framework/template.js';
 
 class TemplateHandler {
     /**
