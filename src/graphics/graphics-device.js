@@ -210,6 +210,15 @@ class GraphicsDevice extends EventHandler {
         this.fire('destroy');
     }
 
+    onDestroyShader(shader) {
+        this.fire('destroy:shader', shader);
+
+        const idx = this.shaders.indexOf(shader);
+        if (idx !== -1) {
+            this.shaders.splice(idx, 1);
+        }
+    }
+
     // executes after the extended classes have executed their destroy function
     postDestroy() {
         this.scope = null;

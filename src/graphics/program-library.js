@@ -38,6 +38,10 @@ class ProgramLibrary {
             this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
         standardMaterial.shaderOptBuilder.updateMinRef(
             this._defaultStdMatOptionMin, {}, standardMaterial, null, [], SHADER_SHADOW, null);
+
+        device.on('destroy:shader', (shader) => {
+            this.removeFromCache(shader);
+        });
     }
 
     destroy() {
