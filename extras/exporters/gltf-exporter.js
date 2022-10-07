@@ -453,28 +453,34 @@ class GltfExporter extends CoreExporter {
             const isRGBA = true;
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-            const texture = textures[i];
-            const mipObject = texture.getSource();
-
             // convert texture data to uri
-            const canvas = this.imageToCanvas(mipObject, textureOptions);
-            const uri = canvas.toDataURL(mimeType);
+            const texture = textures[i];
+            const canvas = this.textureToCanvas(texture, textureOptions);
 
-            json.images[i] = {
-                'uri': uri
-            };
+            // if texture format is supported
+            if (canvas) {
+                const uri = canvas.toDataURL(mimeType);
 
-            json.samplers[i] = {
-                'minFilter': getFilter(texture.minFilter),
-                'magFilter': getFilter(texture.magFilter),
-                'wrapS': getWrap(texture.addressU),
-                'wrapT': getWrap(texture.addressV)
-            };
+                json.images[i] = {
+                    'uri': uri
+                };
 
-            json.textures[i] = {
-                'sampler': i,
-                'source': i
-            };
+                json.samplers[i] = {
+                    'minFilter': getFilter(texture.minFilter),
+                    'magFilter': getFilter(texture.magFilter),
+                    'wrapS': getWrap(texture.addressU),
+                    'wrapT': getWrap(texture.addressV)
+                };
+
+                json.textures[i] = {
+                    'sampler': i,
+                    'source': i
+                };
+            } else {
+                // ignore it
+                console.log(`Export of texture ${texture.name} is not currently supported.`);
+                textures[i] = null;
+            }
         }
     }
 
