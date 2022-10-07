@@ -28,7 +28,7 @@ import { LightmapCache } from './lightmapper/lightmap-cache.js';
 /** @typedef {import('../graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('../graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../core/math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 /** @typedef {import('./scene.js').Scene} Scene */

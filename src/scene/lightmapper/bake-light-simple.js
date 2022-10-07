@@ -1,5 +1,5 @@
-import { Vec2 } from '../../math/vec2.js';
-import { random } from '../../math/random.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { random } from '../../core/math/random.js';
 import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { BakeLight } from './bake-light.js';
 

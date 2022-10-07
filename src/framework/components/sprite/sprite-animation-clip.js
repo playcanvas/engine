@@ -1,6 +1,6 @@
 import { EventHandler } from '../../../core/event-handler.js';
 
-import { math } from '../../../math/math.js';
+import { math } from '../../../core/math/math.js';
 
 import { Asset } from '../../../asset/asset.js';
 

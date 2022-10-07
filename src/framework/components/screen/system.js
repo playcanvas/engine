@@ -1,6 +1,6 @@
 import { IndexedList } from '../../../core/indexed-list.js';
 
-import { Vec2 } from '../../../math/vec2.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

@@ -1,7 +1,7 @@
-import { Quat } from '../../math/quat.js';
+import { Quat } from '../../core/math/quat.js';
 import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 import { AnimEvaluator } from '../evaluator/anim-evaluator.js';
-import { math } from '../../math/math.js';
+import { math } from '../../core/math/math.js';
 
 /**
  * Used to store and update the value of an animation target. This combines the values of multiple

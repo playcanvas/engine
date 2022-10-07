@@ -1,6 +1,6 @@
-import { Curve } from '../../../math/curve.js';
-import { CurveSet } from '../../../math/curve-set.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Curve } from '../../../core/math/curve.js';
+import { CurveSet } from '../../../core/math/curve-set.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { LIGHTTYPE_DIRECTIONAL } from '../../../scene/constants.js';
 

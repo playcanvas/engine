@@ -1,9 +1,9 @@
 import { Debug } from '../../core/debug.js';
 
-import { Color } from '../../math/color.js';
-import { Vec2 } from '../../math/vec2.js';
-import { Quat } from '../../math/quat.js';
-import { math } from '../../math/math.js';
+import { Color } from '../../core/math/color.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Quat } from '../../core/math/quat.js';
+import { math } from '../../core/math/math.js';
 
 import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
 import { EnvLighting } from '../../graphics/env-lighting.js';

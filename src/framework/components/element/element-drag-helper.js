@@ -1,9 +1,9 @@
 import { platform } from '../../../core/platform.js';
 import { EventHandler } from '../../../core/event-handler.js';
 
-import { Quat } from '../../../math/quat.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { ElementComponent } from './component.js';
 import { Ray } from '../../../shape/ray.js';

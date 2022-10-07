@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 import { BoundingBox } from '../shape/bounding-box.js';
 

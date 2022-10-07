@@ -1,5 +1,5 @@
-import { Vec3 } from '../../math/vec3.js';
-import { math } from '../../math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../shape/bounding-box.js';
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';

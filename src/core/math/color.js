@@ -1,4 +1,4 @@
-import { math } from '../math/math.js';
+import { math } from './math.js';
 
 /**
  * Representation of an RGBA color.

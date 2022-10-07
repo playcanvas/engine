@@ -3,7 +3,7 @@ import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { URI } from '../core/uri.js';
 
-import { math } from '../math/math.js';
+import { math } from '../core/math/math.js';
 
 /**
  * Callback used by {@link Http#get}, {@link Http#post}, {@link Http#put}, {@link Http#del}, and

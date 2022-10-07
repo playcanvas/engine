@@ -1,10 +1,10 @@
 import { now } from '../../core/time.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
 import { BoundingSphere } from '../../shape/bounding-sphere.js';
 

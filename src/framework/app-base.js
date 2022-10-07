@@ -9,11 +9,11 @@ import { EventHandler } from '../core/event-handler.js';
 import { Debug } from '../core/debug.js';
 import { TRACEID_RENDER_FRAME } from '../core/constants.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Quat } from '../core/math/quat.js';
 
 import { http } from '../net/http.js';
 

@@ -3,8 +3,8 @@ import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from './constants.js';
-import { Vec3 } from '../math/vec3.js';
-import { random } from '../math/random.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { random } from '../core/math/random.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { ChunkUtils } from './program-lib/chunk-utils.js';
@@ -16,7 +16,7 @@ import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { DeviceCache } from './device-cache.js';
 
-/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../core/math/vec4.js').Vec4} Vec4 */
 
 const getProjectionName = (projection) => {
     switch (projection) {

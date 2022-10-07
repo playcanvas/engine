@@ -1,9 +1,9 @@
 import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
 
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
-import { Vec2 } from '../../../math/vec2.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import { BoundingBox } from '../../../shape/bounding-box.js';
 
