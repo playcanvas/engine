@@ -4,9 +4,9 @@ import fs from 'fs';
 const regex = /Class<(.*?)>/g;
 const paths = [
     './types/framework/components/script/component.d.ts',
-    './types/script/script-attributes.d.ts',
-    './types/script/script-registry.d.ts',
-    './types/script/script.d.ts'
+    './types/framework/script/script-attributes.d.ts',
+    './types/framework/script/script-registry.d.ts',
+    './types/framework/script/script.d.ts'
 ];
 
 paths.forEach(path => {
