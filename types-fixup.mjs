@@ -471,7 +471,7 @@ dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
 fs.writeFileSync(path, dts);
 
-path = './types/script/script-type.d.ts';
+path = './types/framework/script/script-type.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
     /**
