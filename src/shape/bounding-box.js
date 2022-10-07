@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec3 } from '../core/math/vec3.js';
 
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('../core/math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
 /** @typedef {import('./ray.js').Ray} Ray */
 

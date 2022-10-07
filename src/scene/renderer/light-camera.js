@@ -1,6 +1,6 @@
-import { Quat } from '../../math/quat.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Mat4 } from '../../math/mat4.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 import { ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../constants.js';
 import { Camera } from '../camera.js';

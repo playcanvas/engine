@@ -1,7 +1,7 @@
-import { math } from '../../math/math.js';
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
+import { math } from '../../core/math/math.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 import { CULLFACE_NONE } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';

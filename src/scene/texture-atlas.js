@@ -1,7 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
-/** @typedef {import('../math/vec2.js').Vec2} Vec2 */
-/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../core/math/vec2.js').Vec2} Vec2 */
+/** @typedef {import('../core/math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 
 /**

@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 import {
     PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM

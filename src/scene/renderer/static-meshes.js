@@ -1,6 +1,6 @@
 import { now } from '../../core/time.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Mat4 } from '../../math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 import { BoundingBox } from '../../shape/bounding-box.js';
 import { BoundingSphere } from '../../shape/bounding-sphere.js';

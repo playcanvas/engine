@@ -4,8 +4,8 @@ import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../
 import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
-import { Vec2 } from '../../../../src/math/vec2.js';
-import { Vec4 } from '../../../../src/math/vec4.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

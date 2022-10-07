@@ -1,6 +1,6 @@
-import { Vec3 } from '../../math/vec3.js';
-import { random } from '../../math/random.js';
-import { Color } from '../../math/color.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { random } from '../../core/math/random.js';
+import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { SHADOW_PCF3 } from '../constants.js';
 import { BakeLight } from './bake-light.js';

@@ -2,8 +2,8 @@ import { path } from '../core/path.js';
 
 import { http } from '../net/http.js';
 
-import { Vec2 } from '../math/vec2.js';
-import { Vec4 } from '../math/vec4.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec4 } from '../core/math/vec4.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,

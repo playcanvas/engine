@@ -3,7 +3,7 @@ import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../core/math/vec4.jsce.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./shader.js').Shader} Shader */
 

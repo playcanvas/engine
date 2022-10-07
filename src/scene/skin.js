@@ -1,5 +1,5 @@
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
+/** @typedef {import('../core/math/mat4.js').Mat4} Mat4 */
 
 /**
  * A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.

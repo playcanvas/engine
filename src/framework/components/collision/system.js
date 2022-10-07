@@ -1,8 +1,8 @@
 import { Debug } from '../../../core/debug.js';
 
-import { Mat4 } from '../../../math/mat4.js';
-import { Quat } from '../../../math/quat.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
 

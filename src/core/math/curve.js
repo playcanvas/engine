@@ -1,4 +1,4 @@
-import { extend } from '../core/core.js';
+import { extend } from '../core.js';
 
 import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';

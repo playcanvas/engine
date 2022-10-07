@@ -1,9 +1,9 @@
 import { Debug } from '../../../core/debug.js';
 
-import { math } from '../../../math/math.js';
-import { Mat4 } from '../../../math/mat4.js';
-import { Quat } from '../../../math/quat.js';
-import { Vec2 } from '../../../math/vec2.js';
+import { math } from '../../../core/math/math.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import { Component } from '../component.js';
 

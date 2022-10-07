@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { Color } from '../../math/color.js';
+import { Color } from '../../core/math/color.js';
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
