@@ -193,10 +193,10 @@ export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';
 
 // SCRIPTS
-export { createScript, registerScript } from './script/script.js';
-export { ScriptAttributes } from './script/script-attributes.js';
-export { ScriptRegistry } from './script/script-registry.js';
-export { ScriptType } from './script/script-type.js';
+export { createScript, registerScript } from './framework/script/script.js';
+export { ScriptAttributes } from './framework/script/script-attributes.js';
+export { ScriptRegistry } from './framework/script/script-registry.js';
+export { ScriptType } from './framework/script/script-type.js';
 
 // LOCALIZATION
 export { I18n } from './i18n/i18n.js';

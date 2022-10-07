@@ -1,15 +1,15 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
-import { Color } from '../core/math/color.js';
-import { Curve } from '../core/math/curve.js';
-import { CurveSet } from '../core/math/curve-set.js';
-import { Vec2 } from '../core/math/vec2.js';
-import { Vec3 } from '../core/math/vec3.js';
-import { Vec4 } from '../core/math/vec4.js';
+import { Color } from '../../core/math/color.js';
+import { Curve } from '../../core/math/curve.js';
+import { CurveSet } from '../../core/math/curve-set.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 
-import { GraphNode } from '../scene/graph-node.js';
+import { GraphNode } from '../../scene/graph-node.js';
 
-import { Asset } from '../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 /* eslint-disable-next-line no-unused-vars */
 import { ScriptType } from './script-type.js';
