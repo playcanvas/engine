@@ -1,4 +1,4 @@
-import babel from '@rollup/plugin-babel';
+import { babel } from '@rollup/plugin-babel';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
 import dts from 'rollup-plugin-dts';
