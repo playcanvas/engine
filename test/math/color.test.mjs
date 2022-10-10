@@ -1,4 +1,4 @@
-import { Color } from '../../src/math/color.js';
+import { Color } from '../../src/core/math/color.js';
 
 import { expect } from 'chai';
 

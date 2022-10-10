@@ -2,7 +2,7 @@ import { platform } from '../core/platform.js';
 
 import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
-import { SoundManager } from '../sound/manager.js';
+import { SoundManager } from '../platform/sound/manager.js';
 
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
@@ -62,11 +62,11 @@ import { TextureHandler } from '../resources/texture.js';
 
 import { XrManager } from '../xr/xr-manager.js';
 
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
 
 /**
  * An Application represents and manages your PlayCanvas application. If you are developing using

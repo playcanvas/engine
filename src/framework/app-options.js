@@ -1,11 +1,11 @@
 /** @typedef {import('../resources/handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */

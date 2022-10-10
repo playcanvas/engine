@@ -1,4 +1,4 @@
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 const SceneUtils = {
     /**

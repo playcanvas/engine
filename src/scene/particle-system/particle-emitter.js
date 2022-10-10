@@ -1,15 +1,15 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 
-import { math } from '../../math/math.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Quat } from '../../math/quat.js';
-import { Vec3 } from '../../math/vec3.js';
+import { math } from '../../core/math/math.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
-import { Curve } from '../../math/curve.js';
-import { CurveSet } from '../../math/curve-set.js';
+import { Curve } from '../../core/math/curve.js';
+import { CurveSet } from '../../core/math/curve-set.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -31,6 +31,7 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 import { DeviceCache } from '../../graphics/device-cache.js';
 import { particle } from '../../graphics/program-lib/programs/particle.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 
 import {
     BLEND_NORMAL,
@@ -828,8 +829,8 @@ class ParticleEmitter {
     }
 
     regenShader() {
-        const programLib = this.graphicsDevice.getProgramLibrary();
-        this.graphicsDevice.programLib.register('particle', particle);
+        const programLib = getProgramLibrary(this.graphicsDevice);
+        programLib.register('particle', particle);
 
         const hasNormal = (this.normalMap !== null);
         this.normalOption = 0;

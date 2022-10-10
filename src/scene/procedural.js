@@ -1,5 +1,5 @@
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
 import { Debug } from '../core/debug.js';
 
 import {

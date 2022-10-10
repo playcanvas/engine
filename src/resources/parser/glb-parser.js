@@ -1,15 +1,15 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 
-import { http } from '../../net/http.js';
+import { http } from '../../platform/net/http.js';
 
-import { math } from '../../math/math.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec2 } from '../../math/vec2.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { math } from '../../core/math/math.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     typedArrayTypes, typedArrayTypesByteSize,
@@ -36,6 +36,7 @@ import {
 
 import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
@@ -1780,6 +1781,12 @@ const createLight = function (gltfLight, node) {
     if (gltfLight.hasOwnProperty('spot')) {
         lightProps.innerConeAngle = gltfLight.spot.hasOwnProperty('innerConeAngle') ? gltfLight.spot.innerConeAngle * math.RAD_TO_DEG : 0;
         lightProps.outerConeAngle = gltfLight.spot.hasOwnProperty('outerConeAngle') ? gltfLight.spot.outerConeAngle * math.RAD_TO_DEG : Math.PI / 4;
+    }
+
+    // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
+    // so we need the intensities in candela back to lumen
+    if (gltfLight.hasOwnProperty("intensity")) {
+        lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
     }
 
     // Rotate to match light orientation in glTF specification

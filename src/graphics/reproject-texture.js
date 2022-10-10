@@ -3,19 +3,20 @@ import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from './constants.js';
-import { Vec3 } from '../math/vec3.js';
-import { random } from '../math/random.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { random } from '../core/math/random.js';
 import { createShaderFromCode } from './program-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
 import { ChunkUtils } from './program-lib/chunk-utils.js';
 import { shaderChunks } from './program-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
+import { getProgramLibrary } from './get-program-library.js';
 import { Texture } from './texture.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { DeviceCache } from './device-cache.js';
 
-/** @typedef {import('../math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../core/math/vec4.js').Vec4} Vec4 */
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -437,7 +438,7 @@ function reprojectTexture(source, target, options = {}) {
 
     const device = source.device;
 
-    let shader = device.programLib._cache[shaderKey];
+    let shader = getProgramLibrary(device)._cache[shaderKey];
     if (!shader) {
         const defines =
             `#define PROCESS_FUNC ${processFunc}\n` +

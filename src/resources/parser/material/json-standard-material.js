@@ -1,10 +1,10 @@
-import { Color } from '../../../math/color.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Texture } from '../../../graphics/texture.js';
 
-import { BoundingBox } from '../../../shape/bounding-box.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
 

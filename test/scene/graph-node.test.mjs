@@ -1,8 +1,8 @@
 import { GraphNode } from '../../src/scene/graph-node.js';
-import { Mat4 } from '../../src/math/mat4.js';
-import { Quat } from '../../src/math/quat.js';
+import { Mat4 } from '../../src/core/math/mat4.js';
+import { Quat } from '../../src/core/math/quat.js';
 import { Tags } from '../../src/core/tags.js';
-import { Vec3 } from '../../src/math/vec3.js';
+import { Vec3 } from '../../src/core/math/vec3.js';
 
 import { expect } from 'chai';
 

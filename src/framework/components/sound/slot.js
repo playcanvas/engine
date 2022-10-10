@@ -1,13 +1,13 @@
 import { EventHandler } from '../../../core/event-handler.js';
 import { Debug } from '../../../core/debug.js';
 
-import { math } from '../../../math/math.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { math } from '../../../core/math/math.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Asset } from '../../../asset/asset.js';
 
-import { SoundInstance } from '../../../sound/instance.js';
-import { SoundInstance3d } from '../../../sound/instance3d.js';
+import { SoundInstance } from '../../../platform/sound/instance.js';
+import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
 
 /** @typedef {import('./component.js').SoundComponent} SoundComponent */
 

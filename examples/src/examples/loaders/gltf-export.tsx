@@ -59,6 +59,22 @@ class GltfExportExample {
                 entity3.setLocalScale(0.01, 0.01, 0.01);
                 app.root.addChild(entity3);
 
+                // a render component with a sphere and cone primitives
+                const material = new pc.StandardMaterial();
+                material.diffuse = pc.Color.RED;
+                material.update();
+
+                const entity = new pc.Entity("TwoMeshInstances");
+                entity.addComponent('render', {
+                    type: 'asset',
+                    meshInstances: [
+                        new pc.MeshInstance(pc.createSphere(app.graphicsDevice), material),
+                        new pc.MeshInstance(pc.createCone(app.graphicsDevice), material)
+                    ]
+                });
+                app.root.addChild(entity);
+                entity.setLocalPosition(0, 1.5, -1.5);
+
                 // Create an Entity with a camera component
                 const camera = new pc.Entity();
                 camera.addComponent("camera", {
@@ -79,7 +95,11 @@ class GltfExportExample {
                 const link = document.getElementById('ar-link');
 
                 // export the whole scene into a glb format
-                new pcx.GltfExporter().build(app.root).then((arrayBuffer: any) => {
+                const options = {
+                    maxTextureSize: 1024
+                };
+
+                new pcx.GltfExporter().build(app.root, options).then((arrayBuffer: any) => {
 
                     const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 

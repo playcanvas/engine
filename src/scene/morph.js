@@ -1,8 +1,8 @@
 import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
-import { Vec3 } from '../math/vec3.js';
-import { FloatPacking } from '../math/float-packing.js';
-import { BoundingBox } from '../shape/bounding-box.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { FloatPacking } from '../core/math/float-packing.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 import { Texture } from '../graphics/texture.js';
 import { VertexBuffer } from '../graphics/vertex-buffer.js';
 import { VertexFormat } from '../graphics/vertex-format.js';

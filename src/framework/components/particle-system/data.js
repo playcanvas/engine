@@ -1,4 +1,4 @@
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEMODE_GPU, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
 

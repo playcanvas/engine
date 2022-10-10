@@ -1,9 +1,9 @@
 import { Debug } from '../../core/debug.js';
 
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,

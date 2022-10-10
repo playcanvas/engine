@@ -1,9 +1,9 @@
 import { Debug } from '../../core/debug.js';
 
-import { Color } from '../../math/color.js';
-import { Vec2 } from '../../math/vec2.js';
-import { Quat } from '../../math/quat.js';
-import { math } from '../../math/math.js';
+import { Color } from '../../core/math/color.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Quat } from '../../core/math/quat.js';
+import { math } from '../../core/math/math.js';
 
 import { _matTex2D, standard } from '../../graphics/program-lib/programs/standard.js';
 import { EnvLighting } from '../../graphics/env-lighting.js';
@@ -20,11 +20,12 @@ import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
 const _props = {};
@@ -832,7 +833,7 @@ class StandardMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
-        const library = device.getProgramLibrary();
+        const library = getProgramLibrary(device);
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions);
 

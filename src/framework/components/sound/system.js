@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 
-import { hasAudioContext } from '../../../audio/capabilities.js';
+import { hasAudioContext } from '../../../platform/audio/capabilities.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -8,7 +8,7 @@ import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
-/** @typedef {import('../../../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../../../platform/sound/manager.js').SoundManager} SoundManager */
 /** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];

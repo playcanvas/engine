@@ -3,17 +3,17 @@ import { string } from '../core/string.js';
 import { Timer, now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
-import { Frustum } from '../shape/frustum.js';
-import { Plane } from '../shape/plane.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
+import { BoundingSphere } from '../core/shape/bounding-sphere.js';
+import { Frustum } from '../core/shape/frustum.js';
+import { Plane } from '../core/shape/plane.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -42,6 +42,7 @@ import { IndexBuffer } from '../graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../graphics/program-library.js';
+import { getProgramLibrary, setProgramLibrary } from '../graphics/get-program-library.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { ScopeId } from '../graphics/scope-id.js';
 import { Shader } from '../graphics/shader.js';
@@ -74,25 +75,25 @@ import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { Animation, Key, Node } from '../animation/animation.js';
 import { Skeleton } from '../animation/skeleton.js';
 
-import { Channel } from '../audio/channel.js';
-import { Channel3d } from '../audio/channel3d.js';
-import { Listener } from '../sound/listener.js';
-import { Sound } from '../sound/sound.js';
-import { SoundManager } from '../sound/manager.js';
+import { Channel } from '../platform/audio/channel.js';
+import { Channel3d } from '../platform/audio/channel3d.js';
+import { Listener } from '../platform/sound/listener.js';
+import { Sound } from '../platform/sound/sound.js';
+import { SoundManager } from '../platform/sound/manager.js';
 
 import { AssetRegistry } from '../asset/asset-registry.js';
 
 import { XrInputSource } from '../xr/xr-input-source.js';
 
-import { Controller } from '../input/controller.js';
-import { ElementInput } from '../input/element-input.js';
-import { GamePads } from '../input/game-pads.js';
-import { Keyboard } from '../input/keyboard.js';
-import { KeyboardEvent } from '../input/keyboard-event.js';
-import { Mouse } from '../input/mouse.js';
-import { MouseEvent } from '../input/mouse-event.js';
-import { TouchDevice } from '../input/touch-device.js';
-import { getTouchTargetCoords, Touch, TouchEvent } from '../input/touch-event.js';
+import { Controller } from '../platform/input/controller.js';
+import { ElementInput } from '../platform/input/element-input.js';
+import { GamePads } from '../platform/input/game-pads.js';
+import { Keyboard } from '../platform/input/keyboard.js';
+import { KeyboardEvent } from '../platform/input/keyboard-event.js';
+import { Mouse } from '../platform/input/mouse.js';
+import { MouseEvent } from '../platform/input/mouse-event.js';
+import { TouchDevice } from '../platform/input/touch-device.js';
+import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
 import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
 import { Application } from '../framework/application.js';
@@ -491,6 +492,21 @@ Object.defineProperties(Texture.prototype, {
         }
     }
 });
+
+GraphicsDevice.prototype.getProgramLibrary = function () {
+    Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
+    return getProgramLibrary(this);
+};
+
+GraphicsDevice.prototype.setProgramLibrary = function (lib) {
+    Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
+    setProgramLibrary(this, lib);
+};
+
+GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
+    Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
+    getProgramLibrary(this).removeFromCache(shader);
+};
 
 // SCENE
 

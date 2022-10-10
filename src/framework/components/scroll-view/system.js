@@ -4,7 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
-import { Vec2 } from '../../../math/vec2.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 /** @typedef {import('../../app-base.js').AppBase} AppBase */
 

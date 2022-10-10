@@ -1,4 +1,4 @@
-import babel from '@rollup/plugin-babel';
+import { babel } from '@rollup/plugin-babel';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
 import dts from 'rollup-plugin-dts';
@@ -163,8 +163,23 @@ function buildTarget(buildType, moduleFormat) {
 
     if (process.env.treemap) {
         outputPlugins.min.push(visualizer({
+            filename: 'treemap.html',
             brotliSize: true,
             gzipSize: true
+        }));
+    }
+
+    if (process.env.treenet) {
+        outputPlugins.min.push(visualizer({
+            filename: 'treenet.html',
+            template: 'network'
+        }));
+    }
+
+    if (process.env.treesun) {
+        outputPlugins.min.push(visualizer({
+            filename: 'treesun.html',
+            template: 'sunburst'
         }));
     }
 

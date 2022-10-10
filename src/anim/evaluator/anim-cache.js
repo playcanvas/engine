@@ -1,4 +1,4 @@
-import { math } from '../../math/math.js';
+import { math } from '../../core/math/math.js';
 
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../constants.js';
 

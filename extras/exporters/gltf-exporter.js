@@ -1,3 +1,5 @@
+import { CoreExporter } from "./core-exporter.js";
+
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
 
@@ -52,24 +54,53 @@ const getSemantic = (engineSemantic) => {
     }
 };
 
-class GltfExporter {
+const getFilter = function (filter) {
+    switch (filter) {
+        case pc.FILTER_NEAREST: return 9728;
+        case pc.FILTER_LINEAR: return 9729;
+        case pc.FILTER_NEAREST_MIPMAP_NEAREST: return 9984;
+        case pc.FILTER_LINEAR_MIPMAP_NEAREST: return 9985;
+        case pc.FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
+        case pc.FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
+    }
+};
+
+const getWrap = function (wrap) {
+    switch (wrap) {
+        case pc.ADDRESS_CLAMP_TO_EDGE: return 33071;
+        case pc.ADDRESS_MIRRORED_REPEAT: return 33648;
+        case pc.ADDRESS_REPEAT: return 10497;
+    }
+};
+
+// supported texture semantics on a material
+const textureSemantics = [
+    'diffuseMap'
+];
+
+class GltfExporter extends CoreExporter {
     collectResources(root) {
         const resources = {
             buffers: [],
             cameras: [],
             entities: [],
             materials: [],
-            meshInstances: []
+            textures: [],
+
+            // entry: { node, meshInstances}
+            entityMeshInstances: [],
+
+            // maps a buffer (vertex or index) to an array of bufferview indices
+            bufferViewMap: new Map()
         };
 
-        const { materials, buffers } = resources;
+        const { materials, buffers, entityMeshInstances, textures } = resources;
 
         // Collect entities
         root.forEach((entity) => {
             resources.entities.push(entity);
         });
 
-        // Collect materials
         const collectMeshInstances = (meshInstances) => {
             meshInstances.forEach((meshInstance) => {
 
@@ -77,10 +108,24 @@ class GltfExporter {
                 const material = meshInstance.material;
                 if (materials.indexOf(material) < 0) {
                     resources.materials.push(material);
+
+                    // collect textures
+                    textureSemantics.forEach((semantic) => {
+                        const texture = material[semantic];
+                        if (texture && textures.indexOf(texture) < 0) {
+                            textures.push(texture);
+                        }
+                    });
                 }
 
-                // Collect mesh instance
-                resources.meshInstances.push(meshInstance);
+                // collect mesh instances per node
+                const node = meshInstance.node;
+                let nodeMeshInstances = entityMeshInstances.find(e => e.node === node);
+                if (!nodeMeshInstances) {
+                    nodeMeshInstances = { node: node, meshInstances: [] };
+                    entityMeshInstances.push(nodeMeshInstances);
+                }
+                nodeMeshInstances.meshInstances.push(meshInstance);
 
                 // Collect buffers
                 const mesh = meshInstance.mesh;
@@ -101,11 +146,11 @@ class GltfExporter {
                 resources.cameras.push(entity.camera);
             }
 
-            if (entity.render) {
+            if (entity.render && entity.render.enabled) {
                 collectMeshInstances(entity.render.meshInstances);
             }
 
-            if (entity.model) {
+            if (entity.model && entity.model.enabled && entity.model.meshInstances) {
                 collectMeshInstances(entity.model.meshInstances);
             }
         });
@@ -133,34 +178,58 @@ class GltfExporter {
     }
 
     writeBufferViews(resources, json) {
-        if (resources.buffers.length > 0) {
-            let offset = 0;
 
-            json.bufferViews = resources.buffers.map((buffer) => {
-                const arrayBuffer = buffer.lock();
+        json.bufferViews = [];
+        let offset = 0;
 
-                const bufferView = {
+        resources.buffers.forEach((buffer) => {
+
+            const addBufferView = (target, byteLength, byteOffset, byteStride) => {
+
+                const bufferView =  {
+                    target: target,
                     buffer: 0,
-                    byteLength: arrayBuffer.byteLength,
-                    byteOffset: offset
+                    byteLength: byteLength,
+                    byteOffset: byteOffset,
+                    byteStride: byteStride
                 };
 
-                if (buffer instanceof pc.VertexBuffer) {
-                    bufferView.target = ARRAY_BUFFER;
-                    const format = buffer.getFormat();
+                return json.bufferViews.push(bufferView) - 1;
+            };
 
-                    if (format.interleaved) {
-                        bufferView.byteStride = format.size;
-                    }
+            const arrayBuffer = buffer.lock();
+
+            if (buffer instanceof pc.VertexBuffer) {
+
+                const format = buffer.getFormat();
+                if (format.interleaved) {
+
+                    const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
+                    resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
                 } else {
-                    bufferView.target = ELEMENT_ARRAY_BUFFER;
+
+                    // generate buffer view per element
+                    const bufferViewIndices = [];
+                    format.elements.forEach((element) => {
+
+                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
+                        bufferViewIndices.push(bufferViewIndex);
+
+                    });
+
+                    resources.bufferViewMap.set(buffer, bufferViewIndices);
                 }
 
-                offset += arrayBuffer.byteLength;
+            } else {    // index buffer
 
-                return bufferView;
-            });
-        }
+                const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+                resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
+            }
+
+            offset += arrayBuffer.byteLength;
+        });
     }
 
     writeCameras(resources, json) {
@@ -197,19 +266,35 @@ class GltfExporter {
     }
 
     writeMaterials(resources, json) {
+
+        const attachTexture = (material, destination, name, textureSemantic) => {
+            const texture = material[textureSemantic];
+            if (texture) {
+                const textureIndex = resources.textures.indexOf(texture);
+                if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+                destination[name] = {
+                    "index": textureIndex
+                };
+            }
+        };
+
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
                 const { name, diffuse, emissive, opacity, blendType, cull } = mat;
-                const material = {};
+                const material = {
+                    pbrMetallicRoughness: {}
+                };
+                const pbr = material.pbrMetallicRoughness;
 
                 if (name && name.length > 0) {
                     material.name = name;
                 }
 
                 if (!diffuse.equals(pc.Color.WHITE) || opacity !== 1) {
-                    material.pbrMetallicRoughness = {};
-                    material.pbrMetallicRoughness.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+                    pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
                 }
+
+                attachTexture(mat, pbr, 'baseColorTexture', 'diffuseMap');
 
                 if (!emissive.equals(pc.Color.BLACK)) {
                     material.emissiveFactor = [emissive.r, emissive.g, emissive.b];
@@ -258,17 +343,11 @@ class GltfExporter {
                     node.camera = resources.cameras.indexOf(entity.camera);
                 }
 
-                if (entity.render && entity.render.enabled) {
-                    entity.render.meshInstances.forEach((meshInstance) => {
-                        node.mesh = resources.meshInstances.indexOf(meshInstance);
-                    });
+                const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
+                if (entityMeshInstance) {
+                    node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
                 }
 
-                if (entity.model && entity.model.enabled) {
-                    entity.model.meshInstances.forEach((meshInstance) => {
-                        node.mesh = resources.meshInstances.indexOf(meshInstance);
-                    });
-                }
                 if (entity.children.length > 0) {
                     node.children = [];
 
@@ -283,83 +362,129 @@ class GltfExporter {
     }
 
     writeMeshes(resources, json) {
-        if (resources.meshInstances.length > 0) {
+        if (resources.entityMeshInstances.length > 0) {
             json.accessors = [];
             json.meshes = [];
 
-            resources.meshInstances.forEach((meshInstance) => {
-                const indexBuffer = meshInstance.mesh.indexBuffer[0];
-                const vertexBuffer = meshInstance.mesh.vertexBuffer;
-                const vertexFormat = vertexBuffer.getFormat();
-                const numVertices = vertexBuffer.getNumVertices();
+            resources.entityMeshInstances.forEach((entityMeshInstances) => {
 
                 const mesh = {
                     primitives: []
                 };
-                const primitive = {
-                    attributes: {},
-                    material: resources.materials.indexOf(meshInstance.material)
-                };
 
-                // An accessor is a vertex attribute
-                const writeAccessor = (element) => {
+                // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
+                const meshInstances = entityMeshInstances.meshInstances;
+                meshInstances.forEach((meshInstance) => {
 
-                    const accessor = {
-                        bufferView: resources.buffers.indexOf(vertexBuffer),
-                        byteOffset: element.offset,
-                        componentType: getComponentType(element.dataType),
-                        type: getAccessorType(element.numComponents),
-                        count: numVertices
+                    const primitive = {
+                        attributes: {},
+                        material: resources.materials.indexOf(meshInstance.material)
                     };
+                    mesh.primitives.push(primitive);
 
-                    const idx = json.accessors.length;
-                    json.accessors.push(accessor);
+                    // vertex buffer
+                    const { vertexBuffer } = meshInstance.mesh;
+                    const { format } = vertexBuffer;
+                    const { interleaved, elements } = format;
+                    const numVertices = vertexBuffer.getNumVertices();
+                    elements.forEach((element, elementIndex) => {
 
-                    const semantic = getSemantic(element.name);
-                    primitive.attributes[semantic] = idx;
+                        const viewIndex = resources.bufferViewMap.get(vertexBuffer)[interleaved ? 0 : elementIndex];
 
-                    // Position accessor also requires min and max properties
-                    if (element.name === pc.SEMANTIC_POSITION) {
+                        const accessor = {
+                            bufferView: viewIndex,
+                            byteOffset: interleaved ? element.offset : 0,
+                            componentType: getComponentType(element.dataType),
+                            type: getAccessorType(element.numComponents),
+                            count: numVertices
+                        };
 
-                        // compute min and max from positions, as the BoundingBox stores center and extents,
-                        // and we get precision warnings from gltf validator
-                        const positions = [];
-                        meshInstance.mesh.getPositions(positions);
-                        const min = new pc.Vec3(), max = new pc.Vec3();
-                        pc.BoundingBox.computeMinMax(positions, min, max);
+                        const idx = json.accessors.push(accessor) - 1;
+                        primitive.attributes[getSemantic(element.name)] = idx;
 
-                        accessor.min = [min.x, min.y, min.z];
-                        accessor.max = [max.x, max.y, max.z];
+                        // Position accessor also requires min and max properties
+                        if (element.name === pc.SEMANTIC_POSITION) {
+
+                            // compute min and max from positions, as the BoundingBox stores center and extents,
+                            // and we get precision warnings from gltf validator
+                            const positions = [];
+                            meshInstance.mesh.getPositions(positions);
+                            const min = new pc.Vec3(), max = new pc.Vec3();
+                            pc.BoundingBox.computeMinMax(positions, min, max);
+
+                            accessor.min = [min.x, min.y, min.z];
+                            accessor.max = [max.x, max.y, max.z];
+                        }
+                    });
+
+                    // index buffer
+                    const indexBuffer = meshInstance.mesh.indexBuffer[0];
+                    if (indexBuffer) {
+
+                        const viewIndex = resources.bufferViewMap.get(indexBuffer)[0];
+
+                        const accessor = {
+                            bufferView: viewIndex,
+                            componentType: getIndexComponentType(indexBuffer.getFormat()),
+                            count: indexBuffer.getNumIndices(),
+                            type: "SCALAR"
+                        };
+
+                        const idx = json.accessors.push(accessor) - 1;
+                        primitive.indices = idx;
                     }
-                };
-
-                vertexFormat.elements.forEach(writeAccessor);
-
-                if (indexBuffer) {
-                    const ibIdx = resources.buffers.indexOf(indexBuffer);
-
-                    const accessor = {
-                        bufferView: ibIdx,
-                        componentType: getIndexComponentType(indexBuffer.getFormat()),
-                        count: indexBuffer.getNumIndices(),
-                        type: "SCALAR"
-                    };
-
-                    json.accessors.push(accessor);
-
-                    const idx = json.accessors.indexOf(accessor);
-
-                    primitive.indices = idx;
-                }
-
-                mesh.primitives.push(primitive);
+                });
 
                 json.meshes.push(mesh);
             });
         }
     }
 
-    buildJson(resources) {
+    convertTextures(textures, json, options) {
+
+        const textureOptions = {
+            maxTextureSize: options.maxTextureSize
+        };
+
+        for (let i = 0; i < textures.length; i++) {
+
+            // for now store all textures as png
+            // TODO: consider jpg if the alpha channel is not used
+            const isRGBA = true;
+            const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
+
+            // convert texture data to uri
+            const texture = textures[i];
+            const canvas = this.textureToCanvas(texture, textureOptions);
+
+            // if texture format is supported
+            if (canvas) {
+                const uri = canvas.toDataURL(mimeType);
+
+                json.images[i] = {
+                    'uri': uri
+                };
+
+                json.samplers[i] = {
+                    'minFilter': getFilter(texture.minFilter),
+                    'magFilter': getFilter(texture.magFilter),
+                    'wrapS': getWrap(texture.addressU),
+                    'wrapT': getWrap(texture.addressV)
+                };
+
+                json.textures[i] = {
+                    'sampler': i,
+                    'source': i
+                };
+            } else {
+                // ignore it
+                console.log(`Export of texture ${texture.name} is not currently supported.`);
+                textures[i] = null;
+            }
+        }
+    }
+
+    buildJson(resources, options) {
         const json = {
             asset: {
                 version: "2.0",
@@ -372,6 +497,12 @@ class GltfExporter {
                     ]
                 }
             ],
+            images: [
+            ],
+            samplers: [
+            ],
+            textures: [
+            ],
             scene: 0
         };
 
@@ -381,14 +512,28 @@ class GltfExporter {
         this.writeNodes(resources, json);
         this.writeMaterials(resources, json);
         this.writeMeshes(resources, json);
+        this.convertTextures(resources.textures, json, options);
+
+        // delete unused properties
+        if (!json.images.length) delete json.images;
+        if (!json.samplers.length) delete json.samplers;
+        if (!json.textures.length) delete json.textures;
 
         return json;
     }
 
-    build(entity) {
+    /**
+     * Converts a hierarchy of entities to GLB format.
+     *
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {object} options - Object for passing optional arguments.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @returns {ArrayBuffer} - The GLB file content.
+     */
+    build(entity, options = {}) {
         const resources = this.collectResources(entity);
 
-        const json = this.buildJson(resources);
+        const json = this.buildJson(resources, options);
         const jsonText = JSON.stringify(json);
 
         const headerLength = 12;

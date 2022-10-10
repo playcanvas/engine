@@ -1,4 +1,4 @@
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */

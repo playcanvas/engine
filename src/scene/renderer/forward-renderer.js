@@ -1,12 +1,12 @@
 import { now } from '../../core/time.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
+import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -104,6 +104,7 @@ class ForwardRenderer {
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        const device = this.device;
 
         /** @type {Scene|null} */
         this.scene = null;
@@ -126,10 +127,6 @@ class ForwardRenderer {
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
-
-        // Shaders
-        const device = this.device;
-        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);

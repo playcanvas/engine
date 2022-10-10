@@ -1,5 +1,5 @@
 import { BasicMaterial } from '../../../src/scene/materials/basic-material.js';
-import { Color } from '../../../src/math/color.js';
+import { Color } from '../../../src/core/math/color.js';
 import { Material } from '../../../src/scene/materials/material.js';
 
 import { expect } from 'chai';

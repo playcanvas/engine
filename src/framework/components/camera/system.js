@@ -1,6 +1,6 @@
 import { sortPriority } from '../../../core/sort.js';
-import { Color } from '../../../math/color.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

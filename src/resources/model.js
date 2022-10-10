@@ -1,7 +1,7 @@
 import { path } from '../core/path.js';
 import { Debug } from '../core/debug.js';
 
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 
 import { GlbModelParser } from './parser/glb-model.js';
 import { JsonModelParser } from './parser/json-model.js';

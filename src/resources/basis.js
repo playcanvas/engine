@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 

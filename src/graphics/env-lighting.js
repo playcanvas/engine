@@ -1,4 +1,4 @@
-import { Vec4 } from '../math/vec4.js';
+import { Vec4 } from '../core/math/vec4.js';
 import { Texture } from './texture.js';
 import { reprojectTexture } from './reproject-texture.js';
 import {

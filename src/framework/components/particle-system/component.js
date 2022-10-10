@@ -6,9 +6,9 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../math/curve.js').Curve} Curve */
-/** @typedef {import('../../../math/curve-set.js').CurveSet} CurveSet */
-/** @typedef {import('../../../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../../../core/math/curve.js').Curve} Curve */
+/** @typedef {import('../../../core/math/curve-set.js').CurveSet} CurveSet */
+/** @typedef {import('../../../core/math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ParticleSystemComponentSystem} ParticleSystemComponentSystem */
 

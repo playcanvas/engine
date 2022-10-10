@@ -1,4 +1,4 @@
-import { math } from '../../src/math/math.js';
+import { math } from '../../src/core/math/math.js';
 
 import { expect } from 'chai';
 
@@ -197,6 +197,23 @@ describe('math', function () {
             expect(math.nextPowerOfTwo(7)).to.equal(8);
             expect(math.nextPowerOfTwo(8)).to.equal(8);
             expect(math.nextPowerOfTwo(9)).to.equal(16);
+        });
+
+    });
+
+    describe('#nearestPowerOfTwo', function () {
+
+        it('returns the nearest power of two', function () {
+            expect(math.nearestPowerOfTwo(0)).to.equal(0);
+            expect(math.nearestPowerOfTwo(1)).to.equal(1);
+            expect(math.nearestPowerOfTwo(2)).to.equal(2);
+            expect(math.nearestPowerOfTwo(3)).to.equal(4);
+            expect(math.nearestPowerOfTwo(4)).to.equal(4);
+            expect(math.nearestPowerOfTwo(5)).to.equal(4);
+            expect(math.nearestPowerOfTwo(6)).to.equal(8);
+            expect(math.nearestPowerOfTwo(7)).to.equal(8);
+            expect(math.nearestPowerOfTwo(8)).to.equal(8);
+            expect(math.nearestPowerOfTwo(9)).to.equal(8);
         });
 
     });

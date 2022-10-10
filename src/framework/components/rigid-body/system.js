@@ -2,7 +2,7 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

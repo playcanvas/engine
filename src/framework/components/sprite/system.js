@@ -1,4 +1,4 @@
-import { Color } from '../../../math/color.js';
+import { Color } from '../../../core/math/color.js';
 
 import {
     CULLFACE_NONE,

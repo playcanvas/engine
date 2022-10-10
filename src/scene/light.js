@@ -1,9 +1,9 @@
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -24,6 +24,13 @@ const tmpBiases = {
 };
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
+
+const lightTypes = {
+    'directional': LIGHTTYPE_DIRECTIONAL,
+    'omni': LIGHTTYPE_OMNI,
+    'point': LIGHTTYPE_OMNI,
+    'spot': LIGHTTYPE_SPOT
+};
 
 // viewport in shadows map for cascades for directional light
 const directionalCascades = [
@@ -637,6 +644,32 @@ class Light {
         return clone;
     }
 
+    /**
+     * Get conversion factor for luminance -> light specific light unit.
+     *
+     * @param {number} type - The type of light.
+     * @param {number} [outerAngle] - The outer angle of a spot light.
+     * @param {number} [innerAngle] - The inner angle of a spot light.
+     * @returns {number} The scaling factor to multiply with the luminance value.
+     */
+    static getLightUnitConversion(type, outerAngle = Math.PI / 4, innerAngle = 0) {
+        switch (type) {
+            case LIGHTTYPE_SPOT: {
+                const falloffEnd = Math.cos(outerAngle);
+                const falloffStart = Math.cos(innerAngle);
+
+                // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
+                return (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
+            }
+            case LIGHTTYPE_OMNI:
+                // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
+                return (4 * Math.PI);
+            case LIGHTTYPE_DIRECTIONAL:
+                // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
+                return 1;
+        }
+    }
+
     // returns the bias (.x) and normalBias (.y) value for lights as passed to shaders by uniforms
     // Note: this needs to be revisited and simplified
     // Note: vsmBias is not used at all for omni light, even though it is editable in the Editor
@@ -734,25 +767,7 @@ class Light {
 
         // To calculate the lux, which is lm/m^2, we need to convert from luminous power
         if (this._usePhysicalUnits) {
-            switch (this._type) {
-                case LIGHTTYPE_SPOT: {
-                    const falloffEnd = Math.cos(this._outerConeAngle * Math.PI / 180.0);
-                    const falloffStart = Math.cos(this._innerConeAngle * Math.PI / 180.0);
-
-                    // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
-                    i = this._luminance / (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
-                    break;
-                }
-                case LIGHTTYPE_OMNI:
-                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
-                    i = this._luminance / (4 * Math.PI);
-                    break;
-                case LIGHTTYPE_DIRECTIONAL:
-                    // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
-                    // Directional light luminance is already in lux
-                    i = this._luminance;
-                    break;
-            }
+            i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
         }
 
         const finalColor = this._finalColor;
@@ -839,4 +854,4 @@ class Light {
     }
 }
 
-export { Light };
+export { Light, lightTypes };

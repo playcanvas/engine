@@ -15,7 +15,7 @@ import {
     SPECULAR_PHONG
 } from '../constants.js';
 
-import { Quat } from '../../math/quat.js';
+import { Quat } from '../../core/math/quat.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -258,7 +258,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0);
+        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.physicalUnits);
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 

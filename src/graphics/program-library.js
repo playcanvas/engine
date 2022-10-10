@@ -4,7 +4,6 @@ import { version, revision } from '../core/core.js';
 import { Shader } from './shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { ShaderPass } from '../scene/shader-pass.js';
 
 /**
@@ -23,7 +22,7 @@ class ProgramLibrary {
      */
     processedCache = new Map();
 
-    constructor(device) {
+    constructor(device, standardMaterial) {
         this._device = device;
         this._cache = {};
         this._generators = {};
@@ -35,11 +34,18 @@ class ProgramLibrary {
         this._defaultStdMatOption = {};
         this._defaultStdMatOptionMin = {};
 
-        const m = new StandardMaterial();
-        m.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, {}, m, null, [], SHADER_FORWARD, null);
-        m.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, {}, m, null, [], SHADER_SHADOW, null);
+        standardMaterial.shaderOptBuilder.updateRef(
+            this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
+        standardMaterial.shaderOptBuilder.updateMinRef(
+            this._defaultStdMatOptionMin, {}, standardMaterial, null, [], SHADER_SHADOW, null);
+
+        device.on('destroy:shader', (shader) => {
+            this.removeFromCache(shader);
+        });
+    }
+
+    destroy() {
+        this.clearCache();
     }
 
     register(name, generator) {
@@ -145,7 +151,7 @@ class ProgramLibrary {
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
     }
 
-    // run pc.app.graphicsDevice.programLib.dumpPrograms(); from browser console to build shader options script
+    // run pc.app.graphicsDevice.getProgramLibrary().dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
         let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
@@ -155,7 +161,7 @@ class ProgramLibrary {
             text += ',\n\t' + this._programsCollection[i];
         }
         text += '\n];\n';
-        text += 'device.programLib.precompile(shaders);\n';
+        text += 'device.getProgramLibrary().precompile(shaders);\n';
         text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 

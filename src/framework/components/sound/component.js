@@ -1,13 +1,13 @@
 import { Debug } from '../../../core/debug.js';
 
-import { DISTANCE_LINEAR } from '../../../audio/constants.js';
+import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
 
 import { Component } from '../component.js';
 
 import { SoundSlot } from './slot.js';
 
 /** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('../../../sound/instance.js').SoundInstance} SoundInstance */
+/** @typedef {import('../../../platform/sound/instance.js').SoundInstance} SoundInstance */
 /** @typedef {import('./system.js').SoundComponentSystem} SoundComponentSystem */
 
 /**

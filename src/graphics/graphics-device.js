@@ -3,7 +3,6 @@ import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 
 import { ScopeSpace } from './scope-space.js';
-import { ProgramLibrary } from './program-library.js';
 
 import {
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN
@@ -192,9 +191,6 @@ class GraphicsDevice extends EventHandler {
 
         this.textureBias = this.scope.resolve("textureBias");
         this.textureBias.setValue(0.0);
-
-        // Create the program library instance
-        this.programLib = new ProgramLibrary(this);
     }
 
     /**
@@ -214,6 +210,15 @@ class GraphicsDevice extends EventHandler {
         this.fire('destroy');
     }
 
+    onDestroyShader(shader) {
+        this.fire('destroy:shader', shader);
+
+        const idx = this.shaders.indexOf(shader);
+        if (idx !== -1) {
+            this.shaders.splice(idx, 1);
+        }
+    }
+
     // executes after the extended classes have executed their destroy function
     postDestroy() {
         this.scope = null;
@@ -230,29 +235,6 @@ class GraphicsDevice extends EventHandler {
         this.vertexBuffers = [];
         this.shader = null;
         this.renderTarget = null;
-    }
-
-    /**
-     * Retrieves the program library assigned to the specified graphics device.
-     *
-     * @returns {ProgramLibrary} The program library assigned to the device.
-     * @ignore
-     */
-    getProgramLibrary() {
-        return this.programLib;
-    }
-
-    /**
-     * Assigns a program library to the specified device. By default, a graphics device is created
-     * with a program library that manages all of the programs that are used to render any
-     * graphical primitives. However, this function allows the user to replace the existing program
-     * library with a new one.
-     *
-     * @param {ProgramLibrary} programLib - The program library to assign to the device.
-     * @ignore
-     */
-    setProgramLibrary(programLib) {
-        this.programLib = programLib;
     }
 
     /**

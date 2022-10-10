@@ -1,6 +1,6 @@
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -16,7 +16,7 @@ import { Asset } from '../../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../math/vec2.js').Vec2} Vec2 */
+/** @typedef {import('../../../core/math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').LightComponentSystem} LightComponentSystem */
 
