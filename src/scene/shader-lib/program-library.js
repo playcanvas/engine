@@ -1,10 +1,10 @@
-import { Debug } from '../core/debug.js';
-import { version, revision } from '../core/core.js';
+import { Debug } from '../../core/debug.js';
+import { version, revision } from '../../core/core.js';
 
-import { Shader } from './shader.js';
+import { Shader } from '../../graphics/shader.js';
 
-import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../scene/constants.js';
-import { ShaderPass } from '../scene/shader-pass.js';
+import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
+import { ShaderPass } from '../shader-pass.js';
 
 /**
  * A class responsible for creation and caching of required shaders.

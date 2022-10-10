@@ -20,8 +20,8 @@ import { http } from '../platform/net/http.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
-import { setProgramLibrary } from '../graphics/get-program-library.js';
-import { ProgramLibrary } from '../graphics/program-library.js';
+import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
+import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,

@@ -16,7 +16,7 @@ import {
 import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../../graphics/get-program-library.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../../graphics/shader.js').Shader} Shader */

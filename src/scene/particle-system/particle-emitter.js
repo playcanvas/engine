@@ -31,7 +31,7 @@ import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
 import { DeviceCache } from '../../graphics/device-cache.js';
 import { particle } from '../../scene/shader-lib/programs/particle.js';
-import { getProgramLibrary } from '../../graphics/get-program-library.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
 import {
     BLEND_NORMAL,
