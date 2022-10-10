@@ -23,7 +23,7 @@ import {
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
-import { createShaderFromCode } from '../program-lib/utils.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';

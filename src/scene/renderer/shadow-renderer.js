@@ -20,8 +20,8 @@ import { LightCamera } from './light-camera.js';
 
 import { FUNC_LESSEQUAL } from '../../graphics/constants.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';

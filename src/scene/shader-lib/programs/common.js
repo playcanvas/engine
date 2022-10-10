@@ -5,8 +5,8 @@ import {
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
-} from '../../../scene/constants.js';
-import { ShaderPass } from '../../../scene/shader-pass.js';
+} from '../../constants.js';
+import { ShaderPass } from '../../shader-pass.js';
 
 import { shaderChunks } from '../chunks/chunks.js';
 

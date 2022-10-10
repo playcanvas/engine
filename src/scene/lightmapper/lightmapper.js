@@ -16,8 +16,8 @@ import {
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../graphics/constants.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../graphics/program-lib/chunks/chunks-lightmapper.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
 import { RenderTarget } from '../../graphics/render-target.js';
 import { Texture } from '../../graphics/texture.js';

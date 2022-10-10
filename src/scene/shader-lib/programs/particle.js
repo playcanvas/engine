@@ -1,4 +1,4 @@
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../../scene/constants.js';
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import { collectAttribs } from '../utils.js';

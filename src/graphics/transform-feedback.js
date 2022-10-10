@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
-import { createShaderFromCode } from './program-lib/utils.js';
+import { createShaderFromCode } from '../scene/shader-lib/utils.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 
