@@ -271,8 +271,27 @@ function scriptTarget(name, input, output) {
     };
 }
 
+function scriptTargetEs6(name, input, output) {
+    return {
+        input: input,
+        output: {
+            banner: getBanner(''),
+            dir: output,
+            format: 'es',
+            indent: '\t',
+            name: name
+        },
+        preserveModules: true,
+        plugins: [
+            babel(moduleOptions),
+            spacesToTabs()
+        ]
+    };
+}
+
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 

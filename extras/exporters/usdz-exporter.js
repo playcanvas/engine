@@ -1,4 +1,4 @@
-import { zipSync, strToU8 } from '../../node_modules/fflate/esm/browser.js';
+import { zipSync, strToU8 } from 'fflate';
 
 const ROOT_FILE_NAME = 'root';
 
