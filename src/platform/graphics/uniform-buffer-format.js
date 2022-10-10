@@ -1,5 +1,5 @@
-import { Debug } from '../core/debug.js';
-import { math } from '../core/math/math.js';
+import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import {
     uniformTypeToName, bindGroupNames,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,

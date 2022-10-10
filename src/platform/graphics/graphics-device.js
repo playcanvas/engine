@@ -1,13 +1,13 @@
-import { EventHandler } from '../core/event-handler.js';
-import { platform } from '../core/platform.js';
-import { now } from '../core/time.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
+import { now } from '../../core/time.js';
 
 import { ScopeSpace } from './scope-space.js';
 
 import {
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN
 } from './constants.js';
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 

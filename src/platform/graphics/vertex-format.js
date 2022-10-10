@@ -1,7 +1,7 @@
-import { Debug } from '../core/debug.js';
-import { hashCode } from '../core/hash.js';
+import { Debug } from '../../core/debug.js';
+import { hashCode } from '../../core/hash.js';
 
-import { math } from '../core/math/math.js';
+import { math } from '../../core/math/math.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,

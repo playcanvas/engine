@@ -1,4 +1,4 @@
-import { FUNC_ALWAYS, STENCILOP_KEEP } from '../graphics/constants.js';
+import { FUNC_ALWAYS, STENCILOP_KEEP } from '../platform/graphics/constants.js';
 
 /**
  * Holds stencil test settings.

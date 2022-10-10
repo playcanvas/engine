@@ -56,30 +56,30 @@ export { Plane } from './core/shape/plane.js';
 export { Ray } from './core/shape/ray.js';
 
 // GRAPHICS
-export * from './graphics/constants.js';
-export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
+export * from './platform/graphics/constants.js';
+export { drawQuadWithShader, drawTexture } from './platform/graphics/simple-post-effect.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
-export { GraphicsDevice } from './graphics/graphics-device.js';
+export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
-export { IndexBuffer } from './graphics/index-buffer.js';
+export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { PostEffect, drawFullscreenQuad } from './scene/graphics/post-effect.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
-export { RenderTarget } from './graphics/render-target.js';
-export { ScopeId } from './graphics/scope-id.js';
-export { ScopeSpace } from './graphics/scope-space.js';
-export { Shader } from './graphics/shader.js';
-export { Texture } from './graphics/texture.js';
-export { TransformFeedback } from './graphics/transform-feedback.js';
-export { VertexBuffer } from './graphics/vertex-buffer.js';
-export { VertexFormat } from './graphics/vertex-format.js';
-export { VertexIterator } from './graphics/vertex-iterator.js';
+export { RenderTarget } from './platform/graphics/render-target.js';
+export { ScopeId } from './platform/graphics/scope-id.js';
+export { ScopeSpace } from './platform/graphics/scope-space.js';
+export { Shader } from './platform/graphics/shader.js';
+export { Texture } from './platform/graphics/texture.js';
+export { TransformFeedback } from './platform/graphics/transform-feedback.js';
+export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
+export { VertexFormat } from './platform/graphics/vertex-format.js';
+export { VertexIterator } from './platform/graphics/vertex-iterator.js';
 
 // GRAPHICS / webgl
-export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';
 
 // SCENE
 export * from './scene/constants.js';

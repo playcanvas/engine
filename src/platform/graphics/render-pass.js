@@ -1,4 +1,4 @@
-import { Color } from '../core/math/color.js';
+import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 /** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */

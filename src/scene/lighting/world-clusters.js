@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
+import { PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';

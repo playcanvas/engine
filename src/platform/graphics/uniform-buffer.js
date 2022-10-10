@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import {
     uniformTypeToName,
     UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,

@@ -1,9 +1,9 @@
 import { Debug } from '../core/debug.js';
-import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../graphics/constants.js';
+import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../platform/graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../platform/net/http.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // get the list of the device's supported compression formats
 const getCompressionFormats = (device) => {

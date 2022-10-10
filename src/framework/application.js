@@ -1,6 +1,6 @@
 import { platform } from '../core/platform.js';
 
-import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
+import { WebglGraphicsDevice } from '../platform/graphics/webgl/webgl-graphics-device.js';
 
 import { SoundManager } from '../platform/sound/manager.js';
 

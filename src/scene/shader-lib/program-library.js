@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { version, revision } from '../../core/core.js';
 
-import { Shader } from '../../graphics/shader.js';
+import { Shader } from '../../platform/graphics/shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';

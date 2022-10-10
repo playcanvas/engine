@@ -5,7 +5,7 @@ import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 /** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
 
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
 /**
  * A bind group represents an collection of {@link UniformBuffer} and {@link Texture} instance,

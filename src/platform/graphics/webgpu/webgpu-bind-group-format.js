@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug } from '../../../core/debug.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
 
 /** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */

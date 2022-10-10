@@ -6,11 +6,11 @@ import {
 } from '../constants.js';
 
 import { basic } from '../../scene/shader-lib/programs/basic.js';
-import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from './material.js';
 
-/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
 
 /**
  * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map

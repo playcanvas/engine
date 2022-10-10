@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import {
     BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,

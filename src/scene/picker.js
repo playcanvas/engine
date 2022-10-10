@@ -1,10 +1,10 @@
 import { Color } from '../core/math/color.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
-import { GraphicsDevice } from '../graphics/graphics-device.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { Texture } from '../graphics/texture.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../platform/graphics/constants.js';
+import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
+import { RenderTarget } from '../platform/graphics/render-target.js';
+import { Texture } from '../platform/graphics/texture.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
 import { Camera } from './camera.js';

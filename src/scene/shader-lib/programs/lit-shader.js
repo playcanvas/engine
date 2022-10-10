@@ -4,7 +4,7 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/constants.js';
+} from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 
