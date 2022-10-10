@@ -1,7 +1,7 @@
-import { platform } from '../core/platform.js';
-import { Mat4 } from '../core/math/mat4.js';
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
+import { platform } from '../../core/platform.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 /** @typedef {import('./xr-finger.js').XrFinger} XrFinger */
 /** @typedef {import('./xr-hand.js').XrHand} XrHand */

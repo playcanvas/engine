@@ -1,7 +1,7 @@
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
 

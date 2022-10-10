@@ -1,14 +1,14 @@
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { Mat4 } from '../core/math/mat4.js';
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
-import { Ray } from '../core/shape/ray.js';
+import { Ray } from '../../core/shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-/** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('../entity.js').Entity} Entity */
 /** @typedef {import('./xr-hit-test.js').XrHitTestStartCallback} XrHitTestStartCallback */
 /** @typedef {import('./xr-hit-test-source.js').XrHitTestSource} XrHitTestSource */
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */

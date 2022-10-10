@@ -13,7 +13,7 @@ import { Debug } from '../../../core/debug.js';
 /** @typedef {import('../../../core/math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('../../../scene/layer.js').Layer} Layer */
 /** @typedef {import('../../../core/shape/frustum.js').Frustum} Frustum */
-/** @typedef {import('../../../xr/xr-manager.js').XrErrorCallback} XrErrorCallback */
+/** @typedef {import('../../xr/xr-manager.js').XrErrorCallback} XrErrorCallback */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').CameraComponentSystem} CameraComponentSystem */
 

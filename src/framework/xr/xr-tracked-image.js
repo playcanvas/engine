@@ -1,6 +1,6 @@
-import { EventHandler } from '../core/event-handler.js';
-import { Vec3 } from '../core/math/vec3.js';
-import { Quat } from '../core/math/quat.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 
 /**
  * The tracked image interface that is created by the Image Tracking system and is provided as a

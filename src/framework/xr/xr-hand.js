@@ -1,12 +1,12 @@
-import { platform } from '../core/platform.js';
-import { EventHandler } from '../core/event-handler.js';
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
 
 import { XRHAND_LEFT } from './constants.js';
 
 import { XrFinger } from './xr-finger.js';
 import { XrJoint } from './xr-joint.js';
 
-import { Vec3 } from '../core/math/vec3.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 /** @typedef {import('./xr-input-source.js').XrInputSource} XrInputSource */
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
