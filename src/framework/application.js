@@ -2,7 +2,7 @@ import { platform } from '../core/platform.js';
 
 import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
 
-import { SoundManager } from '../sound/manager.js';
+import { SoundManager } from '../platform/sound/manager.js';
 
 import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';

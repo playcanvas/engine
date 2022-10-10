@@ -1,6 +1,6 @@
 import { platform } from '../core/platform.js';
 
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 
 import { Bundle } from '../bundles/bundle.js';
 

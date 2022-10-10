@@ -1,4 +1,4 @@
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 
 import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';

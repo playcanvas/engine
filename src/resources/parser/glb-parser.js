@@ -1,7 +1,7 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 
-import { http } from '../../net/http.js';
+import { http } from '../../platform/net/http.js';
 
 import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';

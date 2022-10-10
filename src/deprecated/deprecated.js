@@ -75,11 +75,11 @@ import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { Animation, Key, Node } from '../animation/animation.js';
 import { Skeleton } from '../animation/skeleton.js';
 
-import { Channel } from '../audio/channel.js';
-import { Channel3d } from '../audio/channel3d.js';
-import { Listener } from '../sound/listener.js';
-import { Sound } from '../sound/sound.js';
-import { SoundManager } from '../sound/manager.js';
+import { Channel } from '../platform/audio/channel.js';
+import { Channel3d } from '../platform/audio/channel3d.js';
+import { Listener } from '../platform/sound/listener.js';
+import { Sound } from '../platform/sound/sound.js';
+import { SoundManager } from '../platform/sound/manager.js';
 
 import { AssetRegistry } from '../asset/asset-registry.js';
 

@@ -3,7 +3,7 @@ import { path } from '../core/path.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 
 import { Animation, Key, Node } from '../animation/animation.js';
 import { AnimEvents } from '../anim/evaluator/anim-events.js';

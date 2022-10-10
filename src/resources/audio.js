@@ -1,11 +1,11 @@
 import { path } from '../core/path.js';
 import { Debug } from '../core/debug.js';
 
-import { http, Http } from '../net/http.js';
+import { http, Http } from '../platform/net/http.js';
 
-import { hasAudioContext } from '../audio/capabilities.js';
+import { hasAudioContext } from '../platform/audio/capabilities.js';
 
-import { Sound } from '../sound/sound.js';
+import { Sound } from '../platform/sound/sound.js';
 
 /** @typedef {import('../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */

@@ -32,7 +32,7 @@ export { URI, createURI } from './core/uri.js';
 export { Tracing } from './core/tracing.js';
 
 // NET
-export { http, Http } from './net/http.js';
+export { http, Http } from './platform/net/http.js';
 
 // MATH
 export * from './core/math/constants.js';
@@ -141,12 +141,12 @@ export { Font } from './font/font.js';
 export { CanvasFont } from './font/canvas-font.js';
 
 // SOUND
-export * from './audio/constants.js';
+export * from './platform/audio/constants.js';
 
-export { SoundManager } from './sound/manager.js';
-export { Sound } from './sound/sound.js';
-export { SoundInstance } from './sound/instance.js';
-export { SoundInstance3d } from './sound/instance3d.js';
+export { SoundManager } from './platform/sound/manager.js';
+export { Sound } from './platform/sound/sound.js';
+export { SoundInstance } from './platform/sound/instance.js';
+export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // BUNDLES
 export { Bundle } from './bundles/bundle.js';
