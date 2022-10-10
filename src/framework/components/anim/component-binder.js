@@ -1,6 +1,6 @@
-import { AnimTarget } from '../../../anim/evaluator/anim-target.js';
-import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
-import { AnimBinder } from '../../../anim/binder/anim-binder.js';
+import { AnimTarget } from '../../anim/evaluator/anim-target.js';
+import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
+import { AnimBinder } from '../../anim/binder/anim-binder.js';
 
 import { Color } from '../../../core/math/color.js';
 import { Quat } from '../../../core/math/quat.js';

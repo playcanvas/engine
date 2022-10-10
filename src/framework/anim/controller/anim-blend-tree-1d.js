@@ -1,4 +1,4 @@
-import { math } from '../../core/math/math.js';
+import { math } from '../../../core/math/math.js';
 
 import { AnimBlendTree } from './anim-blend-tree.js';
 

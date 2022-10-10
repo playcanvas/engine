@@ -1,4 +1,4 @@
-import { AnimData } from '../../../src/anim/evaluator/anim-data.js';
+import { AnimData } from '../../../src/framework/anim/evaluator/anim-data.js';
 import { expect } from 'chai';
 
 describe('AnimData', function () {

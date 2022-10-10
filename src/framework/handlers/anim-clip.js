@@ -1,8 +1,8 @@
 import { http, Http } from '../../platform/net/http.js';
 
-import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
-import { AnimData } from '../../anim/evaluator/anim-data.js';
-import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimCurve } from '../anim/evaluator/anim-curve.js';
+import { AnimData } from '../anim/evaluator/anim-data.js';
+import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
