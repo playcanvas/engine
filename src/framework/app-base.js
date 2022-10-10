@@ -44,7 +44,7 @@ import { ResourceLoader } from '../resources/loader.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 
-import { BundleRegistry } from '../bundles/bundle-registry.js';
+import { BundleRegistry } from './bundle/bundle-registry.js';
 
 import { ScriptRegistry } from './script/script-registry.js';
 

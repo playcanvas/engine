@@ -149,8 +149,8 @@ export { SoundInstance } from './platform/sound/instance.js';
 export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // BUNDLES
-export { Bundle } from './bundles/bundle.js';
-export { BundleRegistry } from './bundles/bundle-registry.js';
+export { Bundle } from './framework/bundle/bundle.js';
+export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
 // RESOURCES
 export { basisInitialize, basisTranscode } from './resources/basis.js';
