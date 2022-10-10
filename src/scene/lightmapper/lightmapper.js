@@ -28,7 +28,7 @@ import { MeshInstance } from '../mesh-instance.js';
 import { LightingParams } from '../lighting/lighting-params.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 
-/** @typedef {import('../../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
 /** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
 /** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */

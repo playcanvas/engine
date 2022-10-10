@@ -10,7 +10,7 @@ import { Component } from '../component.js';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
 
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../asset/asset.js').Asset} Asset */
 /** @typedef {import('../../../core/math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ButtonComponentSystem} ButtonComponentSystem */

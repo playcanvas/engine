@@ -81,7 +81,7 @@ import { Listener } from '../platform/sound/listener.js';
 import { Sound } from '../platform/sound/sound.js';
 import { SoundManager } from '../platform/sound/manager.js';
 
-import { AssetRegistry } from '../asset/asset-registry.js';
+import { AssetRegistry } from '../framework/asset/asset-registry.js';
 
 import { XrInputSource } from '../xr/xr-input-source.js';
 

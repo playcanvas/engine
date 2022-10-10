@@ -10,7 +10,7 @@ import {
     TEXTURETYPE_RGBE
 } from '../../../platform/graphics/constants.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../../framework/asset/asset.js';
 
 /** @typedef {import('../../texture.js').TextureParser} TextureParser */
 

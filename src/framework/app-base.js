@@ -41,8 +41,8 @@ import { setDefaultMaterial } from '../scene/materials/default-material.js';
 import { BundleHandler } from '../resources/bundle.js';
 import { ResourceLoader } from '../resources/loader.js';
 
-import { Asset } from '../asset/asset.js';
-import { AssetRegistry } from '../asset/asset-registry.js';
+import { Asset } from './asset/asset.js';
+import { AssetRegistry } from './asset/asset-registry.js';
 
 import { BundleRegistry } from '../bundles/bundle-registry.js';
 

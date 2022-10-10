@@ -16,7 +16,7 @@ import { DdsParser } from './parser/texture/dds.js';
 import { HdrParser } from './parser/texture/hdr.js';
 
 /** @typedef {import('../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../asset/asset.js').Asset} Asset */
+/** @typedef {import('../framework/asset/asset.js').Asset} Asset */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 

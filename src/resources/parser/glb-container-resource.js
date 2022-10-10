@@ -1,4 +1,4 @@
-import { Asset } from '../../asset/asset.js';
+import { Asset } from '../../framework/asset/asset.js';
 import { Entity } from '../../framework/entity.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { MorphInstance } from '../../scene/morph-instance.js';

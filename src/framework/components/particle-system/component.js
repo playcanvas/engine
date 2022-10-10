@@ -2,7 +2,7 @@ import { LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 

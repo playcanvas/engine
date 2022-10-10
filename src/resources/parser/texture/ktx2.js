@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../../framework/asset/asset.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { basisTranscode } from '../../basis.js';
 import { ReadStream } from '../../../core/read-stream.js';

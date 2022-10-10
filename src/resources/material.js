@@ -6,7 +6,7 @@ import { Texture } from '../platform/graphics/texture.js';
 import { SPECULAR_PHONG } from '../scene/constants.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
 
-import { AssetReference } from '../asset/asset-reference.js';
+import { AssetReference } from '../framework/asset/asset-reference.js';
 
 import { JsonStandardMaterialParser } from './parser/material/json-standard-material.js';
 

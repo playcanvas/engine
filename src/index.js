@@ -185,12 +185,12 @@ export { TextureHandler, TextureParser } from './resources/texture.js';
 export { TextureAtlasHandler } from './resources/texture-atlas.js';
 
 // ASSETS
-export * from './asset/constants.js';
-export { Asset } from './asset/asset.js';
-export { AssetListLoader } from './asset/asset-list-loader.js';
-export { AssetReference } from './asset/asset-reference.js';
-export { AssetRegistry } from './asset/asset-registry.js';
-export { LocalizedAsset } from './asset/asset-localized.js';
+export * from './framework/asset/constants.js';
+export { Asset } from './framework/asset/asset.js';
+export { AssetListLoader } from './framework/asset/asset-list-loader.js';
+export { AssetReference } from './framework/asset/asset-reference.js';
+export { AssetRegistry } from './framework/asset/asset-registry.js';
+export { LocalizedAsset } from './framework/asset/asset-localized.js';
 
 // SCRIPTS
 export { createScript, registerScript } from './framework/script/script.js';

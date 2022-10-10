@@ -1,5 +1,5 @@
-/** @typedef {import('../asset/asset.js').Asset} Asset */
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/asset/asset.js').Asset} Asset */
+/** @typedef {import('../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
 
 /**
  * Callback used by {@link ResourceHandler#load} when a resource is loaded (or an error occurs).

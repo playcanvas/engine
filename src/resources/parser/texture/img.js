@@ -6,7 +6,7 @@ import {
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
-import { ABSOLUTE_URL } from '../../../asset/constants.js';
+import { ABSOLUTE_URL } from '../../../framework/asset/constants.js';
 
 /** @typedef {import('../../texture.js').TextureParser} TextureParser */
 

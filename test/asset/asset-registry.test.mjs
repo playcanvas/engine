@@ -1,6 +1,6 @@
 import { Application } from '../../src/framework/application.js';
-import { Asset } from '../../src/asset/asset.js';
-import { AssetRegistry } from '../../src/asset/asset-registry.js';
+import { Asset } from '../../src/framework/asset/asset.js';
+import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
 import { GlbContainerResource } from '../../src/resources/parser/glb-container-resource.js';
 import { ResourceLoader } from '../../src/resources/loader.js';
 import { http, Http } from '../../src/platform/net/http.js';

@@ -1,4 +1,4 @@
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
 import { Asset } from './asset.js';
 
