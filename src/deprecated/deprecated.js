@@ -112,7 +112,7 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { basisInitialize } from '../resources/basis.js';
+import { basisInitialize } from '../framework/handlers/basis.js';
 
 // CORE
 

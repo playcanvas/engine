@@ -38,8 +38,8 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { BundleHandler } from '../resources/bundle.js';
-import { ResourceLoader } from '../resources/loader.js';
+import { BundleHandler } from '../framework/handlers/bundle.js';
+import { ResourceLoader } from '../framework/handlers/loader.js';
 
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';

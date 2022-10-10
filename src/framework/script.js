@@ -1,6 +1,6 @@
 import { events } from '../core/events.js';
 
-import { ScriptHandler } from '../resources/script.js';
+import { ScriptHandler } from '../framework/handlers/script.js';
 
 import { getApplication } from './globals.js';
 

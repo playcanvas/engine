@@ -7,7 +7,7 @@ import { Entity } from '../../src/framework/entity.js';
 import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
 import { I18n } from '../../src/framework/i18n/i18n.js';
 import { Lightmapper } from '../../src/scene/lightmapper/lightmapper.js';
-import { ResourceLoader } from '../../src/resources/loader.js';
+import { ResourceLoader } from '../../src/framework/handlers/loader.js';
 import { Scene } from '../../src/scene/scene.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/framework/script/script-registry.js';

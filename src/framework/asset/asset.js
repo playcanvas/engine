@@ -11,7 +11,7 @@ import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
 
 /** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../../resources/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
+/** @typedef {import('../../framework/handlers/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
