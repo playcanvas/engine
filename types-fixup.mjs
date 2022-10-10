@@ -9,7 +9,7 @@ const paths = [
     './types/framework/script/script.d.ts'
 ];
 
-paths.forEach(path => {
+paths.forEach((path) => {
     let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
     fs.writeFileSync(path, dts);
@@ -28,7 +28,7 @@ const regexConstructor = /constructor\(([^)]+)\);/g;
 const getDeclarations = (properties) => {
     let declarations = '';
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
         declarations += `
     set ${prop[0]}(arg: ${prop[1]});
     get ${prop[0]}(): ${prop[1]};
@@ -63,7 +63,7 @@ const buttonComponentProps = [
     ['pressedTint', 'Color'],
     ['transitionMode', 'number']
 ];
-   
+
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
