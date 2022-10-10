@@ -11,7 +11,7 @@ import { Mouse } from './mouse.js';
 
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../../framework/components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('../../xr/xr-input-source.js').XrInputSource} XrInputSource */
+/** @typedef {import('../../framework/xr/xr-input-source.js').XrInputSource} XrInputSource */
 
 let targetX, targetY;
 const vecA = new Vec3();

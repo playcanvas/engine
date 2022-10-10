@@ -295,19 +295,19 @@ export { ZoneComponentSystem } from './framework/components/zone/system.js';
 export { Template } from './framework/template.js';
 
 // XR
-export * from './xr/constants.js';
-export { XrInput } from './xr/xr-input.js';
-export { XrInputSource } from './xr/xr-input-source.js';
-export { XrLightEstimation } from './xr/xr-light-estimation.js';
-export { XrDepthSensing } from './xr/xr-depth-sensing.js';
-export { XrManager } from './xr/xr-manager.js';
-export { XrHitTest } from './xr/xr-hit-test.js';
-export { XrHitTestSource } from './xr/xr-hit-test-source.js';
-export { XrImageTracking } from './xr/xr-image-tracking.js';
-export { XrTrackedImage } from './xr/xr-tracked-image.js';
-export { XrDomOverlay } from './xr/xr-dom-overlay.js';
-export { XrPlaneDetection } from './xr/xr-plane-detection.js';
-export { XrPlane } from './xr/xr-plane.js';
+export * from './framework/xr/constants.js';
+export { XrInput } from './framework/xr/xr-input.js';
+export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
+export { XrManager } from './framework/xr/xr-manager.js';
+export { XrHitTest } from './framework/xr/xr-hit-test.js';
+export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
+export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
+export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
+export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrPlane } from './framework/xr/xr-plane.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';

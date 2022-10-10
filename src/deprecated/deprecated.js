@@ -83,7 +83,7 @@ import { SoundManager } from '../platform/sound/manager.js';
 
 import { AssetRegistry } from '../framework/asset/asset-registry.js';
 
-import { XrInputSource } from '../xr/xr-input-source.js';
+import { XrInputSource } from '../framework/xr/xr-input-source.js';
 
 import { Controller } from '../platform/input/controller.js';
 import { ElementInput } from '../platform/input/element-input.js';

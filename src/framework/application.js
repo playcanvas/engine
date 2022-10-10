@@ -60,7 +60,7 @@ import { TextHandler } from '../framework/handlers/text.js';
 import { TextureAtlasHandler } from '../framework/handlers/texture-atlas.js';
 import { TextureHandler } from '../framework/handlers/texture.js';
 
-import { XrManager } from '../xr/xr-manager.js';
+import { XrManager } from './xr/xr-manager.js';
 
 /** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
