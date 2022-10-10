@@ -3,7 +3,7 @@ import { string } from '../../core/string.js';
 
 import { http } from '../../platform/net/http.js';
 
-import { Font } from '../../font/font.js';
+import { Font } from '../font/font.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 /** @typedef {import('../../framework/app-base.js').AppBase} AppBase */

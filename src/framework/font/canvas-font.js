@@ -1,16 +1,16 @@
-import { string } from '../core/string.js';
-import { EventHandler } from '../core/event-handler.js';
+import { string } from '../../core/string.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { Color } from '../core/math/color.js';
+import { Color } from '../../core/math/color.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../platform/graphics/constants.js';
-import { Texture } from '../platform/graphics/texture.js';
+} from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
-/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('../app-base.js').AppBase} AppBase */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
