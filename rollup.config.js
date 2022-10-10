@@ -286,7 +286,7 @@ function scriptTarget(name, input, output) {
             babel(es5Options),
             spacesToTabs()
         ],
-        external: [ 'playcanvas' ],
+        external: ['playcanvas'],
         cache: false
     };
 }
@@ -299,7 +299,7 @@ function scriptTargetEs6(name, input, output) {
             banner: getBanner(''),
             dir: output,
             format: 'es',
-            indent: '\t',
+            indent: '\t'
         },
         preserveModules: true,
         plugins: [

@@ -90,9 +90,9 @@ class Render2d {
 
         this.device = device;
         this.shader = shaderChunks.createShaderFromCode(device,
-                                                           vertexShader,
-                                                           fragmentShader,
-                                                           'mini-stats');
+                                                        vertexShader,
+                                                        fragmentShader,
+                                                        'mini-stats');
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
 
