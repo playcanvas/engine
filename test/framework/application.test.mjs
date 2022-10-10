@@ -1,6 +1,6 @@
 import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
 import { Application } from '../../src/framework/application.js';
-import { AssetRegistry } from '../../src/asset/asset-registry.js';
+import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
 import { BatchManager } from '../../src/scene/batching/batch-manager.js';
 import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
 import { Entity } from '../../src/framework/entity.js';

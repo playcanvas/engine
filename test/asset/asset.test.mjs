@@ -1,5 +1,5 @@
 import { Application } from '../../src/framework/application.js';
-import { Asset } from '../../src/asset/asset.js';
+import { Asset } from '../../src/framework/asset/asset.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
