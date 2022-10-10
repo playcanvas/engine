@@ -136,9 +136,9 @@ export { AnimController } from './framework/anim/controller/anim-controller.js';
 export { AnimStateGraph } from './framework/anim/state-graph/anim-state-graph.js';
 
 // FONT
-export * from './font/constants.js';
-export { Font } from './font/font.js';
-export { CanvasFont } from './font/canvas-font.js';
+export * from './framework/font/constants.js';
+export { Font } from './framework/font/font.js';
+export { CanvasFont } from './framework/font/canvas-font.js';
 
 // SOUND
 export * from './platform/audio/constants.js';
