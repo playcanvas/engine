@@ -9,7 +9,7 @@ import { script } from '../script.js';
 
 import { Asset } from './asset.js';
 
-/** @typedef {import('../../resources/loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../../framework/handlers/loader.js').ResourceLoader} ResourceLoader */
 
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.

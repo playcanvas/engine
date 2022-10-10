@@ -502,7 +502,7 @@ dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
 `);
 fs.writeFileSync(path, dts);
 
-path = './types/resources/handler.d.ts';
+path = './types/framework/handlers/handler.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');
