@@ -2,7 +2,7 @@ import { platform } from '../core/platform.js';
 
 import { http, Http } from '../platform/net/http.js';
 
-import { Bundle } from '../bundles/bundle.js';
+import { Bundle } from '../framework/bundle/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
