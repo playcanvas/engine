@@ -3,7 +3,7 @@ import { Asset } from '../../src/asset/asset.js';
 import { AssetRegistry } from '../../src/asset/asset-registry.js';
 import { GlbContainerResource } from '../../src/resources/parser/glb-container-resource.js';
 import { ResourceLoader } from '../../src/resources/loader.js';
-import { http, Http } from '../../src/net/http.js';
+import { http, Http } from '../../src/platform/net/http.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
