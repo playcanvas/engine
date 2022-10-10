@@ -2,7 +2,7 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-import { PRIMITIVE_TRIANGLES } from '../../graphics/constants.js';
+import { PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
 
 import { BLEND_ADDITIVEALPHA } from '../../scene/constants.js';
 import { GraphNode } from '../graph-node.js';

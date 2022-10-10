@@ -1,7 +1,7 @@
 import { Asset } from '../../../asset/asset.js';
-import { Texture } from '../../../graphics/texture.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 import { basisTranscode } from '../../basis.js';
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
 
 /** @typedef {import('../../texture.js').TextureParser} TextureParser */
 

@@ -1,6 +1,6 @@
-import { Debug } from '../core/debug.js';
-import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../core/constants.js';
-import { math } from '../core/math/math.js';
+import { Debug } from '../../core/debug.js';
+import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
+import { math } from '../../core/math/math.js';
 
 import {
     ADDRESS_REPEAT,

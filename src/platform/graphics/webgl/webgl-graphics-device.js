@@ -1,6 +1,7 @@
-import { setupVertexArrayObject } from '../../polyfill/OESVertexArrayObject.js';
-import { Debug } from '../../core/debug.js';
-import { platform } from '../../core/platform.js';
+import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
+import { Debug } from '../../../core/debug.js';
+import { platform } from '../../../core/platform.js';
+import { Color } from '../../../core/math/color.js';
 
 import {
     DEVICETYPE_WEBGL,
@@ -23,7 +24,7 @@ import {
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { createShaderFromCode } from '../../../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
@@ -34,7 +35,6 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { Color } from '../../core/math/color.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */

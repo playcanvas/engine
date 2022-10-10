@@ -11,17 +11,17 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
     typedArrayIndexFormats
-} from '../graphics/constants.js';
-import { IndexBuffer } from '../graphics/index-buffer.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
-import { VertexIterator } from '../graphics/vertex-iterator.js';
+} from '../platform/graphics/constants.js';
+import { IndexBuffer } from '../platform/graphics/index-buffer.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
+import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
 import { getApplication } from '../framework/globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
 /** @typedef {import('./skin.js').Skin} Skin */
 

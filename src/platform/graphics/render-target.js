@@ -1,5 +1,5 @@
-import { Debug } from '../core/debug.js';
-import { TRACEID_RENDER_TARGET_ALLOC } from '../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';

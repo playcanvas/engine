@@ -1,7 +1,7 @@
 import { http } from '../platform/net/http.js';
 
-import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
-import { Texture } from '../graphics/texture.js';
+import { PIXELFORMAT_R8_G8_B8_A8 } from '../platform/graphics/constants.js';
+import { Texture } from '../platform/graphics/texture.js';
 
 import { SPECULAR_PHONG } from '../scene/constants.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';

@@ -1,14 +1,14 @@
 import { ReadStream } from '../../../core/read-stream.js';
 import { Debug } from '../../../core/debug.js';
 
-import { Texture } from '../../../graphics/texture.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
     PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_RGBE
-} from '../../../graphics/constants.js';
+} from '../../../platform/graphics/constants.js';
 
 import { Asset } from '../../../asset/asset.js';
 

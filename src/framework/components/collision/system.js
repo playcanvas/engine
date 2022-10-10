@@ -4,7 +4,7 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
-import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
+import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';

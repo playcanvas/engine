@@ -1,4 +1,4 @@
-import { SEMANTIC_POSITION } from '../../../graphics/constants.js';
+import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 

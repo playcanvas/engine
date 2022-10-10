@@ -1,6 +1,6 @@
 import { FONT_MSDF } from './constants.js';
 
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 
 /**
  * Represents the resource of a font asset.

@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug } from '../../../core/debug.js';
 import { INDEXFORMAT_UINT8, INDEXFORMAT_UINT16 } from '../constants.js';
 import { WebgpuBuffer } from "./webgpu-buffer.js";
 

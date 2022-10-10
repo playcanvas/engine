@@ -19,12 +19,12 @@ import {
 import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
-import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
-/** @typedef {import('../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material

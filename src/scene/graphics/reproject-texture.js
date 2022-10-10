@@ -2,19 +2,19 @@ import { Debug } from '../../core/debug.js';
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { random } from '../../core/math/random.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { GraphicsDevice } from '../../graphics/graphics-device.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { Texture } from '../../graphics/texture.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
-import { DeviceCache } from '../../graphics/device-cache.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
 /** @typedef {import('../../core/math/vec4.js').Vec4} Vec4 */
 

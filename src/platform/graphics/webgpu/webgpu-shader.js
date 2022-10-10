@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug } from '../../../core/debug.js';
 import { ShaderProcessor } from '../shader-processor.js';
 
 /** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */

@@ -1,4 +1,4 @@
-import { PRIMITIVE_TRISTRIP } from '../../graphics/constants.js';
+import { PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 

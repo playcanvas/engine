@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
-import { DeviceCache } from '../../graphics/device-cache.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./standard-material.js').StandardMaterial} StandardMaterial */
 
 // device cache storing default material

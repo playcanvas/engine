@@ -1,4 +1,4 @@
-import { Debug } from "../../core/debug.js";
+import { Debug } from "../../../core/debug.js";
 import { semanticToLocation, TYPE_FLOAT32 } from '../constants.js';
 
 /** @typedef {import('../vertex-format.js').VertexFormat} VertexFormat */

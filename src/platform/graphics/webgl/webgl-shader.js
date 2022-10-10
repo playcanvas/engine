@@ -1,5 +1,5 @@
-import { Debug } from '../../core/debug.js';
-import { now } from '../../core/time.js';
+import { Debug } from '../../../core/debug.js';
+import { now } from '../../../core/time.js';
 
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';

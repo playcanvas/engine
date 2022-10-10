@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('../render-pass.js').RenderPass} RenderPass */
 /** @typedef {import('../render-target.js').RenderTarget} RenderTarget */

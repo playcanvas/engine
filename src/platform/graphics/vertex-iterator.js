@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
 /** @typedef {import('./scope-id.js').ScopeId} ScopeId */

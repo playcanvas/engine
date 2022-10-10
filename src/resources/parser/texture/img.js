@@ -3,8 +3,8 @@ import { http } from '../../../platform/net/http.js';
 
 import {
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, TEXHINT_ASSET
-} from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
+} from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { ABSOLUTE_URL } from '../../../asset/constants.js';
 

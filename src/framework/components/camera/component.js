@@ -6,7 +6,7 @@ import { Component } from '../component.js';
 import { PostEffectQueue } from './post-effect-queue.js';
 import { Debug } from '../../../core/debug.js';
 
-/** @typedef {import('../../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../../platform/graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../../core/math/color.js').Color} Color */
 /** @typedef {import('../../../core/math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('../../../core/math/vec3.js').Vec3} Vec3 */

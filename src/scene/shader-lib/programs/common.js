@@ -1,6 +1,6 @@
 import {
     DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
-} from '../../../graphics/constants.js';
+} from '../../../platform/graphics/constants.js';
 
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,

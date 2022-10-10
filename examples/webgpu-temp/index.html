@@ -24,14 +24,14 @@
         import { AssetListLoader } from "../../src/asset/asset-list-loader.js";
         import { AppBase } from "../../src/framework/app-base.js";
         import { AppOptions } from "../../src/framework/app-options.js";
-        import { WebgpuGraphicsDevice } from '../../src/graphics/webgpu/webgpu-graphics-device.js';
-        import { Shader } from '../../src/graphics/shader.js';
-        import { Texture } from '../../src/graphics/texture.js';
-        import { RenderTarget } from '../../src/graphics/render-target.js';
+        import { WebgpuGraphicsDevice } from '../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+        import { Shader } from '../../src/platform/graphics/shader.js';
+        import { Texture } from '../../src/platform/graphics/texture.js';
+        import { RenderTarget } from '../../src/platform/graphics/render-target.js';
         import {
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
-        } from '../../src/graphics/constants.js';
+        } from '../../src/platform/graphics/constants.js';
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 

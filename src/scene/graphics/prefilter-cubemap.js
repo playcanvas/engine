@@ -3,12 +3,12 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import {
     PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
 function areaElement(x, y) {

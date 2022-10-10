@@ -1,6 +1,6 @@
-import { TRACEID_SHADER_ALLOC } from '../core/constants.js';
-import { Debug } from '../core/debug.js';
-import { Preprocessor } from '../core/preprocessor.js';
+import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { Preprocessor } from '../../core/preprocessor.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */

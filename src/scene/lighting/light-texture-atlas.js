@@ -1,7 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { RenderTarget } from '../../graphics/render-target.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
 
 import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
 import { CookieRenderer } from '../renderer/cookie-renderer.js';

@@ -2,8 +2,8 @@ import {
     LIGHTTYPE_DIRECTIONAL
 } from '../constants.js';
 
-/** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
-/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../platform/graphics/bind-group.js').BindGroup} BindGroup */
+/** @typedef {import('../../platform/graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
 
 /**

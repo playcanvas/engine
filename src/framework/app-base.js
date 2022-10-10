@@ -19,7 +19,7 @@ import { http } from '../platform/net/http.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 
@@ -67,8 +67,8 @@ import {
     setApplication
 } from './globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */

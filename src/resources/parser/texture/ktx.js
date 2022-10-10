@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../../asset/asset.js';
-import { Texture } from '../../../graphics/texture.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -9,7 +9,7 @@ import {
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA,
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
     TEXHINT_ASSET
-} from '../../../graphics/constants.js';
+} from '../../../platform/graphics/constants.js';
 
 /** @typedef {import('../../texture.js').TextureParser} TextureParser */
 

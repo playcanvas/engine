@@ -33,24 +33,24 @@ import {
     TEXTURELOCK_READ, TEXTURELOCK_WRITE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 import { begin, dummyFragmentCode, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from '../scene/shader-lib/programs/common.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
-import { GraphicsDevice } from '../graphics/graphics-device.js';
-import { IndexBuffer } from '../graphics/index-buffer.js';
+import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
+import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { ScopeId } from '../graphics/scope-id.js';
-import { Shader } from '../graphics/shader.js';
-import { ShaderInput } from '../graphics/shader-input.js';
-import { Texture } from '../graphics/texture.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
-import { VertexIterator } from '../graphics/vertex-iterator.js';
+import { RenderTarget } from '../platform/graphics/render-target.js';
+import { ScopeId } from '../platform/graphics/scope-id.js';
+import { Shader } from '../platform/graphics/shader.js';
+import { ShaderInput } from '../platform/graphics/shader-input.js';
+import { Texture } from '../platform/graphics/texture.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
+import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';

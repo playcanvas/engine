@@ -1,5 +1,5 @@
-import { Debug } from '../core/debug.js';
-import { TRACEID_VRAM_IB } from '../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { TRACEID_VRAM_IB } from '../../core/constants.js';
 import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';

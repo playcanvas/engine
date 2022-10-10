@@ -11,7 +11,7 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 
@@ -24,7 +24,7 @@ import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../scene.js').Scene} Scene */
 
 function paramsIdentical(a, b) {

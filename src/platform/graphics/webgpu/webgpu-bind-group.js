@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('../bind-group.js').BindGroup} BindGroup */
 /** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */

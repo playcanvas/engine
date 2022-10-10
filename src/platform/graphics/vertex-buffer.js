@@ -1,5 +1,5 @@
-import { Debug } from '../core/debug.js';
-import { TRACEID_VRAM_VB } from '../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { TRACEID_VRAM_VB } from '../../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
