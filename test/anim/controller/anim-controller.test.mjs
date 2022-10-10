@@ -1,13 +1,13 @@
-import { AnimController } from '../../../src/anim/controller/anim-controller.js';
+import { AnimController } from '../../../src/framework/anim/controller/anim-controller.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { AnimComponentBinder } from '../../../src/framework/components/anim/component-binder.js';
-import { AnimEvaluator } from '../../../src/anim/evaluator/anim-evaluator.js';
+import { AnimEvaluator } from '../../../src/framework/anim/evaluator/anim-evaluator.js';
 import { Application } from '../../../src/framework/application.js';
-import { AnimTrack } from '../../../src/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../src/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../src/anim/evaluator/anim-curve.js';
-import { INTERPOLATION_LINEAR } from '../../../src/anim/constants.js';
-import { ANIM_LESS_THAN } from '../../../src/anim/controller/constants.js';
+import { AnimTrack } from '../../../src/framework/anim/evaluator/anim-track.js';
+import { AnimData } from '../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimCurve } from '../../../src/framework/anim/evaluator/anim-curve.js';
+import { INTERPOLATION_LINEAR } from '../../../src/framework/anim/constants.js';
+import { ANIM_LESS_THAN } from '../../../src/framework/anim/controller/constants.js';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 

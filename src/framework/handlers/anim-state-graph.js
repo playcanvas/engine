@@ -1,5 +1,5 @@
 import { http, Http } from '../../platform/net/http.js';
-import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
+import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 

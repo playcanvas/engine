@@ -1,5 +1,5 @@
-import { AnimNode } from '../../../src/anim/controller/anim-node.js';
-import { AnimState } from '../../../src/anim/controller/anim-state.js';
+import { AnimNode } from '../../../src/framework/anim/controller/anim-node.js';
+import { AnimState } from '../../../src/framework/anim/controller/anim-state.js';
 import { expect } from 'chai';
 
 describe('AnimNode', function () {

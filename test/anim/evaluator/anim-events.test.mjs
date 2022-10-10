@@ -1,4 +1,4 @@
-import { AnimEvents } from '../../../src/anim/evaluator/anim-events.js';
+import { AnimEvents } from '../../../src/framework/anim/evaluator/anim-events.js';
 import { expect } from 'chai';
 
 describe('AnimEvents', function () {
