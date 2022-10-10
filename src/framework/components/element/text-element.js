@@ -14,7 +14,7 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
 
-import { LocalizedAsset } from '../../../asset/asset-localized.js';
+import { LocalizedAsset } from '../../asset/asset-localized.js';
 
 import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
 

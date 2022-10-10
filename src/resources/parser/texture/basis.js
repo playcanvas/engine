@@ -1,4 +1,4 @@
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../../framework/asset/asset.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { basisTranscode } from '../../basis.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';

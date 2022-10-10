@@ -3,7 +3,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../platform/graphics/constants.js';
 
-import { Asset } from '../asset/asset.js';
+import { Asset } from '../framework/asset/asset.js';
 import { Texture } from '../platform/graphics/texture.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */

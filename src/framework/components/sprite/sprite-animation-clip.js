@@ -2,7 +2,7 @@ import { EventHandler } from '../../../core/event-handler.js';
 
 import { math } from '../../../core/math/math.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 

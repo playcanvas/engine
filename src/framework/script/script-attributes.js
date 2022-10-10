@@ -9,7 +9,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 import { GraphNode } from '../../scene/graph-node.js';
 
-import { Asset } from '../../asset/asset.js';
+import { Asset } from '../asset/asset.js';
 
 /* eslint-disable-next-line no-unused-vars */
 import { ScriptType } from './script-type.js';

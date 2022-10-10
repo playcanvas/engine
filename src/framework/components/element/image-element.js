@@ -29,7 +29,7 @@ import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 // #if _DEBUG
 const _debugLogging = false;

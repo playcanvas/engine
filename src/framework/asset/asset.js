@@ -1,17 +1,17 @@
-import { path } from '../core/path.js';
-import { Tags } from '../core/tags.js';
+import { path } from '../../core/path.js';
+import { Tags } from '../../core/tags.js';
 
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { findAvailableLocale } from '../framework/i18n/utils.js';
+import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
-import { getApplication } from '../framework/globals.js';
-import { http } from '../platform/net/http.js';
+import { getApplication } from '../globals.js';
+import { http } from '../../platform/net/http.js';
 
 /** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../resources/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
+/** @typedef {import('../../resources/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;

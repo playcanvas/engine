@@ -19,7 +19,7 @@ import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../asset/asset.js').Asset} Asset */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').SpriteComponentSystem} SpriteComponentSystem */
 

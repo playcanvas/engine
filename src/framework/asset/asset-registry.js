@@ -1,15 +1,15 @@
-import { path } from '../core/path.js';
-import { Debug } from '../core/debug.js';
-import { EventHandler } from '../core/event-handler.js';
-import { TagsCache } from '../core/tags-cache.js';
+import { path } from '../../core/path.js';
+import { Debug } from '../../core/debug.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { TagsCache } from '../../core/tags-cache.js';
 
-import { standardMaterialTextureParameters } from '../scene/materials/standard-material-parameters.js';
+import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
 
-import { script } from '../framework/script.js';
+import { script } from '../script.js';
 
 import { Asset } from './asset.js';
 
-/** @typedef {import('../resources/loader.js').ResourceLoader} ResourceLoader */
+/** @typedef {import('../../resources/loader.js').ResourceLoader} ResourceLoader */
 
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.

@@ -6,7 +6,7 @@ import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

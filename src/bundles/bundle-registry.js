@@ -1,5 +1,5 @@
-/** @typedef {import('../asset/asset.js').Asset} Asset */
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../framework/asset/asset.js').Asset} Asset */
+/** @typedef {import('../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
 
 /**
  * Keeps track of which assets are in bundles and loads files from bundles.

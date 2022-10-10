@@ -52,7 +52,7 @@ import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
 
-import { Asset } from '../../asset/asset.js';
+import { Asset } from '../../framework/asset/asset.js';
 
 import { GlbContainerResource } from './glb-container-resource.js';
 

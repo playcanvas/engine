@@ -5,7 +5,7 @@ import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 import { math } from '../../../core/math/math.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../asset/asset.js').Asset} Asset */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
