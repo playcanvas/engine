@@ -1,5 +1,5 @@
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
-import { createShaderFromCode } from '../graphics/program-lib/utils.js';
+import { createShaderFromCode } from '../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';

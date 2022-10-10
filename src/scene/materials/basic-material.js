@@ -5,7 +5,7 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 
-import { basic } from '../../graphics/program-lib/programs/basic.js';
+import { basic } from '../../scene/shader-lib/programs/basic.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
 import { getProgramLibrary } from '../../graphics/get-program-library.js';
 import { Material } from './material.js';

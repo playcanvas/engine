@@ -5,10 +5,10 @@ import {
 } from './constants.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { random } from '../core/math/random.js';
-import { createShaderFromCode } from './program-lib/utils.js';
+import { createShaderFromCode } from '../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { ChunkUtils } from './program-lib/chunk-utils.js';
-import { shaderChunks } from './program-lib/chunks/chunks.js';
+import { ChunkUtils } from '../scene/shader-lib/chunk-utils.js';
+import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { getProgramLibrary } from './get-program-library.js';

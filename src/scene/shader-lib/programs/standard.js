@@ -5,13 +5,13 @@ import {
     BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
-} from '../../../scene/constants.js';
-import { ShaderPass } from '../../../scene/shader-pass.js';
+} from '../../constants.js';
+import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 
-/** @typedef {import('../../graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const _matTex2D = [];
 

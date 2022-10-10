@@ -4,9 +4,9 @@ import { Vec3 } from '../core/math/vec3.js';
 import {
     PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from './constants.js';
-import { createShaderFromCode } from './program-lib/utils.js';
+import { createShaderFromCode } from '../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from './simple-post-effect.js';
-import { shaderChunks } from './program-lib/chunks/chunks.js';
+import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { RenderTarget } from './render-target.js';
 import { Texture } from './texture.js';
 

@@ -4,7 +4,7 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../constants.js';
+} from '../../../graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 
@@ -19,9 +19,9 @@ import {
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
-} from '../../../scene/constants.js';
-import { LightsBuffer } from '../../../scene/lighting/lights-buffer.js';
-import { ShaderPass } from '../../../scene/shader-pass.js';
+} from '../../constants.js';
+import { LightsBuffer } from '../../lighting/lights-buffer.js';
+import { ShaderPass } from '../../shader-pass.js';
 
 import { vertexIntro, fragmentIntro, begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';

@@ -13,7 +13,7 @@ import {
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../../graphics/constants.js';
 
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';

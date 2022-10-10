@@ -1,6 +1,6 @@
 import { PRIMITIVE_TRISTRIP } from '../../graphics/constants.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { BLEND_NORMAL } from '../../scene/constants.js';
 import { BasicMaterial } from '../../scene/materials/basic-material.js';

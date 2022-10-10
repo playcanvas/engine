@@ -1,11 +1,11 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
-} from '../../constants.js';
+} from '../../../graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     SHADER_DEPTH, SHADER_PICK
-} from '../../../scene/constants.js';
+} from '../../constants.js';
 
 import { vertexIntro, fragmentIntro, begin, end, fogCode, skinCode } from './common.js';
 

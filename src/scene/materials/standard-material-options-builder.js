@@ -1,4 +1,4 @@
-import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
+import { _matTex2D } from '../../scene/shader-lib/programs/standard.js';
 
 import {
     PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR

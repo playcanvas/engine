@@ -3,11 +3,11 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
-} from '../constants.js';
-import { Shader } from '../shader.js';
+} from '../../graphics/constants.js';
+import { Shader } from '../../graphics/shader.js';
 
 import { shaderChunks } from './chunks/chunks.js';
-import { getProgramLibrary } from '../get-program-library.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 
 import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
 
