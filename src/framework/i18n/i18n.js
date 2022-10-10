@@ -1,10 +1,10 @@
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { Asset } from '../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { I18nParser } from './i18n-parser.js';
 
-/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
+/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 
 import {
     DEFAULT_LOCALE,

@@ -48,7 +48,7 @@ import { BundleRegistry } from '../bundles/bundle-registry.js';
 
 import { ScriptRegistry } from './script/script-registry.js';
 
-import { I18n } from '../i18n/i18n.js';
+import { I18n } from '../framework/i18n/i18n.js';
 
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';

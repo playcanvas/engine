@@ -3,7 +3,7 @@ import { Tags } from '../core/tags.js';
 
 import { EventHandler } from '../core/event-handler.js';
 
-import { findAvailableLocale } from '../i18n/utils.js';
+import { findAvailableLocale } from '../framework/i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
