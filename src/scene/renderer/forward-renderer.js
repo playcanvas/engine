@@ -18,13 +18,13 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
-} from '../../graphics/constants.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
-import { UniformBuffer } from '../../graphics/uniform-buffer.js';
-import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../graphics/bind-group-format.js';
-import { BindGroup } from '../../graphics/bind-group.js';
-import { RenderPass } from '../../graphics/render-pass.js';
+} from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
@@ -46,8 +46,8 @@ import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 /** @typedef {import('../scene.js').Scene} Scene */

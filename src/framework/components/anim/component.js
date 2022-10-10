@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
 import { AnimController } from '../../../anim/controller/anim-controller.js';

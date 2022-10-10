@@ -8,7 +8,7 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 

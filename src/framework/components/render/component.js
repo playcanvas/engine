@@ -6,8 +6,8 @@ import { getShapePrimitive } from '../../../scene/procedural.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { SkinInstanceCache } from '../../../scene/skin-instance-cache.js';
 
-import { Asset } from '../../../asset/asset.js';
-import { AssetReference } from '../../../asset/asset-reference.js';
+import { Asset } from '../../asset/asset.js';
+import { AssetReference } from '../../asset/asset-reference.js';
 
 import { Component } from '../component.js';
 

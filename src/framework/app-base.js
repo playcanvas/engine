@@ -19,9 +19,9 @@ import { http } from '../platform/net/http.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
-} from '../graphics/constants.js';
-import { setProgramLibrary } from '../graphics/get-program-library.js';
-import { ProgramLibrary } from '../graphics/program-library.js';
+} from '../platform/graphics/constants.js';
+import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
+import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -38,17 +38,17 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { BundleHandler } from '../resources/bundle.js';
-import { ResourceLoader } from '../resources/loader.js';
+import { BundleHandler } from '../framework/handlers/bundle.js';
+import { ResourceLoader } from '../framework/handlers/loader.js';
 
-import { Asset } from '../asset/asset.js';
-import { AssetRegistry } from '../asset/asset-registry.js';
+import { Asset } from './asset/asset.js';
+import { AssetRegistry } from './asset/asset-registry.js';
 
-import { BundleRegistry } from '../bundles/bundle-registry.js';
+import { BundleRegistry } from './bundle/bundle-registry.js';
 
 import { ScriptRegistry } from './script/script-registry.js';
 
-import { I18n } from '../i18n/i18n.js';
+import { I18n } from '../framework/i18n/i18n.js';
 
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';
@@ -67,8 +67,8 @@ import {
     setApplication
 } from './globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */

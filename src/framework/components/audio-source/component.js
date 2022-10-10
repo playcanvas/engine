@@ -1,4 +1,4 @@
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Channel3d } from '../../../platform/audio/channel3d.js';
 

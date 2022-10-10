@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptHandler } from '../../resources/script.js';
+import { ScriptHandler } from '../../framework/handlers/script.js';
 
 import { script } from '../script.js';
 import { AppBase } from '../app-base.js';

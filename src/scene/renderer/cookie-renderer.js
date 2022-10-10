@@ -1,11 +1,11 @@
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
-import { Texture } from '../../graphics/texture.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
-import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import { LIGHTTYPE_OMNI } from '../constants.js';
 import { LightCamera } from './light-camera.js';

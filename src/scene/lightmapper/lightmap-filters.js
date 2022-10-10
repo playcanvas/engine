@@ -1,6 +1,6 @@
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../graphics/program-lib/chunks/chunks-lightmapper.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 
 // size of the kernel - needs to match the constant in the shader
 const DENOISE_FILTER_SIZE = 15;

@@ -15,7 +15,7 @@ import { RenderAction } from './render-action.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 import { LightCompositionData } from './light-composition-data.js';
 
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 

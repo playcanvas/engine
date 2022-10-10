@@ -6,7 +6,7 @@ import {
     BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
     FUNC_LESSEQUAL
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
@@ -15,11 +15,11 @@ import {
 } from '../constants.js';
 import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from './default-material.js';
-import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../../graphics/get-program-library.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
-/** @typedef {import('../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../graphics/shader.js').Shader} Shader */
+/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../platform/graphics/shader.js').Shader} Shader */
 /** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
 
 let id = 0;

@@ -2,7 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 
 /** @typedef {import('../core/math/vec2.js').Vec2} Vec2 */
 /** @typedef {import('../core/math/vec4.js').Vec4} Vec4 */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 
 /**
  * A TextureAtlas contains a number of frames from a texture. Each frame defines a region in a

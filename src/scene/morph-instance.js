@@ -1,13 +1,13 @@
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
-import { createShaderFromCode } from '../graphics/program-lib/utils.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../platform/graphics/constants.js';
+import { createShaderFromCode } from '../scene/shader-lib/utils.js';
+import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { RenderTarget } from '../platform/graphics/render-target.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { Debug } from '../core/debug.js';
 
 import { Morph } from './morph.js';
 
-/** @typedef {import('../graphics/shader.js').Shader} Shader */
+/** @typedef {import('../platform/graphics/shader.js').Shader} Shader */
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `

@@ -1,8 +1,8 @@
-import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
+import { _matTex2D } from '../../scene/shader-lib/programs/standard.js';
 
 import {
     PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,

@@ -15,23 +15,23 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
-} from '../../graphics/constants.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../graphics/program-lib/chunks/chunks-lightmapper.js';
-import { drawQuadWithShader } from '../../graphics/simple-post-effect.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
+} from '../../platform/graphics/constants.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import { MeshInstance } from '../mesh-instance.js';
 
 import { LightingParams } from '../lighting/lighting-params.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 
-/** @typedef {import('../../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
 /** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../scene.js').Scene} Scene */
 
 import {

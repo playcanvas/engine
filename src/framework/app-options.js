@@ -1,5 +1,5 @@
-/** @typedef {import('../resources/handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../framework/handlers/handler.js').ResourceHandler} ResourceHandler */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */

@@ -56,30 +56,30 @@ export { Plane } from './core/shape/plane.js';
 export { Ray } from './core/shape/ray.js';
 
 // GRAPHICS
-export * from './graphics/constants.js';
-export { drawQuadWithShader, drawTexture } from './graphics/simple-post-effect.js';
-export { shFromCubemap } from './graphics/prefilter-cubemap.js';
-export { reprojectTexture } from './graphics/reproject-texture.js';
-export { createShader, createShaderFromCode } from './graphics/program-lib/utils.js';
-export { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-export { shaderChunksLightmapper } from './graphics/program-lib/chunks/chunks-lightmapper.js';
-export { GraphicsDevice } from './graphics/graphics-device.js';
-export { EnvLighting } from './graphics/env-lighting.js';
-export { IndexBuffer } from './graphics/index-buffer.js';
-export { PostEffect, drawFullscreenQuad } from './graphics/post-effect.js';
-export { ProgramLibrary } from './graphics/program-library.js';
-export { RenderTarget } from './graphics/render-target.js';
-export { ScopeId } from './graphics/scope-id.js';
-export { ScopeSpace } from './graphics/scope-space.js';
-export { Shader } from './graphics/shader.js';
-export { Texture } from './graphics/texture.js';
-export { TransformFeedback } from './graphics/transform-feedback.js';
-export { VertexBuffer } from './graphics/vertex-buffer.js';
-export { VertexFormat } from './graphics/vertex-format.js';
-export { VertexIterator } from './graphics/vertex-iterator.js';
+export * from './platform/graphics/constants.js';
+export { drawQuadWithShader, drawTexture } from './platform/graphics/simple-post-effect.js';
+export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
+export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
+export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
+export { GraphicsDevice } from './platform/graphics/graphics-device.js';
+export { EnvLighting } from './scene/graphics/env-lighting.js';
+export { IndexBuffer } from './platform/graphics/index-buffer.js';
+export { PostEffect, drawFullscreenQuad } from './scene/graphics/post-effect.js';
+export { ProgramLibrary } from './scene/shader-lib/program-library.js';
+export { RenderTarget } from './platform/graphics/render-target.js';
+export { ScopeId } from './platform/graphics/scope-id.js';
+export { ScopeSpace } from './platform/graphics/scope-space.js';
+export { Shader } from './platform/graphics/shader.js';
+export { Texture } from './platform/graphics/texture.js';
+export { TransformFeedback } from './platform/graphics/transform-feedback.js';
+export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
+export { VertexFormat } from './platform/graphics/vertex-format.js';
+export { VertexIterator } from './platform/graphics/vertex-iterator.js';
 
 // GRAPHICS / webgl
-export { WebglGraphicsDevice } from './graphics/webgl/webgl-graphics-device.js';
+export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';
 
 // SCENE
 export * from './scene/constants.js';
@@ -116,8 +116,8 @@ export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // ANIMATION
-export { Animation, Key, Node } from './animation/animation.js';
-export { Skeleton } from './animation/skeleton.js';
+export { Animation, Key, Node } from './scene/animation/animation.js';
+export { Skeleton } from './scene/animation/skeleton.js';
 
 // ANIM
 export * from './anim/constants.js';
@@ -149,48 +149,48 @@ export { SoundInstance } from './platform/sound/instance.js';
 export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // BUNDLES
-export { Bundle } from './bundles/bundle.js';
-export { BundleRegistry } from './bundles/bundle-registry.js';
+export { Bundle } from './framework/bundle/bundle.js';
+export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
 // RESOURCES
-export { basisInitialize, basisTranscode } from './resources/basis.js';
-export { AnimClipHandler } from './resources/anim-clip.js';
-export { AnimStateGraphHandler } from './resources/anim-state-graph.js';
-export { AnimationHandler } from './resources/animation.js';
-export { AudioHandler } from './resources/audio.js';
-export { BinaryHandler } from './resources/binary.js';
-export { BundleHandler } from './resources/bundle.js';
-export { ContainerHandler, ContainerResource } from './resources/container.js';
-export { createStyle, CssHandler } from './resources/css.js';
-export { CubemapHandler } from './resources/cubemap.js';
-export { FolderHandler } from './resources/folder.js';
-export { FontHandler } from './resources/font.js';
-export { HierarchyHandler } from './resources/hierarchy.js';
-export { HtmlHandler } from './resources/html.js';
-export { JsonHandler } from './resources/json.js';
-export { JsonStandardMaterialParser } from './resources/parser/material/json-standard-material.js';
-export { MaterialHandler } from './resources/material.js';
-export { ModelHandler } from './resources/model.js';
-export { RenderHandler } from './resources/render.js';
-export { ResourceHandler } from './resources/handler.js';
-export { ResourceLoader } from './resources/loader.js';
-export { ScriptHandler } from './resources/script.js';
-export { SceneHandler } from './resources/scene.js';
-export { SceneSettingsHandler } from './resources/scene-settings.js';
-export { ShaderHandler } from './resources/shader.js';
-export { SpriteHandler } from './resources/sprite.js';
-export { TemplateHandler } from './resources/template.js';
-export { TextHandler } from './resources/text.js';
-export { TextureHandler, TextureParser } from './resources/texture.js';
-export { TextureAtlasHandler } from './resources/texture-atlas.js';
+export { basisInitialize, basisTranscode } from './framework/handlers/basis.js';
+export { AnimClipHandler } from './framework/handlers/anim-clip.js';
+export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
+export { AnimationHandler } from './framework/handlers/animation.js';
+export { AudioHandler } from './framework/handlers/audio.js';
+export { BinaryHandler } from './framework/handlers/binary.js';
+export { BundleHandler } from './framework/handlers/bundle.js';
+export { ContainerHandler, ContainerResource } from './framework/handlers/container.js';
+export { createStyle, CssHandler } from './framework/handlers/css.js';
+export { CubemapHandler } from './framework/handlers/cubemap.js';
+export { FolderHandler } from './framework/handlers/folder.js';
+export { FontHandler } from './framework/handlers/font.js';
+export { HierarchyHandler } from './framework/handlers/hierarchy.js';
+export { HtmlHandler } from './framework/handlers/html.js';
+export { JsonHandler } from './framework/handlers/json.js';
+export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
+export { MaterialHandler } from './framework/handlers/material.js';
+export { ModelHandler } from './framework/handlers/model.js';
+export { RenderHandler } from './framework/handlers/render.js';
+export { ResourceHandler } from './framework/handlers/handler.js';
+export { ResourceLoader } from './framework/handlers/loader.js';
+export { ScriptHandler } from './framework/handlers/script.js';
+export { SceneHandler } from './framework/handlers/scene.js';
+export { SceneSettingsHandler } from './framework/handlers/scene-settings.js';
+export { ShaderHandler } from './framework/handlers/shader.js';
+export { SpriteHandler } from './framework/handlers/sprite.js';
+export { TemplateHandler } from './framework/handlers/template.js';
+export { TextHandler } from './framework/handlers/text.js';
+export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
+export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // ASSETS
-export * from './asset/constants.js';
-export { Asset } from './asset/asset.js';
-export { AssetListLoader } from './asset/asset-list-loader.js';
-export { AssetReference } from './asset/asset-reference.js';
-export { AssetRegistry } from './asset/asset-registry.js';
-export { LocalizedAsset } from './asset/asset-localized.js';
+export * from './framework/asset/constants.js';
+export { Asset } from './framework/asset/asset.js';
+export { AssetListLoader } from './framework/asset/asset-list-loader.js';
+export { AssetReference } from './framework/asset/asset-reference.js';
+export { AssetRegistry } from './framework/asset/asset-registry.js';
+export { LocalizedAsset } from './framework/asset/asset-localized.js';
 
 // SCRIPTS
 export { createScript, registerScript } from './framework/script/script.js';
@@ -199,7 +199,7 @@ export { ScriptRegistry } from './framework/script/script-registry.js';
 export { ScriptType } from './framework/script/script-type.js';
 
 // LOCALIZATION
-export { I18n } from './i18n/i18n.js';
+export { I18n } from './framework/i18n/i18n.js';
 
 // INPUT
 export * from './platform/input/constants.js';

@@ -2,11 +2,11 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_R8_G8_B8
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 
-import { RenderTarget } from '../graphics/render-target.js';
-import { Texture } from '../graphics/texture.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
+import { RenderTarget } from '../platform/graphics/render-target.js';
+import { Texture } from '../platform/graphics/texture.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 import {
     LAYERID_DEPTH, LAYERID_WORLD,
@@ -15,7 +15,7 @@ import {
 
 import { Layer } from '../scene/layer.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
 
 // uniform names (first is current name, second one is deprecated name for compatibility)

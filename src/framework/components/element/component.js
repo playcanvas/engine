@@ -5,7 +5,7 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
@@ -22,7 +22,7 @@ import { TextElement } from './text-element.js';
 /** @typedef {import('../../../core/math/color.js').Color} Color */
 /** @typedef {import('../../../font/canvas-font.js').CanvasFont} CanvasFont */
 /** @typedef {import('../../../font/font.js').Font} Font */
-/** @typedef {import('../../../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../../../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('../../../scene/materials/material.js').Material} Material */
 /** @typedef {import('../../../scene/sprite.js').Sprite} Sprite */
 /** @typedef {import('./system.js').ElementComponentSystem} ElementComponentSystem */

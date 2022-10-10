@@ -4,7 +4,7 @@ import { Debug } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';

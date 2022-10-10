@@ -3,18 +3,18 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Quat } from '../core/math/quat.js';
 
-import { CULLFACE_FRONT } from '../graphics/constants.js';
+import { CULLFACE_FRONT } from '../platform/graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
-import { skybox } from '../graphics/program-lib/programs/skybox.js';
-import { getProgramLibrary } from '../graphics/get-program-library.js';
+import { skybox } from '../scene/shader-lib/programs/skybox.js';
+import { getProgramLibrary } from './shader-lib/get-program-library.js';
 
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./scene.js').Scene} Scene */
 
 /** @type {Mat4} */

@@ -21,17 +21,17 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
-} from '../../graphics/constants.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { IndexBuffer } from '../../graphics/index-buffer.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
-import { VertexBuffer } from '../../graphics/vertex-buffer.js';
-import { VertexFormat } from '../../graphics/vertex-format.js';
-import { DeviceCache } from '../../graphics/device-cache.js';
-import { particle } from '../../graphics/program-lib/programs/particle.js';
-import { getProgramLibrary } from '../../graphics/get-program-library.js';
+} from '../../platform/graphics/constants.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
+import { particle } from '../../scene/shader-lib/programs/particle.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
 import {
     BLEND_NORMAL,
