@@ -1,4 +1,4 @@
-import { math } from '../core/math/math.js';
+import { math } from '../../core/math/math.js';
 
 import { hasAudioContext } from './capabilities.js';
 

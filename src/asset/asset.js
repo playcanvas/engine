@@ -8,7 +8,7 @@ import { findAvailableLocale } from '../i18n/utils.js';
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
 import { getApplication } from '../framework/globals.js';
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 /** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
 /** @typedef {import('../resources/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */

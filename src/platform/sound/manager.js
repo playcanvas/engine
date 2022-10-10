@@ -1,8 +1,8 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
-import { EventHandler } from '../core/event-handler.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { math } from '../core/math/math.js';
+import { math } from '../../core/math/math.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 import { Channel } from '../audio/channel.js';

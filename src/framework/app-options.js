@@ -5,7 +5,7 @@
 /** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
 /** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
 /** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */

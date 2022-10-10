@@ -1,7 +1,7 @@
 import { path } from '../core/path.js';
 import { string } from '../core/string.js';
 
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 import { Font } from '../font/font.js';
 

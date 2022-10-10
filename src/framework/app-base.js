@@ -15,7 +15,7 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Quat } from '../core/math/quat.js';
 
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
@@ -81,7 +81,7 @@ import {
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./app-options.js').AppOptions} AppOptions */
 /** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {

@@ -1,7 +1,7 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
-import { math } from '../core/math/math.js';
-import { Vec3 } from '../core/math/vec3.js';
+import { math } from '../../core/math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from '../audio/constants.js';
 import { hasAudioContext } from '../audio/capabilities.js';

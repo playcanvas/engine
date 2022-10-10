@@ -1,4 +1,4 @@
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 import { PIXELFORMAT_R8_G8_B8_A8 } from '../graphics/constants.js';
 import { Texture } from '../graphics/texture.js';
