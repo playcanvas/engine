@@ -72,8 +72,8 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { Animation, Key, Node } from '../animation/animation.js';
-import { Skeleton } from '../animation/skeleton.js';
+import { Animation, Key, Node } from '../scene/animation/animation.js';
+import { Skeleton } from '../scene/animation/skeleton.js';
 
 import { Channel } from '../platform/audio/channel.js';
 import { Channel3d } from '../platform/audio/channel3d.js';

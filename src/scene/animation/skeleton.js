@@ -1,9 +1,9 @@
-import { Debug } from '../core/debug.js';
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
+import { Debug } from '../../core/debug.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 /** @typedef {import('./animation.js').Animation} Animation */
-/** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
+/** @typedef {import('../../scene/graph-node.js').GraphNode} GraphNode */
 
 class InterpolatedKey {
     constructor() {
