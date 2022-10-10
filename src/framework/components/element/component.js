@@ -1,9 +1,9 @@
 import { Debug } from '../../../core/debug.js';
 
-import { Mat4 } from '../../../math/mat4.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
 
@@ -19,7 +19,7 @@ import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
-/** @typedef {import('../../../math/color.js').Color} Color */
+/** @typedef {import('../../../core/math/color.js').Color} Color */
 /** @typedef {import('../../../font/canvas-font.js').CanvasFont} CanvasFont */
 /** @typedef {import('../../../font/font.js').Font} Font */
 /** @typedef {import('../../../graphics/texture.js').Texture} Texture */

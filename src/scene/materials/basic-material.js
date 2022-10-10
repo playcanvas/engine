@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { Color } from '../../math/color.js';
+import { Color } from '../../core/math/color.js';
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADER_PICK
@@ -7,6 +7,7 @@ import {
 
 import { basic } from '../../graphics/program-lib/programs/basic.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
+import { getProgramLibrary } from '../../graphics/get-program-library.js';
 import { Material } from './material.js';
 
 /** @typedef {import('../../graphics/texture.js').Texture} Texture */
@@ -108,7 +109,7 @@ class BasicMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
-        const library = device.getProgramLibrary();
+        const library = getProgramLibrary(device);
         library.register('basic', basic);
 
         return library.getProgram('basic', options, processingOptions);

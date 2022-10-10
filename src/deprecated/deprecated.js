@@ -3,17 +3,17 @@ import { string } from '../core/string.js';
 import { Timer, now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
-import { Frustum } from '../shape/frustum.js';
-import { Plane } from '../shape/plane.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
+import { BoundingSphere } from '../core/shape/bounding-sphere.js';
+import { Frustum } from '../core/shape/frustum.js';
+import { Plane } from '../core/shape/plane.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -42,6 +42,7 @@ import { IndexBuffer } from '../graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../graphics/program-library.js';
+import { getProgramLibrary, setProgramLibrary } from '../graphics/get-program-library.js';
 import { RenderTarget } from '../graphics/render-target.js';
 import { ScopeId } from '../graphics/scope-id.js';
 import { Shader } from '../graphics/shader.js';
@@ -494,6 +495,21 @@ Object.defineProperties(Texture.prototype, {
         }
     }
 });
+
+GraphicsDevice.prototype.getProgramLibrary = function () {
+    Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
+    return getProgramLibrary(this);
+};
+
+GraphicsDevice.prototype.setProgramLibrary = function (lib) {
+    Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
+    setProgramLibrary(this, lib);
+};
+
+GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
+    Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
+    getProgramLibrary(this).removeFromCache(shader);
+};
 
 // SCENE
 

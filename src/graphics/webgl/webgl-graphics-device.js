@@ -25,7 +25,6 @@ import {
 import { GraphicsDevice } from '../graphics-device.js';
 import { createShaderFromCode } from '../program-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
-import { shaderChunks } from '../program-lib/chunks/chunks.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -35,7 +34,7 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { Color } from '../../math/color.js';
+import { Color } from '../../core/math/color.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -43,6 +42,46 @@ import { Color } from '../../math/color.js';
 /** @typedef {import('../render-pass.js').RenderPass} RenderPass */
 
 const invalidateAttachments = [];
+
+const _fullScreenQuadVS = /* glsl */`
+attribute vec2 vertex_position;
+varying vec2 vUv0;
+void main(void)
+{
+    gl_Position = vec4(vertex_position, 0.5, 1.0);
+    vUv0 = vertex_position.xy*0.5+0.5;
+}
+`;
+
+const _precisionTest1PS = /* glsl */`
+void main(void) { 
+    gl_FragColor = vec4(2147483648.0);
+}
+`;
+
+const _precisionTest2PS = /* glsl */`
+uniform sampler2D source;
+vec4 packFloat(float depth) {
+    const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
+    const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
+    vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);
+    res -= res.xxyz * bit_mask;
+    return res;
+}
+void main(void) {
+    float c = texture2D(source, vec2(0.0)).r;
+    float diff = abs(c - 2147483648.0) / 2147483648.0;
+    gl_FragColor = packFloat(diff);
+}
+`;
+
+const _outputTexture2D = /* glsl */`
+varying vec2 vUv0;
+uniform sampler2D source;
+void main(void) {
+    gl_FragColor = texture2D(source, vUv0);
+}
+`;
 
 function testRenderable(gl, pixelFormat) {
     let result = true;
@@ -109,8 +148,8 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    const test1 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTestPS, "ptest1");
-    const test2 = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, shaderChunks.precisionTest2PS, "ptest2");
+    const test1 = createShaderFromCode(device, _fullScreenQuadVS, _precisionTest1PS, "ptest1");
+    const test2 = createShaderFromCode(device, _fullScreenQuadVS, _precisionTest2PS, "ptest2");
 
     const textureOptions = {
         format: PIXELFORMAT_RGBA32F,
@@ -1258,9 +1297,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     getCopyShader() {
         if (!this._copyShader) {
-            const vs = shaderChunks.fullscreenQuadVS;
-            const fs = shaderChunks.outputTex2DPS;
-            this._copyShader = createShaderFromCode(this, vs, fs, "outputTex2D");
+            this._copyShader = createShaderFromCode(this, _fullScreenQuadVS, _outputTexture2D, "outputTex2D");
         }
         return this._copyShader;
     }
@@ -2733,8 +2770,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteShader(this.vertexShaderCache[shaderSrc]);
             delete this.vertexShaderCache[shaderSrc];
         }
-
-        this.programLib.clearCache();
     }
 
     /**
@@ -2749,16 +2784,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
 
         this._vaoMap.clear();
-    }
-
-    /**
-     * Removes a shader from the cache.
-     *
-     * @param {Shader} shader - The shader to remove from the cache.
-     * @ignore
-     */
-    removeShaderFromCache(shader) {
-        this.programLib.removeFromCache(shader);
     }
 
     /**

@@ -1,7 +1,7 @@
 import { SceneParser } from '../resources/parser/scene.js';
 
-/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('./app-base.js').AppBase} AppBase */
+/** @typedef {import('./entity.js').Entity} Entity */
 
 /**
  * Create a Template resource from raw database data.

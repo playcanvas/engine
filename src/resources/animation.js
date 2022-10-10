@@ -1,7 +1,7 @@
 import { path } from '../core/path.js';
 
-import { Quat } from '../math/quat.js';
-import { Vec3 } from '../math/vec3.js';
+import { Quat } from '../core/math/quat.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 import { http, Http } from '../net/http.js';
 

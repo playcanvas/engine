@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug } from '../debug.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 

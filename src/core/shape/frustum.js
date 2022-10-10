@@ -1,5 +1,5 @@
 import { Vec3 } from '../math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../scene/constants.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 /** @typedef {import('../math/mat4.js').Mat4} Mat4 */
 /** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */

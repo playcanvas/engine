@@ -3,13 +3,13 @@ import { Debug } from '../../core/debug.js';
 
 import { http } from '../../net/http.js';
 
-import { math } from '../../math/math.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec2 } from '../../math/vec2.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { math } from '../../core/math/math.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     typedArrayTypes, typedArrayTypesByteSize,

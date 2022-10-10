@@ -9,17 +9,19 @@ import { EventHandler } from '../core/event-handler.js';
 import { Debug } from '../core/debug.js';
 import { TRACEID_RENDER_FRAME } from '../core/constants.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Quat } from '../core/math/quat.js';
 
 import { http } from '../net/http.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../graphics/constants.js';
+import { setProgramLibrary } from '../graphics/get-program-library.js';
+import { ProgramLibrary } from '../graphics/program-library.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -44,7 +46,7 @@ import { AssetRegistry } from '../asset/asset-registry.js';
 
 import { BundleRegistry } from '../bundles/bundle-registry.js';
 
-import { ScriptRegistry } from '../script/script-registry.js';
+import { ScriptRegistry } from './script/script-registry.js';
 
 import { I18n } from '../i18n/i18n.js';
 
@@ -281,6 +283,7 @@ class AppBase extends EventHandler {
         this.graphicsDevice = device;
 
         this._initDefaultMaterial();
+        this._initProgramLibrary();
         this.stats = new ApplicationStats(device);
 
         /**
@@ -663,6 +666,12 @@ class AppBase extends EventHandler {
         material.name = "Default Material";
         material.shadingModel = SPECULAR_BLINN;
         setDefaultMaterial(this.graphicsDevice, material);
+    }
+
+    /** @private */
+    _initProgramLibrary() {
+        const library = new ProgramLibrary(this.graphicsDevice, new StandardMaterial());
+        setProgramLibrary(this.graphicsDevice, library);
     }
 
     /**

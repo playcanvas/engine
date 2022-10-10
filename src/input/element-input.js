@@ -1,9 +1,9 @@
 import { platform } from '../core/platform.js';
 
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
 
-import { Ray } from '../shape/ray.js';
+import { Ray } from '../core/shape/ray.js';
 
 import { getApplication } from '../framework/globals.js';
 

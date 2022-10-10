@@ -1,9 +1,9 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-import { Color } from '../../math/color.js';
-import { Vec2 } from '../../math/vec2.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Vec4 } from '../../math/vec4.js';
+import { Color } from '../../core/math/color.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 
 /** @typedef {import('../app-base.js').AppBase} AppBase */
 /** @typedef {import('./component.js').Component} Component */

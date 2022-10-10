@@ -1,7 +1,7 @@
 import { string } from '../core/string.js';
 import { EventHandler } from '../core/event-handler.js';
 
-import { Color } from '../math/color.js';
+import { Color } from '../core/math/color.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,

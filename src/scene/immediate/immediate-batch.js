@@ -1,4 +1,4 @@
-import { Mat4 } from '../../math/mat4.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 import { PRIMITIVE_LINES } from '../../graphics/constants.js';
 import { Mesh } from '../../scene/mesh.js';

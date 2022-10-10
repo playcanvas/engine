@@ -1,12 +1,12 @@
 import { Debug } from '../../core/debug.js';
 
-import { math } from '../../math/math.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Vec4 } from '../../math/vec4.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Color } from '../../math/color.js';
+import { math } from '../../core/math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -25,7 +25,7 @@ import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { DebugGraphics } from '../../graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
-import { Frustum } from '../../shape/frustum.js';
+import { Frustum } from '../../core/shape/frustum.js';
 import { ShaderPass } from '../shader-pass.js';
 
 /** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */

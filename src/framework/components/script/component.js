@@ -1,12 +1,12 @@
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
-import { ScriptAttributes } from '../../../script/script-attributes.js';
+import { ScriptAttributes } from '../../script/script-attributes.js';
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
 /* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from '../../../script/script-type.js';
+import { ScriptType } from '../../script/script-type.js';
 import { Debug } from '../../../core/debug.js';
 
 /** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */

@@ -1,4 +1,4 @@
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
 

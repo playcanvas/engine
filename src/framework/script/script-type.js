@@ -1,12 +1,12 @@
-import { Debug } from '../core/debug.js';
-import { EventHandler } from '../core/event-handler.js';
+import { Debug } from '../../core/debug.js';
+import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptComponent } from '../framework/components/script/component.js';
+import { ScriptComponent } from '../components/script/component.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 
-/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../framework/entity.js').Entity} Entity */
+/** @typedef {import('../app-base.js').AppBase} AppBase */
+/** @typedef {import('../entity.js').Entity} Entity */
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 

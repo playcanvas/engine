@@ -1,5 +1,5 @@
-import { createScript } from '../../src/script/script.js';
-import { Color } from '../../src/math/color.js';
+import { createScript } from '../../src/framework/script/script.js';
+import { Color } from '../../src/core/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';

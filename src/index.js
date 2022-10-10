@@ -35,25 +35,25 @@ export { Tracing } from './core/tracing.js';
 export { http, Http } from './net/http.js';
 
 // MATH
-export * from './math/constants.js';
-export { math } from './math/math.js';
-export { Color } from './math/color.js';
-export { Curve } from './math/curve.js';
-export { CurveSet } from './math/curve-set.js';
-export { Mat3 } from './math/mat3.js';
-export { Mat4 } from './math/mat4.js';
-export { Quat } from './math/quat.js';
-export { Vec2 } from './math/vec2.js';
-export { Vec3 } from './math/vec3.js';
-export { Vec4 } from './math/vec4.js';
+export * from './core/math/constants.js';
+export { math } from './core/math/math.js';
+export { Color } from './core/math/color.js';
+export { Curve } from './core/math/curve.js';
+export { CurveSet } from './core/math/curve-set.js';
+export { Mat3 } from './core/math/mat3.js';
+export { Mat4 } from './core/math/mat4.js';
+export { Quat } from './core/math/quat.js';
+export { Vec2 } from './core/math/vec2.js';
+export { Vec3 } from './core/math/vec3.js';
+export { Vec4 } from './core/math/vec4.js';
 
 // SHAPE
-export { BoundingBox } from './shape/bounding-box.js';
-export { BoundingSphere } from './shape/bounding-sphere.js';
-export { Frustum } from './shape/frustum.js';
-export { OrientedBox } from './shape/oriented-box.js';
-export { Plane } from './shape/plane.js';
-export { Ray } from './shape/ray.js';
+export { BoundingBox } from './core/shape/bounding-box.js';
+export { BoundingSphere } from './core/shape/bounding-sphere.js';
+export { Frustum } from './core/shape/frustum.js';
+export { OrientedBox } from './core/shape/oriented-box.js';
+export { Plane } from './core/shape/plane.js';
+export { Ray } from './core/shape/ray.js';
 
 // GRAPHICS
 export * from './graphics/constants.js';
@@ -193,10 +193,10 @@ export { AssetRegistry } from './asset/asset-registry.js';
 export { LocalizedAsset } from './asset/asset-localized.js';
 
 // SCRIPTS
-export { createScript, registerScript } from './script/script.js';
-export { ScriptAttributes } from './script/script-attributes.js';
-export { ScriptRegistry } from './script/script-registry.js';
-export { ScriptType } from './script/script-type.js';
+export { createScript, registerScript } from './framework/script/script.js';
+export { ScriptAttributes } from './framework/script/script-attributes.js';
+export { ScriptRegistry } from './framework/script/script-registry.js';
+export { ScriptType } from './framework/script/script-type.js';
 
 // LOCALIZATION
 export { I18n } from './i18n/i18n.js';
@@ -292,7 +292,7 @@ export { ZoneComponent } from './framework/components/zone/component.js';
 export { ZoneComponentSystem } from './framework/components/zone/system.js';
 
 // TEMPLATES
-export { Template } from './templates/template.js';
+export { Template } from './framework/template.js';
 
 // XR
 export * from './xr/constants.js';

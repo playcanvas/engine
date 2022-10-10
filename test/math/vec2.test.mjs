@@ -1,4 +1,4 @@
-import { Vec2 } from '../../src/math/vec2.js';
+import { Vec2 } from '../../src/core/math/vec2.js';
 
 import { expect } from 'chai';
 

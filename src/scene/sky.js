@@ -1,7 +1,7 @@
-import { Mat3 } from '../math/mat3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec3 } from '../math/vec3.js';
-import { Quat } from '../math/quat.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Quat } from '../core/math/quat.js';
 
 import { CULLFACE_FRONT } from '../graphics/constants.js';
 
@@ -11,6 +11,7 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { skybox } from '../graphics/program-lib/programs/skybox.js';
+import { getProgramLibrary } from '../graphics/get-program-library.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -45,7 +46,7 @@ class Sky {
         const material = new Material();
 
         material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-            const library = device.getProgramLibrary();
+            const library = getProgramLibrary(device);
             library.register('skybox', skybox);
 
             if (texture.cubemap) {

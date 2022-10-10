@@ -166,17 +166,23 @@ class UsdzExporter extends CoreExporter {
             const isRGBA = true;
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-            const texture = textureArray[i];
-            const mipObject = texture._levels[0];
-
             // convert texture data to canvas
-            const canvas = this.imageToCanvas(mipObject, textureOptions);
+            const texture = textureArray[i];
+            const canvas = this.textureToCanvas(texture, textureOptions);
 
-            // async convert them to blog and then to array buffer
-            // eslint-disable-next-line no-promise-executor-return
-            promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
-                blob => blob.arrayBuffer()
-            ));
+            // if texture format is supported
+            if (canvas) {
+
+                // async convert them to blog and then to array buffer
+                // eslint-disable-next-line no-promise-executor-return
+                promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
+                    blob => blob.arrayBuffer()
+                ));
+
+            } else {
+                // ignore it
+                console.log(`Export of texture ${texture.name} is not currently supported.`);
+            }
         }
 
         // when all textures are converted

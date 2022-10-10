@@ -14,7 +14,7 @@ import { Component } from '../component.js';
 
 /** @typedef {import('../../../scene/composition/layer-composition.js').LayerComposition} LayerComposition */
 /** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ModelComponentSystem} ModelComponentSystem */
 

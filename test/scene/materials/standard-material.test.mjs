@@ -1,8 +1,8 @@
 import { CUBEPROJ_NONE, DETAILMODE_MUL, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
-import { Color } from '../../../src/math/color.js';
+import { Color } from '../../../src/core/math/color.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { Vec2 } from '../../../src/math/vec2.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
 
 import { expect } from 'chai';
 

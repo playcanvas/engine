@@ -15,7 +15,7 @@ import {
     SPECULAR_PHONG,
 } from '../constants.js';
 
-import { Quat } from '../../math/quat.js';
+import { Quat } from '../../core/math/quat.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
