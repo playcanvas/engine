@@ -1,4 +1,4 @@
-import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/graphics/constants.js';
+import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 
