@@ -46,11 +46,11 @@ import { Render } from '../../scene/render.js';
 
 import { Entity } from '../../framework/entity.js';
 
-import { AnimCurve } from '../../anim/evaluator/anim-curve.js';
-import { AnimData } from '../../anim/evaluator/anim-data.js';
-import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimCurve } from '../anim/evaluator/anim-curve.js';
+import { AnimData } from '../anim/evaluator/anim-data.js';
+import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
-import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../../anim/constants.js';
+import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../anim/constants.js';
 
 import { Asset } from '../../framework/asset/asset.js';
 

@@ -1,9 +1,9 @@
 import { Debug } from '../../../core/debug.js';
 
-import { AnimClip } from '../../../anim/evaluator/anim-clip.js';
-import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
-import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
+import { AnimClip } from '../../anim/evaluator/anim-clip.js';
+import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
 
 import { Skeleton } from '../../../scene/animation/skeleton.js';
 

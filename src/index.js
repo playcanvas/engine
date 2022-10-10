@@ -120,20 +120,20 @@ export { Animation, Key, Node } from './scene/animation/animation.js';
 export { Skeleton } from './scene/animation/skeleton.js';
 
 // ANIM
-export * from './anim/constants.js';
-export { AnimBinder } from './anim/binder/anim-binder.js';
-export { AnimClip } from './anim/evaluator/anim-clip.js';
-export { AnimCurve } from './anim/evaluator/anim-curve.js';
-export { AnimData } from './anim/evaluator/anim-data.js';
-export { AnimEvaluator } from './anim/evaluator/anim-evaluator.js';
-export { AnimSnapshot } from './anim/evaluator/anim-snapshot.js';
-export { AnimTarget } from './anim/evaluator/anim-target.js';
-export { AnimEvents } from './anim/evaluator/anim-events.js';
-export { AnimTrack } from './anim/evaluator/anim-track.js';
-export { DefaultAnimBinder } from './anim/binder/default-anim-binder.js';
-export * from './anim/controller/constants.js';
-export { AnimController } from './anim/controller/anim-controller.js';
-export { AnimStateGraph } from './anim/state-graph/anim-state-graph.js';
+export * from './framework/anim/constants.js';
+export { AnimBinder } from './framework/anim/binder/anim-binder.js';
+export { AnimClip } from './framework/anim/evaluator/anim-clip.js';
+export { AnimCurve } from './framework/anim/evaluator/anim-curve.js';
+export { AnimData } from './framework/anim/evaluator/anim-data.js';
+export { AnimEvaluator } from './framework/anim/evaluator/anim-evaluator.js';
+export { AnimSnapshot } from './framework/anim/evaluator/anim-snapshot.js';
+export { AnimTarget } from './framework/anim/evaluator/anim-target.js';
+export { AnimEvents } from './framework/anim/evaluator/anim-events.js';
+export { AnimTrack } from './framework/anim/evaluator/anim-track.js';
+export { DefaultAnimBinder } from './framework/anim/binder/default-anim-binder.js';
+export * from './framework/anim/controller/constants.js';
+export { AnimController } from './framework/anim/controller/anim-controller.js';
+export { AnimStateGraph } from './framework/anim/state-graph/anim-state-graph.js';
 
 // FONT
 export * from './font/constants.js';

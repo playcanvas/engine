@@ -1,5 +1,5 @@
-import { Debug } from '../../core/debug.js';
-import { sortPriority } from '../../core/sort.js';
+import { Debug } from '../../../core/debug.js';
+import { sortPriority } from '../../../core/sort.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -11,7 +11,7 @@ import {
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
-/** @typedef {import('../../core/event-handler.js').EventHandler} EventHandler */
+/** @typedef {import('../../../core/event-handler.js').EventHandler} EventHandler */
 /** @typedef {import('../evaluator/anim-evaluator.js').AnimEvaluator} AnimEvaluator */
 
 /**
