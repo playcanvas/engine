@@ -12,7 +12,7 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
-import { EVENT_MOUSEWHEEL } from '../../../input/constants.js';
+import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ScrollViewComponentSystem} ScrollViewComponentSystem */

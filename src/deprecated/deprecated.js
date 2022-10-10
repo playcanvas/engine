@@ -85,15 +85,15 @@ import { AssetRegistry } from '../asset/asset-registry.js';
 
 import { XrInputSource } from '../xr/xr-input-source.js';
 
-import { Controller } from '../input/controller.js';
-import { ElementInput } from '../input/element-input.js';
-import { GamePads } from '../input/game-pads.js';
-import { Keyboard } from '../input/keyboard.js';
-import { KeyboardEvent } from '../input/keyboard-event.js';
-import { Mouse } from '../input/mouse.js';
-import { MouseEvent } from '../input/mouse-event.js';
-import { TouchDevice } from '../input/touch-device.js';
-import { getTouchTargetCoords, Touch, TouchEvent } from '../input/touch-event.js';
+import { Controller } from '../platform/input/controller.js';
+import { ElementInput } from '../platform/input/element-input.js';
+import { GamePads } from '../platform/input/game-pads.js';
+import { Keyboard } from '../platform/input/keyboard.js';
+import { KeyboardEvent } from '../platform/input/keyboard-event.js';
+import { Mouse } from '../platform/input/mouse.js';
+import { MouseEvent } from '../platform/input/mouse-event.js';
+import { TouchDevice } from '../platform/input/touch-device.js';
+import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
 import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
 import { Application } from '../framework/application.js';

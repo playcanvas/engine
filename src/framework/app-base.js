@@ -69,11 +69,11 @@ import {
 
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */

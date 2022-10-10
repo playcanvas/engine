@@ -1,5 +1,5 @@
-import { Debug } from '../core/debug.js';
-import { EventHandler } from '../core/event-handler.js';
+import { Debug } from '../../core/debug.js';
+import { EventHandler } from '../../core/event-handler.js';
 
 import { KeyboardEvent } from './keyboard-event.js';
 

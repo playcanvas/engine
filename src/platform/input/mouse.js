@@ -1,5 +1,5 @@
-import { platform } from '../core/platform.js';
-import { EventHandler } from '../core/event-handler.js';
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
 
 import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';

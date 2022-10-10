@@ -1,17 +1,17 @@
-import { platform } from '../core/platform.js';
+import { platform } from '../../core/platform.js';
 
-import { Vec3 } from '../core/math/vec3.js';
-import { Vec4 } from '../core/math/vec4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 
-import { Ray } from '../core/shape/ray.js';
+import { Ray } from '../../core/shape/ray.js';
 
-import { getApplication } from '../framework/globals.js';
+import { getApplication } from '../../framework/globals.js';
 
 import { Mouse } from './mouse.js';
 
-/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../framework/components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
+/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../../framework/components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('../../xr/xr-input-source.js').XrInputSource} XrInputSource */
 
 let targetX, targetY;
 const vecA = new Vec3();

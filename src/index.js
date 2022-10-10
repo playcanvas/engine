@@ -202,16 +202,16 @@ export { ScriptType } from './framework/script/script-type.js';
 export { I18n } from './i18n/i18n.js';
 
 // INPUT
-export * from './input/constants.js';
-export { Controller } from './input/controller.js';
-export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './input/element-input.js';
-export { GamePads } from './input/game-pads.js';
-export { Keyboard } from './input/keyboard.js';
-export { KeyboardEvent } from './input/keyboard-event.js';
-export { Mouse } from './input/mouse.js';
-export { MouseEvent } from './input/mouse-event.js';
-export { TouchDevice } from './input/touch-device.js';
-export { getTouchTargetCoords, Touch, TouchEvent } from './input/touch-event.js';
+export * from './platform/input/constants.js';
+export { Controller } from './platform/input/controller.js';
+export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './platform/input/element-input.js';
+export { GamePads } from './platform/input/game-pads.js';
+export { Keyboard } from './platform/input/keyboard.js';
+export { KeyboardEvent } from './platform/input/keyboard-event.js';
+export { Mouse } from './platform/input/mouse.js';
+export { MouseEvent } from './platform/input/mouse-event.js';
+export { TouchDevice } from './platform/input/touch-device.js';
+export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-event.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
