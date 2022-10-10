@@ -5,7 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { http, Http } from '../../platform/net/http.js';
 
-import { Animation, Key, Node } from '../../animation/animation.js';
+import { Animation, Key, Node } from '../../scene/animation/animation.js';
 import { AnimEvents } from '../../anim/evaluator/anim-events.js';
 
 import { GlbParser } from '../parsers/glb-parser.js';
