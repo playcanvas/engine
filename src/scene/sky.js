@@ -11,7 +11,7 @@ import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
 import { skybox } from '../scene/shader-lib/programs/skybox.js';
-import { getProgramLibrary } from '../graphics/get-program-library.js';
+import { getProgramLibrary } from './shader-lib/get-program-library.js';
 
 /** @typedef {import('../graphics/texture.js').Texture} Texture */
 /** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */

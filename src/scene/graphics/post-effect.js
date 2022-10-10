@@ -1,11 +1,11 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32, BUFFER_STATIC } from './constants.js';
-import { VertexBuffer } from './vertex-buffer.js';
-import { VertexFormat } from './vertex-format.js';
+import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32, BUFFER_STATIC } from '../../graphics/constants.js';
+import { VertexBuffer } from '../../graphics/vertex-buffer.js';
+import { VertexFormat } from '../../graphics/vertex-format.js';
 
 /** @typedef {import('../math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('../core/math/vec4.jsce.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('./shader.js').Shader} Shader */
+/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../graphics/shader.js').Shader} Shader */
 
 // Primitive for drawFullscreenQuad
 const primitive = {

@@ -10,7 +10,7 @@ import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Immediate } from './immediate/immediate.js';
 
-import { EnvLighting } from '../graphics/env-lighting.js';
+import { EnvLighting } from './graphics/env-lighting.js';
 import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */

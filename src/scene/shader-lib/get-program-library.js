@@ -1,7 +1,7 @@
-import { Debug } from '../core/debug.js';
-import { DeviceCache } from './device-cache.js';
+import { Debug } from '../../core/debug.js';
+import { DeviceCache } from '../../graphics/device-cache.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./program-library.js').ProgramLibrary} ProgramLibrary */
 
 // Device cache storing a program library

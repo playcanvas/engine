@@ -6,7 +6,7 @@ import { Quat } from '../../core/math/quat.js';
 import { math } from '../../core/math/math.js';
 
 import { _matTex2D, standard } from '../../scene/shader-lib/programs/standard.js';
-import { EnvLighting } from '../../graphics/env-lighting.js';
+import { EnvLighting } from '../graphics/env-lighting.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -20,7 +20,7 @@ import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { ShaderProcessorOptions } from '../../graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../../graphics/get-program-library.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
