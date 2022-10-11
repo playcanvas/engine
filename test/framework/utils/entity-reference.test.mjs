@@ -2,7 +2,7 @@ import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
 
-import { DummyComponentSystem } from '../../test-component/system.mjs';
+import { DummyComponentSystem } from '../test-component/system.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
