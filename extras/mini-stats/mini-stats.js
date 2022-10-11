@@ -1,3 +1,9 @@
+import {
+    FILTER_NEAREST,
+    math,
+    Color,
+    Texture
+} from 'playcanvas';
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
 import { StatsTimer } from './stats-timer.js';
@@ -132,11 +138,11 @@ class MiniStats {
 
             // colors used to render graphs
             colors: {
-                graph0: new pc.Color(0.7, 0.2, 0.2, 1),
-                graph1: new pc.Color(0.2, 0.7, 0.2, 1),
-                graph2: new pc.Color(0.2, 0.2, 0.7, 1),
-                watermark: new pc.Color(0.4, 0.4, 0.2, 1),
-                background: new pc.Color(0, 0, 0, 1.0)
+                graph0: new Color(0.7, 0.2, 0.2, 1),
+                graph1: new Color(0.2, 0.7, 0.2, 1),
+                graph2: new Color(0.2, 0.2, 0.7, 1),
+                watermark: new Color(0.4, 0.4, 0.2, 1),
+                background: new Color(0, 0, 0, 1.0)
             },
 
             // cpu graph options
@@ -151,13 +157,13 @@ class MiniStats {
                 watermark: 33
             },
 
-            // array of options to render additional graphs based on stats collected into pc.Application.stats
+            // array of options to render additional graphs based on stats collected into Application.stats
             stats: [
                 {
                     // display name
                     name: 'Frame',
 
-                    // path to data inside pc.Application.stats
+                    // path to data inside Application.stats
                     stats: ['frame.ms'],
 
                     // number of decimal places (defaults to none)
@@ -221,13 +227,13 @@ class MiniStats {
     initWordAtlas(device, words, maxWidth, numGraphs) {
 
         // create the texture for storing word atlas and graph data
-        const texture = new pc.Texture(device, {
+        const texture = new Texture(device, {
             name: 'mini-stats',
-            width: pc.math.nextPowerOfTwo(maxWidth),
+            width: math.nextPowerOfTwo(maxWidth),
             height: 64,
             mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST
         });
 
         const wordAtlas = new WordAtlas(texture, words);

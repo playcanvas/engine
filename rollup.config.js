@@ -7,6 +7,7 @@ import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { execSync } from 'child_process';
+import resolve from "@rollup/plugin-node-resolve";
 
 let revision;
 try {
@@ -273,21 +274,46 @@ function scriptTarget(name, input, output) {
     return {
         input: input,
         output: {
+            name: name,
             banner: getBanner(''),
             file: output || input.replace('.mjs', '.js'),
             format: 'umd',
             indent: '\t',
-            name: name
+            globals: { playcanvas: 'pc' }
         },
         plugins: [
+            resolve(),
             babel(es5Options),
             spacesToTabs()
-        ]
+        ],
+        external: ['playcanvas'],
+        cache: false
+    };
+}
+
+function scriptTargetEs6(name, input, output) {
+    return {
+        input: input,
+        output: {
+            name: name,
+            banner: getBanner(''),
+            dir: output,
+            format: 'es',
+            indent: '\t'
+        },
+        preserveModules: true,
+        plugins: [
+            resolve(),
+            babel(moduleOptions),
+            spacesToTabs()
+        ],
+        external: ['playcanvas', 'fflate']
     };
 }
 
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
