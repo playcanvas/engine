@@ -84,7 +84,7 @@
 
             loadScript(enginePath, () => {
                 window.top.pc = window.pc;
-                loadScript(../../build/playcanvas-extras.js', () => {
+                loadScript('../../build/playcanvas-extras.js', () => {
                     callback();
                 });
             });
