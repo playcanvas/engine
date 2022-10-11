@@ -1,6 +1,6 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { random } from '../../core/math/random.js';
-import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL } from '../../scene/constants.js';
 import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec2();

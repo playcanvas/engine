@@ -1,8 +1,8 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { random } from '../../core/math/random.js';
 import { Color } from '../../core/math/color.js';
-import { Entity } from '../../framework/entity.js';
-import { SHADOW_PCF3 } from '../constants.js';
+import { Entity } from '../entity.js';
+import { SHADOW_PCF3 } from '../../scene/constants.js';
 import { BakeLight } from './bake-light.js';
 
 const _tempPoint = new Vec3();

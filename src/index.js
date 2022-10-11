@@ -110,7 +110,6 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { Lightmapper } from './scene/lightmapper/lightmapper.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance, Command } from './scene/mesh-instance.js';
@@ -187,6 +186,7 @@ export { LayoutGroupComponent } from './framework/components/layout-group/compon
 export { LayoutGroupComponentSystem } from './framework/components/layout-group/system.js';
 export { LightComponent } from './framework/components/light/component.js';
 export { LightComponentSystem } from './framework/components/light/system.js';
+export { Lightmapper } from './framework/lightmapper/lightmapper.js';
 export { ModelComponent } from './framework/components/model/component.js';
 export { ModelComponentSystem } from './framework/components/model/system.js';
 export { ParticleSystemComponent } from './framework/components/particle-system/component.js';

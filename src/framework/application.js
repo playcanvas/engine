@@ -4,7 +4,7 @@ import { WebglGraphicsDevice } from '../platform/graphics/webgl/webgl-graphics-d
 
 import { SoundManager } from '../platform/sound/manager.js';
 
-import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
+import { Lightmapper } from './lightmapper/lightmapper.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
