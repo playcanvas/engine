@@ -20,7 +20,7 @@ import {
 
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
-import { LightmapCache } from './lightmapper/lightmap-cache.js';
+import { LightmapCache } from './graphics/lightmap-cache.js';
 
 /** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('../platform/graphics/shader.js').Shader} Shader */

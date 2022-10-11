@@ -23,16 +23,16 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
-import { MeshInstance } from '../mesh-instance.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
 
-import { LightingParams } from '../lighting/lighting-params.js';
-import { WorldClusters } from '../lighting/world-clusters.js';
+import { LightingParams } from '../../scene/lighting/lighting-params.js';
+import { WorldClusters } from '../../scene/lighting/world-clusters.js';
 
-/** @typedef {import('../../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../../framework/entity.js').Entity} Entity */
-/** @typedef {import('../renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
+/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
+/** @typedef {import('../entity.js').Entity} Entity */
+/** @typedef {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
 /** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../scene.js').Scene} Scene */
+/** @typedef {import('../../scene/scene.js').Scene} Scene */
 
 import {
     BAKE_COLORDIR,
@@ -43,15 +43,15 @@ import {
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
-} from '../constants.js';
-import { Camera } from '../camera.js';
-import { GraphNode } from '../graph-node.js';
-import { StandardMaterial } from '../materials/standard-material.js';
+} from '../../scene/constants.js';
+import { Camera } from '../../scene/camera.js';
+import { GraphNode } from '../../scene/graph-node.js';
+import { StandardMaterial } from '../../scene/materials/standard-material.js';
 
 import { BakeLightSimple } from './bake-light-simple.js';
 import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
-import { LightmapCache } from './lightmap-cache.js';
+import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;

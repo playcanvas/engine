@@ -77,7 +77,7 @@ import {
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('./lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./app-options.js').AppOptions} AppOptions */
 /** @typedef {import('./xr/xr-manager.js').XrManager} XrManager */
