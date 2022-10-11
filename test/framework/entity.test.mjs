@@ -27,7 +27,7 @@ import { SoundComponent } from '../../src/framework/components/sound/component.j
 import { SpriteComponent } from '../../src/framework/components/sprite/component.js';
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
 
-import { DummyComponentSystem } from '../test-component/system.mjs';
+import { DummyComponentSystem } from './test-component/system.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
