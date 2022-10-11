@@ -9,7 +9,7 @@
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./components/system.js').ComponentSystem} ComponentSystem */
-/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
+/** @typedef {import('./xr/xr-manager.js').XrManager} XrManager */
 
 class AppOptions {
     /**

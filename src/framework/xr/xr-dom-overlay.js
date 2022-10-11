@@ -1,4 +1,4 @@
-import { platform } from '../core/platform.js';
+import { platform } from '../../core/platform.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
 

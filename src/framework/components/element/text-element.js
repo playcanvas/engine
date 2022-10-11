@@ -16,7 +16,7 @@ import { Mesh } from '../../../scene/mesh.js';
 
 import { LocalizedAsset } from '../../asset/asset-localized.js';
 
-import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
+import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
 
 import { Markup } from './markup.js';
 

@@ -80,7 +80,7 @@ import {
 /** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./app-options.js').AppOptions} AppOptions */
-/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
+/** @typedef {import('./xr/xr-manager.js').XrManager} XrManager */
 /** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets

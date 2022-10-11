@@ -1,8 +1,8 @@
-import { platform } from '../core/platform.js';
-import { EventHandler } from '../core/event-handler.js';
-import { Mat4 } from '../core/math/mat4.js';
-import { Texture } from '../platform/graphics/texture.js';
-import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../platform/graphics/constants.js';
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
 import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */

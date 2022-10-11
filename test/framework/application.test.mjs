@@ -11,7 +11,7 @@ import { ResourceLoader } from '../../src/framework/handlers/loader.js';
 import { Scene } from '../../src/scene/scene.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
-import { XrManager } from '../../src/xr/xr-manager.js';
+import { XrManager } from '../../src/framework/xr/xr-manager.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

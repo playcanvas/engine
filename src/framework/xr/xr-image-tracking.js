@@ -1,5 +1,5 @@
-import { platform } from '../core/platform.js';
-import { EventHandler } from '../core/event-handler.js';
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /** @typedef {import('./xr-manager.js').XrManager} XrManager */
