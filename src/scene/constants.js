@@ -386,20 +386,6 @@ export const PARTICLEORIENTATION_WORLD = 1;
 export const PARTICLEORIENTATION_EMITTER = 2;
 
 /**
- * A perspective camera projection where the frustum shape is essentially pyramidal.
- *
- * @type {number}
- */
-export const PROJECTION_PERSPECTIVE = 0;
-
-/**
- * An orthographic camera projection where the frustum shape is essentially a cuboid.
- *
- * @type {number}
- */
-export const PROJECTION_ORTHOGRAPHIC = 1;
-
-/**
  * Render mesh instance as solid geometry.
  *
  * @type {number}

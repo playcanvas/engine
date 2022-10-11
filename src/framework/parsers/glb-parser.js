@@ -10,6 +10,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+import {
+    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE
+} from '../../core/shape/constants.js';
 
 import {
     typedArrayTypes, typedArrayTypesByteSize,
@@ -30,7 +33,6 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
-    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
 

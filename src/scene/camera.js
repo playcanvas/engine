@@ -5,9 +5,10 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 
 import { Frustum } from '../core/shape/frustum.js';
+import { PROJECTION_PERSPECTIVE } from '../core/shape/constants.js';
 
 import {
-    ASPECT_AUTO, PROJECTION_PERSPECTIVE,
+    ASPECT_AUTO,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 
