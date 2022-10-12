@@ -5,13 +5,13 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 import { Ray } from '../../core/shape/ray.js';
 
-import { getApplication } from '../../framework/globals.js';
+import { getApplication } from '../globals.js';
 
-import { Mouse } from './mouse.js';
+import { Mouse } from '../../platform/input/mouse.js';
 
-/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../../framework/components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('../../framework/xr/xr-input-source.js').XrInputSource} XrInputSource */
+/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../components/element/component.js').ElementComponent} ElementComponent */
+/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
 
 let targetX, targetY;
 const vecA = new Vec3();
