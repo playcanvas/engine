@@ -64,7 +64,7 @@ import { Morph } from '../scene/morph.js';
 import { MeshInstance, Command } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
-import { Picker } from '../scene/picker.js';
+import { Picker } from '../framework/graphics/picker.js';
 import { Scene } from '../scene/scene.js';
 import { Skin } from '../scene/skin.js';
 import { SkinInstance } from '../scene/skin-instance.js';
