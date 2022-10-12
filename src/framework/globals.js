@@ -1,3 +1,5 @@
+import { GraphicsDeviceAccess } from "../platform/graphics/graphics-device-access.js";
+
 let currentApplication;
 
 function getApplication() {
@@ -6,6 +8,7 @@ function getApplication() {
 
 function setApplication(app) {
     currentApplication = app;
+    GraphicsDeviceAccess.set(app?.graphicsDevice);
 }
 
 export {

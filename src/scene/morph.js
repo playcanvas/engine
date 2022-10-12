@@ -6,12 +6,12 @@ import { BoundingBox } from '../core/shape/bounding-box.js';
 import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
-import { getApplication } from '../framework/globals.js';
 
 import {
     BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F
 } from '../platform/graphics/constants.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 /** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph-target.js').MorphTarget} MorphTarget */
@@ -33,10 +33,11 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice) {
         super();
 
+        Debug.assertDeprecated(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
+
         // validation
         targets.forEach(target => Debug.assert(!target.used, 'The target specified has already been used to create a Morph, use its clone instead.'));
-
-        this.device = graphicsDevice || getApplication().graphicsDevice;
         this._targets = targets.slice();
 
         // default to texture based morphing if available

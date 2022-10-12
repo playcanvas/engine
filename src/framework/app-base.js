@@ -20,6 +20,7 @@ import { http } from '../platform/net/http.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../platform/graphics/constants.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 
@@ -281,6 +282,7 @@ class AppBase extends EventHandler {
          * @type {GraphicsDevice}
          */
         this.graphicsDevice = device;
+        GraphicsDeviceAccess.set(device);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
