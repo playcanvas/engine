@@ -540,10 +540,7 @@ class Camera {
      * @param {number} [far] - Far distance for the frustum points. Defaults to the far clip distance of the camera.
      * @returns {Vec3[]} - An array of corners, using a global storage space.
      */
-    getFrustumCorners(near, far) {
-
-        near = near || this._nearClip;
-        far = far || this._farClip;
+    getFrustumCorners(near = this._nearClip, far = this._farClip) {
 
         const fov = this._fov * Math.PI / 180.0;
         let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
