@@ -536,9 +536,9 @@ class Camera {
     /**
      * Returns an array of corners of the frustum of the camera in the local coordinate system of the camera.
      *
-     * @param {*} near - near distance for the frustum points , defaults to the near clip distance of the camera.
-     * @param {*} far - far distance for the frustum points, defaults to the far clip distance of the camera.
-     * @returns {Array<Vec3>} - An array of corners, using a global storage space.
+     * @param {number} [near] - Near distance for the frustum points. Defaults to the near clip distance of the camera.
+     * @param {number} [far] - Far distance for the frustum points. Defaults to the far clip distance of the camera.
+     * @returns {Vec3[]} - An array of corners, using a global storage space.
      */
     getFrustumCorners(near, far) {
 
