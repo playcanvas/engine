@@ -56,7 +56,7 @@ import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { SceneGrab } from './scene-grab.js';
+import { SceneGrab } from './graphics/scene-grab.js';
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
