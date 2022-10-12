@@ -1,25 +1,25 @@
-import { Color } from '../core/math/color.js';
+import { Color } from '../../core/math/color.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../platform/graphics/constants.js';
-import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
-import { RenderTarget } from '../platform/graphics/render-target.js';
-import { Texture } from '../platform/graphics/texture.js';
-import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
+import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
+import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
-import { SHADER_PICK, SORTMODE_NONE } from './constants.js';
-import { Camera } from './camera.js';
-import { Command } from './mesh-instance.js';
-import { Layer } from './layer.js';
-import { LayerComposition } from './composition/layer-composition.js';
+import { SHADER_PICK, SORTMODE_NONE } from '../../scene/constants.js';
+import { Camera } from '../../scene/camera.js';
+import { Command } from '../../scene/mesh-instance.js';
+import { Layer } from '../../scene/layer.js';
+import { LayerComposition } from '../../scene/composition/layer-composition.js';
 
-import { getApplication } from '../framework/globals.js';
-import { Entity } from '../framework/entity.js';
-import { Debug } from '../core/debug.js';
+import { getApplication } from '../globals.js';
+import { Entity } from '../entity.js';
+import { Debug } from '../../core/debug.js';
 
-/** @typedef {import('../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('./scene.js').Scene} Scene */
+/** @typedef {import('../app-base.js').AppBase} AppBase */
+/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
+/** @typedef {import('../../scene/mesh-instance.js').MeshInstance} MeshInstance */
+/** @typedef {import('../../scene/scene.js').Scene} Scene */
 
 const tempSet = new Set();
 

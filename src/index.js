@@ -118,7 +118,6 @@ export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
-export { Picker } from './scene/picker.js';
 export { Scene } from './scene/scene.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
@@ -255,6 +254,9 @@ export { CanvasFont } from './framework/font/canvas-font.js';
 // FRAMEWORK / BUNDLE
 export { Bundle } from './framework/bundle/bundle.js';
 export { BundleRegistry } from './framework/bundle/bundle-registry.js';
+
+// FRAMEWORK / GRAPHICS
+export { Picker } from './framework/graphics/picker.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize, basisTranscode } from './framework/handlers/basis.js';
