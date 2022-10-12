@@ -2,8 +2,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../core/shape/constants.js';
-import { ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../constants.js';
+import { ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../constants.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 

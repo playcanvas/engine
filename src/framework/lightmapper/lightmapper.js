@@ -6,9 +6,6 @@ import { Color } from '../../core/math/color.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import {
-    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE
-} from '../../core/shape/constants.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -41,6 +38,7 @@ import {
     BAKE_COLORDIR,
     FOG_NONE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
