@@ -714,13 +714,13 @@ class Layer {
         if (!this._lightsSet.has(l)) {
             this._lightsSet.add(l);
 
-            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
-                this._clusteredLightsSet.add(l);
-            }
-
             this._lights.push(l);
             this._dirtyLights = true;
             this._generateLightHash();
+        }
+
+        if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+            this._clusteredLightsSet.add(l);
         }
     }
 
@@ -735,13 +735,13 @@ class Layer {
         if (this._lightsSet.has(l)) {
             this._lightsSet.delete(l);
 
-            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
-                this._clusteredLightsSet.delete(l);
-            }
-
             this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
             this._generateLightHash();
+        }
+
+        if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+            this._clusteredLightsSet.delete(l);
         }
     }
 
