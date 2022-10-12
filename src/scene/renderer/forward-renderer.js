@@ -7,7 +7,6 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
-import { PROJECTION_ORTHOGRAPHIC } from '../../core/shape/constants.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -35,7 +34,7 @@ import {
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOWUPDATE_NONE,
     SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    VIEW_CENTER, SHADOWUPDATE_THISFRAME, LAYERID_DEPTH, PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';

@@ -10,7 +10,6 @@ import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../core/shape/constants.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { Frustum } from '../core/shape/frustum.js';
@@ -53,7 +52,7 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 
-import { LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';

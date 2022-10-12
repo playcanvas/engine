@@ -45,7 +45,6 @@ export { Vec3 } from './core/math/vec3.js';
 export { Vec4 } from './core/math/vec4.js';
 
 // CORE / SHAPE
-export * from './core/shape/constants.js';
 export { BoundingBox } from './core/shape/bounding-box.js';
 export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
