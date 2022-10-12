@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
 import { Color } from '../core/math/color.js';
@@ -5,13 +6,14 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Quat } from '../core/math/quat.js';
 import { math } from '../core/math/math.js';
 
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Immediate } from './immediate/immediate.js';
 
 import { EnvLighting } from './graphics/env-lighting.js';
-import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */
 /** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -173,7 +175,8 @@ class Scene extends EventHandler {
     constructor(graphicsDevice) {
         super();
 
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        Debug.assertDeprecated(graphicsDevice, "Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         this._gravity = new Vec3(0, -9.8, 0);
 

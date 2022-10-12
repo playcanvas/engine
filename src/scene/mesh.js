@@ -16,10 +16,9 @@ import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
-
-import { getApplication } from '../framework/globals.js';
 
 /** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
@@ -175,7 +174,8 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        Debug.assertDeprecated(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
