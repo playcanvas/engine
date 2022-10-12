@@ -322,7 +322,7 @@ class ShadowRenderer {
             // get camera's frustum corners for the cascade, convert them to world space and find their center
             const frustumNearDist = cascade === 0 ? nearDist : light._shadowCascadeDistances[cascade - 1];
             const frustumFarDist = light._shadowCascadeDistances[cascade];
-            const frustumPoints = Frustum.getPoints(camera, frustumNearDist, frustumFarDist);
+            const frustumPoints = camera.getFrustumCorners(frustumNearDist, frustumFarDist);
             center.set(0, 0, 0);
             const cameraWorldMat = camera.node.getWorldTransform();
             for (let i = 0; i < 8; i++) {
