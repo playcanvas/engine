@@ -25,7 +25,6 @@ import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
-import { Frustum } from '../../core/shape/frustum.js';
 import { ShaderPass } from '../shader-pass.js';
 
 /** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
