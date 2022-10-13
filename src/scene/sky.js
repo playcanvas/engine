@@ -1,8 +1,3 @@
-import { Mat3 } from '../core/math/mat3.js';
-import { Mat4 } from '../core/math/mat4.js';
-import { Vec3 } from '../core/math/vec3.js';
-import { Quat } from '../core/math/quat.js';
-
 import { CULLFACE_FRONT } from '../platform/graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
@@ -17,9 +12,6 @@ import { getProgramLibrary } from './shader-lib/get-program-library.js';
 /** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./scene.js').Scene} Scene */
 
-/** @type {Mat4} */
-let _mat4;
-
 /**
  * A visual representation of the sky.
  *
@@ -32,9 +24,6 @@ class Sky {
      * @type {MeshInstance}
      */
     meshInstance;
-
-    /** @type {Mat3} */
-    _rotationMat3;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
