@@ -1,6 +1,6 @@
 import { Quat } from '../../../core/math/quat.js';
 import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
-import { AnimEvaluator } from './anim-evaluator.js';
+import { AnimBlend } from './anim-blend.js';
 import { math } from '../../../core/math/math.js';
 
 /**
@@ -86,9 +86,9 @@ class AnimTargetValue {
     updateValue(index, value) {
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
-            AnimEvaluator._set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);
+            AnimBlend.set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);
             if (!this._normalizeWeights) {
-                AnimEvaluator._blend(this.value, this.baseValue, 1, this.valueType);
+                AnimBlend.blend(this.value, this.baseValue, 1, this.valueType);
             }
         }
         if (!this.mask[index] || this.getWeight(index) === 0) return;
@@ -108,15 +108,15 @@ class AnimTargetValue {
                 AnimTargetValue.quatArr[1] = v.y;
                 AnimTargetValue.quatArr[2] = v.z;
                 AnimTargetValue.quatArr[3] = v.w;
-                AnimEvaluator._set(this.value, AnimTargetValue.quatArr, this.valueType);
+                AnimBlend.set(this.value, AnimTargetValue.quatArr, this.valueType);
             } else {
                 AnimTargetValue.vecArr[0] = value[0] - this.baseValue[0];
                 AnimTargetValue.vecArr[1] = value[1] - this.baseValue[1];
                 AnimTargetValue.vecArr[2] = value[2] - this.baseValue[2];
-                AnimEvaluator._blend(this.value, AnimTargetValue.vecArr, this.getWeight(index), this.valueType, true);
+                AnimBlend.blend(this.value, AnimTargetValue.vecArr, this.getWeight(index), this.valueType, true);
             }
         } else {
-            AnimEvaluator._blend(this.value, value, this.getWeight(index), this.valueType);
+            AnimBlend.blend(this.value, value, this.getWeight(index), this.valueType);
         }
         if (this.setter) this.setter(this.value);
     }
