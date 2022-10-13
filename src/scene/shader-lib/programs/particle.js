@@ -1,8 +1,8 @@
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
-import { collectAttribs } from '../utils.js';
-import { gammaCode, precisionCode, tonemapCode } from './common.js';
+import { gammaCode, tonemapCode } from './common.js';
 
 const particle = {
     generateKey: function (options) {
@@ -24,7 +24,7 @@ const particle = {
 
     createShaderDefinition: function (device, options) {
         let vshader = "";
-        let fshader = precisionCode(device) + "\n";
+        let fshader = ShaderUtils.precisionCode(device) + "\n";
         fshader += '#define PARTICLE\n';
 
         if (device.webgl2) {
@@ -118,7 +118,7 @@ const particle = {
         }
         fshader += shaderChunks.particle_endPS;
 
-        const attributes = collectAttribs(vshader);
+        const attributes = ShaderUtils.collectAttributes(vshader);
 
         return {
             attributes: attributes,

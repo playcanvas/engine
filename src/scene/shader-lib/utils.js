@@ -1,92 +1,25 @@
-import {
-    DEVICETYPE_WEBGPU,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
-    SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
-    SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
-} from '../../platform/graphics/constants.js';
-import { Shader } from '../../platform/graphics/shader.js';
-
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 
-import { dummyFragmentCode, precisionCode, versionCode } from './programs/common.js';
-
-const attrib2Semantic = {
-    vertex_position: SEMANTIC_POSITION,
-    vertex_normal: SEMANTIC_NORMAL,
-    vertex_tangent: SEMANTIC_TANGENT,
-    vertex_texCoord0: SEMANTIC_TEXCOORD0,
-    vertex_texCoord1: SEMANTIC_TEXCOORD1,
-    vertex_texCoord2: SEMANTIC_TEXCOORD2,
-    vertex_texCoord3: SEMANTIC_TEXCOORD3,
-    vertex_texCoord4: SEMANTIC_TEXCOORD4,
-    vertex_texCoord5: SEMANTIC_TEXCOORD5,
-    vertex_texCoord6: SEMANTIC_TEXCOORD6,
-    vertex_texCoord7: SEMANTIC_TEXCOORD7,
-    vertex_color: SEMANTIC_COLOR,
-    vertex_boneIndices: SEMANTIC_BLENDINDICES,
-    vertex_boneWeights: SEMANTIC_BLENDWEIGHT
-};
-
-/**
- * Extract the attributes specified in a vertex shader.
- *
- * @param {string} vsCode - The vertex shader code.
- * @returns {Object<string, string>} The attribute name to semantic map.
- * @ignore
- */
-function collectAttribs(vsCode) {
-    const attribs = {};
-    let attrs = 0;
-
-    let found = vsCode.indexOf("attribute");
-    while (found >= 0) {
-        if (found > 0 && vsCode[found - 1] === "/") break;
-        const endOfLine = vsCode.indexOf(';', found);
-        const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
-        const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
-
-        const semantic = attrib2Semantic[attribName];
-        if (semantic !== undefined) {
-            attribs[attribName] = semantic;
-        } else {
-            attribs[attribName] = "ATTR" + attrs;
-            attrs++;
-        }
-
-        found = vsCode.indexOf("attribute", found + 1);
-    }
-    return attribs;
-}
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/shader.js').Shader} Shader */
 
 /**
  * Create a shader from named shader chunks.
  *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsName - The vertex shader chunk name.
- * @param {string} psName - The fragment shader chunk name.
+ * @param {string} fsName - The fragment shader chunk name.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
  * @returns {Shader} The newly created shader.
  */
-function createShader(device, vsName, psName, useTransformFeedback = false) {
-    let vsCode = shaderChunks[vsName];
-    let psCode = precisionCode(device) + "\n" + shaderChunks[psName];
-    const attribs = collectAttribs(vsCode);
-
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-        vsCode = versionCode(device) + shaderChunks.webgpuVS + vsCode;
-        psCode = versionCode(device) + shaderChunks.webgpuPS + psCode;
-    } else if (device.webgl2) {
-        vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
-        psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
-    }
-
-    return new Shader(device, {
-        attributes: attribs,
-        vshader: vsCode,
-        fshader: psCode,
-        useTransformFeedback: useTransformFeedback,
-        name: `${vsName}_${psName}`
+function createShader(device, vsName, fsName, useTransformFeedback = false) {
+    return ShaderUtils.createShader(device, {
+        name: `${vsName}_${fsName}`,
+        vertexCode: shaderChunks[vsName],
+        fragmentCode: shaderChunks[fsName],
+        useTransformFeedback: useTransformFeedback
     });
 }
 
@@ -95,41 +28,30 @@ function createShader(device, vsName, psName, useTransformFeedback = false) {
  *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsCode - The vertex shader code.
- * @param {string} psCode - The fragment shader code.
- * @param {string} uName - Unique name for the shader.
+ * @param {string} fsCode - The fragment shader code.
+ * @param {string} uniqueName - Unique name for the shader.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string} [psPreamble] - An optional 'preamble' string for the fragment shader. Defaults
+ * @param {string} [fragmentPreamble] - An optional 'preamble' string for the fragment shader. Defaults
  * to ''.
  * @returns {Shader} The newly created shader.
  */
-function createShaderFromCode(device, vsCode, psCode, uName, useTransformFeedback = false, psPreamble = "") {
+function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFeedback = false, fragmentPreamble = '') {
     const shaderCache = getProgramLibrary(device)._cache;
-    const cached = shaderCache[uName];
-    if (cached !== undefined) return cached;
-
-    psCode = precisionCode(device) + "\n" + (psCode || dummyFragmentCode());
-    const attribs = collectAttribs(vsCode);
-
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-        vsCode = versionCode(device) + shaderChunks.webgpuVS + vsCode;
-        psCode = versionCode(device) + shaderChunks.webgpuPS + psCode;
-    } else if (device.webgl2) {
-        vsCode = versionCode(device) + shaderChunks.gles3VS + vsCode;
-        psCode = versionCode(device) + shaderChunks.gles3PS + psCode;
+    let shader = shaderCache[uniqueName];
+    if (!shader) {
+        shader = ShaderUtils.createShader(device, {
+            name: uniqueName,
+            vertexCode: vsCode,
+            fragmentCode: fsCode,
+            fragmentPreamble: fragmentPreamble,
+            useTransformFeedback: useTransformFeedback
+        });
+        shaderCache[uniqueName] = shader;
     }
-
-    shaderCache[uName] = new Shader(device, {
-        name: uName,
-        attributes: attribs,
-        vshader: vsCode,
-        fshader: psPreamble + psCode,
-        useTransformFeedback: useTransformFeedback
-    });
-    return shaderCache[uName];
+    return shader;
 }
 
-shaderChunks.collectAttribs = collectAttribs;
 shaderChunks.createShader = createShader;
 shaderChunks.createShaderFromCode = createShaderFromCode;
 
-export { collectAttribs, createShader, createShaderFromCode };
+export { createShader, createShaderFromCode };

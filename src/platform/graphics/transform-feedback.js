@@ -1,9 +1,9 @@
 import { Debug } from '../../core/debug.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { ShaderUtils } from './shader-utils.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./shader.js').Shader} Shader */
@@ -109,12 +109,16 @@ class TransformFeedback {
      * Creates a transform feedback ready vertex shader from code.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
-     * @param {string} vsCode - Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vsCode, name) {
-        return createShaderFromCode(graphicsDevice, vsCode, null, name, true);
+    static createShader(graphicsDevice, vertexCode, name) {
+        return ShaderUtils.createShader(graphicsDevice, {
+            name,
+            vertexCode,
+            useTransformFeedback: true
+        });
     }
 
     /**

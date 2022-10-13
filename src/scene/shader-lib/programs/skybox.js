@@ -2,7 +2,8 @@ import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 
-import { gammaCode, precisionCode, tonemapCode } from './common.js';
+import { gammaCode, tonemapCode } from './common.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 
 const skybox = {
     generateKey: function (options) {
@@ -16,7 +17,7 @@ const skybox = {
         if (options.type === 'cubemap') {
             const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
 
-            fshader = precisionCode(device);
+            fshader = ShaderUtils.precisionCode(device);
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
             fshader += shaderChunks.decodePS;
@@ -26,7 +27,7 @@ const skybox = {
                 .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
                 .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
         } else {
-            fshader = precisionCode(device);
+            fshader = ShaderUtils.precisionCode(device);
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
             fshader += shaderChunks.decodePS;
             fshader += gammaCode(options.gamma);

@@ -54,9 +54,9 @@ import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
 import gamma2_2PS from './common/frag/gamma2_2.js';
-import gles2PS from './common/frag/gles2.js';
-import gles3PS from './common/frag/gles3.js';
-import gles3VS from './common/vert/gles3.js';
+import gles2PS from '../../../platform/graphics/shader-chunks/frag/gles2.js';
+import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
+import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
@@ -192,8 +192,8 @@ import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import viewDirPS from './lit/frag/viewDir.js';
 import viewNormalVS from './lit/vert/viewNormal.js';
-import webgpuPS from './common/frag/webgpu.js';
-import webgpuVS from './common/vert/webgpu.js';
+import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
+import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
 /**
  * @static
