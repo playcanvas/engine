@@ -19,23 +19,23 @@ import { math } from '../../core/math/math.js';
  */
 class Http {
     static ContentType = {
+        AAC: 'audio/aac',
+        BASIS: 'image/basis',
+        BIN: 'application/octet-stream',
+        DDS: 'image/dds',
         FORM_URLENCODED: 'application/x-www-form-urlencoded',
         GIF: 'image/gif',
+        GLB: 'model/gltf-binary',
         JPEG: 'image/jpeg',
-        DDS: 'image/dds',
         JSON: 'application/json',
-        PNG: 'image/png',
-        TEXT: 'text/plain',
-        XML: 'application/xml',
-        WAV: 'audio/x-wav',
-        OGG: 'audio/ogg',
         MP3: 'audio/mpeg',
         MP4: 'audio/mp4',
-        AAC: 'audio/aac',
-        BIN: 'application/octet-stream',
-        BASIS: 'image/basis',
-        GLB: 'model/gltf-binary',
-        OPUS: 'audio/ogg; codecs="opus"'
+        OGG: 'audio/ogg',
+        OPUS: 'audio/ogg; codecs="opus"',
+        PNG: 'image/png',
+        TEXT: 'text/plain',
+        WAV: 'audio/x-wav',
+        XML: 'application/xml',
     };
 
     static ResponseType = {
@@ -469,21 +469,27 @@ class Http {
 
     _isBinaryContentType(contentType) {
         const binTypes = [
-            Http.ContentType.MP4,
-            Http.ContentType.WAV,
-            Http.ContentType.OGG,
-            Http.ContentType.MP3,
+            Http.ContentType.BASIS,
             Http.ContentType.BIN,
             Http.ContentType.DDS,
-            Http.ContentType.BASIS,
             Http.ContentType.GLB,
-            Http.ContentType.OPUS
+            Http.ContentType.MP3,
+            Http.ContentType.MP4,
+            Http.ContentType.OGG,
+            Http.ContentType.OPUS,
+            Http.ContentType.WAV,
         ];
         if (binTypes.indexOf(contentType) >= 0) {
             return true;
         }
 
         return false;
+    }
+
+    _isBinaryResponseType(responseType) {
+        return responseType === Http.ResponseType.ARRAY_BUFFER ||
+               responseType === Http.ResponseType.BLOB ||
+               responseType === Http.ResponseType.JSON;
     }
 
     _onReadyStateChange(method, url, options, xhr) {
@@ -532,28 +538,15 @@ class Http {
             if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
-            } else if (this._isBinaryContentType(contentType)) {
+            } else if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
+                // It's a binary response
                 response = xhr.response;
+            } else if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === Http.ContentType.XML) {
+                // It's an XML response
+                response = xhr.responseXML;
             } else {
-                // #if _DEBUG
-                if (contentType) {
-                    console.warn(`responseType: ${xhr.responseType} being served with Content-Type: ${contentType}`);
-                }
-                // #endif
-
-                if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
-                    response = xhr.response;
-                } else if (xhr.responseType === Http.ResponseType.BLOB || xhr.responseType === Http.ResponseType.JSON) {
-                    response = xhr.response;
-                } else {
-                    if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === Http.ContentType.XML) {
-                        // It's an XML response
-                        response = xhr.responseXML;
-                    } else {
-                        // It's raw data
-                        response = xhr.responseText;
-                    }
-                }
+                // It's raw data
+                response = xhr.responseText;
             }
 
             options.callback(null, response);
