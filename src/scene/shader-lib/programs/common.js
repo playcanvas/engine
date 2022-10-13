@@ -1,6 +1,7 @@
 import {
     DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
 } from '../../../platform/graphics/constants.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
@@ -56,54 +57,9 @@ function skinCode(device, chunks) {
     return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
 }
 
-function precisionCode(device, forcePrecision, shadowPrecision) {
-
-    let code = '';
-
-    if (device.deviceType === DEVICETYPE_WEBGL) {
-
-        if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
-            forcePrecision = null;
-        }
-
-        if (forcePrecision) {
-            if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
-                forcePrecision = 'mediump';
-            }
-            if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
-                forcePrecision = 'lowp';
-            }
-        }
-
-        const precision = forcePrecision ? forcePrecision : device.precision;
-        code = `precision ${precision} float;\n`;
-
-        // TODO: this can be only set on shaders with version 300 or more, so make this optional as many
-        // internal shaders (particles..) are from webgl1 era and don't set any precision. Modified when upgraded.
-        if (shadowPrecision && device.webgl2) {
-            code += `precision ${precision} sampler2DShadow;\n`;
-        }
-    }
-
-    return code;
-}
-
-function versionCode(device) {
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-        return '#version 450\n';
-    }
-
-    return device.webgl2 ? "#version 300 es\n" : "";
-}
-
-// SpectorJS integration
-function getShaderNameCode(name) {
-    return `#define SHADER_NAME ${name}\n`;
-}
-
 function vertexIntro(device, name, pass, extensionCode) {
 
-    let code = versionCode(device);
+    let code = ShaderUtils.versionCode(device);
 
     if (device.deviceType === DEVICETYPE_WEBGPU) {
 
@@ -120,7 +76,7 @@ function vertexIntro(device, name, pass, extensionCode) {
         }
     }
 
-    code += getShaderNameCode(name);
+    code += ShaderUtils.getShaderNameCode(name);
     code += ShaderPass.getPassShaderDefine(pass);
 
     return code;
@@ -128,7 +84,7 @@ function vertexIntro(device, name, pass, extensionCode) {
 
 function fragmentIntro(device, name, pass, extensionCode, forcePrecision) {
 
-    let code = versionCode(device);
+    let code = ShaderUtils.versionCode(device);
 
     if (device.deviceType === DEVICETYPE_WEBGPU) {
 
@@ -158,15 +114,11 @@ function fragmentIntro(device, name, pass, extensionCode, forcePrecision) {
         }
     }
 
-    code += precisionCode(device, forcePrecision, true);
-    code += getShaderNameCode(name);
+    code += ShaderUtils.precisionCode(device, forcePrecision, true);
+    code += ShaderUtils.getShaderNameCode(name);
     code += ShaderPass.getPassShaderDefine(pass);
 
     return code;
-}
-
-function dummyFragmentCode() {
-    return "void main(void) {gl_FragColor = vec4(0.0);}";
 }
 
 function begin() {
@@ -177,4 +129,4 @@ function end() {
     return '}\n';
 }
 
-export { vertexIntro, fragmentIntro, begin, end, dummyFragmentCode, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode };
+export { vertexIntro, fragmentIntro, begin, end, fogCode, gammaCode, skinCode, tonemapCode };

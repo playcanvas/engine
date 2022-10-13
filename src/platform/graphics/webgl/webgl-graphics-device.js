@@ -24,7 +24,6 @@ import {
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
-import { createShaderFromCode } from '../../../scene/shader-lib/utils.js';
 import { drawQuadWithShader } from '../simple-post-effect.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
@@ -35,6 +34,7 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
+import { ShaderUtils } from '../shader-utils.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -148,8 +148,17 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    const test1 = createShaderFromCode(device, _fullScreenQuadVS, _precisionTest1PS, "ptest1");
-    const test2 = createShaderFromCode(device, _fullScreenQuadVS, _precisionTest2PS, "ptest2");
+    const shader1 = ShaderUtils.createShader(device, {
+        name: 'ptest1',
+        vertexCode: _fullScreenQuadVS,
+        fragmentCode: _precisionTest1PS
+    });
+
+    const shader2 = ShaderUtils.createShader(device, {
+        name: 'ptest2',
+        vertexCode: _fullScreenQuadVS,
+        fragmentCode: _precisionTest2PS
+    });
 
     const textureOptions = {
         format: PIXELFORMAT_RGBA32F,
@@ -165,7 +174,7 @@ function testTextureFloatHighPrecision(device) {
         colorBuffer: tex1,
         depth: false
     });
-    drawQuadWithShader(device, targ1, test1);
+    drawQuadWithShader(device, targ1, shader1);
 
     textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
     const tex2 = new Texture(device, textureOptions);
@@ -174,7 +183,7 @@ function testTextureFloatHighPrecision(device) {
         depth: false
     });
     device.constantTexSource.setValue(tex1);
-    drawQuadWithShader(device, targ2, test2);
+    drawQuadWithShader(device, targ2, shader2);
 
     const prevFramebuffer = device.activeFramebuffer;
     device.setFramebuffer(targ2.impl._glFrameBuffer);
@@ -194,6 +203,8 @@ function testTextureFloatHighPrecision(device) {
     targ1.destroy();
     tex2.destroy();
     targ2.destroy();
+    shader1.destroy();
+    shader2.destroy();
 
     return f === 0;
 }
@@ -1297,7 +1308,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     getCopyShader() {
         if (!this._copyShader) {
-            this._copyShader = createShaderFromCode(this, _fullScreenQuadVS, _outputTexture2D, "outputTex2D");
+            this._copyShader = ShaderUtils.createShader(this, {
+                name: 'outputTex2D',
+                vertexCode: _fullScreenQuadVS,
+                fragmentCode: _outputTexture2D
+            });
         }
         return this._copyShader;
     }

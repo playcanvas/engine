@@ -34,7 +34,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../platform/graphics/constants.js';
-import { begin, dummyFragmentCode, end, fogCode, gammaCode, precisionCode, skinCode, tonemapCode, versionCode } from '../scene/shader-lib/programs/common.js';
+import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
 import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
@@ -113,6 +113,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
+import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 
 // CORE
 
@@ -318,14 +319,14 @@ ContextCreationError.prototype = Error.prototype;
 
 export const programlib = {
     begin: begin,
-    dummyFragmentCode: dummyFragmentCode,
+    dummyFragmentCode: ShaderUtils.dummyFragmentCode,
     end: end,
     fogCode: fogCode,
     gammaCode: gammaCode,
-    precisionCode: precisionCode,
+    precisionCode: ShaderUtils.precisionCode,
     skinCode: skinCode,
     tonemapCode: tonemapCode,
-    versionCode: versionCode
+    versionCode: ShaderUtils.versionCode
 };
 
 export const gfx = {
