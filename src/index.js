@@ -76,7 +76,6 @@ export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-de
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';
-export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './platform/input/element-input.js';
 export { GamePads } from './platform/input/game-pads.js';
 export { Keyboard } from './platform/input/keyboard.js';
 export { KeyboardEvent } from './platform/input/keyboard-event.js';
@@ -288,6 +287,9 @@ export { TemplateHandler } from './framework/handlers/template.js';
 export { TextHandler } from './framework/handlers/text.js';
 export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
+
+// FRAMEWORK / INPUT
+export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './framework/input/element-input.js';
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';

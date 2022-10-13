@@ -9,7 +9,7 @@ import { ElementComponent } from './component.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 
-/** @typedef {import('../../../platform/input/element-input').ElementTouchEvent} ElementTouchEvent */
+/** @typedef {import('../../input/element-input').ElementTouchEvent} ElementTouchEvent */
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();

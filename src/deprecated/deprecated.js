@@ -86,7 +86,7 @@ import { AssetRegistry } from '../framework/asset/asset-registry.js';
 import { XrInputSource } from '../framework/xr/xr-input-source.js';
 
 import { Controller } from '../platform/input/controller.js';
-import { ElementInput } from '../platform/input/element-input.js';
+import { ElementInput } from '../framework/input/element-input.js';
 import { GamePads } from '../platform/input/game-pads.js';
 import { Keyboard } from '../platform/input/keyboard.js';
 import { KeyboardEvent } from '../platform/input/keyboard-event.js';

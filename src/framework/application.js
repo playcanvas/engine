@@ -62,7 +62,7 @@ import { TextureHandler } from '../framework/handlers/texture.js';
 
 import { XrManager } from './xr/xr-manager.js';
 
-/** @typedef {import('../platform/input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('./input/element-input.js').ElementInput} ElementInput */
 /** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
 /** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
 /** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
