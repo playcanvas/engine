@@ -35,7 +35,7 @@ class Http {
         PNG: 'image/png',
         TEXT: 'text/plain',
         WAV: 'audio/x-wav',
-        XML: 'application/xml',
+        XML: 'application/xml'
     };
 
     static ResponseType = {
@@ -477,7 +477,7 @@ class Http {
             Http.ContentType.MP4,
             Http.ContentType.OGG,
             Http.ContentType.OPUS,
-            Http.ContentType.WAV,
+            Http.ContentType.WAV
         ];
         if (binTypes.indexOf(contentType) >= 0) {
             return true;
