@@ -40,6 +40,7 @@ const _attrib2Semantic = {
 class ShaderUtils {
     /**
      * Creates a new shader.
+     *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - Object for passing optional arguments.
      * @param {string} options.name - A name of the shader.

@@ -1,5 +1,5 @@
 import {
-    DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
+    DEVICETYPE_WEBGPU
 } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 
