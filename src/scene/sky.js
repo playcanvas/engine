@@ -1,8 +1,3 @@
-import { Mat3 } from '../core/math/mat3.js';
-import { Mat4 } from '../core/math/mat4.js';
-import { Vec3 } from '../core/math/vec3.js';
-import { Quat } from '../core/math/quat.js';
-
 import { CULLFACE_FRONT } from '../platform/graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
@@ -17,9 +12,6 @@ import { getProgramLibrary } from './shader-lib/get-program-library.js';
 /** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./scene.js').Scene} Scene */
 
-/** @type {Mat4} */
-let _mat4;
-
 /**
  * A visual representation of the sky.
  *
@@ -32,9 +24,6 @@ class Sky {
      * @type {MeshInstance}
      */
     meshInstance;
-
-    /** @type {Mat3} */
-    _rotationMat3;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -75,17 +64,6 @@ class Sky {
         } else {
             material.setParameter('texture_envAtlas', texture);
             material.setParameter('mipLevel', scene._skyboxMip);
-        }
-
-        if (!scene.skyboxRotation.equals(Quat.IDENTITY)) {
-            _mat4 = _mat4 || new Mat4();
-            this._rotationMat3 = this._rotationMat3 || new Mat3();
-
-            _mat4.setTRS(Vec3.ZERO, scene._skyboxRotation, Vec3.ONE);
-            _mat4.invertTo3x3(this._rotationMat3);
-            material.setParameter('cubeMapRotationMatrix', this._rotationMat3.data);
-        } else {
-            material.setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
         }
 
         material.cull = CULLFACE_FRONT;

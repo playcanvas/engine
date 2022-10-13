@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { Quat } from '../../core/math/quat.js';
 import { math } from '../../core/math/math.js';
 
 import { _matTex2D, standard } from '../../scene/shader-lib/programs/standard.js';
@@ -802,10 +801,6 @@ class StandardMaterial extends Material {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
             } else if (scene.skybox) {
                 this._setParameter('texture_cubeMap', scene.skybox);
-            }
-
-            if (!scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
-                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
             }
         }
 

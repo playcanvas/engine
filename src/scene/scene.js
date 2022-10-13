@@ -5,6 +5,8 @@ import { Color } from '../core/math/color.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Quat } from '../core/math/quat.js';
 import { math } from '../core/math/math.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
@@ -223,8 +225,8 @@ class Scene extends EventHandler {
         this._skyboxMip = 0;
 
         this._skyboxRotation = new Quat();
-        this._skyboxRotationMat3 = null;
-        this._skyboxRotationMat4 = null;
+        this._skyboxRotationMat3 = new Mat3();
+        this._skyboxRotationMat4 = new Mat4();
 
         // ambient light lightmapping properties
         this._ambientBakeNumSamples = 1;
@@ -616,6 +618,12 @@ class Scene extends EventHandler {
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
+            if (value.equals(Quat.IDENTITY)) {
+                this._skyboxRotationMat3.setIdentity();
+            } else {
+                this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
+                this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+            }
             this._resetSky();
         }
     }
