@@ -1,4 +1,5 @@
 import { AnimTargetValue } from './anim-target-value.js';
+import { AnimBlend } from './anim-blend.js';
 
 /** @typedef {import('../binder/anim-binder.js').AnimBinder} AnimBinder */
 /** @typedef {import('./anim-clip.js').AnimClip} AnimClip */
@@ -29,93 +30,6 @@ class AnimEvaluator {
      */
     get clips() {
         return this._clips;
-    }
-
-    static _dot(a, b) {
-        const len  = a.length;
-        let result = 0;
-        for (let i = 0; i < len; ++i) {
-            result += a[i] * b[i];
-        }
-        return result;
-    }
-
-    static _normalize(a) {
-        let l = AnimEvaluator._dot(a, a);
-        if (l > 0) {
-            l = 1.0 / Math.sqrt(l);
-            const len = a.length;
-            for (let i = 0; i < len; ++i) {
-                a[i] *= l;
-            }
-        }
-    }
-
-    static _set(a, b, type) {
-        const len  = a.length;
-
-        if (type === 'quaternion') {
-            let l = AnimEvaluator._dot(b, b);
-            if (l > 0) {
-                l = 1.0 / Math.sqrt(l);
-            }
-            for (let i = 0; i < len; ++i) {
-                a[i] = b[i] * l;
-            }
-        } else {
-            for (let i = 0; i < len; ++i) {
-                a[i] = b[i];
-            }
-        }
-    }
-
-    static _blendVec(a, b, t, additive) {
-        const it = additive ? 1.0 : 1.0 - t;
-        const len = a.length;
-        for (let i = 0; i < len; ++i) {
-            a[i] = a[i] * it + b[i] * t;
-        }
-    }
-
-    static _blendQuat(a, b, t, additive) {
-        const len = a.length;
-        const it = additive ? 1.0 : 1.0 - t;
-
-        // negate b if a and b don't lie in the same winding (due to
-        // double cover). if we don't do this then often rotations from
-        // one orientation to another go the long way around.
-        if (AnimEvaluator._dot(a, b) < 0) {
-            t = -t;
-        }
-
-        for (let i = 0; i < len; ++i) {
-            a[i] = a[i] * it + b[i] * t;
-        }
-
-        if (!additive) {
-            AnimEvaluator._normalize(a);
-        }
-    }
-
-    static _blend(a, b, t, type, additive) {
-        if (type === 'quaternion') {
-            AnimEvaluator._blendQuat(a, b, t, additive);
-        } else {
-            AnimEvaluator._blendVec(a, b, t, additive);
-        }
-    }
-
-    static _stableSort(a, lessFunc) {
-        const len = a.length;
-        for (let i = 0; i < len - 1; ++i) {
-            for (let j = i + 1; j < len; ++j) {
-                if (lessFunc(a[j], a[i])) {
-                    const tmp = a[i];
-                    a[i] = a[j];
-                    a[j] = tmp;
-                }
-            }
-        }
     }
 
     /**
@@ -280,7 +194,7 @@ class AnimEvaluator {
         const order = clips.map(function (c, i) {
             return i;
         });
-        AnimEvaluator._stableSort(order, function (a, b) {
+        AnimBlend._stableSort(order, function (a, b) {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 
@@ -306,7 +220,7 @@ class AnimEvaluator {
                     output = outputs[j];
                     value = output.value;
 
-                    AnimEvaluator._set(value, input, output.target.type);
+                    AnimBlend._set(value, input, output.target.type);
 
                     output.blendCounter++;
                 }
@@ -317,9 +231,9 @@ class AnimEvaluator {
                     value = output.value;
 
                     if (output.blendCounter === 0) {
-                        AnimEvaluator._set(value, input, output.target.type);
+                        AnimBlend._set(value, input, output.target.type);
                     } else {
-                        AnimEvaluator._blend(value, input, blendWeight, output.target.type);
+                        AnimBlend._blend(value, input, blendWeight, output.target.type);
                     }
 
                     output.blendCounter++;
