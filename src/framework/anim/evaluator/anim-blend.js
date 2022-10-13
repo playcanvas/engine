@@ -1,5 +1,5 @@
 class AnimBlend {
-    static _dot(a, b) {
+    static dot(a, b) {
         const len  = a.length;
         let result = 0;
         for (let i = 0; i < len; ++i) {
@@ -8,8 +8,8 @@ class AnimBlend {
         return result;
     }
 
-    static _normalize(a) {
-        let l = AnimBlend._dot(a, a);
+    static normalize(a) {
+        let l = AnimBlend.dot(a, a);
         if (l > 0) {
             l = 1.0 / Math.sqrt(l);
             const len = a.length;
@@ -19,11 +19,11 @@ class AnimBlend {
         }
     }
 
-    static _set(a, b, type) {
+    static set(a, b, type) {
         const len  = a.length;
 
         if (type === 'quaternion') {
-            let l = AnimBlend._dot(b, b);
+            let l = AnimBlend.dot(b, b);
             if (l > 0) {
                 l = 1.0 / Math.sqrt(l);
             }
@@ -37,7 +37,7 @@ class AnimBlend {
         }
     }
 
-    static _blendVec(a, b, t, additive) {
+    static blendVec(a, b, t, additive) {
         const it = additive ? 1.0 : 1.0 - t;
         const len = a.length;
         for (let i = 0; i < len; ++i) {
@@ -45,14 +45,14 @@ class AnimBlend {
         }
     }
 
-    static _blendQuat(a, b, t, additive) {
+    static blendQuat(a, b, t, additive) {
         const len = a.length;
         const it = additive ? 1.0 : 1.0 - t;
 
         // negate b if a and b don't lie in the same winding (due to
         // double cover). if we don't do this then often rotations from
         // one orientation to another go the long way around.
-        if (AnimBlend._dot(a, b) < 0) {
+        if (AnimBlend.dot(a, b) < 0) {
             t = -t;
         }
 
@@ -61,19 +61,19 @@ class AnimBlend {
         }
 
         if (!additive) {
-            AnimBlend._normalize(a);
+            AnimBlend.normalize(a);
         }
     }
 
-    static _blend(a, b, t, type, additive) {
+    static blend(a, b, t, type, additive) {
         if (type === 'quaternion') {
-            AnimBlend._blendQuat(a, b, t, additive);
+            AnimBlend.blendQuat(a, b, t, additive);
         } else {
-            AnimBlend._blendVec(a, b, t, additive);
+            AnimBlend.blendVec(a, b, t, additive);
         }
     }
 
-    static _stableSort(a, lessFunc) {
+    static stableSort(a, lessFunc) {
         const len = a.length;
         for (let i = 0; i < len - 1; ++i) {
             for (let j = i + 1; j < len; ++j) {

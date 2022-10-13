@@ -194,7 +194,7 @@ class AnimEvaluator {
         const order = clips.map(function (c, i) {
             return i;
         });
-        AnimBlend._stableSort(order, function (a, b) {
+        AnimBlend.stableSort(order, function (a, b) {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 
@@ -220,7 +220,7 @@ class AnimEvaluator {
                     output = outputs[j];
                     value = output.value;
 
-                    AnimBlend._set(value, input, output.target.type);
+                    AnimBlend.set(value, input, output.target.type);
 
                     output.blendCounter++;
                 }
@@ -231,9 +231,9 @@ class AnimEvaluator {
                     value = output.value;
 
                     if (output.blendCounter === 0) {
-                        AnimBlend._set(value, input, output.target.type);
+                        AnimBlend.set(value, input, output.target.type);
                     } else {
-                        AnimBlend._blend(value, input, blendWeight, output.target.type);
+                        AnimBlend.blend(value, input, blendWeight, output.target.type);
                     }
 
                     output.blendCounter++;
