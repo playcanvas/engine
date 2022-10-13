@@ -176,6 +176,7 @@ class ForwardRenderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.exposureId = scope.resolve('exposure');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
+        this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -577,9 +578,8 @@ class ForwardRenderer {
         }
         this.ambientId.setValue(this.ambientColor);
 
-        if (scene.sky) {
-            this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
-        }
+        this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
+        this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
     }
 
     _resolveLight(scope, i) {

@@ -77,17 +77,6 @@ class Sky {
             material.setParameter('mipLevel', scene._skyboxMip);
         }
 
-        if (!scene.skyboxRotation.equals(Quat.IDENTITY)) {
-            _mat4 = _mat4 || new Mat4();
-            this._rotationMat3 = this._rotationMat3 || new Mat3();
-
-            _mat4.setTRS(Vec3.ZERO, scene._skyboxRotation, Vec3.ONE);
-            _mat4.invertTo3x3(this._rotationMat3);
-            material.setParameter('cubeMapRotationMatrix', this._rotationMat3.data);
-        } else {
-            material.setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
-        }
-
         material.cull = CULLFACE_FRONT;
         material.depthWrite = false;
 

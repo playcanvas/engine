@@ -803,10 +803,6 @@ class StandardMaterial extends Material {
             } else if (scene.skybox) {
                 this._setParameter('texture_cubeMap', scene.skybox);
             }
-
-            if (!scene.skyboxRotation.equals(Quat.IDENTITY) && scene._skyboxRotationMat3) {
-                this._setParameter('cubeMapRotationMatrix', scene._skyboxRotationMat3.data);
-            }
         }
 
         this._processParameters('_activeLightingParams');
