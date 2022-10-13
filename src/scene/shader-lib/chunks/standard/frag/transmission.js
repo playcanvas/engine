@@ -12,7 +12,7 @@ void getRefraction() {
     #endif
 
     #ifdef MAPTEXTURE
-    refraction *= gammaCorrectInput(texture2DBias($SAMPLER, $UV, textureBias)).$CH;
+    refraction *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
     #endif
 
     #ifdef MAPVERTEX
