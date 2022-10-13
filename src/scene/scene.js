@@ -676,6 +676,21 @@ class Scene extends EventHandler {
         batch.addLinesArrays(positions, colors);
     }
 
+    drawLineWithMaterial(material, start, end, color = Color.WHITE, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatchByMaterial(material, layer);
+        batch.addLines([start, end], [color, color]);
+    }
+
+    drawLinesWithMaterial(material, positions, colors, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatchByMaterial(material, layer);
+        batch.addLines(positions, colors);
+    }
+
+    drawLineArraysWithMaterial(material, positions, colors, layer = this.defaultDrawLayer) {
+        const batch = this.immediate.getBatchByMaterial(material, layer);
+        batch.addLinesArrays(positions, colors);
+    }
+
     applySettings(settings) {
         const physics = settings.physics;
         const render = settings.render;

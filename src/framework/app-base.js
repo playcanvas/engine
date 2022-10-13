@@ -1729,8 +1729,59 @@ class AppBase extends EventHandler {
      * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    drawLine(start, end, color, depthTest, layer) {
+    drawLine(start, end, color, depthTest, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLine(start, end, color, depthTest, layer);
+    }
+
+    /**
+     * Draws a single line using the given material. Line start and end coordinates are specified in world-space.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the line.
+     * @param {Vec3} start - The start world-space coordinate of the line.
+     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a 1-unit long white line
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = true;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLineWithMaterial(material, start, end);
+     * @example
+     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLineWithMaterial(material, start, end, pc.Color.RED);
+     * @example
+     * // Render a 1-unit long white line into the world layer
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = true;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * app.drawLineWithMaterial(material, start, end, pc.Color.WHITE, worldLayer);
+     */
+    drawLineWithMaterial(material, start, end, color, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineWithMaterial(material, start, end, color, layer);
     }
 
     /**
@@ -1777,6 +1828,64 @@ class AppBase extends EventHandler {
     }
 
     /**
+     * Renders an arbitrary number of discrete line segments with a given material.
+     * The lines are not connected by each subsequent point in the array. Instead, they are individual segments
+     * specified by two points. Therefore, the lengths of the supplied position and color arrays must be the same
+     * and also must be a multiple of 2. The colors of the ends of each line segment will be interpolated along
+     * the length of each line.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the lines.
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
+     * array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a single line, with unique colors for each point
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLinesWithMaterial(material, [start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * @example
+     * // Render 2 discrete line segments
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const points = [
+     *     // Line 1
+     *     new pc.Vec3(0, 0, 0),
+     *     new pc.Vec3(1, 0, 0),
+     *     // Line 2
+     *     new pc.Vec3(1, 1, 0),
+     *     new pc.Vec3(1, 1, 1)
+     * ];
+     * const colors = [
+     *     // Line 1
+     *     pc.Color.RED,
+     *     pc.Color.YELLOW,
+     *     // Line 2
+     *     pc.Color.CYAN,
+     *     pc.Color.BLUE
+     * ];
+     * app.drawLinesWithMaterial(material, points, colors);
+     */
+    drawLinesWithMaterial(material, positions, colors, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLinesWithMaterial(material, positions, colors, layer);
+    }
+
+    /**
      * Renders an arbitrary number of discrete line segments. The lines are not connected by each
      * subsequent point in the array. Instead, they are individual segments specified by two
      * points.
@@ -1810,6 +1919,51 @@ class AppBase extends EventHandler {
      */
     drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLineArrays(positions, colors, depthTest, layer);
+    }
+
+    /**
+     * Renders an arbitrary number of discrete line segments with a given material.
+     * The lines are not connected by each subsequent point in the array. Instead, they are
+     * individual segments specified by two points.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the lines.
+     * @param {number[]} positions - An array of points to draw lines between. Each point is
+     * represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const points = [
+     *     // Line 1
+     *     0, 0, 0,
+     *     1, 0, 0,
+     *     // Line 2
+     *     1, 1, 0,
+     *     1, 1, 1
+     * ];
+     * const colors = [
+     *     // Line 1
+     *     1, 0, 0, 1,  // red
+     *     0, 1, 0, 1,  // green
+     *     // Line 2
+     *     0, 0, 1, 1,  // blue
+     *     1, 1, 1, 1   // white
+     * ];
+     * app.drawLineArraysWithMaterial(material, points, colors);
+     */
+    drawLineArraysWithMaterial(material, positions, colors, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineArraysWithMaterial(material, positions, colors, layer);
     }
 
     /**
