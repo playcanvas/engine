@@ -207,9 +207,9 @@ let _params = new Set();
  * @property {string} iridescenceThicknessMapChannel Color channels of the iridescence thickness
  * map to use. Can be "r", "g", "b" or "a".
  * @property {number} iridescenceThicknessMin The minimum thickness for the iridescence layer.
- * Only used when an iridescence thickness map is used.
+ * Only used when an iridescence thickness map is used. The unit is in nm.
  * @property {number} iridescenceThicknessMax The maximum thickness for the iridescence layer.
- * Used as the 'base' thickness when no iridescence thickness map is defined.
+ * Used as the 'base' thickness when no iridescence thickness map is defined. The unit is in nm.
  * @property {number} iridescenceRefractionIndex The index of refraction of the iridescent
  * thin-film.
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
@@ -218,7 +218,7 @@ let _params = new Set();
  * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
- * specular map to apply color tint to specular reflections
+ * specular map to apply color tint to specular reflections.
  * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
@@ -275,9 +275,9 @@ let _params = new Set();
  * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
- * is enabled.
- * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when useDynamicRefraction
- * is enabled.
+ * is enabled. The unit is in base units, and scales with the size of the object.
+ * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when
+ * useDynamicRefraction is enabled.
  * @property {number} thicknessMapUv Thickness map UV channel.
  * @property {Vec2} thicknessMapTiling Controls the 2D tiling of the thickness map.
  * @property {Vec2} thicknessMapOffset Controls the 2D offset of the thickness map. Each component is
@@ -291,7 +291,7 @@ let _params = new Set();
  * @property {Color} attenuation The attenuation color for refractive materials, only used when
  * useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
- * within the medium, only used when useDynamicRefraction is enabled.
+ * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
