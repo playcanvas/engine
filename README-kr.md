@@ -39,6 +39,7 @@ PlayCanvas 엔진을 사용하여 [많은 게임과 앱](https://github.com/play
 ## Users
 
 PlayCanvas는 비디오 게임, 광고, 시각화 분야에서 대기업에 채용되고 있습니다.
+
 **Animech, Arm, BMW, Disney, Facebook, Famobi, Funday Factory, IGT, King, Miniclip, Leapfrog, Mojiworks, Mozilla, Nickelodeon, Nordeus, NOWWA, PikPok, PlaySide Studios, Polaris, Product Madness, Samsung, Snap, Spry Fox, Zeptolab, Zynga**
 
 ## 특징
@@ -47,7 +48,7 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 
 * 🧊 **그래픽** - WebGL 1.0&2.0으로 구축된 고도의 2D+3D 그래픽 엔진.
 * 🏃 **애니메이션** - 캐릭터나 장면에 대한 강력한 스테이트 기반 애니메이션
-* ⚛️ **물리** - 3D 리지드 바디 물리 엔진 [ammo.js] (https://github.com/kripken/ammo.js)
+* ⚛️ **물리** - 3D 리지드 바디 물리 엔진 [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **입력** - 마우스, 키보드, 터치, 게임패드, VR 컨트롤러의 API
 * 🔊 **사운드 ** - Web Audio API를 이용한 3D 위치정보 사운드
 * 📦 **에셋** - [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/), [Basis](https://github.com/BinomialLLC/basis_universal) 압축 기술을 이용한 비동기형 스트리밍 시스템
@@ -116,11 +117,11 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 </html>
 ```
 
-이 코드를 직접 시도하려면 [CodePen] (https://codepen.io/playcanvas/pen/NPbxMj)를 클릭하세요.
+이 코드를 직접 시도하려면 [CodePen](https://codepen.io/playcanvas/pen/NPbxMj)를 클릭하세요.
 
 ## 빌드 순서
 
-Node.js가 설치 되어 있는지 확인합니다. 그 다음 필요한 Node.js 종속성을 모두 설치합니다.
+[Node.js](https://nodejs.org)가 설치 되어 있는지 확인합니다. 그 다음 필요한 Node.js 종속성을 모두 설치합니다.
 
     npm install
 
@@ -154,19 +155,9 @@ Node.js가 설치 되어 있는지 확인합니다. 그 다음 필요한 Node.js
 
 엔진의 디버깅이 쉽도록 소스 맵을 구축하려면 임의의 엔진 구축 명령에 `---m`을 추가합니다. 예시는 다음과 같습니다.
 
-
     npm run build -- -m
 
 그러면  `build/playcanvas.js.map` 이 출력이 됩니다.
-
-## 테스트
-
-PlayCanvas에서는 유닛 테스트에 Karma를 사용하고 있습니다. 테스트를 실행하는 방법은 두 가지가 있습니다.
-
-| Command                | Description                                                                           |
-|------------------------|---------------------------------------------------------------------------------------|
-| `npm run test`         | 빌드된 'play canvas.js'에 대해 유닛 테스트를 실행합니다.                                        |
-| `npm run test:watch`   | 변경이 검출되었을 때 유닛 테스트 재실행하기 - open http://localhost:9876/debug.html  |
 
 ## PlayCanvas 에디터
 
