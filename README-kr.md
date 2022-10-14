@@ -50,9 +50,9 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 * 🏃 **애니메이션** - 캐릭터나 장면에 대한 강력한 스테이트 기반 애니메이션
 * ⚛️ **물리** - 3D 리지드 바디 물리 엔진 [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **입력** - 마우스, 키보드, 터치, 게임패드, VR 컨트롤러의 API
-* 🔊 **사운드 ** - Web Audio API를 이용한 3D 위치정보 사운드
+* 🔊 **사운드** - Web Audio API를 이용한 3D 위치정보 사운드
 * 📦 **에셋** - [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/), [Basis](https://github.com/BinomialLLC/basis_universal) 압축 기술을 이용한 비동기형 스트리밍 시스템
-* 📜 **스크립트 ** - TypeScript와 자바스크립트 지원
+* 📜 **스크립트** - TypeScript와 자바스크립트 지원
 
 ## 사용방법
 
@@ -161,7 +161,7 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 
 ## PlayCanvas 에디터
 
-PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔진입니다.엔진 외에 [Play Canvas 에디터](https://playcanvas.com/)가 있습니다.
+PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔진입니다.엔진 외에 [PlayCanvas 에디터](https://playcanvas.com/)가 있습니다.
 
 [![Editor](https://github.com/playcanvas/editor/blob/main/images/editor.png?raw=true)](https://github.com/playcanvas/editor)
 
