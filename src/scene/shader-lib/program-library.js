@@ -22,9 +22,15 @@ class ProgramLibrary {
      */
     processedCache = new Map();
 
+    /**
+     * A cache of shader definitions before processing.
+     *
+     * @type {Map<string, object>}
+     */
+    definitionsCache = new Map();
+
     constructor(device, standardMaterial) {
         this._device = device;
-        this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
         this._precached = false;
@@ -65,9 +71,9 @@ class ProgramLibrary {
         return (generator !== undefined);
     }
 
-    generateShader(generator, name, key, options) {
-        let shader = this._cache[key];
-        if (!shader) {
+    generateShaderDefinition(generator, name, key, options) {
+        let def = this.definitionsCache.get(key);
+        if (!def) {
             let lights;
             if (options.lights) {
                 lights = options.lights;
@@ -88,11 +94,19 @@ class ProgramLibrary {
                 Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
             const device = this._device;
-            const shaderDefinition = generator.createShaderDefinition(device, options);
-            shaderDefinition.name = `${name}-pass:${options.pass}`;
-            shader = this._cache[key] = new Shader(device, shaderDefinition);
+            def = generator.createShaderDefinition(device, options);
+            def.name = `${name}-pass:${options.pass}`;
+            this.definitionsCache.set(key, def);
         }
-        return shader;
+        return def;
+    }
+
+    getCachedShader(key) {
+        return this.processedCache.get(key);
+    }
+
+    setCachedShader(key, shader) {
+        this.processedCache.set(key, shader);
     }
 
     getProgram(name, options, processingOptions) {
@@ -109,16 +123,16 @@ class ProgramLibrary {
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
-        let processedShader = this.processedCache.get(totalKey);
+        let processedShader = this.getCachedShader(totalKey);
         if (!processedShader) {
 
             // get generated shader
-            const generatedShader = this.generateShader(generator, name, generationKey, options);
-            Debug.assert(generatedShader);
+            const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
+            Debug.assert(generatedShaderDef);
 
             // create a shader definition for the shader that will include the processingOptions
-            const generatedShaderDef = generatedShader.definition;
             const shaderDefinition = {
+                name: name,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -127,7 +141,7 @@ class ProgramLibrary {
 
             // add new shader to the processed cache
             processedShader = new Shader(this._device, shaderDefinition);
-            this.processedCache.set(totalKey, processedShader);
+            this.setCachedShader(totalKey, processedShader);
         }
 
         return processedShader;
@@ -175,28 +189,32 @@ class ProgramLibrary {
     }
 
     clearCache() {
-        const cache = this._cache;
         this._isClearingCache = true;
-        for (const key in cache) {
-            if (cache.hasOwnProperty(key)) {
-                cache[key].destroy();
-            }
-        }
-        this._cache = {};
+
+        this.processedCache.forEach((shader) => {
+            shader.destroy();
+        });
+        this.processedCache.clear();
+
         this._isClearingCache = false;
     }
 
+    /**
+     * Remove shader from the cache. This function does not destroy it, that is the responsibility
+     * of the caller.
+     *
+     * @param {Shader} shader - The shader to be removed.
+     */
     removeFromCache(shader) {
-        if (this._isClearingCache) return; // don't delete by one when clearing whole cache
-        const cache = this._cache;
-        for (const key in cache) {
-            if (cache.hasOwnProperty(key)) {
-                if (cache[key] === shader) {
-                    delete cache[key];
-                    break;
-                }
+        // don't delete by one when clearing whole cache
+        if (this._isClearingCache)
+            return;
+
+        this.processedCache.forEach((cachedShader, key) => {
+            if (shader === cachedShader) {
+                this.processedCache.delete(key);
             }
-        }
+        });
     }
 
     _getDefaultStdMatOptions(pass) {

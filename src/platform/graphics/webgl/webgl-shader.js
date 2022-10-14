@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { TRACEID_SHADER_COMPILE } from '../../../core/constants.js';
 import { now } from '../../../core/time.js';
 
 import { ShaderInput } from '../shader-input.js';
@@ -6,6 +7,8 @@ import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
 /** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
 /** @typedef {import('../shader.js').Shader} Shader */
+
+let _totalCompileTime = 0;
 
 const _vertexShaderBuiltins = [
     'gl_VertexID',
@@ -21,6 +24,8 @@ const _vertexShaderBuiltins = [
  * @ignore
  */
 class WebglShader {
+    compileDuration = 0;
+
     constructor(shader) {
         this.init();
         this.compileAndLink(shader.device, shader);
@@ -73,6 +78,13 @@ class WebglShader {
      * @param {Shader} shader - The shader to compile.
      */
     compileAndLink(device, shader) {
+
+        let startTime = 0;
+        Debug.call(() => {
+            this.compileDuration = 0;
+            startTime = now();
+        });
+
         const definition = shader.definition;
         const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
         const glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
@@ -114,6 +126,10 @@ class WebglShader {
         this.glVertexShader = glVertexShader;
         this.glFragmentShader = glFragmentShader;
         this.glProgram = glProgram;
+
+        Debug.call(() => {
+            this.compileDuration = now() - startTime;
+        });
 
         // #if _PROFILER
         device._shaderStats.linked++;
@@ -194,6 +210,11 @@ class WebglShader {
         });
         // #endif
 
+        let linkStartTime = 0;
+        Debug.call(() => {
+            linkStartTime = now();
+        });
+
         // Check for compilation errors
         if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
             return false;
@@ -263,6 +284,13 @@ class WebglShader {
         });
         device._shaderStats.compileTime += endTime - startTime;
         // #endif
+
+        Debug.call(() => {
+            const duration = now() - linkStartTime;
+            this.compileDuration += duration;
+            _totalCompileTime += this.compileDuration;
+            Debug.trace(TRACEID_SHADER_COMPILE, `[id: ${shader.id}] ${shader.name}: ${this.compileDuration.toFixed(1)}ms, TOTAL: ${_totalCompileTime.toFixed(1)}ms`);
+        });
 
         return true;
     }
