@@ -291,7 +291,7 @@ let _params = new Set();
  * @property {Color} attenuation The attenuation color for refractive materials, only used when
  * useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
- * within the medium, only used when useDynamicRefraction is enabled.
+ * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
