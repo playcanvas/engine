@@ -49,6 +49,13 @@ export const TRACEID_TEXTURE_ALLOC = 'TextureAlloc';
 export const TRACEID_SHADER_ALLOC = 'ShaderAlloc';
 
 /**
+ * Logs the compilation time of shaders.
+ *
+ * @type {string}
+ */
+export const TRACEID_SHADER_COMPILE = 'ShaderCompile';
+
+/**
  * Logs the vram use by the textures.
  *
  * @type {string}

@@ -36,8 +36,8 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * @returns {Shader} The newly created shader.
  */
 function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFeedback = false, fragmentPreamble = '') {
-    const shaderCache = getProgramLibrary(device)._cache;
-    let shader = shaderCache[uniqueName];
+    const programLibrary = getProgramLibrary(device);
+    let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
         shader = ShaderUtils.createShader(device, {
             name: uniqueName,
@@ -46,7 +46,7 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFe
             fragmentPreamble: fragmentPreamble,
             useTransformFeedback: useTransformFeedback
         });
-        shaderCache[uniqueName] = shader;
+        programLibrary.setCachedShader(uniqueName, shader);
     }
     return shader;
 }

@@ -438,7 +438,7 @@ function reprojectTexture(source, target, options = {}) {
 
     const device = source.device;
 
-    let shader = getProgramLibrary(device)._cache[shaderKey];
+    let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
         const defines =
             `#define PROCESS_FUNC ${processFunc}\n` +
