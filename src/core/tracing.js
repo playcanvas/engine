@@ -45,7 +45,7 @@ class Tracing {
     /**
      * Test if the trace channel is enabled.
      *
-     * @param {string} channel - Name of the trace channnel.
+     * @param {string} channel - Name of the trace channel.
      * @returns {boolean} - True if the trace channel is enabled.
      */
     static get(channel) {

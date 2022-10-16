@@ -471,7 +471,7 @@ class ForwardRenderer {
     /**
      * Set up the viewport and the scissor for camera rendering.
      *
-     * @param {Camera} camera - The camera containing the viewport infomation.
+     * @param {Camera} camera - The camera containing the viewport information.
      * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {

@@ -218,7 +218,7 @@ class ShaderProcessor {
         // add textures uniforms
         const textureFormats = [];
         uniformLinesSamplers.forEach((uniform) => {
-            // unmached texture uniforms go to mesh block
+            // unmatched texture uniforms go to mesh block
             if (!processingOptions.hasTexture(uniform.name)) {
 
                 // TODO: we could optimize visibility to only stages that use any of the data
@@ -302,7 +302,7 @@ class ShaderProcessor {
                 const location = semanticToLocation[semantic];
 
                 Debug.assert(!usedLocations.hasOwnProperty(location),
-                             `WARNING: Two vertex attribues are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                             `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
                 // generates: 'layout(location = 0) in vec4 position;'

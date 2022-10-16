@@ -150,7 +150,7 @@ class WebgpuTexture {
 
             } else {
 
-                Debug.error('Unsuported texture soruce data', mipObject);
+                Debug.error('Unsupported texture source data', mipObject);
             }
         }
     }
