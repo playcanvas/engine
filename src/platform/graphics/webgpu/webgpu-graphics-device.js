@@ -22,7 +22,7 @@ import { WebgpuRenderState } from './webgpu-render-state.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
-     * The render target represenging the main framebuffer.
+     * The render target representing the main framebuffer.
      *
      * @type {RenderTarget}
      */

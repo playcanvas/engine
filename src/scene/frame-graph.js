@@ -82,7 +82,7 @@ class FrameGraph {
 
             if (thisTexture?.cubemap) {
 
-                // if previous pass used the same cubemap texture, it does not need mimaps generated
+                // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
                     lastCubeRenderPass.colorOps.mipmaps = false;
                 }
