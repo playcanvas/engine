@@ -25,6 +25,21 @@ jobs:
     - name: Build PlayCanvas
       run: npm run build
 
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Setup Node.js 16.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Build API reference manual
+      run: npm run docs
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

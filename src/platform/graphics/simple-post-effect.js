@@ -4,7 +4,7 @@ import { VertexFormat } from './vertex-format.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { DeviceCache } from './device-cache.js';
 
-/** @typedef {import('../../core/math/vec4.js').Vec4} Vec4 */
+/** @typedef {import('../core/math/vec4.js').Vec4} Vec4 */
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('./shader.js').Shader} Shader */
