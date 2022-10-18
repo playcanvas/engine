@@ -211,7 +211,8 @@ let _params = new Set();
  * @property {number} iridescenceThicknessMax The maximum thickness for the iridescence layer.
  * Used as the 'base' thickness when no iridescence thickness map is defined. The unit is in nm.
  * @property {number} iridescenceRefractionIndex The index of refraction of the iridescent
- * thin-film.
+ * thin-film. Affects the color phase shift as described here: 
+ * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
  * diffuse colors also affect specular instead of the dedicated specular map. This can be used as
  * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
