@@ -1,5 +1,4 @@
 import { Debug } from "../../core/debug.js";
-import { Shader } from "./shader.js";
 import {
     DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
@@ -39,61 +38,85 @@ const _attrib2Semantic = {
  */
 class ShaderUtils {
     /**
-     * Creates a new shader.
+     * Creates a shader definition.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - Object for passing optional arguments.
-     * @param {string} options.name - A name of the shader.
+     * @param {string} [options.name] - A name of the shader.
+     * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if
+     * not provided.
      * @param {string} options.vertexCode - The vertex shader code.
      * @param {string} [options.vertexDefines] - The vertex shader defines.
-     * @param {string} options.fragmentCode - The fragment shader code.
+     * @param {string} [options.vertexExtensions] - The vertex shader extensions code.
+     * @param {string} [options.fragmentCode] - The fragment shader code.
      * @param {string} [options.fragmentDefines] - The fragment shader defines.
+     * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
-     * @returns {Shader} Returns the created shader.
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
+     * to false.
+     * @returns {object} Returns the created shader definition.
      */
-    static createShader(device, options) {
+    static createDefinition(device, options) {
         Debug.assert(options);
 
-        const getDefines = (gpu, gl2, gl1) => {
+        const getDefines = (gpu, gl2, gl1, isVertex) => {
             return device.deviceType === DEVICETYPE_WEBGPU ? gpu :
-                (device.webgl2 ? gl2 : gl1);
+                (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
         };
 
         const name = options.name ?? 'Untitled';
 
         // vertex code
-        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '');
+        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 
         // fragment code
-        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS);
+        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
         ShaderUtils.versionCode(device) +
             ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
             ShaderUtils.getShaderNameCode(name) +
-            (options.fragmentCode || ShaderUtils.dummyFragmentCode);
+            (options.fragmentCode || ShaderUtils.dummyFragmentCode());
 
         // attributes
-        Debug.assert(options.vertexCode);
-        const attribs = ShaderUtils.collectAttributes(options.vertexCode);
+        const attribs = options.attributes ?? ShaderUtils.collectAttributes(options.vertexCode);
 
-        return new Shader(device, {
+        return {
             name: name,
             attributes: attribs,
             vshader: vertCode,
             fshader: fragCode,
             useTransformFeedback: options.useTransformFeedback
-        });
+        };
     }
 
     // SpectorJS integration
     static getShaderNameCode(name) {
         return `#define SHADER_NAME ${name}\n`;
+    }
+
+    static gl1Extensions(device, options, isVertex) {
+        let code;
+        if (isVertex) {
+            code = options.vertexExtensions ? `${options.vertexExtensions}\n` : '';
+        } else {
+            code = options.fragmentExtensions ? `${options.fragmentExtensions}\n` : '';
+
+            // extensions used by default
+            if (device.extStandardDerivatives) {
+                code += "#extension GL_OES_standard_derivatives : enable\n";
+            }
+            if (device.extTextureLod) {
+                code += "#extension GL_EXT_shader_texture_lod : enable\n";
+                code += "#define SUPPORTS_TEXLOD\n";
+            }
+        }
+
+        return code;
     }
 
     static dummyFragmentCode() {
@@ -107,7 +130,7 @@ class ShaderUtils {
         return device.webgl2 ? "#version 300 es\n" : "";
     }
 
-    static precisionCode(device, forcePrecision, shadowPrecision) {
+    static precisionCode(device, forcePrecision) {
 
         let code = '';
 
@@ -129,9 +152,7 @@ class ShaderUtils {
             const precision = forcePrecision ? forcePrecision : device.precision;
             code = `precision ${precision} float;\n`;
 
-            // TODO: this can be only set on shaders with version 300 or more, so make this optional as many
-            // internal shaders (particles..) are from webgl1 era and don't set any precision. Modified when upgraded.
-            if (shadowPrecision && device.webgl2) {
+            if (device.webgl2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
             }
         }

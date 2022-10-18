@@ -1,5 +1,4 @@
 export default /* glsl */`
-#define SHADER_NAME Dilate
 
 varying vec2 vUv0;
 

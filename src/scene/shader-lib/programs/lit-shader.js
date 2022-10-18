@@ -23,8 +23,9 @@ import {
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 
-import { vertexIntro, fragmentIntro, begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.js';
+import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -417,17 +418,13 @@ class LitShader {
             }
         });
 
-        const startCode = vertexIntro(device, 'LitShader', this.options.pass, chunks.extensionVS);
-        this.vshader = startCode + this.varyings + code;
+        const shaderPassDefine = ShaderPass.getPassShaderDefine(this.options.pass);
+        this.vshader = shaderPassDefine + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        const device = this.device;
-        const chunks = this.chunks;
-
-        const precision = this.options.forceFragmentPrecision;
-        let code = fragmentIntro(device, 'LitShader', this.options.pass, chunks.extensionPS, precision);
+        let code = ShaderPass.getPassShaderDefine(this.options.pass);
 
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
@@ -1408,17 +1405,19 @@ class LitShader {
     }
 
     getDefinition() {
-        const result = {
+
+        const definition = ShaderUtils.createDefinition(this.device, {
+            name: 'LitShader',
             attributes: this.attributes,
-            vshader: this.vshader,
-            fshader: this.fshader
-        };
+            vertexCode: this.vshader,
+            fragmentCode: this.fshader
+        });
 
         if (ShaderPass.isForward(this.options.pass)) {
-            result.tag = SHADERTAG_MATERIAL;
+            definition.tag = SHADERTAG_MATERIAL;
         }
 
-        return result;
+        return definition;
     }
 }
 

@@ -3,10 +3,10 @@ import { Debug } from '../../core/debug.js';
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { Shader } from './shader.js';
 import { ShaderUtils } from './shader-utils.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./shader.js').Shader} Shader */
 
 /**
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
@@ -114,11 +114,11 @@ class TransformFeedback {
      * @returns {Shader} A shader to use in the process() function.
      */
     static createShader(graphicsDevice, vertexCode, name) {
-        return ShaderUtils.createShader(graphicsDevice, {
+        return new Shader(graphicsDevice, ShaderUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
             useTransformFeedback: true
-        });
+        }));
     }
 
     /**

@@ -35,6 +35,7 @@ import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
+import { Shader } from '../shader.js';
 
 /** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
 /** @typedef {import('../shader.js').Shader} Shader */
@@ -148,17 +149,17 @@ function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
 
-    const shader1 = ShaderUtils.createShader(device, {
+    const shader1 = new Shader(device, ShaderUtils.createDefinition(device, {
         name: 'ptest1',
         vertexCode: _fullScreenQuadVS,
         fragmentCode: _precisionTest1PS
-    });
+    }));
 
-    const shader2 = ShaderUtils.createShader(device, {
+    const shader2 = new Shader(device, ShaderUtils.createDefinition(device, {
         name: 'ptest2',
         vertexCode: _fullScreenQuadVS,
         fragmentCode: _precisionTest2PS
-    });
+    }));
 
     const textureOptions = {
         format: PIXELFORMAT_RGBA32F,
@@ -1308,11 +1309,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     getCopyShader() {
         if (!this._copyShader) {
-            this._copyShader = ShaderUtils.createShader(this, {
+            this._copyShader = new Shader(this, ShaderUtils.createDefinition(this, {
                 name: 'outputTex2D',
                 vertexCode: _fullScreenQuadVS,
                 fragmentCode: _outputTexture2D
-            });
+            }));
         }
         return this._copyShader;
     }

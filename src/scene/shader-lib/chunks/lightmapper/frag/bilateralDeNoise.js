@@ -8,8 +8,6 @@ export default /* glsl */`
 // Euclidean distance of pixels, but also on the radiometric differences (e.g., range differences, such
 // as color intensity, depth distance, etc.). This preserves sharp edges.
 
-#define SHADER_NAME BilateralDeNoise
-
 float normpdf3(in vec3 v, in float sigma) {
     return 0.39894 * exp(-0.5 * dot(v, v) / (sigma * sigma)) / sigma;
 }
