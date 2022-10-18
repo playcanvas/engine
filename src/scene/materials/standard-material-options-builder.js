@@ -173,6 +173,7 @@ class StandardMaterialOptionsBuilder {
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
         options.refraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
+        options.refractionTint = (stdMat.refraction !== 1.0) ? 1 : 0;
         options.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
