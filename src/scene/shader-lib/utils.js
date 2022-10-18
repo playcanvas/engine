@@ -1,9 +1,9 @@
+import { Shader } from '../../platform/graphics/shader.js';
 import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 
 /** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../platform/graphics/shader.js').Shader} Shader */
 
 /**
  * Create a shader from named shader chunks.
@@ -15,12 +15,12 @@ import { getProgramLibrary } from './get-program-library.js';
  * @returns {Shader} The newly created shader.
  */
 function createShader(device, vsName, fsName, useTransformFeedback = false) {
-    return ShaderUtils.createShader(device, {
+    return new Shader(device, ShaderUtils.createDefinition(device, {
         name: `${vsName}_${fsName}`,
         vertexCode: shaderChunks[vsName],
         fragmentCode: shaderChunks[fsName],
         useTransformFeedback: useTransformFeedback
-    });
+    }));
 }
 
 /**
@@ -39,13 +39,13 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFe
     const programLibrary = getProgramLibrary(device);
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
-        shader = ShaderUtils.createShader(device, {
+        shader = new Shader(device, ShaderUtils.createDefinition(device, {
             name: uniqueName,
             vertexCode: vsCode,
             fragmentCode: fsCode,
             fragmentPreamble: fragmentPreamble,
             useTransformFeedback: useTransformFeedback
-        });
+        }));
         programLibrary.setCachedShader(uniqueName, shader);
     }
     return shader;

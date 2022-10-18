@@ -41,7 +41,8 @@ class Shader {
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
-     * @param {string} definition.fshader - Fragment shader source (GLSL code).
+     * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
+     * useTransformFeedback is specified.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @example

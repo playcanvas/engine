@@ -23,15 +23,9 @@ const particle = {
     },
 
     createShaderDefinition: function (device, options) {
-        let vshader = "";
-        let fshader = ShaderUtils.precisionCode(device) + "\n";
-        fshader += '#define PARTICLE\n';
+        let fshader = '#define PARTICLE\n';
+        let vshader = "#define VERTEXSHADER\n";
 
-        if (device.webgl2) {
-            vshader += "#define GL2\n";
-            fshader += "#define GL2\n";
-        }
-        vshader += "#define VERTEXSHADER\n";
         if (options.mesh) vshader += "#define USE_MESH\n";
         if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
         if (options.screenSpace) vshader += "#define SCREEN_SPACE\n";
@@ -118,13 +112,10 @@ const particle = {
         }
         fshader += shaderChunks.particle_endPS;
 
-        const attributes = ShaderUtils.collectAttributes(vshader);
-
-        return {
-            attributes: attributes,
-            vshader: vshader,
-            fshader: fshader
-        };
+        return ShaderUtils.createDefinition(device, {
+            vertexCode: vshader,
+            fragmentCode: fshader
+        });
     }
 };
 

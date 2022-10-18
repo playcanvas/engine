@@ -1,13 +1,15 @@
 import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0
 } from '../../../platform/graphics/constants.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
 import {
     SHADER_DEPTH, SHADER_PICK
 } from '../../constants.js';
+import { ShaderPass } from '../../shader-pass.js';
 
-import { vertexIntro, fragmentIntro, begin, end, fogCode, skinCode } from './common.js';
+import { begin, end, fogCode, skinCode } from './common.js';
 
 const basic = {
     generateKey: function (options) {
@@ -44,124 +46,123 @@ const basic = {
             attributes.vertex_texCoord0 = SEMANTIC_TEXCOORD0;
         }
 
+        const shaderPassDefine = ShaderPass.getPassShaderDefine(options.pass);
+
         // GENERATE VERTEX SHADER
-        let code = vertexIntro(device, 'BasicShader', options.pass);
+        let vshader = shaderPassDefine;
 
         // VERTEX SHADER DECLARATIONS
-        code += shaderChunks.transformDeclVS;
+        vshader += shaderChunks.transformDeclVS;
 
         if (options.skin) {
-            code += skinCode(device);
-            code += shaderChunks.transformSkinnedVS;
+            vshader += skinCode(device);
+            vshader += shaderChunks.transformSkinnedVS;
         } else {
-            code += shaderChunks.transformVS;
+            vshader += shaderChunks.transformVS;
         }
 
         if (options.vertexColors) {
-            code += 'attribute vec4 vertex_color;\n';
-            code += 'varying vec4 vColor;\n';
+            vshader += 'attribute vec4 vertex_color;\n';
+            vshader += 'varying vec4 vColor;\n';
         }
         if (options.diffuseMap) {
-            code += 'attribute vec2 vertex_texCoord0;\n';
-            code += 'varying vec2 vUv0;\n';
+            vshader += 'attribute vec2 vertex_texCoord0;\n';
+            vshader += 'varying vec2 vUv0;\n';
         }
 
         if (options.pass === SHADER_DEPTH) {
-            code += 'varying float vDepth;\n';
-            code += '#ifndef VIEWMATRIX\n';
-            code += '#define VIEWMATRIX\n';
-            code += 'uniform mat4 matrix_view;\n';
-            code += '#endif\n';
-            code += '#ifndef CAMERAPLANES\n';
-            code += '#define CAMERAPLANES\n';
-            code += 'uniform vec4 camera_params;\n\n';
-            code += '#endif\n';
+            vshader += 'varying float vDepth;\n';
+            vshader += '#ifndef VIEWMATRIX\n';
+            vshader += '#define VIEWMATRIX\n';
+            vshader += 'uniform mat4 matrix_view;\n';
+            vshader += '#endif\n';
+            vshader += '#ifndef CAMERAPLANES\n';
+            vshader += '#define CAMERAPLANES\n';
+            vshader += 'uniform vec4 camera_params;\n\n';
+            vshader += '#endif\n';
         }
 
         // VERTEX SHADER BODY
-        code += begin();
+        vshader += begin();
 
-        code += "   gl_Position = getPosition();\n";
+        vshader += "   gl_Position = getPosition();\n";
 
         if (options.pass === SHADER_DEPTH) {
-            code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
+            vshader += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
         }
 
         if (options.vertexColors) {
-            code += '    vColor = vertex_color;\n';
+            vshader += '    vColor = vertex_color;\n';
         }
         if (options.diffuseMap) {
-            code += '    vUv0 = vertex_texCoord0;\n';
+            vshader += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += end();
-
-        const vshader = code;
+        vshader += end();
 
         // GENERATE FRAGMENT SHADER
-        code = fragmentIntro(device, 'BasicMaterial', options.pass);
+        let fshader = shaderPassDefine;
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
-            code += 'varying vec4 vColor;\n';
+            fshader += 'varying vec4 vColor;\n';
         } else {
-            code += 'uniform vec4 uColor;\n';
+            fshader += 'uniform vec4 uColor;\n';
         }
         if (options.diffuseMap) {
-            code += 'varying vec2 vUv0;\n';
-            code += 'uniform sampler2D texture_diffuseMap;\n';
+            fshader += 'varying vec2 vUv0;\n';
+            fshader += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            code += fogCode(options.fog);
+            fshader += fogCode(options.fog);
         }
         if (options.alphaTest) {
-            code += shaderChunks.alphaTestPS;
+            fshader += shaderChunks.alphaTestPS;
         }
 
         if (options.pass === SHADER_DEPTH) {
             // ##### SCREEN DEPTH PASS #####
-            code += 'varying float vDepth;\n';
-            code += shaderChunks.packDepthPS;
+            fshader += 'varying float vDepth;\n';
+            fshader += shaderChunks.packDepthPS;
         }
 
         // FRAGMENT SHADER BODY
-        code += begin();
+        fshader += begin();
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
-            code += '    gl_FragColor = vColor;\n';
+            fshader += '    gl_FragColor = vColor;\n';
         } else {
-            code += '    gl_FragColor = uColor;\n';
+            fshader += '    gl_FragColor = uColor;\n';
         }
         if (options.diffuseMap) {
-            code += '    gl_FragColor *= texture2D(texture_diffuseMap, vUv0);\n';
+            fshader += '    gl_FragColor *= texture2D(texture_diffuseMap, vUv0);\n';
         }
 
         if (options.alphaTest) {
-            code += "   alphaTest(gl_FragColor.a);\n";
+            fshader += "   alphaTest(gl_FragColor.a);\n";
         }
 
         if (options.pass !== SHADER_PICK) {
             if (options.pass === SHADER_DEPTH) {
                 // ##### SCREEN DEPTH PASS #####
-                code += "    gl_FragColor = packFloat(vDepth);\n";
+                fshader += "    gl_FragColor = packFloat(vDepth);\n";
             } else {
                 // ##### FORWARD PASS #####
                 if (options.fog) {
-                    code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
+                    fshader += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
                 }
             }
         }
 
-        code += end();
+        fshader += end();
 
-        const fshader = code;
-
-        return {
+        return ShaderUtils.createDefinition(device, {
+            name: 'BasicShader',
             attributes: attributes,
-            vshader: vshader,
-            fshader: fshader
-        };
+            vertexCode: vshader,
+            fragmentCode: fshader
+        });
     }
 };
 

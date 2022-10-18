@@ -13,11 +13,9 @@ const skybox = {
     },
 
     createShaderDefinition: function (device, options) {
-        let fshader;
+        let fshader = '';
         if (options.type === 'cubemap') {
             const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
-
-            fshader = ShaderUtils.precisionCode(device);
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
             fshader += shaderChunks.decodePS;
@@ -27,7 +25,6 @@ const skybox = {
                 .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
                 .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
         } else {
-            fshader = ShaderUtils.precisionCode(device);
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
             fshader += shaderChunks.decodePS;
             fshader += gammaCode(options.gamma);
@@ -37,13 +34,13 @@ const skybox = {
             fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
         }
 
-        return {
+        return ShaderUtils.createDefinition(device, {
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
-            vshader: shaderChunks.skyboxVS,
-            fshader: fshader
-        };
+            vertexCode: shaderChunks.skyboxVS,
+            fragmentCode: fshader
+        });
     }
 };
 

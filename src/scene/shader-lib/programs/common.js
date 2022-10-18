@@ -1,13 +1,7 @@
 import {
-    DEVICETYPE_WEBGPU
-} from '../../../platform/graphics/constants.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-
-import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
 } from '../../constants.js';
-import { ShaderPass } from '../../shader-pass.js';
 
 import { shaderChunks } from '../chunks/chunks.js';
 
@@ -57,70 +51,6 @@ function skinCode(device, chunks) {
     return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
 }
 
-function vertexIntro(device, name, pass, extensionCode) {
-
-    let code = ShaderUtils.versionCode(device);
-
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-
-        code += shaderChunks.webgpuVS;
-
-    } else {    // WebGL
-
-        if (extensionCode) {
-            code += extensionCode + "\n";
-        }
-
-        if (device.webgl2) {
-            code += shaderChunks.gles3VS;
-        }
-    }
-
-    code += ShaderUtils.getShaderNameCode(name);
-    code += ShaderPass.getPassShaderDefine(pass);
-
-    return code;
-}
-
-function fragmentIntro(device, name, pass, extensionCode, forcePrecision) {
-
-    let code = ShaderUtils.versionCode(device);
-
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-
-        code += shaderChunks.webgpuPS;
-
-    } else {    // WebGL
-
-        if (extensionCode) {
-            code += extensionCode + "\n";
-        }
-
-        if (device.webgl2) {    // WebGL 2
-
-            code += shaderChunks.gles3PS;
-
-        } else {    // WebGL 1
-
-            if (device.extStandardDerivatives) {
-                code += "#extension GL_OES_standard_derivatives : enable\n";
-            }
-            if (device.extTextureLod) {
-                code += "#extension GL_EXT_shader_texture_lod : enable\n";
-                code += "#define SUPPORTS_TEXLOD\n";
-            }
-
-            code += shaderChunks.gles2PS;
-        }
-    }
-
-    code += ShaderUtils.precisionCode(device, forcePrecision, true);
-    code += ShaderUtils.getShaderNameCode(name);
-    code += ShaderPass.getPassShaderDefine(pass);
-
-    return code;
-}
-
 function begin() {
     return 'void main(void)\n{\n';
 }
@@ -129,4 +59,4 @@ function end() {
     return '}\n';
 }
 
-export { vertexIntro, fragmentIntro, begin, end, fogCode, gammaCode, skinCode, tonemapCode };
+export { begin, end, fogCode, gammaCode, skinCode, tonemapCode };
