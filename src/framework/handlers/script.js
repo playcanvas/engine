@@ -1,4 +1,5 @@
 import { script } from '../../framework/script.js';
+import { ScriptTypes } from '../script/script-types.js';
 
 /** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -30,16 +31,6 @@ class ScriptHandler {
         this._cache = { };
     }
 
-    static _types = [];
-
-    static _push(Type) {
-        if (script.legacy && ScriptHandler._types.length > 0) {
-            console.assert('Script Ordering Error. Contact support@playcanvas.com');
-        } else {
-            ScriptHandler._types.push(Type);
-        }
-    }
-
     load(url, callback) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {
@@ -57,8 +48,8 @@ class ScriptHandler {
                 if (script.legacy) {
                     let Type = null;
                     // pop the type from the loading stack
-                    if (ScriptHandler._types.length) {
-                        Type = ScriptHandler._types.pop();
+                    if (ScriptTypes._types.length) {
+                        Type = ScriptTypes._types.pop();
                     }
 
                     if (Type) {
@@ -73,10 +64,10 @@ class ScriptHandler {
                 } else {
                     const obj = { };
 
-                    for (let i = 0; i < ScriptHandler._types.length; i++)
-                        obj[ScriptHandler._types[i].name] = ScriptHandler._types[i];
+                    for (let i = 0; i < ScriptTypes._types.length; i++)
+                        obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
 
-                    ScriptHandler._types.length = 0;
+                    ScriptTypes._types.length = 0;
 
                     callback(null, obj, extra);
 
