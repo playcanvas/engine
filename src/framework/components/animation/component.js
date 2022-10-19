@@ -10,6 +10,7 @@ import { Skeleton } from '../../../scene/animation/skeleton.js';
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
+import { revision, version } from "../../../core/core.js";
 
 /** @typedef {import('../../../scene/animation/animation.js').Animation} Animation */
 /** @typedef {import('../../../scene/model.js').Model} Model */
@@ -216,12 +217,18 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation. Returns `Number.MAX_VALUE` if no animation is playing.
+     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
      *
      * @type {number}
      */
     get duration() {
-        return this.currAnim ? this.animations[this.currAnim].duration : Number.MAX_VALUE;
+        // #if _DEBUG
+        if (!this.currAnim) {
+            Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        }
+        // #endif
+
+        return this.currAnim ? this.animations[this.currAnim].duration : 0;
     }
 
     /**
