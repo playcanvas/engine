@@ -1,9 +1,7 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from './script-type.js';
-
 /** @typedef {import('../app-base.js').AppBase} AppBase */
+/** @typedef {import('./script-type.js').ScriptType} ScriptType */
 
 /**
  * Container for all {@link ScriptType}s that are available to this application. Note that

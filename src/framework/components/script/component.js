@@ -1,15 +1,17 @@
+import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
 import { ScriptAttributes } from '../../script/script-attributes.js';
+import {
+    SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
+    SCRIPT_POST_UPDATE, SCRIPT_SWAP
+} from '../../script/constants.js';
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from '../../script/script-type.js';
-import { Debug } from '../../../core/debug.js';
-
 /** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
+/** @typedef {import('../../script/script-type.js').ScriptType} ScriptType */
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
@@ -254,14 +256,6 @@ class ScriptComponent extends Component {
         return this._enabled;
     }
 
-    static scriptMethods = {
-        initialize: 'initialize',
-        postInitialize: 'postInitialize',
-        update: 'update',
-        postUpdate: 'postUpdate',
-        swap: 'swap'
-    };
-
     onEnable() {
         this._beingEnabled = true;
         this._checkState();
@@ -287,7 +281,7 @@ class ScriptComponent extends Component {
                 script._postInitialized = true;
 
                 if (script.postInitialize)
-                    this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
+                    this._scriptMethod(script, SCRIPT_POST_INITIALIZE);
             }
         }
 
@@ -413,7 +407,7 @@ class ScriptComponent extends Component {
             if (!script._initialized && script.enabled) {
                 script._initialized = true;
                 if (script.initialize)
-                    this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
+                    this._scriptMethod(script, SCRIPT_INITIALIZE);
             }
         }
 
@@ -433,7 +427,7 @@ class ScriptComponent extends Component {
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
             const script = list.items[list.loopIndex];
             if (script.enabled) {
-                this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
+                this._scriptMethod(script, SCRIPT_UPDATE, dt);
             }
         }
 
@@ -449,7 +443,7 @@ class ScriptComponent extends Component {
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
             const script = list.items[list.loopIndex];
             if (script.enabled) {
-                this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
+                this._scriptMethod(script, SCRIPT_POST_UPDATE, dt);
             }
         }
 
@@ -680,13 +674,13 @@ class ScriptComponent extends Component {
                         scriptInstance._initialized = true;
 
                         if (scriptInstance.initialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
+                            this._scriptMethod(scriptInstance, SCRIPT_INITIALIZE);
                     }
 
                     if (scriptInstance.enabled && !scriptInstance._postInitialized) {
                         scriptInstance._postInitialized = true;
                         if (scriptInstance.postInitialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
+                            this._scriptMethod(scriptInstance, SCRIPT_POST_INITIALIZE);
                     }
                 }
 
@@ -821,7 +815,7 @@ class ScriptComponent extends Component {
             this._postUpdateList.insert(scriptInstance);
         }
 
-        this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
+        this._scriptMethod(scriptInstance, SCRIPT_SWAP, scriptInstanceOld);
 
         this.fire('swap', scriptName, scriptInstance);
         this.fire('swap:' + scriptName, scriptInstance);
