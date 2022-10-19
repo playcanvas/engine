@@ -2,7 +2,10 @@ import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
 import { ScriptAttributes } from '../../script/script-attributes.js';
-import { scriptComponentMethods } from '../../script/script-methods.js';
+import {
+    SCRIPTMETHOD_INITIALIZE, SCRIPTMETHOD_POST_INITIALIZE, SCRIPTMETHOD_UPDATE,
+    SCRIPTMETHOD_POST_UPDATE, SCRIPTMETHOD_SWAP
+} from '../../script/constants.js';
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
@@ -278,7 +281,7 @@ class ScriptComponent extends Component {
                 script._postInitialized = true;
 
                 if (script.postInitialize)
-                    this._scriptMethod(script, scriptComponentMethods.postInitialize);
+                    this._scriptMethod(script, SCRIPTMETHOD_POST_INITIALIZE);
             }
         }
 
@@ -404,7 +407,7 @@ class ScriptComponent extends Component {
             if (!script._initialized && script.enabled) {
                 script._initialized = true;
                 if (script.initialize)
-                    this._scriptMethod(script, scriptComponentMethods.initialize);
+                    this._scriptMethod(script, SCRIPTMETHOD_INITIALIZE);
             }
         }
 
@@ -424,7 +427,7 @@ class ScriptComponent extends Component {
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
             const script = list.items[list.loopIndex];
             if (script.enabled) {
-                this._scriptMethod(script, scriptComponentMethods.update, dt);
+                this._scriptMethod(script, SCRIPTMETHOD_UPDATE, dt);
             }
         }
 
@@ -440,7 +443,7 @@ class ScriptComponent extends Component {
         for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
             const script = list.items[list.loopIndex];
             if (script.enabled) {
-                this._scriptMethod(script, scriptComponentMethods.postUpdate, dt);
+                this._scriptMethod(script, SCRIPTMETHOD_POST_UPDATE, dt);
             }
         }
 
@@ -671,13 +674,13 @@ class ScriptComponent extends Component {
                         scriptInstance._initialized = true;
 
                         if (scriptInstance.initialize)
-                            this._scriptMethod(scriptInstance, scriptComponentMethods.initialize);
+                            this._scriptMethod(scriptInstance, SCRIPTMETHOD_INITIALIZE);
                     }
 
                     if (scriptInstance.enabled && !scriptInstance._postInitialized) {
                         scriptInstance._postInitialized = true;
                         if (scriptInstance.postInitialize)
-                            this._scriptMethod(scriptInstance, scriptComponentMethods.postInitialize);
+                            this._scriptMethod(scriptInstance, SCRIPTMETHOD_POST_INITIALIZE);
                     }
                 }
 
@@ -812,7 +815,7 @@ class ScriptComponent extends Component {
             this._postUpdateList.insert(scriptInstance);
         }
 
-        this._scriptMethod(scriptInstance, scriptComponentMethods.swap, scriptInstanceOld);
+        this._scriptMethod(scriptInstance, SCRIPTMETHOD_SWAP, scriptInstanceOld);
 
         this.fire('swap', scriptName, scriptInstance);
         this.fire('swap:' + scriptName, scriptInstance);
