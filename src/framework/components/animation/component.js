@@ -1,17 +1,17 @@
 import { Debug } from '../../../core/debug.js';
 
-import { AnimClip } from '../../../anim/evaluator/anim-clip.js';
-import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
-import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
+import { AnimClip } from '../../anim/evaluator/anim-clip.js';
+import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
 
-import { Skeleton } from '../../../animation/skeleton.js';
+import { Skeleton } from '../../../scene/animation/skeleton.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../animation/animation.js').Animation} Animation */
+/** @typedef {import('../../../scene/animation/animation.js').Animation} Animation */
 /** @typedef {import('../../../scene/model.js').Model} Model */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').AnimationComponentSystem} AnimationComponentSystem */

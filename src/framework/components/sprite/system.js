@@ -1,10 +1,10 @@
-import { Color } from '../../../math/color.js';
+import { Color } from '../../../core/math/color.js';
 
 import {
     CULLFACE_NONE,
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
+} from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';

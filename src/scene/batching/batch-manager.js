@@ -1,19 +1,19 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 
-import { Vec3 } from '../../math/vec3.js';
-import { Mat3 } from '../../math/mat3.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat3 } from '../../core/math/mat3.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
 
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';
@@ -24,7 +24,7 @@ import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
 /** @typedef {import('../../framework/entity.js').Entity} Entity */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('../scene.js').Scene} Scene */
 
 function paramsIdentical(a, b) {

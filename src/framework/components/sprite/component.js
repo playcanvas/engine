@@ -1,9 +1,9 @@
 import { Debug } from '../../../core/debug.js';
 
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
     LAYERID_WORLD,
@@ -19,7 +19,7 @@ import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../asset/asset.js').Asset} Asset */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').SpriteComponentSystem} SpriteComponentSystem */
 

@@ -1,7 +1,7 @@
 import { path } from '../core/path.js';
 import { Debug } from '../core/debug.js';
 
-import { ABSOLUTE_URL } from '../asset/constants.js';
+import { ABSOLUTE_URL } from './asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 

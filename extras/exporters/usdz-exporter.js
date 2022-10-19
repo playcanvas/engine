@@ -1,5 +1,12 @@
 import { CoreExporter } from "./core-exporter.js";
-import { zipSync, strToU8 } from '../../node_modules/fflate/esm/browser.js';
+import { zipSync, strToU8 } from 'fflate';
+import {
+    SEMANTIC_POSITION,
+    SEMANTIC_NORMAL,
+    SEMANTIC_TEXCOORD0,
+    SEMANTIC_TEXCOORD1,
+    Color
+} from 'playcanvas';
 
 const ROOT_FILE_NAME = 'root';
 
@@ -166,17 +173,23 @@ class UsdzExporter extends CoreExporter {
             const isRGBA = true;
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-            const texture = textureArray[i];
-            const mipObject = texture._levels[0];
-
             // convert texture data to canvas
-            const canvas = this.imageToCanvas(mipObject, textureOptions);
+            const texture = textureArray[i];
+            const canvas = this.textureToCanvas(texture, textureOptions);
 
-            // async convert them to blog and then to array buffer
-            // eslint-disable-next-line no-promise-executor-return
-            promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
-                blob => blob.arrayBuffer()
-            ));
+            // if texture format is supported
+            if (canvas) {
+
+                // async convert them to blog and then to array buffer
+                // eslint-disable-next-line no-promise-executor-return
+                promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
+                    blob => blob.arrayBuffer()
+                ));
+
+            } else {
+                // ignore it
+                console.log(`Export of texture ${texture.name} is not currently supported.`);
+            }
         }
 
         // when all textures are converted
@@ -382,7 +395,7 @@ class UsdzExporter extends CoreExporter {
                 const uvChannel = material[textureSlot + 'Uv'] === 1 ? 'st1' : 'st';
 
                 // texture tint
-                const tintColor = tintTexture && uniform ? uniform : pc.Color.WHITE;
+                const tintColor = tintTexture && uniform ? uniform : Color.WHITE;
 
                 samplers.push(buildTexture(texture, textureIds, valueName, uvChannel, tiling, offset, rotation, tintColor));
 
@@ -451,10 +464,10 @@ ${inputs.join('\n')}
         let uv0 = [];
         let uv1 = [];
 
-        mesh.getVertexStream(pc.SEMANTIC_POSITION, positions);
-        mesh.getVertexStream(pc.SEMANTIC_NORMAL, normals);
-        mesh.getVertexStream(pc.SEMANTIC_TEXCOORD0, uv0);
-        mesh.getVertexStream(pc.SEMANTIC_TEXCOORD1, uv1);
+        mesh.getVertexStream(SEMANTIC_POSITION, positions);
+        mesh.getVertexStream(SEMANTIC_NORMAL, normals);
+        mesh.getVertexStream(SEMANTIC_TEXCOORD0, uv0);
+        mesh.getVertexStream(SEMANTIC_TEXCOORD1, uv1);
         mesh.getIndices(indices);
 
         // vertex counts for each faces (all are triangles)

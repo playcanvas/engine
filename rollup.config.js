@@ -1,4 +1,4 @@
-import babel from '@rollup/plugin-babel';
+import { babel } from '@rollup/plugin-babel';
 import strip from '@rollup/plugin-strip';
 import { createFilter } from '@rollup/pluginutils';
 import dts from 'rollup-plugin-dts';
@@ -7,6 +7,7 @@ import { terser } from 'rollup-plugin-terser';
 import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { execSync } from 'child_process';
+import resolve from "@rollup/plugin-node-resolve";
 
 let revision;
 try {
@@ -37,6 +38,54 @@ function spacesToTabs(enable) {
                 code: code.replace(/\G {4}/g, '\t'),
                 map: null
             };
+        }
+    };
+}
+
+// Validate and print warning if an engine module on a lower level imports module on a higher level
+function engineLayerImportValidation(rootFile, enable) {
+
+    const folderLevels = {
+        'core': 0,
+        'platform': 1,
+        'scene': 2,
+        'framework': 3
+    };
+
+    const path = require('path');
+    let rootPath;
+
+    return {
+        buildStart() {
+            rootPath = path.parse(path.resolve(rootFile)).dir;
+        },
+
+        resolveId(imported, importer) {
+            if (enable) {
+
+                // skip non-relative paths, those are not our imports, for example 'rollupPluginBabelHelpers.js'
+                if (importer && imported && imported.includes('./')) {
+
+                    // convert importer path
+                    const importerDir = path.parse(importer).dir;
+                    const relImporter = path.dirname(path.relative(rootPath, importer));
+                    const folderImporter = relImporter.split(path.sep)[0];
+                    const levelImporter = folderLevels[folderImporter];
+
+                    // convert imported path
+                    const absImported = path.resolve(path.join(importerDir, imported));
+                    const relImported = path.dirname(path.relative(rootPath, absImported));
+                    const folderImported = relImported.split(path.sep)[0];
+                    const levelImported = folderLevels[folderImported];
+
+                    if (levelImporter < levelImported) {
+                        console.log(`(!) Incorrect import: [${path.relative(rootPath, importer)}] -> [${imported}]`);
+                    }
+                }
+            }
+
+            // we don't process imports, return null to allow chaining
+            return null;
         }
     };
 }
@@ -128,6 +177,7 @@ const moduleOptions = {
 
 const stripFunctions = [
     'Debug.assert',
+    'Debug.assertDeprecated',
     'Debug.call',
     'Debug.deprecated',
     'Debug.warn',
@@ -255,13 +305,15 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions
     };
 
+    const rootFile = 'src/index.js';
     return {
-        input: 'src/index.js',
+        input: rootFile,
         output: outputOptions,
         preserveModules: moduleFormat === 'es6',
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
+            engineLayerImportValidation(rootFile, buildType === 'debug'),
             strip(stripOptions[buildType] || stripOptions.release),
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
@@ -273,21 +325,46 @@ function scriptTarget(name, input, output) {
     return {
         input: input,
         output: {
+            name: name,
             banner: getBanner(''),
             file: output || input.replace('.mjs', '.js'),
             format: 'umd',
             indent: '\t',
-            name: name
+            globals: { playcanvas: 'pc' }
         },
         plugins: [
+            resolve(),
             babel(es5Options),
             spacesToTabs()
-        ]
+        ],
+        external: ['playcanvas'],
+        cache: false
+    };
+}
+
+function scriptTargetEs6(name, input, output) {
+    return {
+        input: input,
+        output: {
+            name: name,
+            banner: getBanner(''),
+            dir: output,
+            format: 'es',
+            indent: '\t'
+        },
+        preserveModules: true,
+        plugins: [
+            resolve(),
+            babel(moduleOptions),
+            spacesToTabs()
+        ],
+        external: ['playcanvas', 'fflate']
     };
 }
 
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 

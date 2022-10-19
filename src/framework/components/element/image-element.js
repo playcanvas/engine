@@ -1,10 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
     BUFFER_STATIC,
@@ -13,9 +13,9 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
     STENCILOP_DECREMENT,
     TYPE_FLOAT32
-} from '../../../graphics/constants.js';
-import { VertexBuffer } from '../../../graphics/vertex-buffer.js';
-import { VertexFormat } from '../../../graphics/vertex-format.js';
+} from '../../../platform/graphics/constants.js';
+import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 
 import {
     LAYER_HUD, LAYER_WORLD,
@@ -29,7 +29,7 @@ import { StencilParameters } from '../../../scene/stencil-parameters.js';
 
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 // #if _DEBUG
 const _debugLogging = false;

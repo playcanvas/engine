@@ -1,12 +1,12 @@
 import { now } from '../../core/time.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Mat4 } from '../../math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
-import { BoundingBox } from '../../shape/bounding-box.js';
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 
-import { PRIMITIVE_TRIANGLES, SEMANTIC_POSITION } from '../../graphics/constants.js';
-import { IndexBuffer } from '../../graphics/index-buffer.js';
+import { PRIMITIVE_TRIANGLES, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 
 import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT } from '../constants.js';
 import { Mesh } from '../mesh.js';

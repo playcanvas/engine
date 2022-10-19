@@ -1,12 +1,12 @@
 import { now } from '../../core/time.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
+import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -18,13 +18,13 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
-} from '../../graphics/constants.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
-import { UniformBuffer } from '../../graphics/uniform-buffer.js';
-import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../graphics/bind-group-format.js';
-import { BindGroup } from '../../graphics/bind-group.js';
-import { RenderPass } from '../../graphics/render-pass.js';
+} from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
@@ -46,8 +46,8 @@ import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 /** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../../platform/graphics/render-target.js').RenderTarget} RenderTarget */
 /** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
 /** @typedef {import('../layer.js').Layer} Layer */
 /** @typedef {import('../scene.js').Scene} Scene */
@@ -176,6 +176,7 @@ class ForwardRenderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.exposureId = scope.resolve('exposure');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
+        this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -470,7 +471,7 @@ class ForwardRenderer {
     /**
      * Set up the viewport and the scissor for camera rendering.
      *
-     * @param {Camera} camera - The camera containing the viewport infomation.
+     * @param {Camera} camera - The camera containing the viewport information.
      * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
@@ -577,9 +578,8 @@ class ForwardRenderer {
         }
         this.ambientId.setValue(this.ambientColor);
 
-        if (scene.sky) {
-            this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
-        }
+        this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
+        this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
     }
 
     _resolveLight(scope, i) {

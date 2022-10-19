@@ -24,6 +24,7 @@ class Tracing {
      * - {@link TRACEID_RENDER_TARGET_ALLOC}
      * - {@link TRACEID_TEXTURE_ALLOC}
      * - {@link TRACEID_SHADER_ALLOC}
+     * - {@link TRACEID_SHADER_COMPILE}
      * - {@link TRACEID_VRAM_TEXTURE}
      * - {@link TRACEID_VRAM_VB}
      * - {@link TRACEID_VRAM_IB}
@@ -44,7 +45,7 @@ class Tracing {
     /**
      * Test if the trace channel is enabled.
      *
-     * @param {string} channel - Name of the trace channnel.
+     * @param {string} channel - Name of the trace channel.
      * @returns {boolean} - True if the trace channel is enabled.
      */
     static get(channel) {

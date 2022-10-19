@@ -1,8 +1,8 @@
 import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec3 } from '../core/math/vec3.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
@@ -11,17 +11,16 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
     typedArrayIndexFormats
-} from '../graphics/constants.js';
-import { IndexBuffer } from '../graphics/index-buffer.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
-import { VertexIterator } from '../graphics/vertex-iterator.js';
+} from '../platform/graphics/constants.js';
+import { IndexBuffer } from '../platform/graphics/index-buffer.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
+import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
-import { getApplication } from '../framework/globals.js';
-
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./morph.js').Morph} Morph */
 /** @typedef {import('./skin.js').Skin} Skin */
 
@@ -175,7 +174,8 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        Debug.assertDeprecated(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         /**
          * The vertex buffer holding the vertex data of the mesh.

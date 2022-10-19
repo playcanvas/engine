@@ -1,4 +1,4 @@
-import { math } from '../../../math/math.js';
+import { math } from '../../../core/math/math.js';
 
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
 

@@ -2,9 +2,9 @@ import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constan
 import { Debug } from '../core/debug.js';
 import { Tracing } from '../core/tracing.js';
 
-/** @typedef {import('../graphics/render-pass.js').RenderPass} RenderPass */
-/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/render-pass.js').RenderPass} RenderPass */
+/** @typedef {import('../platform/graphics/render-target.js').RenderTarget} RenderTarget */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
@@ -82,7 +82,7 @@ class FrameGraph {
 
             if (thisTexture?.cubemap) {
 
-                // if previous pass used the same cubemap texture, it does not need mimaps generated
+                // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
                     lastCubeRenderPass.colorOps.mipmaps = false;
                 }

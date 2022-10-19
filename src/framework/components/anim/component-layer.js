@@ -1,11 +1,11 @@
 import { Debug } from '../../../core/debug.js';
-import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
-import { AnimTransition } from '../../../anim/controller/anim-transition.js';
-import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
-import { math } from '../../../math/math.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimTransition } from '../../anim/controller/anim-transition.js';
+import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
+import { math } from '../../../core/math/math.js';
 
 /** @typedef {import('./component.js').AnimComponent} AnimComponent */
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+/** @typedef {import('../../asset/asset.js').Asset} Asset */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.

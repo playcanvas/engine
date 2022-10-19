@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { AppBase } from './app-base.js';
+import { getApplication } from './globals.js';
 
 /** @typedef {import('./components/component.js').Component} Component */
 /** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
@@ -278,18 +278,10 @@ class Entity extends GraphNode {
      * // Or use rotateLocal
      * entity.rotateLocal(0, 90, 0);
      */
-    constructor(name, app) {
+    constructor(name, app = getApplication()) {
         super(name);
 
-        if (name instanceof AppBase) app = name;
-
-        if (!app) {
-            app = AppBase.getApplication(); // get the current application
-            if (!app) {
-                throw new Error("Couldn't find current application");
-            }
-        }
-
+        Debug.assert(app, 'Could not find current application');
         this._app = app;
     }
 
@@ -608,7 +600,7 @@ class Entity extends GraphNode {
      */
     _cloneRecursively(duplicatedIdsMap) {
         /** @type {this} */
-        const clone = new this.constructor(this._app);
+        const clone = new this.constructor(undefined, this._app);
         super._cloneInternal(clone);
 
         for (const type in this.c) {

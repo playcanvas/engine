@@ -4,12 +4,12 @@ import fs from 'fs';
 const regex = /Class<(.*?)>/g;
 const paths = [
     './types/framework/components/script/component.d.ts',
-    './types/script/script-attributes.d.ts',
-    './types/script/script-registry.d.ts',
-    './types/script/script.d.ts'
+    './types/framework/script/script-attributes.d.ts',
+    './types/framework/script/script-registry.d.ts',
+    './types/framework/script/script.d.ts'
 ];
 
-paths.forEach(path => {
+paths.forEach((path) => {
     let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
     fs.writeFileSync(path, dts);
@@ -17,7 +17,7 @@ paths.forEach(path => {
 
 // Fix up description parameter for VertexFormat constructor because tsc
 // doesn't recognize it as an array
-let path = './types/graphics/vertex-format.d.ts';
+let path = './types/platform/graphics/vertex-format.d.ts';
 let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
@@ -28,7 +28,7 @@ const regexConstructor = /constructor\(([^)]+)\);/g;
 const getDeclarations = (properties) => {
     let declarations = '';
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
         declarations += `
     set ${prop[0]}(arg: ${prop[1]});
     get ${prop[0]}(): ${prop[1]};
@@ -63,7 +63,7 @@ const buttonComponentProps = [
     ['pressedTint', 'Color'],
     ['transitionMode', 'number']
 ];
-   
+
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
@@ -471,7 +471,7 @@ dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
 fs.writeFileSync(path, dts);
 
-path = './types/script/script-type.d.ts';
+path = './types/framework/script/script-type.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
     /**
@@ -502,7 +502,7 @@ dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
 `);
 fs.writeFileSync(path, dts);
 
-path = './types/resources/handler.d.ts';
+path = './types/framework/handlers/handler.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');

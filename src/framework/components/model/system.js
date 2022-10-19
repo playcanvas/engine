@@ -1,12 +1,12 @@
 import { extend } from '../../../core/core.js';
 
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
-import { BoundingBox } from '../../../shape/bounding-box.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';

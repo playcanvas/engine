@@ -1,10 +1,10 @@
 import { Debug } from '../core/debug.js';
 
-import { BoundingBox } from '../shape/bounding-box.js';
-import { BoundingSphere } from '../shape/bounding-sphere.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
+import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 
-import { BindGroup } from '../graphics/bind-group.js';
-import { UniformBuffer } from '../graphics/uniform-buffer.js';
+import { BindGroup } from '../platform/graphics/bind-group.js';
+import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -20,15 +20,15 @@ import {
 
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
-import { LightmapCache } from './lightmapper/lightmap-cache.js';
+import { LightmapCache } from './graphics/lightmap-cache.js';
 
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../graphics/shader.js').Shader} Shader */
-/** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('../graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('../graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../math/vec3.js').Vec3} Vec3 */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/shader.js').Shader} Shader */
+/** @typedef {import('../platform/graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
+/** @typedef {import('../platform/graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
+/** @typedef {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../core/math/vec3.js').Vec3} Vec3 */
 /** @typedef {import('./materials/material.js').Material} Material */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 /** @typedef {import('./scene.js').Scene} Scene */

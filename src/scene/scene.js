@@ -1,21 +1,25 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
-import { Quat } from '../math/quat.js';
-import { math } from '../math/math.js';
+import { Color } from '../core/math/color.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Quat } from '../core/math/quat.js';
+import { math } from '../core/math/math.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
+
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Immediate } from './immediate/immediate.js';
 
-import { EnvLighting } from '../graphics/env-lighting.js';
-import { getApplication } from '../framework/globals.js';
+import { EnvLighting } from './graphics/env-lighting.js';
 
 /** @typedef {import('../framework/entity.js').Entity} Entity */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 /** @typedef {import('./composition/layer-composition.js').LayerComposition} LayerComposition */
 /** @typedef {import('./layer.js').Layer} Layer */
 
@@ -173,7 +177,8 @@ class Scene extends EventHandler {
     constructor(graphicsDevice) {
         super();
 
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        Debug.assertDeprecated(graphicsDevice, "Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         this._gravity = new Vec3(0, -9.8, 0);
 
@@ -220,8 +225,8 @@ class Scene extends EventHandler {
         this._skyboxMip = 0;
 
         this._skyboxRotation = new Quat();
-        this._skyboxRotationMat3 = null;
-        this._skyboxRotationMat4 = null;
+        this._skyboxRotationMat3 = new Mat3();
+        this._skyboxRotationMat4 = new Mat4();
 
         // ambient light lightmapping properties
         this._ambientBakeNumSamples = 1;
@@ -613,6 +618,12 @@ class Scene extends EventHandler {
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
+            if (value.equals(Quat.IDENTITY)) {
+                this._skyboxRotationMat3.setIdentity();
+            } else {
+                this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
+                this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+            }
             this._resetSky();
         }
     }

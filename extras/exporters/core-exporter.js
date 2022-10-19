@@ -1,14 +1,16 @@
 class CoreExporter {
     /**
-     * Converts a source image specified in multiple formats to a canvas.
+     * Converts a texture to a canvas.
      *
-     * @param {any} image - The source image to be converted.
+     * @param {Texture} texture - The source texture to be converted.
      * @param {object} options - Object for passing optional arguments.
      * @param {Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {any} - The canvas element containing the image.
      */
-    imageToCanvas(image, options = {}) {
+    textureToCanvas(texture, options = {}) {
+
+        const image = texture.getSource();
 
         if ((typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) ||
             (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||

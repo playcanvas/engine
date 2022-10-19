@@ -1,15 +1,15 @@
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
 import { Debug } from '../core/debug.js';
 
 import {
     SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
     TYPE_UINT8
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 
 import { Mesh } from './mesh.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const primitiveUv1Padding = 4.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;

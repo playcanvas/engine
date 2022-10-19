@@ -9,19 +9,20 @@ import { EventHandler } from '../core/event-handler.js';
 import { Debug } from '../core/debug.js';
 import { TRACEID_RENDER_FRAME } from '../core/constants.js';
 
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Quat } from '../core/math/quat.js';
 
-import { http } from '../net/http.js';
+import { http } from '../platform/net/http.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
-} from '../graphics/constants.js';
-import { setProgramLibrary } from '../graphics/get-program-library.js';
-import { ProgramLibrary } from '../graphics/program-library.js';
+} from '../platform/graphics/constants.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
+import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
@@ -38,24 +39,24 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { BundleHandler } from '../resources/bundle.js';
-import { ResourceLoader } from '../resources/loader.js';
+import { BundleHandler } from '../framework/handlers/bundle.js';
+import { ResourceLoader } from '../framework/handlers/loader.js';
 
-import { Asset } from '../asset/asset.js';
-import { AssetRegistry } from '../asset/asset-registry.js';
+import { Asset } from './asset/asset.js';
+import { AssetRegistry } from './asset/asset-registry.js';
 
-import { BundleRegistry } from '../bundles/bundle-registry.js';
+import { BundleRegistry } from './bundle/bundle-registry.js';
 
-import { ScriptRegistry } from '../script/script-registry.js';
+import { ScriptRegistry } from './script/script-registry.js';
 
-import { I18n } from '../i18n/i18n.js';
+import { I18n } from '../framework/i18n/i18n.js';
 
 import { ComponentSystemRegistry } from './components/registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { SceneGrab } from './scene-grab.js';
+import { SceneGrab } from './graphics/scene-grab.js';
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -67,21 +68,21 @@ import {
     setApplication
 } from './globals.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
+/** @typedef {import('./input/element-input.js').ElementInput} ElementInput */
+/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
+/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
+/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
+/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
 /** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
 /** @typedef {import('../scene/mesh.js').Mesh} Mesh */
 /** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
+/** @typedef {import('./lightmapper/lightmapper.js').Lightmapper} Lightmapper */
 /** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
 /** @typedef {import('./app-options.js').AppOptions} AppOptions */
-/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
+/** @typedef {import('./xr/xr-manager.js').XrManager} XrManager */
+/** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -281,6 +282,7 @@ class AppBase extends EventHandler {
          * @type {GraphicsDevice}
          */
         this.graphicsDevice = device;
+        GraphicsDeviceAccess.set(device);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();

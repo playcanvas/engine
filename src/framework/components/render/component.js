@@ -6,15 +6,15 @@ import { getShapePrimitive } from '../../../scene/procedural.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { SkinInstanceCache } from '../../../scene/skin-instance-cache.js';
 
-import { Asset } from '../../../asset/asset.js';
-import { AssetReference } from '../../../asset/asset-reference.js';
+import { Asset } from '../../asset/asset.js';
+import { AssetReference } from '../../asset/asset-reference.js';
 
 import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
 /** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').RenderComponentSystem} RenderComponentSystem */
 

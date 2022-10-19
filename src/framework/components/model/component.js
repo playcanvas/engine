@@ -8,13 +8,13 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
 /** @typedef {import('../../../scene/composition/layer-composition.js').LayerComposition} LayerComposition */
 /** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../shape/bounding-box.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 /** @typedef {import('../../entity.js').Entity} Entity */
 /** @typedef {import('./system.js').ModelComponentSystem} ModelComponentSystem */
 

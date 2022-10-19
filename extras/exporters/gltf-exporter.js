@@ -1,26 +1,47 @@
 import { CoreExporter } from "./core-exporter.js";
+import {
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
+    BLEND_NORMAL,
+    CULLFACE_NONE,
+    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST,
+    FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    PROJECTION_ORTHOGRAPHIC,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR,
+    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0,
+    SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4,
+    SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7, TYPE_INT8,
+    TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
+    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32,
+    math,
+    BoundingBox,
+    Color,
+    Quat,
+    Vec3,
+    VertexBuffer
+} from 'playcanvas';
 
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
 
 const getIndexComponentType = (indexFormat) => {
     switch (indexFormat) {
-        case pc.INDEXFORMAT_UINT8: return 5121;
-        case pc.INDEXFORMAT_UINT16: return 5123;
-        case pc.INDEXFORMAT_UINT32: return 5125;
+        case INDEXFORMAT_UINT8: return 5121;
+        case INDEXFORMAT_UINT16: return 5123;
+        case INDEXFORMAT_UINT32: return 5125;
     }
     return 0;
 };
 
 const getComponentType = (dataType) => {
     switch (dataType) {
-        case pc.TYPE_INT8: return 5120;
-        case pc.TYPE_UINT8: return 5121;
-        case pc.TYPE_INT16: return 5122;
-        case pc.TYPE_UINT16: return 5123;
-        case pc.TYPE_INT32: return 5124;
-        case pc.TYPE_UINT32: return 5125;
-        case pc.TYPE_FLOAT32: return 5126;
+        case TYPE_INT8: return 5120;
+        case TYPE_UINT8: return 5121;
+        case TYPE_INT16: return 5122;
+        case TYPE_UINT16: return 5123;
+        case TYPE_INT32: return 5124;
+        case TYPE_UINT32: return 5125;
+        case TYPE_FLOAT32: return 5126;
     }
     return 0;
 };
@@ -37,39 +58,39 @@ const getAccessorType = (componentCount) => {
 
 const getSemantic = (engineSemantic) => {
     switch (engineSemantic) {
-        case pc.SEMANTIC_POSITION: return 'POSITION';
-        case pc.SEMANTIC_NORMAL: return 'NORMAL';
-        case pc.SEMANTIC_TANGENT: return 'TANGENT';
-        case pc.SEMANTIC_COLOR: return 'COLOR_0';
-        case pc.SEMANTIC_BLENDINDICES: return 'JOINTS_0';
-        case pc.SEMANTIC_BLENDWEIGHT: return 'WEIGHTS_0';
-        case pc.SEMANTIC_TEXCOORD0: return 'TEXCOORD_0';
-        case pc.SEMANTIC_TEXCOORD1: return 'TEXCOORD_1';
-        case pc.SEMANTIC_TEXCOORD2: return 'TEXCOORD_2';
-        case pc.SEMANTIC_TEXCOORD3: return 'TEXCOORD_3';
-        case pc.SEMANTIC_TEXCOORD4: return 'TEXCOORD_4';
-        case pc.SEMANTIC_TEXCOORD5: return 'TEXCOORD_5';
-        case pc.SEMANTIC_TEXCOORD6: return 'TEXCOORD_6';
-        case pc.SEMANTIC_TEXCOORD7: return 'TEXCOORD_7';
+        case SEMANTIC_POSITION: return 'POSITION';
+        case SEMANTIC_NORMAL: return 'NORMAL';
+        case SEMANTIC_TANGENT: return 'TANGENT';
+        case SEMANTIC_COLOR: return 'COLOR_0';
+        case SEMANTIC_BLENDINDICES: return 'JOINTS_0';
+        case SEMANTIC_BLENDWEIGHT: return 'WEIGHTS_0';
+        case SEMANTIC_TEXCOORD0: return 'TEXCOORD_0';
+        case SEMANTIC_TEXCOORD1: return 'TEXCOORD_1';
+        case SEMANTIC_TEXCOORD2: return 'TEXCOORD_2';
+        case SEMANTIC_TEXCOORD3: return 'TEXCOORD_3';
+        case SEMANTIC_TEXCOORD4: return 'TEXCOORD_4';
+        case SEMANTIC_TEXCOORD5: return 'TEXCOORD_5';
+        case SEMANTIC_TEXCOORD6: return 'TEXCOORD_6';
+        case SEMANTIC_TEXCOORD7: return 'TEXCOORD_7';
     }
 };
 
 const getFilter = function (filter) {
     switch (filter) {
-        case pc.FILTER_NEAREST: return 9728;
-        case pc.FILTER_LINEAR: return 9729;
-        case pc.FILTER_NEAREST_MIPMAP_NEAREST: return 9984;
-        case pc.FILTER_LINEAR_MIPMAP_NEAREST: return 9985;
-        case pc.FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
-        case pc.FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
+        case FILTER_NEAREST: return 9728;
+        case FILTER_LINEAR: return 9729;
+        case FILTER_NEAREST_MIPMAP_NEAREST: return 9984;
+        case FILTER_LINEAR_MIPMAP_NEAREST: return 9985;
+        case FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
+        case FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
     }
 };
 
 const getWrap = function (wrap) {
     switch (wrap) {
-        case pc.ADDRESS_CLAMP_TO_EDGE: return 33071;
-        case pc.ADDRESS_MIRRORED_REPEAT: return 33648;
-        case pc.ADDRESS_REPEAT: return 10497;
+        case ADDRESS_CLAMP_TO_EDGE: return 33071;
+        case ADDRESS_MIRRORED_REPEAT: return 33648;
+        case ADDRESS_REPEAT: return 10497;
     }
 };
 
@@ -88,7 +109,10 @@ class GltfExporter extends CoreExporter {
             textures: [],
 
             // entry: { node, meshInstances}
-            entityMeshInstances: []
+            entityMeshInstances: [],
+
+            // maps a buffer (vertex or index) to an array of bufferview indices
+            bufferViewMap: new Map()
         };
 
         const { materials, buffers, entityMeshInstances, textures } = resources;
@@ -175,34 +199,58 @@ class GltfExporter extends CoreExporter {
     }
 
     writeBufferViews(resources, json) {
-        if (resources.buffers.length > 0) {
-            let offset = 0;
 
-            json.bufferViews = resources.buffers.map((buffer) => {
-                const arrayBuffer = buffer.lock();
+        json.bufferViews = [];
+        let offset = 0;
 
-                const bufferView = {
+        resources.buffers.forEach((buffer) => {
+
+            const addBufferView = (target, byteLength, byteOffset, byteStride) => {
+
+                const bufferView =  {
+                    target: target,
                     buffer: 0,
-                    byteLength: arrayBuffer.byteLength,
-                    byteOffset: offset
+                    byteLength: byteLength,
+                    byteOffset: byteOffset,
+                    byteStride: byteStride
                 };
 
-                if (buffer instanceof pc.VertexBuffer) {
-                    bufferView.target = ARRAY_BUFFER;
-                    const format = buffer.getFormat();
+                return json.bufferViews.push(bufferView) - 1;
+            };
 
-                    if (format.interleaved) {
-                        bufferView.byteStride = format.size;
-                    }
+            const arrayBuffer = buffer.lock();
+
+            if (buffer instanceof VertexBuffer) {
+
+                const format = buffer.getFormat();
+                if (format.interleaved) {
+
+                    const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
+                    resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
                 } else {
-                    bufferView.target = ELEMENT_ARRAY_BUFFER;
+
+                    // generate buffer view per element
+                    const bufferViewIndices = [];
+                    format.elements.forEach((element) => {
+
+                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
+                        bufferViewIndices.push(bufferViewIndex);
+
+                    });
+
+                    resources.bufferViewMap.set(buffer, bufferViewIndices);
                 }
 
-                offset += arrayBuffer.byteLength;
+            } else {    // index buffer
 
-                return bufferView;
-            });
-        }
+                const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+                resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
+            }
+
+            offset += arrayBuffer.byteLength;
+        });
     }
 
     writeCameras(resources, json) {
@@ -214,7 +262,7 @@ class GltfExporter extends CoreExporter {
 
                 const camera = {};
 
-                if (projection === pc.PROJECTION_ORTHOGRAPHIC) {
+                if (projection === PROJECTION_ORTHOGRAPHIC) {
                     camera.type = "orthographic";
                     camera.orthographic = {
                         xmag: 1,
@@ -263,21 +311,21 @@ class GltfExporter extends CoreExporter {
                     material.name = name;
                 }
 
-                if (!diffuse.equals(pc.Color.WHITE) || opacity !== 1) {
+                if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
                     pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
                 }
 
                 attachTexture(mat, pbr, 'baseColorTexture', 'diffuseMap');
 
-                if (!emissive.equals(pc.Color.BLACK)) {
+                if (!emissive.equals(Color.BLACK)) {
                     material.emissiveFactor = [emissive.r, emissive.g, emissive.b];
                 }
 
-                if (blendType === pc.BLEND_NORMAL) {
+                if (blendType === BLEND_NORMAL) {
                     material.alphaMode = "BLEND";
                 }
 
-                if (cull === pc.CULLFACE_NONE) {
+                if (cull === CULLFACE_NONE) {
                     material.doubleSided = true;
                 }
 
@@ -300,15 +348,15 @@ class GltfExporter extends CoreExporter {
                     node.name = name;
                 }
 
-                if (!t.equals(pc.Vec3.ZERO)) {
+                if (!t.equals(Vec3.ZERO)) {
                     node.translation = [t.x, t.y, t.z];
                 }
 
-                if (!r.equals(pc.Quat.IDENTITY)) {
+                if (!r.equals(Quat.IDENTITY)) {
                     node.rotation = [r.x, r.y, r.z, r.w];
                 }
 
-                if (!s.equals(pc.Vec3.ONE)) {
+                if (!s.equals(Vec3.ONE)) {
                     node.scale = [s.x, s.y, s.z];
                 }
 
@@ -348,10 +396,6 @@ class GltfExporter extends CoreExporter {
                 // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
                 const meshInstances = entityMeshInstances.meshInstances;
                 meshInstances.forEach((meshInstance) => {
-                    const indexBuffer = meshInstance.mesh.indexBuffer[0];
-                    const vertexBuffer = meshInstance.mesh.vertexBuffer;
-                    const vertexFormat = vertexBuffer.getFormat();
-                    const numVertices = vertexBuffer.getNumVertices();
 
                     const primitive = {
                         attributes: {},
@@ -359,54 +403,55 @@ class GltfExporter extends CoreExporter {
                     };
                     mesh.primitives.push(primitive);
 
-                    // An accessor is a vertex attribute
-                    const writeAccessor = (element) => {
+                    // vertex buffer
+                    const { vertexBuffer } = meshInstance.mesh;
+                    const { format } = vertexBuffer;
+                    const { interleaved, elements } = format;
+                    const numVertices = vertexBuffer.getNumVertices();
+                    elements.forEach((element, elementIndex) => {
+
+                        const viewIndex = resources.bufferViewMap.get(vertexBuffer)[interleaved ? 0 : elementIndex];
 
                         const accessor = {
-                            bufferView: resources.buffers.indexOf(vertexBuffer),
-                            byteOffset: element.offset,
+                            bufferView: viewIndex,
+                            byteOffset: interleaved ? element.offset : 0,
                             componentType: getComponentType(element.dataType),
                             type: getAccessorType(element.numComponents),
                             count: numVertices
                         };
 
-                        const idx = json.accessors.length;
-                        json.accessors.push(accessor);
-
-                        const semantic = getSemantic(element.name);
-                        primitive.attributes[semantic] = idx;
+                        const idx = json.accessors.push(accessor) - 1;
+                        primitive.attributes[getSemantic(element.name)] = idx;
 
                         // Position accessor also requires min and max properties
-                        if (element.name === pc.SEMANTIC_POSITION) {
+                        if (element.name === SEMANTIC_POSITION) {
 
                             // compute min and max from positions, as the BoundingBox stores center and extents,
                             // and we get precision warnings from gltf validator
                             const positions = [];
                             meshInstance.mesh.getPositions(positions);
-                            const min = new pc.Vec3(), max = new pc.Vec3();
-                            pc.BoundingBox.computeMinMax(positions, min, max);
+                            const min = new Vec3(), max = new Vec3();
+                            BoundingBox.computeMinMax(positions, min, max);
 
                             accessor.min = [min.x, min.y, min.z];
                             accessor.max = [max.x, max.y, max.z];
                         }
-                    };
+                    });
 
-                    vertexFormat.elements.forEach(writeAccessor);
-
+                    // index buffer
+                    const indexBuffer = meshInstance.mesh.indexBuffer[0];
                     if (indexBuffer) {
-                        const ibIdx = resources.buffers.indexOf(indexBuffer);
+
+                        const viewIndex = resources.bufferViewMap.get(indexBuffer)[0];
 
                         const accessor = {
-                            bufferView: ibIdx,
+                            bufferView: viewIndex,
                             componentType: getIndexComponentType(indexBuffer.getFormat()),
                             count: indexBuffer.getNumIndices(),
                             type: "SCALAR"
                         };
 
-                        json.accessors.push(accessor);
-
-                        const idx = json.accessors.indexOf(accessor);
-
+                        const idx = json.accessors.push(accessor) - 1;
                         primitive.indices = idx;
                     }
                 });
@@ -429,28 +474,34 @@ class GltfExporter extends CoreExporter {
             const isRGBA = true;
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-            const texture = textures[i];
-            const mipObject = texture._levels[0];
-
             // convert texture data to uri
-            const canvas = this.imageToCanvas(mipObject, textureOptions);
-            const uri = canvas.toDataURL(mimeType);
+            const texture = textures[i];
+            const canvas = this.textureToCanvas(texture, textureOptions);
 
-            json.images[i] = {
-                'uri': uri
-            };
+            // if texture format is supported
+            if (canvas) {
+                const uri = canvas.toDataURL(mimeType);
 
-            json.samplers[i] = {
-                'minFilter': getFilter(texture.minFilter),
-                'magFilter': getFilter(texture.magFilter),
-                'wrapS': getWrap(texture.addressU),
-                'wrapT': getWrap(texture.addressV)
-            };
+                json.images[i] = {
+                    'uri': uri
+                };
 
-            json.textures[i] = {
-                'sampler': i,
-                'source': i
-            };
+                json.samplers[i] = {
+                    'minFilter': getFilter(texture.minFilter),
+                    'magFilter': getFilter(texture.magFilter),
+                    'wrapS': getWrap(texture.addressU),
+                    'wrapT': getWrap(texture.addressV)
+                };
+
+                json.textures[i] = {
+                    'sampler': i,
+                    'source': i
+                };
+            } else {
+                // ignore it
+                console.log(`Export of texture ${texture.name} is not currently supported.`);
+                textures[i] = null;
+            }
         }
     }
 
@@ -484,6 +535,11 @@ class GltfExporter extends CoreExporter {
         this.writeMeshes(resources, json);
         this.convertTextures(resources.textures, json, options);
 
+        // delete unused properties
+        if (!json.images.length) delete json.images;
+        if (!json.samplers.length) delete json.samplers;
+        if (!json.textures.length) delete json.textures;
+
         return json;
     }
 
@@ -512,7 +568,7 @@ class GltfExporter extends CoreExporter {
         resources.buffers.forEach((buffer) => {
             binaryDataLength += buffer.lock().byteLength;
         });
-        binaryDataLength = pc.math.roundUp(binaryDataLength, 4);
+        binaryDataLength = math.roundUp(binaryDataLength, 4);
 
         let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
         if (binaryDataLength > 0) {

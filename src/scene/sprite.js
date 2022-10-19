@@ -1,11 +1,11 @@
 import { EventHandler } from '../core/event-handler.js';
 
-import { Vec2 } from '../math/vec2.js';
+import { Vec2 } from '../core/math/vec2.js';
 
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { createMesh } from './procedural.js';
 
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
+/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 /** @typedef {import('./mesh.js').Mesh} Mesh */
 /** @typedef {import('./texture-atlas.js').TextureAtlas} TextureAtlas */
 

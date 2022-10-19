@@ -1,3 +1,22 @@
+import {
+    BLENDEQUATION_ADD,
+    BLENDMODE_ONE,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_SRC_ALPHA,
+    BUFFER_STATIC,
+    BUFFER_STREAM,
+    CULLFACE_NONE,
+    INDEXFORMAT_UINT16,
+    PRIMITIVE_TRIANGLES,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    TYPE_FLOAT32,
+    shaderChunks,
+    IndexBuffer,
+    VertexBuffer,
+    VertexFormat
+} from 'playcanvas';
+
 // render 2d textured quads
 class Render2d {
     constructor(device, colors, maxQuads = 512) {
@@ -48,14 +67,14 @@ class Render2d {
             '    gl_FragColor = tex * clr;\n' +
             '}\n';
 
-        const format = new pc.VertexFormat(device, [{
-            semantic: pc.SEMANTIC_POSITION,
+        const format = new VertexFormat(device, [{
+            semantic: SEMANTIC_POSITION,
             components: 3,
-            type: pc.TYPE_FLOAT32
+            type: TYPE_FLOAT32
         }, {
-            semantic: pc.SEMANTIC_TEXCOORD0,
+            semantic: SEMANTIC_TEXCOORD0,
             components: 4,
-            type: pc.TYPE_FLOAT32
+            type: TYPE_FLOAT32
         }]);
 
         // generate quad indices
@@ -70,14 +89,14 @@ class Render2d {
         }
 
         this.device = device;
-        this.shader = pc.shaderChunks.createShaderFromCode(device,
-                                                           vertexShader,
-                                                           fragmentShader,
-                                                           'mini-stats');
-        this.buffer = new pc.VertexBuffer(device, format, maxQuads * 4, pc.BUFFER_STREAM);
+        this.shader = shaderChunks.createShaderFromCode(device,
+                                                        vertexShader,
+                                                        fragmentShader,
+                                                        'mini-stats');
+        this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
 
-        this.indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT16, maxQuads * 6, pc.BUFFER_STATIC, indices);
+        this.indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, maxQuads * 6, BUFFER_STATIC, indices);
 
         this.prims = [];
         this.prim = null;
@@ -114,7 +133,7 @@ class Render2d {
             this.primIndex++;
             if (this.primIndex === this.prims.length) {
                 prim = {
-                    type: pc.PRIMITIVE_TRIANGLES,
+                    type: PRIMITIVE_TRIANGLES,
                     indexed: true,
                     base: quad * 6,
                     count: 6,
@@ -154,13 +173,13 @@ class Render2d {
         device.updateBegin();
         device.setDepthTest(false);
         device.setDepthWrite(false);
-        device.setCullMode(pc.CULLFACE_NONE);
+        device.setCullMode(CULLFACE_NONE);
         device.setBlending(true);
-        device.setBlendFunctionSeparate(pc.BLENDMODE_SRC_ALPHA,
-                                        pc.BLENDMODE_ONE_MINUS_SRC_ALPHA,
-                                        pc.BLENDMODE_ONE,
-                                        pc.BLENDMODE_ONE);
-        device.setBlendEquationSeparate(pc.BLENDEQUATION_ADD, pc.BLENDEQUATION_ADD);
+        device.setBlendFunctionSeparate(BLENDMODE_SRC_ALPHA,
+                                        BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                        BLENDMODE_ONE,
+                                        BLENDMODE_ONE);
+        device.setBlendEquationSeparate(BLENDEQUATION_ADD, BLENDEQUATION_ADD);
         device.setVertexBuffer(buffer, 0);
         device.setIndexBuffer(this.indexBuffer);
         device.setShader(this.shader);

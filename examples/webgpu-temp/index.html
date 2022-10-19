@@ -20,26 +20,26 @@
 
     <script type="module">
 
-        import { Asset } from "../../src/asset/asset.js";
-        import { AssetListLoader } from "../../src/asset/asset-list-loader.js";
+        import { Asset } from "../../src/framework/asset/asset.js";
+        import { AssetListLoader } from "../../src/framework/asset/asset-list-loader.js";
         import { AppBase } from "../../src/framework/app-base.js";
         import { AppOptions } from "../../src/framework/app-options.js";
-        import { WebgpuGraphicsDevice } from '../../src/graphics/webgpu/webgpu-graphics-device.js';
-        import { Shader } from '../../src/graphics/shader.js';
-        import { Texture } from '../../src/graphics/texture.js';
-        import { RenderTarget } from '../../src/graphics/render-target.js';
+        import { WebgpuGraphicsDevice } from '../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+        import { Shader } from '../../src/platform/graphics/shader.js';
+        import { Texture } from '../../src/platform/graphics/texture.js';
+        import { RenderTarget } from '../../src/platform/graphics/render-target.js';
         import {
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
-        } from '../../src/graphics/constants.js';
+        } from '../../src/platform/graphics/constants.js';
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 
             TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC
         } from "../../src/core/constants.js";
-        import { Color } from "../../src/math/color.js";
-        import { Vec3 } from "../../src/math/vec3.js";
-        import { Quat } from "../../src/math/quat.js";
+        import { Color } from "../../src/core/math/color.js";
+        import { Vec3 } from "../../src/core/math/vec3.js";
+        import { Quat } from "../../src/core/math/quat.js";
         import { StandardMaterial } from "../../src/scene/materials/standard-material.js";
         import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../../src/scene/constants.js";
 
@@ -48,8 +48,8 @@
         import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
         import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
         import { LightComponentSystem } from '../../src/framework/components/light/system.js';
-        import { TextureHandler } from '../../src/resources/texture.js';
-        import { ContainerHandler } from '../../src/resources/container.js';
+        import { TextureHandler } from '../../src/framework/handlers/texture.js';
+        import { ContainerHandler } from '../../src/framework/handlers/container.js';
 
         const assets = {
             'playcanvas': new Asset('playcanvas.png', 'texture', { url: '../assets/textures/playcanvas.png' }),
