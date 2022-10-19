@@ -11,8 +11,7 @@ import { GraphNode } from '../../scene/graph-node.js';
 
 import { Asset } from '../asset/asset.js';
 
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from './script-type.js';
+/** @typedef {import('./script-type.js').ScriptType} ScriptType */
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];

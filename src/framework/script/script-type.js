@@ -1,8 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptComponent } from '../components/script/component.js';
-
+import { scriptComponentMethods } from './script-methods.js';
 import { ScriptAttributes } from './script-attributes.js';
 
 /** @typedef {import('../app-base.js').AppBase} AppBase */
@@ -216,7 +215,7 @@ class ScriptType extends EventHandler {
             this.__initializeAttributes(true);
 
             if (this.initialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
+                this.entity.script._scriptMethod(this, scriptComponentMethods.initialize);
         }
 
         // post initialize script if not post initialized yet and still enabled
@@ -228,7 +227,7 @@ class ScriptType extends EventHandler {
             this._postInitialized = true;
 
             if (this.postInitialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
+                this.entity.script._scriptMethod(this, scriptComponentMethods.postInitialize);
         }
     }
 
