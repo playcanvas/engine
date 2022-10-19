@@ -30,7 +30,7 @@ void addRefraction() {
     uv += vec2(1.0);
     uv *= vec2(0.5);
 
-    #ifdef GL2
+    #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip
         float iorToRoughness = (1.0 - dGlossiness) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
         float refractionLod = log2(uScreenSize.x) * iorToRoughness;

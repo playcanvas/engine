@@ -39,17 +39,17 @@ float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
     u2 = u2 * shadowMapSizeInv + base_uv.x;
     v2 = v2 * shadowMapSizeInv + base_uv.y;
 
-    sum += uw0 * vw0 * texture(shadowMap, vec3(u0, v0, z));
-    sum += uw1 * vw0 * texture(shadowMap, vec3(u1, v0, z));
-    sum += uw2 * vw0 * texture(shadowMap, vec3(u2, v0, z));
+    sum += uw0 * vw0 * textureShadow(shadowMap, vec3(u0, v0, z));
+    sum += uw1 * vw0 * textureShadow(shadowMap, vec3(u1, v0, z));
+    sum += uw2 * vw0 * textureShadow(shadowMap, vec3(u2, v0, z));
 
-    sum += uw0 * vw1 * texture(shadowMap, vec3(u0, v1, z));
-    sum += uw1 * vw1 * texture(shadowMap, vec3(u1, v1, z));
-    sum += uw2 * vw1 * texture(shadowMap, vec3(u2, v1, z));
+    sum += uw0 * vw1 * textureShadow(shadowMap, vec3(u0, v1, z));
+    sum += uw1 * vw1 * textureShadow(shadowMap, vec3(u1, v1, z));
+    sum += uw2 * vw1 * textureShadow(shadowMap, vec3(u2, v1, z));
 
-    sum += uw0 * vw2 * texture(shadowMap, vec3(u0, v2, z));
-    sum += uw1 * vw2 * texture(shadowMap, vec3(u1, v2, z));
-    sum += uw2 * vw2 * texture(shadowMap, vec3(u2, v2, z));
+    sum += uw0 * vw2 * textureShadow(shadowMap, vec3(u0, v2, z));
+    sum += uw1 * vw2 * textureShadow(shadowMap, vec3(u1, v2, z));
+    sum += uw2 * vw2 * textureShadow(shadowMap, vec3(u2, v2, z));
 
     sum *= 1.0f / 144.0;
 

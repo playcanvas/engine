@@ -1,6 +1,5 @@
 import * as pc from '../../../../';
 
-
 class GrabPassExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Grab Pass';
@@ -24,8 +23,6 @@ class GrabPassExample {
             }
         `,
         'shader.frag': /* glsl */`
-            precision mediump float;
-
             // use the special uSceneColorMap texture, which is a built-in texture containing
             // a copy of the color buffer at the point of capture, inside the Depth layer.
             uniform sampler2D uSceneColorMap;
@@ -59,12 +56,7 @@ class GrabPassExample {
                 float mipmap = roughness * 5.0;
 
                 // get background pixel color with distorted offset
-                #ifdef GL2
-                    // only webgl2 (and webgl1 extension - not handled here) supports reading specified mipmap
-                    vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
-                #else
-                    vec3 grabColor = texture2D(uSceneColorMap, grabUv + offset).rgb;
-                #endif
+                vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
                 // brighten the refracted texture a little bit
                 // brighten even more the rough parts of the glass
