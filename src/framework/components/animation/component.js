@@ -216,12 +216,12 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
+     * Get the duration in seconds of the current animation. Returns `Number.MAX_VALUE` if no animation is playing.
      *
      * @type {number}
      */
     get duration() {
-        return this.currAnim ? this.animations[this.currAnim].duration : 0;
+        return this.currAnim ? this.animations[this.currAnim].duration : Number.MAX_VALUE;
     }
 
     /**
