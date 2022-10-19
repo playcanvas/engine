@@ -222,13 +222,12 @@ class AnimationComponent extends Component {
      * @type {number}
      */
     get duration() {
-        // #if _DEBUG
-        if (!this.currAnim) {
-            Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        if (this.currAnim) {
+            return this.animations[this.currAnim].duration;
         }
-        // #endif
 
-        return this.currAnim ? this.animations[this.currAnim].duration : 0;
+        Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        return 0;
     }
 
     /**
