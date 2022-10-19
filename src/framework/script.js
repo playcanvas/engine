@@ -1,8 +1,7 @@
 import { events } from '../core/events.js';
 
-import { ScriptHandler } from '../framework/handlers/script.js';
-
 import { getApplication } from './globals.js';
+import { ScriptTypes } from './script/script-types.js';
 
 /** @typedef {import('./app-base.js').AppBase} AppBase */
 
@@ -74,7 +73,7 @@ const script = {
         ScriptType._pcScriptName = name;
 
         // Push this onto loading stack
-        ScriptHandler._push(ScriptType);
+        ScriptTypes.push(ScriptType, _legacy);
 
         this.fire("created", name, callback);
     },
