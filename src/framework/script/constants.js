@@ -1,5 +1,5 @@
-export const SCRIPTMETHOD_INITIALIZE = 'initialize';
-export const SCRIPTMETHOD_POST_INITIALIZE = 'postInitialize';
-export const SCRIPTMETHOD_UPDATE = 'update';
-export const SCRIPTMETHOD_POST_UPDATE = 'postUpdate';
-export const SCRIPTMETHOD_SWAP = 'swap';
+export const SCRIPT_INITIALIZE = 'initialize';
+export const SCRIPT_POST_INITIALIZE = 'postInitialize';
+export const SCRIPT_UPDATE = 'update';
+export const SCRIPT_POST_UPDATE = 'postUpdate';
+export const SCRIPT_SWAP = 'swap';
