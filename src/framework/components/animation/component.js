@@ -216,12 +216,12 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation.
+     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
      *
      * @type {number}
      */
     get duration() {
-        return this.animations[this.currAnim].duration;
+        return this.currAnim ? this.animations[this.currAnim].duration : 0;
     }
 
     /**
