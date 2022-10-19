@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
 import { ScriptAttributes } from '../../script/script-attributes.js';
@@ -6,11 +7,8 @@ import { scriptComponentMethods } from '../../script/script-methods.js';
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from '../../script/script-type.js';
-import { Debug } from '../../../core/debug.js';
-
 /** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
+/** @typedef {import('../../script/script-type.js').ScriptType} ScriptType */
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
