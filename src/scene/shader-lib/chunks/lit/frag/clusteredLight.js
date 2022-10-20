@@ -135,19 +135,12 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     );
 }
 
-// use LOD sampling if supported to sample data textures as it has better chance of getting skipped inside dynamic branches
-#ifdef SUPPORTS_TEXLOD
-    #define textureData(texture, uv) texture2DLodEXT(texture, uv, 0.0)
-#else
-    #define textureData(texture, uv) texture2D(texture, uv)
-#endif
-
 vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-    return textureData(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV));
+    return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
 }
 
 vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-    return textureData(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV));
+    return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
 }
 
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
@@ -568,7 +561,7 @@ void addClusteredLights() {
         const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
         for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-            vec4 lightIndices = textureData(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV));
+            vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
             vec4 indices = lightIndices * 255.0;
 
             // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller

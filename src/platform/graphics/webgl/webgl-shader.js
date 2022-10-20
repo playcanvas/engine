@@ -227,6 +227,11 @@ class WebglShader {
             const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
 
             // #if _DEBUG
+
+            // log translated shaders
+            definition.translatedFrag = gl.getExtension('WEBGL_debug_shaders')?.getTranslatedShaderSource(this.glFragmentShader);
+            definition.translatedVert = gl.getExtension('WEBGL_debug_shaders')?.getTranslatedShaderSource(this.glVertexShader);
+
             console.error(message, definition);
             // #else
             console.error(message);

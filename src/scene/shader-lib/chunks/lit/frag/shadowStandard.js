@@ -44,10 +44,10 @@ float _getShadowPCF3x3(sampler2DShadow shadowMap, vec3 shadowParams) {
     u1 = u1 * shadowMapSizeInv + base_uv.x;
     v1 = v1 * shadowMapSizeInv + base_uv.y;
 
-    sum += uw0 * vw0 * texture(shadowMap, vec3(u0, v0, z));
-    sum += uw1 * vw0 * texture(shadowMap, vec3(u1, v0, z));
-    sum += uw0 * vw1 * texture(shadowMap, vec3(u0, v1, z));
-    sum += uw1 * vw1 * texture(shadowMap, vec3(u1, v1, z));
+    sum += uw0 * vw0 * textureShadow(shadowMap, vec3(u0, v0, z));
+    sum += uw1 * vw0 * textureShadow(shadowMap, vec3(u1, v0, z));
+    sum += uw0 * vw1 * textureShadow(shadowMap, vec3(u0, v1, z));
+    sum += uw1 * vw1 * textureShadow(shadowMap, vec3(u1, v1, z));
 
     sum *= 1.0f / 16.0;
     return sum;
@@ -91,15 +91,15 @@ float _getShadowPCF3x3(sampler2D shadowMap, vec3 shadowParams) {
     float dx1 = xoffset;
 
     mat3 depthKernel;
-    depthKernel[0][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dx0)));
-    depthKernel[0][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)));
-    depthKernel[0][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dx1)));
-    depthKernel[1][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dx0)));
-    depthKernel[1][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy));
-    depthKernel[1][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dx1)));
-    depthKernel[2][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dx0)));
-    depthKernel[2][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
-    depthKernel[2][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
+    depthKernel[0][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, dx0)));
+    depthKernel[0][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)));
+    depthKernel[0][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, dx1)));
+    depthKernel[1][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(0.0, dx0)));
+    depthKernel[1][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy));
+    depthKernel[1][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(0.0, dx1)));
+    depthKernel[2][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, dx0)));
+    depthKernel[2][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
+    depthKernel[2][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
 
     return _xgetShadowPCF3x3(depthKernel, shadowMap, shadowParams);
 }

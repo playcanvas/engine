@@ -11,7 +11,7 @@ export default /* glsl */`
         vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
 
         float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
-        return texture(shadowMap, vec3(uv, shadowZ));
+        return textureShadow(shadowMap, vec3(uv, shadowZ));
     }
 
     #endif
@@ -54,7 +54,7 @@ export default /* glsl */`
         vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
 
         // no filter shadow sampling
-        float depth = unpackFloat(texture2D(shadowMap, uv));
+        float depth = unpackFloat(textureShadow(shadowMap, uv));
         float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
         return depth > shadowZ ? 1.0 : 0.0;
     }
@@ -102,7 +102,7 @@ export default /* glsl */`
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)
 
     float getShadowSpotClusteredPCF1(sampler2DShadow shadowMap, vec4 shadowParams) {
-        return texture(shadowMap, dShadowCoord);
+        return textureShadow(shadowMap, dShadowCoord);
     }
 
     #endif
@@ -128,7 +128,7 @@ export default /* glsl */`
 
     float getShadowSpotClusteredPCF1(sampler2D shadowMap, vec4 shadowParams) {
 
-        float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
+        float depth = unpackFloat(textureShadow(shadowMap, dShadowCoord.xy));
 
         return depth > dShadowCoord.z ? 1.0 : 0.0;
 
