@@ -272,7 +272,6 @@ void main() {
             app.root.addChild(modelEntityParent);
 
             // LIGHT 
-
             const lightOmni = new Entity("Omni");
             lightOmni.addComponent("light", {
                 type: "omni",
@@ -286,6 +285,23 @@ void main() {
             app.root.addChild(lightOmni);
 
             ///////////
+
+
+            const lightDir = new Entity();
+            lightDir.addComponent("light", {
+                type: "directional",
+                color: new Color(1, 1, 1),
+                castShadows: false,
+                shadowBias: 0.2,
+                shadowDistance: 25,
+                normalOffsetBias: 0.05,
+                shadowResolution: 2048
+            });
+            lightDir.setLocalEulerAngles(45, 30, 0);
+            app.root.addChild(lightDir);
+
+
+
 
             let time = 0;
             const rot = new Quat();
@@ -327,8 +343,8 @@ void main() {
 
             // Tracing.set(TRACEID_RENDER_FRAME, true);
             // Tracing.set(TRACEID_RENDER_PASS, true);
-            Tracing.set(TRACEID_TEXTURE_ALLOC, true);
-            //Tracing.set(TRACEID_SHADER_ALLOC, true);
+            //Tracing.set(TRACEID_TEXTURE_ALLOC, true);
+            Tracing.set(TRACEID_SHADER_ALLOC, true);
 
             const canvas = document.querySelector('#gpuCanvas');
 

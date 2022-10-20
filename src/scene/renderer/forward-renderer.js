@@ -1322,29 +1322,29 @@ class ForwardRenderer {
                     if (material._dirtyBlend) {
                         scene.layers._dirtyBlend = true;
                     }
-
-                    if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
-
-                        // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
-                        // the same for the same pass, using all lights of the scene
-                        if (!drawCall.isStatic) {
-                            const variantKey = pass + '_' + objDefs + '_' + lightHash;
-                            drawCall._shader[pass] = material.variants[variantKey];
-                            if (!drawCall._shader[pass]) {
-                                drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                                material.variants[variantKey] = drawCall._shader[pass];
-                            }
-                        } else {
-
-                            // static lights generate unique shader per draw call, as static lights are unique per draw call,
-                            // and so variants cache is not used
-                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                        }
-                        drawCall._lightHash = lightHash;
-                    }
-
-                    Debug.assert(drawCall._shader[pass], "no shader for pass", material);
                 }
+
+                if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
+
+                    // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
+                    // the same for the same pass, using all lights of the scene
+                    if (!drawCall.isStatic) {
+                        const variantKey = pass + '_' + objDefs + '_' + lightHash;
+                        drawCall._shader[pass] = material.variants[variantKey];
+                        if (!drawCall._shader[pass]) {
+                            drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                            material.variants[variantKey] = drawCall._shader[pass];
+                        }
+                    } else {
+
+                        // static lights generate unique shader per draw call, as static lights are unique per draw call,
+                        // and so variants cache is not used
+                        drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                    }
+                    drawCall._lightHash = lightHash;
+                }
+
+                Debug.assert(drawCall._shader[pass], "no shader for pass", material);
 
                 addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -1352,7 +1352,6 @@ class ForwardRenderer {
                 prevObjDefs = objDefs;
                 prevLightMask = lightMask;
                 prevStatic = drawCall.isStatic;
-
             }
         }
 

@@ -20,7 +20,7 @@ gpuTextureFormats[PIXELFORMAT_L8_A8] = '';
 gpuTextureFormats[PIXELFORMAT_R5_G6_B5] = '';
 gpuTextureFormats[PIXELFORMAT_R5_G5_B5_A1] = '';
 gpuTextureFormats[PIXELFORMAT_R4_G4_B4_A4] = '';
-gpuTextureFormats[PIXELFORMAT_R8_G8_B8] = '';
+gpuTextureFormats[PIXELFORMAT_R8_G8_B8] = 'bgra8unorm';
 gpuTextureFormats[PIXELFORMAT_R8_G8_B8_A8] = 'bgra8unorm';
 gpuTextureFormats[PIXELFORMAT_DXT1] = '';
 gpuTextureFormats[PIXELFORMAT_DXT3] = '';
@@ -118,7 +118,7 @@ class WebgpuTexture {
         const texture = this.texture;
         const wgpu = device.wgpu;
         const gpuFormat = gpuTextureFormats[texture.format];
-        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format}`, texture);
+        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
 
         /** @type {GPUTextureDescriptor} */
         const textureDescriptor = {
