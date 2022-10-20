@@ -2466,7 +2466,7 @@ const parseGlb = function (glbData, callback) {
 
 // parse the chunk of data, which can be glb or gltf
 const parseChunk = function (filename, data, callback) {
-    if (filename && filename.toLowerCase().endsWith('.glb') ||
+    if ((filename && filename.toLowerCase().endsWith('.glb')) ||
         (data[0] === 'g' && data[1] === 'l' && data[2] === 'T' && data[3] === 'F')) {
         parseGlb(data, callback);
     } else {
