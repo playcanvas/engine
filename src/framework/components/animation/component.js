@@ -10,7 +10,6 @@ import { Skeleton } from '../../../scene/animation/skeleton.js';
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-import { revision, version } from "../../../core/core.js";
 
 /** @typedef {import('../../../scene/animation/animation.js').Animation} Animation */
 /** @typedef {import('../../../scene/model.js').Model} Model */
