@@ -1591,9 +1591,9 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
 
         if (target.path.startsWith('weights')) {
             createMorphTargetCurves(curve, node, entityPath);
-            // after all morph targets in this curve have been included in the curveMap, this curve and its output data can be deleted
-            delete curveMap[channel.sampler];
-            delete outputMap[curve.output];
+            // as all individual morph targets in this morph curve have their own curve now, this morph curve should be flagged
+            // so it's not included in the final output
+            curveMap[channel.sampler].morphCurve = true;
         } else {
             curve.paths.push({
                 entityPath: entityPath,
@@ -1622,6 +1622,10 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     // inputs arrays using the inputMap. Likewise for output values.
     for (const curveKey in curveMap) {
         const curveData = curveMap[curveKey];
+        // if the curveData contains a morph curve then do not add it to the final curve list as the individual morph target curves are included instead
+        if (curveData.morphCurve) {
+            continue;
+        }
         curves.push(new AnimCurve(
             curveData.paths,
             inputMap[curveData.input],
