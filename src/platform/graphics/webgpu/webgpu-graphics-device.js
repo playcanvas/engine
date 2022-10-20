@@ -72,6 +72,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extTextureHalfFloat = false; // TODO: likely supported as well
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
+        this.extStandardDerivatives = true;
     }
 
     async initWebGpu() {
@@ -175,6 +176,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // render pipeline
         const pipeline = this.renderPipeline.get(primitive, vb.format, null, this.shader, this.renderTarget,
                                                  this.bindGroupFormats, this.renderState);
+        Debug.assert(pipeline);
+
         if (this.pipeline !== pipeline) {
             this.pipeline = pipeline;
             passEncoder.setPipeline(pipeline);
@@ -263,6 +266,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // TODO: test single command encoder for the whole frame
         this.commandEncoder = this.wgpu.createCommandEncoder();
+
+        // clear cached encoder state
+        this.pipeline = null;
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
