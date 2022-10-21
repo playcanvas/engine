@@ -551,7 +551,7 @@ class GltfExporter extends CoreExporter {
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {ArrayBuffer} - The GLB file content.
      */
-    build(entity, options = {}) {
+    buildAsync(entity, options = {}) {
         const resources = this.collectResources(entity);
 
         const json = this.buildJson(resources, options);

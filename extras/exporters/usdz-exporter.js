@@ -132,7 +132,7 @@ class UsdzExporter extends CoreExporter {
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {ArrayBuffer} - The USDZ file content.
      */
-    build(entity, options = {}) {
+    buildAsync(entity, options = {}) {
 
         this.init();
 

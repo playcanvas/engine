@@ -99,7 +99,7 @@ class GltfExportExample {
                     maxTextureSize: 1024
                 };
 
-                new pcx.GltfExporter().build(app.root, options).then((arrayBuffer: any) => {
+                new pcx.GltfExporter().buildAsync(app.root, options).then((arrayBuffer: any) => {
 
                     const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 

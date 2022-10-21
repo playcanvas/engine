@@ -59,7 +59,7 @@ class UsdzExportExample {
                 maxTextureSize: 1024
             };
 
-            new pcx.UsdzExporter().build(entity, options).then((arrayBuffer: any) => {
+            new pcx.UsdzExporter().buildAsync(entity, options).then((arrayBuffer: any) => {
                 const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
                 // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
