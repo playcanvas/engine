@@ -1,7 +1,20 @@
 import { Debug } from "../../../core/debug.js";
-import { semanticToLocation, TYPE_FLOAT32 } from '../constants.js';
+import {
+    semanticToLocation,
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+} from '../constants.js';
 
 /** @typedef {import('../vertex-format.js').VertexFormat} VertexFormat */
+
+// map of TYPE_*** to GPUVertexFormat
+const gpuVertexFormats = [];
+gpuVertexFormats[TYPE_INT8] = 'sint8';
+gpuVertexFormats[TYPE_UINT8] = 'uint8';
+gpuVertexFormats[TYPE_INT16] = 'sint16';
+gpuVertexFormats[TYPE_UINT16] = 'uint16';
+gpuVertexFormats[TYPE_INT32] = 'sint32';
+gpuVertexFormats[TYPE_UINT32] = 'uint32';
+gpuVertexFormats[TYPE_FLOAT32] = 'float32';
 
 /**
  * @ignore
@@ -50,12 +63,13 @@ class WebgpuVertexBufferLayout {
                 const element = format.elements[i];
                 const location = semanticToLocation[element.name];
 
-                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float formats are supported, ${element.dataType} is not supported.`);
+                // A WGL shader needs attributes to have matching types, but glslang translator we use does not allow us to set those
+                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported.`);
 
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `float32x${element.numComponents}`
+                    format: `${gpuVertexFormats[element.dataType]}x${element.numComponents}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
