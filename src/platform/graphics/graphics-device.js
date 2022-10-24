@@ -326,10 +326,14 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     _isBrowserInterface(texture) {
-        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
-                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
-                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement) ||
-                (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
+        return this._isImageBrowserInterface(texture) ||
+                (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
+                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);           
+    }
+
+    _isImageBrowserInterface(texture) {
+        return (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
+               (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
     }
 
     /**
