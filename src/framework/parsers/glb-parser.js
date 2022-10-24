@@ -2474,7 +2474,7 @@ const parseChunk = function (filename, data, callback) {
         // glb format starts with 'glTF'
         const u8 = new Uint8Array(data);
         return u8[0] === 103 && u8[1] === 108 && u8[2] === 84 && u8[3] === 70;
-    }
+    };
 
     if ((filename && filename.toLowerCase().endsWith('.glb')) || hasGlbHeader()) {
         parseGlb(data, callback);
