@@ -2470,8 +2470,13 @@ const parseGlb = function (glbData, callback) {
 
 // parse the chunk of data, which can be glb or gltf
 const parseChunk = function (filename, data, callback) {
-    if ((filename && filename.toLowerCase().endsWith('.glb')) ||
-        (data[0] === 'g' && data[1] === 'l' && data[2] === 'T' && data[3] === 'F')) {
+    const hasGlbHeader = () => {
+        // glb format starts with 'glTF'
+        const u8 = new Uint8Array(data);
+        return u8[0] === 103 && u8[1] === 108 && u8[2] === 84 && u8[3] === 70;
+    }
+
+    if ((filename && filename.toLowerCase().endsWith('.glb')) || hasGlbHeader()) {
         parseGlb(data, callback);
     } else {
         callback(null, {
