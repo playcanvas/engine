@@ -332,8 +332,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     _isImageBrowserInterface(texture) {
-        return (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) ||
-               (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap);
+        return (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
+               (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement);
     }
 
     /**
