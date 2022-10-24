@@ -318,7 +318,7 @@ class WebglTexture {
 
                         let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
-                        if (device._isImageBrowserInterface(src))
+                        if (device._isImageBrowserInterface(src)) {
                             if (src.width > device.maxCubeMapSize || src.height > device.maxCubeMapSize) {
                                 src = downsampleImage(src, device.maxCubeMapSize);
                                 if (mipLevel === 0) {
@@ -406,7 +406,7 @@ class WebglTexture {
                 // ----- 2D -----
                 if (device._isBrowserInterface(mipObject)) {
                     // Downsize images that are too large to be used as textures
-                    if (device._isImageBrowserInterface(mipObject))
+                    if (device._isImageBrowserInterface(mipObject)) {
                         if (mipObject.width > device.maxTextureSize || mipObject.height > device.maxTextureSize) {
                             mipObject = downsampleImage(mipObject, device.maxTextureSize);
                             if (mipLevel === 0) {
