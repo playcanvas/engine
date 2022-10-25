@@ -28,11 +28,8 @@ class SoundManager extends EventHandler {
     /**
      * Create a new SoundManager instance.
      *
-     * @param {object} [options] - Options options object.
-     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API, even if check
-     * indicates that it is not available.
      */
-    constructor(options) {
+    constructor() {
         super();
 
         /**

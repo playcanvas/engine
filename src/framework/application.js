@@ -136,7 +136,7 @@ class Application extends AppBase {
         appOptions.assetPrefix = options.assetPrefix;
         appOptions.scriptsOrder = options.scriptsOrder;
 
-        appOptions.soundManager = new SoundManager(options);
+        appOptions.soundManager = new SoundManager();
         appOptions.lightmapper = Lightmapper;
         appOptions.batchManager = BatchManager;
         appOptions.xr = XrManager;
