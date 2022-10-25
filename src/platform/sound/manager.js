@@ -126,7 +126,7 @@ class SoundManager extends EventHandler {
 
         if (this._context) {
             this._removeUnlockListeners();
-            this?._context?.close();
+            this._context?.close();
             this._context = null;
         }
     }
