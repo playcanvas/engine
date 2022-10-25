@@ -33,11 +33,7 @@ class AnimClip {
         this._blendWeight = 1.0;        // blend weight 0..1
         this._blendOrder = 0.0;         // blend order relative to other clips
         this._eventHandler = eventHandler;
-        this._eventCursor = 0;
-        // move the event cursor to an event that should fire after the starting time
-        while (this._track.events[this._eventCursor] && this._track.events[this._eventCursor].time < this.time) {
-            this._eventCursor++;
-        }
+        this.alignCursorToCurrentTime();
     }
 
     set name(name) {
@@ -58,6 +54,7 @@ class AnimClip {
 
     set time(time) {
         this._time = time;
+        this.alignCursorToCurrentTime();
     }
 
     get time() {
@@ -102,6 +99,14 @@ class AnimClip {
 
     get eventCursor() {
         return this._eventCursor;
+    }
+
+    alignCursorToCurrentTime() {
+        this._eventCursor = 0;
+        // move the event cursor to the event that should fire after the current time
+        while (this._track.events[this._eventCursor] && this._track.events[this._eventCursor].time < this.time) {
+            this._eventCursor++;
+        }
     }
 
     activeEventsForFrame(frameStartTime, frameEndTime) {
