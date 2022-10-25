@@ -52,7 +52,8 @@ class SoundManager extends EventHandler {
 
         this._unlockHandlerFunc = this._unlockHandler.bind(this);
 
-        this._enabled = true;
+        // user suspended audio
+        this._userSuspended = false;
 
         this.listener = new Listener(this);
 
@@ -103,8 +104,8 @@ class SoundManager extends EventHandler {
     }
 
     suspend() {
-        if (this._enabled) {
-            this._enabled = false;
+        if (!this._userSuspended) {
+            this._userSuspended = true;
             if (this._context && this._context.state === CONTEXT_STATE_RUNNING) {
                 this._suspend();
             }
@@ -112,8 +113,8 @@ class SoundManager extends EventHandler {
     }
 
     resume() {
-        if (!this._enabled) {
-            this._enabled = true;
+        if (this._userSuspended) {
+            this._userSuspended = false;
             if (this._context && this._context.state !== CONTEXT_STATE_RUNNING) {
                 this._resume();
             }
@@ -191,13 +192,11 @@ class SoundManager extends EventHandler {
 
     // resume the sound context
     _resume() {
-        // explictly resume() context, and only fire 'resume' event after context has resumed
         this._context.resume().then(() => {
             // Some platforms (mostly iOS) require an additional sound to be played.
             // This also performs a sanity check and verifies sounds can be played.
-            const buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
             const source = this._context.createBufferSource();
-            source.buffer = buffer;
+            source.buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
             source.connect(this._context.destination);
             source.start(0);
 
@@ -213,6 +212,7 @@ class SoundManager extends EventHandler {
         });
     }
 
+    // resume the sound context and fire suspend event if it succeeds
     _suspend() {
         this._context.suspend().then(() => {
             this.fire('suspend');
@@ -226,7 +226,7 @@ class SoundManager extends EventHandler {
     _unlockHandler() {
         this._removeUnlockListeners();
 
-        if (this._enabled && this._context.state !== CONTEXT_STATE_RUNNING) {
+        if (!this._userSuspended && this._context.state !== CONTEXT_STATE_RUNNING) {
             this._resume();
         }
     }
