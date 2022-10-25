@@ -122,12 +122,13 @@ class SoundManager extends EventHandler {
     }
 
     destroy() {
-        this._removeUnlockListeners();
-
         this.fire('destroy');
 
-        this?._context?.close();
-        this._context = null;
+        if (this._context) {
+            this._removeUnlockListeners();
+            this?._context?.close();
+            this._context = null;
+        }
     }
 
     /**
