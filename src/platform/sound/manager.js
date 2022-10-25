@@ -52,6 +52,8 @@ class SoundManager extends EventHandler {
 
         this._unlockHandlerFunc = this._unlockHandler.bind(this);
 
+        this._enabled = true;
+
         this.listener = new Listener(this);
 
         this._volume = 1;
@@ -101,14 +103,20 @@ class SoundManager extends EventHandler {
     }
 
     suspend() {
-        if (this._context && this._context.state === CONTEXT_STATE_RUNNING) {
-            this._suspend();
+        if (!this._enabled) {
+            this._enabled = false;
+            if (this._context && this._context.state === CONTEXT_STATE_RUNNING) {
+                this._suspend();
+            }
         }
     }
 
     resume() {
-        if (this._context && this._context.state !== CONTEXT_STATE_RUNNING) {
-            this._resume();
+        if (!this._enabled) {
+            this._enabled = true;
+            if (this._context && this._context.state !== CONTEXT_STATE_RUNNING) {
+                this._resume();
+            }
         }
     }
 
@@ -209,16 +217,16 @@ class SoundManager extends EventHandler {
         this._context.suspend().then(() => {
             this.fire('suspend');
         }, (e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected ${e}`);
+            Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but it was rejected ${e}`);
         }).catch((e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception ${e}`);
+            Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but threw an exception ${e}`);
         });
     }
 
     _unlockHandler() {
         this._removeUnlockListeners();
 
-        if (this._context.state !== CONTEXT_STATE_RUNNING) {
+        if (this._enabled && this._context.state !== CONTEXT_STATE_RUNNING) {
             this._resume();
         }
     }
