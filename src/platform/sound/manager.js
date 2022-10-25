@@ -43,8 +43,8 @@ class SoundManager extends EventHandler {
          */
         this._context = null;
 
-        // @ts-ignore
-        this.AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.AudioContext = (typeof AudioContext !== 'undefined' && AudioContext) ||
+                            (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
 
         if (!this.AudioContext) {
             Debug.warn('No support for 3D audio found');
