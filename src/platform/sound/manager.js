@@ -103,7 +103,7 @@ class SoundManager extends EventHandler {
     }
 
     suspend() {
-        if (!this._enabled) {
+        if (this._enabled) {
             this._enabled = false;
             if (this._context && this._context.state === CONTEXT_STATE_RUNNING) {
                 this._suspend();
