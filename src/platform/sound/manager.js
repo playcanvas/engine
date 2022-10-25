@@ -184,10 +184,7 @@ class SoundManager extends EventHandler {
     // resume the sound context
     _resume() {
         // explictly resume() context, and only fire 'resume' event after context has resumed
-        console.log(`before: ${this._context.state}`);
         this._context.resume().then(() => {
-            console.log(`after: ${this._context.state}`);
-
             // Some platforms (mostly iOS) require an additional sound to be played.
             // This also performs a sanity check and verifies sounds can be played.
             const buffer = this._context.createBuffer(1, 1, this._context.sampleRate);
