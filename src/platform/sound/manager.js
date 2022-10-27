@@ -73,12 +73,8 @@ class SoundManager extends EventHandler {
         return this._volume;
     }
 
-    get running() {
-        return this._context && this._context.state === CONTEXT_STATE_RUNNING;
-    }
-
     get suspended() {
-        return !this.running;
+        return this._userSuspended;
     }
 
     /**
