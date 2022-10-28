@@ -939,6 +939,9 @@ class RigidBodyComponent extends Component {
                 const q = ammoTransform.getRotation();
                 this.entity.setPosition(p.x(), p.y(), p.z());
                 this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+
+                this._getEntityTransform(ammoTransform);
+                motionState.setWorldTransform(ammoTransform);
             }
         }
     }
