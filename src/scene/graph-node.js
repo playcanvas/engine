@@ -1117,17 +1117,17 @@ class GraphNode extends EventHandler {
      */
     setRotation(x, y, z, w) {
         if (x instanceof Quat) {
-            rotation.copy(x);
+            this.rotation.copy(x);
         } else {
-            rotation.set(x, y, z, w);
+            this.rotation.set(x, y, z, w);
         }
 
         if (this._parent === null) {
-            this.localRotation.copy(rotation);
+            this.localRotation.copy(this.rotation);
         } else {
             const parentRot = this._parent.getRotation();
             invParentRot.copy(parentRot).invert();
-            this.localRotation.copy(invParentRot).mul(rotation);
+            this.localRotation.copy(invParentRot).mul(this.rotation);
         }
 
         if (!this._dirtyLocal)
