@@ -8,14 +8,17 @@ import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { execSync } from 'child_process';
 import resolve from "@rollup/plugin-node-resolve";
-
+/** @type {string} */
 let revision;
 try {
     revision = execSync('git rev-parse --short HEAD').toString().trim();
 } catch (e) {
     revision = 'unknown';
 }
-
+/**
+ * @param {string} config 
+ * @returns {string}
+ */
 function getBanner(config) {
     return [
         '/**',
@@ -25,24 +28,42 @@ function getBanner(config) {
         ' */'
     ].join('\n');
 }
-
+/**
+ * @param {boolean} enable 
+ * @returns {import('rollup').Plugin}
+ */
 function spacesToTabs(enable) {
     const filter = createFilter([
         '**/*.js'
     ], []);
 
     return {
+        name: "spacesToTabs",
         transform(code, id) {
             if (!enable || !filter(id)) return undefined;
+            // ^    = start of line
+            // " +" = one or more spaces
+            // gm   = find all + multiline
+            const regex = /^ +/gm;
+            code = code.replace(
+                regex,
+                startSpaces => startSpaces.replace(/  /g, '\t')
+            );
             return {
-                code: code.replace(/\G {4}/g, '\t'),
+                code,
                 map: null
             };
         }
     };
 }
 
-// Validate and print warning if an engine module on a lower level imports module on a higher level
+/**
+ * Validate and print warning if an engine module on a lower level imports module on a higher level
+ * 
+ * @param {string} rootFile 
+ * @param {boolean} enable 
+ * @returns {import('rollup').Plugin}
+ */
 function engineLayerImportValidation(rootFile, enable) {
 
     const folderLevels = {
@@ -56,6 +77,8 @@ function engineLayerImportValidation(rootFile, enable) {
     let rootPath;
 
     return {
+        name: 'engineLayerImportValidation',
+
         buildStart() {
             rootPath = path.parse(path.resolve(rootFile)).dir;
         },
@@ -89,7 +112,10 @@ function engineLayerImportValidation(rootFile, enable) {
         }
     };
 }
-
+/**
+ * @param {boolean} enable 
+ * @returns {import('rollup').Plugin}
+ */
 function shaderChunks(enable) {
     const filter = createFilter([
         '**/*.vert.js',
@@ -97,6 +123,7 @@ function shaderChunks(enable) {
     ], []);
 
     return {
+        name: 'shaderChunks',
         transform(code, id) {
             if (!enable || !filter(id)) return undefined;
 
@@ -135,11 +162,14 @@ function shaderChunks(enable) {
         }
     };
 }
-
-const es5Options = {
+/**
+ * @param {string} buildType
+ * @returns {import('@rollup/plugin-babel').RollupBabelInputPluginOptions}
+ */
+const es5Options = buildType => ({
     babelHelpers: 'bundled',
     babelrc: false,
-    comments: false,
+    comments: buildType === 'debug',
     compact: false,
     minified: false,
     presets: [
@@ -153,12 +183,15 @@ const es5Options = {
             }
         ]
     ]
-};
-
-const moduleOptions = {
+});
+/**
+ * @param {string} buildType
+ * @returns {import('@rollup/plugin-babel').RollupBabelInputPluginOptions}
+ */
+const moduleOptions = buildType => ({
     babelHelpers: 'bundled',
     babelrc: false,
-    comments: false,
+    comments: buildType === 'debug',
     compact: false,
     minified: false,
     presets: [
@@ -173,7 +206,7 @@ const moduleOptions = {
             }
         ]
     ]
-};
+});
 
 const stripFunctions = [
     'Debug.assert',
@@ -193,9 +226,11 @@ const stripFunctions = [
     'DebugGraphics.popGpuMarker',
     'WorldClustersDebug.render'
 ];
-
-// buildType is: 'debug', 'release', 'profiler', 'min'
-// moduleFormat is: 'es5', 'es6'
+/**
+ * @param {'debug'|'release'|'profiler'|'min'} buildType 
+ * @param {'es5'|'es6'} moduleFormat 
+ * @returns {import('rollup').RollupOptions}
+ */
 function buildTarget(buildType, moduleFormat) {
     const banner = {
         debug: ' (DEBUG PROFILER)',
@@ -245,6 +280,7 @@ function buildTarget(buildType, moduleFormat) {
         es6: '.mjs'
     };
 
+    /** @type {Record<string, 'umd'|'es'>} */
     const outputFormat = {
         es5: 'umd',
         es6: 'es'
@@ -254,7 +290,7 @@ function buildTarget(buildType, moduleFormat) {
         debug: 'inline',
         release: null
     };
-
+    /** @type {import('rollup').OutputOptions} */
     const outputOptions = {
         banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
         plugins: outputPlugins[buildType || outputPlugins.release],
@@ -291,18 +327,16 @@ function buildTarget(buildType, moduleFormat) {
         }
     };
 
+    /**
+     * @type {import('@rollup/plugin-strip').RollupStripOptions}
+     */
     const stripOptions = {
-        debug: {
-            functions: []
-        },
-        release: {
-            functions: stripFunctions
-        }
+        functions: stripFunctions
     };
 
     const babelOptions = {
-        es5: es5Options,
-        es6: moduleOptions
+        es5: es5Options(buildType),
+        es6: moduleOptions(buildType)
     };
 
     const rootFile = 'src/index.js';
@@ -314,13 +348,18 @@ function buildTarget(buildType, moduleFormat) {
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
-            strip(stripOptions[buildType] || stripOptions.release),
+            buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
-            spacesToTabs(buildType !== 'debug')
+            spacesToTabs(buildType !== 'debug'),
         ]
     };
 }
-
+/**
+ * @param {string} name 
+ * @param {string} input 
+ * @param {string} [output] - If not given, input is used.
+ * @returns {import('rollup').RollupOptions}
+ */
 function scriptTarget(name, input, output) {
     return {
         input: input,
@@ -334,14 +373,19 @@ function scriptTarget(name, input, output) {
         },
         plugins: [
             resolve(),
-            babel(es5Options),
-            spacesToTabs()
+            babel(es5Options('release')),
+            spacesToTabs(true)
         ],
         external: ['playcanvas'],
         cache: false
     };
 }
-
+/**
+ * @param {string} name 
+ * @param {string} input 
+ * @param {string} output 
+ * @returns {import('rollup').RollupOptions}
+ */
 function scriptTargetEs6(name, input, output) {
     return {
         input: input,
@@ -355,19 +399,18 @@ function scriptTargetEs6(name, input, output) {
         preserveModules: true,
         plugins: [
             resolve(),
-            babel(moduleOptions),
-            spacesToTabs()
+            babel(moduleOptions('release')),
+            spacesToTabs(true)
         ],
         external: ['playcanvas', 'fflate']
     };
 }
-
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
-
+/** @type {import('rollup').RollupOptions} */
 const target_types = {
     input: 'types/index.d.ts',
     output: [{
@@ -381,6 +424,7 @@ const target_types = {
 };
 
 export default (args) => {
+    /** @type {import('rollup').RollupOptions[]} */
     let targets = [];
 
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
