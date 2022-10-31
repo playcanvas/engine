@@ -727,11 +727,11 @@ class Light {
             tmpVec.copy(node.up);
 
             if (angle > 45) {
-                tmpVec.mulScalar(-size * cosAngle);
                 sphere.radius = size * this._outerConeAngleSin;
+                tmpVec.mulScalar(-size * cosAngle);
             } else {
-                tmpVec.mulScalar(size / (-2 * cosAngle));
                 sphere.radius = size / (2 * cosAngle);
+                tmpVec.mulScalar(-sphere.radius);
             }
 
             sphere.center.add2(node.getPosition(), tmpVec);
