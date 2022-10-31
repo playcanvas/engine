@@ -1,20 +1,36 @@
-import { babel } from '@rollup/plugin-babel';
-import strip from '@rollup/plugin-strip';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
 import { createFilter } from '@rollup/pluginutils';
+import { babel } from '@rollup/plugin-babel';
+import resolve from "@rollup/plugin-node-resolve";
+import strip from '@rollup/plugin-strip';
+import terser from '@rollup/plugin-terser';
+
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { terser } from 'rollup-plugin-terser';
-import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { execSync } from 'child_process';
-import resolve from "@rollup/plugin-node-resolve";
 
-let revision;
-try {
-    revision = execSync('git rev-parse --short HEAD').toString().trim();
-} catch (e) {
-    revision = 'unknown';
+function getVersion() {
+    const text = fs.readFileSync('./package.json', 'utf8');
+    const json = JSON.parse(text);
+    return json.version;
 }
+
+function getRevision() {
+    let revision;
+    try {
+        revision = execSync('git rev-parse --short HEAD').toString().trim();
+    } catch (e) {
+        revision = 'unknown';
+    }
+    return revision;
+}
+
+const version = getVersion();
+const revision = getRevision();
+console.log('Building PlayCanvas Engine v' + version + ' revision ' + revision);
 
 function getBanner(config) {
     return [
@@ -52,7 +68,6 @@ function engineLayerImportValidation(rootFile, enable) {
         'framework': 3
     };
 
-    const path = require('path');
     let rootPath;
 
     return {
@@ -261,7 +276,8 @@ function buildTarget(buildType, moduleFormat) {
         format: outputFormat[moduleFormat],
         indent: '\t',
         sourcemap: sourceMap[buildType] || sourceMap.release,
-        name: 'pc'
+        name: 'pc',
+        preserveModules: moduleFormat === 'es6'
     };
 
     outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = `${outputFile[buildType]}${outputExtension[moduleFormat]}`;
@@ -309,7 +325,6 @@ function buildTarget(buildType, moduleFormat) {
     return {
         input: rootFile,
         output: outputOptions,
-        preserveModules: moduleFormat === 'es6',
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
@@ -350,9 +365,9 @@ function scriptTargetEs6(name, input, output) {
             banner: getBanner(''),
             dir: output,
             format: 'es',
-            indent: '\t'
+            indent: '\t',
+            preserveModules: true
         },
-        preserveModules: true,
         plugins: [
             resolve(),
             babel(moduleOptions),
