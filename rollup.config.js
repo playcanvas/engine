@@ -8,6 +8,11 @@ import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { execSync } from 'child_process';
 import resolve from "@rollup/plugin-node-resolve";
+/** @typedef {import('rollup'              ).RollupOptions                } RollupOptions                 */
+/** @typedef {import('rollup'              ).Plugin                       } Plugin                        */
+/** @typedef {import('rollup'              ).OutputOptions                } OutputOptions                 */
+/** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
+/** @typedef {import('@rollup/plugin-strip').RollupStripOptions           } RollupStripOptions            */
 /** @type {string} */
 let revision;
 try {
@@ -16,8 +21,10 @@ try {
     revision = 'unknown';
 }
 /**
- * @param {string} config 
- * @returns {string}
+ * Build the banner with build date and revision. Revision only works for git repo, not zip.
+ *
+ * @param {string} config - A string like `(DEBUG PROFILER)` or even an empty string.
+ * @returns {string} - The banner.
  */
 function getBanner(config) {
     return [
@@ -29,8 +36,11 @@ function getBanner(config) {
     ].join('\n');
 }
 /**
- * @param {boolean} enable 
- * @returns {import('rollup').Plugin}
+ * This plugin converts every two spaces into one tab. Two spaces is the default the babel plugin
+ * outputs, which is independent of the four spaces of the code base.
+ *
+ * @param {boolean} enable - Enable or disable the plugin.
+ * @returns {Plugin} The plugin.
  */
 function spacesToTabs(enable) {
     const filter = createFilter([
@@ -47,7 +57,7 @@ function spacesToTabs(enable) {
             const regex = /^ +/gm;
             code = code.replace(
                 regex,
-                startSpaces => startSpaces.replace(/  /g, '\t')
+                startSpaces => startSpaces.replace(/ {2}/g, '\t')
             );
             return {
                 code,
@@ -59,10 +69,10 @@ function spacesToTabs(enable) {
 
 /**
  * Validate and print warning if an engine module on a lower level imports module on a higher level
- * 
- * @param {string} rootFile 
- * @param {boolean} enable 
- * @returns {import('rollup').Plugin}
+ *
+ * @param {string} rootFile - The root file, typically `src/index.js`.
+ * @param {boolean} enable - Enable or disable the plugin.
+ * @returns {Plugin} The plugin.
  */
 function engineLayerImportValidation(rootFile, enable) {
 
@@ -113,8 +123,8 @@ function engineLayerImportValidation(rootFile, enable) {
     };
 }
 /**
- * @param {boolean} enable 
- * @returns {import('rollup').Plugin}
+ * @param {boolean} enable - Enable or disable the plugin.
+ * @returns {Plugin} The plugin.
  */
 function shaderChunks(enable) {
     const filter = createFilter([
@@ -163,8 +173,10 @@ function shaderChunks(enable) {
     };
 }
 /**
- * @param {string} buildType
- * @returns {import('@rollup/plugin-babel').RollupBabelInputPluginOptions}
+ * The ES5 options for babel(...) plugin.
+ *
+ * @param {string} buildType - Only 'debug' requires special handling so far.
+ * @returns {RollupBabelInputPluginOptions} The babel options.
  */
 const es5Options = buildType => ({
     babelHelpers: 'bundled',
@@ -185,8 +197,10 @@ const es5Options = buildType => ({
     ]
 });
 /**
- * @param {string} buildType
- * @returns {import('@rollup/plugin-babel').RollupBabelInputPluginOptions}
+ * The ES6 options for babel(...) plugin.
+ *
+ * @param {string} buildType - Only 'debug' requires special handling so far.
+ * @returns {RollupBabelInputPluginOptions} The babel options.
  */
 const moduleOptions = buildType => ({
     babelHelpers: 'bundled',
@@ -227,9 +241,11 @@ const stripFunctions = [
     'WorldClustersDebug.render'
 ];
 /**
- * @param {'debug'|'release'|'profiler'|'min'} buildType 
- * @param {'es5'|'es6'} moduleFormat 
- * @returns {import('rollup').RollupOptions}
+ * Build a target that rollup is supposed to build.
+ *
+ * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {'es5'|'es6'} moduleFormat - The module format.
+ * @returns {RollupOptions} One rollup target.
  */
 function buildTarget(buildType, moduleFormat) {
     const banner = {
@@ -290,7 +306,7 @@ function buildTarget(buildType, moduleFormat) {
         debug: 'inline',
         release: null
     };
-    /** @type {import('rollup').OutputOptions} */
+    /** @type {OutputOptions} */
     const outputOptions = {
         banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
         plugins: outputPlugins[buildType || outputPlugins.release],
@@ -328,7 +344,7 @@ function buildTarget(buildType, moduleFormat) {
     };
 
     /**
-     * @type {import('@rollup/plugin-strip').RollupStripOptions}
+     * @type {RollupStripOptions}
      */
     const stripOptions = {
         functions: stripFunctions
@@ -350,15 +366,17 @@ function buildTarget(buildType, moduleFormat) {
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
-            spacesToTabs(buildType !== 'debug'),
+            spacesToTabs(buildType !== 'debug')
         ]
     };
 }
 /**
- * @param {string} name 
- * @param {string} input 
+ * Build an ES5 target that rollup is supposed to build.
+ *
+ * @param {string} name - The name, like `pcx` or `VoxParser`.
+ * @param {string} input - The input file, like `extras/index.js`.
  * @param {string} [output] - If not given, input is used.
- * @returns {import('rollup').RollupOptions}
+ * @returns {RollupOptions} One rollup target.
  */
 function scriptTarget(name, input, output) {
     return {
@@ -381,10 +399,12 @@ function scriptTarget(name, input, output) {
     };
 }
 /**
- * @param {string} name 
- * @param {string} input 
- * @param {string} output 
- * @returns {import('rollup').RollupOptions}
+ * Build an ES6 target that rollup is supposed to build.
+ *
+ * @param {string} name - The name, like `pcx` or `VoxParser`.
+ * @param {string} input - The input file, like `extras/index.js`.
+ * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
+ * @returns {RollupOptions} One rollup target.
  */
 function scriptTargetEs6(name, input, output) {
     return {
@@ -410,7 +430,7 @@ const target_extras = [
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
-/** @type {import('rollup').RollupOptions} */
+/** @type {RollupOptions} */
 const target_types = {
     input: 'types/index.d.ts',
     output: [{
@@ -424,7 +444,7 @@ const target_types = {
 };
 
 export default (args) => {
-    /** @type {import('rollup').RollupOptions[]} */
+    /** @type {RollupOptions[]} */
     let targets = [];
 
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
