@@ -15,8 +15,6 @@ import {
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
-const spotCenter = new Vec3();
-const spotEndPoint = new Vec3();
 const tmpVec = new Vec3();
 const tmpBiases = {
     bias: 0,
