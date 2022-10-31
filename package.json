@@ -129,7 +129,7 @@
     "watch:es6": "npm run build:es6 -- -w",
     "watch:profiler": "npm run build:profiler -- -w",
     "docs": "jsdoc -c conf-api.json",
-    "lint": "eslint --ext .js,.mjs extras scripts src test rollup.config.js",
+    "lint": "eslint --ext .js,.mjs extras scripts src test rollup.config.mjs",
     "serve": "serve build -l 51000",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",

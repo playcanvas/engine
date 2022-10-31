@@ -2,12 +2,14 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+// 1st party Rollup plugins
 import { createFilter } from '@rollup/pluginutils';
 import { babel } from '@rollup/plugin-babel';
 import resolve from "@rollup/plugin-node-resolve";
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
 
+// 3rd party Rollup plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
