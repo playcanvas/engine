@@ -32,7 +32,7 @@ function getRevision() {
 
 const version = getVersion();
 const revision = getRevision();
-console.log('Building PlayCanvas Engine v' + version + ' revision ' + revision);
+console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 
 function getBanner(config) {
     return [
