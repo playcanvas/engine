@@ -158,7 +158,7 @@ class Light {
         this._position = new Vec3(0, 0, 0);
         this._direction = new Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
-        this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
+        this._updateOuterAngle(this._outerConeAngle);
 
         this._usePhysicalUnits = undefined;
 
@@ -416,7 +416,8 @@ class Light {
             return;
 
         this._outerConeAngle = value;
-        this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
+        this._updateOuterAngle(value);
+
         if (this._usePhysicalUnits) {
             this._updateFinalColor();
         }
@@ -424,6 +425,12 @@ class Light {
 
     get outerConeAngle() {
         return this._outerConeAngle;
+    }
+
+    _updateOuterAngle(angle) {
+        const radAngle = angle * Math.PI / 180;
+        this._outerConeAngleCos = Math.cos(radAngle);
+        this._outerConeAngleSin = Math.sin(radAngle);
     }
 
     set intensity(value) {
@@ -713,24 +720,23 @@ class Light {
 
     getBoundingSphere(sphere) {
         if (this._type === LIGHTTYPE_SPOT) {
-            const range = this.attenuationEnd;
+
+            // based on https://bartwronski.com/2017/04/13/cull-that-cone/
+            const size = this.attenuationEnd;
             const angle = this._outerConeAngle;
-            const f = Math.cos(angle * math.DEG_TO_RAD);
+            const cosAngle = this._outerConeAngleCos;
             const node = this._node;
+            tmpVec.copy(node.up);
 
-            spotCenter.copy(node.up);
-            spotCenter.mulScalar(-range * 0.5 * f);
-            spotCenter.add(node.getPosition());
-            sphere.center = spotCenter;
+            if (angle > 45) {
+                tmpVec.mulScalar(-size * cosAngle);
+                sphere.radius = size * this._outerConeAngleSin;
+            } else {
+                tmpVec.mulScalar(size / (-2 * cosAngle));
+                sphere.radius = size / (2 * cosAngle);
+            }
 
-            spotEndPoint.copy(node.up);
-            spotEndPoint.mulScalar(-range);
-
-            tmpVec.copy(node.right);
-            tmpVec.mulScalar(Math.sin(angle * math.DEG_TO_RAD) * range);
-            spotEndPoint.add(tmpVec);
-
-            sphere.radius = spotEndPoint.length() * 0.5;
+            sphere.center.add2(node.getPosition(), tmpVec);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             sphere.center = this._node.getPosition();
