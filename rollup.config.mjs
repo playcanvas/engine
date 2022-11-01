@@ -45,6 +45,7 @@ function getRevision() {
 const version = getVersion();
 const revision = getRevision();
 console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
+
 /**
  * Build the banner with build date and revision. Revision only works for git repo, not zip.
  *
@@ -60,6 +61,7 @@ function getBanner(config) {
         ' */'
     ].join('\n');
 }
+
 /**
  * This plugin converts every two spaces into one tab. Two spaces is the default the babel plugin
  * outputs, which is independent of the four spaces of the code base.
@@ -146,6 +148,7 @@ function engineLayerImportValidation(rootFile, enable) {
         }
     };
 }
+
 /**
  * @param {boolean} enable - Enable or disable the plugin.
  * @returns {Plugin} The plugin.
@@ -221,6 +224,7 @@ const es5Options = buildType => ({
         ]
     ]
 });
+
 /**
  * The ES6 options for babel(...) plugin.
  *
@@ -265,6 +269,7 @@ const stripFunctions = [
     'DebugGraphics.popGpuMarker',
     'WorldClustersDebug.render'
 ];
+
 /**
  * Build a target that rollup is supposed to build.
  *
@@ -395,6 +400,7 @@ function buildTarget(buildType, moduleFormat) {
         ]
     };
 }
+
 /**
  * Build an ES5 target that rollup is supposed to build.
  *
@@ -423,6 +429,7 @@ function scriptTarget(name, input, output) {
         cache: false
     };
 }
+
 /**
  * Build an ES6 target that rollup is supposed to build.
  *
@@ -456,6 +463,7 @@ const target_extras = [
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
+
 /** @type {RollupOptions} */
 const target_types = {
     input: 'types/index.d.ts',
