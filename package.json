@@ -76,7 +76,7 @@
     "README-zh.md"
   ],
   "devDependencies": {
-    "@babel/core": "^7.19.3",
+    "@babel/core": "^7.19.6",
     "@babel/eslint-parser": "^7.18.9",
     "@babel/preset-env": "^7.19.4",
     "@playcanvas/canvas-mock": "^1.0.1",
@@ -89,7 +89,7 @@
     "@rollup/pluginutils": "^5.0.2",
     "c8": "^7.12.0",
     "chai": "^4.3.6",
-    "eslint": "^8.25.0",
+    "eslint": "^8.26.0",
     "fflate": "^0.7.4",
     "jsdoc": "^3.6.11",
     "jsdoc-tsimport-plugin": "^1.0.5",
@@ -98,7 +98,7 @@
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.34",
     "mocha": "^10.1.0",
-    "rollup": "^3.2.4",
+    "rollup": "^3.2.5",
     "rollup-plugin-dts": "^5.0.0",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.8.3",
