@@ -1,3 +1,5 @@
+import { Debug } from "../../../core/debug.js";
+
 /**
  * A WebGL implementation of the RenderTarget.
  *
@@ -112,9 +114,7 @@ class WebglRenderTarget {
             }
         }
 
-        // #if _DEBUG
-        this._checkFbo(device);
-        // #endif
+        Debug.call(() => this._checkFbo(device, target));
 
         // ##### Create MSAA FBO (WebGL2 only) #####
         if (device.webgl2 && target._samples > 1) {
@@ -150,9 +150,8 @@ class WebglRenderTarget {
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
                 }
             }
-            // #if _DEBUG
-            this._checkFbo(device);
-            // #endif
+
+            Debug.call(() => this._checkFbo(device, target, 'MSAA'));
         }
     }
 
@@ -161,27 +160,26 @@ class WebglRenderTarget {
      *
      * @private
      */
-    _checkFbo(device) {
+    _checkFbo(device, target, type = '') {
         const gl = device.gl;
         const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        let errorCode;
         switch (status) {
             case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                console.error("ERROR: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                errorCode = 'FRAMEBUFFER_INCOMPLETE_ATTACHMENT';
                 break;
             case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                console.error("ERROR: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                errorCode = 'FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT';
                 break;
             case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                console.error("ERROR: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                errorCode = 'FRAMEBUFFER_INCOMPLETE_DIMENSIONS';
                 break;
             case gl.FRAMEBUFFER_UNSUPPORTED:
-                console.error("ERROR: FRAMEBUFFER_UNSUPPORTED");
-                break;
-            case gl.FRAMEBUFFER_COMPLETE:
-                break;
-            default:
+                errorCode = 'FRAMEBUFFER_UNSUPPORTED';
                 break;
         }
+
+        Debug.assert(!errorCode, `Framebuffer creation failed with error code ${errorCode}, render target: ${target.name} ${type}`, target);
     }
 
     loseContext() {

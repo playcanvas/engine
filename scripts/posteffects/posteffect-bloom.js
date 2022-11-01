@@ -225,7 +225,7 @@ BloomEffect.prototype._resize = function (target) {
         colorBuffer.magFilter = pc.FILTER_LINEAR;
         colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'pe-bloom';
+        colorBuffer.name = 'pe-bloom-' + i;
         var bloomTarget = new pc.RenderTarget({
             name: "Bloom Render Target " + i,
             colorBuffer: colorBuffer,
