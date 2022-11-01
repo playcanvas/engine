@@ -1,25 +1,44 @@
-import { babel } from '@rollup/plugin-babel';
-import strip from '@rollup/plugin-strip';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
+// 1st party Rollup plugins
 import { createFilter } from '@rollup/pluginutils';
+import { babel } from '@rollup/plugin-babel';
+import resolve from '@rollup/plugin-node-resolve';
+import strip from '@rollup/plugin-strip';
+import terser from '@rollup/plugin-terser';
+
+// 3rd party Rollup plugins
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
-import { terser } from 'rollup-plugin-terser';
-import { version } from './package.json';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { execSync } from 'child_process';
-import resolve from "@rollup/plugin-node-resolve";
+
 /** @typedef {import('rollup'              ).RollupOptions                } RollupOptions                 */
 /** @typedef {import('rollup'              ).Plugin                       } Plugin                        */
 /** @typedef {import('rollup'              ).OutputOptions                } OutputOptions                 */
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions           } RollupStripOptions            */
-/** @type {string} */
-let revision;
-try {
-    revision = execSync('git rev-parse --short HEAD').toString().trim();
-} catch (e) {
-    revision = 'unknown';
+
+function getVersion() {
+    const text = fs.readFileSync('./package.json', 'utf8');
+    const json = JSON.parse(text);
+    return json.version;
 }
+
+function getRevision() {
+    let revision;
+    try {
+        revision = execSync('git rev-parse --short HEAD').toString().trim();
+    } catch (e) {
+        revision = 'unknown';
+    }
+    return revision;
+}
+
+const version = getVersion();
+const revision = getRevision();
+console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 /**
  * Build the banner with build date and revision. Revision only works for git repo, not zip.
  *
@@ -83,7 +102,6 @@ function engineLayerImportValidation(rootFile, enable) {
         'framework': 3
     };
 
-    const path = require('path');
     let rootPath;
 
     return {
@@ -172,6 +190,7 @@ function shaderChunks(enable) {
         }
     };
 }
+
 /**
  * The ES5 options for babel(...) plugin.
  *
@@ -313,7 +332,8 @@ function buildTarget(buildType, moduleFormat) {
         format: outputFormat[moduleFormat],
         indent: '\t',
         sourcemap: sourceMap[buildType] || sourceMap.release,
-        name: 'pc'
+        name: 'pc',
+        preserveModules: moduleFormat === 'es6'
     };
 
     outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = `${outputFile[buildType]}${outputExtension[moduleFormat]}`;
@@ -359,7 +379,6 @@ function buildTarget(buildType, moduleFormat) {
     return {
         input: rootFile,
         output: outputOptions,
-        preserveModules: moduleFormat === 'es6',
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
@@ -414,9 +433,9 @@ function scriptTargetEs6(name, input, output) {
             banner: getBanner(''),
             dir: output,
             format: 'es',
-            indent: '\t'
+            indent: '\t',
+            preserveModules: true
         },
-        preserveModules: true,
         plugins: [
             resolve(),
             babel(moduleOptions('release')),
@@ -425,6 +444,7 @@ function scriptTargetEs6(name, input, output) {
         external: ['playcanvas', 'fflate']
     };
 }
+
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),

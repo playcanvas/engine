@@ -85,7 +85,7 @@ const _drawCallList = {
     lightMaskChanged: []
 };
 
-const _tempMaterialSet = new Set();
+const _tempSet = new Set();
 
 /**
  * The forward renderer renders {@link Scene}s.
@@ -1565,8 +1565,8 @@ class ForwardRenderer {
             const mat = drawCalls[i].material;
             if (mat) {
                 // material not processed yet
-                if (!_tempMaterialSet.has(mat)) {
-                    _tempMaterialSet.add(mat);
+                if (!_tempSet.has(mat)) {
+                    _tempSet.add(mat);
 
                     // skip this for materials not using variants
                     if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
@@ -1585,7 +1585,7 @@ class ForwardRenderer {
         }
 
         // keep temp set empty
-        _tempMaterialSet.clear();
+        _tempSet.clear();
     }
 
     /**
@@ -1896,10 +1896,27 @@ class ForwardRenderer {
         const startTime = now();
         // #endif
 
-        for (let i = 0; i < comp._worldClusters.length; i++) {
-            const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lighting);
+        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
+
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
+            const cluster = renderAction.lightClusters;
+
+            if (cluster && cluster !== emptyWorldClusters) {
+
+                // update each cluster only one time
+                if (!_tempSet.has(cluster)) {
+                    _tempSet.add(cluster);
+
+                    const layer = comp.layerList[renderAction.layerIndex];
+                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
+                }
+            }
         }
+
+        // keep temp set empty
+        _tempSet.clear();
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;

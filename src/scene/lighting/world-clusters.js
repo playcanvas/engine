@@ -272,10 +272,7 @@ class WorldClusters {
         const usedLights = this._usedLights;
         let lightIndex = 1;
 
-        for (let i = 0; i < lights.length; i++) {
-
-            // use enabled and visible lights
-            const light = lights[i];
+        lights.forEach((light) => {
             const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
             if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight) {
 
@@ -300,11 +297,10 @@ class WorldClusters {
 
                     lightIndex++;
                 } else {
-                    console.warn(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
-                    break;
+                    Debug.warnOnce(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
                 }
             }
-        }
+        });
 
         usedLights.length = lightIndex;
     }
