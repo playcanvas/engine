@@ -4,8 +4,7 @@
         "checkJs": true,
         "module": "es6",
         "target": "es6",
-        "moduleResolution": "node",
-        "resolveJsonModule": true
+        "moduleResolution": "node"
     },
     "include": ["src/**/*", "rollup.config.js"],
 }
