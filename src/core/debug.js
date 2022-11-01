@@ -131,7 +131,11 @@ class Debug {
      */
     static trace(channel, ...args) {
         if (Tracing.get(channel)) {
-            console.log(`${channel.padEnd(20, ' ')}|`, ...args);
+            console.groupCollapsed(`${channel.padEnd(20, ' ')}|`, ...args);
+            if (Tracing.stack) {
+                console.trace();
+            }
+            console.groupEnd();
         }
     }
 }
