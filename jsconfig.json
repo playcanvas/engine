@@ -6,5 +6,5 @@
         "target": "es6",
         "moduleResolution": "node"
     },
-    "include": ["src/**/*", "rollup.config.js"],
+    "include": ["src/**/*", "rollup.config.mjs"]
 }
