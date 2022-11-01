@@ -14,11 +14,11 @@ import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-/** @typedef {import('rollup'              ).RollupOptions                } RollupOptions                 */
-/** @typedef {import('rollup'              ).Plugin                       } Plugin                        */
-/** @typedef {import('rollup'              ).OutputOptions                } OutputOptions                 */
+/** @typedef {import('rollup').RollupOptions} RollupOptions */
+/** @typedef {import('rollup').Plugin} Plugin */
+/** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
-/** @typedef {import('@rollup/plugin-strip').RollupStripOptions           } RollupStripOptions            */
+/** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
 /**
  * @returns {string} Version string like `1.58.0-dev`
