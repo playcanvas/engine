@@ -57,12 +57,16 @@ const standard = {
             key += chunks;
         }
 
-        if (options.litOptions.lights) {
-            const isClustered = options.litOptions.clusteredLightingEnabled;
-            for (let i = 0; i < options.litOptions.lights.length; i++) {
-                const light = options.litOptions.lights[i];
-                if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                    key += light.key;
+        if (options.litOptions) {
+            for (const m in options.litOptions)
+                key += m + options.litOptions[m];
+            if (options.litOptions.lights) {
+                const isClustered = options.litOptions.clusteredLightingEnabled;
+                for (let i = 0; i < options.litOptions.lights.length; i++) {
+                    const light = options.litOptions.lights[i];
+                    if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                        key += light.key;
+                    }
                 }
             }
         }
