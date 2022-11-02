@@ -178,6 +178,7 @@ class StandardMaterialOptionsBuilder {
         options.sheenGlossinessTint = 1;
 
         // LIT OPTIONS
+        options.litOptions.ambientTint = options.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
