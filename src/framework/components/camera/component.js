@@ -289,6 +289,10 @@ class CameraComponent extends Component {
         }
     }
 
+    set renderSceneColorMap(value) {
+        this.requestSceneColorMap(value);
+    }
+
     get renderSceneColorMap() {
         return this._renderSceneColorMap > 0;
     }
@@ -305,6 +309,10 @@ class CameraComponent extends Component {
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
         }
+    }
+
+    set renderSceneDepthMap(value) {
+        this.requestSceneDepthMap(value);
     }
 
     get renderSceneDepthMap() {
