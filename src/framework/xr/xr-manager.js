@@ -613,10 +613,16 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
+        // A framebufferScaleFactor scale of 1 is the full resolution of the display
+        // so we need to calculate this based on devicePixelRatio of the dislay and what
+        // we've set this in the graphics device
+        const framebufferScaleFactor = (1 / window.devicePixelRatio) * this.app.graphicsDevice.maxPixelRatio;
+
         this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
             alpha: true,
             depth: true,
-            stencil: true
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor
         });
 
         session.updateRenderState({
