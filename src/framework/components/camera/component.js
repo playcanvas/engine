@@ -184,6 +184,9 @@ class CameraComponent extends Component {
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
+
+        this._sceneDepthMapRequested = false;
+        this._sceneColorMapRequested = false;
     }
 
     /**
@@ -283,9 +286,20 @@ class CameraComponent extends Component {
      */
     requestSceneColorMap(enabled) {
         this._renderSceneColorMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneColorMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    set renderSceneColorMap(value) {
+        if (value && !this._sceneColorMapRequested) {
+            this.requestSceneColorMap(true);
+            this._sceneColorMapRequested = true;
+        } else if (this._sceneColorMapRequested) {
+            this.requestSceneColorMap(false);
+            this._sceneColorMapRequested = false;
         }
     }
 
@@ -301,9 +315,20 @@ class CameraComponent extends Component {
      */
     requestSceneDepthMap(enabled) {
         this._renderSceneDepthMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneDepthMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    set renderSceneDepthMap(value) {
+        if (value && !this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(true);
+            this._sceneDepthMapRequested = true;
+        } else if (this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(false);
+            this._sceneDepthMapRequested = false;
         }
     }
 
