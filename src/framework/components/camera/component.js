@@ -297,7 +297,7 @@ class CameraComponent extends Component {
         if (value) {
             this.requestSceneColorMap(true);
             this._sceneColorMapVeto = true;
-        } else if (!this._sceneColorMapVeto) {
+        } else if (this._sceneColorMapVeto) {
             this.requestSceneColorMap(false);
             this._sceneColorMapVeto = false;
         }
