@@ -290,7 +290,11 @@ class CameraComponent extends Component {
     }
 
     set renderSceneColorMap(value) {
-        this.requestSceneColorMap(value);
+        if (value) {
+            this._colorRequestedBefore = true;
+            this.requestSceneColorMap(true);
+        } else if (this._colorRequestedBefore)
+            this.requestSceneColorMap(false);
     }
 
     get renderSceneColorMap() {
@@ -312,7 +316,11 @@ class CameraComponent extends Component {
     }
 
     set renderSceneDepthMap(value) {
-        this.requestSceneDepthMap(value);
+        if (value) {
+            this._depthRequestedBefore = true;
+            this.requestSceneDepthMap(true);
+        } else if (this._depthRequestedBefore)
+            this.requestSceneDepthMap(false);
     }
 
     get renderSceneDepthMap() {
