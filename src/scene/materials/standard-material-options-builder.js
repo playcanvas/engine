@@ -343,6 +343,8 @@ class StandardMaterialOptionsBuilder {
         }
         options[vname] = false;
         options[vcname] = '';
+        options.litOptions[vname] = options[vname];
+        options.litOptions[vcname] = options[vcname];
 
         const isOpacity = p === 'opacity';
         if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
@@ -386,8 +388,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions[cname] = options[cname];
         options.litOptions[tname] = options[tname];
         options.litOptions[uname] = options[uname];
-        options.litOptions[vname] = options[vname];
-        options.litOptions[vcname] = options[vcname];
         options.litOptions.vertexColors = options.vertexColors;
     }
 
