@@ -185,8 +185,8 @@ class CameraComponent extends Component {
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
 
-        this._sceneDepthMapVeto = false;
-        this._sceneColorMapVeto = false;
+        this._sceneDepthMapRequested = false;
+        this._sceneColorMapRequested = false;
     }
 
     /**
@@ -296,10 +296,10 @@ class CameraComponent extends Component {
     set renderSceneColorMap(value) {
         if (value) {
             this.requestSceneColorMap(true);
-            this._sceneColorMapVeto = true;
-        } else if (this._sceneColorMapVeto) {
+            this._sceneColorMapRequested = true;
+        } else if (this._sceneColorMapRequested) {
             this.requestSceneColorMap(false);
-            this._sceneColorMapVeto = false;
+            this._sceneColorMapRequested = false;
         }
     }
 
@@ -325,10 +325,10 @@ class CameraComponent extends Component {
     set renderSceneDepthMap(value) {
         if (value) {
             this.requestSceneDepthMap(true);
-            this._sceneDepthMapVeto = true;
-        } else if (this._sceneDepthMapVeto) {
+            this._sceneDepthMapRequested = true;
+        } else if (this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(false);
-            this._sceneDepthMapVeto = false;
+            this._sceneDepthMapRequested = false;
         }
     }
 
