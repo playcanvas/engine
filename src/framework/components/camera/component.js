@@ -184,6 +184,9 @@ class CameraComponent extends Component {
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
+
+        this._sceneDepthMapVeto = false;
+        this._sceneColorMapVeto = false;
     }
 
     /**
@@ -283,6 +286,7 @@ class CameraComponent extends Component {
      */
     requestSceneColorMap(enabled) {
         this._renderSceneColorMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneColorMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
@@ -291,10 +295,12 @@ class CameraComponent extends Component {
 
     set renderSceneColorMap(value) {
         if (value) {
-            this._colorRequestedBefore = true;
             this.requestSceneColorMap(true);
-        } else if (this._colorRequestedBefore)
+            this._sceneColorMapVeto = true;
+        } else if (!this._sceneColorMapVeto) {
             this.requestSceneColorMap(false);
+            this._sceneColorMapVeto = false;
+        }
     }
 
     get renderSceneColorMap() {
@@ -309,6 +315,7 @@ class CameraComponent extends Component {
      */
     requestSceneDepthMap(enabled) {
         this._renderSceneDepthMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneDepthMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
@@ -317,10 +324,12 @@ class CameraComponent extends Component {
 
     set renderSceneDepthMap(value) {
         if (value) {
-            this._depthRequestedBefore = true;
             this.requestSceneDepthMap(true);
-        } else if (this._depthRequestedBefore)
+            this._sceneDepthMapVeto = true;
+        } else if (this._sceneDepthMapVeto) {
             this.requestSceneDepthMap(false);
+            this._sceneDepthMapVeto = false;
+        }
     }
 
     get renderSceneDepthMap() {
