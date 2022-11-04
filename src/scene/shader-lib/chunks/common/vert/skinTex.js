@@ -1,11 +1,23 @@
 export default /* glsl */`
+
 attribute vec4 vertex_boneWeights;
-attribute vec4 vertex_boneIndices;
+
+#ifdef WEBGPU
+    attribute uvec4 vertex_boneIndices;
+    #define BoneIndexFormat uint
+    #define BoneIndexFormat4 uvec4
+#else
+    attribute vec4 vertex_boneIndices;
+    #define BoneIndexFormat float
+    #define BoneIndexFormat4 vec4
+#endif
 
 uniform highp sampler2D texture_poseMap;
 uniform vec4 texture_poseMapSize;
 
-void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3) {
+void getBoneMatrix(const in BoneIndexFormat index, out vec4 v1, out vec4 v2, out vec4 v3) {
+
+    float i = float(index);
     float j = i * 3.0;
     float dx = texture_poseMapSize.z;
     float dy = texture_poseMapSize.w;
@@ -20,7 +32,7 @@ void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3) {
     v3 = texture2D(texture_poseMap, vec2(dx * (x + 2.5), y));
 }
 
-mat4 getSkinMatrix(const in vec4 indices, const in vec4 weights) {
+mat4 getSkinMatrix(const in BoneIndexFormat4 indices, const in vec4 weights) {
     // get 4 bone matrices
     vec4 a1, a2, a3;
     getBoneMatrix(indices.x, a1, a2, a3);

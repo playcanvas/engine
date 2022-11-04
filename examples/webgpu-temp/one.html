@@ -350,25 +350,25 @@ void main() {
 
             const createOptions = new AppOptions();
             createOptions.graphicsDevice = new WebgpuGraphicsDevice(canvas, {});
-            createOptions.componentSystems = [
-                RenderComponentSystem,
-                CameraComponentSystem,
-                LightComponentSystem,
-            ];
-            createOptions.resourceHandlers = [
-                TextureHandler,
-                ContainerHandler
-            ];
-
-            const app = new AppBase(canvas);
-            app.init(createOptions);
-
-            const lighting = app.scene.lighting;
-            lighting.shadowsEnabled = false;
-            lighting.cookiesEnabled = false;
-
-            app.graphicsDevice.initWebGpu().then(() => {
+            createOptions.graphicsDevice.initWebGpu().then(() => {
                 console.log("gpu device async created");
+
+                createOptions.componentSystems = [
+                    RenderComponentSystem,
+                    CameraComponentSystem,
+                    LightComponentSystem,
+                ];
+                createOptions.resourceHandlers = [
+                    TextureHandler,
+                    ContainerHandler
+                ];
+
+                const app = new AppBase(canvas);
+                app.init(createOptions);
+
+                const lighting = app.scene.lighting;
+                lighting.shadowsEnabled = false;
+                lighting.cookiesEnabled = false;
 
                 const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
                 assetListLoader.load(() => {

@@ -64,7 +64,7 @@ class WebgpuVertexBufferLayout {
                 const location = semanticToLocation[element.name];
 
                 // A WGL shader needs attributes to have matching types, but glslang translator we use does not allow us to set those
-                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported.`);
+                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported, semantic: ${element.name}.`);
 
                 attributes.push({
                     shaderLocation: location,

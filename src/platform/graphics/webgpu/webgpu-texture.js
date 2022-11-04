@@ -61,9 +61,37 @@ class WebgpuTexture {
     /** @type {GPUSampler} */
     sampler;
 
+    /** @type {GPUTextureDescriptor} */
+    descr;
+
     constructor(texture) {
         /** @type {Texture} */
         this.texture = texture;
+    }
+
+    create(device) {
+
+        const texture = this.texture;
+        const wgpu = device.wgpu;
+        const gpuFormat = gpuTextureFormats[texture.format];
+        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
+
+        this.descr = {
+            size: { width: texture.width, height: texture.height },
+            format: gpuFormat,
+            mipLevelCount: 1,
+            sampleCount: 1,
+            dimension: '2d',
+
+            // TODO: use only required usage flags
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+        };
+
+        this.gpuTexture = wgpu.createTexture(this.descr);
+        DebugHelper.setLabel(this.gpuTexture, texture.name);
+
+        this.view = this.gpuTexture.createView();
+        DebugHelper.setLabel(this.view, `DefaultView: ${this.texture.name}`);
     }
 
     destroy(device) {
@@ -71,14 +99,9 @@ class WebgpuTexture {
 
     getView(device) {
 
-        if (!this.gpuTexture) {
+        this.uploadImmediate(device, this.texture);
 
-            this.upload(device);
-
-            this.view = this.gpuTexture.createView();
-            DebugHelper.setLabel(this.view, `DefaultView: ${this.texture.name}`);
-        }
-
+        Debug.assert(this.view);
         return this.view;
     }
 
@@ -93,6 +116,7 @@ class WebgpuTexture {
                     minFilter: "nearest",
                     mipmapFilter: "nearest"
                 });
+                DebugHelper.setLabel(this.sampler, `NearestSampler`);
 
             } else {
 
@@ -101,6 +125,7 @@ class WebgpuTexture {
                     minFilter: "linear",
                     mipmapFilter: "linear"
                 });
+                DebugHelper.setLabel(this.sampler, `LinearSampler`);
             }
         }
 
@@ -112,28 +137,29 @@ class WebgpuTexture {
 
     /**
      * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {Texture} texture - The texture.
      */
-    upload(device) {
+    uploadImmediate(device, texture) {
+
+        if (!this.gpuTexture) {
+            this.create(device);
+        }
+
+        if (texture._needsUpload || texture._needsMipmapsUpload) {
+            this.uploadData(device);
+
+            texture._needsUpload = false;
+            texture._needsMipmapsUpload = false;
+        }
+    }
+
+    /**
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     */
+    uploadData(device) {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const gpuFormat = gpuTextureFormats[texture.format];
-        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
-
-        /** @type {GPUTextureDescriptor} */
-        const textureDescriptor = {
-            size: { width: texture.width, height: texture.height },
-            format: gpuFormat,
-            mipLevelCount: 1,
-            sampleCount: 1,
-            dimension: '2d',
-
-            // TODO: use only required usage flags
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-        };
-
-        this.gpuTexture = wgpu.createTexture(textureDescriptor);
-        DebugHelper.setLabel(this.gpuTexture, texture.name);
 
         // upload texture data if any
         const mipLevel = 0;
@@ -142,7 +168,7 @@ class WebgpuTexture {
 
             if (mipObject instanceof ImageBitmap) {
 
-                wgpu.queue.copyExternalImageToTexture({ source: mipObject }, { texture: this.gpuTexture }, textureDescriptor.size);
+                wgpu.queue.copyExternalImageToTexture({ source: mipObject }, { texture: this.gpuTexture }, this.descr.size);
 
             } else if (ArrayBuffer.isView(mipObject)) { // typed array
 

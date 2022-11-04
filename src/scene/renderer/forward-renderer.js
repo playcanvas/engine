@@ -455,6 +455,7 @@ class ForwardRenderer {
             while (renderAction.viewBindGroups.length < viewCount) {
                 const ub = new UniformBuffer(device, this.viewUniformFormat);
                 const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
+                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
                 renderAction.viewBindGroups.push(bg);
             }
 

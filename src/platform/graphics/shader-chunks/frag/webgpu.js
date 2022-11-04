@@ -16,5 +16,6 @@ layout(location = 0) out highp vec4 pc_fragColor;
 // #define texture2DProjGradEXT textureProjGrad
 // #define textureCubeGradEXT textureGrad
 #define GL2
+#define WEBGPU
 #define SUPPORTS_TEXLOD
 `;

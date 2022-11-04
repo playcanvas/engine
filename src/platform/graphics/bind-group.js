@@ -1,3 +1,5 @@
+import { Debug } from '../../core/debug.js';
+import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 
 /** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
@@ -5,7 +7,7 @@ import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 /** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
 /** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
 
-import { Debug } from '../../core/debug.js';
+let id = 0;
 
 /**
  * A bind group represents an collection of {@link UniformBuffer} and {@link Texture} instance,
@@ -23,6 +25,7 @@ class BindGroup {
      * has a single uniform buffer, and this allows easier access.
      */
     constructor(graphicsDevice, format, defaultUniformBuffer) {
+        this.id = id++;
         this.device = graphicsDevice;
         this.format = format;
         this.dirty = true;
@@ -36,6 +39,8 @@ class BindGroup {
         if (defaultUniformBuffer) {
             this.setUniformBuffer(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, defaultUniformBuffer);
         }
+
+        Debug.trace(TRACEID_BINDGROUP_ALLOC, `Alloc: Id ${this.id}`, this, format);
     }
 
     /**

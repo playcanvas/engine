@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
 
 /** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */
@@ -37,6 +37,7 @@ class WebgpuBindGroupFormat {
 
         /** @type {GPUBindGroupLayout} */
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
+        DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
 
     destroy() {

@@ -36,7 +36,8 @@
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
         import { 
-            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC,
+            TRACEID_BINDGROUP_ALLOC, TRACEID_BINDGROUPFORMAT_ALLOC
         } from "../../src/core/constants.js";
         import { Color } from "../../src/core/math/color.js";
         import { Vec3 } from "../../src/core/math/vec3.js";
@@ -47,63 +48,52 @@
         import { Material } from "../../src/scene/materials/material.js";
         import { BasicMaterial } from "../../src/scene/materials/basic-material.js";
         import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
+        import { ModelComponentSystem } from '../../src/framework/components/model/system.js';
         import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
         import { LightComponentSystem } from '../../src/framework/components/light/system.js';
+        import { AnimComponentSystem } from '../../src/framework/components/anim/system.js';
         import { TextureHandler } from '../../src/framework/handlers/texture.js';
         import { ContainerHandler } from '../../src/framework/handlers/container.js';
 
         const assets = {
-            'playcanvas': new Asset('playcanvas.png', 'texture', { url: '../assets/textures/playcanvas.png' }),
-//            'model': new Asset('model', 'container', { url: '../assets/models/house.glb' }),
-            'model': new Asset('model', 'container', { url: '../assets/models/statue.glb' }),
-//            'model': new Asset('model', 'container', { url: '../assets/models/batmobile-armored.glb' }),
-//            'model': new Asset('model', 'container', { url: '../assets/models/terrain.glb' }),
+            'model': new Asset('model', 'container', { url: './assets/skinned-mesh.glb' }),
+            'anim': new Asset('anim', 'container', { url: './assets/skinned-mesh-anim.glb' }),
         };
 
         function onLoaded(app) {
 
             app.start();
 
-            // Create an entity with a camera component
+            // Create an Entity with a camera component
             const camera = new Entity();
             camera.addComponent("camera", {
-                clearColor: new Color(0.4, 0.4, 0.4, 1)
+                clearColor: new Color(0.3, 0.3, 0)
             });
+            camera.setLocalPosition(7, 2.5, 6);
+            camera.lookAt(0, 0, 0);
             app.root.addChild(camera);
-            camera.setLocalPosition(0, 0, 5);
 
-            camera.clearColorBuffer = false;
-
-            const modelEntity = assets.model.resource.instantiateRenderEntity({
-            });
-
-            const modelEntityParent = new Entity();
-            modelEntityParent.setLocalScale(20, 20, 20);
-            modelEntityParent.addChild(modelEntity);
-            app.root.addChild(modelEntityParent);
-
-            const lightDir = new Entity();
-            lightDir.addComponent("light", {
+            // Create an entity with a light component
+            const light = new Entity();
+            light.addComponent("light", {
                 type: "directional",
                 color: new Color(1, 1, 1),
                 castShadows: false,
-                shadowBias: 0.2,
-                shadowDistance: 25,
-                normalOffsetBias: 0.05,
-                shadowResolution: 2048
+                intensity: 2
             });
-            lightDir.setLocalEulerAngles(45, 30, 0);
-            app.root.addChild(lightDir);
+            light.setLocalEulerAngles(45, 30, 0);
+            app.root.addChild(light);
 
-            let time = 0;
-            const rot = new Quat();
-            app.on("update", function (dt) {
-                time += dt;
-
-                // slowly orbit camera around
-                camera.setLocalPosition(420 * Math.cos(time * 0.2), 300, 420 * Math.sin(time * 0.2));
-                camera.lookAt(new Vec3(0, 150, 0));
+            const modelEntity = assets.model.resource.instantiateRenderEntity({
             });
+            app.root.addChild(modelEntity);
+
+            modelEntity.addComponent('anim', {
+                activate: true
+            });
+
+            const animTrack = assets.anim.resource.animations[0].resource;
+            modelEntity.anim.assignAnimation('anim', animTrack);
 
         }
 
@@ -114,21 +104,25 @@
             // Tracing.set(TRACEID_RENDER_FRAME, true);
             // Tracing.set(TRACEID_RENDER_PASS, true);
             //Tracing.set(TRACEID_TEXTURE_ALLOC, true);
-            Tracing.set(TRACEID_SHADER_ALLOC, true);
+            //Tracing.set(TRACEID_SHADER_ALLOC, true);
+            //Tracing.set(TRACEID_BINDGROUP_ALLOC, true);
+            //Tracing.set(TRACEID_BINDGROUPFORMAT_ALLOC, true);
 
             const canvas = document.querySelector('#gpuCanvas');
 
             const createOptions = new AppOptions();
             createOptions.graphicsDevice = new WebgpuGraphicsDevice(canvas, {});
-//            createOptions.graphicsDevice = new WebglGraphicsDevice(canvas, {});
+            //createOptions.graphicsDevice = new WebglGraphicsDevice(canvas, {});
 
             createOptions.graphicsDevice.initWebGpu().then(() => {
                 console.log("gpu device async created");
 
                 createOptions.componentSystems = [
                     RenderComponentSystem,
+                    ModelComponentSystem,
                     CameraComponentSystem,
                     LightComponentSystem,
+                    AnimComponentSystem
                 ];
                 createOptions.resourceHandlers = [
                     TextureHandler,

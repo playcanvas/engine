@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /** @typedef {import('../bind-group.js').BindGroup} BindGroup */
 /** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
@@ -20,6 +20,7 @@ class WebgpuBindGroup {
 
         /** @type {GPUBindGroupDescriptor} */
         const descr = this.createDescriptor(device, bindGroup);
+        DebugHelper.setLabel(descr, bindGroup.name);
 
         this.bindGroup = device.wgpu.createBindGroup(descr);
     }
