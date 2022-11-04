@@ -269,7 +269,7 @@ class Texture {
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
-            `${this.mipmaps ? '[Mipmaps]' : ''}`);
+            `${this.mipmaps ? '[Mipmaps]' : ''}`, this);
     }
 
     /**
@@ -970,6 +970,7 @@ class Texture {
     upload() {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
+        this.impl.uploadImmediate?.(this.device, this);
     }
 
     /**

@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    DEVICETYPE_WEBGPU
+    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -60,8 +60,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     constructor(canvas, options = {}) {
         super(canvas);
-
         this.deviceType = DEVICETYPE_WEBGPU;
+
+        this.initDeviceCaps();
+    }
+
+    initDeviceCaps() {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.maxTextures = 16;
@@ -69,10 +73,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.extTextureFloat = true;
-        this.extTextureHalfFloat = false; // TODO: likely supported as well
+        this.textureFloatRenderable = true;
+        this.extTextureHalfFloat = true;
+        this.textureHalfFloatRenderable = true;
+        this.textureHalfFloatUpdatable = true;
+        this.maxTextureSize = 4096;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
+        this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
     }
 
     async initWebGpu() {

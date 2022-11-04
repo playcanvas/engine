@@ -1,4 +1,4 @@
-import { Debug } from '../core/debug.js';
+import { Debug, DebugHelper } from '../core/debug.js';
 
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
@@ -448,6 +448,7 @@ class MeshInstance {
             const bingGroupFormat = shader.meshBindGroupFormat;
             Debug.assert(bingGroupFormat);
             bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+            DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
 
             this._bindGroups[pass] = bindGroup;
         }
