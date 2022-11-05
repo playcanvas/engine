@@ -89,7 +89,8 @@ class WebglTexture {
         this._glTexture = gl.createTexture();
 
         this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-            (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
+            (texture._volume ? gl.TEXTURE_3D : 
+                (texture._array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
             case PIXELFORMAT_A8:
@@ -286,6 +287,16 @@ class WebglTexture {
 
         const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
+        if (texture._array) {
+            // for texture arrays we reserve the space in advance
+            gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
+                            1,
+                            this._glInternalFormat,
+                            texture._width,
+                            texture._height,
+                            texture._arrayLength);
+        }
+
         while (texture._levels[mipLevel] || mipLevel === 0) {
             // Upload all existing mip levels. Initialize 0 mip anyway.
 
@@ -401,6 +412,42 @@ class WebglTexture {
                                   this._glFormat,
                                   this._glPixelType,
                                   mipObject);
+                }
+            } else if (texture._array && typeof mipObject === "object") {
+                resMult = 1 / Math.pow(2, mipLevel);
+                if (texture._arrayLength === mipObject.length) {
+                    if (texture._compressed) {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.compressedTexSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                1,
+                                this._glFormat,
+                                mipObject[index]
+                            );
+                        }
+                    } else {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.texSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                1,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject[index]
+                            );
+                        }
+                    }
                 }
             } else {
                 // ----- 2D -----

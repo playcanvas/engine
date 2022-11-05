@@ -48,6 +48,7 @@ import ShaderToonExample from "./shader-toon";
 import ShaderWobbleExample from "./shader-wobble";
 import ShadowCascadesExample from "./shadow-cascades";
 import ShapesExample from "./shapes";
+import TextureArrayExample from "./texture-array";
 import TextureBasisExample from "./texture-basis";
 import TransformFeedbackExample from "./transform-feedback";
 import VideoTextureExample from "./video-texture";
@@ -103,6 +104,7 @@ export {
     ShaderWobbleExample,
     ShadowCascadesExample,
     ShapesExample,
+    TextureArrayExample,
     TextureBasisExample,
     TransformFeedbackExample,
     VideoTextureExample

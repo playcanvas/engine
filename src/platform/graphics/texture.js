@@ -40,6 +40,7 @@ class Texture {
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only).
+     * @param {number} [options.arrayLength] - The number of textures in a 2D texture array (WebGL2 only).
      * Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
@@ -95,6 +96,8 @@ class Texture {
      * texture. Default is true.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
+     * @param {boolean} [options.array] - Specifies whether the texture is to be a 2D texture array
+     * (WebGL2 only). Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
      * (WebGL2 only). Defaults to false.
      * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}.
@@ -121,7 +124,8 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]} [options.levels] - Array of Uint8Array.
+     * @param {Uint8Array[] | Uint8Array[][]} [options.levels] - Array of Uint8Array or a two-dimensional array
+     * of Uint8Array if options.array is true.
      * @example
      * // Create a 8x8x24-bit texture
      * var texture = new pc.Texture(graphicsDevice, {
@@ -157,6 +161,7 @@ class Texture {
         this._width = 4;
         this._height = 4;
         this._depth = 1;
+        this._arrayLength = 1;
 
         this._format = PIXELFORMAT_R8_G8_B8_A8;
         this.type = TEXTURETYPE_DEFAULT;
@@ -164,6 +169,7 @@ class Texture {
 
         this._cubemap = false;
         this._volume = false;
+        this._array = false;
         this.fixCubemapSeams = false;
         this._flipY = false;
         this._premultiplyAlpha = false;
@@ -237,6 +243,8 @@ class Texture {
             if (graphicsDevice.webgl2) {
                 this._depth = (options.depth !== undefined) ? options.depth : this._depth;
                 this._volume = (options.volume !== undefined) ? options.volume : this._volume;
+                this._array = (options.array !== undefined) ? options.array : this._array;
+                this._arrayLength = (options.arrayLength !== undefined) ? options.arrayLength : this._arrayLength;
                 this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
             }
 
@@ -602,6 +610,15 @@ class Texture {
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
         return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+    }
+
+    /**
+     * Returns true if this texture is a 2D texture array and false otherwise.
+     *
+     * @type {boolean}
+     */
+    get array() {
+       return this._array;
     }
 
     /**
