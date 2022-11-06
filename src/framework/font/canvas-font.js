@@ -10,8 +10,6 @@ import {
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
 
@@ -25,7 +23,7 @@ class CanvasFont extends EventHandler {
     /**
      * Create a new CanvasFont instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../app-base.js').AppBase} app - The application.
      * @param {object} options - The font options.
      * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
      * Defaults to 'Arial'.

@@ -1,6 +1,3 @@
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
-/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
-
 /**
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
@@ -22,7 +19,8 @@ class Frustum {
     /**
      * Updates the frustum shape based on the supplied 4x4 matrix.
      *
-     * @param {Mat4} matrix - The matrix describing the shape of the frustum.
+     * @param {import('../math/mat4.js').Mat4} matrix - The matrix describing the shape of the
+     * frustum.
      * @example
      * // Create a perspective projection matrix
      * var projMat = pc.Mat4();
@@ -141,7 +139,7 @@ class Frustum {
      * sphere is completely inside the frustum, 2 is returned. Note that a sphere touching a
      * frustum plane from the outside is considered to be outside the frustum.
      *
-     * @param {BoundingSphere} sphere - The sphere to test.
+     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - The sphere to test.
      * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the
      * frustum and 2 if it is contained by the frustum.
      */

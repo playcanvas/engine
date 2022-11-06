@@ -8,8 +8,6 @@ import { Entity } from '../../entity.js';
 import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
 
-/** @typedef {import('./system.js').ScreenComponentSystem} ScreenComponentSystem */
-
 const _transform = new Mat4();
 
 /**
@@ -22,7 +20,8 @@ class ScreenComponent extends Component {
     /**
      * Create a new ScreenComponent.
      *
-     * @param {ScreenComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {import('./system.js').ScreenComponentSystem} system - The ComponentSystem that
+     * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {

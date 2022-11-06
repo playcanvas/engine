@@ -1,10 +1,8 @@
-import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-
-import { math } from '../../core/math/math.js';
+import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
@@ -16,23 +14,16 @@ import {
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';
-
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../entity.js').Entity} Entity */
-/** @typedef {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../scene/scene.js').Scene} Scene */
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 
 import {
     BAKE_COLORDIR,
@@ -68,11 +59,14 @@ class Lightmapper {
     /**
      * Create a new Lightmapper instance.
      *
-     * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
-     * @param {Entity} root - The root entity of the scene.
-     * @param {Scene} scene - The scene to lightmap.
-     * @param {ForwardRenderer} renderer - The renderer.
-     * @param {AssetRegistry} assets - Registry of assets to lightmap.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device used by the lightmapper.
+     * @param {import('../entity.js').Entity} root - The root entity of the scene.
+     * @param {import('../../scene/scene.js').Scene} scene - The scene to lightmap.
+     * @param {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} renderer - The
+     * renderer.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - Registry of assets to
+     * lightmap.
      * @hideconstructor
      */
     constructor(device, root, scene, renderer, assets) {
@@ -499,8 +493,8 @@ class Lightmapper {
     /**
      * Generates and applies the lightmaps.
      *
-     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to
-     * render lightmaps for. If not supplied, the entire scene will be baked.
+     * @param {import('../entity.js').Entity[]|null} nodes - An array of entities (with model or
+     * render components) to render lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap

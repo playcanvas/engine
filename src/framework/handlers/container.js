@@ -1,11 +1,8 @@
 import { path } from '../../core/path.js';
+
 import { GlbParser } from '../parsers/glb-parser.js';
 
-/** @typedef {import('../../framework/entity.js').Entity} Entity */
-/** @typedef {import('../../scene/mesh-instance').MeshInstance} MeshInstance */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 
 /**
  * @interface
@@ -18,8 +15,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the model component type
      * {@link ModelComponent}.
-     * @returns {Entity} A single entity with a model component. Model component internally
-     * contains a hierarchy based on {@link GraphNode}.
+     * @returns {import('../../framework/entity.js').Entity} A single entity with a model
+     * component. Model component internally contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -38,8 +35,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the render component type
      * {@link RenderComponent}.
-     * @returns {Entity} A hierarchy of entities with render components on entities containing
-     * renderable geometry.
+     * @returns {import('../../framework/entity.js').Entity} A hierarchy of entities with render
+     * components on entities containing renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -74,9 +71,10 @@ class ContainerResource {
     /**
      * Applies a material variant to an entity hierarchy.
      *
-     * @param {Entity} entity - The entity root to which material variants will be applied
+     * @param {import('../../framework/entity.js').Entity} entity - The entity root to which
+     * material variants will be applied.
      * @param {string} [name] - The name of the variant, as queried from getMaterialVariants,
-     * if null the variant will be reset to the default
+     * if null the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -94,7 +92,8 @@ class ContainerResource {
      * this method allows for setting the variant on a specific set of mesh instances instead of the
      * whole entity.
      *
-     * @param {MeshInstance[]} instances - An array of mesh instances
+     * @param {import('../../scene/mesh-instance').MeshInstance[]} instances - An array of mesh
+     * instances.
      * @param {string} [name] - The the name of the variant, as quered from getMaterialVariants,
      * if null the variant will be reset to the default
      * @example
@@ -166,7 +165,7 @@ class ContainerHandler {
     /**
      * Create a new ContainerResource instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -212,8 +211,8 @@ class ContainerHandler {
      * @param {string} [url.load] - The URL to be used for loading the resource.
      * @param {string} [url.original] - The original URL to be used for identifying the resource
      * format. This is necessary when loading, for example from blob.
-     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
-     * an error occurs.
+     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
+     * the resource is loaded or an error occurs.
      * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {

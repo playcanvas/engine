@@ -1,22 +1,22 @@
 import { Debug } from '../../core/debug.js';
+import { random } from '../../core/math/random.js';
+import { Vec3 } from '../../core/math/vec3.js';
+
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from '../../platform/graphics/constants.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { random } from '../../core/math/random.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
+import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
-/** @typedef {import('../../core/math/vec4.js').Vec4} Vec4 */
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -393,7 +393,7 @@ void main(void) {
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert',
  * 'phong', 'ggx'. Default depends on specularPower.
- * @param {Vec4} [options.rect] - Optional viewport rectangle.
+ * @param {import('../../core/math/vec4.js').Vec4} [options.rect] - Optional viewport rectangle.
  * @param {number} [options.seamPixels] - Optional number of seam pixels to render
  */
 function reprojectTexture(source, target, options = {}) {

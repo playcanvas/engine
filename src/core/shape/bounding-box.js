@@ -1,10 +1,6 @@
 import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
-/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
-/** @typedef {import('./ray.js').Ray} Ray */
-
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 const tmpVecC = new Vec3();
@@ -221,8 +217,9 @@ class BoundingBox {
     /**
      * Test if a ray intersects with the AABB.
      *
-     * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -287,7 +284,7 @@ class BoundingBox {
      * matrix.
      *
      * @param {BoundingBox} aabb - Box to transform and enclose.
-     * @param {Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {import('../math/mat4.js').Mat4} m - Transformation matrix to apply to source AABB.
      * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
     setFromTransformedAabb(aabb, m, ignoreScale = false) {
@@ -391,7 +388,7 @@ class BoundingBox {
     /**
      * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
      *
-     * @param {BoundingSphere} sphere - Bounding Sphere to test.
+     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
      * AABB and false otherwise.
      */

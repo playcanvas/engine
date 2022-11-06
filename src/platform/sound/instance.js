@@ -4,9 +4,6 @@ import { math } from '../../core/math/math.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
-/** @typedef {import('./sound.js').Sound} Sound */
-/** @typedef {import('./manager.js').SoundManager} SoundManager */
-
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
@@ -41,8 +38,8 @@ class SoundInstance extends EventHandler {
     /**
      * Create a new SoundInstance instance.
      *
-     * @param {SoundManager} manager - The sound manager.
-     * @param {Sound} sound - The sound to play.
+     * @param {import('./manager.js').SoundManager} manager - The sound manager.
+     * @param {import('./sound.js').Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
      * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
      * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
@@ -62,7 +59,7 @@ class SoundInstance extends EventHandler {
         super();
 
         /**
-         * @type {SoundManager}
+         * @type {import('./manager.js').SoundManager}
          * @private
          */
         this._manager = manager;
@@ -86,7 +83,7 @@ class SoundInstance extends EventHandler {
         this._loop = !!(options.loop !== undefined ? options.loop : false);
 
         /**
-         * @type {Sound}
+         * @type {import('./sound.js').Sound}
          * @private
          */
         this._sound = sound;
@@ -431,7 +428,7 @@ class SoundInstance extends EventHandler {
     /**
      * The sound resource that the instance will play.
      *
-     * @type {Sound}
+     * @type {import('./sound.js').Sound}
      */
     set sound(value) {
         this._sound = value;

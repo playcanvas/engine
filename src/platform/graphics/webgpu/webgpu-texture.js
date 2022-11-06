@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+
 import {
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_L8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R5_G5_B5_A1, PIXELFORMAT_R4_G4_B4_A4,
     PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -8,9 +9,6 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA
 } from '../constants.js';
-
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-/** @typedef {import('../texture.js').Texture} Texture */
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
 const gpuTextureFormats = [];
@@ -65,7 +63,7 @@ class WebgpuTexture {
     descr;
 
     constructor(texture) {
-        /** @type {Texture} */
+        /** @type {import('../texture.js').Texture} */
         this.texture = texture;
     }
 
@@ -136,8 +134,9 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
-     * @param {Texture} texture - The texture.
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The graphics
+     * device.
+     * @param {import('../texture.js').Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
 
@@ -154,7 +153,8 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The graphics
+     * device.
      */
     uploadData(device) {
 

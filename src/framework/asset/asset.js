@@ -10,9 +10,6 @@ import { AssetFile } from './asset-file.js';
 import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
 
-/** @typedef {import('./asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../../framework/handlers/loader.js').ResourceLoaderCallback} ResourceLoaderCallback */
-
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
 
@@ -146,7 +143,7 @@ class Asset extends EventHandler {
         /**
          * The asset registry that this Asset belongs to.
          *
-         * @type {AssetRegistry}
+         * @type {import('./asset-registry.js').AssetRegistry}
          */
         this.registry = null;
 
@@ -524,7 +521,8 @@ class Asset extends EventHandler {
      * via http.
      *
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {ResourceLoaderCallback} callback - The callback function to receive results.
+     * @param {import('../../framework/handlers/loader.js').ResourceLoaderCallback} callback - The
+     * callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      * @ignore

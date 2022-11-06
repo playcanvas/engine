@@ -8,9 +8,6 @@ import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
-/** @typedef {import('../../../platform/sound/manager.js').SoundManager} SoundManager */
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
@@ -23,7 +20,7 @@ class SoundComponentSystem extends ComponentSystem {
     /**
      * Create a SoundComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {
@@ -39,10 +36,10 @@ class SoundComponentSystem extends ComponentSystem {
         /**
          * Gets / sets the sound manager.
          *
-         * @type {SoundManager}
+         * @type {import('../../../platform/sound/manager.js').SoundManager}
          */
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
 
         this.app.systems.on('update', this.onUpdate, this);
 

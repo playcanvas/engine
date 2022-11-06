@@ -1,7 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../core/math/vec3.js';
-
 import { BoundingBox } from '../core/shape/bounding-box.js';
 
 import {
@@ -19,10 +18,6 @@ import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
-
-/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./morph.js').Morph} Morph */
-/** @typedef {import('./skin.js').Skin} Skin */
 
 let id = 0;
 
@@ -168,8 +163,9 @@ class Mesh extends RefCountedObject {
     /**
      * Create a new Mesh instance.
      *
-     * @param {GraphicsDevice} [graphicsDevice] - The graphics device used to manage this mesh. If
-     * it is not provided, a device is obtained from the {@link Application}.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [graphicsDevice] -
+     * The graphics device used to manage this mesh. If it is not provided, a device is obtained
+     * from the {@link Application}.
      */
     constructor(graphicsDevice) {
         super();
@@ -224,7 +220,7 @@ class Mesh extends RefCountedObject {
         /**
          * The skin data (if any) that drives skinned mesh animations for this mesh.
          *
-         * @type {Skin|null}
+         * @type {import('./skin.js').Skin|null}
          */
         this.skin = null;
 
@@ -241,7 +237,7 @@ class Mesh extends RefCountedObject {
     /**
      * The morph data (if any) that drives morph target animations for this mesh.
      *
-     * @type {Morph|null}
+     * @type {import('./morph.js').Morph|null}
      */
     set morph(morph) {
 

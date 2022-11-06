@@ -1,7 +1,6 @@
 import { Debug } from "../../../core/debug.js";
-import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
+import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -47,7 +46,7 @@ const _bindGroupLayouts = [];
  */
 class WebgpuRenderPipeline {
     constructor(device) {
-        /** @type {WebgpuGraphicsDevice} */
+        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         this.device = device;
 
         /**

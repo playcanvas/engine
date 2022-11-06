@@ -4,7 +4,6 @@ import { http } from '../../platform/net/http.js';
 
 import { Sprite } from '../../scene/sprite.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the sprite asset
@@ -37,7 +36,7 @@ class SpriteHandler {
     /**
      * Create a new SpriteHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

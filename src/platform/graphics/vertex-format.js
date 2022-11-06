@@ -8,8 +8,6 @@ import {
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
 } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
  * {@link VertexBuffer}.
@@ -59,10 +57,11 @@ class VertexFormat {
     /**
      * Create a new VertexFormat instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this vertex format.
      * @param {object[]} description - An array of vertex attribute descriptions.
-     * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
-     * the vertex data to a shader input. Can be:
+     * @param {string} description[].semantic - The meaning of the vertex element. This is used to
+     * link the vertex data to a shader input. Can be:
      *
      * - {@link SEMANTIC_POSITION}
      * - {@link SEMANTIC_NORMAL}

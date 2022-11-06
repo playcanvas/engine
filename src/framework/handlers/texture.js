@@ -15,10 +15,7 @@ import { Ktx2Parser } from '../parsers/texture/ktx2.js';
 import { DdsParser } from '../parsers/texture/dds.js';
 import { HdrParser } from '../parsers/texture/hdr.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../../framework/asset/asset.js').Asset} Asset */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -59,8 +56,10 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
+     * the resource is loaded or an error occurs.
+     * @param {import('../../framework/asset/asset.js').Asset} [asset] - Optional asset that is
+     * passed by ResourceLoader.
      */
     load(url, callback, asset) {
         throw new Error('not implemented');
@@ -167,7 +166,7 @@ class TextureHandler {
     /**
      * Create a new TextureHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

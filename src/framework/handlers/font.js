@@ -6,7 +6,6 @@ import { http } from '../../platform/net/http.js';
 import { Font } from '../font/font.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
@@ -48,7 +47,7 @@ class FontHandler {
     /**
      * Create a new FontHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

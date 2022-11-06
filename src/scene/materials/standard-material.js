@@ -1,11 +1,9 @@
 import { Debug } from '../../core/debug.js';
-
 import { Color } from '../../core/math/color.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { math } from '../../core/math/math.js';
+import { Vec2 } from '../../core/math/vec2.js';
 
-import { _matTex2D, standard } from '../../scene/shader-lib/programs/standard.js';
-import { EnvLighting } from '../graphics/env-lighting.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
@@ -16,15 +14,12 @@ import {
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
+import { EnvLighting } from '../graphics/env-lighting.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
-
-/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
 
 // properties that get created on a standard material
 const _props = {};
@@ -57,8 +52,8 @@ let _params = new Set();
  * (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
  * @property {boolean} diffuseTint Multiply main (primary) diffuse map and/or diffuse vertex color
  * by the constant diffuse value.
- * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
- * null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseMap The main
+ * (primary) diffuse map of the material (default is null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
  * @property {Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
  * @property {Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each
@@ -71,8 +66,9 @@ let _params = new Set();
  * diffuseTint are set, they'll be multiplied by vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {Texture|null} diffuseDetailMap The detail (secondary) diffuse map of the material
- * (default is null). Will only be used if main (primary) diffuse map is non-null.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseDetailMap The
+ * detail (secondary) diffuse map of the material (default is null). Will only be used if main
+ * (primary) diffuse map is non-null.
  * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
  * @property {Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse
  * map.
@@ -100,7 +96,8 @@ let _params = new Set();
  * Affects specular intensity and tint.
  * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the
  * constant specular value.
- * @property {Texture|null} specularMap The specular map of the material (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} specularMap The specular
+ * map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
  * @property {Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is
@@ -115,7 +112,8 @@ let _params = new Set();
  * constant specular value.
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
- * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} specularityFactorMap The
+ * factor of specularity as a texture (default is null).
  * @property {number} specularityFactorMapUv Specularity factor map UV channel.
  * @property {Vec2} specularityFactorMapTiling Controls the 2D tiling of the specularity factor map.
  * @property {Vec2} specularityFactorMapOffset Controls the 2D offset of the specularity factor map. Each component is
@@ -139,8 +137,9 @@ let _params = new Set();
  *
  * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
- * @property {Texture|null} clearCoatMap Monochrome clear coat intensity map (default is null). If
- * specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatMap Monochrome
+ * clear coat intensity map (default is null). If specified, will be multiplied by normalized
+ * 'clearCoat' value and/or vertex colors.
  * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
  * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
  * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each
@@ -155,9 +154,9 @@ let _params = new Set();
  * intensity. Can be "r", "g", "b" or "a".
  * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer
  * from 0 (rough) to 1 (mirror).
- * @property {Texture|null} clearCoatGlossMap Monochrome clear coat glossiness map (default is
- * null). If specified, will be multiplied by normalized 'clearCoatGlossiness' value and/or vertex
- * colors.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatGlossMap Monochrome
+ * clear coat glossiness map (default is null). If specified, will be multiplied by normalized
+ * 'clearCoatGlossiness' value and/or vertex colors.
  * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
  * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
  * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map.
@@ -170,8 +169,9 @@ let _params = new Set();
  * If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat
  * glossiness. Can be "r", "g", "b" or "a".
- * @property {Texture|null} clearCoatNormalMap The clear coat normal map of the material (default
- * is null). The texture must contains normalized, tangent space normals.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatNormalMap The
+ * clear coat normal map of the material (default is null). The texture must contains normalized,
+ * tangent space normals.
  * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal
  * map.
@@ -183,8 +183,8 @@ let _params = new Set();
  * the assigned main clear coat normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
- * @property {Texture|null} iridescenceMap The per-pixel iridescence intensity. Only used when
- * useIridescence is enabled.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceMap The
+ * per-pixel iridescence intensity. Only used when useIridescence is enabled.
  * @property {number} iridescenceMapUv Iridescence map UV channel.
  * @property {Vec2} iridescenceMapTiling Controls the 2D tiling of the iridescence map.
  * @property {Vec2} iridescenceMapOffset Controls the 2D offset of the iridescence map. Each component is
@@ -193,9 +193,9 @@ let _params = new Set();
  * map.
  * @property {string} iridescenceMapChannel Color channels of the iridescence map to use. Can be "r",
  * "g", "b" or "a".
- * @property {Texture|null} iridescenceThicknessMap The per-pixel iridescence thickness. Defines a
- * gradient weight between iridescenceThicknessMin and iridescenceThicknessMax. Only used when
- * useIridescence is enabled.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceThicknessMap The
+ * per-pixel iridescence thickness. Defines a gradient weight between iridescenceThicknessMin and
+ * iridescenceThicknessMax. Only used when useIridescence is enabled.
  * @property {number} iridescenceThicknessMapUv Iridescence thickness map UV channel.
  * @property {Vec2} iridescenceThicknessMapTiling Controls the 2D tiling of the iridescence
  * thickness map.
@@ -222,7 +222,8 @@ let _params = new Set();
  * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
- * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} metalnessMap Monochrome
+ * metalness map (default is null).
  * @property {number} metalnessMapUv Metalness map UV channel.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
  * @property {Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component
@@ -239,8 +240,9 @@ let _params = new Set();
  * mirror). A higher shininess value results in a more focused specular highlight. Glossiness map/
  * vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used
  * directly as constant output.
- * @property {Texture|null} glossMap Glossiness map (default is null). If specified, will be
- * multiplied by normalized 'shininess' value and/or vertex colors.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
+ * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
+ * vertex colors.
  * @property {number} glossMapUv Gloss map UV channel.
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b"
  * or "a".
@@ -254,7 +256,8 @@ let _params = new Set();
  * "r", "g", "b" or "a".
  * @property {number} refraction Defines the visibility of refraction. Material can refract the
  * same cube map as used for reflections.
- * @property {Texture|null} refractionMap The map of the refraction visibility.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} refractionMap The map of
+ * the refraction visibility.
  * @property {number} refractionMapUv Refraction map UV channel.
  * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
  * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component
@@ -276,8 +279,8 @@ let _params = new Set();
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
  * is enabled. The unit is in base units, and scales with the size of the object.
- * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when
- * useDynamicRefraction is enabled.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} thicknessMap The
+ * per-pixel thickness of the medium, only used when useDynamicRefraction is enabled.
  * @property {number} thicknessMapUv Thickness map UV channel.
  * @property {Vec2} thicknessMapTiling Controls the 2D tiling of the thickness map.
  * @property {Vec2} thicknessMapOffset Controls the 2D offset of the thickness map. Each component is
@@ -296,8 +299,8 @@ let _params = new Set();
  * (RGB), where each component is between 0 and 1.
  * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
  * constant emissive value.
- * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
- * HDR.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} emissiveMap The emissive
+ * map of the material (default is null). Can be HDR.
  * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -316,8 +319,8 @@ let _params = new Set();
  * This color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant
  * sheen value.
- * @property {Texture|null} sheenMap The sheen microstructure color map of the material
- * (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} sheenMap The sheen
+ * microstructure color map of the material (default is null).
  * @property {number} sheenMapUv Sheen map UV channel.
  * @property {Vec2} sheenMapTiling Controls the 2D tiling of the sheen map.
  * @property {Vec2} sheenMapOffset Controls the 2D offset of the sheen map. Each component is
@@ -332,8 +335,8 @@ let _params = new Set();
  * This color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
- * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
- * material (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
+ * glossiness microstructure color map of the material (default is null).
  * @property {number} sheenGlossMapUv Sheen map UV channel.
  * @property {Vec2} sheenGlossMapTiling Controls the 2D tiling of the sheen glossiness map.
  * @property {Vec2} sheenGlossMapOffset Controls the 2D offset of the sheen glossiness map.
@@ -352,7 +355,8 @@ let _params = new Set();
  * {@link BLEND_ADDITIVE} or any other mode. Also note that for most semi-transparent objects you
  * want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind
  * them.
- * @property {Texture|null} opacityMap The opacity map of the material (default is null).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} opacityMap The opacity map
+ * of the material (default is null).
  * @property {number} opacityMapUv Opacity map UV channel.
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g",
  * "b" or "a".
@@ -369,8 +373,9 @@ let _params = new Set();
  * {@link Material#alphaFade} to fade out materials.
  * @property {number} alphaFade used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
- * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
- * null). The texture must contains normalized, tangent space normals.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
+ * (primary) normal map of the material (default is null). The texture must contains normalized,
+ * tangent space normals.
  * @property {number} normalMapUv Main (primary) normal map UV channel.
  * @property {Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
  * @property {Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each
@@ -380,8 +385,9 @@ let _params = new Set();
  * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main
  * (primary) normal map. It should be normally between 0 (no bump mapping) and 1 (full bump
  * mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
- * @property {Texture|null} normalDetailMap The detail (secondary) normal map of the material
- * (default is null). Will only be used if main (primary) normal map is non-null.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} normalDetailMap The detail
+ * (secondary) normal map of the material (default is null). Will only be used if main (primary)
+ * normal map is non-null.
  * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
  * @property {Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal
  * map.
@@ -392,10 +398,10 @@ let _params = new Set();
  * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the
  * assigned detail (secondary) normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
- * @property {Texture|null} heightMap The height map of the material (default is null). Used for a
- * view-dependent parallax effect. The texture must represent the height of the surface where
- * darker pixels are lower and lighter pixels are higher. It is recommended to use it together with
- * a normal map.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} heightMap The height map
+ * of the material (default is null). Used for a view-dependent parallax effect. The texture must
+ * represent the height of the surface where darker pixels are lower and lighter pixels are higher.
+ * It is recommended to use it together with a normal map.
  * @property {number} heightMapUv Height map UV channel.
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b"
  * or "a".
@@ -405,22 +411,26 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
- * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
- * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
- * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
- * This setting overrides sphereMap and will replace the scene lighting environment.
- * @property {Texture|null} sphereMap The spherical environment map of the material (default is
- * null). This will replace the scene lighting environment.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} envAtlas The prefiltered
+ * environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and
+ * will replace the scene lighting environment.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} cubeMap The cubic
+ * environment map of the material (default is null). This setting overrides sphereMap and will
+ * replace the scene lighting environment.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} sphereMap The spherical
+ * environment map of the material (default is null). This will replace the scene lighting
+ * environment.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
- * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining
- * the box-projection used for the cubeMap property. Only used when cubeMapProjection is set to
- * {@link CUBEPROJ_BOX}.
+ * @property {import('../../core/shape/bounding-box.js').BoundingBox} cubeMapProjectionBox The
+ * world space axis-aligned bounding box defining the box-projection used for the cubeMap property.
+ * Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
  * @property {number} reflectivity Environment map intensity.
- * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
- * are textures that contain pre-rendered lighting. Can be HDR.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} lightMap A custom lightmap
+ * of the material (default is null). Lightmaps are textures that contain pre-rendered lighting.
+ * Can be HDR.
  * @property {number} lightMapUv Lightmap UV channel
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b",
  * "a", "rgb" or any swizzled combination.
@@ -433,8 +443,8 @@ let _params = new Set();
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
- * @property {Texture|null} aoMap Baked ambient occlusion (AO) map (default is null). Modulates
- * ambient color.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap Baked ambient
+ * occlusion (AO) map (default is null). Modulates ambient color.
  * @property {number} aoMapUv AO map UV channel
  * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} aoMapTiling Controls the 2D tiling of the AO map.

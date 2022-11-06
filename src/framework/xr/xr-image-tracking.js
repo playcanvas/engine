@@ -1,8 +1,7 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { XrTrackedImage } from './xr-tracked-image.js';
+import { platform } from '../../core/platform.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
  * Image Tracking provides the ability to track real world images by provided image samples and
@@ -12,7 +11,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  */
 class XrImageTracking extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
@@ -39,7 +38,7 @@ class XrImageTracking extends EventHandler {
      * Image Tracking provides the ability to track real world images by provided image samples and
      * their estimate sizes.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {

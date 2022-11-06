@@ -1,11 +1,11 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
-import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+
+import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
 /**
  * Depth Sensing provides depth information which is reconstructed using the underlying AR system.
@@ -66,7 +66,7 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  */
 class XrDepthSensing extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
@@ -134,7 +134,7 @@ class XrDepthSensing extends EventHandler {
     /**
      * Create a new XrDepthSensing instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {

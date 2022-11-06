@@ -6,7 +6,6 @@ import { Bundle } from '../../framework/bundle/bundle.js';
 
 import { Untar, UntarWorker } from './untar.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -26,7 +25,7 @@ class BundleHandler {
     /**
      * Create a new BundleHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

@@ -1,10 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
-/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
-/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
-
 function set1(a) {
     this.array[this.index] = a;
 }
@@ -118,11 +114,11 @@ class VertexIteratorAccessor {
      * that are not relevant to this attribute.
      * @param {number} vertexElement.stride - The number of total bytes that are between the start
      * of one vertex, and the start of the next.
-     * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the
-     * attribute.
+     * @param {import('./scope-id.js').ScopeId} vertexElement.scopeId - The shader input variable
+     * corresponding to the attribute.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
-     * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
-     * inside the buffer.
+     * @param {import('./vertex-format.js').VertexFormat} vertexFormat - A vertex format that
+     * defines the layout of vertex data inside the buffer.
      */
     constructor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
@@ -220,7 +216,8 @@ class VertexIterator {
     /**
      * Create a new VertexIterator instance.
      *
-     * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to be
+     * iterated.
      */
     constructor(vertexBuffer) {
         // Store the vertex buffer

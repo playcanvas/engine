@@ -15,9 +15,6 @@ import {
 
 import { Layer } from '../../scene/layer.js';
 
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-
 // uniform names (first is current name, second one is deprecated name for compatibility)
 const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
 const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
@@ -39,7 +36,7 @@ class SceneGrab {
     constructor(application) {
         this.application = application;
 
-        /** @type {GraphicsDevice} */
+        /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
         this.device = application.graphicsDevice;
 
         // create depth layer
@@ -150,10 +147,10 @@ class SceneGrab {
 
             onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
 
-                /** @type {GraphicsDevice} */
+                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
                 const device = app.graphicsDevice;
 
-                /** @type {CameraComponent} */
+                /** @type {import('../components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
@@ -244,10 +241,10 @@ class SceneGrab {
 
             onPostCull: function (cameraPass) {
 
-                /** @type {GraphicsDevice} */
+                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
                 const device = app.graphicsDevice;
 
-                /** @type {CameraComponent} */
+                /** @type {import('../components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
@@ -298,10 +295,10 @@ class SceneGrab {
 
             onPreRenderOpaque: function (cameraPass) {
 
-                /** @type {GraphicsDevice} */
+                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
                 const device = app.graphicsDevice;
 
-                /** @type {CameraComponent} */
+                /** @type {import('../components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
@@ -348,7 +345,7 @@ class SceneGrab {
 
             onPostRenderOpaque: function (cameraPass) {
 
-                /** @type {CameraComponent} */
+                /** @type {import('../components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {

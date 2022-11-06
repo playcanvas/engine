@@ -13,9 +13,6 @@ import {
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
-/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./morph-target.js').MorphTarget} MorphTarget */
-
 // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
 const _floatRounding = 0.2;
 
@@ -26,9 +23,10 @@ class Morph extends RefCountedObject {
     /**
      * Create a new Morph instance.
      *
-     * @param {MorphTarget[]} targets - A list of morph targets.
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph
-     * target. If it is not provided, a device is obtained from the {@link Application}.
+     * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this morph target. If it is not provided, a device is
+     * obtained from the {@link Application}.
      */
     constructor(targets, graphicsDevice) {
         super();
@@ -232,7 +230,7 @@ class Morph extends RefCountedObject {
     /**
      * The array of morph targets.
      *
-     * @type {MorphTarget[]}
+     * @type {import('./morph-target.js').MorphTarget[]}
      */
     get targets() {
         return this._targets;

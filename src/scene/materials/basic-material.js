@@ -10,8 +10,6 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from './material.js';
 
-/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
-
 /**
  * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
  * modulated with a color.
@@ -48,7 +46,7 @@ class BasicMaterial extends Material {
          * The color map of the material (default is null). If specified, the color map is
          * modulated by the color property.
          *
-         * @type {Texture|null}
+         * @type {import('../../platform/graphics/texture.js').Texture|null}
          */
         this.colorMap = null;
         this.vertexColors = false;

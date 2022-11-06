@@ -5,12 +5,8 @@ import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
-import { skybox } from '../scene/shader-lib/programs/skybox.js';
 import { getProgramLibrary } from './shader-lib/get-program-library.js';
-
-/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
-/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./scene.js').Scene} Scene */
+import { skybox } from './shader-lib/programs/skybox.js';
 
 /**
  * A visual representation of the sky.
@@ -26,9 +22,10 @@ class Sky {
     meshInstance;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {Scene} scene - The scene owning the sky.
-     * @param {Texture} texture - The texture of the sky.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {import('./scene.js').Scene} scene - The scene owning the sky.
+     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture of the sky.
      */
     constructor(device, scene, texture) {
 

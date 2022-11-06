@@ -62,12 +62,6 @@ import { TextureHandler } from '../framework/handlers/texture.js';
 
 import { XrManager } from './xr/xr-manager.js';
 
-/** @typedef {import('./input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
-
 /**
  * An Application represents and manages your PlayCanvas application. If you are developing using
  * the PlayCanvas Editor, the Application is created for you. You can access your Application
@@ -100,11 +94,16 @@ class Application extends AppBase {
      *
      * @param {Element} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
-     * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
-     * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
-     * @param {Mouse} [options.mouse] - Mouse handler for input.
-     * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
-     * @param {GamePads} [options.gamepads] - Gamepad handler for input.
+     * @param {import('./input/element-input.js').ElementInput} [options.elementInput] - Input
+     * handler for {@link ElementComponent}s.
+     * @param {import('../platform/input/keyboard.js').Keyboard} [options.keyboard] - Keyboard
+     * handler for input.
+     * @param {import('../platform/input/mouse.js').Mouse} [options.mouse] - Mouse handler for
+     * input.
+     * @param {import('../platform/input/touch-device.js').TouchDevice} [options.touch] - TouchDevice
+     * handler for input.
+     * @param {import('../platform/input/game-pads.js').GamePads} [options.gamepads] - Gamepad
+     * handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the

@@ -1,9 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
-/** @typedef {import('../bind-group.js').BindGroup} BindGroup */
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-/** @typedef {import('./webgpu-texture.js').WebgpuTexture} WebgpuTexture */
-
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
  *
@@ -33,8 +29,9 @@ class WebgpuBindGroup {
     /**
      * Creates a bind group descriptor in WebGPU format
      *
-     * @param {WebgpuGraphicsDevice} device - Graphics device.
-     * @param {BindGroup} bindGroup - Bind group to create the descriptor for.
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to create the
+     * descriptor for.
      * @returns {GPUBindGroupDescriptor} - Returns the generated descriptor, which can be used to
      * create a GPUBindGroup
      */
@@ -59,7 +56,7 @@ class WebgpuBindGroup {
         // textures
         bindGroup.textures.forEach((tex) => {
 
-            /** @type {WebgpuTexture} */
+            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
             const wgpuTexture = tex.impl;
 
             // texture
