@@ -369,9 +369,13 @@ class ElementInput {
         this._touchmoveHandler = this._handleTouchMove.bind(this);
         this._sortHandler = this._sortElements.bind(this);
 
+        /** @type {ElementComponent[]} */
         this._elements = [];
+        /** @type {ElementComponent|null} */
         this._hoveredElement = null;
+        /** @type {ElementComponent|null} */
         this._pressedElement = null;
+        /** @type {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} */
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
         this._selectedElements = {};
@@ -547,10 +551,17 @@ class ElementInput {
         this._onElementMouseEvent('mousewheel', event);
     }
 
+    /**
+     * @param {TouchEvent} event - The TouchEvent.
+     * @returns {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} - Object
+     * containing information about touched ElementComponent's.
+     * @private
+     */
     _determineTouchedElements(event) {
+        /** @type {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} */
         const touchedElements = {};
         const cameras = this.app.systems.camera.cameras;
-
+        const { changedTouches } = event;
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
@@ -558,19 +569,20 @@ class ElementInput {
             const camera = cameras[i];
 
             let done = 0;
-            const len = event.changedTouches.length;
+            const len = changedTouches.length;
             for (let j = 0; j < len; j++) {
-                if (touchedElements[event.changedTouches[j].identifier]) {
+                const changedTouch = changedTouches[j];
+                if (touchedElements[changedTouch.identifier]) {
                     done++;
                     continue;
                 }
 
-                const coords = this._calcTouchCoords(event.changedTouches[j]);
+                const coords = this._calcTouchCoords(changedTouch);
 
                 const element = this._getTargetElementByCoords(camera, coords.x, coords.y);
                 if (element) {
                     done++;
-                    touchedElements[event.changedTouches[j].identifier] = {
+                    touchedElements[changedTouch.identifier] = {
                         element: element,
                         camera: camera,
                         x: coords.x,
@@ -598,14 +610,12 @@ class ElementInput {
             const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-                this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
+                this._fireEvent('touchstart', new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
                 this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
             }
         }
 
-        for (const touchId in newTouchedElements) {
-            this._touchedElements[touchId] = newTouchedElements[touchId];
-        }
+        Object.assign(this._touchedElements, newTouchedElements);
     }
 
     _handleTouchEnd(event) {
@@ -627,10 +637,7 @@ class ElementInput {
             if (!touchInfo)
                 continue;
 
-            const element = touchInfo.element;
-            const camera = touchInfo.camera;
-            const x = touchInfo.x;
-            const y = touchInfo.y;
+            const { element, camera, x, y } = touchInfo;
 
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
@@ -655,6 +662,10 @@ class ElementInput {
         }
     }
 
+    /**
+     * @param {globalThis.TouchEvent} event - The TouchEvent.
+     * @private
+     */
     _handleTouchMove(event) {
         // call preventDefault to avoid issues in Chrome Android:
         // http://wilsonpage.co.uk/touch-events-in-chrome-android/
@@ -663,33 +674,44 @@ class ElementInput {
         if (!this._enabled) return;
 
         const newTouchedElements = this._determineTouchedElements(event);
-
+        const { _touchedElements, _touchesForWhichTouchLeaveHasFired } = this;
         for (let i = 0, len = event.changedTouches.length; i < len; i++) {
             const touch = event.changedTouches[i];
-            const newTouchInfo = newTouchedElements[touch.identifier];
-            const oldTouchInfo = this._touchedElements[touch.identifier];
-
+            const { identifier } = touch;
+            const newTouchInfo = newTouchedElements[identifier];
+            const oldTouchInfo = _touchedElements[identifier];
             if (oldTouchInfo) {
-                const coords = this._calcTouchCoords(touch);
-
+                const { x, y } = this._calcTouchCoords(touch);
+                const leaveHasFired = _touchesForWhichTouchLeaveHasFired[identifier];
+                const leftPreviousElement  = !newTouchInfo || newTouchInfo.element !== oldTouchInfo.element;
+                const enterPreviousElement =  newTouchInfo && newTouchInfo.element === oldTouchInfo.element;
                 // Fire touchleave if we've left the previously touched element
-                if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
-                    this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
-
+                if (leftPreviousElement && !leaveHasFired) {
+                    this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, x, y, touch));
                     // Flag that touchleave has been fired for this touch, so that we don't
                     // re-fire it on the next touchmove. This is required because touchmove
                     // events keep on firing for the same element until the touch ends, even
                     // if the touch position moves away from the element. Touchleave, on the
                     // other hand, should fire once when the touch position moves away from
                     // the element and then not re-fire again within the same touch session.
-                    this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
+                    _touchesForWhichTouchLeaveHasFired[identifier] = true;
                 }
-
-                this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
+                // And fire touchenter if we've entered the previously left touched element again
+                if (enterPreviousElement && leaveHasFired) {
+                    this._fireEvent('touchenter', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, x, y, touch));
+                    _touchesForWhichTouchLeaveHasFired[identifier] = false;
+                }
+                // Always send touchmove, touched or not, e.g. scrolling behaviour depends on it
+                this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, x, y, touch));
             }
         }
     }
 
+    /**
+     * @param {'mouseup'|'mousedown'|'mousemove'|'mousewheel'} eventType - The event type.
+     * @param {globalThis.MouseEvent} event - The MouseEvent.
+     * @private
+     */
     _onElementMouseEvent(eventType, event) {
         let element = null;
 
@@ -740,15 +762,12 @@ class ElementInput {
         if (eventType === 'mouseup' && this._pressedElement) {
             // click event
             if (this._pressedElement === this._hoveredElement) {
-                this._pressedElement = null;
-
                 // fire click event if it hasn't been fired already by the touchup handler
                 if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
                     this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
-            } else {
-                this._pressedElement = null;
             }
+            this._pressedElement = null;
         }
     }
 
@@ -854,6 +873,11 @@ class ElementInput {
         }
     }
 
+    /**
+     * @param {'click'|'mouseup'|'mousedown'|'mousemove'|'mouseenter'|'mouseleave'|'mousewheel'|'touchleave'|'touchmove'|'selectleave'|'selectenter'|'selectstart'|'selectend'|'touchstart'|'touchenter'} name - The name.
+     * @param {ElementMouseEvent|ElementTouchEvent|ElementSelectEvent} evt - The Element{Mouse/Touch/Select}Event.
+     * @private
+     */
     _fireEvent(name, evt) {
         let element = evt.element;
         while (true) {
@@ -870,6 +894,10 @@ class ElementInput {
         }
     }
 
+    /**
+     * @param {globalThis.MouseEvent} event - The MouseEvent.
+     * @private
+     */
     _calcMouseCoords(event) {
         const rect = this._target.getBoundingClientRect();
         const left = Math.floor(rect.left);
@@ -878,6 +906,11 @@ class ElementInput {
         targetY = (event.clientY - top);
     }
 
+    /**
+     * @param {globalThis.Touch} touch - The Touch.
+     * @returns {{x: number, y: number}} X and Y coordinate.
+     * @private
+     */
     _calcTouchCoords(touch) {
         let totalOffsetX = 0;
         let totalOffsetY = 0;
@@ -900,6 +933,12 @@ class ElementInput {
         };
     }
 
+    /**
+     * @param {ElementComponent} a - First element
+     * @param {ElementComponent} b - Second Element
+     * @returns {number} Returns -1|0|1 to specify the relative position.
+     * @private
+     */
     _sortElements(a, b) {
         const layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
@@ -918,6 +957,15 @@ class ElementInput {
         return b.drawOrder - a.drawOrder;
     }
 
+    /**
+     * Get the target element by coordinates.
+     *
+     * @param {CameraComponent} camera - The camera component.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @returns {ElementComponent|null} Returns ElementComponent or null.
+     * @private
+     */
     _getTargetElementByCoords(camera, x, y) {
         // calculate screen-space and 3d-space rays
         const rayScreen = this._calculateRayScreen(x, y, camera, rayA) ? rayA : null;
@@ -940,6 +988,13 @@ class ElementInput {
         return this._getTargetElement(camera, rayScreen, ray3d);
     }
 
+    /**
+     * @param {CameraComponent} camera - The CameraComponent.
+     * @param {Ray} rayScreen - The rayScreen.
+     * @param {Ray} ray3d - The ray3d.
+     * @returns {ElementComponent|null} Returns ElementComponent or null.
+     * @private
+     */
     _getTargetElement(camera, rayScreen, ray3d) {
         let result = null;
         let closestDistance3d = Infinity;
@@ -991,10 +1046,20 @@ class ElementInput {
         return result;
     }
 
-    // In most cases the corners used for hit testing will just be the element's
-    // screen corners. However, in cases where the element has additional hit
-    // padding specified, we need to expand the screenCorners to incorporate the
-    // padding.
+    /**
+     * In most cases the corners used for hit testing will just be the element's
+     * screen corners. However, in cases where the element has additional hit
+     * padding specified, we need to expand the screenCorners to incorporate the
+     * padding.
+     *
+     * @param {ElementComponent} element - The ElementComponent.
+     * @param {Vec3[]} screenOrWorldCorners - Array of four corners.
+     * @param {number} scaleX - Scale of X coordinate.
+     * @param {number} scaleY - Scale of Y coordinate.
+     * @param {number} scaleZ - Scale of Z coordinate.
+     * @returns {Vec3[]} Array of four corners.
+     * @private
+     */
     _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
         let hitCorners = screenOrWorldCorners;
         const button = element.entity && element.entity.button;
@@ -1055,6 +1120,11 @@ class ElementInput {
         return hitCorners;
     }
 
+    /**
+     * @param {ElementComponent} element - The ElementComponent.
+     * @returns {Vec3} The accumulated scale.
+     * @private
+     */
     _calculateScaleToScreen(element) {
         let current = element.entity;
         const screenScale = element.screen.screen.scale;
@@ -1069,6 +1139,11 @@ class ElementInput {
         return _accumulatedScale;
     }
 
+    /**
+     * @param {ElementComponent} element - The ElementComponent.
+     * @returns {Vec3} The accumulated scale.
+     * @private
+     */
     _calculateScaleToWorld(element) {
         let current = element.entity;
         _accumulatedScale.set(1, 1, 1);
@@ -1081,6 +1156,14 @@ class ElementInput {
         return _accumulatedScale;
     }
 
+    /**
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {CameraComponent} camera - The camera component.
+     * @param {Ray} ray - The ray.
+     * @returns {boolean} Boolean result.
+     * @private
+     */
     _calculateRayScreen(x, y, camera, ray) {
         const sw = this.app.graphicsDevice.width;
         const sh = this.app.graphicsDevice.height;
@@ -1115,6 +1198,14 @@ class ElementInput {
         return false;
     }
 
+    /**
+     * @param {number} x - The X coordinate.
+     * @param {number} y - The Y coordinate.
+     * @param {CameraComponent} camera - The CameraComponent.
+     * @param {Ray} ray - The ray.
+     * @returns {boolean} Whether window coords are within camera rect
+     * @private
+     */
     _calculateRay3d(x, y, camera, ray) {
         const sw = this._target.clientWidth;
         const sh = this._target.clientHeight;
@@ -1151,6 +1242,13 @@ class ElementInput {
         return false;
     }
 
+    /**
+     * @param {Ray} ray - The ray.
+     * @param {ElementComponent} element - The ElementComponent.
+     * @param {boolean} screen - If true, calculate scale to screen, otherwise to world.
+     * @returns {number} -1 or distance squared.
+     * @private
+     */
     _checkElement(ray, element, screen) {
         // ensure click is contained by any mask first
         if (element.maskedBy) {

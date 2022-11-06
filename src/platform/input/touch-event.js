@@ -134,7 +134,7 @@ class TouchEvent {
      *
      * @param {number} id - The identifier of the touch.
      * @param {Touch[]|null} list - An array of touches to search.
-     * @returns {Touch} The {@link Touch} object or null.
+     * @returns {Touch|null} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
         for (let i = 0, l = list.length; i < l; i++) {
