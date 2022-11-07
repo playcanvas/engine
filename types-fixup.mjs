@@ -9,9 +9,18 @@ const paths = [
     './types/framework/script/script.d.ts'
 ];
 
-paths.forEach((path) => {
+paths.forEach((path, index) => {
     let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
+    if (index === 0) {
+        dts += `
+import { ScriptType } from '../../script/script-type.js';
+`;
+    } else {
+        dts += `
+import { ScriptType } from './script-type.js';
+`;
+    }
     fs.writeFileSync(path, dts);
 });
 
