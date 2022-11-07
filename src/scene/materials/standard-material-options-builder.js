@@ -278,25 +278,25 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
-        options.litOptions.useLightMap = false;
-        options.litOptions.lightMapChannel = '';
-        options.litOptions.lightMapUv = 0;
-        options.litOptions.lightMapTransform = 0;
+        options.lightMap = false;
+        options.lightMapChannel = '';
+        options.lightMapUv = 0;
+        options.lightMapTransform = 0;
         options.litOptions.lightMapWithoutAmbient = false;
-        options.litOptions.useDirLightMap = false;
+        options.dirLightMap = false;
 
         if (objDefs) {
             options.litOptions.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.litOptions.lightMapEncoding = 'rgbm';
-                options.litOptions.useLightMap = true;
-                options.litOptions.lightMapChannel = 'rgb';
-                options.litOptions.lightMapUv = 1;
-                options.litOptions.lightMapTransform = 0;
+                options.lightMapEncoding = 'rgbm';
+                options.lightMap = true;
+                options.lightMapChannel = 'rgb';
+                options.lightMapUv = 1;
+                options.lightMapTransform = 0;
                 options.litOptions.lightMapWithoutAmbient = !stdMat.lightMap;
                 if ((objDefs & SHADERDEF_DIRLM) !== 0) {
-                    options.litOptions.useDirLightMap = true;
+                    options.dirLightMap = true;
                 }
 
                 // if lightmaps contain baked ambient light, disable real-time ambient light
@@ -348,7 +348,6 @@ class StandardMaterialOptionsBuilder {
         options[vname] = false;
         options[vcname] = '';
         options.litOptions[vname] = options[vname];
-        options.litOptions[vcname] = options[vcname];
 
         const isOpacity = p === 'opacity';
         if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
@@ -387,9 +386,8 @@ class StandardMaterialOptionsBuilder {
             }
         }
 
-        options.litOptions[mname] = options[mname];
-        options.litOptions[iname] = options[iname];
-        options.litOptions[cname] = options[cname];
+        const litOptionsName = 'use' + mname[0].toUpperCase() + mname.substring(1);
+        options.litOptions[litOptionsName] = options[mname];
         options.litOptions[tname] = options[tname];
         options.litOptions[uname] = options[uname];
         options.litOptions.useVertexColors = options.vertexColors;

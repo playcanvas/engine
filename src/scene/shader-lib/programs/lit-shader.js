@@ -87,9 +87,9 @@ class LitShader {
 
         this.lighting = (options.lights.length > 0) || options.useDirLightMap || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
-        if (!options.useSpecular) options.specularMap = options.glossMap = null;
+        if (!options.useSpecular) options.useSpecularMap = options.useGlossMap = false;
         this.shadowPass = ShaderPass.isShadow(options.pass);
-        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
+        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.useHeightMap || options.enableGGXSpecular ||
                             (options.clusteredLightingEnabled && !this.shadowPass) || options.useClearCoatNormalMap;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
@@ -259,7 +259,7 @@ class LitShader {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if (options.hasTangents && (options.heightMap || options.normalMap || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.useHeightMap || options.useNormalMap || options.enableGGXSpecular)) {
                 this.attributes.vertex_tangent = SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -702,13 +702,13 @@ class LitShader {
         code += "\n"; // End of uniform declarations
 
         // TBN
-        const hasTBN = this.needsNormal && (options.normalMap || options.useClearCoatNormalMap || (options.enableGGXSpecular && !options.heightMap));
+        const hasTBN = this.needsNormal && (options.useNormalMap || options.useClearCoatNormalMap || (options.enableGGXSpecular && !options.useHeightMap));
 
         if (hasTBN) {
             if (options.hasTangents) {
                 code += options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
             } else {
-                if (device.extStandardDerivatives && (options.normalMap || options.useClearCoatNormalMap)) {
+                if (device.extStandardDerivatives && (options.useNormalMap || options.useClearCoatNormalMap)) {
                     code += chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv);
                 } else {
                     code += chunks.TBNObjectSpacePS;
@@ -966,7 +966,7 @@ class LitShader {
                 code += "    dVertexNormalW = normalize(vNormalW);\n";
             }
 
-            if ((options.heightMap || options.normalMap) && options.hasTangents) {
+            if ((options.useHeightMap || options.useNormalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
                     code += "    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";

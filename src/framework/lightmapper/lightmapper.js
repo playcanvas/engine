@@ -269,9 +269,9 @@ class Lightmapper {
             this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
             this.ambientAOMaterial.onUpdateShader = function (options) {
                 // mark LM as without ambient, to add it
-                options.lightMapWithoutAmbient = true;
+                options.litOptions.lightMapWithoutAmbient = true;
                 // don't add ambient to diffuse directly but keep it separate, to allow AO to be multiplied in
-                options.separateAmbient = true;
+                options.litOptions.separateAmbient = true;
                 return options;
             };
         }

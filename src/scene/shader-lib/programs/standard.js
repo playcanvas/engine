@@ -448,7 +448,7 @@ const standard = {
                 if (lightmapDir) {
                     decl.append("vec3 dLightmapDir;");
                 }
-                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, textureMapping, options.litOptions.lightMapEncoding));
+                code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
                 func.append("getLightMap();");
             }
 
