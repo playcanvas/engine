@@ -119,7 +119,7 @@ class Frustum {
      * Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
      *
-     * @param {Vec3} point - The point to test.
+     * @param {import('../math/vec3.js').Vec3} point - The point to test.
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
