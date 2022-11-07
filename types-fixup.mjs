@@ -12,6 +12,7 @@ const paths = [
 paths.forEach((path, index) => {
     let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
+    // The .d.ts files don't know what a ScriptType is, so import it
     if (index === 0) {
         dts += `
 import { ScriptType } from '../../script/script-type.js';
@@ -77,6 +78,7 @@ const buttonComponentProps = [
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Vec4 } from '../../../core/math/vec4.js';
 import { Entity } from '../../../framework/entity.js';
@@ -104,6 +106,7 @@ const cameraComponentProps = [
 path = './types/framework/components/camera/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Color } from '../../../core/math/color.js';
 import { Vec4 } from '../../../core/math/vec4.js';
@@ -122,6 +125,7 @@ const collisionComponentProps = [
 path = './types/framework/components/collision/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Model } from '../../../scene/model.js';
@@ -171,6 +175,7 @@ const elementComponentProps = [
 path = './types/framework/components/element/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Color } from '../../../core/math/color.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -224,6 +229,7 @@ const lightComponentProps = [
 path = './types/framework/components/light/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -295,6 +301,7 @@ dts = fs.readFileSync(path, 'utf8');
 // know about the declaration in the Component base class, so remove it.
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemComponentProps));
 dts = dts.replace('enabled: any;', '');
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Curve } from '../../../core/math/curve.js';
@@ -312,6 +319,7 @@ const scrollbarComponentProps = [
 path = './types/framework/components/scrollbar/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Entity } from '../../../framework/entity.js';
 `;
@@ -336,6 +344,7 @@ const scrollViewComponentProps = [
 path = './types/framework/components/scroll-view/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Entity } from '../../../framework/entity.js';
 `;
@@ -517,6 +526,7 @@ const standardMaterialProps = [
 path = './types/scene/materials/standard-material.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
+// We need to import types that are newly introduced in the property list above
 dts += `
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
