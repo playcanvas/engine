@@ -469,6 +469,12 @@ const standardMaterialProps = [
 path = './types/scene/materials/standard-material.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
+dts += `
+import { Color } from '../../core/math/color.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Texture } from '../../platform/graphics/texture.js';
+`
 fs.writeFileSync(path, dts);
 
 path = './types/framework/script/script-type.d.ts';
