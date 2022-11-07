@@ -186,7 +186,7 @@ class AssetViewerExample {
                 normalOffsetBias: 0.05,
                 shadowResolution: 2048
             });
-            directionalLight.setEulerAngles(45, 35, 0);
+            directionalLight.setEulerAngles(45, 180, 0);
             app.root.addChild(directionalLight);
 
 
