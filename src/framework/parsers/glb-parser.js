@@ -1,14 +1,11 @@
-import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
-
-import { http } from '../../platform/net/http.js';
-
-import { math } from '../../core/math/math.js';
+import { path } from '../../core/path.js';
+import { WasmModule } from '../../core/wasm-module.js';
+import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
+import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Color } from '../../core/math/color.js';
-
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
@@ -27,36 +24,30 @@ import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { http } from '../../platform/net/http.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL, LIGHTFALLOFF_INVERSESQUARED,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
-
-import { calculateNormals } from '../../scene/procedural.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
+import { calculateNormals } from '../../scene/procedural.js';
+import { Render } from '../../scene/render.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { Render } from '../../scene/render.js';
 
-import { Entity } from '../../framework/entity.js';
-
+import { Entity } from '../entity.js';
+import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../anim/constants.js';
 import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
-
-import { INTERPOLATION_CUBIC, INTERPOLATION_LINEAR, INTERPOLATION_STEP } from '../anim/constants.js';
-
-import { Asset } from '../../framework/asset/asset.js';
-
+import { Asset } from '../asset/asset.js';
 import { GlbContainerResource } from './glb-container-resource.js';
-
-import { WasmModule } from '../../core/wasm-module.js';
 
 // instance of the draco decoder
 let dracoDecoderInstance = null;

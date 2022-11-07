@@ -16,7 +16,7 @@ class ResourceLoader {
     /**
      * Create a new ResourceLoader instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
+     * @param {import('../app-base.js').AppBase} app - The application.
      */
     constructor(app) {
         this._handlers = {};
@@ -87,8 +87,8 @@ class ResourceLoader {
      * @param {string} type - The type of resource expected.
      * @param {ResourceLoaderCallback} callback - The callback used when the resource is loaded or
      * an error occurs. Passed (err, resource) where err is null if there are no errors.
-     * @param {import('../../framework/asset/asset.js').Asset} [asset] - Optional asset that is
-     * passed into handler.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed into
+     * handler.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
      *     // use texture here
@@ -228,9 +228,8 @@ class ResourceLoader {
      * Perform any operations on a resource, that requires a dependency on its asset data or any
      * other asset data.
      *
-     * @param {import('../../framework/asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../../framework/asset/asset-registry.js').AssetRegistry} assets - The asset
-     * registry.
+     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         const handler = this._handlers[asset.type];

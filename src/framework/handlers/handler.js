@@ -24,8 +24,8 @@ class ResourceHandler {
      * format. This is necessary when loading, for example from blob.
      * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
      * an error occurs.
-     * @param {import('../../framework/asset/asset.js').Asset} [asset] - Optional asset that is
-     * passed by ResourceLoader.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      */
     load(url, callback, asset) {
         throw new Error('not implemented');
@@ -39,8 +39,8 @@ class ResourceHandler {
      * JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {import('../../framework/asset/asset.js').Asset} [asset] - Optional asset that is
-     * passed by ResourceLoader.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {
@@ -53,9 +53,8 @@ class ResourceHandler {
      * @name ResourceHandler#[patch]
      * @description Optional function to perform any operations on a resource, that requires a
      * dependency on its asset data or any other asset data.
-     * @param {import('../../framework/asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../../framework/asset/asset-registry.js').AssetRegistry} assets - The asset
-     * registry.
+     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         // optional function

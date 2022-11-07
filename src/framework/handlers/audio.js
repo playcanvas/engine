@@ -60,7 +60,7 @@ class AudioHandler {
     /**
      * Create a new AudioHandler instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

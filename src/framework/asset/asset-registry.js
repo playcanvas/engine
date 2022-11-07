@@ -36,8 +36,8 @@ class AssetRegistry extends EventHandler {
     /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {import('../../framework/handlers/loader.js').ResourceLoader} loader - The
-     * ResourceLoader used to load the asset files.
+     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
+     * load the asset files.
      */
     constructor(loader) {
         super();

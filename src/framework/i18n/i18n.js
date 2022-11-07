@@ -26,7 +26,7 @@ class I18n extends EventHandler {
     /**
      * Create a new I18n instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
+     * @param {import('../app-base.js').AppBase} app - The application.
      */
     constructor(app) {
         super();

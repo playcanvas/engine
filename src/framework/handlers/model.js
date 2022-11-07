@@ -36,7 +36,7 @@ class ModelHandler {
     /**
      * Create a new ModelHandler instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

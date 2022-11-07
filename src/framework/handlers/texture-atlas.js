@@ -46,7 +46,7 @@ class TextureAtlasHandler {
     /**
      * Create a new TextureAtlasHandler instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

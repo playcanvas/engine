@@ -100,7 +100,7 @@ class AppOptions {
     /**
      * The resource handlers the app requires.
      *
-     * @type {import('../framework/handlers/handler.js').ResourceHandler[]}
+     * @type {import('./handlers/handler.js').ResourceHandler[]}
      */
     resourceHandlers = [];
 }

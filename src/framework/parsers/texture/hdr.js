@@ -1,7 +1,6 @@
-import { ReadStream } from '../../../core/read-stream.js';
 import { Debug } from '../../../core/debug.js';
+import { ReadStream } from '../../../core/read-stream.js';
 
-import { Texture } from '../../../platform/graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
@@ -9,8 +8,9 @@ import {
     PIXELFORMAT_R8_G8_B8_A8,
     TEXTURETYPE_RGBE
 } from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
-import { Asset } from '../../../framework/asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 

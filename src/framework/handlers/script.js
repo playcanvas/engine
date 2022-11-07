@@ -1,4 +1,4 @@
-import { script } from '../../framework/script.js';
+import { script } from '../script.js';
 import { ScriptTypes } from '../script/script-types.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -21,7 +21,7 @@ class ScriptHandler {
     /**
      * Create a new ScriptHandler instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

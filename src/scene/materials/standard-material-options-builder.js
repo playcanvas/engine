@@ -1,8 +1,9 @@
-import { _matTex2D } from '../../scene/shader-lib/programs/standard.js';
+import { Quat } from '../../core/math/quat.js';
 
 import {
     PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
 } from '../../platform/graphics/constants.js';
+
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
@@ -14,8 +15,7 @@ import {
     TONEMAP_LINEAR,
     SPECULAR_PHONG
 } from '../constants.js';
-
-import { Quat } from '../../core/math/quat.js';
+import { _matTex2D } from '../shader-lib/programs/standard.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {

@@ -1,10 +1,14 @@
 import { Debug } from '../../core/debug.js';
+import { Color } from '../../core/math/color.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { Mat4 } from '../../core/math/mat4.js';
-import { Color } from '../../core/math/color.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+
+import { FUNC_LESSEQUAL } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -14,16 +18,12 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
+import { ShaderPass } from '../shader-pass.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
-
-import { FUNC_LESSEQUAL } from '../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
-import { ShaderPass } from '../shader-pass.js';
 
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),

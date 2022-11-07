@@ -58,8 +58,8 @@ class TextureParser {
      * @param {string} url.original - The original URL useful for identifying the resource type.
      * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
      * the resource is loaded or an error occurs.
-     * @param {import('../../framework/asset/asset.js').Asset} [asset] - Optional asset that is
-     * passed by ResourceLoader.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      */
     load(url, callback, asset) {
         throw new Error('not implemented');
@@ -168,7 +168,7 @@ class TextureHandler {
     /**
      * Create a new TextureHandler instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

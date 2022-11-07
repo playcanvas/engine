@@ -40,8 +40,8 @@ class Skeleton {
     /**
      * Create a new Skeleton instance.
      *
-     * @param {import('../../scene/graph-node.js').GraphNode} graph - The root {@link GraphNode} of
-     * the skeleton.
+     * @param {import('../graph-node.js').GraphNode} graph - The root {@link GraphNode} of the
+     * skeleton.
      */
     constructor(graph) {
         /**
@@ -242,8 +242,8 @@ class Skeleton {
      * Links a skeleton to a node hierarchy. The nodes animated skeleton are then subsequently used
      * to drive the local transformation matrices of the node hierarchy.
      *
-     * @param {import('../../scene/graph-node.js').GraphNode} graph - The root node of the graph
-     * that the skeleton is to drive.
+     * @param {import('../graph-node.js').GraphNode} graph - The root node of the graph that the
+     * skeleton is to drive.
      */
     setGraph(graph) {
         this.graph = graph;

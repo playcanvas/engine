@@ -1,4 +1,4 @@
-import { SceneParser } from '../framework/parsers/scene.js';
+import { SceneParser } from './parsers/scene.js';
 
 /**
  * Create a Template resource from raw database data.

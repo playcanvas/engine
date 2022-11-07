@@ -4,7 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
 
-import { BLEND_ADDITIVEALPHA } from '../../scene/constants.js';
+import { BLEND_ADDITIVEALPHA } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
