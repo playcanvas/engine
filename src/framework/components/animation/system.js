@@ -4,9 +4,6 @@ import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-/** @typedef {import('../../entity.js').Entity} Entity */
-
 const _schema = [
     'enabled'
 ];
@@ -20,7 +17,7 @@ class AnimationComponentSystem extends ComponentSystem {
     /**
      * Create an AnimationComponentSystem instance.
      *
-     * @param {AppBase} app - The application managing this system.
+     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
      * @hideconstructor
      */
     constructor(app) {
@@ -49,7 +46,11 @@ class AnimationComponentSystem extends ComponentSystem {
      * @ignore
      */
     initializeComponentData(component, data, properties) {
-        for (const property in data) {
+        // properties need to be set in a specific order due to some setters in the component
+        // having extra logic. `assets` need to be last as it checks other properties
+        // to see if it should play the animation
+        properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
+        for (const property of properties) {
             if (data.hasOwnProperty(property)) {
                 component[property] = data[property];
             }
@@ -61,8 +62,8 @@ class AnimationComponentSystem extends ComponentSystem {
     /**
      * Create a clone of component. This creates a copy of all component data variables.
      *
-     * @param {Entity} entity - The entity to clone the component from.
-     * @param {Entity} clone - The entity to clone the component into.
+     * @param {import('../../entity.js').Entity} entity - The entity to clone the component from.
+     * @param {import('../../entity.js').Entity} clone - The entity to clone the component into.
      * @returns {AnimationComponent} The newly cloned component.
      * @ignore
      */
@@ -97,7 +98,7 @@ class AnimationComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @param {Entity} entity - The entity having its component removed.
+     * @param {import('../../entity.js').Entity} entity - The entity having its component removed.
      * @param {AnimationComponent} component - The component being removed.
      * @private
      */

@@ -1,10 +1,10 @@
-import { Color } from '../math/color.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
-import { math } from '../math/math.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
+import { math } from '../core/math/math.js';
 
-import { Frustum } from '../shape/frustum.js';
+import { Frustum } from '../core/shape/frustum.js';
 
 import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
@@ -16,6 +16,7 @@ const _deviceCoord = new Vec3();
 const _halfSize = new Vec3();
 const _point = new Vec3();
 const _invViewProjMat = new Mat4();
+const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
  * A camera.
@@ -51,6 +52,9 @@ class Camera {
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
         this._scissorRectClear = false; // by default rect is used when clearing. this allows scissorRect to be used when clearing.
+        this._aperture = 16.0;
+        this._shutter = 1.0 / 1000.0;
+        this._sensitivity = 1000;
 
         this._projMat = new Mat4();
         this._projMatDirty = true;
@@ -316,6 +320,30 @@ class Camera {
         return this._viewMat;
     }
 
+    set aperture(newValue) {
+        this._aperture = newValue;
+    }
+
+    get aperture() {
+        return this._aperture;
+    }
+
+    set sensitivity(newValue) {
+        this._sensitivity = newValue;
+    }
+
+    get sensitivity() {
+        return this._sensitivity;
+    }
+
+    set shutter(newValue) {
+        this._shutter = newValue;
+    }
+
+    get shutter() {
+        return this._shutter;
+    }
+
     /**
      * Creates a duplicate of the camera.
      *
@@ -356,6 +384,9 @@ class Camera {
         this.rect = other.rect;
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
+        this.aperture = other.aperture;
+        this.shutter = other.shutter;
+        this.sensitivity = other.sensitivity;
         return this;
     }
 
@@ -465,6 +496,11 @@ class Camera {
         return this._projMatSkybox;
     }
 
+    getExposure() {
+        const ev100 = Math.log2((this._aperture * this._aperture) / this._shutter * 100.0 / this._sensitivity);
+        return 1.0 / (Math.pow(2.0, ev100) * 1.2);
+    }
+
     // returns estimated size of the sphere on the screen in range of [0..1]
     // 0 - infinitely small, 1 - full screen or larger
     getScreenSize(sphere) {
@@ -495,6 +531,53 @@ class Camera {
 
         // ortho
         return math.clamp(sphere.radius / this._orthoHeight, 0, 1);
+    }
+
+    /**
+     * Returns an array of corners of the frustum of the camera in the local coordinate system of the camera.
+     *
+     * @param {number} [near] - Near distance for the frustum points. Defaults to the near clip distance of the camera.
+     * @param {number} [far] - Far distance for the frustum points. Defaults to the far clip distance of the camera.
+     * @returns {Vec3[]} - An array of corners, using a global storage space.
+     */
+    getFrustumCorners(near = this._nearClip, far = this._farClip) {
+
+        const fov = this._fov * Math.PI / 180.0;
+        let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
+        let x = y * this._aspectRatio;
+
+        const points = _frustumPoints;
+        points[0].x = x;
+        points[0].y = -y;
+        points[0].z = -near;
+        points[1].x = x;
+        points[1].y = y;
+        points[1].z = -near;
+        points[2].x = -x;
+        points[2].y = y;
+        points[2].z = -near;
+        points[3].x = -x;
+        points[3].y = -y;
+        points[3].z = -near;
+
+        if (this._projection === PROJECTION_PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * far;
+            x = y * this._aspectRatio;
+        }
+        points[4].x = x;
+        points[4].y = -y;
+        points[4].z = -far;
+        points[5].x = x;
+        points[5].y = y;
+        points[5].z = -far;
+        points[6].x = -x;
+        points[6].y = y;
+        points[6].z = -far;
+        points[7].x = -x;
+        points[7].y = -y;
+        points[7].z = -far;
+
+        return points;
     }
 }
 

@@ -28,6 +28,18 @@ class Debug {
     }
 
     /**
+     * Assertion deprecated message. If the assertion is false, the deprecated message is written to the log.
+     *
+     * @param {boolean|object} assertion - The assertion to check.
+     * @param {string} message - The message to log.
+     */
+    static assertDeprecated(assertion, message) {
+        if (!assertion) {
+            Debug.deprecated(message);
+        }
+    }
+
+    /**
      * Assertion error message. If the assertion is false, the error message is written to the log.
      *
      * @param {boolean|object} assertion - The assertion to check.
@@ -119,7 +131,11 @@ class Debug {
      */
     static trace(channel, ...args) {
         if (Tracing.get(channel)) {
-            console.log(`${channel.padEnd(20, ' ')}|`, ...args);
+            console.groupCollapsed(`${channel.padEnd(20, ' ')}|`, ...args);
+            if (Tracing.stack) {
+                console.trace();
+            }
+            console.groupEnd();
         }
     }
 }

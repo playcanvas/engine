@@ -1,23 +1,20 @@
 import { events } from '../core/events.js';
 
-import { ScriptHandler } from '../resources/script.js';
-
 import { getApplication } from './globals.js';
-
-/** @typedef {import('./app-base.js').AppBase} AppBase */
+import { ScriptTypes } from './script/script-types.js';
 
 /**
  * Callback used by {@link script.createLoadingScreen}.
  *
  * @callback CreateScreenCallback
- * @param {AppBase} app - The application.
+ * @param {import('./app-base.js').AppBase} app - The application.
  */
 
 /**
  * Callback used by {@link script.create}.
  *
  * @callback CreateScriptCallback
- * @param {AppBase} app - The application.
+ * @param {import('./app-base.js').AppBase} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  * @ignore
  */
@@ -74,7 +71,7 @@ const script = {
         ScriptType._pcScriptName = name;
 
         // Push this onto loading stack
-        ScriptHandler._push(ScriptType);
+        ScriptTypes.push(ScriptType, _legacy);
 
         this.fire("created", name, callback);
     },

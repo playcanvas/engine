@@ -1,3 +1,5 @@
+import { now } from 'playcanvas';
+
 class CpuTimer {
     constructor(app) {
         this._frameIndex = 0;
@@ -39,7 +41,7 @@ class CpuTimer {
             return;
         }
 
-        const timestamp = pc.now();
+        const timestamp = now();
 
         // end previous mark
         if (this._frameIndex > 0) {

@@ -1,10 +1,10 @@
 import { platform } from '../core/platform.js';
 
-import { WebglGraphicsDevice } from '../graphics/webgl/webgl-graphics-device.js';
+import { WebglGraphicsDevice } from '../platform/graphics/webgl/webgl-graphics-device.js';
 
-import { SoundManager } from '../sound/manager.js';
+import { SoundManager } from '../platform/sound/manager.js';
 
-import { Lightmapper } from '../scene/lightmapper/lightmapper.js';
+import { Lightmapper } from './lightmapper/lightmapper.js';
 import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
@@ -35,38 +35,32 @@ import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
 
-import { RenderHandler } from '../resources/render.js';
-import { AnimationHandler } from '../resources/animation.js';
-import { AnimClipHandler } from '../resources/anim-clip.js';
-import { AnimStateGraphHandler } from '../resources/anim-state-graph.js';
-import { AudioHandler } from '../resources/audio.js';
-import { BinaryHandler } from '../resources/binary.js';
-import { ContainerHandler } from '../resources/container.js';
-import { CssHandler } from '../resources/css.js';
-import { CubemapHandler } from '../resources/cubemap.js';
-import { FolderHandler } from '../resources/folder.js';
-import { FontHandler } from '../resources/font.js';
-import { HierarchyHandler } from '../resources/hierarchy.js';
-import { HtmlHandler } from '../resources/html.js';
-import { JsonHandler } from '../resources/json.js';
-import { MaterialHandler } from '../resources/material.js';
-import { ModelHandler } from '../resources/model.js';
-import { SceneHandler } from '../resources/scene.js';
-import { ScriptHandler } from '../resources/script.js';
-import { ShaderHandler } from '../resources/shader.js';
-import { SpriteHandler } from '../resources/sprite.js';
-import { TemplateHandler } from '../resources/template.js';
-import { TextHandler } from '../resources/text.js';
-import { TextureAtlasHandler } from '../resources/texture-atlas.js';
-import { TextureHandler } from '../resources/texture.js';
+import { RenderHandler } from './handlers/render.js';
+import { AnimationHandler } from './handlers/animation.js';
+import { AnimClipHandler } from './handlers/anim-clip.js';
+import { AnimStateGraphHandler } from './handlers/anim-state-graph.js';
+import { AudioHandler } from './handlers/audio.js';
+import { BinaryHandler } from './handlers/binary.js';
+import { ContainerHandler } from './handlers/container.js';
+import { CssHandler } from './handlers/css.js';
+import { CubemapHandler } from './handlers/cubemap.js';
+import { FolderHandler } from './handlers/folder.js';
+import { FontHandler } from './handlers/font.js';
+import { HierarchyHandler } from './handlers/hierarchy.js';
+import { HtmlHandler } from './handlers/html.js';
+import { JsonHandler } from './handlers/json.js';
+import { MaterialHandler } from './handlers/material.js';
+import { ModelHandler } from './handlers/model.js';
+import { SceneHandler } from './handlers/scene.js';
+import { ScriptHandler } from './handlers/script.js';
+import { ShaderHandler } from './handlers/shader.js';
+import { SpriteHandler } from './handlers/sprite.js';
+import { TemplateHandler } from './handlers/template.js';
+import { TextHandler } from './handlers/text.js';
+import { TextureAtlasHandler } from './handlers/texture-atlas.js';
+import { TextureHandler } from './handlers/texture.js';
 
-import { XrManager } from '../xr/xr-manager.js';
-
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
+import { XrManager } from './xr/xr-manager.js';
 
 /**
  * An Application represents and manages your PlayCanvas application. If you are developing using
@@ -100,11 +94,16 @@ class Application extends AppBase {
      *
      * @param {Element} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
-     * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
-     * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
-     * @param {Mouse} [options.mouse] - Mouse handler for input.
-     * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
-     * @param {GamePads} [options.gamepads] - Gamepad handler for input.
+     * @param {import('./input/element-input.js').ElementInput} [options.elementInput] - Input
+     * handler for {@link ElementComponent}s.
+     * @param {import('../platform/input/keyboard.js').Keyboard} [options.keyboard] - Keyboard
+     * handler for input.
+     * @param {import('../platform/input/mouse.js').Mouse} [options.mouse] - Mouse handler for
+     * input.
+     * @param {import('../platform/input/touch-device.js').TouchDevice} [options.touch] - TouchDevice
+     * handler for input.
+     * @param {import('../platform/input/game-pads.js').GamePads} [options.gamepads] - Gamepad
+     * handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
@@ -136,7 +135,7 @@ class Application extends AppBase {
         appOptions.assetPrefix = options.assetPrefix;
         appOptions.scriptsOrder = options.scriptsOrder;
 
-        appOptions.soundManager = new SoundManager(options);
+        appOptions.soundManager = new SoundManager();
         appOptions.lightmapper = Lightmapper;
         appOptions.batchManager = BatchManager;
         appOptions.xr = XrManager;

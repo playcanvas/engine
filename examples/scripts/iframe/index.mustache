@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="../../build/playcanvas-extras.js"></script>
     <script src="../../build/playcanvas-observer.js"></script>
     <script src="../../build/urlSearchParamsPolyfill.js"></script>
     <script src="../../build/promisePolyfill.js"></script>
@@ -24,6 +23,14 @@
 <body>
     <div id="app">
         <div id="appInner">
+            <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
+            <div style="width:100%; position:absolute; top:10px">
+                <div style="text-align: center;">
+                    <a id="ar-link" rel="ar" download="asset.usdz">
+                        <img id="button" width="200" src="/arkit.png">
+                    </a>    
+                </div>
+            </div>
             <canvas id='application-canvas'></canvas>
         </div>
     </div>
@@ -65,16 +72,22 @@
         var urlParams = new URLSearchParams(queryString);
     </script>
     <script>
+        function loadScript(url, onload) {
+            const script = document.createElement('script');
+            script.setAttribute('src', url);
+            script.onload = onload;
+            document.head.appendChild(script);
+        }
+
         function loadEngine(callback) {
             const enginePath = urlParams && urlParams.get('use_local_engine') || "{{{enginePath}}}";
 
-            const script = document.createElement('script');
-            script.setAttribute('src', enginePath);
-            script.onload = function() {
+            loadScript(enginePath, () => {
                 window.top.pc = window.pc;
-                callback();
-            };
-            document.head.appendChild(script);
+                loadScript('../../build/playcanvas-extras.js', () => {
+                    callback();
+                });
+            });
         }
 
         function setupApplication(app) {

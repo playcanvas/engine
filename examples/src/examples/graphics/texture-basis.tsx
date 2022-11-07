@@ -25,19 +25,12 @@ class TextureBasisExample {
         const assets = {
             'color': new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.basis' }),
             'gloss': new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.basis' }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.basis' }),
+            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.basis' }, { type: pc.TEXTURETYPE_SWIZZLEGGGR }),
             'helipad': new pc.Asset('helipad', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
         assetListLoader.load(() => {
-
-            pc.basisInitialize({
-                glueUrl: '/static/lib/basis/basis.wasm.js',
-                wasmUrl: '/static/lib/basis/basis.wasm.wasm',
-                fallbackUrl: '/static/lib/basis/basis.js'
-            });
-
             app.start();
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

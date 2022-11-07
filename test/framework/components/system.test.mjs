@@ -1,9 +1,9 @@
 import { Application } from '../../../src/framework/application.js';
-import { Color } from '../../../src/math/color.js';
+import { Color } from '../../../src/core/math/color.js';
 import { ComponentSystem } from '../../../src/framework/components/system.js';
-import { Vec2 } from '../../../src/math/vec2.js';
-import { Vec3 } from '../../../src/math/vec3.js';
-import { Vec4 } from '../../../src/math/vec4.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
+import { Vec4 } from '../../../src/core/math/vec4.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

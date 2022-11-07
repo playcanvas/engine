@@ -1,12 +1,9 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../graphics/constants.js';
-import { DebugGraphics } from '../../../graphics/debug-graphics.js';
-import { RenderTarget } from '../../../graphics/render-target.js';
-import { Texture } from '../../../graphics/texture.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
+import { RenderTarget } from '../../../platform/graphics/render-target.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-/** @typedef {import('./component.js').CameraComponent} CameraComponent */
 
 class PostEffect {
     constructor(effect, inputTarget) {
@@ -24,8 +21,8 @@ class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {AppBase} app - The application.
-     * @param {CameraComponent} camera - The camera component.
+     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {import('./component.js').CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {
         this.app = app;

@@ -1,5 +1,5 @@
-import { createScript } from '../../src/script/script.js';
-import { Color } from '../../src/math/color.js';
+import { createScript } from '../../src/framework/script/script.js';
+import { Color } from '../../src/core/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
@@ -27,7 +27,7 @@ import { SoundComponent } from '../../src/framework/components/sound/component.j
 import { SpriteComponent } from '../../src/framework/components/sprite/component.js';
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
 
-import { DummyComponentSystem } from '../test-component/system.mjs';
+import { DummyComponentSystem } from './test-component/system.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

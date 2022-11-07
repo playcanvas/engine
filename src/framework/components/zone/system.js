@@ -1,12 +1,10 @@
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -20,7 +18,7 @@ class ZoneComponentSystem extends ComponentSystem {
     /**
      * Create a new ZoneComponentSystem.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

@@ -1,23 +1,12 @@
-import { Mat3 } from '../math/mat3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec3 } from '../math/vec3.js';
-import { Quat } from '../math/quat.js';
-
-import { CULLFACE_FRONT } from '../graphics/constants.js';
+import { CULLFACE_FRONT } from '../platform/graphics/constants.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from './constants.js';
 import { createBox } from './procedural.js';
 import { GraphNode } from './graph-node.js';
 import { Material } from './materials/material.js';
 import { MeshInstance } from './mesh-instance.js';
-import { skybox } from '../graphics/program-lib/programs/skybox.js';
-
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./scene.js').Scene} Scene */
-
-/** @type {Mat4} */
-let _mat4;
+import { getProgramLibrary } from './shader-lib/get-program-library.js';
+import { skybox } from './shader-lib/programs/skybox.js';
 
 /**
  * A visual representation of the sky.
@@ -32,27 +21,25 @@ class Sky {
      */
     meshInstance;
 
-    /** @type {Mat3} */
-    _rotationMat3;
-
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {Scene} scene - The scene owning the sky.
-     * @param {Texture} texture - The texture of the sky.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {import('./scene.js').Scene} scene - The scene owning the sky.
+     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture of the sky.
      */
     constructor(device, scene, texture) {
 
         const material = new Material();
 
         material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-            const library = device.getProgramLibrary();
+            const library = getProgramLibrary(device);
             library.register('skybox', skybox);
 
             if (texture.cubemap) {
                 return library.getProgram('skybox', {
                     type: 'cubemap',
                     encoding: texture.encoding,
-                    useIntensity: scene.skyboxIntensity !== 1,
+                    useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
                     mip: texture.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: texture.fixCubemapSeams,
                     gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
@@ -63,7 +50,7 @@ class Sky {
             return library.getProgram('skybox', {
                 type: 'envAtlas',
                 encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1,
+                useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
             });
@@ -74,17 +61,6 @@ class Sky {
         } else {
             material.setParameter('texture_envAtlas', texture);
             material.setParameter('mipLevel', scene._skyboxMip);
-        }
-
-        if (!scene.skyboxRotation.equals(Quat.IDENTITY)) {
-            _mat4 = _mat4 || new Mat4();
-            this._rotationMat3 = this._rotationMat3 || new Mat3();
-
-            _mat4.setTRS(Vec3.ZERO, scene._skyboxRotation, Vec3.ONE);
-            _mat4.invertTo3x3(this._rotationMat3);
-            material.setParameter('cubeMapRotationMatrix', this._rotationMat3.data);
-        } else {
-            material.setParameter('cubeMapRotationMatrix', Mat3.IDENTITY.data);
         }
 
         material.cull = CULLFACE_FRONT;

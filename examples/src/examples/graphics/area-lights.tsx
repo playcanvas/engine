@@ -16,7 +16,7 @@ class AreaLightsExample {
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
             'gloss': new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-            'luts': new pc.Asset('luts', 'binary', { url: '/static/assets/binary/area-light-luts.bin' }),
+            'luts': new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
             'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM })
         };
 
@@ -132,7 +132,8 @@ class AreaLightsExample {
             app.scene.lighting.areaLightsEnabled = true;
 
             // set the loaded area light LUT data
-            app.setAreaLightLuts(assets.luts);
+            const luts = assets.luts.resource;
+            app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
             // set up some general scene rendering properties
             app.scene.toneMapping = pc.TONEMAP_ACES;

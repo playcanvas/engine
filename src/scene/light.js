@@ -1,9 +1,9 @@
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Mat4 } from '../math/mat4.js';
-import { Vec2 } from '../math/vec2.js';
-import { Vec3 } from '../math/vec3.js';
-import { Vec4 } from '../math/vec4.js';
+import { math } from '../core/math/math.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Vec2 } from '../core/math/vec2.js';
+import { Vec3 } from '../core/math/vec3.js';
+import { Vec4 } from '../core/math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -15,8 +15,6 @@ import {
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 
-const spotCenter = new Vec3();
-const spotEndPoint = new Vec3();
 const tmpVec = new Vec3();
 const tmpBiases = {
     bias: 0,
@@ -24,6 +22,13 @@ const tmpBiases = {
 };
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
+
+const lightTypes = {
+    'directional': LIGHTTYPE_DIRECTIONAL,
+    'omni': LIGHTTYPE_OMNI,
+    'point': LIGHTTYPE_OMNI,
+    'spot': LIGHTTYPE_SPOT
+};
 
 // viewport in shadows map for cascades for directional light
 const directionalCascades = [
@@ -100,6 +105,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
         this.mask = MASK_AFFECT_DYNAMIC;
@@ -150,7 +156,9 @@ class Light {
         this._position = new Vec3(0, 0, 0);
         this._direction = new Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
-        this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
+        this._updateOuterAngle(this._outerConeAngle);
+
+        this._usePhysicalUnits = undefined;
 
         // Shadow mapping resources
         this._shadowMap = null;
@@ -264,6 +272,17 @@ class Light {
 
     get shape() {
         return this._shape;
+    }
+
+    set usePhysicalUnits(value) {
+        if (this._usePhysicalUnits !== value) {
+            this._usePhysicalUnits = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get usePhysicalUnits() {
+        return this._usePhysicalUnits;
     }
 
     set shadowType(value) {
@@ -381,6 +400,9 @@ class Light {
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
+        if (this._usePhysicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get innerConeAngle() {
@@ -392,11 +414,21 @@ class Light {
             return;
 
         this._outerConeAngle = value;
-        this._outerConeAngleCos = Math.cos(value * Math.PI / 180);
+        this._updateOuterAngle(value);
+
+        if (this._usePhysicalUnits) {
+            this._updateFinalColor();
+        }
     }
 
     get outerConeAngle() {
         return this._outerConeAngle;
+    }
+
+    _updateOuterAngle(angle) {
+        const radAngle = angle * Math.PI / 180;
+        this._outerConeAngleCos = Math.cos(radAngle);
+        this._outerConeAngleSin = Math.sin(radAngle);
     }
 
     set intensity(value) {
@@ -408,6 +440,17 @@ class Light {
 
     get intensity() {
         return this._intensity;
+    }
+
+    set luminance(value) {
+        if (this._luminance !== value) {
+            this._luminance = value;
+            this._updateFinalColor();
+        }
+    }
+
+    get luminance() {
+        return this._luminance;
     }
 
     get cookieMatrix() {
@@ -562,6 +605,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
 
@@ -603,6 +647,32 @@ class Light {
         // clone.cookieOffset = this._cookieOffset;
 
         return clone;
+    }
+
+    /**
+     * Get conversion factor for luminance -> light specific light unit.
+     *
+     * @param {number} type - The type of light.
+     * @param {number} [outerAngle] - The outer angle of a spot light.
+     * @param {number} [innerAngle] - The inner angle of a spot light.
+     * @returns {number} The scaling factor to multiply with the luminance value.
+     */
+    static getLightUnitConversion(type, outerAngle = Math.PI / 4, innerAngle = 0) {
+        switch (type) {
+            case LIGHTTYPE_SPOT: {
+                const falloffEnd = Math.cos(outerAngle);
+                const falloffStart = Math.cos(innerAngle);
+
+                // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
+                return (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
+            }
+            case LIGHTTYPE_OMNI:
+                // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
+                return (4 * Math.PI);
+            case LIGHTTYPE_DIRECTIONAL:
+                // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
+                return 1;
+        }
     }
 
     // returns the bias (.x) and normalBias (.y) value for lights as passed to shaders by uniforms
@@ -648,24 +718,23 @@ class Light {
 
     getBoundingSphere(sphere) {
         if (this._type === LIGHTTYPE_SPOT) {
-            const range = this.attenuationEnd;
+
+            // based on https://bartwronski.com/2017/04/13/cull-that-cone/
+            const size = this.attenuationEnd;
             const angle = this._outerConeAngle;
-            const f = Math.cos(angle * math.DEG_TO_RAD);
+            const cosAngle = this._outerConeAngleCos;
             const node = this._node;
+            tmpVec.copy(node.up);
 
-            spotCenter.copy(node.up);
-            spotCenter.mulScalar(-range * 0.5 * f);
-            spotCenter.add(node.getPosition());
-            sphere.center = spotCenter;
+            if (angle > 45) {
+                sphere.radius = size * this._outerConeAngleSin;
+                tmpVec.mulScalar(-size * cosAngle);
+            } else {
+                sphere.radius = size / (2 * cosAngle);
+                tmpVec.mulScalar(-sphere.radius);
+            }
 
-            spotEndPoint.copy(node.up);
-            spotEndPoint.mulScalar(-range);
-
-            tmpVec.copy(node.right);
-            tmpVec.mulScalar(Math.sin(angle * math.DEG_TO_RAD) * range);
-            spotEndPoint.add(tmpVec);
-
-            sphere.radius = spotEndPoint.length() * 0.5;
+            sphere.center.add2(node.getPosition(), tmpVec);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             sphere.center = this._node.getPosition();
@@ -698,7 +767,12 @@ class Light {
         const g = color.g;
         const b = color.b;
 
-        const i = this._intensity;
+        let i = this._intensity;
+
+        // To calculate the lux, which is lm/m^2, we need to convert from luminous power
+        if (this._usePhysicalUnits) {
+            i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
+        }
 
         const finalColor = this._finalColor;
         const linearFinalColor = this._linearFinalColor;
@@ -784,4 +858,4 @@ class Light {
     }
 }
 
-export { Light };
+export { Light, lightTypes };

@@ -1,9 +1,9 @@
 import { Debug } from '../core/debug.js';
-import { BoundingBox } from '../shape/bounding-box.js';
+import { BoundingBox } from '../core/shape/bounding-box.js';
 
-import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
+import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 /**
  * A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
@@ -11,6 +11,13 @@ import { VertexFormat } from '../graphics/vertex-format.js';
  * hard to achieve with conventional animation and skinning.
  */
 class MorphTarget {
+    /**
+     * A used flag. A morph target can be used / owned by the Morph class only one time.
+     *
+     * @type {boolean}
+     */
+    used = false;
+
     /**
      * Create a new MorphTarget instance.
      *
@@ -27,6 +34,8 @@ class MorphTarget {
      * @param {BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if
      * undefined.
      * @param {number} [options.defaultWeight] - Default blend weight to use for this morph target.
+     * @param {boolean} [options.preserveData] - When true, the morph target keeps its data passed using the options,
+     * allowing the clone operation.
      */
     constructor(options) {
 
@@ -49,6 +58,21 @@ class MorphTarget {
 
         // store delta positions, used by aabb evaluation
         this.deltaPositions = options.deltaPositions;
+    }
+
+    destroy() {
+
+        this._vertexBufferPositions?.destroy();
+        this._vertexBufferPositions = null;
+
+        this._vertexBufferNormals?.destroy();
+        this._vertexBufferNormals = null;
+
+        this.texturePositions?.destroy();
+        this.texturePositions = null;
+
+        this.textureNormals?.destroy();
+        this.textureNormals = null;
     }
 
     /**
@@ -77,10 +101,26 @@ class MorphTarget {
         return !!this._vertexBufferNormals || !!this.textureNormals;
     }
 
+    /**
+     * Returns an identical copy of the specified morph target. This can only be used if the morph target
+     * was created with options.preserveData set to true.
+     *
+     * @returns {MorphTarget} A morph target instance containing the result of the cloning.
+     */
+    clone() {
+        Debug.assert(this.options, 'MorphTarget cannot be cloned, was it created with a preserveData option?');
+        return new MorphTarget(this.options);
+    }
+
     _postInit() {
 
         // release original data
-        this.options = null;
+        if (!this.options.preserveData) {
+            this.options = null;
+        }
+
+        // mark it as used
+        this.used = true;
     }
 
     _initVertexBuffers(graphicsDevice) {
@@ -109,28 +149,6 @@ class MorphTarget {
 
     _setTexture(name, texture) {
         this[name] = texture;
-    }
-
-    destroy() {
-
-        if (this._vertexBufferPositions) {
-            this._vertexBufferPositions.destroy();
-            this._vertexBufferPositions = null;
-        }
-
-        if (this._vertexBufferNormals) {
-            this._vertexBufferNormals.destroy();
-            this._vertexBufferNormals = null;
-        }
-
-        if (this.texturePositions) {
-            this.texturePositions.destroy();
-            this.texturePositions = null;
-        }
-        if (this.textureNormals) {
-            this.textureNormals.destroy();
-            this.textureNormals = null;
-        }
     }
 }
 

@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>WebGPU Test</title>
+    <meta name="description" content="WebGPU Test" />
+    <script src="./libs/glslang.js"></script>
+</head>
+
+<body style="margin: 0px;">
+    <div class="warning" style="display:none;">
+        <p>
+            The browser you are using does not seem to support WebGPU rendering. At this time,
+            WebGPU implementations are under continuous development, so consider installing a developer
+            build, such as <a href="https://www.google.com/chrome/canary/">Google Chrome Canary</a>.
+        </p>
+    </div>
+    <canvas id="gpuCanvas" width="800" height="600"></canvas>
+
+    <script type="module">
+
+        import { Asset } from "../../src/framework/asset/asset.js";
+        import { AssetListLoader } from "../../src/framework/asset/asset-list-loader.js";
+        import { AppBase } from "../../src/framework/app-base.js";
+        import { AppOptions } from "../../src/framework/app-options.js";
+        import { WebgpuGraphicsDevice } from '../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+        import { Shader } from '../../src/platform/graphics/shader.js';
+        import { Texture } from '../../src/platform/graphics/texture.js';
+        import { RenderTarget } from '../../src/platform/graphics/render-target.js';
+        import {
+            SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
+            PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+        } from '../../src/platform/graphics/constants.js';
+        import { Entity } from "../../src/framework/entity.js";
+        import { Tracing } from "../../src/core/tracing.js";
+        import { 
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC
+        } from "../../src/core/constants.js";
+        import { Color } from "../../src/core/math/color.js";
+        import { Vec3 } from "../../src/core/math/vec3.js";
+        import { Quat } from "../../src/core/math/quat.js";
+        import { StandardMaterial } from "../../src/scene/materials/standard-material.js";
+        import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../../src/scene/constants.js";
+
+        import { Material } from "../../src/scene/materials/material.js";
+        import { BasicMaterial } from "../../src/scene/materials/basic-material.js";
+        import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
+        import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
+        import { LightComponentSystem } from '../../src/framework/components/light/system.js';
+        import { TextureHandler } from '../../src/framework/handlers/texture.js';
+        import { ContainerHandler } from '../../src/framework/handlers/container.js';
+
+        const assets = {
+            'playcanvas': new Asset('playcanvas.png', 'texture', { url: '../assets/textures/playcanvas.png' }),
+            'rocks': new Asset('seaside-rocks01-diffuse-alpha.png', 'texture', { url: '../assets/textures/seaside-rocks01-diffuse-alpha.png' }),
+            'model': new Asset('model', 'container', { url: '../assets/models/house.glb' }),
+        };
+
+        const vertexShaderGLSL = /* glsl */`
+
+#version 450
+
+// in
+attribute vec4 vertex_position;
+attribute vec2 vertex_texCoord0;
+
+// out
+varying vec2 uv;
+
+uniform mat4 matrix_viewProjection;
+uniform mat4 matrix_model;
+
+void main() {
+    vec4 worldPos = matrix_model * vertex_position;
+    gl_Position = matrix_viewProjection * worldPos;
+
+    uv = vertex_texCoord0;
+}
+        `;
+
+
+        const fragmentShaderGLSL = /* glsl */`
+#version 450
+
+#define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
+
+// in 
+varying vec2 uv;
+
+// out - TODO: use shader intro which handles this per platform
+layout(location = 0) out highp vec4 pc_fragColor;
+#define gl_FragColor pc_fragColor
+
+uniform vec3 material_diffuse;
+
+uniform sampler2D texture_emissiveMap;
+
+void main() {
+    vec4 tex = texture2D(texture_emissiveMap, uv);
+    vec3 diffuse = tex.xyz * material_diffuse;
+    gl_FragColor = vec4(diffuse, 1.0);
+}
+        `;
+
+        function createPrimitive(app, primitiveType, shader, position, scale, color) {
+
+            const material = new Material();
+            material.shader = shader;
+            material.setParameter('material_diffuse', [color.r, color.g, color.b]);
+            material.setParameter('texture_emissiveMap', assets.playcanvas.resource);
+
+            // create primitive
+            const primitive = new Entity(primitiveType);
+            primitive.addComponent('render', {
+                type: primitiveType,
+                material: material
+            });
+
+            // set position and scale and add it to scene
+            primitive.setLocalPosition(position);
+            primitive.setLocalScale(scale);
+            app.root.addChild(primitive);
+
+            return primitive;
+        }
+
+        function createPrimitive2(app, numBoxes, x, y, z, blendMode) {
+
+            /*
+            // basic material
+            const material = new BasicMaterial();
+            material.color.set(x, y, 1 - y);
+            material.colorMap = assets.rocks.resource;
+            material.cull = CULLFACE_NONE;
+            material.alphaTest = x / numBoxes - 0.1;
+            material.blendType = blendMode;
+            */
+
+            // standard material
+            const material = new StandardMaterial();
+            material.useLighting = false;
+            material.emissive = new Color(x, y, 1 - y);
+            material.emissiveTint = true;
+            material.blendType = blendMode;
+            material.emissiveMap = assets.rocks.resource;
+            material.update();
+
+            const box = new Entity("Box-primitive2");
+            box.addComponent("render", {
+                material: material,
+                type: "box",
+
+                // Note: basic material cannot currently cast shadows, disable it
+                castShadows: false
+            });
+            box.setLocalPosition(2 * x - (numBoxes - 1) * 1, 2 * y - (numBoxes - 1) * 1, 2 * z);
+            box.setLocalScale(1.4, 1.4, 1.4);
+            app.root.addChild(box);
+
+            return box;
+        };
+
+        function onLoaded(app) {
+
+            app.start();
+
+            // Create the shader definition and shader from the vertex and fragment shaders
+            const shaderDefinition = {
+                attributes: {
+                    vertex_position: SEMANTIC_POSITION,
+                    vertex_texCoord0: SEMANTIC_TEXCOORD0
+                },
+                vshader: vertexShaderGLSL,
+                fshader: fragmentShaderGLSL
+            };
+            const shader = new Shader(app.graphicsDevice, shaderDefinition);
+
+
+            const entities = [];
+            const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+            for (let i = 0; i < 6; i++) {
+                const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+                const color = new Color(Math.random(), Math.random(), Math.random());
+                entities.push(createPrimitive(app, shapeName, shader, Vec3.ZERO, new Vec3(3, 3, 3), color));
+            }
+
+            // Create an entity with a camera component
+            const camera = new Entity();
+            camera.addComponent("camera", {
+                clearColor: new Color(0.4, 0.4, 0.4, 1)
+            });
+            app.root.addChild(camera);
+            camera.setLocalPosition(0, 0, 5);
+
+            camera.clearColorBuffer = false;
+
+            const NUM_BOXES = 5;
+
+            // alpha blend modes for individual rows
+            const blendModes = [
+                BLEND_ADDITIVE,
+                BLEND_SUBTRACTIVE,
+                BLEND_SCREEN,
+                BLEND_NORMAL,
+                BLEND_NONE
+            ];
+
+            const boxes = [];
+            for (let i = 0; i < NUM_BOXES; i++) {
+                for (let j = 0; j < NUM_BOXES; j++) {
+                    boxes.push(createPrimitive2(app, NUM_BOXES, j, i, 0, blendModes[i]));
+                }
+            }
+
+            // create texture and render target for rendering into, including depth buffer
+            const renderTexture = new Texture(app.graphicsDevice, {
+                name: 'RT-Texture',
+                width: 512,
+                height: 256,
+                format: PIXELFORMAT_R8_G8_B8_A8,
+                mipmaps: true,
+                minFilter: FILTER_LINEAR,
+                magFilter: FILTER_LINEAR,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE
+            });
+
+            const renderTarget = new RenderTarget({
+                colorBuffer: renderTexture,
+                depth: true,
+                flipY: true,
+                samples: 1
+            });
+
+            const worldLayer = app.scene.layers.getLayerByName("World");
+            const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+
+            const textureCamera = new Entity("TextureCamera");
+            textureCamera.addComponent("camera", {
+                clearColor: new Color(0.2, 0.2, 0.4),
+
+                layers: [worldLayer.id, skyboxLayer.id],
+
+                // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+                // to make it rendered first each frame
+                priority: -1,
+
+                // this camera renders into texture target
+                renderTarget: renderTarget
+            });
+            app.root.addChild(textureCamera);
+            textureCamera.setLocalPosition(0, 0, 12);
+
+            /////////////// skinning - commented out as it is still not functional
+
+            const modelEntity = assets.model.resource.instantiateRenderEntity({
+            });
+
+            // const renders = modelEntity.findComponents("render");
+            // renders.forEach((render) => {
+            //     const meshInstances = render.meshInstances;
+            //     for (let i = 0; i < meshInstances.length; i++) {
+            //         const meshInstance = meshInstances[i];
+            //         meshInstance.material.useLighting = false;
+            //     }
+            // });
+
+            const modelEntityParent = new Entity();
+            modelEntityParent.setLocalScale(20, 20, 20);
+            modelEntityParent.addChild(modelEntity);
+            app.root.addChild(modelEntityParent);
+
+            // LIGHT 
+            const lightOmni = new Entity("Omni");
+            lightOmni.addComponent("light", {
+                type: "omni",
+                color: Color.WHITE,
+                intensity: 10,
+                range: 350,
+                castShadows: false,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.2,
+            });
+            app.root.addChild(lightOmni);
+
+            ///////////
+
+
+            const lightDir = new Entity();
+            lightDir.addComponent("light", {
+                type: "directional",
+                color: new Color(1, 1, 1),
+                castShadows: false,
+                shadowBias: 0.2,
+                shadowDistance: 25,
+                normalOffsetBias: 0.05,
+                shadowResolution: 2048
+            });
+            lightDir.setLocalEulerAngles(45, 30, 0);
+            app.root.addChild(lightDir);
+
+
+
+
+            let time = 0;
+            const rot = new Quat();
+            app.on("update", function (dt) {
+                time += dt;
+
+                // rotate primitives around their center and also orbit them around the shiny sphere
+                for (let e = 0; e < entities.length; e++) {
+                    const scale = (e + 1) / entities.length;
+                    const offset = time + e * 200;
+                    entities[e].setLocalPosition(7 * Math.sin(offset), 2 * (e - 3), 7 * Math.cos(offset));
+                    entities[e].rotate(1 * scale, 2 * scale, 3 * scale);
+
+                    app.drawLine(entities[e].getPosition(), Vec3.ZERO, Color.YELLOW);
+                }
+
+                // rotate the boxes
+                rot.setFromEulerAngles(20 * time, 30 * time, 0);
+                boxes.forEach((box) => {
+                    box.setRotation(rot);
+                });
+
+                // slowly orbit camera around
+                camera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
+                camera.lookAt(Vec3.ZERO);
+
+                textureCamera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
+                textureCamera.lookAt(Vec3.ZERO);
+
+                app.drawTexture(0.6, -0.7, 0.6, 0.3, assets.rocks.resource);
+                app.drawTexture(-0.6, -0.7, 0.6, 0.5, renderTexture);
+            });
+
+        }
+
+        function main() {
+
+            console.log("example start");
+
+            // Tracing.set(TRACEID_RENDER_FRAME, true);
+            // Tracing.set(TRACEID_RENDER_PASS, true);
+            //Tracing.set(TRACEID_TEXTURE_ALLOC, true);
+            Tracing.set(TRACEID_SHADER_ALLOC, true);
+
+            const canvas = document.querySelector('#gpuCanvas');
+
+            const createOptions = new AppOptions();
+            createOptions.graphicsDevice = new WebgpuGraphicsDevice(canvas, {});
+            createOptions.graphicsDevice.initWebGpu().then(() => {
+                console.log("gpu device async created");
+
+                createOptions.componentSystems = [
+                    RenderComponentSystem,
+                    CameraComponentSystem,
+                    LightComponentSystem,
+                ];
+                createOptions.resourceHandlers = [
+                    TextureHandler,
+                    ContainerHandler
+                ];
+
+                const app = new AppBase(canvas);
+                app.init(createOptions);
+
+                const lighting = app.scene.lighting;
+                lighting.shadowsEnabled = false;
+                lighting.cookiesEnabled = false;
+
+                const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
+                assetListLoader.load(() => {
+                    onLoaded(app);
+                });
+
+            }).catch(console.error);
+        }
+
+        window.addEventListener('load', main);
+    </script>
+</body>
+
+</html>

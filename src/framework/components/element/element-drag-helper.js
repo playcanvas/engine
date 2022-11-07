@@ -1,18 +1,18 @@
 import { platform } from '../../../core/platform.js';
 import { EventHandler } from '../../../core/event-handler.js';
 
-import { Quat } from '../../../math/quat.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { ElementComponent } from './component.js';
+import { Ray } from '../../../core/shape/ray.js';
+import { Plane } from '../../../core/shape/plane.js';
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
-const _rayOrigin = new Vec3();
-const _rayDirection = new Vec3();
-const _planeOrigin = new Vec3();
-const _planeNormal = new Vec3();
+const _ray = new Ray();
+const _plane = new Plane();
 const _entityRotation = new Quat();
 
 const OPPOSITE_AXIS = {
@@ -136,20 +136,29 @@ class ElementDragHelper extends EventHandler {
         }
     }
 
+    /**
+     * This method calculates the `Vec3` intersection point of plane/ray intersection based on
+     * the mouse/touch input event. If there is no intersection, it returns `null`.
+     *
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
+     * is an intersection, otherwise `null`
+     * @private
+     */
     _screenToLocal(event) {
         this._determineInputPosition(event);
         this._chooseRayOriginAndDirection();
 
-        _planeOrigin.copy(this._element.entity.getPosition());
-        _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
+        _plane.point.copy(this._element.entity.getLocalPosition());
+        _plane.normal.copy(this._element.entity.forward).mulScalar(-1);
 
-        const denominator = _planeNormal.dot(_rayDirection);
+        const denominator = _plane.normal.dot(_ray.direction);
 
         // If the ray and plane are not parallel
         if (Math.abs(denominator) > 0) {
-            const rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
-            const collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            const position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
+            const rayOriginToPlaneOrigin = _plane.point.sub(_ray.origin);
+            const collisionDistance = rayOriginToPlaneOrigin.dot(_plane.normal) / denominator;
+            const position = _ray.origin.add(_ray.direction.mulScalar(collisionDistance));
 
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
 
@@ -177,12 +186,12 @@ class ElementDragHelper extends EventHandler {
 
     _chooseRayOriginAndDirection() {
         if (this._element.screen && this._element.screen.screen.screenSpace) {
-            _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
-            _rayDirection.set(0, 0, -1);
+            _ray.origin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
+            _ray.direction.copy(Vec3.FORWARD);
         } else {
             _inputWorldPosition.copy(this._dragCamera.screenToWorld(_inputScreenPosition.x, _inputScreenPosition.y, 1));
-            _rayOrigin.copy(this._dragCamera.entity.getPosition());
-            _rayDirection.copy(_inputWorldPosition).sub(_rayOrigin).normalize();
+            _ray.origin.copy(this._dragCamera.entity.getPosition());
+            _ray.direction.copy(_inputWorldPosition).sub(_ray.origin).normalize();
         }
     }
 
@@ -209,22 +218,33 @@ class ElementDragHelper extends EventHandler {
         dragScale.z = 1 / dragScale.z;
     }
 
+    /**
+     * This method is linked to `_element` events: `mousemove` and `touchmove`
+     *
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @private
+     */
     _onMove(event) {
-        if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
+        const {
+            _element: element,
+            _deltaMousePosition: deltaMousePosition,
+            _deltaHandlePosition: deltaHandlePosition,
+            _axis: axis
+        } = this;
+        if (element && this._isDragging && this.enabled && element.enabled && element.entity.enabled) {
             const currentMousePosition = this._screenToLocal(event);
+            if (currentMousePosition) {
+                deltaMousePosition.sub2(currentMousePosition, this._dragStartMousePosition);
+                deltaHandlePosition.add2(this._dragStartHandlePosition, deltaMousePosition);
 
-            if (this._dragStartMousePosition && currentMousePosition) {
-                this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
-                this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
-
-                if (this._axis) {
-                    const currentPosition = this._element.entity.getLocalPosition();
-                    const constrainedAxis = OPPOSITE_AXIS[this._axis];
-                    this._deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
+                if (axis) {
+                    const currentPosition = element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[axis];
+                    deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 
-                this._element.entity.setLocalPosition(this._deltaHandlePosition);
-                this.fire('drag:move', this._deltaHandlePosition);
+                element.entity.setLocalPosition(deltaHandlePosition);
+                this.fire('drag:move', deltaHandlePosition);
             }
         }
     }

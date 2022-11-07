@@ -1,30 +1,30 @@
 // #if _DEBUG
 import { version, revision } from '../core/core.js';
 // #endif
-
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { EventHandler } from '../core/event-handler.js';
-import { Debug } from '../core/debug.js';
 import { TRACEID_RENDER_FRAME } from '../core/constants.js';
-
-import { math } from '../math/math.js';
-import { Color } from '../math/color.js';
-import { Vec3 } from '../math/vec3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
-
-import { http } from '../net/http.js';
+import { Debug } from '../core/debug.js';
+import { EventHandler } from '../core/event-handler.js';
+import { Color } from '../core/math/color.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { math } from '../core/math/math.js';
+import { Quat } from '../core/math/quat.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
+import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
+import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { FrameGraph } from '../scene/frame-graph.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
@@ -36,24 +36,20 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { BundleHandler } from '../resources/bundle.js';
-import { ResourceLoader } from '../resources/loader.js';
-
-import { Asset } from '../asset/asset.js';
-import { AssetRegistry } from '../asset/asset-registry.js';
-
-import { BundleRegistry } from '../bundles/bundle-registry.js';
-
-import { ScriptRegistry } from '../script/script-registry.js';
-
-import { I18n } from '../i18n/i18n.js';
-
+import { Asset } from './asset/asset.js';
+import { AssetRegistry } from './asset/asset-registry.js';
+import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { script } from './script.js';
-import { ApplicationStats } from './stats.js';
+import { SceneGrab } from './graphics/scene-grab.js';
+import { BundleHandler } from './handlers/bundle.js';
+import { ResourceLoader } from './handlers/loader.js';
+import { I18n } from './i18n/i18n.js';
+import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { SceneGrab } from './scene-grab.js';
+import { script } from './script.js';
+import { ApplicationStats } from './stats.js';
+
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
     RESOLUTION_AUTO, RESOLUTION_FIXED
@@ -63,22 +59,6 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
-
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../input/touch-device.js').TouchDevice} TouchDevice */
-/** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
-/** @typedef {import('../scene/mesh.js').Mesh} Mesh */
-/** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../scene/lightmapper/lightmapper.js').Lightmapper} Lightmapper */
-/** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
-/** @typedef {import('./app-options.js').AppOptions} AppOptions */
-/** @typedef {import('../xr/xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -265,7 +245,8 @@ class AppBase extends EventHandler {
     /**
      * Initialize the app.
      *
-     * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
+     * @param {import('./app-options.js').AppOptions} appOptions - Options specifying the init
+     * parameters for the app.
      */
     init(appOptions) {
         const device = appOptions.graphicsDevice;
@@ -275,15 +256,17 @@ class AppBase extends EventHandler {
         /**
          * The graphics device used by the application.
          *
-         * @type {GraphicsDevice}
+         * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
          */
         this.graphicsDevice = device;
+        GraphicsDeviceAccess.set(device);
 
         this._initDefaultMaterial();
+        this._initProgramLibrary();
         this.stats = new ApplicationStats(device);
 
         /**
-         * @type {SoundManager}
+         * @type {import('../platform/sound/manager.js').SoundManager}
          * @private
          */
         this._soundManager = appOptions.soundManager;
@@ -465,7 +448,7 @@ class AppBase extends EventHandler {
         /**
          * The run-time lightmapper.
          *
-         * @type {Lightmapper}
+         * @type {import('./lightmapper/lightmapper.js').Lightmapper}
          */
         this.lightmapper = null;
         if (appOptions.lightmapper) {
@@ -476,7 +459,7 @@ class AppBase extends EventHandler {
         /**
          * The application's batch manager.
          *
-         * @type {BatchManager}
+         * @type {import('../scene/batching/batch-manager.js').BatchManager}
          */
         this._batcher = null;
         if (appOptions.batchManager) {
@@ -487,35 +470,35 @@ class AppBase extends EventHandler {
         /**
          * The keyboard device.
          *
-         * @type {Keyboard}
+         * @type {import('../platform/input/keyboard.js').Keyboard}
          */
         this.keyboard = appOptions.keyboard || null;
 
         /**
          * The mouse device.
          *
-         * @type {Mouse}
+         * @type {import('../platform/input/mouse.js').Mouse}
          */
         this.mouse = appOptions.mouse || null;
 
         /**
          * Used to get touch events input.
          *
-         * @type {TouchDevice}
+         * @type {import('../platform/input/touch-device.js').TouchDevice}
          */
         this.touch = appOptions.touch || null;
 
         /**
          * Used to access GamePad input.
          *
-         * @type {GamePads}
+         * @type {import('../platform/input/game-pads.js').GamePads}
          */
         this.gamepads = appOptions.gamepads || null;
 
         /**
          * Used to handle input for {@link ElementComponent}s.
          *
-         * @type {ElementInput}
+         * @type {import('./input/element-input.js').ElementInput}
          */
         this.elementInput = appOptions.elementInput || null;
         if (this.elementInput)
@@ -524,7 +507,7 @@ class AppBase extends EventHandler {
         /**
          * The XR Manager that provides ability to start VR/AR sessions.
          *
-         * @type {XrManager}
+         * @type {import('./xr/xr-manager.js').XrManager}
          * @example
          * // check if VR is available
          * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
@@ -664,8 +647,14 @@ class AppBase extends EventHandler {
         setDefaultMaterial(this.graphicsDevice, material);
     }
 
+    /** @private */
+    _initProgramLibrary() {
+        const library = new ProgramLibrary(this.graphicsDevice, new StandardMaterial());
+        setProgramLibrary(this.graphicsDevice, library);
+    }
+
     /**
-     * @type {SoundManager}
+     * @type {import('../platform/sound/manager.js').SoundManager}
      * @ignore
      */
     get soundManager() {
@@ -676,7 +665,7 @@ class AppBase extends EventHandler {
      * The application's batch manager. The batch manager is used to merge mesh instances in
      * the scene, which reduces the overall number of draw calls, thereby boosting performance.
      *
-     * @type {BatchManager}
+     * @type {import('../scene/batching/batch-manager.js').BatchManager}
      */
     get batcher() {
         Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
@@ -852,16 +841,6 @@ class AppBase extends EventHandler {
         }
     }
 
-    // handle area light property
-    _handleAreaLightDataProperty(prop) {
-        const asset = this.assets.get(prop);
-        if (asset) {
-            this.setAreaLightLuts(asset);
-        } else {
-            this.assets.once('add:' + prop, this.setAreaLightLuts, this);
-        }
-    }
-
     // set application properties from data file
     _parseApplicationProperties(props, callback) {
         // configure retrying assets
@@ -931,10 +910,6 @@ class AppBase extends EventHandler {
         // set localization assets
         if (props.i18nAssets) {
             this.i18n.assets = props.i18nAssets;
-        }
-
-        if (props.areaLightDataAsset) {
-            this._handleAreaLightDataProperty(props.areaLightDataAsset);
         }
 
         this._loadLibraries(props.libraries, callback);
@@ -1461,9 +1436,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document
-     * page. It is recommended to call this function when the canvas size changes (e.g on window
-     * resize and orientation change events) so that the canvas resolution is immediately updated.
+     * Updates the {@link import('../platform/graphics/graphics-device.js').GraphicsDevice} canvas
+     * size to match the canvas size on the document page. It is recommended to call this function
+     * when the canvas size changes (e.g on window resize and orientation change events) so that
+     * the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
@@ -1541,6 +1517,7 @@ class AppBase extends EventHandler {
      * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be
      * used as the scene's skybox. Defaults to null.
      * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
+     * @param {number} settings.render.skyboxLuminance - Lux (lm/m^2) value for skybox intensity when physical light units are enabled.
      * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed.
      * Only valid for prefiltered cubemap skyboxes.
      * @param {number[]} settings.render.skyboxRotation - Rotation of skybox.
@@ -1556,6 +1533,7 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
      * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
+     * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
      * @param {boolean} settings.render.clusteredLightingEnabled - Enable clustered lighting.
      * @param {boolean} settings.render.lightingShadowsEnabled - If set to true, the clustered lighting will support shadows.
@@ -1627,19 +1605,17 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Sets the area light LUT asset for this app.
+     * Sets the area light LUT tables for this app.
      *
-     * @param {Asset} asset - LUT asset of type `binary` to be set.
+     * @param {number[]} ltcMat1 - LUT table of type `array` to be set.
+     * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
-    setAreaLightLuts(asset) {
-        if (asset) {
-            const device = this.graphicsDevice;
-            asset.ready((asset) => {
-                AreaLightLuts.set(device, asset.resource);
-            });
-            this.assets.load(asset);
+    setAreaLightLuts(ltcMat1, ltcMat2) {
+
+        if (ltcMat1 && ltcMat2) {
+            AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: asset is not valid");
+            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
         }
     }
 
@@ -1858,7 +1834,8 @@ class AppBase extends EventHandler {
     /**
      * Draw meshInstance at this frame
      *
-     * @param {MeshInstance} meshInstance - The mesh instance to draw.
+     * @param {import('../scene/mesh-instance.js').MeshInstance} meshInstance - The mesh instance
+     * to draw.
      * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
      * {@link LAYERID_IMMEDIATE}.
      * @ignore
@@ -1870,7 +1847,7 @@ class AppBase extends EventHandler {
     /**
      * Draw mesh at this frame.
      *
-     * @param {Mesh} mesh - The mesh to draw.
+     * @param {import('../scene/mesh.js').Mesh} mesh - The mesh to draw.
      * @param {Material} material - The material to use to render the mesh.
      * @param {Mat4} matrix - The matrix to use to render the mesh.
      * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1904,7 +1881,7 @@ class AppBase extends EventHandler {
      * range [0, 2].
      * @param {number} height - The height of the rectangle of the rendered texture. Should be in
      * the range [0, 2].
-     * @param {Texture} texture - The texture to render.
+     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @ignore
@@ -2182,30 +2159,34 @@ const makeTick = function (_app) {
         application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
+        let shouldRenderFrame = true;
+
         if (frame) {
-            application.xr?.update(frame);
+            shouldRenderFrame = application.xr?.update(frame);
             application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
             application.graphicsDevice.defaultFramebuffer = null;
         }
 
-        application.update(dt);
+        if (shouldRenderFrame) {
+            application.update(dt);
 
-        application.fire("framerender");
+            application.fire("framerender");
 
-        Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
-        if (application.autoRender || application.renderNextFrame) {
-            application.updateCanvasSize();
-            application.render();
-            application.renderNextFrame = false;
+            if (application.autoRender || application.renderNextFrame) {
+                application.updateCanvasSize();
+                application.render();
+                application.renderNextFrame = false;
+            }
+
+            // set event data
+            _frameEndData.timestamp = now();
+            _frameEndData.target = application;
+
+            application.fire("frameend", _frameEndData);
         }
-
-        // set event data
-        _frameEndData.timestamp = now();
-        _frameEndData.target = application;
-
-        application.fire("frameend", _frameEndData);
 
         application._inFrameUpdate = false;
 
