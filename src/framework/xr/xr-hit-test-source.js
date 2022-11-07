@@ -1,9 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * @type {Vec3[]}
@@ -25,7 +22,7 @@ const poolQuat = [];
  */
 class XrHitTestSource extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     manager;
@@ -45,7 +42,7 @@ class XrHitTestSource extends EventHandler {
     /**
      * Create a new XrHitTestSource instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
      * @hideconstructor

@@ -3,22 +3,19 @@ import { Debug } from '../../../core/debug.js';
 import {
     DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F
 } from '../constants.js';
-
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 
-import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
-import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
-import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
-import { WebgpuTexture } from './webgpu-texture.js';
-import { WebgpuShader } from './webgpu-shader.js';
-import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
-import { WebgpuRenderTarget } from './webgpu-render-target.js';
-import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
+import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
+import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
+import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
 import { WebgpuRenderState } from './webgpu-render-state.js';
-
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
+import { WebgpuRenderTarget } from './webgpu-render-target.js';
+import { WebgpuShader } from './webgpu-shader.js';
+import { WebgpuTexture } from './webgpu-texture.js';
+import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
+import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -251,7 +248,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startPass(renderPass) {
@@ -286,7 +283,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to end.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endPass(renderPass) {

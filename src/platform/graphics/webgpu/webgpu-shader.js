@@ -1,8 +1,6 @@
 import { Debug } from '../../../core/debug.js';
-import { ShaderProcessor } from '../shader-processor.js';
 
-/** @typedef {import('../graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../shader.js').Shader} Shader */
+import { ShaderProcessor } from '../shader-processor.js';
 
 /**
  * A WebGPU implementation of the Shader.
@@ -25,10 +23,10 @@ class WebgpuShader {
     _fragmentCode;
 
     /**
-     * @param {Shader} shader - The shader.
+     * @param {import('../shader.js').Shader} shader - The shader.
      */
     constructor(shader) {
-        /** @type {Shader} */
+        /** @type {import('../shader.js').Shader} */
         this.shader = shader;
 
         const definition = shader.definition;
@@ -42,7 +40,7 @@ class WebgpuShader {
     /**
      * Free the WebGPU resources associated with a shader.
      *
-     * @param {Shader} shader - The shader to free.
+     * @param {import('../shader.js').Shader} shader - The shader to free.
      */
     destroy(shader) {
         this._vertexCode = null;
@@ -95,8 +93,8 @@ class WebgpuShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {Shader} shader - The shader to restore.
+     * @param {import('../graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
     }

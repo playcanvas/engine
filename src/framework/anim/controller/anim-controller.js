@@ -11,9 +11,6 @@ import {
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
-/** @typedef {import('../../../core/event-handler.js').EventHandler} EventHandler */
-/** @typedef {import('../evaluator/anim-evaluator.js').AnimEvaluator} AnimEvaluator */
-
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
  * parameters. Its update method determines which state the controller should be in based on the
@@ -26,17 +23,17 @@ class AnimController {
     /**
      * Create a new AnimController.
      *
-     * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current
-     * playing animation keyframes and update the entities properties based on the current
-     * animation values.
+     * @param {import('../evaluator/anim-evaluator.js').AnimEvaluator} animEvaluator - The
+     * animation evaluator used to blend all current playing animation keyframes and update the
+     * entities properties based on the current animation values.
      * @param {object[]} states - The list of states used to form the controller state graph.
      * @param {object[]} transitions - The list of transitions used to form the controller state
      * graph.
      * @param {object[]} parameters - The anim components parameters.
      * @param {boolean} activate - Determines whether the anim controller should automatically play
      * once all {@link AnimNodes} are assigned animations.
-     * @param {EventHandler} eventHandler - The event handler which should be notified with anim
-     * events.
+     * @param {import('../../../core/event-handler.js').EventHandler} eventHandler - The event
+     * handler which should be notified with anim events.
      * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
      * have been consumed by a transition.
      */

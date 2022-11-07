@@ -1,6 +1,3 @@
-/** @typedef {import('./xr-hand.js').XrHand} XrHand */
-/** @typedef {import('./xr-joint.js').XrJoint} XrJoint */
-
 /**
  * Represents finger with related joints and index.
  */
@@ -12,19 +9,19 @@ class XrFinger {
     _index;
 
     /**
-     * @type {XrHand}
+     * @type {import('./xr-hand.js').XrHand}
      * @private
      */
     _hand;
 
     /**
-     * @type {XrJoint[]}
+     * @type {import('./xr-joint.js').XrJoint[]}
      * @private
      */
     _joints = [];
 
     /**
-     * @type {XrJoint|null}
+     * @type {import('./xr-joint.js').XrJoint|null}
      * @private
      */
     _tip = null;
@@ -33,7 +30,7 @@ class XrFinger {
      * Create a new XrFinger instance.
      *
      * @param {number} index - Index of a finger.
-     * @param {XrHand} hand - Hand that finger relates to.
+     * @param {import('./xr-hand.js').XrHand} hand - Hand that finger relates to.
      * @hideconstructor
      */
     constructor(index, hand) {
@@ -54,7 +51,7 @@ class XrFinger {
     /**
      * Hand that finger relates to.
      *
-     * @type {XrHand}
+     * @type {import('./xr-hand.js').XrHand}
      */
     get hand() {
         return this._hand;
@@ -64,7 +61,7 @@ class XrFinger {
      * List of joints that relates to this finger, starting from joint closest to wrist all the way
      * to the tip of a finger.
      *
-     * @type {XrJoint[]}
+     * @type {import('./xr-joint.js').XrJoint[]}
      */
     get joints() {
         return this._joints;
@@ -73,7 +70,7 @@ class XrFinger {
     /**
      * Tip of a finger, or null if not available.
      *
-     * @type {XrJoint|null}
+     * @type {import('./xr-joint.js').XrJoint|null}
      */
     get tip() {
         return this._tip;

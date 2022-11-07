@@ -1,9 +1,5 @@
 import { Debug } from '../../../core/debug.js';
 
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
-/** @typedef {import('../render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-
 /**
  * A WebGPU implementation of the RenderTarget.
  *
@@ -40,7 +36,8 @@ class WebgpuRenderTarget {
     renderPassDescriptor = {};
 
     /**
-     * @param {RenderTarget} renderTarget - The render target owning this implementation.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target owning
+     * this implementation.
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
@@ -52,7 +49,8 @@ class WebgpuRenderTarget {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * graphics device.
      */
     destroy(device) {
         this.initialized = false;
@@ -89,8 +87,9 @@ class WebgpuRenderTarget {
     /**
      * Initialize render target for rendering one time.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
-     * @param {RenderTarget} renderTarget - The render target.
+     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * graphics device.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
      */
     init(device, renderTarget) {
 
@@ -162,7 +161,7 @@ class WebgpuRenderTarget {
     /**
      * Update WebGPU render pass descriptor by RenderPass settings.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      */
     setupForRenderPass(renderPass) {
 

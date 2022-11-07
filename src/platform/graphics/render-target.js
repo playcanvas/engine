@@ -4,8 +4,6 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
-/** @typedef {import('./texture.js').Texture} Texture */
-
 const defaultOptions = {
     depth: true,
     face: 0
@@ -23,14 +21,14 @@ class RenderTarget {
      * @param {object} options - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true.
-     * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
-     * rendering surface.
+     * @param {import('./texture.js').Texture} [options.colorBuffer] - The texture that this render
+     * target will treat as a rendering surface.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
-     * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a
-     * depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are
-     * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
-     * format.
+     * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
+     * target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and
+     * 'stencil' properties are ignored. Texture must have {@link PIXELFORMAT_DEPTH} or
+     * {@link PIXELFORMAT_DEPTHSTENCIL} format.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
      * to specify the face of the cubemap to render to. Can be:
      *
@@ -302,7 +300,7 @@ class RenderTarget {
     /**
      * Color buffer set up on the render target.
      *
-     * @type {Texture}
+     * @type {import('./texture.js').Texture}
      */
     get colorBuffer() {
         return this._colorBuffer;
@@ -312,7 +310,7 @@ class RenderTarget {
      * Depth buffer set up on the render target. Only available, if depthBuffer was set in
      * constructor. Not available if depth property was used instead.
      *
-     * @type {Texture}
+     * @type {import('./texture.js').Texture}
      */
     get depthBuffer() {
         return this._depthBuffer;

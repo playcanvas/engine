@@ -9,8 +9,6 @@ import { script } from '../script.js';
 
 import { Asset } from './asset.js';
 
-/** @typedef {import('../../framework/handlers/loader.js').ResourceLoader} ResourceLoader */
-
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
  *
@@ -38,7 +36,8 @@ class AssetRegistry extends EventHandler {
     /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
+     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
+     * load the asset files.
      */
     constructor(loader) {
         super();

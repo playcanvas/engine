@@ -2,9 +2,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').ZoneComponentSystem} ZoneComponentSystem */
-
 /**
  * The ZoneComponent allows you to define an area in world space of certain size. This can be used
  * in various ways, such as affecting audio reverb when {@link AudioListenerComponent} is within
@@ -19,8 +16,10 @@ class ZoneComponent extends Component {
     /**
      * Create a new ZoneComponent instance.
      *
-     * @param {ZoneComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').ZoneComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);

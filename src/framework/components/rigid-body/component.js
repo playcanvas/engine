@@ -12,9 +12,6 @@ import {
 } from './constants.js';
 import { Component } from '../component.js';
 
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').RigidBodyComponentSystem} RigidBodyComponentSystem */
-
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
@@ -59,8 +56,9 @@ class RigidBodyComponent extends Component {
     /**
      * Create a new RigidBodyComponent instance.
      *
-     * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
-     * @param {Entity} entity - The entity this component is attached to.
+     * @param {import('./system.js').RigidBodyComponentSystem} system - The ComponentSystem that
+     * created this component.
+     * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -100,21 +98,21 @@ class RigidBodyComponent extends Component {
      * Fired when two rigid bodies stop touching.
      *
      * @event RigidBodyComponent#collisionend
-     * @param {Entity} other - The {@link Entity} that stopped touching this rigid body.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that stopped touching this rigid body.
      */
 
     /**
      * Fired when a rigid body enters a trigger volume.
      *
      * @event RigidBodyComponent#triggerenter
-     * @param {Entity} other - The {@link Entity} with trigger volume that this rigid body entered.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} with trigger volume that this rigid body entered.
      */
 
     /**
      * Fired when a rigid body exits a trigger volume.
      *
      * @event RigidBodyComponent#triggerleave
-     * @param {Entity} other - The {@link Entity} with trigger volume that this rigid body exited.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} with trigger volume that this rigid body exited.
      */
 
     static onLibraryLoaded() {

@@ -3,12 +3,11 @@ import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 /**
  * Create a shader from named shader chunks.
  *
- * @param {GraphicsDevice} device - The graphics device.
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * graphics device.
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
@@ -26,7 +25,8 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
 /**
  * Create a shader from the supplied source code.
  *
- * @param {GraphicsDevice} device - The graphics device.
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * graphics device.
  * @param {string} vsCode - The vertex shader code.
  * @param {string} fsCode - The fragment shader code.
  * @param {string} uniqueName - Unique name for the shader.

@@ -1,17 +1,11 @@
 import { platform } from '../../core/platform.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { Ray } from '../../core/shape/ray.js';
-
-import { getApplication } from '../globals.js';
 
 import { Mouse } from '../../platform/input/mouse.js';
 
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
+import { getApplication } from '../globals.js';
 
 let targetX, targetY;
 const vecA = new Vec3();
@@ -122,10 +116,10 @@ class ElementInputEvent {
      *
      * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
      * raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      */
     constructor(event, element, camera) {
         /**
@@ -138,14 +132,14 @@ class ElementInputEvent {
         /**
          * The ElementComponent that this event was originally raised on.
          *
-         * @type {ElementComponent}
+         * @type {import('../components/element/component.js').ElementComponent}
          */
         this.element = element;
 
         /**
          * The CameraComponent that this event was originally raised via.
          *
-         * @type {CameraComponent}
+         * @type {import('../components/camera/component.js').CameraComponent}
          */
         this.camera = camera;
 
@@ -175,10 +169,10 @@ class ElementMouseEvent extends ElementInputEvent {
      * Create an instance of an ElementMouseEvent.
      *
      * @param {MouseEvent} event - The MouseEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @param {number} lastX - The last x coordinate.
@@ -269,10 +263,10 @@ class ElementTouchEvent extends ElementInputEvent {
      * Create an instance of an ElementTouchEvent.
      *
      * @param {TouchEvent} event - The TouchEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
      * @param {Touch} touch - The touch object that triggered the event.
@@ -315,12 +309,12 @@ class ElementSelectEvent extends ElementInputEvent {
      * Create an instance of a ElementSelectEvent.
      *
      * @param {object} event - The XRInputSourceEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
-     * @param {XrInputSource} inputSource - The XR input source that this event was originally
-     * raised from.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
+     * @param {import('../xr/xr-input-source.js').XrInputSource} inputSource - The XR input source
+     * that this event was originally raised from.
      */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
@@ -328,7 +322,7 @@ class ElementSelectEvent extends ElementInputEvent {
         /**
          * The XR input source that this event was originally raised from.
          *
-         * @type {XrInputSource}
+         * @type {import('../xr/xr-input-source.js').XrInputSource}
          */
         this.inputSource = inputSource;
     }
@@ -487,7 +481,8 @@ class ElementInput {
      * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent.
      */
     addElement(element) {
         if (this._elements.indexOf(element) === -1)
@@ -498,7 +493,8 @@ class ElementInput {
      * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent.
      */
     removeElement(element) {
         const idx = this._elements.indexOf(element);

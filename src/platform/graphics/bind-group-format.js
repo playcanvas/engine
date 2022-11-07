@@ -1,9 +1,7 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
-import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH } from './constants.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
+import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH } from './constants.js';
 
 let id = 0;
 
@@ -24,7 +22,7 @@ class BindBufferFormat {
  * @ignore
  */
 class BindTextureFormat {
-    /** @type {ScopeId} */
+    /** @type {import('./scope-id.js').ScopeId} */
     scopeId;
 
     constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT) {
@@ -47,7 +45,8 @@ class BindTextureFormat {
  */
 class BindGroupFormat {
     /**
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this vertex format.
      * @param {BindBufferFormat[]} bufferFormats -
      * @param {BindTextureFormat[]} textureFormats -
      */
@@ -55,7 +54,7 @@ class BindGroupFormat {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 
-        /** @type {GraphicsDevice} */
+        /** @type {import('./graphics-device.js').GraphicsDevice} */
         this.device = graphicsDevice;
 
         /** @type {BindBufferFormat[]} */

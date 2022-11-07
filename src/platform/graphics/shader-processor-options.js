@@ -1,20 +1,19 @@
 import { BINDGROUP_VIEW } from "./constants.js";
 
-/** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('./uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
-
 class ShaderProcessorOptions {
-    /** @type {Array<UniformBufferFormat>}*/
+    /** @type {import('./uniform-buffer-format.js').UniformBufferFormat[]} */
     uniformFormats = [];
 
-    /** @type {Array<BindGroupFormat>}*/
+    /** @type {import('./bind-group-format.js').BindGroupFormat[]} */
     bindGroupFormats = [];
 
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {UniformBufferFormat} viewUniformFormat - Format of the uniform buffer.
-     * @param {BindGroupFormat} viewBindGroupFormat - Format of the bind group.
+     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - Format
+     * of the uniform buffer.
+     * @param {import('./bind-group-format.js').BindGroupFormat} viewBindGroupFormat - Format of
+     * the bind group.
      */
     constructor(viewUniformFormat, viewBindGroupFormat) {
 

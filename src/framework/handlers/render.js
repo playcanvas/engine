@@ -1,6 +1,5 @@
 import { Render } from '../../scene/render.js';
 
-/** @typedef {import('../app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 // The scope of this function is the render asset
@@ -58,7 +57,7 @@ class RenderHandler {
     /**
      * Create a new RenderHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

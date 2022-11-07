@@ -5,9 +5,6 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-/** @typedef {import('./component.js').CameraComponent} CameraComponent */
-
 class PostEffect {
     constructor(effect, inputTarget) {
         this.effect = effect;
@@ -24,8 +21,8 @@ class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {AppBase} app - The application.
-     * @param {CameraComponent} camera - The camera component.
+     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {import('./component.js').CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {
         this.app = app;

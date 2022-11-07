@@ -19,8 +19,6 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 let _pixelSizeTable = null;
 let _blockSizeTable = null;
 
@@ -34,7 +32,8 @@ class Texture {
     /**
      * Create a new Texture instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this texture.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {string} [options.name] - The name of the texture.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.

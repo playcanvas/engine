@@ -37,11 +37,6 @@ import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
 
-/** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
-/** @typedef {import('../shader.js').Shader} Shader */
-/** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
-
 const invalidateAttachments = [];
 
 const _fullScreenQuadVS = /* glsl */`
@@ -1321,7 +1316,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startPass(renderPass) {
@@ -1376,7 +1371,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to end.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endPass(renderPass) {
@@ -2242,7 +2237,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the output vertex buffer. It will be written to by a shader with transform feedback
      * varyings.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {import('../vertex-buffer.js').VertexBuffer} tf - The output vertex buffer.
      * @ignore
      */
     setTransformFeedbackBuffer(tf) {

@@ -1,6 +1,5 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
-
+import { platform } from '../../core/platform.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
@@ -8,17 +7,13 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
+import { XrImageTracking } from './xr-image-tracking.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
-import { XrImageTracking } from './xr-image-tracking.js';
-import { XrDomOverlay } from './xr-dom-overlay.js';
-import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
-
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-/** @typedef {import('../entity.js').Entity} Entity */
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -34,7 +29,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  */
 class XrManager extends EventHandler {
     /**
-     * @type {AppBase}
+     * @type {import('../app-base.js').AppBase}
      * @ignore
      */
     app;
@@ -137,7 +132,7 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
-     * @type {CameraComponent}
+     * @type {import('../components/camera/component.js').CameraComponent}
      * @private
      */
     _camera = null;
@@ -193,7 +188,7 @@ class XrManager extends EventHandler {
     /**
      * Create a new XrManager instance.
      *
-     * @param {AppBase} app - The main application.
+     * @param {import('../app-base.js').AppBase} app - The main application.
      * @hideconstructor
      */
     constructor(app) {
@@ -309,8 +304,8 @@ class XrManager extends EventHandler {
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
      *
-     * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
-     * on pose tracking.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - It will be
+     * used to render XR session and manipulated based on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
      * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features
@@ -820,7 +815,7 @@ class XrManager extends EventHandler {
     /**
      * Active camera for which XR session is running or null.
      *
-     * @type {Entity|null}
+     * @type {import('../entity.js').Entity|null}
      */
     get camera() {
         return this._camera ? this._camera.entity : null;

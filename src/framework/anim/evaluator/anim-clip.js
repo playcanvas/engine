@@ -1,8 +1,5 @@
 import { AnimSnapshot } from './anim-snapshot.js';
 
-/** @typedef {import('./anim-track.js').AnimTrack} AnimTrack */
-/** @typedef {import('../../../core/event-handler.js').EventHandler} EventHandler */
-
 // TODO: add configurable looping start/end times?
 
 /**
@@ -15,12 +12,13 @@ class AnimClip {
     /**
      * Create a new animation clip.
      *
-     * @param {AnimTrack} track - The animation data.
+     * @param {import('./anim-track.js').AnimTrack} track - The animation data.
      * @param {number} time - The initial time of the clip.
      * @param {number} speed - Speed of the animation playback.
      * @param {boolean} playing - true if the clip is playing and false otherwise.
      * @param {boolean} loop - Whether the clip should loop.
-     * @param {EventHandler} [eventHandler] - The handler to call when an event is fired by the clip.
+     * @param {import('../../../core/event-handler.js').EventHandler} [eventHandler] - The handler
+     * to call when an event is fired by the clip.
      */
     constructor(track, time, speed, playing, loop, eventHandler) {
         this._name = track.name;        // default to track name

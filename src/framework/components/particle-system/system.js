@@ -12,8 +12,6 @@ import { ComponentSystem } from '../system.js';
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = [
     'enabled',
     'autoPlay',
@@ -89,7 +87,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     /**
      * Create a new ParticleSystemComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {

@@ -16,8 +16,6 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const mat4 = new Mat4();
 const vec3 = new Vec3();
 const quat = new Quat();
@@ -569,7 +567,7 @@ class CollisionComponentSystem extends ComponentSystem {
     /**
      * Creates a new CollisionComponentSystem instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

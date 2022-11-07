@@ -9,9 +9,6 @@ import {
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
 
-/** @typedef {import('./shader-processor-options.js').ShaderProcessorOptions} ShaderProcessorOptions */
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 // accepted keywords
 // TODO: 'out' keyword is not in the list, as handling it is more complicated due
 // to 'out' keyword also being used to mark output only function parameters.
@@ -34,6 +31,7 @@ const textureDimensions = {
     sampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
     sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY
 };
+
 class UniformLine {
     constructor(line) {
         this.line = line;
@@ -57,9 +55,8 @@ class UniformLine {
 }
 
 /**
- * Pure static class implementing processing of GLSL shaders. It allocates
- * fixed locations for attributes, and handles conversion of uniforms to
- * uniform buffers.
+ * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
+ * attributes, and handles conversion of uniforms to uniform buffers.
  *
  * @ignore
  */
@@ -67,7 +64,7 @@ class ShaderProcessor {
     /**
      * Process the shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
      * @returns {object} - The processed shader data.
      */
@@ -182,9 +179,10 @@ class ShaderProcessor {
      * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
      * uniforms that change on the level of the mesh.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
-     * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
+     * @param {import('./shader-processor-options.js').ShaderProcessorOptions} processingOptions -
+     * Uniform formats.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */

@@ -16,11 +16,6 @@ import { getApplication } from '../globals.js';
 import { Entity } from '../entity.js';
 import { Debug } from '../../core/debug.js';
 
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../../scene/scene.js').Scene} Scene */
-
 const tempSet = new Set();
 
 const clearDepthOptions = {
@@ -40,7 +35,8 @@ class Picker {
     /**
      * Create a new Picker instance.
      *
-     * @param {AppBase} app - The application managing this picker instance.
+     * @param {import('../app-base.js').AppBase} app - The application managing this picker
+     * instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
@@ -88,7 +84,8 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle.
      * @param {number} [height] - The height of the rectangle.
-     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
+     * @returns {import('../../scene/mesh-instance.js').MeshInstance[]} An array of mesh instances
+     * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection(10, 20);
@@ -230,8 +227,10 @@ class Picker {
      * be called multiple times on the same picker object. Therefore, if the models or camera do
      * not change in any way, {@link Picker#prepare} does not need to be called again.
      *
-     * @param {CameraComponent} camera - The camera component used to render the scene.
-     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera
+     * component used to render the scene.
+     * @param {import('../../scene/scene.js').Scene} scene - The scene containing the pickable mesh
+     * instances.
      * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
      */
     prepare(camera, scene, layers) {

@@ -6,8 +6,6 @@ import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
 import { ShaderUtils } from './shader-utils.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 /**
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
  * use:
@@ -108,7 +106,8 @@ class TransformFeedback {
     /**
      * Creates a transform feedback ready vertex shader from code.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used by the renderer.
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
      * @returns {Shader} A shader to use in the process() function.

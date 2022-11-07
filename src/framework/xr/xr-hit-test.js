@@ -4,9 +4,6 @@ import { EventHandler } from '../../core/event-handler.js';
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../../core/shape/ray.js').Ray} Ray */
-
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  *
@@ -24,7 +21,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 class XrHitTest extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     manager;
@@ -51,7 +48,7 @@ class XrHitTest extends EventHandler {
     /**
      * Create a new XrHitTest instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {
@@ -192,7 +189,8 @@ class XrHitTest extends EventHandler {
      * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
      * based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {import('../../core/shape/ray.js').Ray} [options.offsetRay] - Optional ray by which
+     * hit test ray can be offset.
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
