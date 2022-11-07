@@ -213,7 +213,8 @@ class ContainerHandler {
      * format. This is necessary when loading, for example from blob.
      * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
      * the resource is loaded or an error occurs.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      */
     load(url, callback, asset) {
         if (typeof url === 'string') {
@@ -229,7 +230,8 @@ class ContainerHandler {
     /**
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {
@@ -237,8 +239,8 @@ class ContainerHandler {
     }
 
     /**
-     * @param {Asset} asset - The asset to patch.
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
 

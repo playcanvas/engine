@@ -448,12 +448,12 @@ class Layer {
     }
 
     /**
-     * @type {RenderTarget}
+     * @type {import('../platform/graphics/render-target.js').RenderTarget}
      * @ignore
      */
     set renderTarget(rt) {
         /**
-         * @type {RenderTarget}
+         * @type {import('../platform/graphics/render-target.js').RenderTarget}
          * @private
          */
         this._renderTarget = rt;

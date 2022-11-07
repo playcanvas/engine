@@ -68,10 +68,12 @@ class TextureParser {
     /**
      * @function
      * @name TextureParser#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
+     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format
+     * JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
      * @returns {Texture} The parsed resource data.
      */
     open(url, data, device) {
