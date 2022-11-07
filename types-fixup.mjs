@@ -31,7 +31,8 @@ let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
 
-const regexConstructor = /constructor\(([^)]+)\);/g;
+// A regex that matches a string starting with 'constructor' and ending with ');'
+const regexConstructor = /constructor(.*?)\);/g;
 
 // Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
@@ -76,6 +77,11 @@ const buttonComponentProps = [
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
+dts += `
+import { Vec4 } from '../../../core/math/vec4.js';
+import { Entity } from '../../../framework/entity.js';
+import { Asset } from '../../../framework/asset/asset.js';
+`;
 fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
@@ -98,6 +104,10 @@ const cameraComponentProps = [
 path = './types/framework/components/camera/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
+`;
 fs.writeFileSync(path, dts);
 
 const collisionComponentProps = [
@@ -112,6 +122,10 @@ const collisionComponentProps = [
 path = './types/framework/components/collision/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
+dts += `
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Model } from '../../../scene/model.js';
+`;
 fs.writeFileSync(path, dts);
 
 const elementComponentProps = [
@@ -157,6 +171,15 @@ const elementComponentProps = [
 path = './types/framework/components/element/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Texture } from '../../../platform/graphics/texture.js';
+import { Sprite } from '../../../scene/sprite.js';
+import { Material } from '../../../scene/materials/material.js';
+import { Entity } from '../../../framework/entity.js';
+import { CanvasFont } from '../../../framework/font/canvas-font.js';
+import { Font } from '../../../framework/font/font.js';
+`;
 fs.writeFileSync(path, dts);
 
 const lightComponentProps = [
@@ -201,6 +224,10 @@ const lightComponentProps = [
 path = './types/framework/components/light/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+`;
 fs.writeFileSync(path, dts);
 
 const particleSystemComponentProps = [
@@ -268,6 +295,12 @@ dts = fs.readFileSync(path, 'utf8');
 // know about the declaration in the Component base class, so remove it.
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemComponentProps));
 dts = dts.replace('enabled: any;', '');
+dts += `
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Curve } from '../../../core/math/curve.js';
+import { CurveSet } from '../../../core/math/curve-set.js';
+import { Asset } from '../../../framework/asset/asset.js';
+`;
 fs.writeFileSync(path, dts);
 
 const scrollbarComponentProps = [
@@ -279,6 +312,9 @@ const scrollbarComponentProps = [
 path = './types/framework/components/scrollbar/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
+dts += `
+import { Entity } from '../../../framework/entity.js';
+`;
 fs.writeFileSync(path, dts);
 
 const scrollViewComponentProps = [
@@ -300,6 +336,9 @@ const scrollViewComponentProps = [
 path = './types/framework/components/scroll-view/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
+dts += `
+import { Entity } from '../../../framework/entity.js';
+`;
 fs.writeFileSync(path, dts);
 
 const standardMaterialProps = [
@@ -483,7 +522,7 @@ import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Texture } from '../../platform/graphics/texture.js';
-`
+`;
 fs.writeFileSync(path, dts);
 
 path = './types/framework/script/script-type.d.ts';
