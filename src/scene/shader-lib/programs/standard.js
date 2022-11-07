@@ -273,7 +273,7 @@ const standard = {
         litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
 
         // handle fragment shader
-        if (options.shadingModel === SPECULAR_PHONG) {
+        if (options.litOptions.shadingModel === SPECULAR_PHONG) {
             options.litOptions.fresnelModel = 0;
             options.litOptions.ambientSH = false;
         } else {
@@ -441,8 +441,8 @@ const standard = {
             }
 
             // lightmap
-            if (options.litOptions.lightMap || options.lightVertexColor) {
-                const lightmapDir = (options.litOptions.dirLightMap && options.litOptions.useSpecular);
+            if (options.litOptions.useLightMap || options.lightVertexColor) {
+                const lightmapDir = (options.litOptions.useDirLightMap && options.litOptions.useSpecular);
                 const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
                 decl.append("vec3 dLightmap;");
                 if (lightmapDir) {

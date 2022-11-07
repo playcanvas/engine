@@ -182,6 +182,10 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
+        options.litOptions.useClearCoatNormalMap = !!stdMat.clearCoatNormalMap;
+        options.litOptions.useDiffuseMap = !!stdMat.diffuseMap;
+        options.litOptions.useAoMap = !!stdMat.aoMap;
+
         options.litOptions.detailModes = !!options.diffuseDetail;
         options.litOptions.shadingModel = stdMat.shadingModel;
         options.litOptions.ambientSH = !!stdMat.ambientSH;
@@ -274,25 +278,25 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
-        options.litOptions.lightMap = false;
+        options.litOptions.useLightMap = false;
         options.litOptions.lightMapChannel = '';
         options.litOptions.lightMapUv = 0;
         options.litOptions.lightMapTransform = 0;
         options.litOptions.lightMapWithoutAmbient = false;
-        options.litOptions.dirLightMap = false;
+        options.litOptions.useDirLightMap = false;
 
         if (objDefs) {
             options.litOptions.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
                 options.litOptions.lightMapEncoding = 'rgbm';
-                options.litOptions.lightMap = true;
+                options.litOptions.useLightMap = true;
                 options.litOptions.lightMapChannel = 'rgb';
                 options.litOptions.lightMapUv = 1;
                 options.litOptions.lightMapTransform = 0;
                 options.litOptions.lightMapWithoutAmbient = !stdMat.lightMap;
                 if ((objDefs & SHADERDEF_DIRLM) !== 0) {
-                    options.litOptions.dirLightMap = true;
+                    options.litOptions.useDirLightMap = true;
                 }
 
                 // if lightmaps contain baked ambient light, disable real-time ambient light
@@ -388,7 +392,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions[cname] = options[cname];
         options.litOptions[tname] = options[tname];
         options.litOptions[uname] = options[uname];
-        options.litOptions.vertexColors = options.vertexColors;
+        options.litOptions.useVertexColors = options.vertexColors;
     }
 
     _collectLights(lType, lights, lightsFiltered, mask, staticLightList) {

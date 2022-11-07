@@ -85,7 +85,7 @@ class LitShader {
             this.chunks = shaderChunks;
         }
 
-        this.lighting = (options.lights.length > 0) || !!options.dirLightMap || !!options.clusteredLightingEnabled;
+        this.lighting = (options.lights.length > 0) || options.useDirLightMap || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         this.shadowPass = ShaderPass.isShadow(options.pass);
@@ -293,7 +293,7 @@ class LitShader {
         this.varyings = codes[1];
         codeBody = codes[2];
 
-        if (options.vertexColors) {
+        if (options.useVertexColors) {
             this.attributes.vertex_color = SEMANTIC_COLOR;
             codeBody += "   vVertexColor = vertex_color;\n";
         }
@@ -751,7 +751,7 @@ class LitShader {
             }
         }
 
-        const useAo = options.aoMap || options.aoVertexColor;
+        const useAo = options.useAoMap || options.aoVertexColor;
 
         if (useAo) {
             code += chunks.aoDiffuseOccPS;
@@ -867,7 +867,7 @@ class LitShader {
                 code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
-            if (!options.fresnelModel && !this.reflections && !options.diffuseMap) {
+            if (!options.fresnelModel && !this.reflections && !options.useDiffuseMap) {
                 code += "    uniform vec3 material_ambient;\n";
                 code += "#define LIT_OLD_AMBIENT";
                 useOldAmbient = true;
@@ -877,11 +877,11 @@ class LitShader {
         code += chunks.combinePS;
 
         // lightmap support
-        if (options.lightMap || options.lightVertexColor) {
-            code += (options.useSpecular && options.dirLightMap) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
+        if (options.useLightMap || options.lightVertexColor) {
+            code += (options.useSpecular && options.useDirLightMap) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
         }
 
-        const addAmbient = (!options.lightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
+        const addAmbient = (!options.useLightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
 
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
@@ -1026,7 +1026,7 @@ class LitShader {
             code += "    occludeDiffuse();\n";
         }
 
-        if (options.lightMap || options.lightVertexColor) {
+        if (options.useLightMap || options.lightVertexColor) {
             code += "    addLightMap();\n";
         }
 
