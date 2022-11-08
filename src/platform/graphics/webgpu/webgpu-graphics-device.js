@@ -81,11 +81,29 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
     }
 
-    async initWebGpu() {
+    async initWebGpu(glslangUrl) {
 
         if (!window.navigator.gpu) {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
+
+        const loadScript = (url) => {
+            return new Promise(function (resolve, reject) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = false;
+                script.onload = function () {
+                    resolve(url);
+                };
+                script.onerror = function () {
+                    reject(new Error(`Failed to download script ${url}`));
+                };
+                document.body.appendChild(script);
+            });
+        };
+
+        // TODO: add loadScript and requestAdapter to promise list and wait for both.
+        await loadScript(glslangUrl);
 
         this.glslang = await glslang();
 
@@ -108,6 +126,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.gpuContext.configure(this.canvasConfig);
 
         this.createFramebuffer();
+
+        return this;
     }
 
     createFramebuffer() {
