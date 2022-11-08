@@ -80,7 +80,7 @@ class BoxReflectionExample {
             const envAtlas = new pc.Texture(app.graphicsDevice, {
                 width: 512,
                 height: 512,
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                format: pc.PIXELFORMAT_RGBA8,
                 type: pc.TEXTURETYPE_RGBM,
                 projection: pc.TEXTUREPROJECTION_EQUIRECT,
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
@@ -135,7 +135,7 @@ class BoxReflectionExample {
 
             // set up video playback into a texture
             const videoTexture = new pc.Texture(app.graphicsDevice, {
-                format: pc.PIXELFORMAT_R5_G6_B5,
+                format: pc.PIXELFORMAT_RGB565,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR,

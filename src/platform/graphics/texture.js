@@ -6,8 +6,8 @@ import {
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
-    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_L8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R5_G5_B5_A1, PIXELFORMAT_R4_G4_B4_A4,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
+    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
@@ -44,12 +44,12 @@ class Texture {
      *
      * - {@link PIXELFORMAT_A8}
      * - {@link PIXELFORMAT_L8}
-     * - {@link PIXELFORMAT_L8_A8}
-     * - {@link PIXELFORMAT_R5_G6_B5}
-     * - {@link PIXELFORMAT_R5_G5_B5_A1}
-     * - {@link PIXELFORMAT_R4_G4_B4_A4}
-     * - {@link PIXELFORMAT_R8_G8_B8}
-     * - {@link PIXELFORMAT_R8_G8_B8_A8}
+     * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_RGB565}
+     * - {@link PIXELFORMAT_RGBA5551}
+     * - {@link PIXELFORMAT_RGBA4}
+     * - {@link PIXELFORMAT_RGB8}
+     * - {@link PIXELFORMAT_RGBA8}
      * - {@link PIXELFORMAT_DXT1}
      * - {@link PIXELFORMAT_DXT3}
      * - {@link PIXELFORMAT_DXT5}
@@ -67,7 +67,7 @@ class Texture {
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
-     * Defaults to {@link PIXELFORMAT_R8_G8_B8_A8}.
+     * Defaults to {@link PIXELFORMAT_RGBA8}.
      * @param {string} [options.projection] - The projection type of the texture, used when the
      * texture represents an environment. Can be:
      *
@@ -126,7 +126,7 @@ class Texture {
      * var texture = new pc.Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
-     *     format: pc.PIXELFORMAT_R8_G8_B8
+     *     format: pc.PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient
@@ -157,7 +157,7 @@ class Texture {
         this._height = 4;
         this._depth = 1;
 
-        this._format = PIXELFORMAT_R8_G8_B8_A8;
+        this._format = PIXELFORMAT_RGBA8;
         this.type = TEXTURETYPE_DEFAULT;
         this.projection = TEXTUREPROJECTION_NONE;
 
@@ -560,12 +560,12 @@ class Texture {
      *
      * - {@link PIXELFORMAT_A8}
      * - {@link PIXELFORMAT_L8}
-     * - {@link PIXELFORMAT_L8_A8}
-     * - {@link PIXELFORMAT_R5_G6_B5}
-     * - {@link PIXELFORMAT_R5_G5_B5_A1}
-     * - {@link PIXELFORMAT_R4_G4_B4_A4}
-     * - {@link PIXELFORMAT_R8_G8_B8}
-     * - {@link PIXELFORMAT_R8_G8_B8_A8}
+     * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_RGB565}
+     * - {@link PIXELFORMAT_RGBA5551}
+     * - {@link PIXELFORMAT_RGBA4}
+     * - {@link PIXELFORMAT_RGB8}
+     * - {@link PIXELFORMAT_RGBA8}
      * - {@link PIXELFORMAT_DXT1}
      * - {@link PIXELFORMAT_DXT3}
      * - {@link PIXELFORMAT_DXT5}
@@ -685,12 +685,12 @@ class Texture {
             _pixelSizeTable = [];
             _pixelSizeTable[PIXELFORMAT_A8] = 1;
             _pixelSizeTable[PIXELFORMAT_L8] = 1;
-            _pixelSizeTable[PIXELFORMAT_L8_A8] = 2;
-            _pixelSizeTable[PIXELFORMAT_R5_G6_B5] = 2;
-            _pixelSizeTable[PIXELFORMAT_R5_G5_B5_A1] = 2;
-            _pixelSizeTable[PIXELFORMAT_R4_G4_B4_A4] = 2;
-            _pixelSizeTable[PIXELFORMAT_R8_G8_B8] = 4;
-            _pixelSizeTable[PIXELFORMAT_R8_G8_B8_A8] = 4;
+            _pixelSizeTable[PIXELFORMAT_LA8] = 2;
+            _pixelSizeTable[PIXELFORMAT_RGB565] = 2;
+            _pixelSizeTable[PIXELFORMAT_RGBA5551] = 2;
+            _pixelSizeTable[PIXELFORMAT_RGBA4] = 2;
+            _pixelSizeTable[PIXELFORMAT_RGB8] = 4;
+            _pixelSizeTable[PIXELFORMAT_RGBA8] = 4;
             _pixelSizeTable[PIXELFORMAT_RGB16F] = 8;
             _pixelSizeTable[PIXELFORMAT_RGBA16F] = 8;
             _pixelSizeTable[PIXELFORMAT_RGB32F] = 16;
@@ -799,18 +799,18 @@ class Texture {
                 case PIXELFORMAT_L8:
                     this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
                     break;
-                case PIXELFORMAT_L8_A8:
+                case PIXELFORMAT_LA8:
                     this._levels[options.level] = new Uint8Array(this._width * this._height *  this._depth * 2);
                     break;
-                case PIXELFORMAT_R5_G6_B5:
-                case PIXELFORMAT_R5_G5_B5_A1:
-                case PIXELFORMAT_R4_G4_B4_A4:
+                case PIXELFORMAT_RGB565:
+                case PIXELFORMAT_RGBA5551:
+                case PIXELFORMAT_RGBA4:
                     this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth);
                     break;
-                case PIXELFORMAT_R8_G8_B8:
+                case PIXELFORMAT_RGB8:
                     this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 3);
                     break;
-                case PIXELFORMAT_R8_G8_B8_A8:
+                case PIXELFORMAT_RGBA8:
                     this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 4);
                     break;
                 case PIXELFORMAT_DXT1:
@@ -980,7 +980,7 @@ class Texture {
      * @ignore
      */
     getDds() {
-        Debug.assert(this.format === PIXELFORMAT_R8_G8_B8_A8, "This format is not implemented yet");
+        Debug.assert(this.format === PIXELFORMAT_RGBA8, "This format is not implemented yet");
 
         let fsize = 128;
         let idx = 0;

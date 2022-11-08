@@ -1,5 +1,5 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -174,7 +174,7 @@ class LightsBuffer {
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8, 'LightsTexture8');
+        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
         this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
 
         // float texture

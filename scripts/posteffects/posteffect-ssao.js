@@ -412,7 +412,7 @@ SSAOEffect.prototype._resize = function (target) {
     this._destroy();
 
     var ssaoResultBuffer = new pc.Texture(this.device, {
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         minFilter: pc.FILTER_LINEAR,
         magFilter: pc.FILTER_LINEAR,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
@@ -429,7 +429,7 @@ SSAOEffect.prototype._resize = function (target) {
     });
 
     var ssaoBlurBuffer = new pc.Texture(this.device, {
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         minFilter: pc.FILTER_LINEAR,
         magFilter: pc.FILTER_LINEAR,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,

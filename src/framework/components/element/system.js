@@ -3,7 +3,7 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -47,7 +47,7 @@ class ElementComponentSystem extends ComponentSystem {
         this._defaultTexture = new Texture(app.graphicsDevice, {
             width: 1,
             height: 1,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             name: 'element-system'
         });
         const pixels = this._defaultTexture.lock();

@@ -419,42 +419,42 @@ export const PIXELFORMAT_L8 = 1;
  *
  * @type {number}
  */
-export const PIXELFORMAT_L8_A8 = 2;
+export const PIXELFORMAT_LA8 = 2;
 
 /**
  * 16-bit RGB (5-bits for red channel, 6 for green and 5 for blue).
  *
  * @type {number}
  */
-export const PIXELFORMAT_R5_G6_B5 = 3;
+export const PIXELFORMAT_RGB565 = 3;
 
 /**
  * 16-bit RGBA (5-bits for red channel, 5 for green, 5 for blue with 1-bit alpha).
  *
  * @type {number}
  */
-export const PIXELFORMAT_R5_G5_B5_A1 = 4;
+export const PIXELFORMAT_RGBA5551 = 4;
 
 /**
  * 16-bit RGBA (4-bits for red channel, 4 for green, 4 for blue with 4-bit alpha).
  *
  * @type {number}
  */
-export const PIXELFORMAT_R4_G4_B4_A4 = 5;
+export const PIXELFORMAT_RGBA4 = 5;
 
 /**
  * 24-bit RGB (8-bits for red channel, 8 for green and 8 for blue).
  *
  * @type {number}
  */
-export const PIXELFORMAT_R8_G8_B8 = 6;
+export const PIXELFORMAT_RGB8 = 6;
 
 /**
  * 32-bit RGBA (8-bits for red channel, 8 for green, 8 for blue with 8-bit alpha).
  *
  * @type {number}
  */
-export const PIXELFORMAT_R8_G8_B8_A8 = 7;
+export const PIXELFORMAT_RGBA8 = 7;
 
 /**
  * Block compressed format storing 16 input pixels in 64 bits of output, consisting of two 16-bit

@@ -5,7 +5,7 @@ import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGBA8,
     TEXTURETYPE_RGBE
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -48,7 +48,7 @@ class HdrParser {
             width: textureData.width,
             height: textureData.height,
             levels: textureData.levels,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             type: TEXTURETYPE_RGBE,
             // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
             mipmaps: false

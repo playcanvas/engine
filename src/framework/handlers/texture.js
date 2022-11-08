@@ -3,7 +3,7 @@ import { path } from '../../core/path.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -98,7 +98,7 @@ const _completePartialMipmapChain = function (texture) {
                (object instanceof HTMLVideoElement);
     };
 
-    if (!(texture._format === PIXELFORMAT_R8_G8_B8_A8 ||
+    if (!(texture._format === PIXELFORMAT_RGBA8 ||
           texture._format === PIXELFORMAT_RGBA32F) ||
           texture._volume ||
           texture._compressed ||
@@ -243,7 +243,7 @@ class TextureHandler {
             texture = new Texture(this._device, {
                 width: 4,
                 height: 4,
-                format: PIXELFORMAT_R8_G8_B8
+                format: PIXELFORMAT_RGB8
             });
         } else {
             // check if the texture has only a partial mipmap chain specified and generate the
