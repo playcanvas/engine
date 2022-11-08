@@ -1145,8 +1145,18 @@ export const uniformTypeToName = [
     '' // not directly handled: UNIFORMTYPE_VEC4ARRAY
 ];
 
-// device implementations
+/**
+ * A WebGL device type.
+ *
+ * @type {string}
+ */
 export const DEVICETYPE_WEBGL = 'webgl';
+
+/**
+ * A WebGPU device type.
+ *
+ * @type {string}
+ */
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
 // (bit-flags) shader stages for resource visibility on the GPU

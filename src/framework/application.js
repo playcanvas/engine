@@ -107,7 +107,7 @@ class Application extends AppBase {
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
-     * {@link GraphicsDevice} constructor.
+     * {@link GraphicsDevice} constructor and {@link createGraphicsDevice} function.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually

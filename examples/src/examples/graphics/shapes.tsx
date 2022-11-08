@@ -6,14 +6,10 @@ class ShapesExample {
 
     example(canvas: HTMLCanvasElement): void {
 
-        const gfxOptions = {
-            deviceTypes: [pc.DEVICETYPE_WEBGPU, pc.DEVICETYPE_WEBGL],
-            glslangUrl: '/static/lib/glslang/glslang.js'
-        };
-        pc.createGraphicsDevice(canvas, gfxOptions).then((graphicsDevice: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, {}).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
-            createOptions.graphicsDevice = graphicsDevice;
+            createOptions.graphicsDevice = device;
 
             createOptions.componentSystems = [
                 // @ts-ignore

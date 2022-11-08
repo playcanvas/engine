@@ -11,11 +11,16 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * Creates a graphics device.
  *
  * @param {Element} canvas - The canvas element.
- * @param {*} options - Options.
- * @returns 
+ * @param {object} options - Graphics device options.
+ * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
+ * order in which the device are attempted to get created. Defaults to [{@link DEVICETYPE_WEBGL}].
+ * @param {string} [options.glslangUrl] - An url to glslang scipt, required if 
+ * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
+ * {@link DEVICETYPE_WEBGL} device type creation.
+ * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
-    options.deviceTypes = options.deviceTypes ?? [DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU];
+    options.deviceTypes = options.deviceTypes ?? [DEVICETYPE_WEBGL];
 
     let device;
     for (let i = 0; i < options.deviceTypes.length; i++) {
