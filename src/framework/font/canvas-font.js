@@ -6,7 +6,7 @@ import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -62,7 +62,7 @@ class CanvasFont extends EventHandler {
 
         const texture = new Texture(this.app.graphicsDevice, {
             name: 'font',
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -303,7 +303,7 @@ class CanvasFont extends EventHandler {
                         ctx = this._getAndClearContext(canvas, transparent);
 
                         const texture = new Texture(this.app.graphicsDevice, {
-                            format: PIXELFORMAT_R8_G8_B8_A8,
+                            format: PIXELFORMAT_RGBA8,
                             mipmaps: true,
                             name: 'font-atlas'
                         });

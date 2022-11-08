@@ -127,7 +127,7 @@ void main(void)
             const texture = new pc.Texture(app.graphicsDevice, {
                 width: textureResolution,
                 height: textureResolution,
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                format: pc.PIXELFORMAT_RGBA8,
                 cubemap: false,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,

@@ -3,7 +3,7 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -606,7 +606,7 @@ class LitShader {
         }
 
         let areaLutsPrecision = 'highp';
-        if (device.areaLightLutFormat === PIXELFORMAT_R8_G8_B8_A8) {
+        if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
             // use offset and scale for rgb8 format luts
             code += "#define AREA_R8_G8_B8_A8_LUTS\n";
             areaLutsPrecision = 'lowp';

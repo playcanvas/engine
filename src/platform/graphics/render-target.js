@@ -52,7 +52,7 @@ class RenderTarget {
      * var colorBuffer = new pc.Texture(graphicsDevice, {
      *     width: 512,
      *     height: 512,
-     *     format: pc.PIXELFORMAT_R8_G8_B8
+     *     format: pc.PIXELFORMAT_RGB8
      * });
      * var renderTarget = new pc.RenderTarget({
      *     colorBuffer: colorBuffer,

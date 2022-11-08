@@ -30,7 +30,7 @@
         import { RenderTarget } from '../../src/platform/graphics/render-target.js';
         import {
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
-            PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+            PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
         } from '../../src/platform/graphics/constants.js';
         import { Entity } from "../../src/framework/entity.js";
         import { Tracing } from "../../src/core/tracing.js";
@@ -218,7 +218,7 @@ void main() {
                 name: 'RT-Texture',
                 width: 512,
                 height: 256,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 mipmaps: true,
                 minFilter: FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,

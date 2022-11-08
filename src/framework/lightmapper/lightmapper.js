@@ -10,7 +10,7 @@ import {
     CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGBA8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
@@ -135,7 +135,7 @@ class Lightmapper {
             this.blackTex = new Texture(this.device, {
                 width: 4,
                 height: 4,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 type: TEXTURETYPE_RGBM,
                 name: 'lightmapBlack'
             });
@@ -284,7 +284,7 @@ class Lightmapper {
             // #endif
             width: size,
             height: size,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             mipmaps: false,
             type: type,
             minFilter: FILTER_NEAREST,

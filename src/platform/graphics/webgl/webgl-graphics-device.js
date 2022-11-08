@@ -13,7 +13,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -172,7 +172,7 @@ function testTextureFloatHighPrecision(device) {
     });
     drawQuadWithShader(device, targ1, shader1);
 
-    textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
+    textureOptions.format = PIXELFORMAT_RGBA8;
     const tex2 = new Texture(device, textureOptions);
     const targ2 = new RenderTarget({
         colorBuffer: tex2,
@@ -230,7 +230,7 @@ function testImageBitmap(device) {
             const texture = new Texture(device, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 mipmaps: false,
                 levels: [image]
             });
@@ -723,7 +723,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
-        this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
@@ -2763,7 +2763,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else if (this.textureFloatRenderable) {
             return PIXELFORMAT_RGBA32F;
         }
-        return PIXELFORMAT_R8_G8_B8_A8;
+        return PIXELFORMAT_RGBA8;
     }
 
     /**

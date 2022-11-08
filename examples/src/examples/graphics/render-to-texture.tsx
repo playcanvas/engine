@@ -102,7 +102,7 @@ class RenderToTextureExample {
             const texture = new pc.Texture(app.graphicsDevice, {
                 width: 512,
                 height: 256,
-                format: pc.PIXELFORMAT_R8_G8_B8,
+                format: pc.PIXELFORMAT_RGB8,
                 mipmaps: true,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR,

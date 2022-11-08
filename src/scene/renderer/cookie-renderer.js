@@ -1,7 +1,7 @@
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -81,7 +81,7 @@ class CookieRenderer {
             name: 'CookieAtlas',
             width: resolution,
             height: resolution,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_NEAREST,

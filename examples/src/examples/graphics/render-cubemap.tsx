@@ -178,7 +178,7 @@ class RenderCubemapExample {
                 return new pc.Texture(app.graphicsDevice, {
                     width: size,
                     height: size,
-                    format: pc.PIXELFORMAT_R8_G8_B8,
+                    format: pc.PIXELFORMAT_RGB8,
                     mipmaps: false,
                     minFilter: pc.FILTER_LINEAR,
                     magFilter: pc.FILTER_LINEAR,
