@@ -14,7 +14,7 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * @param {object} options - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the device are attempted to get created. Defaults to [{@link DEVICETYPE_WEBGL}].
- * @param {string} [options.glslangUrl] - An url to glslang scipt, required if 
+ * @param {string} [options.glslangUrl] - An url to glslang scipt, required if
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
  * @returns {Promise} - Promise object representing the created graphics device.
