@@ -652,11 +652,7 @@ class Texture {
 
     // get the texture's encoding type
     get encoding() {
-        return Texture.getEncoding(this.format, this.type);
-    }
-
-    static getEncoding(pixelFormat, textureType) {
-        switch (textureType) {
+        switch (this.type) {
             case TEXTURETYPE_RGBM:
                 return 'rgbm';
             case TEXTURETYPE_RGBE:
@@ -664,10 +660,10 @@ class Texture {
             case TEXTURETYPE_RGBP:
                 return 'rgbp';
             default:
-                return (pixelFormat === PIXELFORMAT_RGB16F ||
-                        pixelFormat === PIXELFORMAT_RGB32F ||
-                        pixelFormat === PIXELFORMAT_RGBA16F ||
-                        pixelFormat === PIXELFORMAT_RGBA32F) ? 'linear' : 'srgb';
+                return (this.format === PIXELFORMAT_RGB16F ||
+                        this.format === PIXELFORMAT_RGB32F ||
+                        this.format === PIXELFORMAT_RGBA16F ||
+                        this.format === PIXELFORMAT_RGBA32F) ? 'linear' : 'srgb';
         }
     }
 

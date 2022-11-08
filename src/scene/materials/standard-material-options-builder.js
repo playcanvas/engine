@@ -4,8 +4,6 @@ import {
     PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
 } from '../../platform/graphics/constants.js';
 
-import { Texture } from '../../platform/graphics/texture.js';
-
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
@@ -60,7 +58,7 @@ class StandardMaterialOptionsBuilder {
             options.toneMap = TONEMAP_LINEAR;
         }
         options.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
-        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
+        this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
@@ -265,7 +263,7 @@ class StandardMaterialOptionsBuilder {
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
-    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList) {
+    _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
         options.lightMap = false;
         options.lightMapChannel = '';
         options.lightMapUv = 0;
@@ -277,7 +275,7 @@ class StandardMaterialOptionsBuilder {
             options.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapEncoding = Texture.getEncoding(scene.lightmapPixelFormat, scene.lightmapTextureType);
+                options.lightMapEncoding = 'rgbm';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
