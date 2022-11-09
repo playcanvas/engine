@@ -6,7 +6,7 @@ class ShapesExample {
 
     example(canvas: HTMLCanvasElement): void {
 
-        pc.createGraphicsDevice(canvas, {}).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
