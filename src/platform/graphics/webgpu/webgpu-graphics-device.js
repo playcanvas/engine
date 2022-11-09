@@ -44,7 +44,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     // type {GPURenderPipeline}
      */
     pipeline;
 
@@ -107,10 +107,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.glslang = await glslang();
 
-        /** @type {GPUAdapter} */
+        // type {GPUAdapter}
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
-        /** @type {GPUDevice} */
+        // type {GPUDevice}
         this.wgpu = await this.gpuAdapter.requestDevice();
 
         // initially fill the window. This needs improvement.
@@ -118,7 +118,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        /** @type {GPUCanvasConfiguration} */
+        // type {GPUCanvasConfiguration}
         this.canvasConfig = {
             device: this.wgpu,
             format: 'bgra8unorm'
@@ -173,7 +173,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * @param {number} index - Index of the bind group slot
-     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
      */
     setBindGroup(index, bindGroup) {
 
