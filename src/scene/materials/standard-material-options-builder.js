@@ -347,11 +347,18 @@ class StandardMaterialOptionsBuilder {
         }
         options[vname] = false;
         options[vcname] = '';
-        options.litOptions[vname] = options[vname];
+        const litOptions = {
+            enabled: false,
+            transform: 0,
+            uv: 0,
+            vertexColors: false
+        };
 
         const isOpacity = p === 'opacity';
-        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
+        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+            options.litOptions[p] = litOptions;
             return;
+        }
 
         if (!minimalOptions || isOpacity) {
             if (p !== 'height' && stdMat[vname]) {
@@ -386,11 +393,12 @@ class StandardMaterialOptionsBuilder {
             }
         }
 
-        const litOptionsName = 'use' + mname[0].toUpperCase() + mname.substring(1);
-        options.litOptions[litOptionsName] = options[mname];
-        options.litOptions[tname] = options[tname];
-        options.litOptions[uname] = options[uname];
-        options.litOptions.useVertexColors = options.vertexColors;
+        litOptions.enabled = options[mname];
+        litOptions.tranform = options[tname];
+        litOptions.uv = options[uname];
+        litOptions.vertexColors = options[vname];
+        options.litOptions[p] = litOptions;
+        options.litOptions.vertexColors = options.vertexColors;
     }
 
     _collectLights(lType, lights, lightsFiltered, mask, staticLightList) {
