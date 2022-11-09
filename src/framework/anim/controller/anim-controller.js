@@ -473,7 +473,7 @@ class AnimController {
         }
         const state = this._findState(nodeName);
         if (!state) {
-            Debug.error('Attempting to unassign animation tracks from a state that does not exist.');
+            Debug.error('Attempting to unassign animation tracks from a state that does not exist.', nodeName);
             return false;
         }
 
