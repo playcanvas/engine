@@ -10,7 +10,7 @@ import {
     CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
@@ -284,7 +284,7 @@ class Lightmapper {
             // #endif
             width: size,
             height: size,
-            format: PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_RGBA16F,
             mipmaps: false,
             type: type,
             minFilter: FILTER_NEAREST,

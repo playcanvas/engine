@@ -275,7 +275,7 @@ class StandardMaterialOptionsBuilder {
             options.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapEncoding = 'rgbm';
+                options.lightMapEncoding = 'linear';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
