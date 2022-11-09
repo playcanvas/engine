@@ -951,7 +951,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedLevel === -1) {
-            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", texture);
+            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
         }
 
         // Upload the new pixel data
