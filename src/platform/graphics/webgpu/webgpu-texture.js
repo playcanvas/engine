@@ -50,16 +50,16 @@ gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
  * @ignore
  */
 class WebgpuTexture {
-    /** @type {GPUTexture} */
+    // type {GPUTexture}
     gpuTexture;
 
-    /** @type {GPUTextureView} */
+    // type {GPUTextureView}
     view;
 
-    /** @type {GPUSampler} */
+    // type {GPUSampler}
     sampler;
 
-    /** @type {GPUTextureDescriptor} */
+    // type {GPUTextureDescriptor}
     descr;
 
     constructor(texture) {
@@ -185,7 +185,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
 
-        /** @type {GPUImageCopyTexture} */
+        // type {GPUImageCopyTexture}
         const dest = {
             texture: this.gpuTexture,
             mipLevel: 0
@@ -194,7 +194,7 @@ class WebgpuTexture {
         // TODO: RGBA only for now, needs to be more generic
         const numElementsPerPixel = 4;
 
-        /** @type {GPUImageDataLayout} */
+        // type {GPUImageDataLayout}
         const dataLayout = {
             offset: 0,
             bytesPerRow: texture.width * data.BYTES_PER_ELEMENT * numElementsPerPixel,

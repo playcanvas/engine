@@ -22,7 +22,7 @@ class WebgpuBindGroupFormat {
         /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        /** @type {GPUBindGroupLayoutDescriptor} */
+        // type {GPUBindGroupLayoutDescriptor}
         const { key, descr } = this.createDescriptor(bindGroupFormat);
 
         /**
@@ -32,7 +32,7 @@ class WebgpuBindGroupFormat {
          */
         this.key = key;
 
-        /** @type {GPUBindGroupLayout} */
+        // type {GPUBindGroupLayout}
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
