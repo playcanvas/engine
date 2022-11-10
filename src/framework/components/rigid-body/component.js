@@ -1,5 +1,3 @@
-import { Debug } from '../../../core/debug.js';
-
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
@@ -14,7 +12,7 @@ import { Component } from '../component.js';
 
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
-let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+let ammoVec1, ammoVec2, ammoQuat;
 
 /**
  * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
@@ -55,32 +53,46 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 class RigidBodyComponent extends Component {
     /** @private */
     _angularDamping = 0;
+
     /** @private */
     _angularFactor = new Vec3(1, 1, 1);
+
     /** @private */
     _angularVelocity = new Vec3();
+
     /** @private */
     _body = null;
+
     /** @private */
     _friction = 0.5;
+
     /** @private */
     _group = BODYGROUP_STATIC;
+
     /** @private */
     _linearDamping = 0;
+
     /** @private */
     _linearFactor = new Vec3(1, 1, 1);
+
     /** @private */
     _linearVelocity = new Vec3();
+
     /** @private */
     _mask = BODYMASK_NOT_STATIC;
+
     /** @private */
     _mass = 1;
+
     /** @private */
     _restitution = 0;
+
     /** @private */
     _rollingFriction = 0;
+
     /** @private */
     _simulationEnabled = false;
+
     /** @private */
     _type = BODYTYPE_STATIC;
 
@@ -138,7 +150,6 @@ class RigidBodyComponent extends Component {
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
-            ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
     }
 
@@ -750,7 +761,7 @@ class RigidBodyComponent extends Component {
      * // z-axis of the entity's local-space.
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
-    applyImpulse(x, y, z) {
+    applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
         if (body) {
             body.activate();
