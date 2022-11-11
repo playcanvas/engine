@@ -966,8 +966,9 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < drawCallsCount; i++) {
-            const si = drawCalls[i].skinInstance;
-            if (si) {
+            const drawCall = drawCalls[i];
+            const si = drawCall.skinInstance;
+            if (si && drawCall.visibleThisFrame) {
                 si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
                 si._dirty = true;
             }
