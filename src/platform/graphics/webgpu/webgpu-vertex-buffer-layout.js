@@ -19,7 +19,7 @@ gpuVertexFormats[TYPE_FLOAT32] = 'float32';
  * @ignore
  */
 class WebgpuVertexBufferLayout {
-    /** @type {Map<string, GPUVertexBufferLayout[]>} */
+    // type {Map<string, GPUVertexBufferLayout[]>}
     cache = new Map();
 
     /**
@@ -27,7 +27,7 @@ class WebgpuVertexBufferLayout {
      *
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
      * @param {import('../vertex-format.js').VertexFormat} [vertexFormat1] - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex layout.
+     * @returns {any[]} - The vertex layout.
      */
     get(vertexFormat0, vertexFormat1 = null) {
 
@@ -47,11 +47,11 @@ class WebgpuVertexBufferLayout {
     /**
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex buffer layout.
+     * @returns {any[]} - The vertex buffer layout.
      */
     create(vertexFormat0, vertexFormat1) {
 
-        /** @type  {GPUVertexBufferLayout[]} */
+        // type  {GPUVertexBufferLayout[]}
         const layout = [];
 
         const addFormat = (format) => {

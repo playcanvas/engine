@@ -5,7 +5,6 @@
     <meta charset="utf-8" />
     <title>WebGPU Test</title>
     <meta name="description" content="WebGPU Test" />
-    <script src="./libs/glslang.js"></script>
 </head>
 
 <body style="margin: 0px;">
@@ -24,12 +23,12 @@
         import { AssetListLoader } from "../../src/framework/asset/asset-list-loader.js";
         import { AppBase } from "../../src/framework/app-base.js";
         import { AppOptions } from "../../src/framework/app-options.js";
-        import { WebgpuGraphicsDevice } from '../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
-        import { WebglGraphicsDevice } from '../../src/platform/graphics/webgl/webgl-graphics-device.js';
+        import { createGraphicsDevice } from '../../src/platform/graphics/graphics-device-create.js';
         import { Shader } from '../../src/platform/graphics/shader.js';
         import { Texture } from '../../src/platform/graphics/texture.js';
         import { RenderTarget } from '../../src/platform/graphics/render-target.js';
         import {
+            DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU,
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
         } from '../../src/platform/graphics/constants.js';
@@ -117,13 +116,16 @@
             Tracing.set(TRACEID_SHADER_ALLOC, true);
 
             const canvas = document.querySelector('#gpuCanvas');
+            const gfxOptions = {
+                deviceTypes: [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL],
+                glslangUrl: '../src/lib/glslang/glslang.js'
+            };
+            createGraphicsDevice(canvas, gfxOptions).then((graphicsDevice) => {
 
-            const createOptions = new AppOptions();
-            createOptions.graphicsDevice = new WebgpuGraphicsDevice(canvas, {});
-//            createOptions.graphicsDevice = new WebglGraphicsDevice(canvas, {});
+                console.log("Graphics Device created: ", graphicsDevice);
 
-            createOptions.graphicsDevice.initWebGpu().then(() => {
-                console.log("gpu device async created");
+                const createOptions = new AppOptions();
+                createOptions.graphicsDevice = graphicsDevice;
 
                 createOptions.componentSystems = [
                     RenderComponentSystem,

@@ -274,7 +274,7 @@ class WebglTexture {
 
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.");
+        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
         const gl = device.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))

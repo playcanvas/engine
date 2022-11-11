@@ -4,7 +4,7 @@
  * @ignore
  */
 class WebgpuBuffer {
-    /** @type {GPUBuffer} */
+    // type {GPUBuffer}
     buffer = null;
 
     destroy(device) {

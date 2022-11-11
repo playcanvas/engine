@@ -44,7 +44,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     * // type {GPURenderPipeline}
      */
     pipeline;
 
@@ -81,18 +81,36 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
     }
 
-    async initWebGpu() {
+    async initWebGpu(glslangUrl) {
 
         if (!window.navigator.gpu) {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
+        const loadScript = (url) => {
+            return new Promise(function (resolve, reject) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = false;
+                script.onload = function () {
+                    resolve(url);
+                };
+                script.onerror = function () {
+                    reject(new Error(`Failed to download script ${url}`));
+                };
+                document.body.appendChild(script);
+            });
+        };
+
+        // TODO: add loadScript and requestAdapter to promise list and wait for both.
+        await loadScript(glslangUrl);
+
         this.glslang = await glslang();
 
-        /** @type {GPUAdapter} */
+        // type {GPUAdapter}
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
-        /** @type {GPUDevice} */
+        // type {GPUDevice}
         this.wgpu = await this.gpuAdapter.requestDevice();
 
         // initially fill the window. This needs improvement.
@@ -100,7 +118,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        /** @type {GPUCanvasConfiguration} */
+        // type {GPUCanvasConfiguration}
         this.canvasConfig = {
             device: this.wgpu,
             format: 'bgra8unorm'
@@ -108,6 +126,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.gpuContext.configure(this.canvasConfig);
 
         this.createFramebuffer();
+
+        return this;
     }
 
     createFramebuffer() {
@@ -153,7 +173,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * @param {number} index - Index of the bind group slot
-     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
      */
     setBindGroup(index, bindGroup) {
 
