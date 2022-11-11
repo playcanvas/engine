@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -140,11 +140,11 @@ class Scene extends EventHandler {
 
     /**
      * Specify the pixel format to use for lightmaps. Can be:
-     * 
+     *
      * - {@link PIXELFORMAT_RGBA8}
      * - {@link PIXELFORMAT_RGBA16F}
      * - {@link PIXELFORMAT_RGBA32F}
-     * 
+     *
      * @type {number}
      */
     lightmapPixelFormat = PIXELFORMAT_RGBA8;
