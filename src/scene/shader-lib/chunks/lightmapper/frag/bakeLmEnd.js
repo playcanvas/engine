@@ -1,5 +1,5 @@
 export default /* glsl */`
-#if defined(LIGHTMAP_RGBM)
+#ifdef LIGHTMAP_RGBM
     gl_FragColor.rgb = dDiffuseLight;
     gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(0.5));
     gl_FragColor.rgb /= 8.0;

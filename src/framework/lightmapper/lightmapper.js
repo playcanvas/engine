@@ -10,7 +10,7 @@ import {
     CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
@@ -238,7 +238,7 @@ class Lightmapper {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
                 material.ambientTint = true;
             }
-            material.chunks.basePS = shaderChunks.basePS + scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM' : '';
+            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
