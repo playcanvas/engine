@@ -647,7 +647,7 @@ class ElementInput {
 
                     if (!this._clickedEntities[element.entity.getGuid()]) {
                         this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
-                        this._clickedEntities[element.entity.getGuid()] = true;
+                        this._clickedEntities[element.entity.getGuid()] = Date.now();
                     }
 
                 }
@@ -740,15 +740,23 @@ class ElementInput {
         if (eventType === 'mouseup' && this._pressedElement) {
             // click event
             if (this._pressedElement === this._hoveredElement) {
-                this._pressedElement = null;
-
-                // fire click event if it hasn't been fired already by the touchup handler
-                if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
+                // fire click event if it hasn't been fired already by the touchend handler
+                const guid = this._hoveredElement.entity.getGuid();
+                // Always fire, if there are no clicked entities
+                let fireClick = !this._clickedEntities;
+                // But if there are, we need to check how long ago touchend added a "click brake"
+                if (this._clickedEntities) {
+                    const lastTouchUp = this._clickedEntities[guid] || 0;
+                    const dt = Date.now() - lastTouchUp;
+                    fireClick = dt > 300;
+                }
+                // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
+                delete this._clickedEntities[guid];
+                if (fireClick) {
                     this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
-            } else {
-                this._pressedElement = null;
             }
+            this._pressedElement = null;
         }
     }
 
