@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import { Color } from '../../core/math/color.js';
 import { Curve } from '../../core/math/curve.js';
 import { CurveSet } from '../../core/math/curve-set.js';
@@ -9,10 +8,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 import { GraphNode } from '../../scene/graph-node.js';
 
-import { Asset } from '../../asset/asset.js';
-
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from './script-type.js';
+import { Asset } from '../asset/asset.js';
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
@@ -161,7 +157,7 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
+     * @param {Class<import('./script-type.js').ScriptType>} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;

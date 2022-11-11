@@ -15,20 +15,33 @@ class GlbExample {
         // the array will store loaded cameras
         let camerasComponents: Array<pc.CameraComponent> = null;
 
-        // Load a glb file as a container
-        const url = "/static/assets/models/geometry-camera-light.glb";
-        app.assets.loadFromUrl(url, "container", function (err, asset) {
+        const assets = {
+            'scene': new pc.Asset('scene', 'container', { url: '/static/assets/models/geometry-camera-light.glb' })
+        };
+
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
+
             app.start();
 
+            // glb lights use physical units
+            app.scene.physicalUnits = true;
+
             // create an instance using render component
-            const entity = asset.resource.instantiateRenderEntity();
+            const entity = assets.scene.resource.instantiateRenderEntity();
             app.root.addChild(entity);
 
             // find all cameras - by default they are disabled
-            // set their aspect ratio to automatic to work with any window size
             camerasComponents = entity.findComponents("camera");
             camerasComponents.forEach((component) => {
+
+                // set the aspect ratio to automatic to work with any window size
                 component.aspectRatioMode = pc.ASPECT_AUTO;
+
+                // set up exposure for physical units
+                component.aperture = 4;
+                component.shutter = 1 / 100;
+                component.sensitivity = 500;
             });
 
             // enable all lights from the glb

@@ -1,11 +1,8 @@
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
-import { Channel3d } from '../../../audio/channel3d.js';
+import { Channel3d } from '../../../platform/audio/channel3d.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('./system.js').AudioSourceComponentSystem} AudioSourceComponentSystem */
-/** @typedef {import('../../entity.js').Entity} Entity */
 
 /**
  * The AudioSource Component controls playback of an audio sample. This class will be deprecated
@@ -40,9 +37,10 @@ class AudioSourceComponent extends Component {
     /**
      * Create a new AudioSource Component instance.
      *
-     * @param {AudioSourceComponentSystem} system - The ComponentSystem that created
-     * this component.
-     * @param {Entity} entity - The entity that the Component is attached to.
+     * @param {import('./system.js').AudioSourceComponentSystem} system - The ComponentSystem that
+     * created this component.
+     * @param {import('../../entity.js').Entity} entity - The entity that the Component is attached
+     * to.
      */
     constructor(system, entity) {
         super(system, entity);

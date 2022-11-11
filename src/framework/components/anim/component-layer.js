@@ -1,11 +1,9 @@
 import { Debug } from '../../../core/debug.js';
-import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
-import { AnimTransition } from '../../../anim/controller/anim-transition.js';
-import { ANIM_LAYER_OVERWRITE } from '../../../anim/controller/constants.js';
 import { math } from '../../../core/math/math.js';
 
-/** @typedef {import('./component.js').AnimComponent} AnimComponent */
-/** @typedef {import('../../../asset/asset.js').Asset} Asset */
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimTransition } from '../../anim/controller/anim-transition.js';
+import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -16,10 +14,12 @@ class AnimComponentLayer {
      *
      * @param {string} name - The name of the layer.
      * @param {object} controller - The controller to manage this layers animations.
-     * @param {AnimComponent} component - The component that this layer is a member of.
+     * @param {import('./component.js').AnimComponent} component - The component that this layer is
+     * a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
-     * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized using the total weight of all layers.
+     * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized
+     * using the total weight of all layers.
      */
     constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE, normalizedWeight = true) {
         this._name = name;
@@ -344,7 +344,7 @@ class AnimComponentLayer {
      * Returns the asset that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @returns {Asset} The asset associated with the given state.
+     * @returns {import('../../asset/asset.js').Asset} The asset associated with the given state.
      */
     getAnimationAsset(stateName) {
         return this._component.animationAssets[`${this.name}:${stateName}`];

@@ -7,16 +7,16 @@ import { Vec2 } from '../../../core/math/vec2.js';
 
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../graphics/constants.js';
-import { VertexIterator } from '../../../graphics/vertex-iterator.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';
+import { VertexIterator } from '../../../platform/graphics/vertex-iterator.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
 
-import { LocalizedAsset } from '../../../asset/asset-localized.js';
+import { LocalizedAsset } from '../../asset/asset-localized.js';
 
-import { FONT_BITMAP, FONT_MSDF } from '../../../font/constants.js';
+import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
 
 import { Markup } from './markup.js';
 

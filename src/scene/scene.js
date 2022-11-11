@@ -1,23 +1,19 @@
+import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-
 import { Color } from '../core/math/color.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Quat } from '../core/math/quat.js';
 import { math } from '../core/math/math.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
+
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Immediate } from './immediate/immediate.js';
-
-import { EnvLighting } from '../graphics/env-lighting.js';
-import { getApplication } from '../framework/globals.js';
-
-/** @typedef {import('../framework/entity.js').Entity} Entity */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('./composition/layer-composition.js').LayerComposition} LayerComposition */
-/** @typedef {import('./layer.js').Layer} Layer */
+import { EnvLighting } from './graphics/env-lighting.js';
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
@@ -145,7 +141,7 @@ class Scene extends EventHandler {
      * The root entity of the scene, which is usually the only child to the {@link Application}
      * root entity.
      *
-     * @type {Entity}
+     * @type {import('../framework/entity.js').Entity}
      */
     root = null;
 
@@ -167,18 +163,20 @@ class Scene extends EventHandler {
     /**
      * Create a new Scene instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this scene.
      * @hideconstructor
      */
     constructor(graphicsDevice) {
         super();
 
-        this.device = graphicsDevice || getApplication().graphicsDevice;
+        Debug.assertDeprecated(graphicsDevice, "Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         this._gravity = new Vec3(0, -9.8, 0);
 
         /**
-         * @type {LayerComposition}
+         * @type {import('./composition/layer-composition.js').LayerComposition}
          * @private
          */
         this._layers = null;
@@ -191,7 +189,7 @@ class Scene extends EventHandler {
         /**
          * The skybox cubemap as set by user (gets used when skyboxMip === 0)
          *
-         * @type {Texture}
+         * @type {import('../platform/graphics/texture.js').Texture}
          * @private
          */
         this._skyboxCubeMap = null;
@@ -199,7 +197,7 @@ class Scene extends EventHandler {
         /**
          * Array of 6 prefiltered lighting data cubemaps.
          *
-         * @type {Texture[]}
+         * @type {import('../platform/graphics/texture.js').Texture[]}
          * @private
          */
         this._prefilteredCubemaps = [null, null, null, null, null, null];
@@ -207,7 +205,7 @@ class Scene extends EventHandler {
         /**
          * Environment lighting atlas
          *
-         * @type {Texture}
+         * @type {import('../platform/graphics/texture.js').Texture}
          * @private
          */
         this._envAtlas = null;
@@ -220,8 +218,8 @@ class Scene extends EventHandler {
         this._skyboxMip = 0;
 
         this._skyboxRotation = new Quat();
-        this._skyboxRotationMat3 = null;
-        this._skyboxRotationMat4 = null;
+        this._skyboxRotationMat3 = new Mat3();
+        this._skyboxRotationMat4 = new Mat4();
 
         // ambient light lightmapping properties
         this._ambientBakeNumSamples = 1;
@@ -269,7 +267,8 @@ class Scene extends EventHandler {
      * Fired when the skybox is set.
      *
      * @event Scene#set:skybox
-     * @param {Texture} usedTex - Previously used cubemap texture. New is in the {@link Scene#skybox}.
+     * @param {import('../platform/graphics/texture.js').Texture} usedTex - Previously used cubemap
+     * texture. New is in the {@link Scene#skybox}.
      */
 
     /**
@@ -277,8 +276,10 @@ class Scene extends EventHandler {
      * properties to your layers.
      *
      * @event Scene#set:layers
-     * @param {LayerComposition} oldComp - Previously used {@link LayerComposition}.
-     * @param {LayerComposition} newComp - Newly set {@link LayerComposition}.
+     * @param {import('./composition/layer-composition.js').LayerComposition} oldComp - Previously
+     * used {@link LayerComposition}.
+     * @param {import('./composition/layer-composition.js').LayerComposition} newComp - Newly set
+     * {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
      *     var list = newComp.layerList;
@@ -301,7 +302,7 @@ class Scene extends EventHandler {
     /**
      * Returns the default layer used by the immediate drawing functions.
      *
-     * @type {Layer}
+     * @type {import('./layer.js').Layer}
      * @private
      */
     get defaultDrawLayer() {
@@ -381,7 +382,7 @@ class Scene extends EventHandler {
     /**
      * The environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {import('../platform/graphics/texture.js').Texture}
      */
     set envAtlas(value) {
         if (value !== this._envAtlas) {
@@ -441,7 +442,7 @@ class Scene extends EventHandler {
     /**
      * A {@link LayerComposition} that defines rendering order of this scene.
      *
-     * @type {LayerComposition}
+     * @type {import('./composition/layer-composition.js').LayerComposition}
      */
     set layers(layers) {
         const prev = this._layers;
@@ -495,7 +496,7 @@ class Scene extends EventHandler {
     /**
      * Set of 6 prefiltered cubemaps.
      *
-     * @type {Texture[]}
+     * @type {import('../platform/graphics/texture.js').Texture[]}
      */
     set prefilteredCubemaps(value) {
         const cubemaps = this._prefilteredCubemaps;
@@ -543,7 +544,7 @@ class Scene extends EventHandler {
     /**
      * The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
      *
-     * @type {Texture}
+     * @type {import('../platform/graphics/texture.js').Texture}
      */
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
@@ -613,6 +614,12 @@ class Scene extends EventHandler {
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
             this._skyboxRotation.copy(value);
+            if (value.equals(Quat.IDENTITY)) {
+                this._skyboxRotationMat3.setIdentity();
+            } else {
+                this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
+                this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+            }
             this._resetSky();
         }
     }
@@ -751,11 +758,12 @@ class Scene extends EventHandler {
     /**
      * Sets the cubemap for the scene skybox.
      *
-     * @param {Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at
-     * different mip levels. If undefined, scene will remove skybox. Cubemap array should be of
-     * size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0)
-     * with original resolution. Each remaining element (index 1-6) corresponds to a fixed
-     * prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
+     * @param {import('../platform/graphics/texture.js').Texture[]} [cubemaps] - An array of
+     * cubemaps corresponding to the skybox at different mip levels. If undefined, scene will
+     * remove skybox. Cubemap array should be of size 7, with the first element (index 0)
+     * corresponding to the base cubemap (mip level 0) with original resolution. Each remaining
+     * element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32,
+     * 16x16, 8x8, 4x4).
      */
     setSkybox(cubemaps) {
         if (!cubemaps) {

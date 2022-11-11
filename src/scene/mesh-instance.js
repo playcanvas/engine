@@ -1,10 +1,10 @@
-import { Debug } from '../core/debug.js';
+import { Debug, DebugHelper } from '../core/debug.js';
 
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 
-import { BindGroup } from '../graphics/bind-group.js';
-import { UniformBuffer } from '../graphics/uniform-buffer.js';
+import { BindGroup } from '../platform/graphics/bind-group.js';
+import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 
 import {
     BLEND_NONE, BLEND_NORMAL,
@@ -20,26 +20,12 @@ import {
 
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
-import { LightmapCache } from './lightmapper/lightmap-cache.js';
-
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../graphics/shader.js').Shader} Shader */
-/** @typedef {import('../graphics/vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('../graphics/bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('../graphics/uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../core/math/vec3.js').Vec3} Vec3 */
-/** @typedef {import('./materials/material.js').Material} Material */
-/** @typedef {import('./mesh.js').Mesh} Mesh */
-/** @typedef {import('./scene.js').Scene} Scene */
-/** @typedef {import('./morph-instance.js').MorphInstance} MorphInstance */
-/** @typedef {import('./skin-instance.js').SkinInstance} SkinInstance */
+import { LightmapCache } from './graphics/lightmap-cache.js';
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
-
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -47,7 +33,7 @@ const _meshSet = new Set();
  * @ignore
  */
 class InstancingData {
-    /** @type {VertexBuffer|null} */
+    /** @type {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} */
     vertexBuffer = null;
 
     /**
@@ -80,17 +66,17 @@ class Command {
  *
  * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
- * @param {Vec3} cameraPosition - The position of the camera.
- * @param {Vec3} cameraForward - The forward vector of the camera.
+ * @param {import('../core/math/vec3.js').Vec3} cameraPosition - The position of the camera.
+ * @param {import('../core/math/vec3.js').Vec3} cameraForward - The forward vector of the camera.
  */
 
 /**
- * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
- * have different transforms and materials.
+ * An instance of a {@link import('./mesh.js').Mesh}. A single mesh can be referenced by many mesh
+ * instances that can have different transforms and materials.
  */
 class MeshInstance {
     /**
-     * @type {Material}
+     * @type {import('./materials/material.js').Material}
      * @private
      */
     _material;
@@ -98,7 +84,7 @@ class MeshInstance {
     /**
      * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
      *
-     * @type {Array<Shader>}
+     * @type {Array<import('../platform/graphics/shader.js').Shader>}
      * @ignore
      */
     _shader = [];
@@ -115,8 +101,9 @@ class MeshInstance {
     /**
      * Create a new MeshInstance instance.
      *
-     * @param {Mesh} mesh - The graphics mesh to instance.
-     * @param {Material} material - The material to use for this mesh instance.
+     * @param {import('./mesh.js').Mesh} mesh - The graphics mesh to instance.
+     * @param {import('./materials/material.js').Material} material - The material to use for this
+     * mesh instance.
      * @param {GraphNode} [node] - The graph node defining the transform for this instance. This
      * parameter is optional when used with {@link RenderComponent} and will use the node the
      * component is attached to.
@@ -209,12 +196,12 @@ class MeshInstance {
         this.updateKey();
 
         /**
-         * @type {SkinInstance}
+         * @type {import('./skin-instance.js').SkinInstance}
          * @private
          */
         this._skinInstance = null;
         /**
-         * @type {MorphInstance}
+         * @type {import('./morph-instance.js').MorphInstance}
          * @private
          */
         this._morphInstance = null;
@@ -284,7 +271,7 @@ class MeshInstance {
     /**
      * The graphics mesh being instanced.
      *
-     * @type {Mesh}
+     * @type {import('./mesh.js').Mesh}
      */
     set mesh(mesh) {
 
@@ -426,7 +413,8 @@ class MeshInstance {
     }
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
      * @param {number} pass - Shader pass number.
      * @returns {BindGroup} - The mesh bind group.
      * @ignore
@@ -448,6 +436,7 @@ class MeshInstance {
             const bingGroupFormat = shader.meshBindGroupFormat;
             Debug.assert(bingGroupFormat);
             bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+            DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
 
             this._bindGroups[pass] = bindGroup;
         }
@@ -458,7 +447,7 @@ class MeshInstance {
     /**
      * The material used by this mesh instance.
      *
-     * @type {Material}
+     * @type {import('./materials/material.js').Material}
      */
     set material(material) {
 
@@ -537,7 +526,7 @@ class MeshInstance {
     /**
      * The skin instance managing skinning of this mesh instance, or null if skinning is not used.
      *
-     * @type {SkinInstance}
+     * @type {import('./skin-instance.js').SkinInstance}
      */
     set skinInstance(val) {
         this._skinInstance = val;
@@ -560,7 +549,7 @@ class MeshInstance {
     /**
      * The morph instance managing morphing of this mesh instance, or null if morphing is not used.
      *
-     * @type {MorphInstance}
+     * @type {import('./morph-instance.js').MorphInstance}
      */
     set morphInstance(val) {
 
@@ -719,7 +708,7 @@ class MeshInstance {
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      *
-     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
+     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
      * (usually world matrices). Pass null to turn off hardware instancing.
      */
     setInstancing(vertexBuffer) {
@@ -741,12 +730,14 @@ class MeshInstance {
     /**
      * Obtain a shader variant required to render the mesh instance within specified pass.
      *
-     * @param {Scene} scene - The scene.
+     * @param {import('./scene.js').Scene} scene - The scene.
      * @param {number} pass - The render pass.
      * @param {any} staticLightList - List of static lights.
      * @param {any} sortedLights - Array of arrays of lights.
-     * @param {UniformBufferFormat} viewUniformFormat - THe format of the view uniform buffer.
-     * @param {BindGroupFormat} viewBindGroupFormat - The format of the view bind group.
+     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - The
+     * format of the view uniform buffer.
+     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} viewBindGroupFormat - The
+     * format of the view bind group.
      * @ignore
      */
     updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
@@ -785,7 +776,8 @@ class MeshInstance {
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Texture} data - The value for the specified parameter.
+     * @param {number|number[]|import('../platform/graphics/texture.js').Texture} data - The value
+     * for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included
      * in.
      */

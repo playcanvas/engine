@@ -6,15 +6,13 @@ import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -28,7 +26,7 @@ class ModelComponentSystem extends ComponentSystem {
     /**
      * Create a new ModelComponentSystem instance.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {

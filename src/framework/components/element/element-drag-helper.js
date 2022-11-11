@@ -9,8 +9,6 @@ import { ElementComponent } from './component.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 
-/** @typedef {import('../../../input/element-input').ElementTouchEvent} ElementTouchEvent */
-
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
 const _ray = new Ray();
@@ -142,7 +140,7 @@ class ElementDragHelper extends EventHandler {
      * This method calculates the `Vec3` intersection point of plane/ray intersection based on
      * the mouse/touch input event. If there is no intersection, it returns `null`.
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
      * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
      * is an intersection, otherwise `null`
      * @private
@@ -223,7 +221,7 @@ class ElementDragHelper extends EventHandler {
     /**
      * This method is linked to `_element` events: `mousemove` and `touchmove`
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
      * @private
      */
     _onMove(event) {

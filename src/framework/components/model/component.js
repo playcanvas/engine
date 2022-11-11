@@ -8,15 +8,9 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { getShapePrimitive } from '../../../scene/procedural.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('../../../scene/composition/layer-composition.js').LayerComposition} LayerComposition */
-/** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').ModelComponentSystem} ModelComponentSystem */
 
 /**
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
@@ -68,7 +62,7 @@ class ModelComponent extends Component {
     _materialAsset = null;
 
     /**
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      * @private
      */
     _material;
@@ -110,7 +104,7 @@ class ModelComponent extends Component {
     _batchGroupId = -1;
 
     /**
-     * @type {BoundingBox|null}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -132,8 +126,10 @@ class ModelComponent extends Component {
     /**
      * Create a new ModelComponent instance.
      *
-     * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').ModelComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -173,7 +169,7 @@ class ModelComponent extends Component {
      * specified for skinned characters in order to avoid per frame bounding box computations based
      * on bone positions.
      *
-     * @type {BoundingBox|null}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -610,7 +606,7 @@ class ModelComponent extends Component {
      * The material {@link Material} that will be used to render the model (not used on models of
      * type 'asset').
      *
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      */
     set material(value) {
         if (this._material === value)
@@ -722,8 +718,10 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {LayerComposition} oldComp - The old layer composition.
-     * @param {LayerComposition} newComp - The new layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - The
+     * old layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - The
+     * new layer composition.
      * @private
      */
     onLayersChanged(oldComp, newComp) {
@@ -1131,7 +1129,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Material} material - The material to be set.
+     * @param {import('../../../scene/materials/material.js').Material} material - The material to
+     * be set.
      * @private
      */
     _setMaterial(material) {

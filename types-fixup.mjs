@@ -9,26 +9,37 @@ const paths = [
     './types/framework/script/script.d.ts'
 ];
 
-paths.forEach(path => {
+paths.forEach((path, index) => {
     let dts = fs.readFileSync(path, 'utf8');
     dts = dts.replace(regex, 'typeof ScriptType');
+    // The .d.ts files don't know what a ScriptType is, so import it
+    if (index === 0) {
+        dts += `
+import { ScriptType } from '../../script/script-type.js';
+`;
+    } else {
+        dts += `
+import { ScriptType } from './script-type.js';
+`;
+    }
     fs.writeFileSync(path, dts);
 });
 
 // Fix up description parameter for VertexFormat constructor because tsc
 // doesn't recognize it as an array
-let path = './types/graphics/vertex-format.d.ts';
+let path = './types/platform/graphics/vertex-format.d.ts';
 let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
 
-const regexConstructor = /constructor\(([^)]+)\);/g;
+// A regex that matches a string starting with 'constructor' and ending with ');'
+const regexConstructor = /constructor(.*?)\);/g;
 
 // Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
     let declarations = '';
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
         declarations += `
     set ${prop[0]}(arg: ${prop[1]});
     get ${prop[0]}(): ${prop[1]};
@@ -63,10 +74,16 @@ const buttonComponentProps = [
     ['pressedTint', 'Color'],
     ['transitionMode', 'number']
 ];
-   
+
 path = './types/framework/components/button/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Vec4 } from '../../../core/math/vec4.js';
+import { Entity } from '../../../framework/entity.js';
+import { Asset } from '../../../framework/asset/asset.js';
+`;
 fs.writeFileSync(path, dts);
 
 const cameraComponentProps = [
@@ -89,6 +106,11 @@ const cameraComponentProps = [
 path = './types/framework/components/camera/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
+`;
 fs.writeFileSync(path, dts);
 
 const collisionComponentProps = [
@@ -103,6 +125,11 @@ const collisionComponentProps = [
 path = './types/framework/components/collision/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Model } from '../../../scene/model.js';
+`;
 fs.writeFileSync(path, dts);
 
 const elementComponentProps = [
@@ -148,6 +175,16 @@ const elementComponentProps = [
 path = './types/framework/components/element/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Texture } from '../../../platform/graphics/texture.js';
+import { Sprite } from '../../../scene/sprite.js';
+import { Material } from '../../../scene/materials/material.js';
+import { Entity } from '../../../framework/entity.js';
+import { CanvasFont } from '../../../framework/font/canvas-font.js';
+import { Font } from '../../../framework/font/font.js';
+`;
 fs.writeFileSync(path, dts);
 
 const lightComponentProps = [
@@ -192,6 +229,11 @@ const lightComponentProps = [
 path = './types/framework/components/light/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+`;
 fs.writeFileSync(path, dts);
 
 const particleSystemComponentProps = [
@@ -259,6 +301,13 @@ dts = fs.readFileSync(path, 'utf8');
 // know about the declaration in the Component base class, so remove it.
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemComponentProps));
 dts = dts.replace('enabled: any;', '');
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Curve } from '../../../core/math/curve.js';
+import { CurveSet } from '../../../core/math/curve-set.js';
+import { Asset } from '../../../framework/asset/asset.js';
+`;
 fs.writeFileSync(path, dts);
 
 const scrollbarComponentProps = [
@@ -270,6 +319,10 @@ const scrollbarComponentProps = [
 path = './types/framework/components/scrollbar/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Entity } from '../../../framework/entity.js';
+`;
 fs.writeFileSync(path, dts);
 
 const scrollViewComponentProps = [
@@ -291,6 +344,10 @@ const scrollViewComponentProps = [
 path = './types/framework/components/scroll-view/component.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Entity } from '../../../framework/entity.js';
+`;
 fs.writeFileSync(path, dts);
 
 const standardMaterialProps = [
@@ -469,6 +526,13 @@ const standardMaterialProps = [
 path = './types/scene/materials/standard-material.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
+// We need to import types that are newly introduced in the property list above
+dts += `
+import { Color } from '../../core/math/color.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Texture } from '../../platform/graphics/texture.js';
+`;
 fs.writeFileSync(path, dts);
 
 path = './types/framework/script/script-type.d.ts';
@@ -502,7 +566,7 @@ dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
 `);
 fs.writeFileSync(path, dts);
 
-path = './types/resources/handler.d.ts';
+path = './types/framework/handlers/handler.d.ts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');

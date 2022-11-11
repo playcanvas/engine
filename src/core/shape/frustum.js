@@ -1,11 +1,3 @@
-import { Vec3 } from '../math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
-/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
-
-const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-
 /**
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
@@ -27,7 +19,8 @@ class Frustum {
     /**
      * Updates the frustum shape based on the supplied 4x4 matrix.
      *
-     * @param {Mat4} matrix - The matrix describing the shape of the frustum.
+     * @param {import('../math/mat4.js').Mat4} matrix - The matrix describing the shape of the
+     * frustum.
      * @example
      * // Create a perspective projection matrix
      * var projMat = pc.Mat4();
@@ -126,7 +119,7 @@ class Frustum {
      * Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
      *
-     * @param {Vec3} point - The point to test.
+     * @param {import('../math/vec3.js').Vec3} point - The point to test.
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
@@ -146,7 +139,7 @@ class Frustum {
      * sphere is completely inside the frustum, 2 is returned. Note that a sphere touching a
      * frustum plane from the outside is considered to be outside the frustum.
      *
-     * @param {BoundingSphere} sphere - The sphere to test.
+     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - The sphere to test.
      * @returns {number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the
      * frustum and 2 if it is contained by the frustum.
      */
@@ -173,51 +166,6 @@ class Frustum {
         }
 
         return (c === 6) ? 2 : 1;
-    }
-
-    // returns an array of corners of the frustum of the camera, using specified near and far distance
-    // the points are in the local coordinate system of the camera (object space)
-    static getPoints(camera, near, far) {
-
-        near = near || camera._nearClip;
-        far = far || camera._farClip;
-
-        const fov = camera._fov * Math.PI / 180.0;
-        let y = camera._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : camera._orthoHeight;
-        let x = y * camera._aspectRatio;
-
-        const points = _frustumPoints;
-        points[0].x = x;
-        points[0].y = -y;
-        points[0].z = -near;
-        points[1].x = x;
-        points[1].y = y;
-        points[1].z = -near;
-        points[2].x = -x;
-        points[2].y = y;
-        points[2].z = -near;
-        points[3].x = -x;
-        points[3].y = -y;
-        points[3].z = -near;
-
-        if (camera._projection === PROJECTION_PERSPECTIVE) {
-            y = Math.tan(fov / 2.0) * far;
-            x = y * camera._aspectRatio;
-        }
-        points[4].x = x;
-        points[4].y = -y;
-        points[4].z = -far;
-        points[5].x = x;
-        points[5].y = y;
-        points[5].z = -far;
-        points[6].x = -x;
-        points[6].y = y;
-        points[6].z = -far;
-        points[7].x = -x;
-        points[7].y = -y;
-        points[7].z = -far;
-
-        return points;
     }
 }
 

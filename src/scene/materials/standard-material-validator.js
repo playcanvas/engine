@@ -3,8 +3,8 @@ import {
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
     FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL,
     FUNC_GREATEREQUAL, FUNC_ALWAYS
-} from '../../graphics/constants.js';
-import { Texture } from '../../graphics/texture.js';
+} from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT, SPECOCC_NONE,

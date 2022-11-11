@@ -2,15 +2,9 @@ import { LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('../../../core/math/curve.js').Curve} Curve */
-/** @typedef {import('../../../core/math/curve-set.js').CurveSet} CurveSet */
-/** @typedef {import('../../../core/math/vec3.js').Vec3} Vec3 */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').ParticleSystemComponentSystem} ParticleSystemComponentSystem */
 
 // properties that do not need rebuilding the particle system
 const SIMPLE_PROPERTIES = [
@@ -164,18 +158,18 @@ let depthLayer;
  * bear in mind that it can double engine draw calls.
  * @property {number} initialVelocity Defines magnitude of the initial emitter velocity. Direction
  * is given by emitter shape.
- * @property {Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space
- * bounding box within which particles are spawned at random positions.
- * @property {Vec3} emitterExtentsInner (Only for EMITTERSHAPE_BOX) The exception of extents of a
- * local space bounding box within which particles are not spawned. Aligned to the center of
- * EmitterExtents.
+ * @property {import('../../../core/math/vec3.js').Vec3} emitterExtents (Only for EMITTERSHAPE_BOX)
+ * The extents of a local space bounding box within which particles are spawned at random positions.
+ * @property {import('../../../core/math/vec3.js').Vec3} emitterExtentsInner (Only for
+ * EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles
+ * are not spawned. Aligned to the center of EmitterExtents.
  * @property {number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which
  * particles are spawned at random positions.
  * @property {number} emitterRadiusInner (Only for EMITTERSHAPE_SPHERE) The inner radius within
  * which particles are not spawned.
- * @property {Vec3} wrapBounds The half extents of a world space box volume centered on the owner
- * entity's position. If a particle crosses the boundary of one side of the volume, it teleports to
- * the opposite side.
+ * @property {import('../../../core/math/vec3.js').Vec3} wrapBounds The half extents of a world
+ * space box volume centered on the owner entity's position. If a particle crosses the boundary of
+ * one side of the volume, it teleports to the opposite side.
  * @property {Asset} colorMapAsset The {@link Asset} used to set the colorMap.
  * @property {Asset} normalMapAsset The {@link Asset} used to set the normalMap.
  * @property {Asset} meshAsset The {@link Asset} used to set the mesh.
@@ -228,29 +222,33 @@ let depthLayer;
  * - {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by
  * emitter (entity) transformation.
  *
- * @property {Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and
- * PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which
- * particles are not spawned. Aligned to the center of EmitterExtents.
- * @property {CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
- * @property {CurveSet} localVelocityGraph2 If not null, particles pick random values between
- * localVelocityGraph and localVelocityGraph2.
- * @property {CurveSet} velocityGraph World-space velocity over lifetime.
- * @property {CurveSet} velocityGraph2 If not null, particles pick random values between
- * velocityGraph and velocityGraph2.
- * @property {CurveSet} colorGraph Color over lifetime.
- * @property {Curve} rotationSpeedGraph Rotation speed over lifetime.
- * @property {Curve} rotationSpeedGraph2 If not null, particles pick random values between
- * rotationSpeedGraph and rotationSpeedGraph2.
- * @property {Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from
- * emitter origin to particle pos.
- * @property {Curve} radialSpeedGraph2 If not null, particles pick random values between
- * radialSpeedGraph and radialSpeedGraph2.
- * @property {Curve} scaleGraph Scale over lifetime.
- * @property {Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and
- * scaleGraph2.
- * @property {Curve} alphaGraph Alpha over lifetime.
- * @property {Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and
- * alphaGraph2.
+ * @property {import('../../../core/math/vec3.js').Vec3} particleNormal (Only for
+ * PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local
+ * space bounding box within which particles are not spawned. Aligned to the center of
+ * EmitterExtents.
+ * @property {import('../../../core/math/curve-set.js').CurveSet} localVelocityGraph Velocity
+ * relative to emitter over lifetime.
+ * @property {import('../../../core/math/curve-set.js').CurveSet} localVelocityGraph2 If not null,
+ * particles pick random values between localVelocityGraph and localVelocityGraph2.
+ * @property {import('../../../core/math/curve-set.js').CurveSet} velocityGraph World-space
+ * velocity over lifetime.
+ * @property {import('../../../core/math/curve-set.js').CurveSet} velocityGraph2 If not null,
+ * particles pick random values between velocityGraph and velocityGraph2.
+ * @property {import('../../../core/math/curve-set.js').CurveSet} colorGraph Color over lifetime.
+ * @property {import('../../../core/math/curve.js').Curve} rotationSpeedGraph Rotation speed over
+ * lifetime.
+ * @property {import('../../../core/math/curve.js').Curve} rotationSpeedGraph2 If not null,
+ * particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+ * @property {import('../../../core/math/curve.js').Curve} radialSpeedGraph Radial speed over
+ * lifetime, velocity vector points from emitter origin to particle pos.
+ * @property {import('../../../core/math/curve.js').Curve} radialSpeedGraph2 If not null, particles
+ * pick random values between radialSpeedGraph and radialSpeedGraph2.
+ * @property {import('../../../core/math/curve.js').Curve} scaleGraph Scale over lifetime.
+ * @property {import('../../../core/math/curve.js').Curve} scaleGraph2 If not null, particles pick
+ * random values between scaleGraph and scaleGraph2.
+ * @property {import('../../../core/math/curve.js').Curve} alphaGraph Alpha over lifetime.
+ * @property {import('../../../core/math/curve.js').Curve} alphaGraph2 If not null, particles pick
+ * random values between alphaGraph and alphaGraph2.
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this particle
  * system should belong. Don't push/pop/splice or modify this array, if you want to change it - set
  * a new one instead.
@@ -266,9 +264,9 @@ class ParticleSystemComponent extends Component {
     /**
      * Create a new ParticleSystemComponent.
      *
-     * @param {ParticleSystemComponentSystem} system - The ComponentSystem that created this
-     * Component.
-     * @param {Entity} entity - The Entity this Component is attached to.
+     * @param {import('./system.js').ParticleSystemComponentSystem} system - The ComponentSystem
+     * that created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);

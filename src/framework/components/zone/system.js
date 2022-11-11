@@ -6,8 +6,6 @@ import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
@@ -20,7 +18,7 @@ class ZoneComponentSystem extends ComponentSystem {
     /**
      * Create a new ZoneComponentSystem.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

@@ -16,6 +16,7 @@ const _deviceCoord = new Vec3();
 const _halfSize = new Vec3();
 const _point = new Vec3();
 const _invViewProjMat = new Mat4();
+const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 /**
  * A camera.
@@ -530,6 +531,53 @@ class Camera {
 
         // ortho
         return math.clamp(sphere.radius / this._orthoHeight, 0, 1);
+    }
+
+    /**
+     * Returns an array of corners of the frustum of the camera in the local coordinate system of the camera.
+     *
+     * @param {number} [near] - Near distance for the frustum points. Defaults to the near clip distance of the camera.
+     * @param {number} [far] - Far distance for the frustum points. Defaults to the far clip distance of the camera.
+     * @returns {Vec3[]} - An array of corners, using a global storage space.
+     */
+    getFrustumCorners(near = this._nearClip, far = this._farClip) {
+
+        const fov = this._fov * Math.PI / 180.0;
+        let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
+        let x = y * this._aspectRatio;
+
+        const points = _frustumPoints;
+        points[0].x = x;
+        points[0].y = -y;
+        points[0].z = -near;
+        points[1].x = x;
+        points[1].y = y;
+        points[1].z = -near;
+        points[2].x = -x;
+        points[2].y = y;
+        points[2].z = -near;
+        points[3].x = -x;
+        points[3].y = -y;
+        points[3].z = -near;
+
+        if (this._projection === PROJECTION_PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * far;
+            x = y * this._aspectRatio;
+        }
+        points[4].x = x;
+        points[4].y = -y;
+        points[4].z = -far;
+        points[5].x = x;
+        points[5].y = y;
+        points[5].z = -far;
+        points[6].x = -x;
+        points[6].y = y;
+        points[6].z = -far;
+        points[7].x = -x;
+        points[7].y = -y;
+        points[7].z = -far;
+
+        return points;
     }
 }
 

@@ -1,7 +1,5 @@
 import { Vec3 } from './vec3.js';
 
-/** @typedef {import('./mat4.js').Mat4} Mat4 */
-
 /**
  * A 3x3 matrix.
  */
@@ -199,7 +197,7 @@ class Mat3 {
     /**
      * Converts the specified 4x4 matrix to a Mat3.
      *
-     * @param {Mat4} m - The 4x4 matrix to convert.
+     * @param {import('./mat4.js').Mat4} m - The 4x4 matrix to convert.
      * @returns {Mat3} Self for chaining.
      */
     setFromMat4(m) {

@@ -1,13 +1,12 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptHandler } from '../../resources/script.js';
-
 import { script } from '../script.js';
 import { AppBase } from '../app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
 import { ScriptType } from './script-type.js';
+import { ScriptTypes } from './script-types.js';
 
 const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move',
@@ -144,7 +143,7 @@ function registerScript(script, name, app) {
     const registry = app ? app.scripts : AppBase.getApplication().scripts;
     registry.add(script);
 
-    ScriptHandler._push(script);
+    ScriptTypes.push(script, script.legacy);
 }
 /* eslint-enable jsdoc/check-examples */
 

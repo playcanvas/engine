@@ -1,20 +1,15 @@
 import { Debug } from '../../../core/debug.js';
 
-import { AnimClip } from '../../../anim/evaluator/anim-clip.js';
-import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../anim/evaluator/anim-track.js';
-import { DefaultAnimBinder } from '../../../anim/binder/default-anim-binder.js';
+import { AnimClip } from '../../anim/evaluator/anim-clip.js';
+import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
 
-import { Skeleton } from '../../../animation/skeleton.js';
+import { Skeleton } from '../../../scene/animation/skeleton.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('../../../animation/animation.js').Animation} Animation */
-/** @typedef {import('../../../scene/model.js').Model} Model */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').AnimationComponentSystem} AnimationComponentSystem */
 
 /**
  * The Animation Component allows an Entity to playback animations on models.
@@ -23,7 +18,7 @@ import { Component } from '../component.js';
  */
 class AnimationComponent extends Component {
     /**
-     * @type {Object<string, Animation>}
+     * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
      * @private
      */
     _animations = {};
@@ -44,7 +39,7 @@ class AnimationComponent extends Component {
     animEvaluator = null;
 
     /**
-     * @type {Model|null}
+     * @type {import('../../../scene/model.js').Model|null}
      * @ignore
      */
     model = null;
@@ -114,8 +109,10 @@ class AnimationComponent extends Component {
     /**
      * Create a new AnimationComponent instance.
      *
-     * @param {AnimationComponentSystem} system - The {@link ComponentSystem} that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').AnimationComponentSystem} system - The {@link ComponentSystem}
+     * that created this component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this component is
+     * attached to.
      */
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);
@@ -124,7 +121,7 @@ class AnimationComponent extends Component {
     /**
      * Get or set dictionary of animations by name.
      *
-     * @type {Object<string, Animation>}
+     * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
      */
     set animations(value) {
         this._animations = value;
@@ -216,12 +213,17 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation.
+     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
      *
      * @type {number}
      */
     get duration() {
-        return this.animations[this.currAnim].duration;
+        if (this.currAnim) {
+            return this.animations[this.currAnim].duration;
+        }
+
+        Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        return 0;
     }
 
     /**
@@ -321,7 +323,7 @@ class AnimationComponent extends Component {
      * Return an animation.
      *
      * @param {string} name - The name of the animation asset.
-     * @returns {Animation} An Animation.
+     * @returns {import('../../../scene/animation/animation.js').Animation} An Animation.
      */
     getAnimation(name) {
         return this.animations[name];
@@ -330,7 +332,7 @@ class AnimationComponent extends Component {
     /**
      * Set the model driven by this animation component.
      *
-     * @param {Model} model - The model to set.
+     * @param {import('../../../scene/model.js').Model} model - The model to set.
      * @ignore
      */
     setModel(model) {

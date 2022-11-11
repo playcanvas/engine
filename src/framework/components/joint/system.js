@@ -4,8 +4,6 @@ import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
@@ -18,7 +16,7 @@ class JointComponentSystem extends ComponentSystem {
     /**
      * Create a new JointComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

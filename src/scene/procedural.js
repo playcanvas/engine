@@ -5,11 +5,9 @@ import { Debug } from '../core/debug.js';
 import {
     SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
     TYPE_UINT8
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 
 import { Mesh } from './mesh.js';
-
-/** @typedef {import('../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 const primitiveUv1Padding = 4.0 / 64;
 const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
@@ -209,7 +207,8 @@ function calculateTangents(positions, normals, uvs, indices) {
 /**
  * Creates a new mesh object from the supplied vertex information and topology.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
@@ -285,7 +284,8 @@ function createMesh(device, positions, opts) {
  * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the torus's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus
  * (defaults to 0.2).
@@ -582,12 +582,16 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the cylinder's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
+ * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder
+ * (defaults to 0.5).
  * @param {number} [opts.height] - The length of the body of the cylinder (defaults to 1.0).
- * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder (defaults to 5).
- * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cylinder (defaults to 20).
+ * @param {number} [opts.heightSegments] - The number of divisions along the length of the cylinder
+ * (defaults to 5).
+ * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the
+ * cylinder (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
@@ -626,7 +630,8 @@ function createCylinder(device, opts) {
  * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the capsule's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults
  * to 0.3).
@@ -667,7 +672,8 @@ function createCapsule(device, opts) {
  * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cone's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
  * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
@@ -707,7 +713,8 @@ function createCone(device, opts) {
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the sphere's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
  * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the
@@ -788,7 +795,8 @@ function createSphere(device, opts) {
  * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent
  * information is generated into the vertex buffer of the plane's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes
  * (defaults to [0.5, 0.5]).
@@ -868,7 +876,8 @@ function createPlane(device, opts) {
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
  * information is generated into the vertex buffer of the box's mesh.
  *
- * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
+ * device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to
  * [0.5, 0.5, 0.5]).

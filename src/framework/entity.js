@@ -3,29 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { AppBase } from './app-base.js';
-
-/** @typedef {import('./components/component.js').Component} Component */
-/** @typedef {import('./components/anim/component.js').AnimComponent} AnimComponent */
-/** @typedef {import('./components/animation/component.js').AnimationComponent} AnimationComponent */
-/** @typedef {import('./components/audio-listener/component.js').AudioListenerComponent} AudioListenerComponent */
-/** @typedef {import('./components/button/component.js').ButtonComponent} ButtonComponent */
-/** @typedef {import('./components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('./components/collision/component.js').CollisionComponent} CollisionComponent */
-/** @typedef {import('./components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('./components/layout-child/component.js').LayoutChildComponent} LayoutChildComponent */
-/** @typedef {import('./components/layout-group/component.js').LayoutGroupComponent} LayoutGroupComponent */
-/** @typedef {import('./components/light/component.js').LightComponent} LightComponent */
-/** @typedef {import('./components/model/component.js').ModelComponent} ModelComponent */
-/** @typedef {import('./components/particle-system/component.js').ParticleSystemComponent} ParticleSystemComponent */
-/** @typedef {import('./components/render/component.js').RenderComponent} RenderComponent */
-/** @typedef {import('./components/rigid-body/component.js').RigidBodyComponent} RigidBodyComponent */
-/** @typedef {import('./components/screen/component.js').ScreenComponent} ScreenComponent */
-/** @typedef {import('./components/script/component.js').ScriptComponent} ScriptComponent */
-/** @typedef {import('./components/scrollbar/component.js').ScrollbarComponent} ScrollbarComponent */
-/** @typedef {import('./components/scroll-view/component.js').ScrollViewComponent} ScrollViewComponent */
-/** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
-/** @typedef {import('./components/sprite/component.js').SpriteComponent} SpriteComponent */
+import { getApplication } from './globals.js';
 
 /**
  * @type {GraphNode[]}
@@ -52,7 +30,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AnimComponent} attached to this entity.
      *
-     * @type {AnimComponent|undefined}
+     * @type {import('./components/anim/component.js').AnimComponent|undefined}
      * @readonly
      */
     anim;
@@ -60,7 +38,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AnimationComponent} attached to this entity.
      *
-     * @type {AnimationComponent|undefined}
+     * @type {import('./components/animation/component.js').AnimationComponent|undefined}
      * @readonly
      */
     animation;
@@ -68,7 +46,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link AudioListenerComponent} attached to this entity.
      *
-     * @type {AudioListenerComponent|undefined}
+     * @type {import('./components/audio-listener/component.js').AudioListenerComponent|undefined}
      * @readonly
      */
     audiolistener;
@@ -76,15 +54,15 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ButtonComponent} attached to this entity.
      *
-     * @type {ButtonComponent|undefined}
+     * @type {import('./components/button/component.js').ButtonComponent|undefined}
      * @readonly
      */
     button;
 
     /**
-     * Gets the {@link CameraComponent} attached to this entity.
+     * Gets the {@link CameraComponent}} attached to this entity.
      *
-     * @type {CameraComponent|undefined}
+     * @type {import('./components/camera/component.js').CameraComponent|undefined}
      * @readonly
      */
     camera;
@@ -92,7 +70,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link CollisionComponent} attached to this entity.
      *
-     * @type {CollisionComponent|undefined}
+     * @type {import('./components/collision/component.js').CollisionComponent|undefined}
      * @readonly
      */
     collision;
@@ -100,7 +78,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ElementComponent} attached to this entity.
      *
-     * @type {ElementComponent|undefined}
+     * @type {import('./components/element/component.js').ElementComponent|undefined}
      * @readonly
      */
     element;
@@ -108,7 +86,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
      *
-     * @type {LayoutChildComponent|undefined}
+     * @type {import('./components/layout-child/component.js').LayoutChildComponent|undefined}
      * @readonly
      */
     layoutchild;
@@ -116,7 +94,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LayoutGroupComponent} attached to this entity.
      *
-     * @type {LayoutGroupComponent|undefined}
+     * @type {import('./components/layout-group/component.js').LayoutGroupComponent|undefined}
      * @readonly
      */
     layoutgroup;
@@ -124,7 +102,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link LightComponent} attached to this entity.
      *
-     * @type {LightComponent|undefined}
+     * @type {import('./components/light/component.js').LightComponent|undefined}
      * @readonly
      */
     light;
@@ -132,7 +110,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ModelComponent} attached to this entity.
      *
-     * @type {ModelComponent|undefined}
+     * @type {import('./components/model/component.js').ModelComponent|undefined}
      * @readonly
      */
     model;
@@ -140,7 +118,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ParticleSystemComponent} attached to this entity.
      *
-     * @type {ParticleSystemComponent|undefined}
+     * @type {import('./components/particle-system/component.js').ParticleSystemComponent|undefined}
      * @readonly
      */
     particlesystem;
@@ -148,7 +126,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link RenderComponent} attached to this entity.
      *
-     * @type {RenderComponent|undefined}
+     * @type {import('./components/render/component.js').RenderComponent|undefined}
      * @readonly
      */
     render;
@@ -156,7 +134,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link RigidBodyComponent} attached to this entity.
      *
-     * @type {RigidBodyComponent|undefined}
+     * @type {import('./components/rigid-body/component.js').RigidBodyComponent|undefined}
      * @readonly
      */
     rigidbody;
@@ -164,7 +142,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScreenComponent} attached to this entity.
      *
-     * @type {ScreenComponent|undefined}
+     * @type {import('./components/screen/component.js').ScreenComponent|undefined}
      * @readonly
      */
     screen;
@@ -172,7 +150,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScriptComponent} attached to this entity.
      *
-     * @type {ScriptComponent|undefined}
+     * @type {import('./components/script/component.js').ScriptComponent|undefined}
      * @readonly
      */
     script;
@@ -180,7 +158,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScrollbarComponent} attached to this entity.
      *
-     * @type {ScrollbarComponent|undefined}
+     * @type {import('./components/scrollbar/component.js').ScrollbarComponent|undefined}
      * @readonly
      */
     scrollbar;
@@ -188,7 +166,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link ScrollViewComponent} attached to this entity.
      *
-     * @type {ScrollViewComponent|undefined}
+     * @type {import('./components/scroll-view/component.js').ScrollViewComponent|undefined}
      * @readonly
      */
     scrollview;
@@ -196,7 +174,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link SoundComponent} attached to this entity.
      *
-     * @type {SoundComponent|undefined}
+     * @type {import('./components/sound/component.js').SoundComponent|undefined}
      * @readonly
      */
     sound;
@@ -204,7 +182,7 @@ class Entity extends GraphNode {
     /**
      * Gets the {@link SpriteComponent} attached to this entity.
      *
-     * @type {SpriteComponent|undefined}
+     * @type {import('./components/sprite/component.js').SpriteComponent|undefined}
      * @readonly
      */
     sprite;
@@ -212,13 +190,13 @@ class Entity extends GraphNode {
     /**
      * Component storage.
      *
-     * @type {Object<string, Component>}
+     * @type {Object<string, import('./components/component.js').Component>}
      * @ignore
      */
     c = {};
 
     /**
-     * @type {AppBase}
+     * @type {import('./app-base.js').AppBase}
      * @private
      */
     _app;
@@ -250,7 +228,8 @@ class Entity extends GraphNode {
      * Create a new Entity.
      *
      * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
-     * @param {AppBase} [app] - The application the entity belongs to, default is the current application.
+     * @param {import('./app-base.js').AppBase} [app] - The application the entity belongs to,
+     * default is the current application.
      * @example
      * var entity = new pc.Entity();
      *
@@ -278,18 +257,10 @@ class Entity extends GraphNode {
      * // Or use rotateLocal
      * entity.rotateLocal(0, 90, 0);
      */
-    constructor(name, app) {
+    constructor(name, app = getApplication()) {
         super(name);
 
-        if (name instanceof AppBase) app = name;
-
-        if (!app) {
-            app = AppBase.getApplication(); // get the current application
-            if (!app) {
-                throw new Error("Couldn't find current application");
-            }
-        }
-
+        Debug.assert(app, 'Could not find current application');
         this._app = app;
     }
 
@@ -322,8 +293,8 @@ class Entity extends GraphNode {
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to
      * each specific component's API reference page for details on valid values for this parameter.
-     * @returns {Component|null} The new Component that was attached to the entity or null if there
-     * was an error.
+     * @returns {import('./components/component.js').Component|null} The new Component that was
+     * attached to the entity or null if there was an error.
      * @example
      * var entity = new pc.Entity();
      *
@@ -376,8 +347,8 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component} A component of specified type, if the entity or any of its descendants
-     * has one. Returns undefined otherwise.
+     * @returns {import('./components/component.js').Component} A component of specified type, if
+     * the entity or any of its descendants has one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * var light = entity.findComponent("light");
@@ -393,8 +364,8 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @returns {import('./components/component.js').Component[]} All components of specified type
+     * in the entity or any of its descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * var lights = entity.findComponents("light");
@@ -608,7 +579,7 @@ class Entity extends GraphNode {
      */
     _cloneRecursively(duplicatedIdsMap) {
         /** @type {this} */
-        const clone = new this.constructor(this._app);
+        const clone = new this.constructor(undefined, this._app);
         super._cloneInternal(clone);
 
         for (const type in this.c) {

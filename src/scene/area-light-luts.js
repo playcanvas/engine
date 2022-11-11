@@ -1,13 +1,13 @@
 import { FloatPacking } from '../core/math/float-packing.js';
-import { Texture } from '../graphics/texture.js';
-import { DeviceCache } from '../graphics/device-cache.js';
+import { Texture } from '../platform/graphics/texture.js';
+import { DeviceCache } from '../platform/graphics/device-cache.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_DEFAULT
-} from '../graphics/constants.js';
+} from '../platform/graphics/constants.js';
 
 // class used to hold LUT textures in the device cache
 class AreaLightCacheEntry {
@@ -59,7 +59,7 @@ class AreaLightLuts {
 
     // placeholder LUT textures for area light
     static createPlaceholder(device) {
-        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2, 'placeholder');
+        const texture = AreaLightLuts.createTexture(device, device.areaLightLutFormat, 2, 'placeholder');
 
         const pixels = texture.lock();
         pixels.fill(0);

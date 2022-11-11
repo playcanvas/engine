@@ -4,8 +4,8 @@ import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
     PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
+} from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
@@ -16,8 +16,6 @@ import { ComponentSystem } from '../system.js';
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
 import { ElementComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -30,7 +28,7 @@ class ElementComponentSystem extends ComponentSystem {
     /**
      * Create a new ElementComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

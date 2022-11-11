@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8_G8_B8_A8 } from '../../graphics/constants.js';
+import { PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
@@ -272,10 +272,7 @@ class WorldClusters {
         const usedLights = this._usedLights;
         let lightIndex = 1;
 
-        for (let i = 0; i < lights.length; i++) {
-
-            // use enabled and visible lights
-            const light = lights[i];
+        lights.forEach((light) => {
             const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
             if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight) {
 
@@ -300,11 +297,10 @@ class WorldClusters {
 
                     lightIndex++;
                 } else {
-                    console.warn(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
-                    break;
+                    Debug.warnOnce(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
                 }
             }
-        }
+        });
 
         usedLights.length = lightIndex;
     }

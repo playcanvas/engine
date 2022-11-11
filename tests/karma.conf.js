@@ -40,7 +40,7 @@ module.exports = function (config) {
             { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
+            { pattern: 'tests/platform/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true }
         ]),
 

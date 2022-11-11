@@ -1,7 +1,4 @@
-import { SceneParser } from '../resources/parser/scene.js';
-
-/** @typedef {import('./app-base.js').AppBase} AppBase */
-/** @typedef {import('./entity.js').Entity} Entity */
+import { SceneParser } from './parsers/scene.js';
 
 /**
  * Create a Template resource from raw database data.
@@ -10,7 +7,7 @@ class Template {
     /**
      * Create a new Template instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('./app-base.js').AppBase} app - The application.
      * @param {object} data - Asset data from the database.
      */
     constructor(app, data) {
@@ -24,7 +21,7 @@ class Template {
     /**
      * Create an instance of this template.
      *
-     * @returns {Entity} The root entity of the created instance.
+     * @returns {import('./entity.js').Entity} The root entity of the created instance.
      */
     instantiate() {
         if (!this._templateRoot) { // at first use, after scripts are loaded

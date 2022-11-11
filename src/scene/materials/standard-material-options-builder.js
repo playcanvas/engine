@@ -1,8 +1,9 @@
-import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
+import { Quat } from '../../core/math/quat.js';
 
 import {
     PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
-} from '../../graphics/constants.js';
+} from '../../platform/graphics/constants.js';
+
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
@@ -14,8 +15,7 @@ import {
     TONEMAP_LINEAR,
     SPECULAR_PHONG,
 } from '../constants.js';
-
-import { Quat } from '../../core/math/quat.js';
+import { _matTex2D } from '../shader-lib/programs/standard.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -179,6 +179,7 @@ class StandardMaterialOptionsBuilder {
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
         options.refraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
+        options.refractionTint = (stdMat.refraction !== 1.0) ? 1 : 0;
         options.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;

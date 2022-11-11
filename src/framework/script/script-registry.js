@@ -1,10 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-/* eslint-disable-next-line no-unused-vars */
-import { ScriptType } from './script-type.js';
-
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-
 /**
  * Container for all {@link ScriptType}s that are available to this application. Note that
  * PlayCanvas scripts can access the Script Registry from inside the application with
@@ -16,7 +11,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Create a new ScriptRegistry instance.
      *
-     * @param {AppBase} app - Application to attach registry to.
+     * @param {import('../app-base.js').AppBase} app - Application to attach registry to.
      */
     constructor(app) {
         super();
@@ -37,7 +32,8 @@ class ScriptRegistry extends EventHandler {
      * registry, and the new script has a `swap` method defined, it will perform code hot swapping
      * automatically in async manner.
      *
-     * @param {Class<ScriptType>} script - Script Type that is created using {@link createScript}.
+     * @param {Class<import('./script-type.js').ScriptType>} script - Script Type that is created
+     * using {@link createScript}.
      * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
      * var PlayerController = pc.createScript('playerController');
@@ -142,7 +138,8 @@ class ScriptRegistry extends EventHandler {
     /**
      * Remove {@link ScriptType}.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('./script-type.js').ScriptType>} nameOrType - The name or type
+     * of {@link ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
@@ -174,7 +171,8 @@ class ScriptRegistry extends EventHandler {
      * Get {@link ScriptType} by name.
      *
      * @param {string} name - Name of a {@link ScriptType}.
-     * @returns {Class<ScriptType>} The Script Type if it exists in the registry or null otherwise.
+     * @returns {Class<import('./script-type.js').ScriptType>} The Script Type if it exists in the
+     * registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -185,7 +183,8 @@ class ScriptRegistry extends EventHandler {
     /**
      * Check if a {@link ScriptType} with the specified name is in the registry.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('./script-type.js').ScriptType>} nameOrType - The name or type
+     * of {@link ScriptType}.
      * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
@@ -205,7 +204,8 @@ class ScriptRegistry extends EventHandler {
     /**
      * Get list of all {@link ScriptType}s from registry.
      *
-     * @returns {Array<Class<ScriptType>>} list of all {@link ScriptType}s in registry.
+     * @returns {Array<Class<import('./script-type.js').ScriptType>>} list of all {@link ScriptType}s
+     * in registry.
      * @example
      * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function (o) {

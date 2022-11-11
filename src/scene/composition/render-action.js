@@ -2,10 +2,6 @@ import {
     LIGHTTYPE_DIRECTIONAL
 } from '../constants.js';
 
-/** @typedef {import('../../graphics/bind-group.js').BindGroup} BindGroup */
-/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('./layer-composition.js').LayerComposition} LayerComposition */
-
 /**
  * Class representing an entry in the final order of rendering of cameras and layers in the engine
  * this is populated at runtime based on LayerComposition
@@ -27,7 +23,7 @@ class RenderAction {
         /**
          * render target this render action renders to (taken from either camera or layer)
          *
-         * @type {RenderTarget|null}
+         * @type {import('../../platform/graphics/render-target.js').RenderTarget|null}
          */
         this.renderTarget = null;
 
@@ -58,7 +54,7 @@ class RenderAction {
         this.directionalLightsIndices = [];
 
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
-        /** @type {Array<BindGroup>} */
+        /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
         this.viewBindGroups = [];
     }
 
@@ -84,7 +80,8 @@ class RenderAction {
     }
 
     /**
-     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {import('./layer-composition.js').LayerComposition} layerComposition - The layer
+     * composition.
      * @returns {boolean} - True if the layer / sublayer referenced by the render action is enabled
      */
     isLayerEnabled(layerComposition) {

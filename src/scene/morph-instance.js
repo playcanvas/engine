@@ -1,13 +1,12 @@
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../graphics/constants.js';
-import { createShaderFromCode } from '../graphics/program-lib/utils.js';
-import { drawQuadWithShader } from '../graphics/simple-post-effect.js';
-import { RenderTarget } from '../graphics/render-target.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
 import { Debug } from '../core/debug.js';
 
-import { Morph } from './morph.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../platform/graphics/constants.js';
+import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { RenderTarget } from '../platform/graphics/render-target.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
-/** @typedef {import('../graphics/shader.js').Shader} Shader */
+import { createShaderFromCode } from './shader-lib/utils.js';
+import { Morph } from './morph.js';
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
@@ -179,7 +178,8 @@ class MorphInstance {
     /**
      * Gets current weight of the specified morph target.
      *
-     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or
+     * the weight name.
      * @returns {number} Weight.
      */
     getWeight(key) {
@@ -190,7 +190,8 @@ class MorphInstance {
     /**
      * Sets weight of the specified morph target.
      *
-     * @param {string|number} key - An identifier for the morph target. Either the weight index or the weight name
+     * @param {string|number} key - An identifier for the morph target. Either the weight index or
+     * the weight name.
      * @param {number} weight - Weight.
      */
     setWeight(key, weight) {
@@ -237,7 +238,7 @@ class MorphInstance {
      * Create complete shader for texture based morphing.
      *
      * @param {number} count - Number of textures to blend.
-     * @returns {Shader} Shader.
+     * @returns {import('../platform/graphics/shader.js').Shader} Shader.
      * @private
      */
     _getShader(count) {

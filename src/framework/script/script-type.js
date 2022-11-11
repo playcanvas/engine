@@ -1,12 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { ScriptComponent } from '../components/script/component.js';
-
+import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 import { ScriptAttributes } from './script-attributes.js';
-
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-/** @typedef {import('../entity.js').Entity} Entity */
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
@@ -40,14 +36,14 @@ class ScriptType extends EventHandler {
     /**
      * The {@link AppBase} that the instance of this type belongs to.
      *
-     * @type {AppBase}
+     * @type {import('../app-base.js').AppBase}
      */
     app;
 
     /**
      * The {@link Entity} that the instance of this type belongs to.
      *
-     * @type {Entity}
+     * @type {import('../entity.js').Entity}
      */
     entity;
 
@@ -88,8 +84,10 @@ class ScriptType extends EventHandler {
      * Create a new ScriptType instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
-     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
+     * script.
+     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
+     * attached to.
      */
     constructor(args) {
         super();
@@ -216,7 +214,7 @@ class ScriptType extends EventHandler {
             this.__initializeAttributes(true);
 
             if (this.initialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
+                this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
         }
 
         // post initialize script if not post initialized yet and still enabled
@@ -228,7 +226,7 @@ class ScriptType extends EventHandler {
             this._postInitialized = true;
 
             if (this.postInitialize)
-                this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.postInitialize);
+                this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
         }
     }
 
@@ -237,7 +235,8 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @param {{entity: Entity, app: AppBase}} args - The entity and app.
+     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
+     * The entity and app.
      * @private
      */
     initScriptType(args) {

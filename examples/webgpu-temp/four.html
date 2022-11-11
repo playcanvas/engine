@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>WebGPU Test</title>
+    <meta name="description" content="WebGPU Test" />
+    <script src="./libs/glslang.js"></script>
+</head>
+
+<body style="margin: 0px;">
+    <div class="warning" style="display:none;">
+        <p>
+            The browser you are using does not seem to support WebGPU rendering. At this time,
+            WebGPU implementations are under continuous development, so consider installing a developer
+            build, such as <a href="https://www.google.com/chrome/canary/">Google Chrome Canary</a>.
+        </p>
+    </div>
+    <canvas id="gpuCanvas" width="800" height="600"></canvas>
+
+    <script type="module">
+
+        import { Asset } from "../../src/framework/asset/asset.js";
+        import { AssetListLoader } from "../../src/framework/asset/asset-list-loader.js";
+        import { AppBase } from "../../src/framework/app-base.js";
+        import { AppOptions } from "../../src/framework/app-options.js";
+        import { WebgpuGraphicsDevice } from '../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+        import { WebglGraphicsDevice } from '../../src/platform/graphics/webgl/webgl-graphics-device.js';
+        import { Shader } from '../../src/platform/graphics/shader.js';
+        import { Texture } from '../../src/platform/graphics/texture.js';
+        import { RenderTarget } from '../../src/platform/graphics/render-target.js';
+        import {
+            SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
+            PIXELFORMAT_R8_G8_B8_A8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+        } from '../../src/platform/graphics/constants.js';
+        import { Entity } from "../../src/framework/entity.js";
+        import { Tracing } from "../../src/core/tracing.js";
+        import { 
+            TRACEID_RENDER_FRAME, TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL, TRACEID_SHADER_ALLOC, TRACEID_TEXTURE_ALLOC,
+            TRACEID_BINDGROUP_ALLOC, TRACEID_BINDGROUPFORMAT_ALLOC
+        } from "../../src/core/constants.js";
+        import { Color } from "../../src/core/math/color.js";
+        import { Vec3 } from "../../src/core/math/vec3.js";
+        import { Quat } from "../../src/core/math/quat.js";
+        import { StandardMaterial } from "../../src/scene/materials/standard-material.js";
+        import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../../src/scene/constants.js";
+
+        import { Material } from "../../src/scene/materials/material.js";
+        import { BasicMaterial } from "../../src/scene/materials/basic-material.js";
+        import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
+        import { ModelComponentSystem } from '../../src/framework/components/model/system.js';
+        import { CameraComponentSystem } from '../../src/framework/components/camera/system.js';
+        import { LightComponentSystem } from '../../src/framework/components/light/system.js';
+        import { AnimComponentSystem } from '../../src/framework/components/anim/system.js';
+        import { TextureHandler } from '../../src/framework/handlers/texture.js';
+        import { ContainerHandler } from '../../src/framework/handlers/container.js';
+
+        const assets = {
+            'model': new Asset('model', 'container', { url: './assets/skinned-mesh.glb' }),
+            'anim': new Asset('anim', 'container', { url: './assets/skinned-mesh-anim.glb' }),
+        };
+
+        function onLoaded(app) {
+
+            app.start();
+
+            // Create an Entity with a camera component
+            const camera = new Entity();
+            camera.addComponent("camera", {
+                clearColor: new Color(0.3, 0.3, 0)
+            });
+            camera.setLocalPosition(7, 2.5, 6);
+            camera.lookAt(0, 0, 0);
+            app.root.addChild(camera);
+
+            // Create an entity with a light component
+            const light = new Entity();
+            light.addComponent("light", {
+                type: "directional",
+                color: new Color(1, 1, 1),
+                castShadows: false,
+                intensity: 2
+            });
+            light.setLocalEulerAngles(45, 30, 0);
+            app.root.addChild(light);
+
+            const modelEntity = assets.model.resource.instantiateRenderEntity({
+            });
+            app.root.addChild(modelEntity);
+
+            modelEntity.addComponent('anim', {
+                activate: true
+            });
+
+            const animTrack = assets.anim.resource.animations[0].resource;
+            modelEntity.anim.assignAnimation('anim', animTrack);
+
+        }
+
+        function main() {
+
+            console.log("example start");
+
+            // Tracing.set(TRACEID_RENDER_FRAME, true);
+            // Tracing.set(TRACEID_RENDER_PASS, true);
+            //Tracing.set(TRACEID_TEXTURE_ALLOC, true);
+            //Tracing.set(TRACEID_SHADER_ALLOC, true);
+            //Tracing.set(TRACEID_BINDGROUP_ALLOC, true);
+            //Tracing.set(TRACEID_BINDGROUPFORMAT_ALLOC, true);
+
+            const canvas = document.querySelector('#gpuCanvas');
+
+            const createOptions = new AppOptions();
+            createOptions.graphicsDevice = new WebgpuGraphicsDevice(canvas, {});
+            //createOptions.graphicsDevice = new WebglGraphicsDevice(canvas, {});
+
+            createOptions.graphicsDevice.initWebGpu().then(() => {
+                console.log("gpu device async created");
+
+                createOptions.componentSystems = [
+                    RenderComponentSystem,
+                    ModelComponentSystem,
+                    CameraComponentSystem,
+                    LightComponentSystem,
+                    AnimComponentSystem
+                ];
+                createOptions.resourceHandlers = [
+                    TextureHandler,
+                    ContainerHandler
+                ];
+
+                const app = new AppBase(canvas);
+                app.init(createOptions);
+
+                const lighting = app.scene.lighting;
+                lighting.shadowsEnabled = false;
+                lighting.cookiesEnabled = false;
+
+                const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
+                assetListLoader.load(() => {
+                    onLoaded(app);
+                });
+
+            }).catch(console.error);
+        }
+
+        window.addEventListener('load', main);
+    </script>
+</body>
+
+</html>

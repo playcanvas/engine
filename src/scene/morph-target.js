@@ -1,9 +1,9 @@
 import { Debug } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 
-import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../graphics/constants.js';
-import { VertexBuffer } from '../graphics/vertex-buffer.js';
-import { VertexFormat } from '../graphics/vertex-format.js';
+import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 /**
  * A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
@@ -13,6 +13,8 @@ import { VertexFormat } from '../graphics/vertex-format.js';
 class MorphTarget {
     /**
      * A used flag. A morph target can be used / owned by the Morph class only one time.
+     *
+     * @type {boolean}
      */
     used = false;
 

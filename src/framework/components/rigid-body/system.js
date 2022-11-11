@@ -11,9 +11,6 @@ import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-/** @typedef {import('../../entity.js').Entity} Entity */
-
 let ammoRayStart, ammoRayEnd;
 
 /**
@@ -23,7 +20,7 @@ class RaycastResult {
     /**
      * Create a new RaycastResult instance.
      *
-     * @param {Entity} entity - The entity that was hit.
+     * @param {import('../../entity.js').Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
      * @hideconstructor
@@ -32,7 +29,7 @@ class RaycastResult {
         /**
          * The entity that was hit.
          *
-         * @type {Entity}
+         * @type {import('../../entity.js').Entity}
          */
         this.entity = entity;
 
@@ -59,8 +56,8 @@ class SingleContactResult {
     /**
      * Create a new SingleContactResult instance.
      *
-     * @param {Entity} a - The first entity involved in the contact.
-     * @param {Entity} b - The second entity involved in the contact.
+     * @param {import('../../entity.js').Entity} a - The first entity involved in the contact.
+     * @param {import('../../entity.js').Entity} b - The second entity involved in the contact.
      * @param {ContactPoint} contactPoint - The contact point between the two entities.
      * @hideconstructor
      */
@@ -69,14 +66,14 @@ class SingleContactResult {
             /**
              * The first entity involved in the contact.
              *
-             * @type {Entity}
+             * @type {import('../../entity.js').Entity}
              */
             this.a = null;
 
             /**
              * The second entity involved in the contact.
              *
-             * @type {Entity}
+             * @type {import('../../entity.js').Entity}
              */
             this.b = null;
 
@@ -208,7 +205,8 @@ class ContactResult {
     /**
      * Create a new ContactResult instance.
      *
-     * @param {Entity} other - The entity that was involved in the contact with this entity.
+     * @param {import('../../entity.js').Entity} other - The entity that was involved in the
+     * contact with this entity.
      * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
      * @hideconstructor
      */
@@ -216,7 +214,7 @@ class ContactResult {
         /**
          * The entity that was involved in the contact with this entity.
          *
-         * @type {Entity}
+         * @type {import('../../entity.js').Entity}
          */
         this.other = other;
 
@@ -287,7 +285,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Create a new RigidBodyComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {
@@ -552,8 +550,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Stores a collision between the entity and other in the contacts map and returns true if it
      * is a new collision.
      *
-     * @param {Entity} entity - The entity.
-     * @param {Entity} other - The entity that collides with the first entity.
+     * @param {import('../../entity.js').Entity} entity - The entity.
+     * @param {import('../../entity.js').Entity} other - The entity that collides with the first
+     * entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
      * @private
      */
@@ -684,7 +683,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Returns true if the entity has a contact event attached and false otherwise.
      *
-     * @param {object} entity - Entity to test.
+     * @param {import('../../entity.js').Entity} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
      * @private
      */

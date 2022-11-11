@@ -1,11 +1,6 @@
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('../../../core/math/vec3.js').Vec3} Vec3 */
-/** @typedef {import('../../../scene/model.js').Model} Model */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').CollisionComponentSystem} CollisionComponentSystem */
 
 /**
  * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
@@ -36,8 +31,8 @@ import { Component } from '../component.js';
  * - "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
- * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and
- * z axes. Defaults to [0.5, 0.5, 0.5].
+ * @property {import('../../../core/math/vec3.js').Vec3} halfExtents The half-extents of the
+ * box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
  * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
@@ -48,16 +43,18 @@ import { Component } from '../component.js';
  * be an asset id. Defaults to null.
  * @property {Asset|number} renderAsset The render asset of the mesh collision volume - can also be
  * an asset id. Defaults to null. If not set then the asset property will be checked instead.
- * @property {Model} model The model that is added to the scene graph for the mesh collision
- * volume.
+ * @property {import('../../../scene/model.js').Model} model The model that is added to the scene
+ * graph for the mesh collision volume.
  * @augments Component
  */
 class CollisionComponent extends Component {
     /**
      * Create a new CollisionComponent.
      *
-     * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').CollisionComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -96,21 +93,21 @@ class CollisionComponent extends Component {
      * Fired two rigid-bodies stop touching.
      *
      * @event CollisionComponent#collisionend
-     * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
      * Fired when a rigid body enters a trigger volume.
      *
      * @event CollisionComponent#triggerenter
-     * @param {Entity} other - The {@link Entity} that entered this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
      * Fired when a rigid body exits a trigger volume.
      *
      * @event CollisionComponent#triggerleave
-     * @param {Entity} other - The {@link Entity} that exited this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that exited this collision volume.
      */
 
     /**

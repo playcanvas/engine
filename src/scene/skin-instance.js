@@ -2,11 +2,8 @@ import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Mat4 } from '../core/math/mat4.js';
 
-import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../graphics/constants.js';
-import { Texture } from '../graphics/texture.js';
-
-/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
-/** @typedef {import('./skin.js').Skin} Skin */
+import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { Texture } from '../platform/graphics/texture.js';
 
 const _invMatrix = new Mat4();
 
@@ -18,15 +15,15 @@ class SkinInstance {
     /**
      * An array of nodes representing each bone in this skin instance.
      *
-     * @type {GraphNode[]}
+     * @type {import('./graph-node.js').GraphNode[]}
      */
     bones;
 
     /**
      * Create a new SkinInstance instance.
      *
-     * @param {Skin} skin - The skin that will provide the inverse bind pose matrices to generate
-     * the final matrix palette.
+     * @param {import('./skin.js').Skin} skin - The skin that will provide the inverse bind pose
+     * matrices to generate the final matrix palette.
      */
     constructor(skin) {
         this._dirty = true;

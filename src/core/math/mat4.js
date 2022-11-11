@@ -3,14 +3,11 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
-/** @typedef {import('./quat.js').Quat} Quat */
-
 const _halfSize = new Vec2();
 const x = new Vec3();
 const y = new Vec3();
 const z = new Vec3();
 const scale = new Vec3();
-
 
 /**
  * A 4x4 matrix.
@@ -918,7 +915,7 @@ class Mat4 {
      * scale.
      *
      * @param {Vec3} t - A 3-d vector translation.
-     * @param {Quat} r - A quaternion rotation.
+     * @param {import('./quat.js').Quat} r - A quaternion rotation.
      * @param {Vec3} s - A 3-d vector scale.
      * @returns {Mat4} Self for chaining.
      * @example

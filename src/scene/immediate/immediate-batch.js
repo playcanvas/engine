@@ -1,9 +1,10 @@
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { PRIMITIVE_LINES } from '../../graphics/constants.js';
-import { Mesh } from '../../scene/mesh.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { GraphNode } from '../../scene/graph-node.js';
+import { PRIMITIVE_LINES } from '../../platform/graphics/constants.js';
+
+import { Mesh } from '../mesh.js';
+import { MeshInstance } from '../mesh-instance.js';
+import { GraphNode } from '../graph-node.js';
 
 const identityGraphNode = new GraphNode();
 identityGraphNode.worldTransform = Mat4.IDENTITY;
