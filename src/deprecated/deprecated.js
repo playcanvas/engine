@@ -95,13 +95,9 @@ import { MouseEvent } from '../platform/input/mouse-event.js';
 import { TouchDevice } from '../platform/input/touch-device.js';
 import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
-import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
 import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
-import { Component } from '../framework/components/component.js';
-import { ComponentSystem } from '../framework/components/system.js';
-import { Entity } from '../framework/entity.js';
 import { LightComponent } from '../framework/components/light/component.js';
 import { ModelComponent } from '../framework/components/model/component.js';
 import { RenderComponent } from '../framework/components/render/component.js';
