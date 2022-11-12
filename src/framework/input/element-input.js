@@ -278,14 +278,14 @@ class ElementTouchEvent extends ElementInputEvent {
          * The Touch objects representing all current points of contact with the surface,
          * regardless of target or changed status.
          *
-         * @type {Touch[]}
+         * @type {TouchList}
          */
         this.touches = event.touches;
         /**
          * The Touch objects representing individual points of contact whose states changed between
          * the previous touch event and this one.
          *
-         * @type {Touch[]}
+         * @type {TouchList}
          */
         this.changedTouches = event.changedTouches;
         this.x = x;
@@ -363,13 +363,25 @@ class ElementInput {
         this._touchmoveHandler = this._handleTouchMove.bind(this);
         this._sortHandler = this._sortElements.bind(this);
 
-        /** @type {ElementComponent[]} */
+        /**
+         * @type {import('../components/element/component.js').ElementComponent[]}
+         * @ignore
+         */
         this._elements = [];
-        /** @type {ElementComponent|null} */
+        /**
+         * @type {import('../components/element/component.js').ElementComponent|null}
+         * @ignore
+         */
         this._hoveredElement = null;
-        /** @type {ElementComponent|null} */
+        /**
+         * @type {import('../components/element/component.js').ElementComponent|null}
+         * @ignore
+         */
         this._pressedElement = null;
-        /** @type {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} */
+        /**
+         * @ignore
+         * @type {Object<number, {x: number, y: number, camera: import('../components/camera/component.js').CameraComponent, element: import('../components/element/component.js').ElementComponent}>}
+         */
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
         this._selectedElements = {};
@@ -549,12 +561,12 @@ class ElementInput {
 
     /**
      * @param {TouchEvent} event - The TouchEvent.
-     * @returns {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} - Object
+     * @returns {Object<number, {x: number, y: number, camera: import('../components/camera/component.js').CameraComponent, element: import('../components/element/component.js').ElementComponent}>} - Object
      * containing information about touched ElementComponent's.
      * @private
      */
     _determineTouchedElements(event) {
-        /** @type {Record<number, {x: number, y: number, camera: CameraComponent, element: ElementComponent}>} */
+        /** @type {Object<number, {x: number, y: number, camera: import('../components/camera/component.js').CameraComponent, element: import('../components/element/component.js').ElementComponent}>} */
         const touchedElements = {};
         const cameras = this.app.systems.camera.cameras;
         const { changedTouches } = event;
@@ -767,9 +779,9 @@ class ElementInput {
                     const lastTouchUp = this._clickedEntities[guid] || 0;
                     const dt = Date.now() - lastTouchUp;
                     fireClick = dt > 300;
+                    // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
+                    delete this._clickedEntities[guid];
                 }
-                // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
-                delete this._clickedEntities[guid];
                 if (fireClick) {
                     this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
@@ -941,8 +953,8 @@ class ElementInput {
     }
 
     /**
-     * @param {ElementComponent} a - First element
-     * @param {ElementComponent} b - Second Element
+     * @param {import('../components/element/component.js').ElementComponent} a - First element
+     * @param {import('../components/element/component.js').ElementComponent} b - Second Element
      * @returns {number} Returns -1|0|1 to specify the relative position.
      * @private
      */
@@ -967,10 +979,10 @@ class ElementInput {
     /**
      * Get the target element by coordinates.
      *
-     * @param {CameraComponent} camera - The camera component.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera component.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {ElementComponent|null} Returns ElementComponent or null.
+     * @returns {import('../components/element/component.js').ElementComponent|null} Returns ElementComponent or null.
      * @private
      */
     _getTargetElementByCoords(camera, x, y) {
@@ -996,10 +1008,10 @@ class ElementInput {
     }
 
     /**
-     * @param {CameraComponent} camera - The CameraComponent.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The CameraComponent.
      * @param {Ray} rayScreen - The rayScreen.
      * @param {Ray} ray3d - The ray3d.
-     * @returns {ElementComponent|null} Returns ElementComponent or null.
+     * @returns {import('../components/element/component.js').ElementComponent|null} Returns ElementComponent or null.
      * @private
      */
     _getTargetElement(camera, rayScreen, ray3d) {
@@ -1059,7 +1071,7 @@ class ElementInput {
      * padding specified, we need to expand the screenCorners to incorporate the
      * padding.
      *
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
      * @param {Vec3[]} screenOrWorldCorners - Array of four corners.
      * @param {number} scaleX - Scale of X coordinate.
      * @param {number} scaleY - Scale of Y coordinate.
@@ -1128,7 +1140,7 @@ class ElementInput {
     }
 
     /**
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
      * @returns {Vec3} The accumulated scale.
      * @private
      */
@@ -1147,7 +1159,7 @@ class ElementInput {
     }
 
     /**
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
      * @returns {Vec3} The accumulated scale.
      * @private
      */
@@ -1166,7 +1178,7 @@ class ElementInput {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @param {CameraComponent} camera - The camera component.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera component.
      * @param {Ray} ray - The ray.
      * @returns {boolean} Boolean result.
      * @private
@@ -1208,7 +1220,7 @@ class ElementInput {
     /**
      * @param {number} x - The X coordinate.
      * @param {number} y - The Y coordinate.
-     * @param {CameraComponent} camera - The CameraComponent.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The CameraComponent.
      * @param {Ray} ray - The ray.
      * @returns {boolean} Whether window coords are within camera rect
      * @private
@@ -1251,7 +1263,7 @@ class ElementInput {
 
     /**
      * @param {Ray} ray - The ray.
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
      * @param {boolean} screen - If true, calculate scale to screen, otherwise to world.
      * @returns {number} -1 or distance squared.
      * @private
