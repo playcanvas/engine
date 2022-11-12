@@ -1,11 +1,13 @@
-import { Asset } from '../../framework/asset/asset.js';
-import { Entity } from '../../framework/entity.js';
+import { Debug } from '../../core/debug.js';
+
 import { MeshInstance } from '../../scene/mesh-instance.js';
+import { Model } from '../../scene/model.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
-import { Model } from '../../scene/model.js';
-import { Debug } from '../../core/debug.js';
+
+import { Entity } from '../entity.js';
+import { Asset } from '../asset/asset.js';
 
 // Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {

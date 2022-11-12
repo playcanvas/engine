@@ -12,8 +12,6 @@ import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
     vertex_normal: SEMANTIC_NORMAL,
@@ -40,7 +38,7 @@ class ShaderUtils {
     /**
      * Creates a shader definition.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} options - Object for passing optional arguments.
      * @param {string} [options.name] - A name of the shader.
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if

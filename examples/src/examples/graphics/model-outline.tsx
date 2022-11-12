@@ -54,7 +54,7 @@ class ModelOutlineExample {
             let texture = new pc.Texture(app.graphicsDevice, {
                 width: app.graphicsDevice.width,
                 height: app.graphicsDevice.height,
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                format: pc.PIXELFORMAT_RGBA8,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR
@@ -129,7 +129,7 @@ class ModelOutlineExample {
                 texture = new pc.Texture(app.graphicsDevice, {
                     width: app.graphicsDevice.width,
                     height: app.graphicsDevice.height,
-                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    format: pc.PIXELFORMAT_RGBA8,
                     mipmaps: true,
                     minFilter: pc.FILTER_LINEAR,
                     magFilter: pc.FILTER_LINEAR

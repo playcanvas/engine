@@ -1,5 +1,3 @@
-/** @typedef {import('./touch-device.js').TouchDevice} TouchDevice */
-
 /**
  * Similar to {@link getTargetCoords} for the MouseEvents. This function takes a browser Touch
  * object and returns the coordinates of the touch relative to the target element.
@@ -85,7 +83,8 @@ class TouchEvent {
     /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
-     * @param {TouchDevice} device - The source device of the touch events.
+     * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
+     * events.
      * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {

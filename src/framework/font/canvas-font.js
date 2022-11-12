@@ -6,11 +6,9 @@ import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
-/** @typedef {import('../app-base.js').AppBase} AppBase */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
@@ -25,7 +23,7 @@ class CanvasFont extends EventHandler {
     /**
      * Create a new CanvasFont instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../app-base.js').AppBase} app - The application.
      * @param {object} options - The font options.
      * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
      * Defaults to 'Arial'.
@@ -64,7 +62,7 @@ class CanvasFont extends EventHandler {
 
         const texture = new Texture(this.app.graphicsDevice, {
             name: 'font',
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -305,7 +303,7 @@ class CanvasFont extends EventHandler {
                         ctx = this._getAndClearContext(canvas, transparent);
 
                         const texture = new Texture(this.app.graphicsDevice, {
-                            format: PIXELFORMAT_R8_G8_B8_A8,
+                            format: PIXELFORMAT_RGBA8,
                             mipmaps: true,
                             name: 'font-atlas'
                         });

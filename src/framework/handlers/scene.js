@@ -1,7 +1,6 @@
 import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from '../parsers/scene.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -20,7 +19,7 @@ class SceneHandler {
     /**
      * Create a new SceneHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

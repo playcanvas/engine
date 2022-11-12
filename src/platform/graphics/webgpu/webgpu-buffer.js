@@ -1,12 +1,10 @@
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-
 /**
  * A WebGPU implementation of the Buffer.
  *
  * @ignore
  */
 class WebgpuBuffer {
-    /** @type {GPUBuffer} */
+    // type {GPUBuffer}
     buffer = null;
 
     destroy(device) {
@@ -24,7 +22,7 @@ class WebgpuBuffer {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
      * @param {*} usage -
      * @param {*} target -
      * @param {*} storage -

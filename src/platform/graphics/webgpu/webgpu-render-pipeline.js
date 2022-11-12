@@ -1,7 +1,6 @@
 import { Debug } from "../../../core/debug.js";
-import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
+import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -47,7 +46,7 @@ const _bindGroupLayouts = [];
  */
 class WebgpuRenderPipeline {
     constructor(device) {
-        /** @type {WebgpuGraphicsDevice} */
+        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         this.device = device;
 
         /**
@@ -119,7 +118,7 @@ class WebgpuRenderPipeline {
             _bindGroupLayouts.push(format.bindGroupLayout);
         });
 
-        /** @type {GPUPipelineLayout} */
+        // type {GPUPipelineLayout}
         const pipelineLayout = this.device.wgpu.createPipelineLayout({
             bindGroupLayouts: _bindGroupLayouts
         });
@@ -129,7 +128,7 @@ class WebgpuRenderPipeline {
     }
 
     getBlend(renderState) {
-        /** @type {GPUBlendState} */
+        // type {GPUBlendState}
         const blend = {
             color: {
                 operation: _blendOperation[renderState.blendEquationColor],
@@ -156,7 +155,7 @@ class WebgpuRenderPipeline {
 
         const wgpu = this.device.wgpu;
 
-        /** @type {GPUDepthStencilState} */
+        // type {GPUDepthStencilState}
         const depthStencil = renderTarget.depth ? {
             depthWriteEnabled: true,
             depthCompare: 'less',

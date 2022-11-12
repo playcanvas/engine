@@ -216,7 +216,7 @@ BloomEffect.prototype._resize = function (target) {
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
             name: "Bloom Texture" + i,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_RGBA8,
             width: width >> 1,
             height: height >> 1,
             mipmaps: false
@@ -225,7 +225,7 @@ BloomEffect.prototype._resize = function (target) {
         colorBuffer.magFilter = pc.FILTER_LINEAR;
         colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'pe-bloom';
+        colorBuffer.name = 'pe-bloom-' + i;
         var bloomTarget = new pc.RenderTarget({
             name: "Bloom Render Target " + i,
             colorBuffer: colorBuffer,

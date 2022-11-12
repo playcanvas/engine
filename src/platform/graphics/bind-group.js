@@ -1,11 +1,8 @@
+import { Debug } from '../../core/debug.js';
+import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./texture.js').Texture} Texture */
-/** @typedef {import('./bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
-
-import { Debug } from '../../core/debug.js';
+let id = 0;
 
 /**
  * A bind group represents an collection of {@link UniformBuffer} and {@link Texture} instance,
@@ -17,12 +14,15 @@ class BindGroup {
     /**
      * Create a new Bind Group.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform buffer.
-     * @param {BindGroupFormat} format - Format of the bind group.
-     * @param {UniformBuffer} [defaultUniformBuffer] - The default uniform buffer. Typically a bind group only
-     * has a single uniform buffer, and this allows easier access.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this uniform buffer.
+     * @param {import('./bind-group-format.js').BindGroupFormat} format - Format of the bind group.
+     * @param {import('./uniform-buffer.js').UniformBuffer} [defaultUniformBuffer] - The default
+     * uniform buffer. Typically a bind group only has a single uniform buffer, and this allows
+     * easier access.
      */
     constructor(graphicsDevice, format, defaultUniformBuffer) {
+        this.id = id++;
         this.device = graphicsDevice;
         this.format = format;
         this.dirty = true;
@@ -31,11 +31,13 @@ class BindGroup {
         this.textures = [];
         this.uniformBuffers = [];
 
-        /** @type {UniformBuffer} */
+        /** @type {import('./uniform-buffer.js').UniformBuffer} */
         this.defaultUniformBuffer = defaultUniformBuffer;
         if (defaultUniformBuffer) {
             this.setUniformBuffer(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, defaultUniformBuffer);
         }
+
+        Debug.trace(TRACEID_BINDGROUP_ALLOC, `Alloc: Id ${this.id}`, this, format);
     }
 
     /**
@@ -52,7 +54,8 @@ class BindGroup {
      * Assign a uniform buffer to a slot.
      *
      * @param {string} name - The name of the uniform buffer slot
-     * @param {UniformBuffer} uniformBuffer - The Uniform buffer to assign to the slot.
+     * @param {import('./uniform-buffer.js').UniformBuffer} uniformBuffer - The Uniform buffer to
+     * assign to the slot.
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
@@ -67,7 +70,7 @@ class BindGroup {
      * Assign a texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
-     * @param {Texture} texture - Texture to assign to the slot.
+     * @param {import('./texture.js').Texture} texture - Texture to assign to the slot.
      */
     setTexture(name, texture) {
         const index = this.format.textureFormatsMap.get(name);

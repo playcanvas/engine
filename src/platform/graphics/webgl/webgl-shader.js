@@ -5,9 +5,6 @@ import { now } from '../../../core/time.js';
 import { ShaderInput } from '../shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
-/** @typedef {import('./webgl-graphics-device.js').WebglGraphicsDevice} WebglGraphicsDevice */
-/** @typedef {import('../shader.js').Shader} Shader */
-
 let _totalCompileTime = 0;
 
 const _vertexShaderBuiltins = [
@@ -35,7 +32,7 @@ class WebglShader {
     /**
      * Free the WebGL resources associated with a shader.
      *
-     * @param {Shader} shader - The shader to free.
+     * @param {import('../shader.js').Shader} shader - The shader to free.
      */
     destroy(shader) {
         if (this.glProgram) {
@@ -64,8 +61,8 @@ class WebglShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {WebglGraphicsDevice} device - The graphics device.
-     * @param {Shader} shader - The shader to restore.
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
         this.compileAndLink(device, shader);
@@ -74,8 +71,8 @@ class WebglShader {
     /**
      * Compile and link a shader program.
      *
-     * @param {WebglGraphicsDevice} device - The graphics device.
-     * @param {Shader} shader - The shader to compile.
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to compile.
      */
     compileAndLink(device, shader) {
 
@@ -113,7 +110,7 @@ class WebglShader {
             if (attrs.hasOwnProperty(attr)) {
                 const semantic = attrs[attr];
                 const loc = semanticToLocation[semantic];
-                Debug.assert(!locations.hasOwnProperty(loc), `WARNING: Two attribues are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
+                Debug.assert(!locations.hasOwnProperty(loc), `WARNING: Two attributes are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
 
                 locations[loc] = attr;
                 gl.bindAttribLocation(glProgram, loc, attr);
@@ -142,7 +139,7 @@ class WebglShader {
     /**
      * Compiles an individual shader.
      *
-     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
      * @param {string} src - The shader source code.
      * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
      * fragment shader.
@@ -192,8 +189,8 @@ class WebglShader {
     /**
      * Extract attribute and uniform information from a successfully linked shader.
      *
-     * @param {WebglGraphicsDevice} device - The graphics device.
-     * @param {Shader} shader - The shader to query.
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
     postLink(device, shader) {
@@ -303,8 +300,8 @@ class WebglShader {
     /**
      * Check the compilation status of a shader.
      *
-     * @param {WebglGraphicsDevice} device - The graphics device.
-     * @param {Shader} shader - The shader to query.
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to query.
      * @param {WebGLShader} glShader - The WebGL shader.
      * @param {string} source - The shader source code.
      * @param {string} shaderType - The shader type. Can be 'vertex' or 'fragment'.
@@ -336,7 +333,7 @@ class WebglShader {
      * @param {string} src - The shader source code.
      * @param {string} infoLog - The info log returned from WebGL on a failed shader compilation.
      * @returns {Array} An array where the first element is the 10 lines of code around the first
-     * detected error, and the second element an object storing the error messsage, line number and
+     * detected error, and the second element an object storing the error message, line number and
      * complete shader source.
      * @private
      */

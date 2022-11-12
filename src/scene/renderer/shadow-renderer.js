@@ -1,12 +1,14 @@
 import { Debug } from '../../core/debug.js';
-
+import { Color } from '../../core/math/color.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { Mat4 } from '../../core/math/mat4.js';
-import { Color } from '../../core/math/color.js';
-
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+
+import { FUNC_LESSEQUAL } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -16,21 +18,12 @@ import {
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
+import { ShaderPass } from '../shader-pass.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
-
-import { FUNC_LESSEQUAL } from '../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShadowMap } from './shadow-map.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
-import { ShaderPass } from '../shader-pass.js';
-
-/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../light.js').Light} Light */
-/** @typedef {import('./forward-renderer.js').ForwardRenderer} ForwardRenderer */
-/** @typedef {import('../lighting/light-texture-atlas.js').LightTextureAtlas} LightTextureAtlas */
 
 const aabbPoints = [
     new Vec3(), new Vec3(), new Vec3(), new Vec3(),
@@ -114,16 +107,17 @@ function getDepthKey(meshInstance) {
  */
 class ShadowRenderer {
     /**
-     * @param {ForwardRenderer} forwardRenderer - The forward renderer.
-     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
+     * @param {import('./forward-renderer.js').ForwardRenderer} forwardRenderer - The forward renderer.
+     * @param {import('../lighting/light-texture-atlas.js').LightTextureAtlas} lightTextureAtlas - The
+     * shadow map atlas.
      */
     constructor(forwardRenderer, lightTextureAtlas) {
         this.device = forwardRenderer.device;
 
-        /** @type {ForwardRenderer} */
+        /** @type {import('./forward-renderer.js').ForwardRenderer} */
         this.forwardRenderer = forwardRenderer;
 
-        /** @type {LightTextureAtlas} */
+        /** @type {import('../lighting/light-texture-atlas.js').LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
 
         const scope = this.device.scope;
@@ -471,8 +465,9 @@ class ShadowRenderer {
     }
 
     /**
-     * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
-     * @param {Light} light - The light.
+     * @param {import('../mesh-instance.js').MeshInstance[]} visibleCasters - Visible mesh
+     * instances.
+     * @param {import('../light.js').Light} light - The light.
      */
     submitCasters(visibleCasters, light) {
 

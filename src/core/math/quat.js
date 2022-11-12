@@ -1,8 +1,6 @@
 import { math } from './math.js';
 import { Vec3 } from './vec3.js';
 
-/** @typedef {import('./mat4.js').Mat4} Mat4 */
-
 /**
  * A quaternion.
  */
@@ -421,7 +419,7 @@ class Quat {
      * Converts the specified 4x4 matrix to a quaternion. Note that since a quaternion is purely a
      * representation for orientation, only the translational part of the matrix is lost.
      *
-     * @param {Mat4} m - The 4x4 matrix to convert.
+     * @param {import('./mat4.js').Mat4} m - The 4x4 matrix to convert.
      * @returns {Quat} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis

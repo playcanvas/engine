@@ -2,10 +2,6 @@ import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('../uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
-
 let id = 0;
 
 /**
@@ -18,23 +14,24 @@ let id = 0;
  */
 class Shader {
     /**
-     * Format of the uniform buffer for mesh bind grounp.
+     * Format of the uniform buffer for mesh bind group.
      *
-     * @type {UniformBufferFormat}
+     * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
      */
     meshUniformBufferFormat;
 
     /**
      * Format of the bind group for the mesh bind group.
      *
-     * @type {BindGroupFormat}
+     * @type {import('./bind-group-format.js').BindGroupFormat}
      */
     meshBindGroupFormat;
 
     /**
      * Creates a new Shader instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
      * @param {Object<string, string>} definition.attributes - Object detailing the mapping of

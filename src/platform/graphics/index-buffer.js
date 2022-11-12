@@ -4,8 +4,6 @@ import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 let id = 0;
 
 /**
@@ -18,8 +16,8 @@ class IndexBuffer {
     /**
      * Create a new IndexBuffer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index
-     * buffer.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this index buffer.
      * @param {number} format - The type of each index to be stored in the index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}

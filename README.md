@@ -26,9 +26,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![dev Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](http://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )  
-
-
+[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/ )
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
@@ -171,9 +169,9 @@ For Editor related bugs and issues, please refer to the [Editor's repo](https://
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
 [code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
 [code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
-[resolution-badge]: http://isitmaintained.com/badge/resolution/playcanvas/engine.svg
-[open-issues-badge]: http://isitmaintained.com/badge/open/playcanvas/engine.svg
-[isitmaintained-url]: http://isitmaintained.com/project/playcanvas/engine
+[resolution-badge]: https://isitmaintained.com/badge/resolution/playcanvas/engine.svg
+[open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/engine.svg
+[isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
 [docs]: https://developer.playcanvas.com/en/api/

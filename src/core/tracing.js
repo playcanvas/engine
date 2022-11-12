@@ -13,6 +13,13 @@ class Tracing {
     static _traceChannels = new Set();
 
     /**
+     * Enable call stack logging for trace calls. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    static stack = false;
+
+    /**
      * Enable or disable a trace channel.
      *
      * @param {string} channel - Name of the trace channel. Can be:

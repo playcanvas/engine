@@ -10,9 +10,6 @@ import {
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
-/** @typedef {import('./system.js').ScriptComponentSystem} ScriptComponentSystem */
-/** @typedef {import('../../script/script-type.js').ScriptType} ScriptType */
-
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
  * Script Types defined in JavaScript files to be executed with access to the Entity. For more
@@ -24,7 +21,8 @@ class ScriptComponent extends Component {
     /**
      * Create a new ScriptComponent instance.
      *
-     * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {import('./system.js').ScriptComponentSystem} system - The ComponentSystem that
+     * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -33,7 +31,7 @@ class ScriptComponent extends Component {
         /**
          * Holds all script instances for this component.
          *
-         * @type {ScriptType[]}
+         * @type {import('../../script/script-type.js').ScriptType[]}
          * @private
          */
         this._scripts = [];
@@ -115,7 +113,8 @@ class ScriptComponent extends Component {
      *
      * @event ScriptComponent#create
      * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create', function (name, scriptInstance) {
      *     // new script instance added to component
@@ -126,7 +125,8 @@ class ScriptComponent extends Component {
      * Fired when a script instance is created and attached to component.
      *
      * @event ScriptComponent#create:[name]
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been created.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been created.
      * @example
      * entity.script.on('create:playerController', function (scriptInstance) {
      *     // new script instance 'playerController' is added to component
@@ -138,7 +138,8 @@ class ScriptComponent extends Component {
      *
      * @event ScriptComponent#destroy
      * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy', function (name, scriptInstance) {
      *     // script instance has been destroyed and removed from component
@@ -149,7 +150,8 @@ class ScriptComponent extends Component {
      * Fired when a script instance is destroyed and removed from component.
      *
      * @event ScriptComponent#destroy:[name]
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been destroyed.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy:playerController', function (scriptInstance) {
      *     // script instance 'playerController' has been destroyed and removed from component
@@ -161,7 +163,8 @@ class ScriptComponent extends Component {
      *
      * @event ScriptComponent#move
      * @param {string} name - The name of the Script Type.
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -174,7 +177,8 @@ class ScriptComponent extends Component {
      * Fired when a script instance is moved in component.
      *
      * @event ScriptComponent#move:[name]
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that has been moved.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that has been moved.
      * @param {number} ind - New position index.
      * @param {number} indOld - Old position index.
      * @example
@@ -187,7 +191,8 @@ class ScriptComponent extends Component {
      * Fired when a script instance had an exception.
      *
      * @event ScriptComponent#error
-     * @param {ScriptType} scriptInstance - The instance of the {@link ScriptType} that raised the exception.
+     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * the {@link ScriptType} that raised the exception.
      * @param {Error} err - Native JS Error object with details of an error.
      * @param {string} method - The method of the script instance that the exception originated from.
      * @example
@@ -200,7 +205,7 @@ class ScriptComponent extends Component {
      * An array of all script instances attached to an entity. This array is read-only and should
      * not be modified by developer.
      *
-     * @type {ScriptType[]}
+     * @type {import('../../script/script-type.js').ScriptType[]}
      */
     set scripts(value) {
         this._scriptsData = value;
@@ -555,7 +560,8 @@ class ScriptComponent extends Component {
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
      * if (entity.script.has('playerController')) {
@@ -578,9 +584,10 @@ class ScriptComponent extends Component {
     /**
      * Get a script instance (if attached).
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null
-     * is returned.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
+     * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
+     * instance is returned. Otherwise null is returned.
      * @example
      * var controller = entity.script.get('playerController');
      */
@@ -601,7 +608,8 @@ class ScriptComponent extends Component {
     /**
      * Create a script instance and attach to an entity script component.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
      * true.
@@ -611,9 +619,10 @@ class ScriptComponent extends Component {
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
-     * @returns {ScriptType|null} Returns an instance of a {@link ScriptType} if successfully attached
-     * to an entity, or null if it failed because a script with a same name has already been added
-     * or if the {@link ScriptType} cannot be found by name in the {@link ScriptRegistry}.
+     * @returns {import('../../script/script-type.js').ScriptType|null} Returns an instance of a
+     * {@link ScriptType} if successfully attached to an entity, or null if it failed because a
+     * script with a same name has already been added or if the {@link ScriptType} cannot be found
+     * by name in the {@link ScriptRegistry}.
      * @example
      * entity.script.create('playerController', {
      *     attributes: {
@@ -704,7 +713,8 @@ class ScriptComponent extends Component {
     /**
      * Destroy the script instance that is attached to an entity.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
@@ -760,7 +770,8 @@ class ScriptComponent extends Component {
     /**
      * Swap the script instance.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
      * @private
      */
@@ -930,7 +941,8 @@ class ScriptComponent extends Component {
     /**
      * Move script instance to different position to alter update order of scripts within entity.
      *
-     * @param {string|Class<ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example

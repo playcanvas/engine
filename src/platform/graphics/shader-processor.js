@@ -2,13 +2,12 @@ import { Debug } from '../../core/debug.js';
 import {
     BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    UNIFORM_BUFFER_DEFAULT_SLOT_NAME
+    UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
+    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
-
-/** @typedef {import('./shader-processor-options.js').ShaderProcessorOptions} ShaderProcessorOptions */
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // accepted keywords
 // TODO: 'out' keyword is not in the list, as handling it is more complicated due
@@ -22,6 +21,16 @@ const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]
 const MARKER = '@@@';
 
 const precisionQualifiers = new Set(['highp', 'mediump', 'lowp']);
+const shadowSamplers = new Set(['sampler2DShadow', 'samplerCubeShadow']);
+const textureDimensions = {
+    sampler2D: TEXTUREDIMENSION_2D,
+    sampler3D: TEXTUREDIMENSION_3D,
+    samplerCube: TEXTUREDIMENSION_CUBE,
+    samplerCubeShadow: TEXTUREDIMENSION_CUBE,
+    sampler2DShadow: TEXTUREDIMENSION_2D,
+    sampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
+    sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY
+};
 
 class UniformLine {
     constructor(line) {
@@ -46,9 +55,8 @@ class UniformLine {
 }
 
 /**
- * Pure static class implementing processing of GLSL shaders. It allocates
- * fixed locations for attributes, and handles conversion of uniforms to
- * uniform buffers.
+ * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
+ * attributes, and handles conversion of uniforms to uniform buffers.
  *
  * @ignore
  */
@@ -56,7 +64,7 @@ class ShaderProcessor {
     /**
      * Process the shader.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
      * @returns {object} - The processed shader data.
      */
@@ -171,9 +179,10 @@ class ShaderProcessor {
      * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
      * uniforms that change on the level of the mesh.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
-     * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
+     * @param {import('./shader-processor-options.js').ShaderProcessorOptions} processingOptions -
+     * Uniform formats.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
@@ -221,8 +230,20 @@ class ShaderProcessor {
             // unmatched texture uniforms go to mesh block
             if (!processingOptions.hasTexture(uniform.name)) {
 
+                // sample type
+                // WebGpu does not currently support filtered float format textures, and so we map them to unfilterable type
+                // as we sample them without filtering anyways
+                let sampleType = SAMPLETYPE_FLOAT;
+                if (uniform.precision === 'highp')
+                    sampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
+                if (shadowSamplers.has(uniform.type))
+                    sampleType = SAMPLETYPE_DEPTH;
+
+                // dimension
+                const dimension = textureDimensions[uniform.type];
+
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
+                textureFormats.push(new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType));
             }
 
             // validate types in else

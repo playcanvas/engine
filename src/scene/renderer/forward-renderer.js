@@ -45,17 +45,6 @@ import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
-/** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../platform/graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../layer.js').Layer} Layer */
-/** @typedef {import('../scene.js').Scene} Scene */
-/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../camera.js').Camera} Camera */
-/** @typedef {import('../frame-graph.js').FrameGraph} FrameGraph */
-/** @typedef {import('../composition/layer-composition.js').LayerComposition} LayerComposition */
-
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
@@ -85,7 +74,7 @@ const _drawCallList = {
     lightMaskChanged: []
 };
 
-const _tempMaterialSet = new Set();
+const _tempSet = new Set();
 
 /**
  * The forward renderer renders {@link Scene}s.
@@ -99,14 +88,15 @@ class ForwardRenderer {
     /**
      * Create a new ForwardRenderer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
+     * graphics device used by the renderer.
      * @hideconstructor
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         const device = this.device;
 
-        /** @type {Scene|null} */
+        /** @type {import('../scene.js').Scene|null} */
         this.scene = null;
 
         this._shadowDrawCalls = 0;
@@ -455,6 +445,7 @@ class ForwardRenderer {
             while (renderAction.viewBindGroups.length < viewCount) {
                 const ub = new UniformBuffer(device, this.viewUniformFormat);
                 const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
+                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
                 renderAction.viewBindGroups.push(bg);
             }
 
@@ -471,8 +462,10 @@ class ForwardRenderer {
     /**
      * Set up the viewport and the scissor for camera rendering.
      *
-     * @param {Camera} camera - The camera containing the viewport information.
-     * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
+     * @param {import('../camera.js').Camera} camera - The camera containing the viewport
+     * information.
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget} [renderTarget] - The
+     * render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
 
@@ -505,8 +498,9 @@ class ForwardRenderer {
     /**
      * Clear the current render target, using currently set up viewport.
      *
-     * @param {RenderAction} renderAction - Render action containing the clear flags.
-     * @param {Camera} camera - Camera containing the clear values.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - Render action
+     * containing the clear flags.
+     * @param {import('../camera.js').Camera} camera - Camera containing the clear values.
      */
     clear(renderAction, camera) {
 
@@ -560,7 +554,7 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {Scene} scene - The scene.
+     * @param {import('../scene.js').Scene} scene - The scene.
      */
     dispatchGlobalLights(scene) {
         this.ambientColor[0] = scene.ambientLight.r;
@@ -1269,7 +1263,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < drawCallsCount; i++) {
 
-            /** @type {MeshInstance} */
+            /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
 
             // apply visibility override
@@ -1556,7 +1550,7 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {MeshInstance[]} drawCalls - Mesh instances.
+     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Mesh instances.
      * @param {boolean} onlyLitShaders - Limits the update to shaders affected by lighting.
      */
     updateShaders(drawCalls, onlyLitShaders) {
@@ -1565,8 +1559,8 @@ class ForwardRenderer {
             const mat = drawCalls[i].material;
             if (mat) {
                 // material not processed yet
-                if (!_tempMaterialSet.has(mat)) {
-                    _tempMaterialSet.add(mat);
+                if (!_tempSet.has(mat)) {
+                    _tempSet.add(mat);
 
                     // skip this for materials not using variants
                     if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
@@ -1585,11 +1579,12 @@ class ForwardRenderer {
         }
 
         // keep temp set empty
-        _tempMaterialSet.clear();
+        _tempSet.clear();
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to update.
      * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
     beginFrame(comp, lightsChanged) {
@@ -1624,7 +1619,8 @@ class ForwardRenderer {
     /**
      * Updates the layer composition for rendering.
      *
-     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
      * @returns {number} - Flags of what was updated
      * @ignore
@@ -1735,7 +1731,8 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      * @param {number} compUpdatedFlags - Flags of what was updated.
      */
     updateLightStats(comp, compUpdatedFlags) {
@@ -1774,7 +1771,8 @@ class ForwardRenderer {
      * visible meshInstances are collected into light._renderData, and are marked as visible
      * for directional lights also shadow camera matrix is set up
      *
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     cullShadowmaps(comp) {
 
@@ -1808,7 +1806,8 @@ class ForwardRenderer {
      * visibility culling of lights, meshInstances, shadows casters
      * Also applies meshInstance.visible and camera.cullingMask
      *
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     cullComposition(comp) {
 
@@ -1819,19 +1818,19 @@ class ForwardRenderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
 
-            /** @type {RenderAction} */
+            /** @type {import('../composition/render-action.js').RenderAction} */
             const renderAction = renderActions[i];
 
             // layer
             const layerIndex = renderAction.layerIndex;
-            /** @type {Layer} */
+            /** @type {import('../layer.js').Layer} */
             const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             const transparent = comp.subLayerList[layerIndex];
 
             // camera
             const cameraPass = renderAction.cameraIndex;
-            /** @type {CameraComponent} */
+            /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
             const camera = layer.cameras[cameraPass];
 
             if (camera) {
@@ -1881,14 +1880,16 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     updateLightTextureAtlas(comp) {
         this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     updateClusters(comp) {
 
@@ -1896,10 +1897,27 @@ class ForwardRenderer {
         const startTime = now();
         // #endif
 
-        for (let i = 0; i < comp._worldClusters.length; i++) {
-            const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lighting);
+        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
+
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
+            const cluster = renderAction.lightClusters;
+
+            if (cluster && cluster !== emptyWorldClusters) {
+
+                // update each cluster only one time
+                if (!_tempSet.has(cluster)) {
+                    _tempSet.add(cluster);
+
+                    const layer = comp.layerList[renderAction.layerIndex];
+                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
+                }
+            }
         }
+
+        // keep temp set empty
+        _tempSet.clear();
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
@@ -1910,8 +1928,9 @@ class ForwardRenderer {
     /**
      * Builds a frame graph for the rendering of the whole frame.
      *
-     * @param {FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {LayerComposition} layerComposition - The layer composition used to build the frame graph.
+     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition used to build the frame graph.
      * @ignore
      */
     buildFrameGraph(frameGraph, layerComposition) {
@@ -2027,8 +2046,9 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {FrameGraph} frameGraph - The frame graph
-     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame graph.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition.
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex, isGrabPass) {
 
@@ -2078,7 +2098,8 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     update(comp) {
 
@@ -2111,8 +2132,10 @@ class ForwardRenderer {
     /**
      * Render pass for directional shadow maps of the camera.
      *
-     * @param {RenderAction} renderAction - The render action.
-     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
+     * action.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition.
      * @ignore
      */
     renderPassDirectionalShadows(renderAction, layerComposition) {
@@ -2137,7 +2160,8 @@ class ForwardRenderer {
     /**
      * Render pass representing the layer composition's render actions in the specified range.
      *
-     * @param {LayerComposition} comp - the layer composition to render.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to render.
      * @ignore
      */
     renderPassRenderActions(comp, range) {
@@ -2149,8 +2173,10 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
-     * @param {RenderAction} renderAction - The render action.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
+     * action.
      * @param {boolean} firstRenderAction - True if this is the first render action in the render pass.
      */
     renderRenderAction(comp, renderAction, firstRenderAction) {

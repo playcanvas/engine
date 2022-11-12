@@ -1,13 +1,10 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { XRTYPE_AR } from './constants.js';
-
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 const vec3A = new Vec3();
 const vec3B = new Vec3();
@@ -25,7 +22,7 @@ const mat4B = new Mat4();
  */
 class XrLightEstimation extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
@@ -81,7 +78,7 @@ class XrLightEstimation extends EventHandler {
     /**
      * Create a new XrLightEstimation instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {

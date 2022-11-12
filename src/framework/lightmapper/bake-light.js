@@ -57,6 +57,8 @@ class BakeLight {
 
         // destroy shadow map the light might have
         this.light._destroyShadowMap();
+
+        this.light.beginFrame();
     }
 
     endBake(shadowMapCache) {

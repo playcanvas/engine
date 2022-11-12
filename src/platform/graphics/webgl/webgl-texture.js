@@ -1,8 +1,8 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_L8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R5_G5_B5_A1, PIXELFORMAT_R4_G4_B4_A4,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
+    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
@@ -102,32 +102,32 @@ class WebglTexture {
                 this._glInternalFormat = gl.LUMINANCE;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_L8_A8:
+            case PIXELFORMAT_LA8:
                 this._glFormat = gl.LUMINANCE_ALPHA;
                 this._glInternalFormat = gl.LUMINANCE_ALPHA;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_R5_G6_B5:
+            case PIXELFORMAT_RGB565:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.RGB;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
                 break;
-            case PIXELFORMAT_R5_G5_B5_A1:
+            case PIXELFORMAT_RGBA5551:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
                 break;
-            case PIXELFORMAT_R4_G4_B4_A4:
+            case PIXELFORMAT_RGBA4:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
                 break;
-            case PIXELFORMAT_R8_G8_B8:
+            case PIXELFORMAT_RGB8:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = device.webgl2 ? gl.RGB8 : gl.RGB;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_R8_G8_B8_A8:
+            case PIXELFORMAT_RGBA8:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = device.webgl2 ? gl.RGBA8 : gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_BYTE;
@@ -274,7 +274,7 @@ class WebglTexture {
 
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.");
+        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
         const gl = device.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))

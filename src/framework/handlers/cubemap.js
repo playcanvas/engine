@@ -1,13 +1,12 @@
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
-
-import { Asset } from '../../framework/asset/asset.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
+import { Asset } from '../asset/asset.js';
+
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
@@ -25,7 +24,7 @@ class CubemapHandler {
     /**
      * Create a new CubemapHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -170,7 +169,7 @@ class CubemapHandler {
                     type: getType() || faceTextures[0].type,
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
-                    format: format === PIXELFORMAT_R8_G8_B8 ? PIXELFORMAT_R8_G8_B8_A8 : format,
+                    format: format === PIXELFORMAT_RGB8 ? PIXELFORMAT_RGBA8 : format,
                     levels: faceLevels,
                     minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : faceTextures[0].minFilter,
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,
