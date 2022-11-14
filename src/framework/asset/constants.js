@@ -77,6 +77,13 @@ export const ASSET_TEXT = 'text';
 export const ASSET_TEXTURE = 'texture';
 
 /**
+ * Asset type name for textureatlas.
+ *
+ * @type {string}
+ */
+export const ASSET_TEXTUREATLAS = 'textureatlas';
+
+/**
  * Asset type name for cubemap.
  *
  * @type {string}
