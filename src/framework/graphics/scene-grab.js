@@ -253,7 +253,7 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
+                    if (!this.depthRenderTarget.depthBuffer || self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
                         this.depthRenderTarget.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_R8_G8_B8_A8, false, false, true);
                     }
