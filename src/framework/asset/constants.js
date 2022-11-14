@@ -77,10 +77,9 @@ export const ASSET_TEXT = 'text';
 export const ASSET_TEXTURE = 'texture';
 
 /**
- * @constant
+ * Asset type name for textureatlas.
+ *
  * @type {string}
- * @name ASSET_TEXTUREATLAS
- * @description Asset type name for textureatlas.
  */
 export const ASSET_TEXTUREATLAS = 'textureatlas';
 
