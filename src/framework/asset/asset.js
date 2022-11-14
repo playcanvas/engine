@@ -55,7 +55,7 @@ class Asset extends EventHandler {
      * retrieve the asset.
      * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container",
      * "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
-     * "template", text", "texture"]
+     * "template", text", "texture", "textureatlas"]
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
@@ -94,9 +94,9 @@ class Asset extends EventHandler {
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
          * "css", "font", "json", "html", "material", "model", "render", "script", "shader", "sprite",
-         * "template", "text", "texture"]
+         * "template", "text", "texture", "textureatlas"]
          *
-         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
+         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas")}
          */
         this.type = type;
 
