@@ -95,7 +95,8 @@ class PaintMeshExample {
                 return entity;
             };
 
-            // we render decals to a texture, so create a render target for it
+            // We render decals to a texture, so create a render target for it. Note that the texture needs
+            // to be of renderable format here, and so it cannot be compressed.
             const texture = assets.color.resource;
             const renderTarget = new pc.RenderTarget({
                 colorBuffer: texture,
