@@ -52,7 +52,7 @@ class XrPickingExample {
 
         const createCube = function (x: number, y: number, z: number) {
             const cube = new pc.Entity();
-            cube.addComponent("model", {
+            cube.addComponent("render", {
                 type: "box",
                 material: new pc.StandardMaterial()
             });

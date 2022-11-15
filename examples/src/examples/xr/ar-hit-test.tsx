@@ -50,7 +50,7 @@ class ArHitTestExample {
         app.root.addChild(l);
 
         const target = new pc.Entity();
-        target.addComponent("model", {
+        target.addComponent("render", {
             type: "cylinder"
         });
         target.setLocalScale(0.5, 0.01, 0.5);
