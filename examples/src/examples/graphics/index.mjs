@@ -32,6 +32,7 @@ import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
 import MultiViewExample from "./multi-view";
 import PainterExample from "./painter";
+import PaintMeshExample from "./paint-mesh";
 import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
 import ParticlesSnowExample from "./particles-snow";
@@ -87,6 +88,7 @@ export {
     ModelTexturedBoxExample,
     MultiViewExample,
     PainterExample,
+    PaintMeshExample,
     ParticlesAnimIndexExample,
     ParticlesRandomSpritesExample,
     ParticlesSnowExample,
