@@ -4,47 +4,65 @@
  * @param opts - options
  * @returns
  */
-export const createDelayedExecutionRunner = (fn, opts) => {
+ export const createDelayedExecutionRunner = (
+    fn,
+    opts
+    ) => {
     const defaultOpts = {
-        queueSize: 4,
+      queueSize: 4,
     };
+  
     const options = { ...defaultOpts, ...opts };
-    let queueEntryIndex = 0;
+    // ensure queue size cannot be less than 1
+    options.queueSize = Math.max(1, options.queueSize);
+    // the queue to exectute next
     let queueTickIndex = 0;
     const queue = [];
+  
+    for (let i = 0; i < options.queueSize; i++) {
+      queue[i] = new Set();
+    }
+  
     const getTotalSize = () => {
-        let size = 0;
-        for (const q of queue) {
-            size += q.length;
-        }
-        return size;
+      let size = 0;
+      for (const q of queue) {
+        size += q.size;
+      }
+      return size;
     };
     const add = (entry) => {
-        if (!Array.isArray(queue[queueEntryIndex])) {
-            queue[queueEntryIndex] = [];
+      let smallestQueue = queue[0];
+      for (const q of queue) {
+        if (q.has(entry)) return;
+        if (q.size < smallestQueue.size) {
+          smallestQueue = q;
         }
-        queue[queueEntryIndex++].push(entry);
-        if (queueEntryIndex >= options.queueSize) {
-            queueEntryIndex = 0;
-        }
+      }
+      smallestQueue.add(entry);
     };
-
-  // fire the callback function for every entry on the curent queue
-    const tick = (data) => {
-        const q = queue[queueTickIndex++];
-        if (q.length === 0) {
-            tick();
-            return;
-        }
-        if (queueTickIndex >= queue.length) {
-            queueTickIndex = 0;
-        }
-        q.forEach((entry) => fn(entry, data));
+  
+    const remove = (entry) => {
+      for (const q of queue) {
+        q.delete(entry);
+      }
     };
-
+  
+    // fire the callback function for every entry on the curent queue
+    const tick = (dt) => {
+      const q = queue[queueTickIndex++];
+      if (queueTickIndex >= queue.length) {
+        queueTickIndex = 0;
+      }
+      q.forEach((entry) => fn(entry, dt));
+    };
+  
     return {
-        add,
-        tick,
-        getTotalSize
+      add,
+      remove,
+      tick: (dt) => {
+        if (getTotalSize() > 0) tick(dt);
+      },
+      getTotalSize,
     };
-};
+  };
+  

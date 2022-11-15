@@ -107,7 +107,7 @@ class Component extends EventHandler {
      */
     get data() {
         const record = this.system.store[this.entity.getGuid()];
-        return record ? record.data : null;
+        return record ? record.data : {};
     }
 }
 
