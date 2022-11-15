@@ -52,7 +52,7 @@ class FirstPersonExample {
                 app.root.addChild(floor);
 
                 const floorModel = new pc.Entity();
-                floorModel.addComponent("model", {
+                floorModel.addComponent("render", {
                     type: "plane"
                 });
                 floorModel.setLocalPosition(0, 0.5, 0);
