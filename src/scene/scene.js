@@ -140,7 +140,7 @@ class Scene extends EventHandler {
 
     /**
      * Enables HDR lightmaps. This can result in smoother lightmaps especially when many samples
-     * are used.
+     * are used. Defaults to false.
      *
      * @type {boolean}
      */
