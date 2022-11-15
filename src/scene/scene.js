@@ -8,6 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -136,6 +137,14 @@ class Scene extends EventHandler {
      * @type {boolean}
      */
     lightmapFilterEnabled = false;
+
+    /**
+     * Enables HDR lightmaps. This can result in smoother lightmaps especially when many samples
+     * are used. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    lightmapHDR = false;
 
     /**
      * The root entity of the scene, which is usually the only child to the {@link Application}
@@ -773,6 +782,15 @@ class Scene extends EventHandler {
             this.skybox = cubemaps[0] || null;
             this.prefilteredCubemaps = cubemaps.slice(1);
         }
+    }
+
+    /**
+     * Get the lightmap pixel format.
+     *
+     * @type {number} The pixel format.
+     */
+    get lightmapPixelFormat() {
+        return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;
     }
 }
 

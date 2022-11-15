@@ -99,7 +99,7 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr ? device.getHdrFormat() : PIXELFORMAT_RGBA8;
+        const format = hdr && device.getHdrFormat(false, true, false, false) || PIXELFORMAT_RGBA8;
         const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
