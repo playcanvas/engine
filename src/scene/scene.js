@@ -139,15 +139,12 @@ class Scene extends EventHandler {
     lightmapFilterEnabled = false;
 
     /**
-     * Specify the pixel format to use for lightmaps. Can be:
+     * Enables HDR lightmaps. This can result in smoother lightmaps especially when many samples
+     * are used.
      *
-     * - {@link PIXELFORMAT_RGBA8}
-     * - {@link PIXELFORMAT_RGBA16F}
-     * - {@link PIXELFORMAT_RGBA32F}
-     *
-     * @type {number}
+     * @type {boolean}
      */
-    lightmapPixelFormat = PIXELFORMAT_RGBA8;
+    lightmapHDR = false;
 
     /**
      * The root entity of the scene, which is usually the only child to the {@link Application}
@@ -785,6 +782,15 @@ class Scene extends EventHandler {
             this.skybox = cubemaps[0] || null;
             this.prefilteredCubemaps = cubemaps.slice(1);
         }
+    }
+
+    /**
+     * Get the lightmap pixel format.
+     *
+     * @type {number} The pixel format.
+     */
+    get lightmapPixelFormat() {
+        return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;
     }
 }
 

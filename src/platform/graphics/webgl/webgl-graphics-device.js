@@ -2749,21 +2749,36 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Get the supported HDR pixel format.
-     * Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
-     * https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-     * For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+     * Get a supported HDR pixel format given a set of hardware support requirements.
      *
-     * @returns {number} The HDR pixel format.
+     * @param {boolean} preferLargest - If true, prefer the highest precision format. Otherwise prefer the lowest precision format.
+     * @param {boolean} renderable - If true, only include pixel formats that can be used as render targets.
+     * @param {boolean} updatable - If true, only include formats that can be updated by the CPU.
+     * @param {boolean} filterable - If true, only include formats that support texture filtering.
+     *
+     * @returns {number} The HDR pixel format or null if there are none.
      * @ignore
      */
-    getHdrFormat() {
-        if (this.textureHalfFloatRenderable) {
+    getHdrFormat(preferLargest, renderable, updatable, filterable) {
+        // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
+        // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+        // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+        const f16Valid = this.extTextureHalfFloat &&
+            (!renderable || this.textureHalfFloatRenderable) &&
+            (!updatable || this.textureHalfFloatUpdatable) &&
+            (!filterable || this.extTextureHalfFloatLinear);
+        const f32Valid = this.extTextureFloat &&
+            (!renderable || this.textureFloatRenderable) &&
+            (!filterable || this.extTextureFloatLinear);
+
+        if (f16Valid && f32Valid) {
+            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+        } else if (f16Valid) {
             return PIXELFORMAT_RGBA16F;
-        } else if (this.textureFloatRenderable) {
+        } else if (f32Valid) {
             return PIXELFORMAT_RGBA32F;
-        }
-        return PIXELFORMAT_RGBA8;
+        } /* else */
+        return null;
     }
 
     /**
