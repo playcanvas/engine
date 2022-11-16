@@ -72,8 +72,8 @@ class Asset extends EventHandler {
      * materials).
      * @param {object} [options] - The asset handler options. For container options see
      * {@link ContainerHandler}.
-     * @param {boolean} [options.crossOrigin] - For use with texture resources. For
-     * browser-supported image formats only, enable cross origin.
+     * @param {string} [options.crossOrigin] - For use with browser-supported texture resources
+     * only, override the default cross origin.
      * @example
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
