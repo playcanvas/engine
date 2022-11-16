@@ -81,7 +81,11 @@ class ElementDragHelper extends EventHandler {
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
     }
 
-    _toggleDragListeners(onOrOff) {
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @ignore
+     */
+     _toggleDragListeners(onOrOff) {
         const isOn = onOrOff === 'on';
 
         // Prevent multiple listeners
@@ -89,21 +93,17 @@ class ElementDragHelper extends EventHandler {
             return;
         }
 
-        if (!this._handleMouseUpOrTouchEnd) {
-            this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
-        }
-
         // mouse events, if mouse is available
         if (this._app.mouse) {
             this._element[onOrOff]('mousemove', this._onMove, this);
-            this._element[onOrOff]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mouseup', this._onMouseUpOrTouchEnd, this);
         }
 
         // touch events, if touch is available
         if (platform.touch) {
             this._element[onOrOff]('touchmove', this._onMove, this);
-            this._element[onOrOff]('touchend', this._handleMouseUpOrTouchEnd, this);
-            this._element[onOrOff]('touchcancel', this._handleMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchend', this._onMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._onMouseUpOrTouchEnd, this);
         }
 
         this._hasDragListeners = isOn;
