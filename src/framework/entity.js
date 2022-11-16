@@ -22,6 +22,7 @@ import { getApplication } from './globals.js';
 /** @typedef {import('./components/rigid-body/component.js').RigidBodyComponent} RigidBodyComponent */
 /** @typedef {import('./components/screen/component.js').ScreenComponent} ScreenComponent */
 /** @typedef {import('./components/script/component.js').ScriptComponent} ScriptComponent */
+/** @typedef {import('./components/script-esm/component.js').ScriptESMComponent} ScriptESMComponent */
 /** @typedef {import('./components/scrollbar/component.js').ScrollbarComponent} ScrollbarComponent */
 /** @typedef {import('./components/scroll-view/component.js').ScrollViewComponent} ScrollViewComponent */
 /** @typedef {import('./components/sound/component.js').SoundComponent} SoundComponent */
@@ -178,6 +179,14 @@ class Entity extends GraphNode {
     script;
 
     /**
+     * Gets the {@link ScriptESMComponent} attached to this entity.
+     *
+     * @type {ScriptESMComponent|undefined}
+     * @readonly
+     */
+    esmscript;
+
+    /**
      * Gets the {@link ScrollbarComponent} attached to this entity.
      *
      * @type {ScrollbarComponent|undefined}
@@ -307,6 +316,7 @@ class Entity extends GraphNode {
      * - "rigidbody" - see {@link RigidBodyComponent}
      * - "screen" - see {@link ScreenComponent}
      * - "script" - see {@link ScriptComponent}
+     * - "esmscript" - see {@link ScriptESMComponent}
      * - "scrollbar" - see {@link ScrollbarComponent}
      * - "scrollview" - see {@link ScrollViewComponent}
      * - "sound" - see {@link SoundComponent}

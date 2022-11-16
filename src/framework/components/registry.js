@@ -18,6 +18,7 @@ import { EventHandler } from '../../core/event-handler.js';
 /** @typedef {import('./rigid-body/system.js').RigidBodyComponentSystem} RigidBodyComponentSystem */
 /** @typedef {import('./screen/system.js').ScreenComponentSystem} ScreenComponentSystem */
 /** @typedef {import('./script/system.js').ScriptComponentSystem} ScriptComponentSystem */
+/** @typedef {import('./script-esm/system.js').ScriptESMComponentSystem} ScriptESMComponentSystem */
 /** @typedef {import('./scrollbar/system.js').ScrollbarComponentSystem} ScrollbarComponentSystem */
 /** @typedef {import('./scroll-view/system.js').ScrollViewComponentSystem} ScrollViewComponentSystem */
 /** @typedef {import('./sound/system.js').SoundComponentSystem} SoundComponentSystem */
@@ -173,6 +174,14 @@ class ComponentSystemRegistry extends EventHandler {
      * @readonly
      */
     script;
+
+    /**
+     * Gets the {@link ScriptESMComponentSystem} from the registry.
+     *
+     * @type {ScriptESMComponentSystem|undefined}
+     * @readonly
+     */
+    esmscript;
 
     /**
      * Gets the {@link ScrollbarComponentSystem} from the registry.

@@ -26,6 +26,7 @@ import { RenderComponentSystem } from './components/render/system.js';
 import { RigidBodyComponentSystem } from './components/rigid-body/system.js';
 import { ScreenComponentSystem } from './components/screen/system.js';
 import { ScriptLegacyComponentSystem } from './components/script-legacy/system.js';
+import { ScriptESMComponentSystem } from './components/script-esm/system.js';
 import { ScrollViewComponentSystem } from './components/scroll-view/system.js';
 import { ScrollbarComponentSystem } from './components/scrollbar/system.js';
 import { SoundComponentSystem } from './components/sound/system.js';
@@ -169,6 +170,7 @@ class Application extends AppBase {
             CameraComponentSystem,
             LightComponentSystem,
             script.legacy ? ScriptLegacyComponentSystem : ScriptComponentSystem,
+            ScriptESMComponentSystem,
             AudioSourceComponentSystem,
             SoundComponentSystem,
             AudioListenerComponentSystem,
