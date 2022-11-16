@@ -85,7 +85,7 @@ class ElementDragHelper extends EventHandler {
      * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
      * @ignore
      */
-     _toggleDragListeners(onOrOff) {
+    _toggleDragListeners(onOrOff) {
         const isOn = onOrOff === 'on';
 
         // Prevent multiple listeners
