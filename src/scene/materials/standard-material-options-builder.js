@@ -1,8 +1,9 @@
-import { _matTex2D } from '../../graphics/program-lib/programs/standard.js';
+import { Quat } from '../../core/math/quat.js';
 
 import {
-    PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
-} from '../../graphics/constants.js';
+    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR
+} from '../../platform/graphics/constants.js';
+
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
@@ -14,8 +15,7 @@ import {
     TONEMAP_LINEAR,
     SPECULAR_PHONG
 } from '../constants.js';
-
-import { Quat } from '../../math/quat.js';
+import { _matTex2D } from '../shader-lib/programs/standard.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -58,7 +58,7 @@ class StandardMaterialOptionsBuilder {
             options.toneMap = TONEMAP_LINEAR;
         }
         options.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
-        this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
+        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
@@ -106,8 +106,10 @@ class StandardMaterialOptionsBuilder {
 
         options.vertexColors = false;
         this._mapXForms = [];
+
+        const uniqueTextureMap = {};
         for (const p in _matTex2D) {
-            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
+            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
         this._mapXForms = null;
     }
@@ -122,7 +124,7 @@ class StandardMaterialOptionsBuilder {
                             notWhite(stdMat.diffuse);
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notBlack(stdMat.specular) || stdMat.specularityFactor > 0 ||
+                            notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
@@ -131,7 +133,7 @@ class StandardMaterialOptionsBuilder {
                              (stdMat.specularTint || (!stdMat.specularMap && !stdMat.specularVertexColor)) &&
                              notWhite(stdMat.specular);
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalness &&
+        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
                                       (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
 
         const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
@@ -145,7 +147,7 @@ class StandardMaterialOptionsBuilder {
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
-        options.useSpecularityFactor = specularityFactorTint || !!stdMat.specularityFactorMap;
+        options.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.useSpecularColor = useSpecularColor;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
@@ -154,8 +156,10 @@ class StandardMaterialOptionsBuilder {
         options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.ambientSH = !!stdMat.ambientSH;
         options.useSpecular = useSpecular;
-        options.emissiveEncoding = stdMat.emissiveMap ? stdMat.emissiveMap.encoding : null;
-        options.lightMapEncoding = stdMat.lightMap ? stdMat.lightMap.encoding : null;
+        options.diffuseEncoding = stdMat.diffuseMap?.encoding;
+        options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
+        options.emissiveEncoding = stdMat.emissiveMap?.encoding;
+        options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.opacityFadesSpecular = stdMat.opacityFadesSpecular;
         options.alphaFade = stdMat.alphaFade;
@@ -168,10 +172,14 @@ class StandardMaterialOptionsBuilder {
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
-        options.refraction = !!stdMat.refraction || !!stdMat.refractionMap;
-        options.refractionIndexTint = (stdMat.refractionIndex !== 1.5) ? 1 : 0;
+        options.refraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
+        options.refractionTint = (stdMat.refraction !== 1.0) ? 1 : 0;
+        options.useDynamicRefraction = stdMat.useDynamicRefraction;
+        options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
+        options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
         options.useMetalness = stdMat.useMetalness;
-        options.specularEncoding = stdMat.specularEncoding === undefined ? 'linear' : stdMat.specularEncoding;
+        options.specularEncoding = stdMat.specularEncoding || 'linear';
+        options.sheenEncoding = stdMat.sheenEncoding || 'linear';
         options.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.msdf = !!stdMat.msdfMap;
         options.msdfTextAttribute = !!stdMat.msdfTextAttribute;
@@ -187,9 +195,12 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
         options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
 
+        options.iridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
+        options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
+
         options.sheen = stdMat.useSheen;
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
-        options.sheenGlossinessTint = (stdMat.useSheen && stdMat.sheenGlossiness < 1) ? 1 : 0;
+        options.sheenGlossinessTint = 1;
     }
 
     _updateEnvOptions(options, stdMat, scene) {
@@ -248,11 +259,11 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1);
+        options.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.physicalUnits);
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
-    _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
+    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList) {
         options.lightMap = false;
         options.lightMapChannel = '';
         options.lightMapUv = 0;
@@ -264,7 +275,7 @@ class StandardMaterialOptionsBuilder {
             options.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapEncoding = 'rgbm';
+                options.lightMapEncoding = scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? 'rgbm' : 'linear';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
@@ -303,13 +314,14 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
+    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
         const mname = p + 'Map';
         const vname = p + 'VertexColor';
         const vcname = p + 'VertexColorChannel';
         const cname = mname + 'Channel';
         const tname = mname + 'Transform';
         const uname = mname + 'Uv';
+        const iname = mname + 'Identifier';
 
         // Avoid overriding previous lightMap properties
         if (p !== 'light') {
@@ -317,6 +329,7 @@ class StandardMaterialOptionsBuilder {
             options[cname] = '';
             options[tname] = 0;
             options[uname] = 0;
+            options[iname] = undefined;
         }
         options[vname] = false;
         options[vcname] = '';
@@ -338,7 +351,19 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
+
+                    // create an intermediate map between the textures and their slots
+                    // to ensure the unique texture mapping isn't dependent on the texture id
+                    // as that will change when textures are changed, even if the sharing is the same
+                    const mapId = stdMat[mname].id;
+                    let identifier = uniqueTextureMap[mapId];
+                    if (identifier === undefined) {
+                        uniqueTextureMap[mapId] = p;
+                        identifier = p;
+                    }
+
                     options[mname] = !!stdMat[mname];
+                    options[iname] = identifier;
                     options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];

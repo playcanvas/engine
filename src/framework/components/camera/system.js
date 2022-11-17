@@ -1,14 +1,12 @@
 import { sortPriority } from '../../../core/sort.js';
-import { Color } from '../../../math/color.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -29,7 +27,7 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {
@@ -58,6 +56,8 @@ class CameraComponentSystem extends ComponentSystem {
             'clearColorBuffer',
             'clearDepthBuffer',
             'clearStencilBuffer',
+            'renderSceneColorMap',
+            'renderSceneDepthMap',
             'cullFaces',
             'farClip',
             'flipFaces',
@@ -71,7 +71,10 @@ class CameraComponentSystem extends ComponentSystem {
             'projection',
             'priority',
             'rect',
-            'scissorRect'
+            'scissorRect',
+            'aperture',
+            'shutter',
+            'sensitivity'
         ];
 
         for (let i = 0; i < properties.length; i++) {
@@ -115,6 +118,8 @@ class CameraComponentSystem extends ComponentSystem {
             clearColorBuffer: c.clearColorBuffer,
             clearDepthBuffer: c.clearDepthBuffer,
             clearStencilBuffer: c.clearStencilBuffer,
+            renderSceneDepthMap: c.renderSceneDepthMap,
+            renderSceneColorMap: c.renderSceneColorMap,
             cullFaces: c.cullFaces,
             enabled: c.enabled,
             farClip: c.farClip,
@@ -129,7 +134,10 @@ class CameraComponentSystem extends ComponentSystem {
             projection: c.projection,
             priority: c.priority,
             rect: c.rect,
-            scissorRect: c.scissorRect
+            scissorRect: c.scissorRect,
+            aperture: c.aperture,
+            sensitivity: c.sensitivity,
+            shutter: c.shutter
         });
     }
 

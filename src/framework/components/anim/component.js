@@ -1,21 +1,18 @@
 import { Debug } from '../../../core/debug.js';
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
-import { AnimEvaluator } from '../../../anim/evaluator/anim-evaluator.js';
-import { AnimController } from '../../../anim/controller/anim-controller.js';
+import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
+import { AnimController } from '../../anim/controller/anim-controller.js';
 
 import { Component } from '../component.js';
 
 import {
     ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
-} from '../../../anim/controller/constants.js';
+} from '../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
-import { AnimStateGraph } from '../../../anim/state-graph/anim-state-graph.js';
-import { AnimEvents } from '../../../anim/evaluator/anim-events.js';
+import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
-
-/** @typedef {import('./system.js').AnimComponentSystem} AnimComponentSystem */
 
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
@@ -26,8 +23,8 @@ class AnimComponent extends Component {
     /**
      * Create a new AnimComponent instance.
      *
-     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this
-     * Component.
+     * @param {import('./system.js').AnimComponentSystem} system - The {@link ComponentSystem} that
+     * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -429,10 +426,6 @@ class AnimComponent extends Component {
     }
 
     onAnimationAssetLoaded(layerName, stateName, asset) {
-        const animTrack = asset.resource;
-        if (asset.data.events) {
-            animTrack.events = new AnimEvents(Object.values(asset.data.events));
-        }
         this.findAnimationLayer(layerName).assignAnimation(stateName, asset.resource);
     }
 
@@ -667,7 +660,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            Debug.error('Attempting to assign non integer value to integer parameter');
+            Debug.error('Attempting to assign non integer value to integer parameter', name, value);
         }
     }
 

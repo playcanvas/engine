@@ -88,6 +88,10 @@ class LightsExample {
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+            // enable cookies which are disabled by default for clustered lighting
+            app.scene.lighting.cookiesEnabled = true;
+
+            // ambient lighting
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
             // create an entity with the statue

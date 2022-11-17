@@ -1,15 +1,12 @@
-import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-
-import { math } from '../../math/math.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Quat } from '../../math/quat.js';
-import { Vec3 } from '../../math/vec3.js';
-
-import { BoundingBox } from '../../shape/bounding-box.js';
-
-import { Curve } from '../../math/curve.js';
-import { CurveSet } from '../../math/curve-set.js';
+import { now } from '../../core/time.js';
+import { Curve } from '../../core/math/curve.js';
+import { CurveSet } from '../../core/math/curve-set.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -17,19 +14,17 @@ import {
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     INDEXFORMAT_UINT16,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
-} from '../../graphics/constants.js';
-import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
-import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
-import { IndexBuffer } from '../../graphics/index-buffer.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
-import { VertexBuffer } from '../../graphics/vertex-buffer.js';
-import { VertexFormat } from '../../graphics/vertex-format.js';
-import { DeviceCache } from '../../graphics/device-cache.js';
+} from '../../platform/graphics/constants.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 
 import {
     BLEND_NORMAL,
@@ -37,11 +32,14 @@ import {
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
     PARTICLESORT_NONE
-} from '../../scene/constants.js';
-import { Material } from '../../scene/materials/material.js';
-import { Mesh } from '../../scene/mesh.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-
+} from '../constants.js';
+import { Mesh } from '../mesh.js';
+import { MeshInstance } from '../mesh-instance.js';
+import { Material } from '../materials/material.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { particle } from '../shader-lib/programs/particle.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 
@@ -55,7 +53,7 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && format === PIXELFORMAT_R8_G8_B8_A8)
+    if (filter && format === PIXELFORMAT_RGBA8)
         mipFilter = FILTER_LINEAR;
 
     const texture = new Texture(device, {
@@ -73,7 +71,7 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
 
     const pixels = texture.lock();
 
-    if (format === PIXELFORMAT_R8_G8_B8_A8) {
+    if (format === PIXELFORMAT_RGBA8) {
         const temp = new Uint8Array(pixelData.length);
         for (let i = 0; i < pixelData.length; i++) {
             temp[i] = pixelData[i] * mult8Bit * 255;
@@ -403,7 +401,7 @@ class ParticleEmitter {
                 }
             }
 
-            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_RGBA8, 1.0, true);
             texture.minFilter = FILTER_LINEAR;
             texture.magFilter = FILTER_LINEAR;
             return texture;
@@ -646,9 +644,9 @@ class ParticleEmitter {
 
         if (!this.useCpu) {
             if (this.pack8) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
+                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
+                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, PIXELFORMAT_RGBA8, 1, false);
             } else {
                 this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
                 this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
@@ -814,7 +812,7 @@ class ParticleEmitter {
             this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
         }
-        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_RGBA8, 1.0, true);
     }
 
     _initializeTextures() {
@@ -827,7 +825,9 @@ class ParticleEmitter {
     }
 
     regenShader() {
-        const programLib = this.graphicsDevice.getProgramLibrary();
+        const programLib = getProgramLibrary(this.graphicsDevice);
+        programLib.register('particle', particle);
+
         const hasNormal = (this.normalMap !== null);
         this.normalOption = 0;
         if (this.lighting) {

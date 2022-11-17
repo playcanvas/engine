@@ -2,11 +2,11 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
-    PIXELFORMAT_DEPTH, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXHINT_SHADOWMAP
-} from '../../graphics/constants.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
+} from '../../platform/graphics/constants.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     LIGHTTYPE_OMNI,
@@ -54,7 +54,7 @@ class ShadowMap {
         } else if (shadowType === SHADOW_PCF3 && device.webgl2) {
             return PIXELFORMAT_DEPTH;
         }
-        return PIXELFORMAT_R8_G8_B8_A8;
+        return PIXELFORMAT_RGBA8;
     }
 
     static getShadowFiltering(device, shadowType) {
@@ -141,7 +141,7 @@ class ShadowMap {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             width: size,
             height: size,
             cubemap: true,

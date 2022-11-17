@@ -26,7 +26,7 @@ npm run test:coverage
 The PlayCanvas Engine is made up of ES Modules. Each module should have a corresponding unit test module. For example:
 
 ```
-/src/math/vec3.js
+/src/core/math/vec3.js
 ```
 
 ...has the corresponding unit test module:

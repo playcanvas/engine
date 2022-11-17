@@ -1,5 +1,6 @@
 import AreaLightsExample from "./area-lights";
 import AreaPickerExample from "./area-picker";
+import AssetViewerExample from "./asset-viewer";
 import BatchingDynamicExample from "./batching-dynamic";
 import BoxReflectionExample from "./box-reflection";
 import ClusteredAreaLightsExample from "./clustered-area-lights";
@@ -14,6 +15,7 @@ import LayersExample from "./layers";
 import LightsBakedAOExample from "./lights-baked-a-o";
 import LightsBakedExample from "./lights-baked";
 import LightsExample from "./lights";
+import LightPhysicalUnitsExample from "./light-physical-units";
 import LinesExample from "./lines";
 import MaterialAnisotropicExample from "./material-anisotropic";
 import MaterialBasicExample from "./material-basic";
@@ -30,6 +32,7 @@ import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
 import MultiViewExample from "./multi-view";
 import PainterExample from "./painter";
+import PaintMeshExample from "./paint-mesh";
 import ParticlesAnimIndexExample from "./particles-anim-index";
 import ParticlesRandomSpritesExample from "./particles-random-sprites";
 import ParticlesSnowExample from "./particles-snow";
@@ -53,6 +56,7 @@ import VideoTextureExample from "./video-texture";
 export {
     AreaLightsExample,
     AreaPickerExample,
+    AssetViewerExample,
     BatchingDynamicExample,
     BoxReflectionExample,
     ClusteredAreaLightsExample,
@@ -67,6 +71,7 @@ export {
     LightsBakedAOExample,
     LightsBakedExample,
     LightsExample,
+    LightPhysicalUnitsExample,
     LinesExample,
     MaterialAnisotropicExample,
     MaterialBasicExample,
@@ -83,6 +88,7 @@ export {
     ModelTexturedBoxExample,
     MultiViewExample,
     PainterExample,
+    PaintMeshExample,
     ParticlesAnimIndexExample,
     ParticlesRandomSpritesExample,
     ParticlesSnowExample,

@@ -11,12 +11,6 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-/** @typedef {import('../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../framework/components/light/component.js').LightComponent} LightComponent */
-/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
-/** @typedef {import('./light.js').Light} Light */
-/** @typedef {import('./mesh-instance.js').MeshInstance} MeshInstance */
-
 let keyA, keyB, sortPos, sortDir;
 
 function sortManual(drawCallA, drawCallB) {
@@ -357,17 +351,17 @@ class Layer {
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
         /**
-         * @type {MeshInstance[]}
+         * @type {import('./mesh-instance.js').MeshInstance[]}
          * @ignore
          */
         this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
         /**
-         * @type {MeshInstance[]}
+         * @type {import('./mesh-instance.js').MeshInstance[]}
          * @ignore
          */
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
         /**
-         * @type {MeshInstance[]}
+         * @type {import('./mesh-instance.js').MeshInstance[]}
          * @ignore
          */
         this.shadowCasters = this.instances.shadowCasters;
@@ -384,12 +378,12 @@ class Layer {
         this.customCalculateSortValues = null;
 
         /**
-         * @type {Light[]}
+         * @type {import('./light.js').Light[]}
          * @private
          */
         this._lights = [];
         /**
-         * @type {Set<Light>}
+         * @type {Set<import('./light.js').Light>}
          * @private
          */
         this._lightsSet = new Set();
@@ -397,7 +391,7 @@ class Layer {
         /**
          * Set of light used by clustered lighting (omni and spot, but no directional).
          *
-         * @type {Set<Light>}
+         * @type {Set<import('./light.js').Light>}
          * @private
          */
         this._clusteredLightsSet = new Set();
@@ -405,13 +399,13 @@ class Layer {
         /**
          * Lights separated by light type.
          *
-         * @type {Light[][]}
+         * @type {import('./light.js').Light[][]}
          * @ignore
          */
         this._splitLights = [[], [], []];
 
         /**
-         * @type {CameraComponent[]}
+         * @type {import('../framework/components/camera/component.js').CameraComponent[]}
          * @ignore
          */
         this.cameras = [];
@@ -454,12 +448,12 @@ class Layer {
     }
 
     /**
-     * @type {RenderTarget}
+     * @type {import('../platform/graphics/render-target.js').RenderTarget}
      * @ignore
      */
     set renderTarget(rt) {
         /**
-         * @type {RenderTarget}
+         * @type {import('../platform/graphics/render-target.js').RenderTarget}
          * @private
          */
         this._renderTarget = rt;
@@ -537,7 +531,7 @@ class Layer {
     /**
      * Returns lights used by clustered lighting in a set.
      *
-     * @type {Set<Light>}
+     * @type {Set<import('./light.js').Light>}
      * @ignore
      */
     get clusteredLightsSet() {
@@ -586,7 +580,8 @@ class Layer {
      * Adds an array of mesh instances to this layer.
      *1
      *
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
      * to cast shadows in this layer.
      */
@@ -624,8 +619,9 @@ class Layer {
     /**
      * Internal function to remove a mesh instance from an array.
      *
-     * @param {MeshInstance} m - Mesh instance to remove.
-     * @param {MeshInstance[]} arr - Array of mesh instances to remove from.
+     * @param {import('./mesh-instance.js').MeshInstance} m - Mesh instance to remove.
+     * @param {import('./mesh-instance.js').MeshInstance[]} arr - Array of mesh instances to remove
+     * from.
      * @private
      */
     removeMeshInstanceFromArray(m, arr) {
@@ -655,8 +651,8 @@ class Layer {
     /**
      * Removes multiple mesh instances from this layer.
      *
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
-     * this layer, they will be removed.
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}. If they were added to this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
      * removed mesh instances or if they never did cast shadows before.
      */
@@ -705,7 +701,8 @@ class Layer {
     /**
      * Adds a light to this layer.
      *
-     * @param {LightComponent} light - A {@link LightComponent}.
+     * @param {import('../framework/components/light/component.js').LightComponent} light - A
+     * {@link LightComponent}.
      */
     addLight(light) {
 
@@ -714,20 +711,21 @@ class Layer {
         if (!this._lightsSet.has(l)) {
             this._lightsSet.add(l);
 
-            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
-                this._clusteredLightsSet.add(l);
-            }
-
             this._lights.push(l);
             this._dirtyLights = true;
             this._generateLightHash();
+        }
+
+        if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+            this._clusteredLightsSet.add(l);
         }
     }
 
     /**
      * Removes a light from this layer.
      *
-     * @param {LightComponent} light - A {@link LightComponent}.
+     * @param {import('../framework/components/light/component.js').LightComponent} light - A
+     * {@link LightComponent}.
      */
     removeLight(light) {
 
@@ -735,13 +733,13 @@ class Layer {
         if (this._lightsSet.has(l)) {
             this._lightsSet.delete(l);
 
-            if (l.type !== LIGHTTYPE_DIRECTIONAL) {
-                this._clusteredLightsSet.delete(l);
-            }
-
             this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
             this._generateLightHash();
+        }
+
+        if (l.type !== LIGHTTYPE_DIRECTIONAL) {
+            this._clusteredLightsSet.delete(l);
         }
     }
 
@@ -759,7 +757,8 @@ class Layer {
      * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
      * rendered anywhere, but only cast shadows on other objects).
      *
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
         const arr = this.shadowCasters;
@@ -775,8 +774,8 @@ class Layer {
      * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
      * will stop casting shadows.
      *
-     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
-     * this layer, they will be removed.
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}. If they were added to this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
         const arr = this.shadowCasters;
@@ -825,7 +824,8 @@ class Layer {
     /**
      * Adds a camera to this layer.
      *
-     * @param {CameraComponent} camera - A {@link CameraComponent}.
+     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
+     * {@link CameraComponent}.
      */
     addCamera(camera) {
         if (this.cameras.indexOf(camera) >= 0) return;
@@ -836,7 +836,8 @@ class Layer {
     /**
      * Removes a camera from this layer.
      *
-     * @param {CameraComponent} camera - A {@link CameraComponent}.
+     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
+     * {@link CameraComponent}.
      */
     removeCamera(camera) {
         const index = this.cameras.indexOf(camera);
@@ -858,7 +859,7 @@ class Layer {
     }
 
     /**
-     * @param {MeshInstance[]} drawCalls - Array of mesh instances.
+     * @param {import('./mesh-instance.js').MeshInstance[]} drawCalls - Array of mesh instances.
      * @param {number} drawCallsCount - Number of mesh instances.
      * @param {Vec3} camPos - Camera position.
      * @param {Vec3} camFwd - Camera forward vector.
@@ -883,7 +884,8 @@ class Layer {
 
     /**
      * @param {boolean} transparent - True if transparent sorting should be used.
-     * @param {GraphNode} cameraNode - Graph node that the camera is attached to.
+     * @param {import('./graph-node.js').GraphNode} cameraNode - Graph node that the camera is
+     * attached to.
      * @param {number} cameraPass - Camera pass.
      * @ignore
      */

@@ -1,12 +1,12 @@
 import { now } from '../../core/time.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
-import { Mat3 } from '../../math/mat3.js';
-import { Mat4 } from '../../math/mat4.js';
-import { Vec3 } from '../../math/vec3.js';
-import { Color } from '../../math/color.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
-import { BoundingSphere } from '../../shape/bounding-sphere.js';
+import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -16,14 +16,15 @@ import {
     STENCILOP_KEEP,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
-} from '../../graphics/constants.js';
-import { DebugGraphics } from '../../graphics/debug-graphics.js';
-import { UniformBuffer } from '../../graphics/uniform-buffer.js';
-import { UniformFormat, UniformBufferFormat } from '../../graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat } from '../../graphics/bind-group-format.js';
-import { BindGroup } from '../../graphics/bind-group.js';
-import { RenderPass } from '../../graphics/render-pass.js';
+    BINDGROUP_VIEW, BINDGROUP_MESH, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
+} from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
     COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
@@ -44,17 +45,6 @@ import { CookieRenderer } from './cookie-renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
-/** @typedef {import('../composition/render-action.js').RenderAction} RenderAction */
-/** @typedef {import('../../graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../layer.js').Layer} Layer */
-/** @typedef {import('../scene.js').Scene} Scene */
-/** @typedef {import('../mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('../camera.js').Camera} Camera */
-/** @typedef {import('../frame-graph.js').FrameGraph} FrameGraph */
-/** @typedef {import('../composition/layer-composition.js').LayerComposition} LayerComposition */
-
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
@@ -72,7 +62,7 @@ const worldMatZ = new Vec3();
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 const tempSphere = new BoundingSphere();
 const boneTextureSize = [0, 0, 0, 0];
-let boneTexture, instancingData, modelMatrix, normalMatrix;
+let boneTexture, instancingData, modelMatrix;
 
 let keyA, keyB;
 
@@ -84,7 +74,7 @@ const _drawCallList = {
     lightMaskChanged: []
 };
 
-const _tempMaterialSet = new Set();
+const _tempSet = new Set();
 
 /**
  * The forward renderer renders {@link Scene}s.
@@ -98,13 +88,15 @@ class ForwardRenderer {
     /**
      * Create a new ForwardRenderer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
+     * graphics device used by the renderer.
      * @hideconstructor
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
+        const device = this.device;
 
-        /** @type {Scene|null} */
+        /** @type {import('../scene.js').Scene|null} */
         this.scene = null;
 
         this._shadowDrawCalls = 0;
@@ -125,10 +117,6 @@ class ForwardRenderer {
         this._layerCompositionUpdateTime = 0;
         this._lightClustersTime = 0;
         this._lightClusters = 0;
-
-        // Shaders
-        const device = this.device;
-        this.library = device.getProgramLibrary();
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(device);
@@ -178,6 +166,7 @@ class ForwardRenderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.exposureId = scope.resolve('exposure');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
+        this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -323,6 +312,7 @@ class ForwardRenderer {
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
             ]);
         }
     }
@@ -415,6 +405,12 @@ class ForwardRenderer {
         this.nearClipId.setValue(camera._nearClip);
         this.farClipId.setValue(camera._farClip);
 
+        if (this.scene.physicalUnits) {
+            this.exposureId.setValue(camera.getExposure());
+        } else {
+            this.exposureId.setValue(this.scene.exposure);
+        }
+
         const n = camera._nearClip;
         const f = camera._farClip;
         this.cameraParams[0] = 1 / f;
@@ -449,6 +445,7 @@ class ForwardRenderer {
             while (renderAction.viewBindGroups.length < viewCount) {
                 const ub = new UniformBuffer(device, this.viewUniformFormat);
                 const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
+                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
                 renderAction.viewBindGroups.push(bg);
             }
 
@@ -465,8 +462,10 @@ class ForwardRenderer {
     /**
      * Set up the viewport and the scissor for camera rendering.
      *
-     * @param {Camera} camera - The camera containing the viewport infomation.
-     * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
+     * @param {import('../camera.js').Camera} camera - The camera containing the viewport
+     * information.
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget} [renderTarget] - The
+     * render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
 
@@ -499,8 +498,9 @@ class ForwardRenderer {
     /**
      * Clear the current render target, using currently set up viewport.
      *
-     * @param {RenderAction} renderAction - Render action containing the clear flags.
-     * @param {Camera} camera - Camera containing the clear values.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - Render action
+     * containing the clear flags.
+     * @param {import('../camera.js').Camera} camera - Camera containing the clear values.
      */
     clear(renderAction, camera) {
 
@@ -554,7 +554,7 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {Scene} scene - The scene.
+     * @param {import('../scene.js').Scene} scene - The scene.
      */
     dispatchGlobalLights(scene) {
         this.ambientColor[0] = scene.ambientLight.r;
@@ -565,12 +565,15 @@ class ForwardRenderer {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
         }
-        this.ambientId.setValue(this.ambientColor);
-        this.exposureId.setValue(scene.exposure);
-
-        if (scene.sky) {
-            this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+        if (scene.physicalUnits) {
+            for (let i = 0; i < 3; i++) {
+                this.ambientColor[i] *= scene.ambientLuminance;
+            }
         }
+        this.ambientId.setValue(this.ambientColor);
+
+        this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
+        this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
     }
 
     _resolveLight(scope, i) {
@@ -918,17 +921,17 @@ class ForwardRenderer {
     cullLights(camera, lights) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-
+        const physicalUnits = this.scene.physicalUnits;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
             if (light.enabled) {
-
                 // directional lights are marked visible at the start of the frame
                 if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                     light.getBoundingSphere(tempSphere);
                     if (camera.frustum.containsSphere(tempSphere)) {
                         light.visibleThisFrame = true;
+                        light.usePhysicalUnits = physicalUnits;
 
                         // maximum screen area taken by the light
                         const screenSize = camera.getScreenSize(tempSphere);
@@ -944,6 +947,8 @@ class ForwardRenderer {
                             }
                         }
                     }
+                } else {
+                    light.usePhysicalUnits = this.scene.physicalUnits;
                 }
             }
         }
@@ -1056,13 +1061,7 @@ class ForwardRenderer {
             this.modelMatrixId.setValue(modelMatrix.data);
 
             if (normal) {
-                normalMatrix = meshInstance.node.normalMatrix;
-                if (meshInstance.node._dirtyNormal) {
-                    modelMatrix.invertTo3x3(normalMatrix);
-                    normalMatrix.transpose();
-                    meshInstance.node._dirtyNormal = false;
-                }
-                this.normalMatrixId.setValue(normalMatrix.data);
+                this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
             }
 
             device.draw(mesh.primitive[style]);
@@ -1264,7 +1263,7 @@ class ForwardRenderer {
 
         for (let i = 0; i < drawCallsCount; i++) {
 
-            /** @type {MeshInstance} */
+            /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
 
             // apply visibility override
@@ -1317,29 +1316,29 @@ class ForwardRenderer {
                     if (material._dirtyBlend) {
                         scene.layers._dirtyBlend = true;
                     }
-
-                    if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
-
-                        // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
-                        // the same for the same pass, using all lights of the scene
-                        if (!drawCall.isStatic) {
-                            const variantKey = pass + '_' + objDefs + '_' + lightHash;
-                            drawCall._shader[pass] = material.variants[variantKey];
-                            if (!drawCall._shader[pass]) {
-                                drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                                material.variants[variantKey] = drawCall._shader[pass];
-                            }
-                        } else {
-
-                            // static lights generate unique shader per draw call, as static lights are unique per draw call,
-                            // and so variants cache is not used
-                            drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                        }
-                        drawCall._lightHash = lightHash;
-                    }
-
-                    Debug.assert(drawCall._shader[pass], "no shader for pass", material);
                 }
+
+                if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
+
+                    // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
+                    // the same for the same pass, using all lights of the scene
+                    if (!drawCall.isStatic) {
+                        const variantKey = pass + '_' + objDefs + '_' + lightHash;
+                        drawCall._shader[pass] = material.variants[variantKey];
+                        if (!drawCall._shader[pass]) {
+                            drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                            material.variants[variantKey] = drawCall._shader[pass];
+                        }
+                    } else {
+
+                        // static lights generate unique shader per draw call, as static lights are unique per draw call,
+                        // and so variants cache is not used
+                        drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                    }
+                    drawCall._lightHash = lightHash;
+                }
+
+                Debug.assert(drawCall._shader[pass], "no shader for pass", material);
 
                 addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -1347,7 +1346,6 @@ class ForwardRenderer {
                 prevObjDefs = objDefs;
                 prevLightMask = lightMask;
                 prevStatic = drawCall.isStatic;
-
             }
         }
 
@@ -1479,6 +1477,7 @@ class ForwardRenderer {
                     // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
                     // earlier here. This needs to be refactored for multi-view anyways.
                     this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
+                    this.normalMatrixId.setValue(drawCall.node.normalMatrix.data);
 
                     // update mesh bind group / uniform buffer
                     const meshBindGroup = drawCall.getBindGroup(device, pass);
@@ -1551,7 +1550,7 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {MeshInstance[]} drawCalls - Mesh instances.
+     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Mesh instances.
      * @param {boolean} onlyLitShaders - Limits the update to shaders affected by lighting.
      */
     updateShaders(drawCalls, onlyLitShaders) {
@@ -1560,8 +1559,8 @@ class ForwardRenderer {
             const mat = drawCalls[i].material;
             if (mat) {
                 // material not processed yet
-                if (!_tempMaterialSet.has(mat)) {
-                    _tempMaterialSet.add(mat);
+                if (!_tempSet.has(mat)) {
+                    _tempSet.add(mat);
 
                     // skip this for materials not using variants
                     if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
@@ -1580,11 +1579,12 @@ class ForwardRenderer {
         }
 
         // keep temp set empty
-        _tempMaterialSet.clear();
+        _tempSet.clear();
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to update.
      * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
     beginFrame(comp, lightsChanged) {
@@ -1619,7 +1619,8 @@ class ForwardRenderer {
     /**
      * Updates the layer composition for rendering.
      *
-     * @param {LayerComposition} comp - The layer composition to update.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
      * @returns {number} - Flags of what was updated
      * @ignore
@@ -1730,7 +1731,8 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      * @param {number} compUpdatedFlags - Flags of what was updated.
      */
     updateLightStats(comp, compUpdatedFlags) {
@@ -1769,7 +1771,8 @@ class ForwardRenderer {
      * visible meshInstances are collected into light._renderData, and are marked as visible
      * for directional lights also shadow camera matrix is set up
      *
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     cullShadowmaps(comp) {
 
@@ -1803,7 +1806,8 @@ class ForwardRenderer {
      * visibility culling of lights, meshInstances, shadows casters
      * Also applies meshInstance.visible and camera.cullingMask
      *
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     cullComposition(comp) {
 
@@ -1814,19 +1818,19 @@ class ForwardRenderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
 
-            /** @type {RenderAction} */
+            /** @type {import('../composition/render-action.js').RenderAction} */
             const renderAction = renderActions[i];
 
             // layer
             const layerIndex = renderAction.layerIndex;
-            /** @type {Layer} */
+            /** @type {import('../layer.js').Layer} */
             const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
             const transparent = comp.subLayerList[layerIndex];
 
             // camera
             const cameraPass = renderAction.cameraIndex;
-            /** @type {CameraComponent} */
+            /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
             const camera = layer.cameras[cameraPass];
 
             if (camera) {
@@ -1876,14 +1880,16 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     updateLightTextureAtlas(comp) {
         this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     updateClusters(comp) {
 
@@ -1891,10 +1897,27 @@ class ForwardRenderer {
         const startTime = now();
         // #endif
 
-        for (let i = 0; i < comp._worldClusters.length; i++) {
-            const cluster = comp._worldClusters[i];
-            cluster.update(comp._lights, this.scene.gammaCorrection, this.scene.lighting);
+        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
+
+        const renderActions = comp._renderActions;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
+            const cluster = renderAction.lightClusters;
+
+            if (cluster && cluster !== emptyWorldClusters) {
+
+                // update each cluster only one time
+                if (!_tempSet.has(cluster)) {
+                    _tempSet.add(cluster);
+
+                    const layer = comp.layerList[renderAction.layerIndex];
+                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
+                }
+            }
         }
+
+        // keep temp set empty
+        _tempSet.clear();
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
@@ -1905,8 +1928,9 @@ class ForwardRenderer {
     /**
      * Builds a frame graph for the rendering of the whole frame.
      *
-     * @param {FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {LayerComposition} layerComposition - The layer composition used to build the frame graph.
+     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition used to build the frame graph.
      * @ignore
      */
     buildFrameGraph(frameGraph, layerComposition) {
@@ -2022,8 +2046,9 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {FrameGraph} frameGraph - The frame graph
-     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame graph.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition.
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex, isGrabPass) {
 
@@ -2073,7 +2098,8 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
      */
     update(comp) {
 
@@ -2106,8 +2132,10 @@ class ForwardRenderer {
     /**
      * Render pass for directional shadow maps of the camera.
      *
-     * @param {RenderAction} renderAction - The render action.
-     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
+     * action.
+     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
+     * layer composition.
      * @ignore
      */
     renderPassDirectionalShadows(renderAction, layerComposition) {
@@ -2132,7 +2160,8 @@ class ForwardRenderer {
     /**
      * Render pass representing the layer composition's render actions in the specified range.
      *
-     * @param {LayerComposition} comp - the layer composition to render.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition to render.
      * @ignore
      */
     renderPassRenderActions(comp, range) {
@@ -2144,8 +2173,10 @@ class ForwardRenderer {
     }
 
     /**
-     * @param {LayerComposition} comp - The layer composition.
-     * @param {RenderAction} renderAction - The render action.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition.
+     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
+     * action.
      * @param {boolean} firstRenderAction - True if this is the first render action in the render pass.
      */
     renderRenderAction(comp, renderAction, firstRenderAction) {
@@ -2220,11 +2251,6 @@ class ForwardRenderer {
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
-            // Set the not very clever global variable which is only useful when there's just one camera
-            this.scene._activeCamera = camera.camera;
-
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
-
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
                 renderAction.lightClusters.activate(this.lightTextureAtlas);
@@ -2235,6 +2261,11 @@ class ForwardRenderer {
                     WorldClustersDebug.render(renderAction.lightClusters, this.scene);
                 }
             }
+
+            // Set the not very clever global variable which is only useful when there's just one camera
+            this.scene._activeCamera = camera.camera;
+
+            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
 
             // enable flip faces if either the camera has _flipFaces enabled or the render target
             // has flipY enabled

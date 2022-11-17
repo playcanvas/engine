@@ -1,14 +1,12 @@
 import { IndexedList } from '../../../core/indexed-list.js';
 
-import { Vec2 } from '../../../math/vec2.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -21,7 +19,7 @@ class ScreenComponentSystem extends ComponentSystem {
     /**
      * Create a new ScreenComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

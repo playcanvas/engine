@@ -1,13 +1,11 @@
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -22,7 +20,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
     /**
      * Create a new LayoutGroupComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

@@ -2,30 +2,27 @@ import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constan
 import { Debug } from '../core/debug.js';
 import { Tracing } from '../core/tracing.js';
 
-/** @typedef {import('../graphics/render-pass.js').RenderPass} RenderPass */
-/** @typedef {import('../graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../graphics/texture.js').Texture} Texture */
-
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
  * @ignore
  */
 class FrameGraph {
-    /** @type {RenderPass[]} */
+    /** @type {import('../platform/graphics/render-pass.js').RenderPass[]} */
     renderPasses = [];
 
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
      *
-     *  @type {Map<RenderTarget, RenderPass>}
+     *  @type {Map<import('../platform/graphics/render-target.js').RenderTarget, import('../platform/graphics/render-pass.js').RenderPass>}
      */
     renderTargetMap = new Map();
 
     /**
      * Add a render pass to the frame.
      *
-     * @param {RenderPass} renderPass - The render pass to add.
+     * @param {import('../platform/graphics/render-pass.js').RenderPass} renderPass - The render
+     * pass to add.
      */
     addRenderPass(renderPass) {
         this.renderPasses.push(renderPass);
@@ -71,9 +68,9 @@ class FrameGraph {
         // If those passes are separated only by passes not requiring cubemap (shadows ..),
         // we skip the mipmap generation till the last rendering to the cubemap, to avoid
         // mipmaps being generated after each face.
-        /** @type {Texture} */
+        /** @type {import('../platform/graphics/texture.js').Texture} */
         let lastCubeTexture = null;
-        /** @type {RenderPass} */
+        /** @type {import('../platform/graphics/render-pass.js').RenderPass} */
         let lastCubeRenderPass = null;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];
@@ -82,7 +79,7 @@ class FrameGraph {
 
             if (thisTexture?.cubemap) {
 
-                // if previous pass used the same cubemap texture, it does not need mimaps generated
+                // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
                     lastCubeRenderPass.colorOps.mipmaps = false;
                 }

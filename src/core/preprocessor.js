@@ -38,7 +38,7 @@ const INVALID = /[><=|&+-]/g;
  */
 class Preprocessor {
     /**
-     * Run c-like proprocessor on the source code, and resolves the code based on the defines and ifdefs
+     * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
@@ -53,7 +53,7 @@ class Preprocessor {
             .map(line => line.trimEnd())
             .join('\n');
 
-        // proprocess defines / ifdefs ..
+        // preprocess defines / ifdefs ..
         source = this._preprocess(source);
 
         if (source !== null) {

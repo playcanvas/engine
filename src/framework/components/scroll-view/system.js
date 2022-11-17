@@ -4,9 +4,7 @@ import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
-import { Vec2 } from '../../../math/vec2.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
+import { Vec2 } from '../../../core/math/vec2.js';
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },
@@ -37,7 +35,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
     /**
      * Create a new ScrollViewComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

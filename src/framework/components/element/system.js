@@ -1,11 +1,11 @@
-import { Color } from '../../../math/color.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
+    PIXELFORMAT_RGBA8
+} from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
@@ -16,8 +16,6 @@ import { ComponentSystem } from '../system.js';
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
 import { ElementComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = ['enabled'];
 
@@ -30,7 +28,7 @@ class ElementComponentSystem extends ComponentSystem {
     /**
      * Create a new ElementComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {
@@ -49,7 +47,7 @@ class ElementComponentSystem extends ComponentSystem {
         this._defaultTexture = new Texture(app.graphicsDevice, {
             width: 1,
             height: 1,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             name: 'element-system'
         });
         const pixels = this._defaultTexture.lock();

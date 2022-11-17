@@ -1,6 +1,6 @@
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
-import { BoundingBox } from '../../../shape/bounding-box.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 
@@ -9,8 +9,6 @@ import { ComponentSystem } from '../system.js';
 
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
-
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
 
 const _schema = [
     { name: 'rootBone', type: 'entity' },
@@ -45,7 +43,7 @@ class RenderComponentSystem extends ComponentSystem {
     /**
      * Create a new RenderComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {

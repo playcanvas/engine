@@ -1,8 +1,8 @@
 import { CUBEPROJ_NONE, DETAILMODE_MUL, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
-import { Color } from '../../../src/math/color.js';
+import { Color } from '../../../src/core/math/color.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { Vec2 } from '../../../src/math/vec2.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
 
 import { expect } from 'chai';
 
@@ -226,7 +226,7 @@ describe('StandardMaterial', function () {
 
         expect(material.reflectivity).to.equal(1);
         expect(material.refraction).to.equal(0);
-        expect(material.refractionIndex).to.equal(2 / 3);
+        expect(material.refractionIndex).to.equal(1.0 / 1.5);
         expect(material.shadingModel).to.equal(SPECULAR_BLINN);
         expect(material.shininess).to.equal(25);
 

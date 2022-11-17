@@ -1,6 +1,6 @@
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
     BLUR_GAUSSIAN,
@@ -12,13 +12,9 @@ import {
     SHADOWUPDATE_REALTIME
 } from '../../../scene/constants.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
-
-/** @typedef {import('../../../math/vec2.js').Vec2} Vec2 */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').LightComponentSystem} LightComponentSystem */
 
 const _lightProps = [];
 const _lightPropsDefault = [];
@@ -58,6 +54,7 @@ const _lightPropsDefault = [];
  * @property {Color} color The Color of the light. The alpha component of the color is ignored.
  * Defaults to white (1, 1, 1).
  * @property {number} intensity The brightness of the light. Defaults to 1.
+ * @property {number} luminance The physically based luminance. Only used if scene.physicalUnits is true. Defaults to 0.
  * @property {number} shape The light source shape. Can be:
  *
  * - {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
@@ -147,8 +144,9 @@ const _lightPropsDefault = [];
  * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r",
  * "g", "b", "a", "rgb".
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
- * @property {Vec2} cookieScale Spotlight cookie scale.
- * @property {Vec2} cookieOffset Spotlight cookie position offset.
+ * @property {import('../../../core/math/vec2.js').Vec2} cookieScale Spotlight cookie scale.
+ * @property {import('../../../core/math/vec2.js').Vec2} cookieOffset Spotlight cookie position
+ * offset.
  * @property {boolean} isStatic Mark light as non-movable (optimization).
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should
  * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
@@ -159,8 +157,10 @@ class LightComponent extends Component {
     /**
      * Creates a new LightComponent instance.
      *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').LightComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -359,6 +359,9 @@ function _defineProps() {
     }, true);
     _defineProperty('intensity', 1, function (newValue, oldValue) {
         this.light.intensity = newValue;
+    });
+    _defineProperty('luminance', 0, function (newValue, oldValue) {
+        this.light.luminance = newValue;
     });
     _defineProperty('shape', LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;

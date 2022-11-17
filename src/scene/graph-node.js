@@ -2,10 +2,10 @@ import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
 import { Debug } from '../core/debug.js';
 
-import { Mat3 } from '../math/mat3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
-import { Vec3 } from '../math/vec3.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Quat } from '../core/math/quat.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 const scaleCompensatePosTransform = new Mat4();
 const scaleCompensatePos = new Vec3();
@@ -166,7 +166,7 @@ class GraphNode extends EventHandler {
          * @type {Mat3}
          * @private
          */
-        this.normalMatrix = new Mat3();
+        this._normalMatrix = new Mat3();
         /**
          * @type {boolean}
          * @private
@@ -267,6 +267,24 @@ class GraphNode extends EventHandler {
             this._forward = new Vec3();
         }
         return this.getWorldTransform().getZ(this._forward).normalize().mulScalar(-1);
+    }
+
+    /**
+     * A matrix used to transform the normal.
+     *
+     * @type  {Mat3}
+     * @ignore
+     */
+    get normalMatrix() {
+
+        const normalMat = this._normalMatrix;
+        if (this._dirtyNormal) {
+            this.getWorldTransform().invertTo3x3(normalMat);
+            normalMat.transpose();
+            this._dirtyNormal = false;
+        }
+
+        return normalMat;
     }
 
     /**

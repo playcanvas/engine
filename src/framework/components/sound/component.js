@@ -1,14 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 
-import { DISTANCE_LINEAR } from '../../../audio/constants.js';
+import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
 
 import { Component } from '../component.js';
 
 import { SoundSlot } from './slot.js';
-
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('../../../sound/instance.js').SoundInstance} SoundInstance */
-/** @typedef {import('./system.js').SoundComponentSystem} SoundComponentSystem */
 
 /**
  * The Sound Component controls playback of {@link Sound}s.
@@ -19,8 +15,10 @@ class SoundComponent extends Component {
     /**
      * Create a new Sound Component.
      *
-     * @param {SoundComponentSystem} system - The ComponentSystem that created this component.
-     * @param {Entity} entity - The entity that the Component is attached to.
+     * @param {import('./system.js').SoundComponentSystem} system - The ComponentSystem that
+     * created this component.
+     * @param {import('../../entity.js').Entity} entity - The entity that the Component is attached
+     * to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -55,7 +53,8 @@ class SoundComponent extends Component {
      *
      * @event SoundComponent#play
      * @param {SoundSlot} slot - The slot whose instance started playing.
-     * @param {SoundInstance} instance - The instance that started playing.
+     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
+     * that started playing.
      */
 
     /**
@@ -63,7 +62,8 @@ class SoundComponent extends Component {
      *
      * @event SoundComponent#pause
      * @param {SoundSlot} slot - The slot whose instance was paused.
-     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
+     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
+     * that was paused created to play the sound.
      */
 
     /**
@@ -71,7 +71,8 @@ class SoundComponent extends Component {
      *
      * @event SoundComponent#resume
      * @param {SoundSlot} slot - The slot whose instance was resumed.
-     * @param {SoundInstance} instance - The instance that was resumed.
+     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
+     * that was resumed.
      */
 
     /**
@@ -79,7 +80,8 @@ class SoundComponent extends Component {
      *
      * @event SoundComponent#stop
      * @param {SoundSlot} slot - The slot whose instance was stopped.
-     * @param {SoundInstance} instance - The instance that was stopped.
+     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
+     * that was stopped.
      */
 
     /**
@@ -87,7 +89,8 @@ class SoundComponent extends Component {
      *
      * @event SoundComponent#end
      * @param {SoundSlot} slot - The slot whose instance ended.
-     * @param {SoundInstance} instance - The instance that ended.
+     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
+     * that ended.
      */
 
     /**
@@ -417,9 +420,9 @@ class SoundComponent extends Component {
      * created and played.
      *
      * @param {string} name - The name of the {@link SoundSlot} to play.
-     * @returns {SoundInstance|null} The sound instance that will be played. Returns null if the
-     * component or its parent entity is disabled or if the SoundComponent has no slot with the
-     * specified name.
+     * @returns {import('../../../platform/sound/instance.js').SoundInstance|null} The sound
+     * instance that will be played. Returns null if the component or its parent entity is disabled
+     * or if the SoundComponent has no slot with the specified name.
      * @example
      * // get asset by id
      * var asset = app.assets.get(10);

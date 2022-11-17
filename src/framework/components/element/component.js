@@ -1,11 +1,11 @@
 import { Debug } from '../../../core/debug.js';
 
-import { Mat4 } from '../../../math/mat4.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../graphics/constants.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
@@ -18,14 +18,6 @@ import { Component } from '../component.js';
 import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
-
-/** @typedef {import('../../../math/color.js').Color} Color */
-/** @typedef {import('../../../font/canvas-font.js').CanvasFont} CanvasFont */
-/** @typedef {import('../../../font/font.js').Font} Font */
-/** @typedef {import('../../../graphics/texture.js').Texture} Texture */
-/** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../scene/sprite.js').Sprite} Sprite */
-/** @typedef {import('./system.js').ElementComponentSystem} ElementComponentSystem */
 
 // #if _DEBUG
 const _debugLogging = false;
@@ -87,16 +79,16 @@ const matD = new Mat4();
  * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap)
  * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter)
  *
- * @property {Color} color The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color
- * of the text for {@link ELEMENTTYPE_TEXT} types.
+ * @property {import('../../../core/math/color.js').Color} color The color of the image for
+ * {@link ELEMENTTYPE_IMAGE} types or the color of the text for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} opacity The opacity of the image for {@link ELEMENTTYPE_IMAGE} types or the
  * text for {@link ELEMENTTYPE_TEXT} types.
- * @property {Color} outlineColor The text outline effect color and opacity. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
+ * @property {import('../../../core/math/color.js').Color} outlineColor The text outline effect
+ * color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} outlineThickness The width of the text outline effect. Only works for
  * {@link ELEMENTTYPE_TEXT} types.
- * @property {Color} shadowColor The text shadow effect color and opacity. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
+ * @property {import('../../../core/math/color.js').Color} shadowColor The text shadow effect color
+ * and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {Vec2} shadowOffset The text shadow effect shift amount from original text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoWidth Automatically set the width of the component to be the same as the
@@ -107,8 +99,8 @@ const matD = new Mat4();
  * the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
  * for {@link ELEMENTTYPE_TEXT} types.
- * @property {Font} font The font used for rendering the text. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
+ * @property {import('../../font/font.js').Font} font The font used for rendering the text. Only
+ * works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} fontSize The size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {boolean} autoFitWidth When true the font size and line height will scale so that the
  * text fits inside the width of the Element. The font size will be scaled between minFontSize and
@@ -151,20 +143,20 @@ const matD = new Mat4();
  * {@link Application#i18n}. Only works for {@link ELEMENTTYPE_TEXT} types.
  * @property {number} textureAsset The id of the texture asset to render. Only works for
  * {@link ELEMENTTYPE_IMAGE} types.
- * @property {Texture} texture The texture to render. Only works for {@link ELEMENTTYPE_IMAGE}
- * types.
+ * @property {import('../../../platform/graphics/texture.js').Texture} texture The texture to
+ * render. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {number} spriteAsset The id of the sprite asset to render. Only works for
  * {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
- * @property {Sprite} sprite The sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types
- * which can render either a texture or a sprite.
+ * @property {import('../../../scene/sprite.js').Sprite} sprite The sprite to render. Only works
+ * for {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
  * @property {number} spriteFrame The frame of the sprite to render. Only works for
  * {@link ELEMENTTYPE_IMAGE} types who have a sprite assigned.
  * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit. Only
  * works for {@link ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
  * @property {number} materialAsset The id of the material asset to use when rendering an image.
  * Only works for {@link ELEMENTTYPE_IMAGE} types.
- * @property {Material} material The material to use when rendering an image. Only works for
- * {@link ELEMENTTYPE_IMAGE} types.
+ * @property {import('../../../scene/materials/material.js').Material} material The material to use
+ * when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
  * @property {Vec4} rect Specifies which region of the texture to use in order to render an image.
  * Values range from 0 to 1 and indicate u, v, width, height. Only works for
  * {@link ELEMENTTYPE_IMAGE} types.
@@ -186,7 +178,8 @@ class ElementComponent extends Component {
     /**
      * Create a new ElementComponent instance.
      *
-     * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {import('./system.js').ElementComponentSystem} system - The ComponentSystem that
+     * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -397,13 +390,18 @@ class ElementComponent extends Component {
      * of the anchor are not equal. In that case the component will be resized to cover that entire
      * area. e.g. a value of [0, 0, 1, 1] will make the component resize exactly as its parent.
      *
-     * @type {Vec4}
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
+     * @example
+     * pc.app.root.findByName("Inventory").element.anchor = [Math.random() * 0.1, 0, 1, 0];
+     *
+     * @type {Vec4 | number[]}
      */
     set anchor(value) {
         if (value instanceof Vec4) {
-            this._anchor.set(value.x, value.y, value.z, value.w);
+            this._anchor.copy(value);
         } else {
-            this._anchor.set(value[0], value[1], value[2], value[3]);
+            this._anchor.set(...value);
         }
 
         if (!this.entity._parent && !this.screen) {
@@ -674,27 +672,33 @@ class ElementComponent extends Component {
      * The position of the pivot of the component relative to its anchor. Each value ranges from 0
      * to 1 where [0,0] is the bottom left and [1,1] is the top right.
      *
-     * @type {Vec2}
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
+     * @example
+     * pc.app.root.findByName("Inventory").element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
+     *
+     * @type {Vec2 | number[]}
      */
     set pivot(value) {
-        const prevX = this._pivot.x;
-        const prevY = this._pivot.y;
+        const { pivot, margin } = this;
+        const prevX = pivot.x;
+        const prevY = pivot.y;
 
         if (value instanceof Vec2) {
-            this._pivot.set(value.x, value.y);
+            pivot.copy(value);
         } else {
-            this._pivot.set(value[0], value[1]);
+            pivot.set(...value);
         }
 
-        const mx = this._margin.x + this._margin.z;
-        const dx = this._pivot.x - prevX;
-        this._margin.x += mx * dx;
-        this._margin.z -= mx * dx;
+        const mx = margin.x + margin.z;
+        const dx = pivot.x - prevX;
+        margin.x += mx * dx;
+        margin.z -= mx * dx;
 
-        const my = this._margin.y + this._margin.w;
-        const dy = this._pivot.y - prevY;
-        this._margin.y += my * dy;
-        this._margin.w -= my * dy;
+        const my = margin.y + margin.w;
+        const dy = pivot.y - prevY;
+        margin.y += my * dy;
+        margin.w -= my * dy;
 
         this._anchorDirty = true;
         this._cornersDirty = true;
@@ -706,7 +710,7 @@ class ElementComponent extends Component {
         // in order for them to update their position
         this._flagChildrenAsDirty();
 
-        this.fire('set:pivot', this._pivot);
+        this.fire('set:pivot', pivot);
     }
 
     get pivot() {
@@ -1001,9 +1005,19 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition = Entity.prototype.setLocalPosition;
     }
 
+    /**
+     * Patched method for setting the position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     * @private
+     */
     _setPosition(x, y, z) {
-        if (!this.element.screen)
-            return Entity.prototype.setPosition.call(this, x, y, z);
+        if (!this.element.screen) {
+            Entity.prototype.setPosition.call(this, x, y, z);
+            return;
+        }
 
         if (x instanceof Vec3) {
             position.copy(x);
@@ -1019,6 +1033,14 @@ class ElementComponent extends Component {
             this._dirtifyLocal();
     }
 
+    /**
+     * Patched method for setting the local position.
+     *
+     * @param {number|Vec3} x - The x coordinate or Vec3
+     * @param {number} y - The y coordinate
+     * @param {number} z - The z coordinate
+     * @private
+     */
     _setLocalPosition(x, y, z) {
         if (x instanceof Vec3) {
             this.localPosition.copy(x);
@@ -1563,10 +1585,22 @@ class ElementComponent extends Component {
         this.off();
     }
 
-    // recalculates
-    // localAnchor, width, height, (local position is updated if anchors are split)
-    // assumes these properties are up to date
-    // _margin
+    /**
+     * Recalculates these properties:
+     *   - `_localAnchor`
+     *   - `width`
+     *   - `height`
+     *   - Local position is updated if anchors are split
+     *
+     * Assumes these properties are up to date:
+     *   - `_margin`
+     *
+     * @param {boolean} propagateCalculatedWidth - If true, call `_setWidth` instead
+     * of `_setCalculatedWidth`
+     * @param {boolean} propagateCalculatedHeight - If true, call `_setHeight` instead
+     * of `_setCalculatedHeight`
+     * @private
+     */
     _calculateSize(propagateCalculatedWidth, propagateCalculatedHeight) {
         // can't calculate if local anchors are wrong
         if (!this.entity._parent && !this.screen) return;
@@ -1597,7 +1631,12 @@ class ElementComponent extends Component {
         this._sizeDirty = false;
     }
 
-    // internal set width without updating margin
+    /**
+     * Internal set width without updating margin.
+     *
+     * @param {number} w - The new width.
+     * @private
+     */
     _setWidth(w) {
         this._width = w;
         this._setCalculatedWidth(w, false);
@@ -1605,7 +1644,12 @@ class ElementComponent extends Component {
         this.fire('set:width', this._width);
     }
 
-    // internal set height without updating margin
+    /**
+     * Internal set height without updating margin.
+     *
+     * @param {number} h - The new height.
+     * @private
+     */
     _setHeight(h) {
         this._height = h;
         this._setCalculatedHeight(h, false);
@@ -1613,6 +1657,13 @@ class ElementComponent extends Component {
         this.fire('set:height', this._height);
     }
 
+    /**
+     * This method sets the calculated width value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated width.
+     * @param {boolean} updateMargins - Update margins or not.
+     * @private
+     */
     _setCalculatedWidth(value, updateMargins) {
         if (Math.abs(value - this._calculatedWidth) <= 1e-4)
             return;
@@ -1632,6 +1683,13 @@ class ElementComponent extends Component {
         this.fire('resize', this._calculatedWidth, this._calculatedHeight);
     }
 
+    /**
+     * This method sets the calculated height value and optionally updates the margins.
+     *
+     * @param {number} value - The new calculated height.
+     * @param {boolean} updateMargins - Update margins or not.
+     * @private
+     */
     _setCalculatedHeight(value, updateMargins) {
         if (Math.abs(value - this._calculatedHeight) <= 1e-4)
             return;

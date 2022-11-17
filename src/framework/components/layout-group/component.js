@@ -1,14 +1,11 @@
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
 
 import { FITTING_NONE } from './constants.js';
 import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
-
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
 function getElement(entity) {
     return entity.element;
@@ -28,9 +25,10 @@ class LayoutGroupComponent extends Component {
     /**
      * Create a new LayoutGroupComponent instance.
      *
-     * @param {LayoutGroupComponentSystem} system - The ComponentSystem that created this
-     * Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').LayoutGroupComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
