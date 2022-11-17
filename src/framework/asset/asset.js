@@ -73,7 +73,7 @@ class Asset extends EventHandler {
      * @param {object} [options] - The asset handler options. For container options see
      * {@link ContainerHandler}.
      * @param {'anonymous'|'use-credentials'|null} [options.crossOrigin] - For use with texture assets
-     * which are loaded using the browser. This setting overrides the default crossOrigin specifier.
+     * that are loaded using the browser. This setting overrides the default crossOrigin specifier.
      * For more details on crossOrigin and its use, see
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/crossOrigin.
      * @example
