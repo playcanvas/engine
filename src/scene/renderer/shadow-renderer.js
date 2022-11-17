@@ -358,7 +358,7 @@ class ShadowRenderer {
             // look at the center from far away to include all casters during culling
             shadowCamNode.setPosition(center);
             shadowCamNode.translateLocal(0, 0, 1000000);
-            shadowCam.nearClip = 0;
+            shadowCam.nearClip = 0.01;
             shadowCam.farClip = 2000000;
             shadowCam.orthoHeight = radius;
 
