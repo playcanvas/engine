@@ -705,7 +705,7 @@ class Scene extends EventHandler {
         this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
 
         if (render.skyboxRotation) {
-            this._skyboxRotation.setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
+            this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
 
         this.clusteredLightingEnabled = render.clusteredLightingEnabled;
