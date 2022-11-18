@@ -66,6 +66,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.maxTextures = 16;
+        this.maxPixelRatio = 1;
         this.supportsUniformBuffers = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
