@@ -25,6 +25,8 @@ const _schema = [
     'enabled',
     'type',
     'halfExtents',
+    'linearOffset',
+    'angularOffset',
     'radius',
     'axis',
     'height',
@@ -189,6 +191,8 @@ class CollisionSystemImpl {
             enabled: src.data.enabled,
             type: src.data.type,
             halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
+            linearOffset: [src.data.linearOffset.x, src.data.linearOffset.y, src.data.linearOffset.z],
+            angularOffset: [src.data.angularOffset.x, src.data.angularOffset.y, src.data.angularOffset.z],
             radius: src.data.radius,
             axis: src.data.axis,
             height: src.data.height,
@@ -772,14 +776,27 @@ class CollisionComponentSystem extends ComponentSystem {
             pos = node.getPosition();
             rot = node.getRotation();
         }
-
+        const ammoQuat = new Ammo.btQuaternion();
         const transform = new Ammo.btTransform();
+
         transform.setIdentity();
         const origin = transform.getOrigin();
-        origin.setValue(pos.x, pos.y, pos.z);
+        const component = node.collision;
 
-        const ammoQuat = new Ammo.btQuaternion();
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        if (component && component._hasOffset) {
+            const lo = data.linearOffset;
+            const ao = data.angularOffset;
+
+            quat.copy(rot).transformVector(lo, vec3)
+            origin.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
+
+            quat.copy(rot).mul(ao);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        } else {
+            origin.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
+
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
         Ammo.destroy(origin);

@@ -15,6 +15,9 @@ import { Component } from '../component.js';
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
 let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+const quat1 = new Quat();
+const quat2 = new Quat();
+const vec3 = new Vec3();
 
 /**
  * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
@@ -884,8 +887,20 @@ class RigidBodyComponent extends Component {
         const pos = entity.getPosition();
         const rot = entity.getRotation();
 
-        ammoVec1.setValue(pos.x, pos.y, pos.z);
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        const component = entity.collision;
+        if (component && component._hasOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component.data.angularOffset;
+
+            quat1.copy(rot).transformVector(lo, vec3)
+            ammoVec1.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
+
+            quat1.copy(rot).mul(ao);
+            ammoQuat.setValue(quat1.x, quat1.y, quat1.z, quat1.w);
+        } else {
+            ammoVec1.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
 
         transform.setOrigin(ammoVec1);
         transform.setRotation(ammoQuat);
@@ -931,12 +946,28 @@ class RigidBodyComponent extends Component {
             // state is technically redundant since the engine creates one for all bodies.
             const motionState = body.getMotionState();
             if (motionState) {
+                const entity = this.entity;
+
                 motionState.getWorldTransform(ammoTransform);
 
                 const p = ammoTransform.getOrigin();
                 const q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+
+                const component = entity.collision;
+                if (component && component._hasOffset) {
+                    const lo = component.data.linearOffset;
+                    const ao = component.data.angularOffset;
+
+                    quat1.set(q.x(), q.y(), q.z(), q.w()).transformVector(lo, vec3);
+                    entity.setPosition(p.x() - vec3.x, p.y() - vec3.y, p.z() - vec3.z);
+
+                    quat2.copy(ao).invert();
+                    quat1.set(q.x(), q.y(), q.z(), q.w()).mul(quat2);
+                    entity.setRotation(quat1);
+                } else {
+                    entity.setPosition(p.x(), p.y(), p.z());
+                    entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                }
             }
         }
     }

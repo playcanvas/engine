@@ -1,3 +1,6 @@
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
@@ -31,8 +34,12 @@ import { Component } from '../component.js';
  * - "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
- * @property {import('../../../core/math/vec3.js').Vec3} halfExtents The half-extents of the
+ * @property {Vec3} halfExtents The half-extents of the
  * box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
+ * @property {Vec3} linearOffset The positional offset of the collision from the Entity position in local space.
+ * Defaults to [0, 0, 0].
+ * @property {Quat} angularOffset The rotational offset of the collision from the Entity rotation in local space.
+ * Defaults to [0, 0, 0, 1].
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
  * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
@@ -61,11 +68,14 @@ class CollisionComponent extends Component {
 
         /** @private */
         this._compoundParent = null;
+        this._hasOffset = false;
 
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
+        this.on('set_linearOffset', this.onSetOffset, this);
+        this.on('set_angularOffset', this.onSetOffset, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
@@ -131,6 +141,20 @@ class CollisionComponent extends Component {
     onSetHalfExtents(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && t === 'box') {
+            this.system.recreatePhysicalShapes(this);
+        }
+    }
+
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
+    onSetOffset(name, oldValue, newValue) {
+        this._hasOffset = !this.data.linearOffset.equals(Vec3.ZERO) || !this.data.angularOffset.equals(Quat.IDENTITY);
+
+        if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
         }
     }
