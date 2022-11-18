@@ -1,5 +1,8 @@
 export default /* glsl */`
 
+// texelFetch support and others
+#extension GL_EXT_samplerless_texture_functions : require
+
 layout(location = 0) out highp vec4 pc_fragColor;
 #define gl_FragColor pc_fragColor
 
