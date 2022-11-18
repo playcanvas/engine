@@ -85,12 +85,11 @@ class LitShader {
             this.chunks = shaderChunks;
         }
 
-        this.lighting = (options.lights.length > 0) || options.dirLight?.enabled || options.clusteredLightingEnabled;
+        this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
-        if (!options.useSpecular) options.specular.enabled = options.gloss.enabled = false;
         this.shadowPass = ShaderPass.isShadow(options.pass);
-        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.height.enabled || options.enableGGXSpecular ||
-                            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormal.enabled;
+        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMapEnabled || options.enableGGXSpecular ||
+                            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
         this.needsTransforms = options.useDynamicRefraction;
@@ -259,7 +258,7 @@ class LitShader {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if (options.hasTangents && (options.height.enabled || options.normal.enabled || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.heightMapEnabled || options.normalMapEnabled || options.enableGGXSpecular)) {
                 this.attributes.vertex_tangent = SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -702,13 +701,13 @@ class LitShader {
         code += "\n"; // End of uniform declarations
 
         // TBN
-        const hasTBN = this.needsNormal && (options.normal.enabled || options.clearCoatNormal.enabled || (options.enableGGXSpecular && !options.height.enabled));
+        const hasTBN = this.needsNormal && (options.normalMapEnabled || options.clearCoatNormalMapEnabled || (options.enableGGXSpecular && !options.heightMapEnabled));
 
         if (hasTBN) {
             if (options.hasTangents) {
                 code += options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
             } else {
-                if (device.extStandardDerivatives && (options.normal.enabled || options.clearCoatNormal.enabled)) {
+                if (device.extStandardDerivatives && (options.normalMapEnabled || options.clearCoatNormalMapEnabled)) {
                     code += chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv);
                 } else {
                     code += chunks.TBNObjectSpacePS;
@@ -751,7 +750,7 @@ class LitShader {
             }
         }
 
-        const useAo = options.ao.enabled || options.ao.vertexColors;
+        const useAo = options.aoMapEnabled || options.aoVertexColors;
 
         if (useAo) {
             code += chunks.aoDiffuseOccPS;
@@ -867,7 +866,7 @@ class LitShader {
                 code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
-            if (!options.fresnelModel && !this.reflections && !options.diffuse.enabled) {
+            if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
                 code += "    uniform vec3 material_ambient;\n";
                 code += "#define LIT_OLD_AMBIENT";
                 useOldAmbient = true;
@@ -877,11 +876,11 @@ class LitShader {
         code += chunks.combinePS;
 
         // lightmap support
-        if (options.light?.enabled || options.light?.vertexColors) {
-            code += (options.useSpecular && options.dirLight?.enabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
+        if (options.lightMapEnabled || options.lightMapVertexColors) {
+            code += (options.useSpecular && options.dirLightMapEnabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
         }
 
-        const addAmbient = (!options.light?.enabled && !options.light?.vertexColors) || options.lightMapWithoutAmbient;
+        const addAmbient = (!options.lightMapEnabled && !options.lightMapVertexColors) || options.lightMapWithoutAmbient;
 
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
@@ -966,7 +965,7 @@ class LitShader {
                 code += "    dVertexNormalW = normalize(vNormalW);\n";
             }
 
-            if ((options.height.enabled || options.normal.enabled) && options.hasTangents) {
+            if ((options.heightMapEnabled || options.normalMapEnabled) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
                     code += "    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
@@ -1026,7 +1025,7 @@ class LitShader {
             code += "    occludeDiffuse();\n";
         }
 
-        if (options.light?.enabled || options.light?.vertexColors) {
+        if (options.lightMapEnabled || options.lightMapVertexColors) {
             code += "    addLightMap();\n";
         }
 

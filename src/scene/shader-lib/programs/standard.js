@@ -441,8 +441,8 @@ const standard = {
             }
 
             // lightmap
-            if (options.litOptions.light?.enabled || options.light?.vertexColors) {
-                const lightmapDir = (options.litOptions.dirLight?.enabled && options.litOptions.useSpecular);
+            if (options.litOptions.lightMapEnabled || options.lightMapVertexColors) {
+                const lightmapDir = (options.litOptions.dirLightMapEnabled && options.litOptions.useSpecular);
                 const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
                 decl.append("vec3 dLightmap;");
                 if (lightmapDir) {

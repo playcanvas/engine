@@ -117,6 +117,76 @@ class StandardMaterialOptionsBuilder {
             this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
         this._mapXForms = null;
+
+        // All texture related lit options
+        options.litOptions.lightMapEnabled = options.lightMap;
+        options.litOptions.lightMapVertexColors = options.lightVertexColors;
+        options.litOptions.dirLightMapEnabled = options.dirLightMap;
+        options.litOptions.heightMapEnabled = options.heightMap;
+        options.litOptions.normalMapEnabled = options.normalMap;
+        options.litOptions.clearCoatNormalMapEnabled = options.clearCoatNormalMap;
+        options.litOptions.aoMapEnabled = options.aoMap;
+        options.litOptions.aoVertexColors = options.aoVertexColors;
+        options.litOptions.diffuseMapEnabled = options.diffuseMap;
+    }
+
+    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
+        const mname = p + 'Map';
+        const vname = p + 'VertexColor';
+        const vcname = p + 'VertexColorChannel';
+        const cname = mname + 'Channel';
+        const tname = mname + 'Transform';
+        const uname = mname + 'Uv';
+        const iname = mname + 'Identifier';
+
+        // Avoid overriding previous lightMap properties
+        if (p !== 'light') {
+            options[mname] = false;
+            options[iname] = undefined;
+            options[cname] = '';
+            options[tname] = 0;
+            options[uname] = 0;
+        }
+        options[vname] = false;
+        options[vcname] = '';
+
+        const isOpacity = p === 'opacity';
+        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+            return;
+        }
+
+        if (!minimalOptions || isOpacity) {
+            if (p !== 'height' && stdMat[vname]) {
+                if (hasVcolor) {
+                    options[vname] = stdMat[vname];
+                    options[vcname] = stdMat[vcname];
+                    options.litOptions.vertexColors = true;
+                }
+            }
+            if (stdMat[mname]) {
+                let allow = true;
+                if (stdMat[uname] === 0 && !hasUv0) allow = false;
+                if (stdMat[uname] === 1 && !hasUv1) allow = false;
+                if (allow) {
+
+                    // create an intermediate map between the textures and their slots
+                    // to ensure the unique texture mapping isn't dependent on the texture id
+                    // as that will change when textures are changed, even if the sharing is the same
+                    const mapId = stdMat[mname].id;
+                    let identifier = uniqueTextureMap[mapId];
+                    if (identifier === undefined) {
+                        uniqueTextureMap[mapId] = p;
+                        identifier = p;
+                    }
+
+                    options[mname] = !!stdMat[mname];
+                    options[iname] = identifier;
+                    options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
+                    options[cname] = stdMat[cname];
+                    options[uname] = stdMat[uname];
+                }
+            }
+        }
     }
 
     _updateMinOptions(options, stdMat) {
@@ -326,79 +396,6 @@ class StandardMaterialOptionsBuilder {
         if (options.litOptions.lights.length === 0) {
             options.litOptions.noShadow = true;
         }
-    }
-
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
-        const mname = p + 'Map';
-        const vname = p + 'VertexColor';
-        const vcname = p + 'VertexColorChannel';
-        const cname = mname + 'Channel';
-        const tname = mname + 'Transform';
-        const uname = mname + 'Uv';
-        const iname = mname + 'Identifier';
-
-        // Avoid overriding previous lightMap properties
-        if (p !== 'light') {
-            options[mname] = false;
-            options[iname] = undefined;
-            options[cname] = '';
-            options[tname] = 0;
-            options[uname] = 0;
-        }
-        options[vname] = false;
-        options[vcname] = '';
-        const litOptions = {
-            enabled: false,
-            transform: 0,
-            uv: 0,
-            vertexColors: false
-        };
-
-        const isOpacity = p === 'opacity';
-        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
-            options.litOptions[p] = litOptions;
-            return;
-        }
-
-        if (!minimalOptions || isOpacity) {
-            if (p !== 'height' && stdMat[vname]) {
-                if (hasVcolor) {
-                    options[vname] = stdMat[vname];
-                    options[vcname] = stdMat[vcname];
-                    options.vertexColors = true;
-                }
-            }
-            if (stdMat[mname]) {
-                let allow = true;
-                if (stdMat[uname] === 0 && !hasUv0) allow = false;
-                if (stdMat[uname] === 1 && !hasUv1) allow = false;
-                if (allow) {
-
-                    // create an intermediate map between the textures and their slots
-                    // to ensure the unique texture mapping isn't dependent on the texture id
-                    // as that will change when textures are changed, even if the sharing is the same
-                    const mapId = stdMat[mname].id;
-                    let identifier = uniqueTextureMap[mapId];
-                    if (identifier === undefined) {
-                        uniqueTextureMap[mapId] = p;
-                        identifier = p;
-                    }
-
-                    options[mname] = !!stdMat[mname];
-                    options[iname] = identifier;
-                    options[tname] = this._getMapTransformID(stdMat.getUniform(tname), stdMat[uname]);
-                    options[cname] = stdMat[cname];
-                    options[uname] = stdMat[uname];
-                }
-            }
-        }
-
-        litOptions.enabled = options[mname];
-        litOptions.tranform = options[tname];
-        litOptions.uv = options[uname];
-        litOptions.vertexColors = options[vname];
-        options.litOptions[p] = litOptions;
-        options.litOptions.vertexColors = options.vertexColors;
     }
 
     _collectLights(lType, lights, lightsFiltered, mask, staticLightList) {
