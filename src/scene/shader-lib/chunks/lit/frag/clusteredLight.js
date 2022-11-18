@@ -142,7 +142,7 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
 #ifdef GL2
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
-            return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
+        return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
     }
 
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
@@ -154,7 +154,7 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     uniform vec4 lightsTextureInvSize;
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-            return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
+        return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
     }
 
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
