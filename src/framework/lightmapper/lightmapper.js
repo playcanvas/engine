@@ -238,6 +238,7 @@ class Lightmapper {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
                 material.ambientTint = true;
             }
+            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
@@ -276,17 +277,16 @@ class Lightmapper {
         }
     }
 
-    createTexture(size, type, name) {
-
+    createTexture(size, name) {
         return new Texture(this.device, {
             // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
             // #endif
             width: size,
             height: size,
-            format: PIXELFORMAT_RGBA8,
+            format: this.scene.lightmapPixelFormat,
             mipmaps: false,
-            type: type,
+            type: this.scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -596,8 +596,7 @@ class Lightmapper {
         // #endif
     }
 
-    // this allocates lightmap textures and render targets. Note that the type used here is always TEXTURETYPE_DEFAULT,
-    // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
+    // this allocates lightmap textures and render targets.
     allocateTextures(bakeNodes, passCount) {
 
         for (let i = 0; i < bakeNodes.length; i++) {
@@ -608,7 +607,7 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_lightmap_' + i));
+                const tex = this.createTexture(size, ('lightmapper_lightmap_' + i));
                 LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
@@ -618,7 +617,7 @@ class Lightmapper {
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_temp_lightmap_' + size));
+                const tex = this.createTexture(size, ('lightmapper_temp_lightmap_' + size));
                 LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,
