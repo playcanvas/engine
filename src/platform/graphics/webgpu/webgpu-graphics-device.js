@@ -66,6 +66,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.maxTextures = 16;
+        this.maxPixelRatio = 1;
         this.supportsUniformBuffers = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
@@ -79,6 +80,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.supportsTextureFetch = true;
     }
 
     async initWebGpu(glslangUrl) {
