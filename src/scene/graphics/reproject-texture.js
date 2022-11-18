@@ -68,11 +68,11 @@ const packSamples = (samples) => {
 
     // normalize float data and pack into rgba8
     let off = 0;
-    for (let i = 0; i < numSamples; ++i) {
-        packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);
-        packFloat32ToRGBA8(samples[i * 4 + 1] * 0.5 + 0.5, data, off + 4);
-        packFloat32ToRGBA8(samples[i * 4 + 2] * 0.5 + 0.5, data, off + 8);
-        packFloat32ToRGBA8(samples[i * 4 + 3] / 8, data, off + 12);
+    for (let i = 0; i < numSamples; i += 4) {
+        packFloat32ToRGBA8(samples[i + 0] * 0.5 + 0.5, data, off + 0);
+        packFloat32ToRGBA8(samples[i + 1] * 0.5 + 0.5, data, off + 4);
+        packFloat32ToRGBA8(samples[i + 2] * 0.5 + 0.5, data, off + 8);
+        packFloat32ToRGBA8(samples[i + 3] / 8, data, off + 12);
         off += 16;
     }
 
