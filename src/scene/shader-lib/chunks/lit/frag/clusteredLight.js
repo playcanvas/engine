@@ -163,8 +163,6 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
 
 #endif
 
-
-
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
 
     // light index
