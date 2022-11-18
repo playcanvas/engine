@@ -1081,6 +1081,7 @@ class ElementInput {
     // screen corners. However, in cases where the element has additional hit
     // padding specified, we need to expand the screenCorners to incorporate the
     // padding.
+    // NOTE: Used by Editor for visualization in the viewport
     static buildHitCorners(element, screenOrWorldCorners, scale) {
         let hitCorners = screenOrWorldCorners;
         const button = element.entity && element.entity.button;
@@ -1141,6 +1142,7 @@ class ElementInput {
         return hitCorners;
     }
 
+    // NOTE: Used by Editor for visualization in the viewport
     static calculateScaleToScreen(element) {
         let current = element.entity;
         const screenScale = element.screen.screen.scale;
@@ -1155,6 +1157,7 @@ class ElementInput {
         return _accumulatedScale;
     }
 
+    // NOTE: Used by Editor for visualization in the viewport
     static calculateScaleToWorld(element) {
         let current = element.entity;
         _accumulatedScale.set(1, 1, 1);
