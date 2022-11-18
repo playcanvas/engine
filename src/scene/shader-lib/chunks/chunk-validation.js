@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57 } from '../../../platform/graphics/constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_58 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -19,7 +19,7 @@ const chunkVersions = {
     opacityPS: CHUNKAPI_1_57,
     parallaxPS: CHUNKAPI_1_57,
     sheenPS: CHUNKAPI_1_57,
-    sheenGlossPS: CHUNKAPI_1_57,
+    sheenGlossPS: CHUNKAPI_1_58,
     specularPS: CHUNKAPI_1_57,
     specularityFactorPS: CHUNKAPI_1_57,
     thicknessPS: CHUNKAPI_1_57,

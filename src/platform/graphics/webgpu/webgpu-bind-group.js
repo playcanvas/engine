@@ -1,8 +1,4 @@
-import { Debug } from '../../../core/debug.js';
-
-/** @typedef {import('../bind-group.js').BindGroup} BindGroup */
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-/** @typedef {import('./webgpu-texture.js').WebgpuTexture} WebgpuTexture */
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
@@ -10,7 +6,7 @@ import { Debug } from '../../../core/debug.js';
  * @ignore
  */
 class WebgpuBindGroup {
-    /** @type {GPUBindGroup} */
+    // type {GPUBindGroup}
     bindGroup;
 
     update(bindGroup) {
@@ -18,8 +14,9 @@ class WebgpuBindGroup {
         this.destroy();
         const device = bindGroup.device;
 
-        /** @type {GPUBindGroupDescriptor} */
+        // type {GPUBindGroupDescriptor}
         const descr = this.createDescriptor(device, bindGroup);
+        DebugHelper.setLabel(descr, bindGroup.name);
 
         this.bindGroup = device.wgpu.createBindGroup(descr);
     }
@@ -32,10 +29,11 @@ class WebgpuBindGroup {
     /**
      * Creates a bind group descriptor in WebGPU format
      *
-     * @param {WebgpuGraphicsDevice} device - Graphics device.
-     * @param {BindGroup} bindGroup - Bind group to create the descriptor for.
-     * @returns {GPUBindGroupDescriptor} - Returns the generated descriptor, which can be used to
-     * create a GPUBindGroup
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to create the
+     * descriptor for.
+     * @returns {object} - Returns the generated descriptor of type
+     * GPUBindGroupDescriptor, which can be used to create a GPUBindGroup
      */
     createDescriptor(device, bindGroup) {
 
@@ -58,7 +56,7 @@ class WebgpuBindGroup {
         // textures
         bindGroup.textures.forEach((tex) => {
 
-            /** @type {WebgpuTexture} */
+            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
             const wgpuTexture = tex.impl;
 
             // texture

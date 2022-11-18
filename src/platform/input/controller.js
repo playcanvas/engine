@@ -6,11 +6,8 @@ import {
     PAD_1,
     PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y
 } from './constants.js';
-
 import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';
-
-/** @typedef {import('./game-pads.js').GamePads} GamePads */
 
 /**
  * A general input handler which handles both mouse and keyboard input assigned to named actions.
@@ -24,11 +21,11 @@ class Controller {
      * @param {object} [options] - Optional arguments.
      * @param {Keyboard} [options.keyboard] - A Keyboard object to use.
      * @param {Mouse} [options.mouse] - A Mouse object to use.
-     * @param {GamePads} [options.gamepads] - A Gamepads object to use.
+     * @param {import('./game-pads.js').GamePads} [options.gamepads] - A Gamepads object to use.
      * @example
      * var c = new pc.Controller(document);
      *
-     * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
+     * // Register the "fire" action and assign it to both the Enter key and the space bar.
      * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);
      */
     constructor(element, options = {}) {

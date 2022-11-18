@@ -13,7 +13,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -36,11 +36,6 @@ import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
-
-/** @typedef {import('../index-buffer.js').IndexBuffer} IndexBuffer */
-/** @typedef {import('../shader.js').Shader} Shader */
-/** @typedef {import('../vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
 
 const invalidateAttachments = [];
 
@@ -177,7 +172,7 @@ function testTextureFloatHighPrecision(device) {
     });
     drawQuadWithShader(device, targ1, shader1);
 
-    textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
+    textureOptions.format = PIXELFORMAT_RGBA8;
     const tex2 = new Texture(device, textureOptions);
     const targ2 = new RenderTarget({
         colorBuffer: tex2,
@@ -235,7 +230,7 @@ function testImageBitmap(device) {
             const texture = new Texture(device, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 mipmaps: false,
                 levels: [image]
             });
@@ -728,7 +723,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
-        this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
@@ -1321,7 +1316,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startPass(renderPass) {
@@ -1376,7 +1371,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to end.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endPass(renderPass) {
@@ -2242,7 +2237,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the output vertex buffer. It will be written to by a shader with transform feedback
      * varyings.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {import('../vertex-buffer.js').VertexBuffer} tf - The output vertex buffer.
      * @ignore
      */
     setTransformFeedbackBuffer(tf) {
@@ -2754,21 +2749,36 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Get the supported HDR pixel format.
-     * Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
-     * https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-     * For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+     * Get a supported HDR pixel format given a set of hardware support requirements.
      *
-     * @returns {number} The HDR pixel format.
+     * @param {boolean} preferLargest - If true, prefer the highest precision format. Otherwise prefer the lowest precision format.
+     * @param {boolean} renderable - If true, only include pixel formats that can be used as render targets.
+     * @param {boolean} updatable - If true, only include formats that can be updated by the CPU.
+     * @param {boolean} filterable - If true, only include formats that support texture filtering.
+     *
+     * @returns {number} The HDR pixel format or null if there are none.
      * @ignore
      */
-    getHdrFormat() {
-        if (this.textureHalfFloatRenderable) {
+    getHdrFormat(preferLargest, renderable, updatable, filterable) {
+        // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
+        // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+        // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+        const f16Valid = this.extTextureHalfFloat &&
+            (!renderable || this.textureHalfFloatRenderable) &&
+            (!updatable || this.textureHalfFloatUpdatable) &&
+            (!filterable || this.extTextureHalfFloatLinear);
+        const f32Valid = this.extTextureFloat &&
+            (!renderable || this.textureFloatRenderable) &&
+            (!filterable || this.extTextureFloatLinear);
+
+        if (f16Valid && f32Valid) {
+            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+        } else if (f16Valid) {
             return PIXELFORMAT_RGBA16F;
-        } else if (this.textureFloatRenderable) {
+        } else if (f32Valid) {
             return PIXELFORMAT_RGBA32F;
-        }
-        return PIXELFORMAT_R8_G8_B8_A8;
+        } /* else */
+        return null;
     }
 
     /**

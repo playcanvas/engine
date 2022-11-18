@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
@@ -45,7 +45,7 @@ function texelCoordSolidAngle(u, v, size) {
 }
 
 function shFromCubemap(device, source, dontFlipX) {
-    if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
+    if (source.format !== PIXELFORMAT_RGBA8) {
         Debug.error("ERROR: SH: cubemap must be RGBA8");
         return null;
     }

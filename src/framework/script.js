@@ -3,20 +3,18 @@ import { events } from '../core/events.js';
 import { getApplication } from './globals.js';
 import { ScriptTypes } from './script/script-types.js';
 
-/** @typedef {import('./app-base.js').AppBase} AppBase */
-
 /**
  * Callback used by {@link script.createLoadingScreen}.
  *
  * @callback CreateScreenCallback
- * @param {AppBase} app - The application.
+ * @param {import('./app-base.js').AppBase} app - The application.
  */
 
 /**
  * Callback used by {@link script.create}.
  *
  * @callback CreateScriptCallback
- * @param {AppBase} app - The application.
+ * @param {import('./app-base.js').AppBase} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  * @ignore
  */

@@ -1,9 +1,5 @@
 import { Debug } from '../../../core/debug.js';
 
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
-/** @typedef {import('../render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
-
 /**
  * A WebGPU implementation of the RenderTarget.
  *
@@ -26,21 +22,22 @@ class WebgpuRenderTarget {
     /** @type {string} */
     depthFormat = 'depth24plus-stencil8';
 
-    /** @type {GPUTexture} */
+    // type {GPUTexture}
     multisampledColorBuffer;
 
-    /** @type {GPUTexture} */
+    // type {GPUTexture}
     depthTexture = null;
 
     /**
      * Render pass descriptor used when starting a render pass for this render target.
      *
-     * @type {GPURenderPassDescriptor}
+     * // type {GPURenderPassDescriptor}
      */
     renderPassDescriptor = {};
 
     /**
-     * @param {RenderTarget} renderTarget - The render target owning this implementation.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target owning
+     * this implementation.
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
@@ -52,7 +49,8 @@ class WebgpuRenderTarget {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * graphics device.
      */
     destroy(device) {
         this.initialized = false;
@@ -69,7 +67,7 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {GPUTexture} gpuTexture - The color buffer.
+     * @param {any} gpuTexture - The color buffer.
      */
     assignColorTexture(gpuTexture) {
 
@@ -89,8 +87,9 @@ class WebgpuRenderTarget {
     /**
      * Initialize render target for rendering one time.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics device.
-     * @param {RenderTarget} renderTarget - The render target.
+     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * graphics device.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
      */
     init(device, renderTarget) {
 
@@ -104,7 +103,7 @@ class WebgpuRenderTarget {
         // depth buffer as we don't currently resolve it. This might need to change in the future.
         if (depth) {
 
-            /** @type {GPUTextureDescriptor} */
+            // type {GPUTextureDescriptor}
             const depthTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',
@@ -116,7 +115,7 @@ class WebgpuRenderTarget {
             // allocate depth buffer
             this.depthTexture = wgpu.createTexture(depthTextureDesc);
 
-            /** @type {GPURenderPassDepthStencilAttachment} */
+            // @type {GPURenderPassDepthStencilAttachment}
             this.renderPassDescriptor.depthStencilAttachment = {
                 view: this.depthTexture.createView()
             };
@@ -126,7 +125,7 @@ class WebgpuRenderTarget {
         // - for normal render target, construction takes the color buffer as an option
         // - for the main framebuffer, the device supplies the buffer each frame
         // And so we only need to create multi-sampled color buffer if needed here.
-        /** @type {GPURenderPassColorAttachment} */
+        // type {GPURenderPassColorAttachment}
         const colorAttachment = {};
         this.renderPassDescriptor.colorAttachments = [colorAttachment];
 
@@ -136,7 +135,7 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
-            /** @type {GPUTextureDescriptor} */
+            // type {GPUTextureDescriptor}
             const multisampledTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',
@@ -162,7 +161,7 @@ class WebgpuRenderTarget {
     /**
      * Update WebGPU render pass descriptor by RenderPass settings.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      */
     setupForRenderPass(renderPass) {
 

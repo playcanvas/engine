@@ -75,3 +75,17 @@ export const TRACEID_VRAM_VB = 'VRAM.Vb';
  * @type {string}
  */
 export const TRACEID_VRAM_IB = 'VRAM.Ib';
+
+/**
+ * Logs the creation of bind groups.
+ *
+ * @type {string}
+ */
+export const TRACEID_BINDGROUP_ALLOC = 'BindGroupAlloc';
+
+/**
+ * Logs the creation of bind group formats.
+ *
+ * @type {string}
+ */
+export const TRACEID_BINDGROUPFORMAT_ALLOC = 'BindGroupFormatAlloc';

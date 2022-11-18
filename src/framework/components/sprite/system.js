@@ -2,7 +2,7 @@ import { Color } from '../../../core/math/color.js';
 
 import {
     CULLFACE_NONE,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -15,8 +15,6 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
@@ -28,7 +26,7 @@ class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {
@@ -66,7 +64,7 @@ class SpriteComponentSystem extends ComponentSystem {
             const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 name: 'sprite'
             });
             const pixels = new Uint8Array(texture.lock());

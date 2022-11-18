@@ -1,9 +1,6 @@
 import { Debug } from '../../core/debug.js';
-
-import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-
-/** @typedef {import('./manager.js').SoundManager} SoundManager */
+import { Vec3 } from '../../core/math/vec3.js';
 
 /**
  * Represents an audio listener - used internally.
@@ -14,11 +11,11 @@ class Listener {
     /**
      * Create a new listener instance.
      *
-     * @param {SoundManager} manager - The sound manager.
+     * @param {import('./manager.js').SoundManager} manager - The sound manager.
      */
     constructor(manager) {
         /**
-         * @type {SoundManager}
+         * @type {import('./manager.js').SoundManager}
          * @private
          */
         this._manager = manager;

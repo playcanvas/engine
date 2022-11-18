@@ -1,10 +1,8 @@
-import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-
-import { math } from '../../core/math/math.js';
+import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
@@ -12,27 +10,20 @@ import {
     CHUNKAPI_1_55,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGBA8,
     TEXHINT_LIGHTMAP,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';
-
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-
-/** @typedef {import('../asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../entity.js').Entity} Entity */
-/** @typedef {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} ForwardRenderer */
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../../scene/scene.js').Scene} Scene */
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 
 import {
     BAKE_COLORDIR,
@@ -68,11 +59,14 @@ class Lightmapper {
     /**
      * Create a new Lightmapper instance.
      *
-     * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
-     * @param {Entity} root - The root entity of the scene.
-     * @param {Scene} scene - The scene to lightmap.
-     * @param {ForwardRenderer} renderer - The renderer.
-     * @param {AssetRegistry} assets - Registry of assets to lightmap.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device used by the lightmapper.
+     * @param {import('../entity.js').Entity} root - The root entity of the scene.
+     * @param {import('../../scene/scene.js').Scene} scene - The scene to lightmap.
+     * @param {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} renderer - The
+     * renderer.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - Registry of assets to
+     * lightmap.
      * @hideconstructor
      */
     constructor(device, root, scene, renderer, assets) {
@@ -141,7 +135,7 @@ class Lightmapper {
             this.blackTex = new Texture(this.device, {
                 width: 4,
                 height: 4,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 type: TEXTURETYPE_RGBM,
                 name: 'lightmapBlack'
             });
@@ -244,6 +238,7 @@ class Lightmapper {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
                 material.ambientTint = true;
             }
+            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
@@ -282,17 +277,16 @@ class Lightmapper {
         }
     }
 
-    createTexture(size, type, name) {
-
+    createTexture(size, name) {
         return new Texture(this.device, {
             // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
             // #endif
             width: size,
             height: size,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: this.scene.lightmapPixelFormat,
             mipmaps: false,
-            type: type,
+            type: this.scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -499,8 +493,8 @@ class Lightmapper {
     /**
      * Generates and applies the lightmaps.
      *
-     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to
-     * render lightmaps for. If not supplied, the entire scene will be baked.
+     * @param {import('../entity.js').Entity[]|null} nodes - An array of entities (with model or
+     * render components) to render lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap
@@ -602,8 +596,7 @@ class Lightmapper {
         // #endif
     }
 
-    // this allocates lightmap textures and render targets. Note that the type used here is always TEXTURETYPE_DEFAULT,
-    // as we ping-pong between various render targets anyways, and shader uses hardcoded types and ignores it anyways.
+    // this allocates lightmap textures and render targets.
     allocateTextures(bakeNodes, passCount) {
 
         for (let i = 0; i < bakeNodes.length; i++) {
@@ -614,7 +607,7 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_lightmap_' + i));
+                const tex = this.createTexture(size, ('lightmapper_lightmap_' + i));
                 LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
@@ -624,7 +617,7 @@ class Lightmapper {
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                const tex = this.createTexture(size, TEXTURETYPE_DEFAULT, ('lightmapper_temp_lightmap_' + size));
+                const tex = this.createTexture(size, ('lightmapper_temp_lightmap_' + size));
                 LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,

@@ -1,8 +1,5 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
-
-/** @typedef {import('../bind-group-format.js').BindGroupFormat} BindGroupFormat */
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
 
 import { WebgpuUtils } from './webgpu-utils.js';
 
@@ -18,14 +15,14 @@ samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
  */
 class WebgpuBindGroupFormat {
     /**
-     * @param {BindGroupFormat} bindGroupFormat -
+     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
      */
     constructor(bindGroupFormat) {
 
-        /** @type {WebgpuGraphicsDevice} */
+        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        /** @type {GPUBindGroupLayoutDescriptor} */
+        // type {GPUBindGroupLayoutDescriptor}
         const { key, descr } = this.createDescriptor(bindGroupFormat);
 
         /**
@@ -35,8 +32,9 @@ class WebgpuBindGroupFormat {
          */
         this.key = key;
 
-        /** @type {GPUBindGroupLayout} */
+        // type {GPUBindGroupLayout}
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
+        DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
 
     destroy() {
@@ -50,7 +48,7 @@ class WebgpuBindGroupFormat {
     /**
      * Returns texture binding slot.
      *
-     * @param {BindGroupFormat} bindGroupFormat -
+     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
      * @param {number} index - The index of the texture.
      * @returns {number} - The slot index.
      */

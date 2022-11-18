@@ -57,6 +57,7 @@ export * from './platform/audio/constants.js';
 
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
+export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
 export { drawQuadWithShader, drawTexture } from './platform/graphics/simple-post-effect.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
@@ -72,6 +73,11 @@ export { VertexIterator } from './platform/graphics/vertex-iterator.js';
 
 // PLATFORM / GRAPHICS / webgl
 export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';
+
+// PLATFORM / GRAPHICS / webgpu
+// #if _DEBUG
+export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
+// #endif
 
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
@@ -295,7 +301,7 @@ export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent,
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
 
 // FRAMEWORK /SCRIPTS
-export { createScript, registerScript } from './framework/script/script.js';
+export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
 export { ScriptAttributes } from './framework/script/script-attributes.js';
 export { ScriptRegistry } from './framework/script/script-registry.js';
 export { ScriptType } from './framework/script/script-type.js';

@@ -14,8 +14,6 @@ import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
 
-/** @typedef {import('./system.js').AnimComponentSystem} AnimComponentSystem */
-
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
  *
@@ -25,8 +23,8 @@ class AnimComponent extends Component {
     /**
      * Create a new AnimComponent instance.
      *
-     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this
-     * Component.
+     * @param {import('./system.js').AnimComponentSystem} system - The {@link ComponentSystem} that
+     * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -662,7 +660,7 @@ class AnimComponent extends Component {
         if (typeof value === 'number' && value % 1 === 0) {
             this.setParameterValue(name, ANIM_PARAMETER_INTEGER, value);
         } else {
-            Debug.error('Attempting to assign non integer value to integer parameter');
+            Debug.error('Attempting to assign non integer value to integer parameter', name, value);
         }
     }
 

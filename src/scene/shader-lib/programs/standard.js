@@ -11,8 +11,6 @@ import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 
-/** @typedef {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 const _matTex2D = [];
 
 const standard = {

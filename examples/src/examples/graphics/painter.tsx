@@ -39,7 +39,7 @@ class PainterExample {
         const texture = new pc.Texture(app.graphicsDevice, {
             width: 1024,
             height: 1024,
-            format: pc.PIXELFORMAT_R8_G8_B8,
+            format: pc.PIXELFORMAT_RGB8,
             mipmaps: false,
             minFilter: pc.FILTER_LINEAR,
             magFilter: pc.FILTER_LINEAR

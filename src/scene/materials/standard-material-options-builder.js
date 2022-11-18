@@ -1,8 +1,9 @@
-import { _matTex2D } from '../../scene/shader-lib/programs/standard.js';
+import { Quat } from '../../core/math/quat.js';
 
 import {
-    PIXELFORMAT_DXT5, TEXTURETYPE_SWIZZLEGGGR
+    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR
 } from '../../platform/graphics/constants.js';
+
 import {
     BLEND_NONE,
     GAMMA_NONE, GAMMA_SRGBHDR,
@@ -14,8 +15,7 @@ import {
     TONEMAP_LINEAR,
     SPECULAR_PHONG
 } from '../constants.js';
-
-import { Quat } from '../../core/math/quat.js';
+import { _matTex2D } from '../shader-lib/programs/standard.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -58,7 +58,7 @@ class StandardMaterialOptionsBuilder {
             options.toneMap = TONEMAP_LINEAR;
         }
         options.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
-        this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
+        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
@@ -263,7 +263,7 @@ class StandardMaterialOptionsBuilder {
         options.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
-    _updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList) {
+    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList) {
         options.lightMap = false;
         options.lightMapChannel = '';
         options.lightMapUv = 0;
@@ -275,7 +275,7 @@ class StandardMaterialOptionsBuilder {
             options.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapEncoding = 'rgbm';
+                options.lightMapEncoding = scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? 'rgbm' : 'linear';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;

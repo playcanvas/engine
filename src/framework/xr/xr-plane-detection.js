@@ -2,8 +2,6 @@ import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
-
 /**
  * Plane Detection provides the ability to detect real world surfaces based on estimations of the
  * underlying AR system.
@@ -23,7 +21,7 @@ import { XrPlane } from './xr-plane.js';
  */
 class XrPlaneDetection extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
@@ -55,7 +53,7 @@ class XrPlaneDetection extends EventHandler {
     /**
      * Create a new XrPlaneDetection instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {

@@ -1,7 +1,9 @@
-import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT } from './constants.js';
+import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
+import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH } from './constants.js';
+
+let id = 0;
 
 /**
  * @ignore
@@ -20,7 +22,7 @@ class BindBufferFormat {
  * @ignore
  */
 class BindTextureFormat {
-    /** @type {ScopeId} */
+    /** @type {import('./scope-id.js').ScopeId} */
     scopeId;
 
     constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT) {
@@ -43,12 +45,16 @@ class BindTextureFormat {
  */
 class BindGroupFormat {
     /**
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this vertex format.
      * @param {BindBufferFormat[]} bufferFormats -
      * @param {BindTextureFormat[]} textureFormats -
      */
     constructor(graphicsDevice, bufferFormats, textureFormats) {
-        /** @type {GraphicsDevice} */
+        this.id = id++;
+        DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
+
+        /** @type {import('./graphics-device.js').GraphicsDevice} */
         this.device = graphicsDevice;
 
         /** @type {BindBufferFormat[]} */
@@ -75,6 +81,8 @@ class BindGroupFormat {
         });
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
+
+        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}`, this);
     }
 
     /**
@@ -105,6 +113,8 @@ class BindGroupFormat {
         this.textureFormats.forEach((format) => {
 
             // TODO: suport different types of textures and samplers
+            Debug.assert(format.textureDimension === TEXTUREDIMENSION_2D);
+            Debug.assert(format.sampleType !== SAMPLETYPE_DEPTH);
 
             code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform texture2D ${format.name};\n` +
                     `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;

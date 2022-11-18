@@ -1,24 +1,21 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    DEVICETYPE_WEBGPU
+    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F
 } from '../constants.js';
-
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 
-import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
-import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
-import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
-import { WebgpuTexture } from './webgpu-texture.js';
-import { WebgpuShader } from './webgpu-shader.js';
-import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
-import { WebgpuRenderTarget } from './webgpu-render-target.js';
-import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
+import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
+import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
+import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
 import { WebgpuRenderState } from './webgpu-render-state.js';
-
-/** @typedef {import('../render-pass.js').RenderPass} RenderPass */
+import { WebgpuRenderTarget } from './webgpu-render-target.js';
+import { WebgpuShader } from './webgpu-shader.js';
+import { WebgpuTexture } from './webgpu-texture.js';
+import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
+import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -47,7 +44,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     * // type {GPURenderPipeline}
      */
     pipeline;
 
@@ -60,8 +57,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     constructor(canvas, options = {}) {
         super(canvas);
-
         this.deviceType = DEVICETYPE_WEBGPU;
+
+        this.initDeviceCaps();
+    }
+
+    initDeviceCaps() {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.maxTextures = 16;
@@ -69,24 +70,47 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.extTextureFloat = true;
-        this.extTextureHalfFloat = false; // TODO: likely supported as well
+        this.textureFloatRenderable = true;
+        this.extTextureHalfFloat = true;
+        this.textureHalfFloatRenderable = true;
+        this.textureHalfFloatUpdatable = true;
+        this.maxTextureSize = 4096;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
+        this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
     }
 
-    async initWebGpu() {
+    async initWebGpu(glslangUrl) {
 
         if (!window.navigator.gpu) {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
+        const loadScript = (url) => {
+            return new Promise(function (resolve, reject) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = false;
+                script.onload = function () {
+                    resolve(url);
+                };
+                script.onerror = function () {
+                    reject(new Error(`Failed to download script ${url}`));
+                };
+                document.body.appendChild(script);
+            });
+        };
+
+        // TODO: add loadScript and requestAdapter to promise list and wait for both.
+        await loadScript(glslangUrl);
+
         this.glslang = await glslang();
 
-        /** @type {GPUAdapter} */
+        // type {GPUAdapter}
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
-        /** @type {GPUDevice} */
+        // type {GPUDevice}
         this.wgpu = await this.gpuAdapter.requestDevice();
 
         // initially fill the window. This needs improvement.
@@ -94,7 +118,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        /** @type {GPUCanvasConfiguration} */
+        // type {GPUCanvasConfiguration}
         this.canvasConfig = {
             device: this.wgpu,
             format: 'bgra8unorm'
@@ -102,6 +126,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.gpuContext.configure(this.canvasConfig);
 
         this.createFramebuffer();
+
+        return this;
     }
 
     createFramebuffer() {
@@ -147,7 +173,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * @param {number} index - Index of the bind group slot
-     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
      */
     setBindGroup(index, bindGroup) {
 
@@ -242,7 +268,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startPass(renderPass) {
@@ -277,7 +303,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {RenderPass} renderPass - The render pass to end.
+     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endPass(renderPass) {

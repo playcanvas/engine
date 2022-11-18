@@ -48,7 +48,7 @@ CubemapRenderer.prototype.initialize = function () {
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,

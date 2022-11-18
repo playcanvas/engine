@@ -1,9 +1,7 @@
 import { Debug } from '../../core/debug.js';
-import { PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R4_G4_B4_A4 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGB565, PIXELFORMAT_RGBA4 } from '../../platform/graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../../platform/net/http.js';
-
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
 
 // get the list of the device's supported compression formats
 const getCompressionFormats = (device) => {
@@ -161,7 +159,7 @@ class BasisQueue {
             }
         } else {
             // (re)create typed array from the returned array buffers
-            if (data.format === PIXELFORMAT_R5_G6_B5 || data.format === PIXELFORMAT_R4_G4_B4_A4) {
+            if (data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4) {
                 // handle 16 bit formats
                 data.levels = data.levels.map(function (v) {
                     return new Uint16Array(v);
@@ -319,7 +317,8 @@ let deviceDetails = null;
 /**
  * Enqueue a blob of basis data for transcoding.
  *
- * @param {GraphicsDevice} device - The graphics device.
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.

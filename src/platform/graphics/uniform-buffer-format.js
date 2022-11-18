@@ -7,10 +7,6 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
 } from './constants.js';
 
-/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
-/** @typedef {import('./uniform-buffer.js').UniformBuffer} UniformBuffer */
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 // map of UNIFORMTYPE_*** to number of 32bit elements
 const uniformTypeToNumElements = [];
 uniformTypeToNumElements[UNIFORMTYPE_FLOAT] = 1;
@@ -29,7 +25,7 @@ uniformTypeToNumElements[UNIFORMTYPE_MAT2] = 8;    // 2 x vec4
 uniformTypeToNumElements[UNIFORMTYPE_MAT3] = 12;   // 3 x vec4
 uniformTypeToNumElements[UNIFORMTYPE_MAT4] = 16;   // 4 x vec4
 
-// Handle additiona types:
+// Handle additional types:
 //      UNIFORMTYPE_FLOATARRAY = 17;
 //      UNIFORMTYPE_VEC2ARRAY = 21;
 //      UNIFORMTYPE_VEC3ARRAY = 22;
@@ -58,7 +54,7 @@ class UniformFormat {
      */
     offset;
 
-    /** @type {ScopeId} */
+    /** @type {import('./scope-id.js').ScopeId} */
     scopeId;
 
     /**
@@ -110,7 +106,7 @@ class UniformBufferFormat {
     /**
      * Create a new UniformBufferFormat instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device.
      * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer
      */
     constructor(graphicsDevice, uniforms) {

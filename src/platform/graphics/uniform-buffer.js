@@ -6,10 +6,6 @@ import {
     UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
 } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./uniform-buffer-format.js').UniformBufferFormat} UniformBufferFormat */
-/** @typedef {import('./uniform-buffer-format.js').UniformFormat} UniformFormat */
-
 // Uniform buffer set functions - only implemented for types for which the default
 // array to buffer copy does not work, or could be slower.
 const _updateFunctions = [];
@@ -104,8 +100,10 @@ class UniformBuffer {
     /**
      * Create a new UniformBuffer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform buffer.
-     * @param {UniformBufferFormat} format - Format of the uniform buffer
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this uniform buffer.
+     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} format - Format of the
+     * uniform buffer.
      */
     constructor(graphicsDevice, format) {
         this.device = graphicsDevice;
@@ -152,7 +150,8 @@ class UniformBuffer {
      * Assign a value to the uniform specified by its format. This is the fast version of assigning
      * a value to a uniform, avoiding any lookups.
      *
-     * @param {UniformFormat} uniformFormat - The format of the uniform.
+     * @param {import('./uniform-buffer-format.js').UniformFormat} uniformFormat - The format of
+     * the uniform.
      */
     setUniform(uniformFormat) {
         Debug.assert(uniformFormat);

@@ -9,8 +9,6 @@ import { ComponentSystem } from '../system.js';
 import { _lightProps, LightComponent } from './component.js';
 import { LightComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 /**
  * A Light Component is used to dynamically light the scene.
  *
@@ -20,7 +18,7 @@ class LightComponentSystem extends ComponentSystem {
     /**
      * Create a new LightComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

@@ -9,8 +9,6 @@ import { ElementComponent } from './component.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
 
-/** @typedef {import('../../input/element-input').ElementTouchEvent} ElementTouchEvent */
-
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
 const _ray = new Ray();
@@ -83,6 +81,10 @@ class ElementDragHelper extends EventHandler {
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
     }
 
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
+     */
     _toggleDragListeners(onOrOff) {
         const isOn = onOrOff === 'on';
 
@@ -91,21 +93,17 @@ class ElementDragHelper extends EventHandler {
             return;
         }
 
-        if (!this._handleMouseUpOrTouchEnd) {
-            this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
-        }
-
         // mouse events, if mouse is available
         if (this._app.mouse) {
             this._element[onOrOff]('mousemove', this._onMove, this);
-            this._element[onOrOff]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mouseup', this._onMouseUpOrTouchEnd, this);
         }
 
         // touch events, if touch is available
         if (platform.touch) {
             this._element[onOrOff]('touchmove', this._onMove, this);
-            this._element[onOrOff]('touchend', this._handleMouseUpOrTouchEnd, this);
-            this._element[onOrOff]('touchcancel', this._handleMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchend', this._onMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._onMouseUpOrTouchEnd, this);
         }
 
         this._hasDragListeners = isOn;
@@ -142,7 +140,7 @@ class ElementDragHelper extends EventHandler {
      * This method calculates the `Vec3` intersection point of plane/ray intersection based on
      * the mouse/touch input event. If there is no intersection, it returns `null`.
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
      * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
      * is an intersection, otherwise `null`
      * @private
@@ -223,7 +221,7 @@ class ElementDragHelper extends EventHandler {
     /**
      * This method is linked to `_element` events: `mousemove` and `touchmove`
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
      * @private
      */
     _onMove(event) {

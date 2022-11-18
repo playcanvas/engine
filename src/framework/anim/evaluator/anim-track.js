@@ -1,8 +1,5 @@
 import { AnimEvents } from './anim-events.js';
 
-/** @typedef {import('./anim-curve.js').AnimCurve} AnimCurve */
-/** @typedef {import('./anim-data.js').AnimData} AnimData */
-
 /**
  * An AnimTrack stores the curve data necessary to animate a set of target nodes. It can be linked
  * to the nodes it should animate using the {@link AnimComponent#assignAnimation} method.
@@ -13,9 +10,9 @@ class AnimTrack {
      *
      * @param {string} name - The track name.
      * @param {number} duration - The duration of the track in seconds.
-     * @param {AnimData[]} inputs - List of curve key data.
-     * @param {AnimData[]} outputs - List of curve value data.
-     * @param {AnimCurve[]} curves - The list of curves.
+     * @param {import('./anim-data.js').AnimData[]} inputs - List of curve key data.
+     * @param {import('./anim-data.js').AnimData[]} outputs - List of curve value data.
+     * @param {import('./anim-curve.js').AnimCurve[]} curves - The list of curves.
      * @param {AnimEvents} animEvents - A sequence of animation events.
      * @hideconstructor
      */
@@ -49,7 +46,7 @@ class AnimTrack {
     /**
      * Gets the list of curve key data contained in the AnimTrack.
      *
-     * @type {AnimData[]}
+     * @type {import('./anim-data.js').AnimData[]}
      */
     get inputs() {
         return this._inputs;
@@ -58,7 +55,7 @@ class AnimTrack {
     /**
      * Gets the list of curve values contained in the AnimTrack.
      *
-     * @type {AnimData[]}
+     * @type {import('./anim-data.js').AnimData[]}
      */
     get outputs() {
         return this._outputs;
@@ -67,7 +64,7 @@ class AnimTrack {
     /**
      * Gets the list of curves contained in the AnimTrack.
      *
-     * @type {AnimCurve[]}
+     * @type {import('./anim-curve.js').AnimCurve[]}
      */
     get curves() {
         return this._curves;

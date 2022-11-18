@@ -187,7 +187,7 @@ class MiniStatsExample {
                     const texture = new pc.Texture(app.graphicsDevice, {
                         width: 64,
                         height: 64,
-                        format: pc.PIXELFORMAT_R8_G8_B8,
+                        format: pc.PIXELFORMAT_RGB8,
                         mipmaps: false
                     });
                     textures.push(texture);

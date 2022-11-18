@@ -1,10 +1,9 @@
 import { Debug } from "../../../core/debug.js";
+
 import {
     semanticToLocation,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../constants.js';
-
-/** @typedef {import('../vertex-format.js').VertexFormat} VertexFormat */
 
 // map of TYPE_*** to GPUVertexFormat
 const gpuVertexFormats = [];
@@ -20,15 +19,15 @@ gpuVertexFormats[TYPE_FLOAT32] = 'float32';
  * @ignore
  */
 class WebgpuVertexBufferLayout {
-    /** @type {Map<string, GPUVertexBufferLayout[]>} */
+    // type {Map<string, GPUVertexBufferLayout[]>}
     cache = new Map();
 
     /**
      * Obtain a vertex layout of one or two vertex formats.
      *
-     * @param {VertexFormat} vertexFormat0 - The first vertex format.
-     * @param {VertexFormat} [vertexFormat1] - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex layout.
+     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {import('../vertex-format.js').VertexFormat} [vertexFormat1] - The second vertex format.
+     * @returns {any[]} - The vertex layout.
      */
     get(vertexFormat0, vertexFormat1 = null) {
 
@@ -46,13 +45,13 @@ class WebgpuVertexBufferLayout {
     }
 
     /**
-     * @param {VertexFormat} vertexFormat0 - The first vertex format.
-     * @param {VertexFormat} vertexFormat1 - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex buffer layout.
+     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
+     * @returns {any[]} - The vertex buffer layout.
      */
     create(vertexFormat0, vertexFormat1) {
 
-        /** @type  {GPUVertexBufferLayout[]} */
+        // type  {GPUVertexBufferLayout[]}
         const layout = [];
 
         const addFormat = (format) => {
@@ -64,7 +63,7 @@ class WebgpuVertexBufferLayout {
                 const location = semanticToLocation[element.name];
 
                 // A WGL shader needs attributes to have matching types, but glslang translator we use does not allow us to set those
-                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported.`);
+                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported, semantic: ${element.name}.`);
 
                 attributes.push({
                     shaderLocation: location,

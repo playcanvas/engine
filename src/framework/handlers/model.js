@@ -3,12 +3,11 @@ import { Debug } from '../../core/debug.js';
 
 import { http, Http } from '../../platform/net/http.js';
 
+import { getDefaultMaterial } from '../../scene/materials/default-material.js';
+
 import { GlbModelParser } from '../parsers/glb-model.js';
 import { JsonModelParser } from '../parsers/json-model.js';
 
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
-
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -37,7 +36,7 @@ class ModelHandler {
     /**
      * Create a new ModelHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {

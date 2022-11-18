@@ -1,21 +1,14 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 
-import { ScopeSpace } from './scope-space.js';
-
 import {
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN
 } from './constants.js';
-import { Debug } from '../../core/debug.js';
+import { ScopeSpace } from './scope-space.js';
 
 const EVENT_RESIZE = 'resizecanvas';
-
-/** @typedef {import('./render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('./shader.js').Shader} Shader */
-/** @typedef {import('./texture.js').Texture} Texture */
-/** @typedef {import('./index-buffer.js').IndexBuffer} IndexBuffer */
-/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -94,7 +87,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Currently active render target.
      *
-     * @type {RenderTarget}
+     * @type {import('./render-target.js').RenderTarget}
      * @ignore
      */
     renderTarget = null;
@@ -145,15 +138,15 @@ class GraphicsDevice extends EventHandler {
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
         // Array of objects that need to be re-initialized after a context restore event
-        /** @type {Shader[]} */
+        /** @type {import('./shader.js').Shader[]} */
         this.shaders = [];
 
         this.buffers = [];
 
-        /** @type {Texture[]} */
+        /** @type {import('./texture.js').Texture[]} */
         this.textures = [];
 
-        /** @type {RenderTarget[]} */
+        /** @type {import('./render-target.js').RenderTarget[]} */
         this.targets = [];
 
         this._vram = {
@@ -243,7 +236,8 @@ class GraphicsDevice extends EventHandler {
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
-     * @param {RenderTarget} renderTarget - The render target to activate.
+     * @param {import('./render-target.js').RenderTarget} renderTarget - The render target to
+     * activate.
      * @example
      * // Set a render target to receive all rendering output
      * device.setRenderTarget(renderTarget);
@@ -260,7 +254,8 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
      * for any indexed primitives.
      *
-     * @param {IndexBuffer} indexBuffer - The index buffer to assign to the device.
+     * @param {import('./index-buffer.js').IndexBuffer} indexBuffer - The index buffer to assign to
+     * the device.
      */
     setIndexBuffer(indexBuffer) {
         // Store the index buffer
@@ -272,7 +267,8 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
      * data for any primitives.
      *
-     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
+     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to
+     * assign to the device.
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -284,7 +280,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Queries the currently set render target on the device.
      *
-     * @returns {RenderTarget} The current render target.
+     * @returns {import('./render-target.js').RenderTarget} The current render target.
      * @example
      * // Get the current render target
      * var renderTarget = device.getRenderTarget();
@@ -296,7 +292,8 @@ class GraphicsDevice extends EventHandler {
     /**
      * Initialize render target before it can be used.
      *
-     * @param {RenderTarget} target - The render target to be initialized.
+     * @param {import('./render-target.js').RenderTarget} target - The render target to be
+     * initialized.
      * @ignore
      */
     initRenderTarget(target) {
