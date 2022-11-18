@@ -12,7 +12,7 @@ import { Component } from '../component.js';
 
 // Shared math variable to avoid excessive allocation
 let ammoTransform;
-let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+let ammoVec1, ammoVec2, ammoQuat;
 const quat1 = new Quat();
 const quat2 = new Quat();
 const vec3 = new Vec3();

@@ -406,7 +406,7 @@ class CollisionComponent extends Component {
 
 
     /**
-     * @returns {Vec3}
+     * @returns {Vec3} The world position for the physics body taking into account of any offsets.
      * @private
      */
     _getBodyPosition() {
@@ -418,13 +418,13 @@ class CollisionComponent extends Component {
             quat.copy(rot).transformVector(lo, vec3);
             vec3.add((pos));
             return vec3;
-        } else {
-            return pos;
         }
+
+        return pos;
     }
 
     /**
-     * @returns {Quat}
+     * @returns {Quat} The world rotation for the physics body taking into account of any angular offset.
      * @private
      */
     _getBodyRotation() {
@@ -434,9 +434,9 @@ class CollisionComponent extends Component {
             const ao = this.data.angularOffset;
             quat.copy(rot).mul(ao);
             return quat;
-        } else {
-            return rot;
         }
+
+        return rot;
     }
 
     /** @private */
