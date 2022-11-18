@@ -79,6 +79,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.supportsTextureFetch = true;
     }
 
     async initWebGpu(glslangUrl) {
