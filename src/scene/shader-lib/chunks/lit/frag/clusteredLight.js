@@ -25,6 +25,12 @@ uniform highp sampler2D lightsTextureFloat;
     uniform sampler2D cookieAtlasTexture;
 #endif
 
+#ifdef GL2
+    uniform int clusterMaxCells;
+#else
+    uniform vec4 lightsTextureInvSize;
+#endif
+
 uniform float clusterPixelsPerCell;
 uniform vec3 clusterCellsCountByBoundsSize;
 uniform vec3 clusterTextureSize;
@@ -150,8 +156,6 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     }
 
 #else
-
-    uniform vec4 lightsTextureInvSize;
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
         return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
@@ -579,30 +583,54 @@ void addClusteredLights() {
         // convert cell index to uv coordinates
         float clusterV = floor(cellIndex * clusterTextureSize.y);
         float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
-        clusterV = (clusterV + 0.5) * clusterTextureSize.z;
 
-        // loop over maximum possible number of supported light cells
-        const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
-        for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+        #ifdef GL2
 
-            vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
-            vec4 indices = lightIndices * 255.0;
+            // loop over maximum number of light cells
+            for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
-            // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
-            for (int i = 0; i < 4; i++) {
-                
-                if (indices.x <= 0.0)
-                    return;
+                vec4 lightIndices = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0);
 
-                evaluateClusterLight(indices.x); 
-                indices = indices.yzwx;
+                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+                vec4 indices = lightIndices * 255.0;
+                for (int i = 0; i < 4; i++) {
+                    
+                    if (indices.x <= 0.0)
+                        return;
+
+                    evaluateClusterLight(indices.x); 
+                    indices = indices.yzwx;
+                }
             }
 
-            // end of the cell array
-            if (lightCellIndex > clusterPixelsPerCell) {
-                break;
+        #else
+
+            clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+
+            // loop over maximum possible number of supported light cells
+            const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+            for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+
+                vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
+                vec4 indices = lightIndices * 255.0;
+
+                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+                for (int i = 0; i < 4; i++) {
+                    
+                    if (indices.x <= 0.0)
+                        return;
+
+                    evaluateClusterLight(indices.x); 
+                    indices = indices.yzwx;
+                }
+
+                // end of the cell array
+                if (lightCellIndex > clusterPixelsPerCell) {
+                    break;
+                }
             }
-        }
+
+        #endif
     }
 }
 `;

@@ -115,6 +115,8 @@ class WorldClusters {
 
     registerUniforms(device) {
 
+        this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
+
         this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
         this._clusterPixelsPerCellId = device.scope.resolve('clusterPixelsPerCell');
 
@@ -215,6 +217,8 @@ class WorldClusters {
         this._clusterWorldTextureId.setValue(this.clusterTexture);
 
         // uniform values
+        this._clusterMaxCellsId.setValue(this._pixelsPerCellCount);
+
         const boundsDelta = this.boundsDelta;
         this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / boundsDelta.x;
         this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / boundsDelta.y;
