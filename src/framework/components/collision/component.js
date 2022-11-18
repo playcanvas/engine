@@ -5,6 +5,9 @@ import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
+const vec3 = new Vec3();
+const quat = new Quat();
+
 /**
  * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
  * collision volume that can be simulated using the physics engine.
@@ -398,6 +401,41 @@ class CollisionComponent extends Component {
                 if (bodyComponent)
                     bodyComponent.activate();
             }
+        }
+    }
+
+
+    /**
+     * @returns {Vec3}
+     * @private
+     */
+    _getBodyPosition() {
+        const pos = this.entity.getPosition();
+        const rot = this.entity.getRotation();
+
+        if (this._hasOffset) {
+            const lo = this.data.linearOffset;
+            quat.copy(rot).transformVector(lo, vec3);
+            vec3.add((pos));
+            return vec3;
+        } else {
+            return pos;
+        }
+    }
+
+    /**
+     * @returns {Quat}
+     * @private
+     */
+    _getBodyRotation() {
+        const rot = this.entity.getRotation();
+
+        if (this._hasOffset) {
+            const ao = this.data.angularOffset;
+            quat.copy(rot).mul(ao);
+            return quat;
+        } else {
+            return rot;
         }
     }
 

@@ -1,10 +1,6 @@
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
-import { Quat } from '../../../core/math/quat.js';
-import { Vec3 } from '../../../core/math/vec3.js';
 
 let ammoVec1, ammoQuat, ammoTransform;
-const quat = new Quat();
-const vec3 = new Vec3();
 
 /**
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
@@ -49,15 +45,11 @@ class Trigger {
             const rot = entity.getRotation();
             const component = this.component;
 
-            if (component && component._hasOffset) {
-                const lo = data.linearOffset;
-                const ao = data.angularOffset;
-
-                quat.copy(rot).transformVector(lo, vec3)
-                ammoVec1.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
-
-                quat.copy(rot).mul(ao);
-                ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+            if (component) {
+                const bodyPos = component._getBodyPosition();
+                const bodyRot = component._getBodyRotation();
+                ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+                ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
             } else {
                 ammoVec1.setValue(pos.x, pos.y, pos.z);
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -101,15 +93,11 @@ class Trigger {
         const pos = this.entity.getPosition();
         const rot = this.entity.getRotation();
 
-        if (component && component._hasOffset) {
-            const lo = data.linearOffset;
-            const ao = data.angularOffset;
-
-            quat.copy(rot).transformVector(lo, vec3)
-            ammoVec1.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
-
-            quat.copy(rot).mul(ao);
-            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        if (component) {
+            const bodyPos = component._getBodyPosition();
+            const bodyRot = component._getBodyRotation();
+            ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+            ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
         } else {
             ammoVec1.setValue(pos.x, pos.y, pos.z);
             ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);

@@ -783,15 +783,11 @@ class CollisionComponentSystem extends ComponentSystem {
         const origin = transform.getOrigin();
         const component = node.collision;
 
-        if (component && component._hasOffset) {
-            const lo = data.linearOffset;
-            const ao = data.angularOffset;
-
-            quat.copy(rot).transformVector(lo, vec3)
-            origin.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
-
-            quat.copy(rot).mul(ao);
-            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        if (component) {
+            const bodyPos = component._getBodyPosition();
+            const bodyRot = component._getBodyRotation();
+            origin.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+            ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
         } else {
             origin.setValue(pos.x, pos.y, pos.z);
             ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);

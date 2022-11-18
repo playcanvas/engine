@@ -888,15 +888,11 @@ class RigidBodyComponent extends Component {
         const rot = entity.getRotation();
 
         const component = entity.collision;
-        if (component && component._hasOffset) {
-            const lo = component.data.linearOffset;
-            const ao = component.data.angularOffset;
-
-            quat1.copy(rot).transformVector(lo, vec3)
-            ammoVec1.setValue(pos.x + vec3.x, pos.y + vec3.y, pos.z + vec3.z);
-
-            quat1.copy(rot).mul(ao);
-            ammoQuat.setValue(quat1.x, quat1.y, quat1.z, quat1.w);
+        if (component) {
+            const bodyPos = component._getBodyPosition();
+            const bodyRot = component._getBodyRotation();
+            ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+            ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
         } else {
             ammoVec1.setValue(pos.x, pos.y, pos.z);
             ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -958,12 +954,16 @@ class RigidBodyComponent extends Component {
                     const lo = component.data.linearOffset;
                     const ao = component.data.angularOffset;
 
-                    quat1.set(q.x(), q.y(), q.z(), q.w()).transformVector(lo, vec3);
-                    entity.setPosition(p.x() - vec3.x, p.y() - vec3.y, p.z() - vec3.z);
+                    // Un-rotate the angular offset and then use the new rotation to
+                    // un-translate the linear offset in local space
+                    // Order of operations matter here
+                    const invertedAo = quat2.copy(ao).invert();
+                    const entityRot = quat1.set(q.x(), q.y(), q.z(), q.w()).mul(invertedAo);
 
-                    quat2.copy(ao).invert();
-                    quat1.set(q.x(), q.y(), q.z(), q.w()).mul(quat2);
-                    entity.setRotation(quat1);
+                    entityRot.transformVector(lo, vec3);
+                    entity.setPosition(p.x() - vec3.x, p.y() - vec3.y, p.z() - vec3.z);
+                    entity.setRotation(entityRot);
+
                 } else {
                     entity.setPosition(p.x(), p.y(), p.z());
                     entity.setRotation(q.x(), q.y(), q.z(), q.w());
