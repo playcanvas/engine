@@ -1255,7 +1255,7 @@ class LitShader {
                     if (options.useSpecular) {
                         code += "    dSpecularLight += getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : "";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : "* dSpecularity";
                         code += ";\n";
                     }
                 }
