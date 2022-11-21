@@ -94,7 +94,7 @@ class RenderAssetExample {
 
                 });
             });
-        });
+        }).catch(console.error);
     }
 }
 
