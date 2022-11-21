@@ -126,7 +126,6 @@ class MeshDeformationExample {
                     }
                 });
             });
-
         }).catch(console.error);
     }
 }
