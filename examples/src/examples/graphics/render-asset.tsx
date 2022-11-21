@@ -72,7 +72,7 @@ class RenderAssetExample {
                 camera.lookAt(0, 7, 0);
                 app.root.addChild(camera);
 
-                // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
+                // set skybox
                 app.scene.envAtlas = assets.helipad.resource;
                 app.scene.toneMapping = pc.TONEMAP_ACES;
                 app.scene.skyboxMip = 1;
