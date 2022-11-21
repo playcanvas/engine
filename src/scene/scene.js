@@ -403,6 +403,7 @@ class Scene extends EventHandler {
                 value.addressV = ADDRESS_CLAMP_TO_EDGE;
                 value.minFilter = FILTER_LINEAR;
                 value.magFilter = FILTER_LINEAR;
+                value.mipmaps = false;
             }
 
             this.updateShaders = true;
