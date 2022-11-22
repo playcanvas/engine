@@ -89,6 +89,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
+        // temporary message to confirm Webgpu is being used
+        Debug.log("WebgpuGraphicsDevice initialization ..");
+
         const loadScript = (url) => {
             return new Promise(function (resolve, reject) {
                 const script = document.createElement('script');
