@@ -60,7 +60,7 @@ class HardwareInstancingExample {
                 // create standard material and enable instancing on it
                 const material = new pc.StandardMaterial();
                 material.onUpdateShader = function (options) {
-                    options.useInstancing = true;
+                    options.litOptions.useInstancing = true;
                     return options;
                 };
                 material.shininess = 60;

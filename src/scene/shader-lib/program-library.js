@@ -75,9 +75,9 @@ class ProgramLibrary {
         let def = this.definitionsCache.get(key);
         if (!def) {
             let lights;
-            if (options.lights) {
-                lights = options.lights;
-                options.lights = lights.map(function (l) {
+            if (options.litOptions?.lights) {
+                lights = options.litOptions.lights;
+                options.litOptions.lights = lights.map(function (l) {
                     // TODO: refactor this to avoid creating a clone of the light.
                     const lcopy = l.clone ? l.clone() : l;
                     lcopy.key = l.key;
@@ -87,8 +87,8 @@ class ProgramLibrary {
 
             this.storeNewProgram(name, options);
 
-            if (options.lights)
-                options.lights = lights;
+            if (options.litOptions?.lights)
+                options.litOptions.lights = lights;
 
             if (this._precached)
                 Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
@@ -156,6 +156,9 @@ class ProgramLibrary {
             for (const p in options) {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
+            }
+            for (const p in options.litOptions) {
+                opt[p] = options.litOptions[p];
             }
         } else {
             // Other shaders have only dozen params
