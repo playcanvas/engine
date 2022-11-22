@@ -46,8 +46,8 @@ class Trigger {
             const component = this.component;
 
             if (component) {
-                const bodyPos = component._getBodyPosition();
-                const bodyRot = component._getBodyRotation();
+                const bodyPos = component.getShapePosition();
+                const bodyRot = component.getShapeRotation();
                 ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
                 ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
             } else {
@@ -94,8 +94,8 @@ class Trigger {
         const rot = this.entity.getRotation();
 
         if (component) {
-            const bodyPos = component._getBodyPosition();
-            const bodyRot = component._getBodyRotation();
+            const bodyPos = component.getShapePosition();
+            const bodyRot = component.getShapeRotation();
             ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
             ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
         } else {

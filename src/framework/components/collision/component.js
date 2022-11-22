@@ -406,10 +406,10 @@ class CollisionComponent extends Component {
 
 
     /**
-     * @returns {Vec3} The world position for the physics body taking into account of any offsets.
-     * @private
+     * @description Returns the world position for the collision shape taking into account of any offsets.
+     * @returns {Vec3} The world position for the collision shape.
      */
-    _getBodyPosition() {
+    getShapePosition() {
         const pos = this.entity.getPosition();
         const rot = this.entity.getRotation();
 
@@ -424,10 +424,10 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @returns {Quat} The world rotation for the physics body taking into account of any angular offset.
-     * @private
+     * @description Returns the world rotation for the collision shape taking into account of any offsets.
+     * @returns {Quat} The world rotation for the collision.
      */
-    _getBodyRotation() {
+    getShapeRotation() {
         const rot = this.entity.getRotation();
 
         if (this._hasOffset) {
