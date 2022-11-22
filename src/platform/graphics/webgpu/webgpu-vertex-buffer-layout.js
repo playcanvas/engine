@@ -56,6 +56,7 @@ class WebgpuVertexBufferLayout {
 
         const addFormat = (format) => {
             const interleaved = format.interleaved;
+            const stepMode = format.instancing ? 'instance' : 'vertex';
             let attributes = [];
             const elementCount = format.elements.length;
             for (let i = 0; i < elementCount; i++) {
@@ -75,7 +76,7 @@ class WebgpuVertexBufferLayout {
                     layout.push({
                         attributes: attributes,
                         arrayStride: element.stride,
-                        stepMode: 'vertex'          // for instancing, this need to change
+                        stepMode: stepMode
                     });
                     attributes = [];
                 }

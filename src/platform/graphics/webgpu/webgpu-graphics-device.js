@@ -67,6 +67,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxSamples = 4;
         this.maxTextures = 16;
         this.maxPixelRatio = 1;
+        this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
@@ -189,23 +190,34 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats[index] = bindGroup.format.impl;
     }
 
-    draw(primitive, numInstances, keepBuffers) {
+    submitVertexBuffer(vertexBuffer, slot) {
+
+        const format = vertexBuffer.format;
+        const elementCount = format.elements.length;
+        const vbBuffer = vertexBuffer.impl.buffer;
+        for (let i = 0; i < elementCount; i++) {
+            const element = format.elements[i];
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+        }
+
+        return elementCount;
+    }
+
+    draw(primitive, numInstances = 1, keepBuffers) {
 
         const passEncoder = this.passEncoder;
 
-        // vertex buffer
-        const vb = this.vertexBuffers[0];
-        this.vertexBuffers.length = 0;
-        const format = vb.format;
-        const elementCount = format.elements.length;
-        const vbBuffer = vb.impl.buffer;
-        for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            passEncoder.setVertexBuffer(i, vbBuffer, element.offset);
+        // vertex buffers
+        const vb0 = this.vertexBuffers[0];
+        const vbSlot = this.submitVertexBuffer(vb0, 0);
+        const vb1 = this.vertexBuffers[1];
+        if (vb1) {
+            this.submitVertexBuffer(vb1, vbSlot);
         }
+        this.vertexBuffers.length = 0;
 
         // render pipeline
-        const pipeline = this.renderPipeline.get(primitive, vb.format, null, this.shader, this.renderTarget,
+        const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
                                                  this.bindGroupFormats, this.renderState);
         Debug.assert(pipeline);
 
@@ -218,9 +230,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const ib = this.indexBuffer;
         if (ib) {
             passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-            passEncoder.drawIndexed(ib.numIndices, 1, 0, 0, 0);
+            passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
         } else {
-            passEncoder.draw(vb.numVertices, 1, 0, 0);
+            passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
         }
     }
 

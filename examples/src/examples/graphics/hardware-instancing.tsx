@@ -69,7 +69,7 @@ class HardwareInstancingExample {
                 material.update();
 
                 // Create a Entity with a cylinder render component and the instancing material
-                const box = new pc.Entity();
+                const box = new pc.Entity("InstancingEntity");
                 box.addComponent("render", {
                     material: material,
                     type: "cylinder"

@@ -1748,7 +1748,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
 
-                    if (vertexBuffer.instancing) {
+                    if (vertexBuffer.format.instancing) {
                         gl.vertexAttribDivisor(loc, 1);
                     }
                 }
