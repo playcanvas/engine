@@ -192,7 +192,7 @@ class CollisionSystemImpl {
             type: src.data.type,
             halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
             linearOffset: [src.data.linearOffset.x, src.data.linearOffset.y, src.data.linearOffset.z],
-            angularOffset: [src.data.angularOffset.x, src.data.angularOffset.y, src.data.angularOffset.z],
+            angularOffset: [src.data.angularOffset.x, src.data.angularOffset.y, src.data.angularOffset.z, src.data.angularOffset.w],
             radius: src.data.radius,
             axis: src.data.axis,
             height: src.data.height,

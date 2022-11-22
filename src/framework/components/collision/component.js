@@ -5,8 +5,8 @@ import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-const vec3 = new Vec3();
-const quat = new Quat();
+const _vec3 = new Vec3();
+const _quat = new Quat();
 
 /**
  * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
@@ -39,10 +39,10 @@ const quat = new Quat();
  * Defaults to "box".
  * @property {Vec3} halfExtents The half-extents of the
  * box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
- * @property {Vec3} linearOffset The positional offset of the collision from the Entity position in local space.
+ * @property {Vec3} linearOffset The positional offset of the collision shape from the Entity position in local space.
  * Defaults to [0, 0, 0].
- * @property {Quat} angularOffset The rotational offset of the collision from the Entity rotation in local space.
- * Defaults to [0, 0, 0, 1].
+ * @property {Quat} angularOffset The rotational offset of the collision shape from the Entity rotation in local space.
+ * Defaults to identity.
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
  * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
@@ -411,13 +411,13 @@ class CollisionComponent extends Component {
      */
     getShapePosition() {
         const pos = this.entity.getPosition();
-        const rot = this.entity.getRotation();
 
         if (this._hasOffset) {
+            const rot = this.entity.getRotation();
             const lo = this.data.linearOffset;
-            quat.copy(rot).transformVector(lo, vec3);
-            vec3.add((pos));
-            return vec3;
+
+            _quat.copy(rot).transformVector(lo, _vec3);
+            return _vec3.add(pos);
         }
 
         return pos;
@@ -431,9 +431,7 @@ class CollisionComponent extends Component {
         const rot = this.entity.getRotation();
 
         if (this._hasOffset) {
-            const ao = this.data.angularOffset;
-            quat.copy(rot).mul(ao);
-            return quat;
+            return _quat.copy(rot).mul(this.data.angularOffset);
         }
 
         return rot;
