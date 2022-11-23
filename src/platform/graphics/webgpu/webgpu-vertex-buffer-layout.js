@@ -69,7 +69,7 @@ class WebgpuVertexBufferLayout {
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${gpuVertexFormats[element.dataType]}x${element.numComponents}`
+                    format: `${gpuVertexFormats[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
