@@ -2,6 +2,7 @@ import { Entity } from '../entity.js';
 
 import { CompressUtils } from '../../scene/compress/compress-utils.js';
 import { Decompress } from '../../scene/compress/decompress.js';
+import { Debug } from "../../core/debug.js";
 
 class SceneParser {
     constructor(app, isTemplate) {
@@ -97,24 +98,29 @@ class SceneParser {
         // Create components in order
         const systemsList = this._app.systems.list;
 
-        let len = systemsList.length;
-        const entityData = entities[entity.getGuid()];
-        for (let i = 0; i < len; i++) {
-            const system = systemsList[i];
-            const componentData = entityData.components[system.id];
-            if (componentData) {
-                system.addComponent(entity, componentData);
+        if (entity) {
+            let len = systemsList.length;
+            const entityData = entities[entity.getGuid()];
+            for (let i = 0; i < len; i++) {
+                const system = systemsList[i];
+                const componentData = entityData.components[system.id];
+                if (componentData) {
+                    system.addComponent(entity, componentData);
+                }
             }
+
+            // Open all children and add them to the node
+            len = entityData.children.length;
+            const children = entity._children;
+            for (let i = 0; i < len; i++) {
+                children[i] = this._openComponentData(children[i], entities);
+            }
+
+            return entity;
         }
 
-        // Open all children and add them to the node
-        len = entityData.children.length;
-        const children = entity._children;
-        for (let i = 0; i < len; i++) {
-            children[i] = this._openComponentData(children[i], entities);
-        }
-
-        return entity;
+        Debug.warn("Scene data is invalid where an Entity doesn't exist. Please check the scene data");
+        return new Entity();
     }
 }
 
