@@ -45,6 +45,7 @@ gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGB] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
 
+// map of ADDRESS_*** to GPUAddressMode
 const gpuAddressModes = [];
 gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
 gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
@@ -68,21 +69,25 @@ class WebgpuTexture {
     // type {GPUTextureDescriptor}
     descr;
 
+    // type {GPUTextureFormat}
+    format;
+
     constructor(texture) {
         /** @type {import('../texture.js').Texture} */
         this.texture = texture;
+
+        this.format = gpuTextureFormats[texture.format];
+        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
     }
 
     create(device) {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const gpuFormat = gpuTextureFormats[texture.format];
-        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
 
         this.descr = {
             size: { width: texture.width, height: texture.height },
-            format: gpuFormat,
+            format: this.format,
             mipLevelCount: 1,
             sampleCount: 1,
             dimension: '2d',

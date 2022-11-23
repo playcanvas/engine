@@ -42,10 +42,14 @@ class WebgpuRenderTarget {
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
 
+        // color format is based on the texture
+        if (renderTarget.colorBuffer) {
+            this.colorFormat = renderTarget.colorBuffer.impl.format;
+        }
+
         // TODO: handle shadow map case (depth only, no color)
 
-        // key used by render pipeline creation
-        this.key = `${this.colorFormat}-${renderTarget.depth ? this.depthFormat : ''}-${renderTarget.samples}`;
+        this.updateKey();
     }
 
     /**
@@ -61,6 +65,12 @@ class WebgpuRenderTarget {
 
         this.multisampledColorBuffer?.destroy();
         this.multisampledColorBuffer = null;
+    }
+
+    updateKey() {
+        // key used by render pipeline creation
+        const rt = this.renderTarget;
+        this.key = `${this.colorFormat}-${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
     }
 
     /**
@@ -82,6 +92,10 @@ class WebgpuRenderTarget {
         } else {
             colorAttachment.view = view;
         }
+
+        // for main framebuffer, this is how the format is obtained
+        this.colorFormat = gpuTexture.format;
+        this.updateKey();
     }
 
     /**
