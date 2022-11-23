@@ -59,7 +59,7 @@ class BindGroup {
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group which does not contain in.`);
+        Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain in.`);
         if (this.uniformBuffers[index] !== uniformBuffer) {
             this.uniformBuffers[index] = uniformBuffer;
             this.dirty = true;
@@ -74,7 +74,7 @@ class BindGroup {
      */
     setTexture(name, texture) {
         const index = this.format.textureFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group which does not contain in.`);
+        Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain in.`);
         if (this.textures[index] !== texture) {
             this.textures[index] = texture;
             this.dirty = true;
