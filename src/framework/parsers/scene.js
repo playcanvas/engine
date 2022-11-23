@@ -98,29 +98,28 @@ class SceneParser {
         // Create components in order
         const systemsList = this._app.systems.list;
 
-        if (entity) {
-            let len = systemsList.length;
-            const entityData = entities[entity.getGuid()];
-            for (let i = 0; i < len; i++) {
-                const system = systemsList[i];
-                const componentData = entityData.components[system.id];
-                if (componentData) {
-                    system.addComponent(entity, componentData);
-                }
+        let len = systemsList.length;
+        const entityData = entities[entity.getGuid()];
+        for (let i = 0; i < len; i++) {
+            const system = systemsList[i];
+            const componentData = entityData.components[system.id];
+            if (componentData) {
+                system.addComponent(entity, componentData);
             }
-
-            // Open all children and add them to the node
-            len = entityData.children.length;
-            const children = entity._children;
-            for (let i = 0; i < len; i++) {
-                children[i] = this._openComponentData(children[i], entities);
-            }
-
-            return entity;
         }
 
-        Debug.warn("Scene data is invalid where an Entity doesn't exist. Please check the scene data");
-        return new Entity();
+        // Open all children and add them to the node
+        len = entityData.children.length;
+        const children = entity._children;
+        for (let i = 0; i < len; i++) {
+            if (children[i]) {
+                children[i] = this._openComponentData(children[i], entities);
+            } else {
+                Debug.warn(`Scene data is invalid where a child under "${entity.name}" Entity doesn't exist. Please check the scene data.`);
+            }
+        }
+
+        return entity;
     }
 }
 
