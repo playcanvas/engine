@@ -76,7 +76,6 @@ class AreaLightLuts {
 
             texture.lock().set(data);
             texture.unlock();
-            texture.upload();
 
             return texture;
         }

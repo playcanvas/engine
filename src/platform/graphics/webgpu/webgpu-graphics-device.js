@@ -71,6 +71,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsUniformBuffers = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
+        this.supportsAreaLights = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
         this.extTextureHalfFloat = true;
