@@ -1,7 +1,7 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_R8_G8_B8
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RGBA8, PIXELFORMAT_RGB8
 } from '../../platform/graphics/constants.js';
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -43,7 +43,7 @@ class SceneGrab {
         this.layer = null;
 
         // color buffer format
-        this.colorFormat = this.device.defaultFramebufferAlpha ? PIXELFORMAT_R8_G8_B8_A8 : PIXELFORMAT_R8_G8_B8;
+        this.colorFormat = this.device.defaultFramebufferAlpha ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
         // create a depth layer, which is a default depth layer, but also a template used
         // to patch application created depth layers to behave as one
@@ -250,9 +250,9 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
+                    if (!this.depthRenderTarget.depthBuffer || self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
                         this.depthRenderTarget.destroyTextureBuffers();
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_R8_G8_B8_A8, false, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
                     }
 
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2

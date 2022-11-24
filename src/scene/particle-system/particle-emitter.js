@@ -14,7 +14,7 @@ import {
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     INDEXFORMAT_UINT16,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
@@ -53,7 +53,7 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && format === PIXELFORMAT_R8_G8_B8_A8)
+    if (filter && format === PIXELFORMAT_RGBA8)
         mipFilter = FILTER_LINEAR;
 
     const texture = new Texture(device, {
@@ -71,7 +71,7 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
 
     const pixels = texture.lock();
 
-    if (format === PIXELFORMAT_R8_G8_B8_A8) {
+    if (format === PIXELFORMAT_RGBA8) {
         const temp = new Uint8Array(pixelData.length);
         for (let i = 0; i < pixelData.length; i++) {
             temp[i] = pixelData[i] * mult8Bit * 255;
@@ -401,7 +401,7 @@ class ParticleEmitter {
                 }
             }
 
-            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_RGBA8, 1.0, true);
             texture.minFilter = FILTER_LINEAR;
             texture.magFilter = FILTER_LINEAR;
             return texture;
@@ -644,9 +644,9 @@ class ParticleEmitter {
 
         if (!this.useCpu) {
             if (this.pack8) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
+                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, PIXELFORMAT_RGBA8, 1, false);
+                this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, PIXELFORMAT_RGBA8, 1, false);
             } else {
                 this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
                 this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
@@ -812,7 +812,7 @@ class ParticleEmitter {
             this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
         }
-        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_RGBA8, 1.0, true);
     }
 
     _initializeTextures() {

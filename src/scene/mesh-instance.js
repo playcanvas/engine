@@ -717,7 +717,7 @@ class MeshInstance {
             this.instancingData.vertexBuffer = vertexBuffer;
 
             // mark vertex buffer as instancing data
-            vertexBuffer.instancing = true;
+            vertexBuffer.format.instancing = true;
 
             // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
             this.cull = false;

@@ -130,6 +130,9 @@ class VertexFormat {
         this.vertexCount = vertexCount;
         this.interleaved = vertexCount === undefined;
 
+        // true if the vertex format represents an instancing vertex buffer
+        this.instancing = false;
+
         // calculate total size of the vertex
         this.size = description.reduce((total, desc) => {
             return total + Math.ceil(desc.components * typedArrayTypesByteSize[desc.type] / 4) * 4;

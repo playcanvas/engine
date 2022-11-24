@@ -1,5 +1,5 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -99,6 +99,9 @@ class LightsBuffer {
     // active light texture format, initialized at app start
     static lightTextureFormat = LightsBuffer.FORMAT_8BIT;
 
+    // on webgl2 we use texelFetch instruction to read data textures
+    static useTexelFetch = false;
+
     // defines used for unpacking of light textures to allow CPU packing to match the GPU unpacking
     static shaderDefines = '';
 
@@ -115,8 +118,9 @@ class LightsBuffer {
     // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
         let str = '';
+        const floatOffset = LightsBuffer.useTexelFetch ? '' : '.5';
         Object.keys(object).forEach((key) => {
-            str += `\n#define ${prefix}${key} ${object[key]}.5`;
+            str += `\n#define ${prefix}${key} ${object[key]}${floatOffset}`;
         });
         return str;
     }
@@ -127,6 +131,8 @@ class LightsBuffer {
         // precision for texture storage
         // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
         LightsBuffer.lightTextureFormat = (device.extTextureFloat && device.maxTextures > 8) ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
+
+        LightsBuffer.useTexelFetch = device.supportsTextureFetch;
 
         LightsBuffer.initShaderDefines();
     }
@@ -174,7 +180,7 @@ class LightsBuffer {
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_R8_G8_B8_A8, 'LightsTexture8');
+        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
         this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
 
         // float texture

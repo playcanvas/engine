@@ -2,7 +2,7 @@ import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_LA8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
@@ -144,7 +144,7 @@ class XrDepthSensing extends EventHandler {
 
         // TODO: data format can be different
         this._texture = new Texture(this._manager.app.graphicsDevice, {
-            format: PIXELFORMAT_L8_A8,
+            format: PIXELFORMAT_LA8,
             mipmaps: false,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -399,7 +399,7 @@ class XrDepthSensing extends EventHandler {
     /* eslint-disable jsdoc/check-examples */
     /**
      * Texture that contains packed depth information. The format of this texture is
-     * {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can
+     * {@link PIXELFORMAT_LA8}. It is UV transformed based on the underlying AR system which can
      * be normalized using {@link XrDepthSensing#uvMatrix}.
      *
      * @type {Texture}

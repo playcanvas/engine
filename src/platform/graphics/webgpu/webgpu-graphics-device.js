@@ -44,7 +44,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * @type {GPURenderPipeline}
+     * // type {GPURenderPipeline}
      */
     pipeline;
 
@@ -66,6 +66,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.precision = 'hiphp';
         this.maxSamples = 4;
         this.maxTextures = 16;
+        this.maxPixelRatio = 1;
+        this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
@@ -79,20 +81,42 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.supportsTextureFetch = true;
     }
 
-    async initWebGpu() {
+    async initWebGpu(glslangUrl) {
 
         if (!window.navigator.gpu) {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
 
+        // temporary message to confirm Webgpu is being used
+        Debug.log("WebgpuGraphicsDevice initialization ..");
+
+        const loadScript = (url) => {
+            return new Promise(function (resolve, reject) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = false;
+                script.onload = function () {
+                    resolve(url);
+                };
+                script.onerror = function () {
+                    reject(new Error(`Failed to download script ${url}`));
+                };
+                document.body.appendChild(script);
+            });
+        };
+
+        // TODO: add loadScript and requestAdapter to promise list and wait for both.
+        await loadScript(glslangUrl);
+
         this.glslang = await glslang();
 
-        /** @type {GPUAdapter} */
+        // type {GPUAdapter}
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
-        /** @type {GPUDevice} */
+        // type {GPUDevice}
         this.wgpu = await this.gpuAdapter.requestDevice();
 
         // initially fill the window. This needs improvement.
@@ -100,7 +124,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        /** @type {GPUCanvasConfiguration} */
+        // type {GPUCanvasConfiguration}
         this.canvasConfig = {
             device: this.wgpu,
             format: 'bgra8unorm'
@@ -108,6 +132,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.gpuContext.configure(this.canvasConfig);
 
         this.createFramebuffer();
+
+        return this;
     }
 
     createFramebuffer() {
@@ -153,7 +179,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * @param {number} index - Index of the bind group slot
-     * @param {BindGroup} bindGroup - Bind group to attach
+     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
      */
     setBindGroup(index, bindGroup) {
 
@@ -164,23 +190,34 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats[index] = bindGroup.format.impl;
     }
 
-    draw(primitive, numInstances, keepBuffers) {
+    submitVertexBuffer(vertexBuffer, slot) {
+
+        const format = vertexBuffer.format;
+        const elementCount = format.elements.length;
+        const vbBuffer = vertexBuffer.impl.buffer;
+        for (let i = 0; i < elementCount; i++) {
+            const element = format.elements[i];
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+        }
+
+        return elementCount;
+    }
+
+    draw(primitive, numInstances = 1, keepBuffers) {
 
         const passEncoder = this.passEncoder;
 
-        // vertex buffer
-        const vb = this.vertexBuffers[0];
-        this.vertexBuffers.length = 0;
-        const format = vb.format;
-        const elementCount = format.elements.length;
-        const vbBuffer = vb.impl.buffer;
-        for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            passEncoder.setVertexBuffer(i, vbBuffer, element.offset);
+        // vertex buffers
+        const vb0 = this.vertexBuffers[0];
+        const vbSlot = this.submitVertexBuffer(vb0, 0);
+        const vb1 = this.vertexBuffers[1];
+        if (vb1) {
+            this.submitVertexBuffer(vb1, vbSlot);
         }
+        this.vertexBuffers.length = 0;
 
         // render pipeline
-        const pipeline = this.renderPipeline.get(primitive, vb.format, null, this.shader, this.renderTarget,
+        const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
                                                  this.bindGroupFormats, this.renderState);
         Debug.assert(pipeline);
 
@@ -193,9 +230,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const ib = this.indexBuffer;
         if (ib) {
             passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-            passEncoder.drawIndexed(ib.numIndices, 1, 0, 0, 0);
+            passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
         } else {
-            passEncoder.draw(vb.numVertices, 1, 0, 0);
+            passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
         }
     }
 

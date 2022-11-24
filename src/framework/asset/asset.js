@@ -55,7 +55,7 @@ class Asset extends EventHandler {
      * retrieve the asset.
      * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container",
      * "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
-     * "template", text", "texture"]
+     * "template", text", "texture", "textureatlas"]
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
@@ -72,8 +72,10 @@ class Asset extends EventHandler {
      * materials).
      * @param {object} [options] - The asset handler options. For container options see
      * {@link ContainerHandler}.
-     * @param {boolean} [options.crossOrigin] - For use with texture resources. For
-     * browser-supported image formats only, enable cross origin.
+     * @param {'anonymous'|'use-credentials'|null} [options.crossOrigin] - For use with texture assets
+     * that are loaded using the browser. This setting overrides the default crossOrigin specifier.
+     * For more details on crossOrigin and its use, see
+     * https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/crossOrigin.
      * @example
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
@@ -94,9 +96,9 @@ class Asset extends EventHandler {
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
          * "css", "font", "json", "html", "material", "model", "render", "script", "shader", "sprite",
-         * "template", "text", "texture"]
+         * "template", "text", "texture", "textureatlas"]
          *
-         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture")}
+         * @type {("animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas")}
          */
         this.type = type;
 

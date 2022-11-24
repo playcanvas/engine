@@ -19,7 +19,7 @@ gpuVertexFormats[TYPE_FLOAT32] = 'float32';
  * @ignore
  */
 class WebgpuVertexBufferLayout {
-    /** @type {Map<string, GPUVertexBufferLayout[]>} */
+    // type {Map<string, GPUVertexBufferLayout[]>}
     cache = new Map();
 
     /**
@@ -27,7 +27,7 @@ class WebgpuVertexBufferLayout {
      *
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
      * @param {import('../vertex-format.js').VertexFormat} [vertexFormat1] - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex layout.
+     * @returns {any[]} - The vertex layout.
      */
     get(vertexFormat0, vertexFormat1 = null) {
 
@@ -47,15 +47,16 @@ class WebgpuVertexBufferLayout {
     /**
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
      * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
-     * @returns {GPUVertexBufferLayout[]} - The vertex buffer layout.
+     * @returns {any[]} - The vertex buffer layout.
      */
     create(vertexFormat0, vertexFormat1) {
 
-        /** @type  {GPUVertexBufferLayout[]} */
+        // type  {GPUVertexBufferLayout[]}
         const layout = [];
 
         const addFormat = (format) => {
             const interleaved = format.interleaved;
+            const stepMode = format.instancing ? 'instance' : 'vertex';
             let attributes = [];
             const elementCount = format.elements.length;
             for (let i = 0; i < elementCount; i++) {
@@ -68,14 +69,14 @@ class WebgpuVertexBufferLayout {
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${gpuVertexFormats[element.dataType]}x${element.numComponents}`
+                    format: `${gpuVertexFormats[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
                     layout.push({
                         attributes: attributes,
                         arrayStride: element.stride,
-                        stepMode: 'vertex'          // for instancing, this need to change
+                        stepMode: stepMode
                     });
                     attributes = [];
                 }

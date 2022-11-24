@@ -460,6 +460,7 @@ class AppBase extends EventHandler {
          * The application's batch manager.
          *
          * @type {import('../scene/batching/batch-manager.js').BatchManager}
+         * @private
          */
         this._batcher = null;
         if (appOptions.batchManager) {

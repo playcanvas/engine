@@ -13,7 +13,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -172,7 +172,7 @@ function testTextureFloatHighPrecision(device) {
     });
     drawQuadWithShader(device, targ1, shader1);
 
-    textureOptions.format = PIXELFORMAT_R8_G8_B8_A8;
+    textureOptions.format = PIXELFORMAT_RGBA8;
     const tex2 = new Texture(device, textureOptions);
     const targ2 = new RenderTarget({
         colorBuffer: tex2,
@@ -230,7 +230,7 @@ function testImageBitmap(device) {
             const texture = new Texture(device, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 mipmaps: false,
                 levels: [image]
             });
@@ -723,7 +723,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
-        this.areaLightLutFormat = PIXELFORMAT_R8_G8_B8_A8;
+        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
@@ -985,6 +985,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
+
+        // supports texture fetch instruction
+        this.supportsTextureFetch = this.webgl2;
 
         // Also do not allow them when we only have small number of texture units
         if (this.maxTextures <= 8) {
@@ -1745,7 +1748,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
 
-                    if (vertexBuffer.instancing) {
+                    if (vertexBuffer.format.instancing) {
                         gl.vertexAttribDivisor(loc, 1);
                     }
                 }
@@ -2749,21 +2752,36 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Get the supported HDR pixel format.
-     * Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
-     * https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-     * For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+     * Get a supported HDR pixel format given a set of hardware support requirements.
      *
-     * @returns {number} The HDR pixel format.
+     * @param {boolean} preferLargest - If true, prefer the highest precision format. Otherwise prefer the lowest precision format.
+     * @param {boolean} renderable - If true, only include pixel formats that can be used as render targets.
+     * @param {boolean} updatable - If true, only include formats that can be updated by the CPU.
+     * @param {boolean} filterable - If true, only include formats that support texture filtering.
+     *
+     * @returns {number} The HDR pixel format or null if there are none.
      * @ignore
      */
-    getHdrFormat() {
-        if (this.textureHalfFloatRenderable) {
+    getHdrFormat(preferLargest, renderable, updatable, filterable) {
+        // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
+        // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+        // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
+        const f16Valid = this.extTextureHalfFloat &&
+            (!renderable || this.textureHalfFloatRenderable) &&
+            (!updatable || this.textureHalfFloatUpdatable) &&
+            (!filterable || this.extTextureHalfFloatLinear);
+        const f32Valid = this.extTextureFloat &&
+            (!renderable || this.textureFloatRenderable) &&
+            (!filterable || this.extTextureFloatLinear);
+
+        if (f16Valid && f32Valid) {
+            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+        } else if (f16Valid) {
             return PIXELFORMAT_RGBA16F;
-        } else if (this.textureFloatRenderable) {
+        } else if (f32Valid) {
             return PIXELFORMAT_RGBA32F;
-        }
-        return PIXELFORMAT_R8_G8_B8_A8;
+        } /* else */
+        return null;
     }
 
     /**

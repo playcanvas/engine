@@ -12,7 +12,6 @@ class Component extends EventHandler {
      * The ComponentSystem used to create this Component.
      *
      * @type {import('./system.js').ComponentSystem}
-     * @ignore
      */
     system;
 
@@ -20,7 +19,6 @@ class Component extends EventHandler {
      * The Entity that this Component is attached to.
      *
      * @type {import('../entity.js').Entity}
-     * @ignore
      */
     entity;
 
@@ -49,6 +47,7 @@ class Component extends EventHandler {
         this.on('set_enabled', this.onSetEnabled, this);
     }
 
+    /** @ignore */
     static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (descriptor) {
@@ -73,10 +72,12 @@ class Component extends EventHandler {
         obj._accessorsBuilt = true;
     }
 
+    /** @ignore */
     buildAccessors(schema) {
         Component._buildAccessors(this, schema);
     }
 
+    /** @ignore */
     onSetEnabled(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (this.entity.enabled) {
@@ -89,12 +90,15 @@ class Component extends EventHandler {
         }
     }
 
+    /** @ignore */
     onEnable() {
     }
 
+    /** @ignore */
     onDisable() {
     }
 
+    /** @ignore */
     onPostStateChange() {
     }
 

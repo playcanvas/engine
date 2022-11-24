@@ -118,7 +118,7 @@ class WebgpuRenderPipeline {
             _bindGroupLayouts.push(format.bindGroupLayout);
         });
 
-        /** @type {GPUPipelineLayout} */
+        // type {GPUPipelineLayout}
         const pipelineLayout = this.device.wgpu.createPipelineLayout({
             bindGroupLayouts: _bindGroupLayouts
         });
@@ -128,7 +128,7 @@ class WebgpuRenderPipeline {
     }
 
     getBlend(renderState) {
-        /** @type {GPUBlendState} */
+        // type {GPUBlendState}
         const blend = {
             color: {
                 operation: _blendOperation[renderState.blendEquationColor],
@@ -155,14 +155,15 @@ class WebgpuRenderPipeline {
 
         const wgpu = this.device.wgpu;
 
-        /** @type {GPUDepthStencilState} */
+        // type {GPUDepthStencilState}
         const depthStencil = renderTarget.depth ? {
             depthWriteEnabled: true,
             depthCompare: 'less',
             format: renderTarget.impl.depthFormat
         } : undefined;
 
-        return wgpu.createRenderPipeline({
+        // type {GPURenderPipelineDescriptor}
+        const descr = {
             vertex: {
                 module: wgpu.createShaderModule({
                     code: webgpuShader.vertexCode
@@ -194,7 +195,9 @@ class WebgpuRenderPipeline {
 
             // uniform / texture binding layout
             layout: pipelineLayout
-        });
+        };
+
+        return wgpu.createRenderPipeline(descr);
     }
 }
 

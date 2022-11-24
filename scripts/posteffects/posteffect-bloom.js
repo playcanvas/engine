@@ -216,7 +216,7 @@ BloomEffect.prototype._resize = function (target) {
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
             name: "Bloom Texture" + i,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_RGBA8,
             width: width >> 1,
             height: height >> 1,
             mipmaps: false

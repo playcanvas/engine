@@ -22,16 +22,16 @@ class WebgpuRenderTarget {
     /** @type {string} */
     depthFormat = 'depth24plus-stencil8';
 
-    /** @type {GPUTexture} */
+    // type {GPUTexture}
     multisampledColorBuffer;
 
-    /** @type {GPUTexture} */
+    // type {GPUTexture}
     depthTexture = null;
 
     /**
      * Render pass descriptor used when starting a render pass for this render target.
      *
-     * @type {GPURenderPassDescriptor}
+     * // type {GPURenderPassDescriptor}
      */
     renderPassDescriptor = {};
 
@@ -42,10 +42,14 @@ class WebgpuRenderTarget {
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
 
+        // color format is based on the texture
+        if (renderTarget.colorBuffer) {
+            this.colorFormat = renderTarget.colorBuffer.impl.format;
+        }
+
         // TODO: handle shadow map case (depth only, no color)
 
-        // key used by render pipeline creation
-        this.key = `${this.colorFormat}-${renderTarget.depth ? this.depthFormat : ''}-${renderTarget.samples}`;
+        this.updateKey();
     }
 
     /**
@@ -63,11 +67,17 @@ class WebgpuRenderTarget {
         this.multisampledColorBuffer = null;
     }
 
+    updateKey() {
+        // key used by render pipeline creation
+        const rt = this.renderTarget;
+        this.key = `${this.colorFormat}-${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
+    }
+
     /**
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {GPUTexture} gpuTexture - The color buffer.
+     * @param {any} gpuTexture - The color buffer.
      */
     assignColorTexture(gpuTexture) {
 
@@ -82,6 +92,10 @@ class WebgpuRenderTarget {
         } else {
             colorAttachment.view = view;
         }
+
+        // for main framebuffer, this is how the format is obtained
+        this.colorFormat = gpuTexture.format;
+        this.updateKey();
     }
 
     /**
@@ -103,7 +117,7 @@ class WebgpuRenderTarget {
         // depth buffer as we don't currently resolve it. This might need to change in the future.
         if (depth) {
 
-            /** @type {GPUTextureDescriptor} */
+            // type {GPUTextureDescriptor}
             const depthTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',
@@ -115,7 +129,7 @@ class WebgpuRenderTarget {
             // allocate depth buffer
             this.depthTexture = wgpu.createTexture(depthTextureDesc);
 
-            /** @type {GPURenderPassDepthStencilAttachment} */
+            // @type {GPURenderPassDepthStencilAttachment}
             this.renderPassDescriptor.depthStencilAttachment = {
                 view: this.depthTexture.createView()
             };
@@ -125,7 +139,7 @@ class WebgpuRenderTarget {
         // - for normal render target, construction takes the color buffer as an option
         // - for the main framebuffer, the device supplies the buffer each frame
         // And so we only need to create multi-sampled color buffer if needed here.
-        /** @type {GPURenderPassColorAttachment} */
+        // type {GPURenderPassColorAttachment}
         const colorAttachment = {};
         this.renderPassDescriptor.colorAttachments = [colorAttachment];
 
@@ -135,7 +149,7 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
-            /** @type {GPUTextureDescriptor} */
+            // type {GPUTextureDescriptor}
             const multisampledTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',

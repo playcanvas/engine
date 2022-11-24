@@ -25,7 +25,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
@@ -95,13 +95,9 @@ import { MouseEvent } from '../platform/input/mouse-event.js';
 import { TouchDevice } from '../platform/input/touch-device.js';
 import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
-import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
-import { Application } from '../framework/application.js';
+import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
-import { Component } from '../framework/components/component.js';
-import { ComponentSystem } from '../framework/components/system.js';
-import { Entity } from '../framework/entity.js';
 import { LightComponent } from '../framework/components/light/component.js';
 import { ModelComponent } from '../framework/components/model/component.js';
 import { RenderComponent } from '../framework/components/render/component.js';
@@ -305,6 +301,13 @@ export const ELEMENTTYPE_INT32 = TYPE_INT32;
 export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
 export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
+export const PIXELFORMAT_L8_A8 = PIXELFORMAT_LA8;
+export const PIXELFORMAT_R5_G6_B5 = PIXELFORMAT_RGB565;
+export const PIXELFORMAT_R5_G5_B5_A1 = PIXELFORMAT_RGBA5551;
+export const PIXELFORMAT_R4_G4_B4_A4 = PIXELFORMAT_RGBA4;
+export const PIXELFORMAT_R8_G8_B8 = PIXELFORMAT_RGB8;
+export const PIXELFORMAT_R8_G8_B8_A8 = PIXELFORMAT_RGBA8;
+
 export function UnsupportedBrowserError(message) {
     this.name = 'UnsupportedBrowserError';
     this.message = (message || '');
@@ -367,9 +370,9 @@ export const gfx = {
     INDEXFORMAT_UINT8: INDEXFORMAT_UINT8,
     INDEXFORMAT_UINT16: INDEXFORMAT_UINT16,
     INDEXFORMAT_UINT32: INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5: PIXELFORMAT_R5_G6_B5,
-    PIXELFORMAT_R8_G8_B8: PIXELFORMAT_R8_G8_B8,
-    PIXELFORMAT_R8_G8_B8_A8: PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGB565: PIXELFORMAT_RGB565,
+    PIXELFORMAT_RGB8: PIXELFORMAT_RGB8,
+    PIXELFORMAT_RGBA8: PIXELFORMAT_RGBA8,
     PRIMITIVE_POINTS: PRIMITIVE_POINTS,
     PRIMITIVE_LINES: PRIMITIVE_LINES,
     PRIMITIVE_LINELOOP: PRIMITIVE_LINELOOP,
@@ -963,30 +966,14 @@ export const RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
 export const RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
 export const RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
 
-export const fw = {
-    Application: Application,
-    Component: Component,
-    ComponentSystem: ComponentSystem,
-    Entity: Entity,
-    FillMode: {
-        NONE: FILLMODE_NONE,
-        FILL_WINDOW: FILLMODE_FILL_WINDOW,
-        KEEP_ASPECT: FILLMODE_KEEP_ASPECT
-    },
-    ResolutionMode: {
-        AUTO: RESOLUTION_AUTO,
-        FIXED: RESOLUTION_FIXED
-    }
-};
-
-Application.prototype.isFullscreen = function () {
-    Debug.deprecated('pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.isFullscreen = function () {
+    Debug.deprecated('pc.AppBase#isFullscreen is deprecated. Use the Fullscreen API directly.');
 
     return !!document.fullscreenElement;
 };
 
-Application.prototype.enableFullscreen = function (element, success, error) {
-    Debug.deprecated('pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.enableFullscreen = function (element, success, error) {
+    Debug.deprecated('pc.AppBase#enableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     element = element || this.graphicsDevice.canvas;
 
@@ -1017,8 +1004,8 @@ Application.prototype.enableFullscreen = function (element, success, error) {
     }
 };
 
-Application.prototype.disableFullscreen = function (success) {
-    Debug.deprecated('pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.disableFullscreen = function (success) {
+    Debug.deprecated('pc.AppBase#disableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     // success callback
     const s = function () {
@@ -1033,8 +1020,8 @@ Application.prototype.disableFullscreen = function (success) {
     document.exitFullscreen();
 };
 
-Application.prototype.getSceneUrl = function (name) {
-    Debug.deprecated('pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.');
+AppBase.prototype.getSceneUrl = function (name) {
+    Debug.deprecated('pc.AppBase#getSceneUrl is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#find instead.');
     const entry = this.scenes.find(name);
     if (entry) {
         return entry.url;
@@ -1042,34 +1029,34 @@ Application.prototype.getSceneUrl = function (name) {
     return null;
 };
 
-Application.prototype.loadScene = function (url, callback) {
-    Debug.deprecated('pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.');
+AppBase.prototype.loadScene = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadScene is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadScene instead.');
     this.scenes.loadScene(url, callback);
 };
 
-Application.prototype.loadSceneHierarchy = function (url, callback) {
-    Debug.deprecated('pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.');
+AppBase.prototype.loadSceneHierarchy = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadSceneHierarchy is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadSceneHierarchy instead.');
     this.scenes.loadSceneHierarchy(url, callback);
 };
 
-Application.prototype.loadSceneSettings = function (url, callback) {
-    Debug.deprecated('pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.');
+AppBase.prototype.loadSceneSettings = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadSceneSettings is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadSceneSettings instead.');
     this.scenes.loadSceneSettings(url, callback);
 };
 
-Application.prototype.renderMeshInstance = function (meshInstance, options) {
-    Debug.deprecated('pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.');
+AppBase.prototype.renderMeshInstance = function (meshInstance, options) {
+    Debug.deprecated('pc.AppBase.renderMeshInstance is deprecated. Use pc.AppBase.drawMeshInstance.');
     const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
-Application.prototype.renderMesh = function (mesh, material, matrix, options) {
-    Debug.deprecated('pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.');
+AppBase.prototype.renderMesh = function (mesh, material, matrix, options) {
+    Debug.deprecated('pc.AppBase.renderMesh is deprecated. Use pc.AppBase.drawMesh.');
     const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 
-Application.prototype._addLines = function (positions, colors, options) {
+AppBase.prototype._addLines = function (positions, colors, options) {
     const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
@@ -1077,9 +1064,9 @@ Application.prototype._addLines = function (positions, colors, options) {
     batch.addLines(positions, colors);
 };
 
-Application.prototype.renderLine = function (start, end, color) {
+AppBase.prototype.renderLine = function (start, end, color) {
 
-    Debug.deprecated('pc.Application.renderLine is deprecated. Use pc.Application.drawLine.');
+    Debug.deprecated('pc.AppBase.renderLine is deprecated. Use pc.AppBase.drawLine.');
 
     let endColor = color;
     let options;
@@ -1131,9 +1118,9 @@ Application.prototype.renderLine = function (start, end, color) {
     this._addLines([start, end], [color, endColor], options);
 };
 
-Application.prototype.renderLines = function (position, color, options) {
+AppBase.prototype.renderLines = function (position, color, options) {
 
-    Debug.deprecated('pc.Application.renderLines is deprecated. Use pc.Application.drawLines.');
+    Debug.deprecated('pc.AppBase.renderLines is deprecated. Use pc.AppBase.drawLines.');
 
     if (!options) {
         // default option
@@ -1170,8 +1157,8 @@ Application.prototype.renderLines = function (position, color, options) {
     this._addLines(position, color, options);
 };
 
-Application.prototype.enableVr = function () {
-    Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
+AppBase.prototype.enableVr = function () {
+    Debug.deprecated('pc.AppBase#enableVR is deprecated, and WebVR API is no longer supported.');
 };
 
 Object.defineProperty(CameraComponent.prototype, 'node', {

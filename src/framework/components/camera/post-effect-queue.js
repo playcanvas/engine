@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8_G8_B8_A8 } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -99,7 +99,7 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr ? device.getHdrFormat() : PIXELFORMAT_R8_G8_B8_A8;
+        const format = hdr && device.getHdrFormat(false, true, false, false) || PIXELFORMAT_RGBA8;
         const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
         const colorBuffer = this._allocateColorBuffer(format, name);

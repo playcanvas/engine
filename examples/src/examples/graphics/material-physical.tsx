@@ -1,102 +1,120 @@
 import * as pc from '../../../../';
 
-
 class MaterialPhysicalExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Physical';
 
-
     example(canvas: HTMLCanvasElement): void {
 
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
-
         const assets = {
-            'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
+
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.ElementComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.FontHandler
+            ];
+
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            app.scene.toneMapping = pc.TONEMAP_ACES;
-            // Set the skybox to the 128x128 cubemap mipmap level
-            app.scene.skyboxMip = 1;
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
+                app.start();
 
-            // Create an entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera");
-            camera.translate(0, 0, 9);
-            app.root.addChild(camera);
+                app.scene.envAtlas = assets.helipad.resource;
+                app.scene.toneMapping = pc.TONEMAP_ACES;
+                // Set the skybox to the 128x128 cubemap mipmap level
+                app.scene.skyboxMip = 1;
 
-            app.scene.setSkybox(assets['helipad.dds'].resources);
+                // Create an entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera");
+                camera.translate(0, 0, 9);
+                app.root.addChild(camera);
 
-            const NUM_SPHERES = 5;
+                const NUM_SPHERES = 5;
 
-            const createSphere = function (x: number, y: number, z: number) {
-                const material = new pc.StandardMaterial();
-                material.metalness = y / (NUM_SPHERES - 1);
-                material.shininess = x / (NUM_SPHERES - 1) * 100;
-                material.useMetalness = true;
-                material.update();
+                const createSphere = function (x: number, y: number, z: number) {
+                    const material = new pc.StandardMaterial();
+                    material.metalness = y / (NUM_SPHERES - 1);
+                    material.shininess = x / (NUM_SPHERES - 1) * 100;
+                    material.useMetalness = true;
+                    material.update();
 
-                const sphere = new pc.Entity();
-                sphere.addComponent("render", {
-                    material: material,
-                    type: "sphere"
-                });
-                sphere.setLocalPosition(x - (NUM_SPHERES - 1) * 0.5, y - (NUM_SPHERES - 1) * 0.5, z);
-                sphere.setLocalScale(0.9, 0.9, 0.9);
-                app.root.addChild(sphere);
-            };
+                    const sphere = new pc.Entity();
+                    sphere.addComponent("render", {
+                        material: material,
+                        type: "sphere"
+                    });
+                    sphere.setLocalPosition(x - (NUM_SPHERES - 1) * 0.5, y - (NUM_SPHERES - 1) * 0.5, z);
+                    sphere.setLocalScale(0.9, 0.9, 0.9);
+                    app.root.addChild(sphere);
+                };
 
-            const createText = function (fontAsset: pc.Asset, message: string, x: number, y: number, z: number, rot: number) {
-                // Create a text element-based entity
-                const text = new pc.Entity();
-                text.addComponent("element", {
-                    anchor: [0.5, 0.5, 0.5, 0.5],
-                    fontAsset: fontAsset,
-                    fontSize: 0.5,
-                    pivot: [0.5, 0.5],
-                    text: message,
-                    type: pc.ELEMENTTYPE_TEXT
-                });
-                text.setLocalPosition(x, y, z);
-                text.setLocalEulerAngles(0, 0, rot);
-                app.root.addChild(text);
-            };
+                const createText = function (fontAsset: pc.Asset, message: string, x: number, y: number, z: number, rot: number) {
+                    // Create a text element-based entity
+                    const text = new pc.Entity();
+                    text.addComponent("element", {
+                        anchor: [0.5, 0.5, 0.5, 0.5],
+                        fontAsset: fontAsset,
+                        fontSize: 0.5,
+                        pivot: [0.5, 0.5],
+                        text: message,
+                        type: pc.ELEMENTTYPE_TEXT
+                    });
+                    text.setLocalPosition(x, y, z);
+                    text.setLocalEulerAngles(0, 0, rot);
+                    app.root.addChild(text);
+                };
 
-            for (let i = 0; i < NUM_SPHERES; i++) {
-                for (let j = 0; j < NUM_SPHERES; j++) {
-                    createSphere(j, i, 0);
+                for (let i = 0; i < NUM_SPHERES; i++) {
+                    for (let j = 0; j < NUM_SPHERES; j++) {
+                        createSphere(j, i, 0);
+                    }
                 }
-            }
 
-            createText(assets.font, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
-            createText(assets.font, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
+                createText(assets.font, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
+                createText(assets.font, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
 
-            // rotate the skybox using mouse input
-            const mouse = new pc.Mouse(document.body);
+                // rotate the skybox using mouse input
+                const mouse = new pc.Mouse(document.body);
 
-            let x = 0;
-            let y = 0;
-            const rot = new pc.Quat();
+                let x = 0;
+                let y = 0;
+                const rot = new pc.Quat();
 
-            mouse.on('mousemove', function (event) {
-                if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
-                    x += event.dx;
-                    y += event.dy;
+                mouse.on('mousemove', function (event) {
+                    if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
+                        x += event.dx;
+                        y += event.dy;
 
-                    rot.setFromEulerAngles(0.2 * y, 0.2 * x, 0);
-                    app.scene.skyboxRotation = rot;
-                }
+                        rot.setFromEulerAngles(0.2 * y, 0.2 * x, 0);
+                        app.scene.skyboxRotation = rot;
+                    }
+                });
             });
-        });
+        }).catch(console.error);
     }
 }
 
