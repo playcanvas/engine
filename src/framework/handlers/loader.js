@@ -98,7 +98,7 @@ class ResourceLoader {
         const handler = this._handlers[type];
         if (!handler) {
             const err = `No resource handler for asset type: '${type}' when loading [${url}]`;
-            Debug.warnOnce(err);
+            Debug.errorOnce(err);
             callback(err);
             return;
         }
