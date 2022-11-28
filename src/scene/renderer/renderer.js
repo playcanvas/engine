@@ -15,6 +15,7 @@ import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 
 import {
+    DEVICETYPE_WEBGPU,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4,
@@ -43,9 +44,20 @@ const worldMatY = new Vec3();
 const worldMatZ = new Vec3();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
-const flipYMat = new Mat4().setScale(1, -1, 1);
-const flippedViewProjMat = new Mat4();
-const flippedSkyboxProjMat = new Mat4();
+const _flipYMat = new Mat4().setScale(1, -1, 1);
+
+// Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
+const _fixProjRangeMat = new Mat4().set([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 0.5, 0,
+    0, 0, 0.5, 1
+]);
+
+const _tempProjMat0 = new Mat4();
+const _tempProjMat1 = new Mat4();
+const _tempProjMat2 = new Mat4();
+const _tempProjMat3 = new Mat4();
 const _tempSet = new Set();
 
 /**
@@ -233,27 +245,33 @@ class Renderer {
      */
     clear(renderAction, camera) {
 
-        const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEWPORT');
+        const flags = (renderAction.clearColor ? CLEARFLAG_COLOR : 0) |
+                      (renderAction.clearDepth ? CLEARFLAG_DEPTH : 0) |
+                      (renderAction.clearStencil ? CLEARFLAG_STENCIL : 0);
 
-        device.clear({
-            color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-            depth: camera._clearDepth,
-            stencil: camera._clearStencil,
-            flags: (renderAction.clearColor ? CLEARFLAG_COLOR : 0) |
-                   (renderAction.clearDepth ? CLEARFLAG_DEPTH : 0) |
-                   (renderAction.clearStencil ? CLEARFLAG_STENCIL : 0)
-        });
+        if (flags) {
+            const device = this.device;
+            DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEWPORT');
 
-        DebugGraphics.popGpuMarker(device);
+            device.clear({
+                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
+                depth: camera._clearDepth,
+                stencil: camera._clearStencil,
+                flags: flags
+            });
+
+            DebugGraphics.popGpuMarker(device);
+        }
     }
 
     setCameraUniforms(camera, target, renderAction) {
 
-        let transform;
+        // flipping proj matrix
+        const flipY = target?.flipY;
 
         let viewCount = 1;
         if (camera.xr && camera.xr.session) {
+            let transform;
             const parent = camera._node.parent;
             if (parent)
                 transform = parent.getWorldTransform();
@@ -281,15 +299,28 @@ class Renderer {
                 camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
+
             // Projection Matrix
-            const projMat = camera.projectionMatrix;
+            let projMat = camera.projectionMatrix;
             if (camera.calculateProjection) {
                 camera.calculateProjection(projMat, VIEW_CENTER);
             }
-            this.projId.setValue(projMat.data);
+            let projMatSkybox = camera.getProjectionMatrixSkybox();
 
-            // Skybox Projection Matrix
-            this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
+            // flip projection matrices
+            if (flipY) {
+                projMat = _tempProjMat0.mul2(_flipYMat, projMat);
+                projMatSkybox = _tempProjMat1.mul2(_flipYMat, projMatSkybox);
+            }
+
+            // update depth range of projection matrices (-1..1 to 0..1)
+            if (this.device.deviceType === DEVICETYPE_WEBGPU) {
+                projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
+                projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
+            }
+
+            this.projId.setValue(projMat.data);
+            this.projSkyboxId.setValue(projMatSkybox.data);
 
             // ViewInverse Matrix
             if (camera.calculateTransform) {
@@ -311,19 +342,9 @@ class Renderer {
 
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
+            this.viewProjId.setValue(viewProjMat.data);
 
-            if (target && target.flipY) {
-                flippedViewProjMat.mul2(flipYMat, viewProjMat);
-                flippedSkyboxProjMat.mul2(flipYMat, camera.getProjectionMatrixSkybox());
-
-                this.viewProjId.setValue(flippedViewProjMat.data);
-                this.projSkyboxId.setValue(flippedSkyboxProjMat.data);
-            } else {
-                this.viewProjId.setValue(viewProjMat.data);
-                this.projSkyboxId.setValue(camera.getProjectionMatrixSkybox().data);
-            }
-
-            this.flipYId.setValue(target?.flipY ? -1 : 1);
+            this.flipYId.setValue(flipY ? -1 : 1);
 
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
@@ -331,26 +352,23 @@ class Renderer {
             camera.frustum.setFromMat4(viewProjMat);
         }
 
-        this.tbnBasis.setValue(target && target.flipY ? -1 : 1);
+        this.tbnBasis.setValue(flipY ? -1 : 1);
 
         // Near and far clip values
-        this.nearClipId.setValue(camera._nearClip);
-        this.farClipId.setValue(camera._farClip);
-
-        if (this.scene.physicalUnits) {
-            this.exposureId.setValue(camera.getExposure());
-        } else {
-            this.exposureId.setValue(this.scene.exposure);
-        }
-
         const n = camera._nearClip;
         const f = camera._farClip;
+        this.nearClipId.setValue(n);
+        this.farClipId.setValue(f);
+
+        // camera params
         this.cameraParams[0] = 1 / f;
         this.cameraParams[1] = f;
         this.cameraParams[2] = n;
         this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
-
         this.cameraParamsId.setValue(this.cameraParams);
+
+        // exposure
+        this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
         if (this.device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(renderAction, viewCount);
