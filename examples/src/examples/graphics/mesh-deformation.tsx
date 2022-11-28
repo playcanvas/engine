@@ -43,10 +43,6 @@ class MeshDeformationExample {
 
                 app.start();
 
-                // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-                app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-                app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
                 // setup skydome
                 app.scene.skyboxMip = 2;
                 app.scene.exposure = 1;
