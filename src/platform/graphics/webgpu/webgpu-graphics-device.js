@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F
+    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -16,6 +16,8 @@ import { WebgpuShader } from './webgpu-shader.js';
 import { WebgpuTexture } from './webgpu-texture.js';
 import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
+import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -29,17 +31,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Internal representation of the current render state, as requested by the renderer.
      * In the future this can be completely replaced by a more optimal solution, where
      * render states are bundled together (DX11 style) and set using a single call.
-     *
-     * @type {WebgpuRenderState}
      */
     renderState = new WebgpuRenderState();
 
     /**
      * Object responsible for caching and creation of render pipelines.
-     *
-     * @type {WebgpuRenderPipeline}
      */
     renderPipeline = new WebgpuRenderPipeline(this);
+
+    /**
+     * Object responsible for clearing the rendering surface by rendering a quad.
+     */
+    clearRenderer = new WebgpuClearRenderer();
 
     /**
      * Render pipeline currently set on the device.
@@ -54,6 +57,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {WebgpuBindGroupFormat[]}
      */
     bindGroupFormats = [];
+
+    /**
+     * Current command buffer encoder.
+     *
+     * type {GPUCommandEncoder}
+     */
+    commandEncoder;
 
     constructor(canvas, options = {}) {
         super(canvas);
@@ -72,6 +82,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
+        this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
         this.extTextureHalfFloat = true;
@@ -125,10 +136,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
+        // pixel format of the framebuffer is the most efficient one on the system
+        const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+        this.framebufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
+
+        // this is configuration of the main colorframebuffer we obtain using getCurrentTexture
         // type {GPUCanvasConfiguration}
         this.canvasConfig = {
             device: this.wgpu,
-            format: 'bgra8unorm'
+            colorSpace: 'srgb',
+            alphaMode: 'opaque',  // could also be 'premultiplied'
+
+            // use prefered format for optimal performance on mobile
+            format: preferredCanvasFormat,
+
+            // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+
+            // formats that views created from textures returned by getCurrentTexture may use
+            viewFormats: []
         };
         this.gpuContext.configure(this.canvasConfig);
 
@@ -184,11 +210,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     setBindGroup(index, bindGroup) {
 
-        // set it on the device
-        this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup);
+        // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
+        if (this.passEncoder) {
 
-        // store the active formats, used by the pipeline creation
-        this.bindGroupFormats[index] = bindGroup.format.impl;
+            // set it on the device
+            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup);
+
+            // store the active formats, used by the pipeline creation
+            this.bindGroupFormats[index] = bindGroup.format.impl;
+        }
     }
 
     submitVertexBuffer(vertexBuffer, slot) {
@@ -300,6 +330,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initRenderTarget(rt);
 
         // assign current frame's render texture if rendering to the main frame buffer
+        // TODO: this should probably be done at the start of the frame, so that it can be used
+        // as a destination of the copy operation
         if (rt === this.frameBuffer) {
             const outColorBuffer = this.gpuContext.getCurrentTexture();
             wrt.assignColorTexture(outColorBuffer);
@@ -308,7 +340,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
 
-        // TODO: test single command encoder for the whole frame
+        // create a new encoder for each pass to keep the GPU busy with commands
         this.commandEncoder = this.wgpu.createCommandEncoder();
 
         // clear cached encoder state
@@ -334,12 +366,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     clear(options) {
-
-        Debug.logOnce("WebgpuGraphicsDevice.clear not implemented.");
-        // this needs to handle (by rendering a quad):
-        // - clearing of a viewport
-        // - clearing of full render target in the middle of the render pass
-
+        if (options.flags) {
+            this.clearRenderer.clear(this, this.renderTarget, options);
+        }
     }
 
     get width() {
@@ -357,9 +386,78 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setViewport(x, y, w, h) {
+        // TODO: only execute when it changes. Also, the viewport of encoder  matches the rendering attachments,
+        // so we can skip this if fullscreen
+        // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
+        if (this.passEncoder) {
+            this.passEncoder.setViewport(x, this.renderTarget.height - y - h, w, h, 0, 1);
+        }
     }
 
     setScissor(x, y, w, h) {
+        // TODO: only execute when it changes. Also, the viewport of encoder  matches the rendering attachments,
+        // so we can skip this if fullscreen
+        // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
+        if (this.passEncoder) {
+            this.passEncoder.setScissorRect(x, this.renderTarget.height - y - h, w, h);
+        }
+    }
+
+    /**
+     * Copies source render target into destination render target. Mostly used by post-effects.
+     *
+     * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
+     * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
+     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @returns {boolean} True if the copy was successful, false otherwise.
+     */
+    copyRenderTarget(source, dest, color, depth) {
+
+        // type {GPUExtent3D}
+        const copySize = {
+            width: source ? source.width : dest.width,
+            height: source ? source.height : dest.height,
+            depthOrArrayLayers: 1
+        };
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-RT');
+
+        // use existing or create new encoder if between render passes
+        const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+
+        if (color) {
+
+            // read from supplied render target, or from the framebuffer
+            // type {GPUImageCopyTexture}
+            const copySrc = {
+                texture: source ? source.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                mipLevel: 0
+            };
+
+            // write to supplied render target, or to the framebuffer
+            // type {GPUImageCopyTexture}
+            const copyDst = {
+                texture: dest ? dest.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                mipLevel: 0
+            };
+
+            Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
+            commandEncoder.copyTextureToTexture(copySrc, copyDst, copySize);
+        }
+
+        if (depth) {
+            Debug.assert("copyRenderTarget does not handle depth copy yet.");
+        }
+
+        // submit the encoded commands if we created the encoder
+        if (!this.commandEncoder) {
+            this.wgpu.queue.submit([commandEncoder.finish()]);
+        }
+
+        DebugGraphics.popGpuMarker(this);
+
+        return true;
     }
 
     // #if _DEBUG

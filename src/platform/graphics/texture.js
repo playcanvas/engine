@@ -3,6 +3,7 @@ import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constant
 import { math } from '../../core/math/math.js';
 
 import {
+    isCompressedPixelFormat,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
@@ -16,7 +17,7 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
 } from './constants.js';
 
 let _pixelSizeTable = null;
@@ -244,10 +245,7 @@ class Texture {
             // #endif
         }
 
-        this._compressed = (this._format === PIXELFORMAT_DXT1 ||
-                            this._format === PIXELFORMAT_DXT3 ||
-                            this._format === PIXELFORMAT_DXT5 ||
-                            this._format >= PIXELFORMAT_ETC1);
+        this._compressed = isCompressedPixelFormat(this._format);
 
         // Mip levels
         this._invalid = false;
