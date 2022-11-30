@@ -200,12 +200,12 @@ class WebgpuRenderTarget {
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;
         if (depthAttachment) {
             depthAttachment.depthClearValue = renderPass.depthStencilOps.clearDepthValue;
-            depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'discard';
+            depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'load';
             depthAttachment.depthStoreOp = renderPass.depthStencilOps.storeDepth ? 'store' : 'discard';
             depthAttachment.depthReadOnly = false;
 
             depthAttachment.stencilClearValue = renderPass.depthStencilOps.clearStencilValue;
-            depthAttachment.stencilLoadOp = renderPass.depthStencilOps.clearStencil ? 'clear' : 'discard';
+            depthAttachment.stencilLoadOp = renderPass.depthStencilOps.clearStencil ? 'clear' : 'load';
             depthAttachment.stencilStoreOp = renderPass.depthStencilOps.storeStencil ? 'store' : 'discard';
             depthAttachment.stencilReadOnly = false;
         }
