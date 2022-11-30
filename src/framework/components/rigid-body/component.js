@@ -148,12 +148,12 @@ class RigidBodyComponent extends Component {
     /** @ignore */
     static onLibraryLoaded() {
         // Lazily create shared variable
-        if (typeof Ammo !== 'undefined') {
+        //if (typeof Ammo !== 'undefined') {
             _ammoTransform = new Ammo.btTransform();
             _ammoVec1 = new Ammo.btVector3();
             _ammoVec2 = new Ammo.btVector3();
             _ammoQuat = new Ammo.btQuaternion();
-        }
+        //}
     }
 
     /**

@@ -133,7 +133,9 @@ class GraphicsDevice extends EventHandler {
         this._width = 0;
         this._height = 0;
 
-        this._maxPixelRatio = 1;
+        // Some devices window.devicePixelRatio can be less than one
+        // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
+        this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
         // Array of objects that need to be re-initialized after a context restore event
         /** @type {import('./shader.js').Shader[]} */

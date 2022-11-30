@@ -162,7 +162,8 @@ class WebgpuRenderPipeline {
             format: renderTarget.impl.depthFormat
         } : undefined;
 
-        return wgpu.createRenderPipeline({
+        // type {GPURenderPipelineDescriptor}
+        const descr = {
             vertex: {
                 module: wgpu.createShaderModule({
                     code: webgpuShader.vertexCode
@@ -194,7 +195,9 @@ class WebgpuRenderPipeline {
 
             // uniform / texture binding layout
             layout: pipelineLayout
-        });
+        };
+
+        return wgpu.createRenderPipeline(descr);
     }
 }
 

@@ -160,6 +160,17 @@ class AnimComponent extends Component {
         return this._playing;
     }
 
+    // Move the animation from one entity to another
+    transferOwnership(entity, opts) {
+        // change the animation skeleton to the new mesh
+        this.rootBone = entity;
+        this.animationFrameSkip = opts.animationFrameSkip;
+        // ensure the new mesh is in sync
+        this.update(0);
+        this._mi = undefined;
+        this.setupDelayed = false;
+    }
+
     /**
      * The entity that this anim component should use as the root of the animation hierarchy.
      *

@@ -5,7 +5,7 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADER_PICK
 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { basic } from '../shader-lib/programs/basic.js';
@@ -102,7 +102,7 @@ class BasicMaterial extends Material {
 
             alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,
-            diffuseMap: !!this.colorMap,
+            diffuseMap: pass === SHADER_PICK ? false : !!this.colorMap,
             pass: pass
         };
 

@@ -15,7 +15,7 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
-    SORTKEY_FORWARD
+    SORTKEY_FORWARD,
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
@@ -356,7 +356,7 @@ class MeshInstance {
             } else if (this.node._aabbVer !== this._aabbVer) {
 
                 // local space bounding box - either from mesh or empty
-                if (this.mesh) {
+                if (this.mesh?.aabb) {
                     localAabb.center.copy(this.mesh.aabb.center);
                     localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
                 } else {
@@ -717,7 +717,7 @@ class MeshInstance {
             this.instancingData.vertexBuffer = vertexBuffer;
 
             // mark vertex buffer as instancing data
-            vertexBuffer.instancing = true;
+            vertexBuffer.format.instancing = true;
 
             // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
             this.cull = false;

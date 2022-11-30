@@ -1,3 +1,4 @@
+import { createDelayedExecutionRunner } from '../../../core/delayed-execution-runner.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
@@ -72,19 +73,97 @@ class AnimComponentSystem extends ComponentSystem {
         }
     }
 
+    createExecutor(queueSize) {
+        const executor = createDelayedExecutionRunner(
+            (animComponent, dt) => {
+                this.updateMeshInstanceCache(animComponent);
+                // The entity has been delete, remove it from the executor
+                if (!animComponent.entity.parent) {
+                    this.delayedExecutors.forEach((e) => {
+                        e.remove(animComponent);
+                    });
+                    return;
+                }
+                if (
+                    animComponent._mi.visible &&
+                    (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
+                    animComponent.entity.enabled &&
+                    animComponent.playing
+                ) {
+                    animComponent.update(dt);
+                }
+                if (animComponent.animationFrameSkip !== queueSize - 1) {
+                    executor.remove(animComponent);
+                    const newExecutor = this.delayedExecutors.get(animComponent.animationFrameSkip + 1);
+                    if (newExecutor) {
+                        newExecutor.add(animComponent);
+                    }
+                }
+            },
+            {
+                queueSize
+            }
+        );
+        return executor;
+    }
+
+    updateMeshInstanceCache(animComponent, id) {
+        const components = this.store;
+        if (!animComponent._mi) {
+            const renderComp = (animComponent.rootBone ?? animComponent.entity).findComponent('render');
+            if (renderComp) {
+                animComponent._mi = renderComp.meshInstances[0];
+            } else {
+                delete components[id];
+            }
+        }
+    }
+
     onAnimationUpdate(dt) {
         const components = this.store;
-
+        if (this.delayedExecutors === undefined) {
+            this.delayedExecutors = new Map();
+        }
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                const component = components[id].entity.anim;
-                const componentData = component.data;
-
-                if (componentData.enabled && component.entity.enabled && component.playing) {
-                    component.update(dt);
+                const entity = components[id].entity;
+                const animComponent = entity.anim;
+                if (!animComponent) {
+                    delete components[id];
+                    return;
+                }
+                if (!animComponent.setupDelayed) {
+                    var _animComponent$animat;
+                    const divisor =
+                    Math.round(
+                        (_animComponent$animat = animComponent.animationFrameSkip) != null ? _animComponent$animat : -1
+                    ) + 1;
+                    if (divisor > 1) {
+                        let executor = this.delayedExecutors.get(divisor);
+                        if (!executor) {
+                            executor = this.createExecutor(divisor);
+                            this.delayedExecutors.set(divisor, executor);
+                        }
+                        executor.add(animComponent);
+                    }
+                    animComponent.update(dt);
+                    animComponent.setupDelayed = true;
+                }
+                if (!animComponent.animationFrameSkip) {
+                    this.updateMeshInstanceCache(animComponent, id);
+                    if (
+                        animComponent._mi.visible &&
+                        (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
+                        // componentData.enabled &&
+                        animComponent.entity.enabled &&
+                        animComponent.playing
+                    ) {
+                        animComponent.update(dt);
+                    }
                 }
             }
         }
+        this.delayedExecutors.forEach((e, divisor) => e.tick(dt * divisor));
     }
 
     cloneComponent(entity, clone) {

@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -396,6 +396,16 @@ class Scene extends EventHandler {
     set envAtlas(value) {
         if (value !== this._envAtlas) {
             this._envAtlas = value;
+
+            // make sure required options are set up on the texture
+            if (value) {
+                value.addressU = ADDRESS_REPEAT;
+                value.addressV = ADDRESS_CLAMP_TO_EDGE;
+                value.minFilter = FILTER_LINEAR;
+                value.magFilter = FILTER_LINEAR;
+                value.mipmaps = false;
+            }
+
             this.updateShaders = true;
         }
     }

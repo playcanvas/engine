@@ -31,9 +31,6 @@ class VertexBuffer {
 
         this.impl = graphicsDevice.createVertexBufferImpl(this, format);
 
-        // marks vertex buffer as instancing data
-        this.instancing = false;
-
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
         this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);

@@ -5,7 +5,7 @@ import { math } from '../../core/math/math.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7
 } from './constants.js';
 
 /**
@@ -118,11 +118,20 @@ class VertexFormat {
         this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
+        this.hasUv2 = false;
+        this.hasUv3 = false;
+        this.hasUv4 = false;
+        this.hasUv5 = false;
+        this.hasUv6 = false;
+        this.hasUv7 = false;
         this.hasColor = false;
         this.hasTangents = false;
         this.verticesByteSize = 0;
         this.vertexCount = vertexCount;
         this.interleaved = vertexCount === undefined;
+
+        // true if the vertex format represents an instancing vertex buffer
+        this.instancing = false;
 
         // calculate total size of the vertex
         this.size = description.reduce((total, desc) => {
@@ -165,6 +174,12 @@ class VertexFormat {
                 this.hasUv0 = true;
             } else if (elementDesc.semantic === SEMANTIC_TEXCOORD1) {
                 this.hasUv1 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD2) {
+                this.hasUv2 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD3) {
+                this.hasUv3 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD4) {
+                this.hasUv4 = true;
             } else if (elementDesc.semantic === SEMANTIC_COLOR) {
                 this.hasColor = true;
             } else if (elementDesc.semantic === SEMANTIC_TANGENT) {

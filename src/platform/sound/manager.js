@@ -15,7 +15,7 @@ const CONTEXT_STATE_RUNNING = 'running';
  * List of Window events to listen when AudioContext needs to be unlocked.
  */
 const USER_INPUT_EVENTS = [
-    'click', 'touchstart'
+    'click', 'touchstart', 'mousedown'
 ];
 
 /**

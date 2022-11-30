@@ -310,11 +310,11 @@ class Entity extends GraphNode {
     addComponent(type, data) {
         const system = this._app.systems[type];
         if (!system) {
-            Debug.error(`addComponent: System ${type} doesn't exist`);
+            Debug.error(`addComponent: System '${type}' doesn't exist`);
             return null;
         }
         if (this.c[type]) {
-            Debug.warn(`addComponent: Entity already has ${type} component`);
+            Debug.warn(`addComponent: Entity already has '${type}' component`);
             return null;
         }
         return system.addComponent(this, data);
@@ -333,11 +333,11 @@ class Entity extends GraphNode {
     removeComponent(type) {
         const system = this._app.systems[type];
         if (!system) {
-            Debug.error(`addComponent: System ${type} doesn't exist`);
+            Debug.error(`addComponent: System '${type}' doesn't exist`);
             return;
         }
         if (!this.c[type]) {
-            Debug.warn(`removeComponent: Entity doesn't have ${type} component`);
+            Debug.warn(`removeComponent: Entity doesn't have '${type}' component`);
             return;
         }
         system.removeComponent(this);

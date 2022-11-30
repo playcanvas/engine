@@ -986,6 +986,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.webgl2 || !platform.android;
 
+        // supports texture fetch instruction
+        this.supportsTextureFetch = this.webgl2;
+
         // Also do not allow them when we only have small number of texture units
         if (this.maxTextures <= 8) {
             this.supportsAreaLights = false;
@@ -1745,7 +1748,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
                     gl.enableVertexAttribArray(loc);
 
-                    if (vertexBuffer.instancing) {
+                    if (vertexBuffer.format.instancing) {
                         gl.vertexAttribDivisor(loc, 1);
                     }
                 }

@@ -870,6 +870,7 @@ class ForwardRenderer {
             for (let i = 0; i < drawCallsCount; i++) {
                 // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                 const drawCall = drawCalls[i];
+                drawCall.visibleThisFrame = false;
                 if (!drawCall.visible && !drawCall.command) continue;
 
                 // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
@@ -966,8 +967,9 @@ class ForwardRenderer {
         // #endif
 
         for (let i = 0; i < drawCallsCount; i++) {
-            const si = drawCalls[i].skinInstance;
-            if (si) {
+            const drawCall = drawCalls[i];
+            const si = drawCall.skinInstance;
+            if (si && drawCall.visibleThisFrame) {
                 si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
                 si._dirty = true;
             }
