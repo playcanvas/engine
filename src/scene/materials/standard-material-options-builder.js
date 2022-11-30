@@ -17,6 +17,8 @@ import {
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 
+import { LitOptions } from './lit-options.js';
+
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
         return false;
@@ -44,7 +46,7 @@ class StandardMaterialOptionsBuilder {
 
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = {};
+        options.litOptions = new LitOptions();
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
@@ -52,7 +54,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = {};
+        options.litOptions = new LitOptions();
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
@@ -248,7 +250,7 @@ class StandardMaterialOptionsBuilder {
         options.sheenGlossinessTint = 1;
 
         // LIT OPTIONS
-        options.litOptions.ambientTint = options.ambientTint;
+        options.litOptions.useAmbientTint = options.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 

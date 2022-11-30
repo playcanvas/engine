@@ -895,7 +895,7 @@ class LitShader {
             }
         }
 
-        if (options.ambientTint && !useOldAmbient) {
+        if (options.useAmbientTint && !useOldAmbient) {
             code += "uniform vec3 material_ambient;\n";
         }
 
@@ -1017,7 +1017,7 @@ class LitShader {
             }
         }
 
-        if (options.ambientTint && !useOldAmbient) {
+        if (options.useAmbientTint && !useOldAmbient) {
             code += "    dDiffuseLight *= material_ambient;\n";
         }
 
