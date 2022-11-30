@@ -13,7 +13,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS, FUNC_LESSEQUAL,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -322,9 +322,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.defaultFramebuffer = null;
 
-        // true if the default framebuffer has alpha
-        this.defaultFramebufferAlpha = options.alpha;
-
         this.updateClientRect();
 
         // Add handlers for when the WebGL context is lost or restored
@@ -372,15 +369,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 break;
             }
         }
+        this.gl = gl;
 
         if (!gl) {
             throw new Error("WebGL not supported");
         }
 
+        // pixel format of the framebuffer
+        const alphaBits = gl.getParameter(gl.ALPHA_BITS);
+        this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+
         const isChrome = platform.browser && !!window.chrome;
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
-
-        this.gl = gl;
 
         // enable temporary texture unit workaround on desktop safari
         this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;

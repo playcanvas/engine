@@ -28,6 +28,11 @@ class WebgpuRenderTarget {
     // type {GPUTexture}
     depthTexture = null;
 
+    // Texture assigned each frame, and not owned by this render target. This is used on the framebuffer
+    // to assign per frame texture obtained from the context.
+    // type {GPUTexture}
+    assignedColorTexture = null;
+
     /**
      * Render pass descriptor used when starting a render pass for this render target.
      *
@@ -63,6 +68,8 @@ class WebgpuRenderTarget {
         this.depthTexture?.destroy();
         this.depthTexture = null;
 
+        this.assignedColorTexture = null;
+
         this.multisampledColorBuffer?.destroy();
         this.multisampledColorBuffer = null;
     }
@@ -82,6 +89,8 @@ class WebgpuRenderTarget {
     assignColorTexture(gpuTexture) {
 
         Debug.assert(gpuTexture);
+        this.assignedColorTexture = gpuTexture;
+
         const view = gpuTexture.createView();
 
         // use it as render buffer or resolve target

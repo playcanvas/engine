@@ -8,7 +8,7 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
 } from '../constants.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -44,6 +44,7 @@ gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = '';
 gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGB] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
+gpuTextureFormats[PIXELFORMAT_BGRA8] = 'bgra8unorm';
 
 // map of ADDRESS_*** to GPUAddressMode
 const gpuAddressModes = [];
@@ -78,6 +79,8 @@ class WebgpuTexture {
 
         this.format = gpuTextureFormats[texture.format];
         Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
+
+        this.create(texture.device);
     }
 
     create(device) {
@@ -93,7 +96,8 @@ class WebgpuTexture {
             dimension: '2d',
 
             // TODO: use only required usage flags
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+            // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
         this.gpuTexture = wgpu.createTexture(this.descr);
@@ -155,10 +159,6 @@ class WebgpuTexture {
      * @param {import('../texture.js').Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
-
-        if (!this.gpuTexture) {
-            this.create(device);
-        }
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
             this.uploadData(device);
