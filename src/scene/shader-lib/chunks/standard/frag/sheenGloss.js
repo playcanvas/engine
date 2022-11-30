@@ -1,13 +1,13 @@
 export default /* glsl */`
 #ifdef MAPFLOAT
-uniform float material_sheenGloss;
+uniform float material_sheenGlossiness;
 #endif
 
 void getSheenGlossiness() {
     float sheenGlossiness = 1.0;
 
     #ifdef MAPFLOAT
-    sheenGlossiness *= material_sheenGloss;
+    sheenGlossiness *= material_sheenGlossiness;
     #endif
 
     #ifdef MAPTEXTURE

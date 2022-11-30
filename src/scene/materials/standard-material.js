@@ -331,8 +331,8 @@ let _params = new Set();
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
- * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
- * This color value is 3-component (RGB), where each component is between 0 and 1.
+ * @property {number} sheenGlossiness The glossiness of the sheen (fabric) microfiber structure.
+ * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
@@ -754,7 +754,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheen', getUniform('sheen'));
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGloss', this.sheenGloss);
+                this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
             }
 
             if (this.refractionIndex !== 1.0 / 1.5) {
@@ -1162,7 +1162,7 @@ function _defineMaterialProps() {
     _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
-    _defineFloat('sheenGloss', 0);
+    _defineFloat('sheenGlossiness', 0.0);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.
