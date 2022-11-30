@@ -623,7 +623,19 @@ export const PIXELFORMAT_ATC_RGB = 29;
  */
 export const PIXELFORMAT_ATC_RGBA = 30;
 
-// only add compressed formats next
+/**
+ * 32-bit BGRA (8-bits for blue channel, 8 for green, 8 for red with 8-bit alpha).
+ *
+ * @type {number}
+ * @ignore
+ */
+export const PIXELFORMAT_BGRA8 = 31;
+
+// update this function when exposing additional compressed pixel formats
+export function isCompressedPixelFormat(format) {
+    return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
+           (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
+}
 
 /**
  * List of distinct points.

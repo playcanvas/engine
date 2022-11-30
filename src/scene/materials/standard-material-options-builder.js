@@ -297,7 +297,8 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
         options.litOptions.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.litOptions.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
-        options.litOptions.fixSeams = stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false;
+        options.litOptions.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
+
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 
         let usingSceneEnv = false;
@@ -334,6 +335,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.reflectionEncoding = null;
         }
 
+        // source of environment ambient is as follows:
         if (stdMat.ambientSH && !isPhong) {
             options.litOptions.ambientSource = 'ambientSH';
             options.litOptions.ambientEncoding = null;
@@ -348,7 +350,7 @@ class StandardMaterialOptionsBuilder {
             }
         }
 
-        options.litOptions.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0);
+        options.litOptions.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0 || scene.physicalUnits);
         options.litOptions.useCubeMapRotation = usingSceneEnv && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 

@@ -54,8 +54,6 @@ class ClusteredLightingExample {
                 const spotLightList: Array<pc.Entity> = [];
                 let dirLight: pc.Entity = null;
 
-                app.start();
-
                 // enabled clustered lighting. This is a temporary API and will change in the future
                 app.scene.clusteredLightingEnabled = true;
 
