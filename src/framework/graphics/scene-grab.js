@@ -76,24 +76,24 @@ class SceneGrab {
     }
 
     // texture format of the source texture the grab pass needs to copy
-    getSourceColorFormat(sourceRT) {
+    getSourceColorFormat(texture) {
         // based on the RT the camera renders to, otherwise framebuffer
-        return sourceRT?.colorBuffer.format ?? this.device.framebufferFormat;
+        return texture?.format ?? this.device.framebufferFormat;
     }
 
-    shouldReallocate(targetRT, sourceRT, testFormat) {
+    shouldReallocate(targetRT, sourceTexture, testFormat) {
 
         // need to reallocate if format does not match
         if (testFormat) {
             const targetFormat = targetRT?.colorBuffer.format;
-            const sourceFormat = this.getSourceColorFormat(sourceRT);
+            const sourceFormat = this.getSourceColorFormat(sourceTexture);
             if (targetFormat !== sourceFormat)
                 return true;
         }
 
         // need to reallocate if dimensions don't match
-        const width = sourceRT?.width || this.device.width;
-        const height = sourceRT?.height || this.device.height;
+        const width = sourceTexture?.width || this.device.width;
+        const height = sourceTexture?.height || this.device.height;
         return !targetRT || width !== targetRT.width || height !== targetRT.height;
     }
 
@@ -173,7 +173,7 @@ class SceneGrab {
                     // allocate / resize existing RT as needed
                     if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer, true)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        const format = self.getSourceColorFormat(camera.renderTarget);
+                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, true, false);
                     }
 
@@ -331,7 +331,7 @@ class SceneGrab {
                     // reallocate RT if needed
                     if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        const format = self.getSourceColorFormat(camera.renderTarget);
+                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, false, false);
                     }
 
