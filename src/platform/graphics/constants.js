@@ -1189,6 +1189,7 @@ export const bindGroupNames = ['view', 'mesh'];
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
+export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32'];
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {

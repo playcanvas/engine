@@ -66,9 +66,10 @@ class ShaderProcessor {
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
+     * @param {import('./shader.js').Shader} shader - The shader definition.
      * @returns {object} - The processed shader data.
      */
-    static run(device, shaderDefinition) {
+    static run(device, shaderDefinition, shader) {
 
         /** @type {Map<string, number>} */
         const varyingMap = new Map();
@@ -90,11 +91,22 @@ class ShaderProcessor {
         const outBlock = ShaderProcessor.processOuts(fragmentExtracted.outs);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
-        const uniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
+        // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
+        const concatUniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
+        const uniforms = Array.from(new Set(concatUniforms));
 
         // parse uniform lines
         const parsedUniforms = uniforms.map(line => new UniformLine(line));
 
+        // validation - as uniforms go to a shared uniform buffer, vertex and fragment versions need to match
+        Debug.call(() => {
+            const map = new Map();
+            parsedUniforms.forEach((uni) => {
+                const existing = map.get(uni.name);
+                Debug.assert(!existing, `Vertex and fragment shaders cannot use the same uniform name with different types: '${existing}' and '${uni.line}'`, shader);
+                map.set(uni.name, uni.line);
+            });
+        });
         const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions);
 
         // VS - insert the blocks to the source

@@ -5,7 +5,7 @@ import { math } from '../../core/math/math.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, DEVICETYPE_WEBGPU
 } from './constants.js';
 
 /**
@@ -136,8 +136,13 @@ class VertexFormat {
         for (let i = 0, len = description.length; i < len; i++) {
             const elementDesc = description[i];
 
-            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
+
+            // WebGPU has limited element size support (for example uint16x3 is not supported)
+            Debug.assert(graphicsDevice.deviceType !== DEVICETYPE_WEBGPU || [2, 4, 8, 12, 16].includes(elementSize),
+                         `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
+
+            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             if (vertexCount) {
                 offset = math.roundUp(offset, elementSize);
 

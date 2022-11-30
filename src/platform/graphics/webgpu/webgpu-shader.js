@@ -49,7 +49,7 @@ class WebgpuShader {
 
     process() {
         // process the shader source to allow for uniforms
-        const processed = ShaderProcessor.run(this.shader.device, this.shader.definition);
+        const processed = ShaderProcessor.run(this.shader.device, this.shader.definition, this.shader);
 
         // keep reference to processed shaders in debug mode
         Debug.call(() => {
@@ -67,9 +67,10 @@ class WebgpuShader {
         try {
             return this.shader.device.glslang.compileGLSL(src, shaderType);
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader with id ${this.shader.id} to WebGPU: [${err.message}]`, {
                 processed: src,
-                original: originalSrc
+                original: originalSrc,
+                shader: this.shader
             });
         }
     }
