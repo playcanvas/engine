@@ -40,7 +40,7 @@ import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { SceneGrab } from './graphics/scene-grab.js';
+import { SceneGrab } from '../scene/graphics/scene-grab.js';
 import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
 import { I18n } from './i18n/i18n.js';
@@ -371,7 +371,7 @@ class AppBase extends EventHandler {
             id: LAYERID_WORLD
         });
 
-        this.sceneGrab = new SceneGrab(this);
+        this.sceneGrab = new SceneGrab(this.graphicsDevice, this.scene);
         this.defaultLayerDepth = this.sceneGrab.layer;
 
         this.defaultLayerSkybox = new Layer({
