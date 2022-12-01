@@ -969,9 +969,9 @@ class ForwardRenderer extends Renderer {
         const camera = startLayer.cameras[startRenderAction.cameraIndex];
 
         // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
-        //const isWebgl1DepthGrabPass = isGrabPass && !this.device.webgl2 && camera.renderSceneDepthMap;
+        // const isWebgl1DepthGrabPass = isGrabPass && !this.device.webgl2 && camera.renderSceneDepthMap;
         const grabPassRequired = isGrabPass && SceneGrab.requiresRenderPass(this.device, camera);
-        const isRealPass = !isGrabPass || grabPassRequired /*isWebgl1DepthGrabPass*/;
+        const isRealPass = !isGrabPass || grabPassRequired;
 
         if (isRealPass) {
 
