@@ -22,7 +22,7 @@ class LitOptions {
         this.nineSlicedMode = false;
 
         this.clusteredLightingEnabled = true;
- 
+
         this.clusteredLightingCookiesEnabled = false;
         this.clusteredLightingShadowsEnabled = false;
         this.clusteredLightingShadowType = 0;
