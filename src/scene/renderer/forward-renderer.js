@@ -25,6 +25,7 @@ import {
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
+import { SceneGrab } from '../graphics/scene-grab.js';
 
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 
@@ -968,15 +969,15 @@ class ForwardRenderer extends Renderer {
         const camera = startLayer.cameras[startRenderAction.cameraIndex];
 
         // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
-        const isWebgl1DepthGrabPass = isGrabPass && !this.device.webgl2 && camera.renderSceneDepthMap;
-        const isRealPass = !isGrabPass || isWebgl1DepthGrabPass;
+        const grabPassRequired = isGrabPass && SceneGrab.requiresRenderPass(this.device, camera);
+        const isRealPass = !isGrabPass || grabPassRequired;
 
         if (isRealPass) {
 
             renderPass.init(renderTarget);
             renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
-            if (isWebgl1DepthGrabPass) {
+            if (grabPassRequired) {
 
                 // webgl1 depth rendering clear values
                 renderPass.setClearColor(webgl1DepthClearColor);
