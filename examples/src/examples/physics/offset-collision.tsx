@@ -130,18 +130,17 @@ class OffsetCollisionExample {
                 // load the state graph into the anim component
                 modelEntity.anim.loadStateGraph(animStateGraphData);
 
-                // Add a rigid body with a collision offset as the model's origin is
-                // the feet on the floor
+                // Add a rigid body and collision for the head with offset as the model's origin is
+                // at the feet on the floor
                 modelEntity.addComponent("rigidbody", {
                     type: "static",
                     restitution: 0.5
                 });
 
                 modelEntity.addComponent("collision", {
-                    type: "capsule",
-                    radius: 0.2,
-                    height: 1.5,
-                    linearOffset: [0, 0.75, 0]
+                    type: "sphere",
+                    radius: 0.3,
+                    linearOffset: [0, 1.25, 0]
                 });
 
                 // load the state graph asset resource into the anim component
@@ -206,6 +205,16 @@ class OffsetCollisionExample {
                     app.root.findByTag("shape").forEach(function (entity: pc.Entity) {
                         entity.render.meshInstances[0].material = entity.rigidbody.isActive() ? red : gray;
                     });
+
+                    // Render the offset collision
+                    app.scene.immediate.drawWireSphere(
+                        modelEntity.collision.getShapePosition(),
+                        0.3,
+                        pc.Color.GREEN,
+                        16,
+                        true,
+                        app.scene.layers.getLayerByName("World")
+                    );
                 });
             }
         });
