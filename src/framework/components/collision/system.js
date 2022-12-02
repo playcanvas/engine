@@ -604,7 +604,9 @@ class CollisionComponentSystem extends ComponentSystem {
             'asset',
             'render',
             'renderAsset',
-            'enabled'
+            'enabled',
+            'linearOffset',
+            'angularOffset'
         ];
 
         // duplicate the input data because we are modifying it
@@ -641,6 +643,14 @@ class CollisionComponentSystem extends ComponentSystem {
 
         if (data.halfExtents && Array.isArray(data.halfExtents)) {
             data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+        }
+
+        if (data.linearOffset && Array.isArray(data.linearOffset)) {
+            data.linearOffset = new Vec3(data.linearOffset[0], data.linearOffset[1], data.linearOffset[2]);
+        }
+
+        if (data.angularOffset && Array.isArray(data.angularOffset)) {
+            data.angularOffset = new Quat(data.angularOffset[0], data.angularOffset[1], data.angularOffset[2], data.angularOffset[3]);
         }
 
         const impl = this._createImplementation(data.type);
