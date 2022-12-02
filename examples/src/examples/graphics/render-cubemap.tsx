@@ -15,9 +15,6 @@ class RenderCubemapExample {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
-            createOptions.mouse = new pc.Mouse(document.body);
-            createOptions.touch = new pc.TouchDevice(document.body);
-            createOptions.keyboard = new pc.Keyboard(document.body);
 
             createOptions.componentSystems = [
                 // @ts-ignore
