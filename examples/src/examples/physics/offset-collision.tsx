@@ -152,9 +152,7 @@ class OffsetCollisionExample {
 
                 // Create an Entity with a camera component
                 const cameraEntity = new pc.Entity();
-                cameraEntity.addComponent("camera", {
-                    clearColor: new pc.Color(0.1, 0.1, 0.1)
-                });
+                cameraEntity.addComponent("camera");
                 cameraEntity.translate(0, 2, 5);
                 const lookAtPosition = modelEntity.getPosition();
                 cameraEntity.lookAt(lookAtPosition.x, lookAtPosition.y + 0.75, lookAtPosition.z);

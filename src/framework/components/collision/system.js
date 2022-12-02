@@ -642,15 +642,15 @@ class CollisionComponentSystem extends ComponentSystem {
         component.data.type = data.type;
 
         if (Array.isArray(data.halfExtents)) {
-            data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+            data.halfExtents = new Vec3(data.halfExtents);
         }
 
         if (Array.isArray(data.linearOffset)) {
-            data.linearOffset = new Vec3(data.linearOffset[0], data.linearOffset[1], data.linearOffset[2]);
+            data.linearOffset = new Vec3(data.linearOffset);
         }
 
         if (Array.isArray(data.angularOffset)) {
-            data.angularOffset = new Quat(data.angularOffset[0], data.angularOffset[1], data.angularOffset[2], data.angularOffset[3]);
+            data.angularOffset = new Quat(data.angularOffset);
         }
 
         const impl = this._createImplementation(data.type);
