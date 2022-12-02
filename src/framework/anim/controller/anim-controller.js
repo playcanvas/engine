@@ -516,7 +516,7 @@ class AnimController {
         let animation;
         let clip;
         this._timeInStateBefore = this._timeInState;
-        this._timeInState += dt;
+        this._timeInState += dt * this.activeState.speed;
 
         // transition between states if a transition is available from the active state
         const transition = this._findTransition(this._activeStateName);

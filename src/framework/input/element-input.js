@@ -745,9 +745,10 @@ class ElementInput {
                     const lastTouchUp = this._clickedEntities[guid] || 0;
                     const dt = Date.now() - lastTouchUp;
                     fireClick = dt > 300;
+
+                    // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
+                    delete this._clickedEntities[guid];
                 }
-                // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
-                delete this._clickedEntities[guid];
                 if (fireClick) {
                     this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }

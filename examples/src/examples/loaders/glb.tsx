@@ -9,63 +9,89 @@ class GlbExample {
         // The example demonstrates loading of glb file, which contains meshes,
         // lights and cameras, and switches between the cameras every 2 seconds.
 
-        // Create the app and start the update loop
-        const app = new pc.Application(canvas, {});
-
-        // the array will store loaded cameras
-        let camerasComponents: Array<pc.CameraComponent> = null;
-
         const assets = {
             'scene': new pc.Asset('scene', 'container', { url: '/static/assets/models/geometry-camera-light.glb' })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
 
-            app.start();
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
 
-            // glb lights use physical units
-            app.scene.physicalUnits = true;
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.LightComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler
+            ];
 
-            // create an instance using render component
-            const entity = assets.scene.resource.instantiateRenderEntity();
-            app.root.addChild(entity);
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
-            // find all cameras - by default they are disabled
-            camerasComponents = entity.findComponents("camera");
-            camerasComponents.forEach((component) => {
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-                // set the aspect ratio to automatic to work with any window size
-                component.aspectRatioMode = pc.ASPECT_AUTO;
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
 
-                // set up exposure for physical units
-                component.aperture = 4;
-                component.shutter = 1 / 100;
-                component.sensitivity = 500;
-            });
+                app.start();
 
-            // enable all lights from the glb
-            const lightComponents: Array<pc.LightComponent> = entity.findComponents("light");
-            lightComponents.forEach((component) => {
-                component.enabled = true;
-            });
+                // the array will store loaded cameras
+                let camerasComponents: Array<pc.CameraComponent> = null;
 
-            let time = 0;
-            let activeCamera = 0;
-            app.on("update", function (dt) {
-                time -= dt;
+                // glb lights use physical units
+                app.scene.physicalUnits = true;
 
-                // change the camera every few seconds
-                if (time <= 0) {
-                    time = 2;
+                // create an instance using render component
+                const entity = assets.scene.resource.instantiateRenderEntity({
+                });
+                app.root.addChild(entity);
 
-                    // disable current camera
-                    camerasComponents[activeCamera].enabled = false;
+                // find all cameras - by default they are disabled
+                camerasComponents = entity.findComponents("camera");
+                camerasComponents.forEach((component) => {
 
-                    // activate next camera
-                    activeCamera = (activeCamera + 1) % camerasComponents.length;
-                    camerasComponents[activeCamera].enabled = true;
-                }
+                    // set the aspect ratio to automatic to work with any window size
+                    component.aspectRatioMode = pc.ASPECT_AUTO;
+
+                    // set up exposure for physical units
+                    component.aperture = 4;
+                    component.shutter = 1 / 100;
+                    component.sensitivity = 500;
+                });
+
+                // enable all lights from the glb
+                const lightComponents: Array<pc.LightComponent> = entity.findComponents("light");
+                lightComponents.forEach((component) => {
+                    component.enabled = true;
+                });
+
+                let time = 0;
+                let activeCamera = 0;
+                app.on("update", function (dt) {
+                    time -= dt;
+
+                    // change the camera every few seconds
+                    if (time <= 0) {
+                        time = 2;
+
+                        // disable current camera
+                        camerasComponents[activeCamera].enabled = false;
+
+                        // activate next camera
+                        activeCamera = (activeCamera + 1) % camerasComponents.length;
+                        camerasComponents[activeCamera].enabled = true;
+                    }
+                });
             });
         });
     }

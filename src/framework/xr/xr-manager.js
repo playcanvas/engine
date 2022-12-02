@@ -1,3 +1,5 @@
+import { Debug } from "../../core/debug.js";
+
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat3 } from '../../core/math/mat3.js';
@@ -608,10 +610,17 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
+        // A framebufferScaleFactor scale of 1 is the full resolution of the display
+        // so we need to calculate this based on devicePixelRatio of the dislay and what
+        // we've set this in the graphics device
+        Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
+        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
+
         this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
             alpha: true,
             depth: true,
-            stencil: true
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor
         });
 
         session.updateRenderState({

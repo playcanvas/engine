@@ -1,13 +1,14 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
 } from '../constants.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -18,8 +19,8 @@ gpuTextureFormats[PIXELFORMAT_LA8] = '';
 gpuTextureFormats[PIXELFORMAT_RGB565] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA5551] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA4] = '';
-gpuTextureFormats[PIXELFORMAT_RGB8] = 'bgra8unorm';
-gpuTextureFormats[PIXELFORMAT_RGBA8] = 'bgra8unorm';
+gpuTextureFormats[PIXELFORMAT_RGB8] = 'rgba8unorm';
+gpuTextureFormats[PIXELFORMAT_RGBA8] = 'rgba8unorm';
 gpuTextureFormats[PIXELFORMAT_DXT1] = '';
 gpuTextureFormats[PIXELFORMAT_DXT3] = '';
 gpuTextureFormats[PIXELFORMAT_DXT5] = '';
@@ -43,6 +44,13 @@ gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = '';
 gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGB] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
+gpuTextureFormats[PIXELFORMAT_BGRA8] = 'bgra8unorm';
+
+// map of ADDRESS_*** to GPUAddressMode
+const gpuAddressModes = [];
+gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
+gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
+gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
 
 /**
  * A WebGPU implementation of the Texture.
@@ -62,27 +70,34 @@ class WebgpuTexture {
     // type {GPUTextureDescriptor}
     descr;
 
+    // type {GPUTextureFormat}
+    format;
+
     constructor(texture) {
         /** @type {import('../texture.js').Texture} */
         this.texture = texture;
+
+        this.format = gpuTextureFormats[texture.format];
+        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
+
+        this.create(texture.device);
     }
 
     create(device) {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const gpuFormat = gpuTextureFormats[texture.format];
-        Debug.assert(gpuFormat !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
 
         this.descr = {
             size: { width: texture.width, height: texture.height },
-            format: gpuFormat,
+            format: this.format,
             mipLevelCount: 1,
             sampleCount: 1,
             dimension: '2d',
 
             // TODO: use only required usage flags
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+            // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
         this.gpuTexture = wgpu.createTexture(this.descr);
@@ -103,28 +118,33 @@ class WebgpuTexture {
         return this.view;
     }
 
+    // TODO: handle the case where those properties get changed
+
     getSampler(device) {
         if (!this.sampler) {
 
+            const texture = this.texture;
+
+            // type GPUSamplerDescriptor
+            const descr = {
+                addressModeU: gpuAddressModes[texture.addressU],
+                addressModeV: gpuAddressModes[texture.addressV],
+                addressModeW: gpuAddressModes[texture.addressW]
+            };
+
             // TODO: this is temporary and needs to be made generic
             if (this.texture.format === PIXELFORMAT_RGBA32F) {
-
-                this.sampler = device.wgpu.createSampler({
-                    magFilter: "nearest",
-                    minFilter: "nearest",
-                    mipmapFilter: "nearest"
-                });
-                DebugHelper.setLabel(this.sampler, `NearestSampler`);
-
+                descr.magFilter = 'nearest';
+                descr.minFilter = 'nearest';
+                descr.mipmapFilter = 'nearest';
             } else {
-
-                this.sampler = device.wgpu.createSampler({
-                    magFilter: "linear",
-                    minFilter: "linear",
-                    mipmapFilter: "linear"
-                });
-                DebugHelper.setLabel(this.sampler, `LinearSampler`);
+                descr.magFilter = 'linear';
+                descr.minFilter = 'linear';
+                descr.mipmapFilter = 'linear';
             }
+
+            this.sampler = device.wgpu.createSampler(descr);
+            DebugHelper.setLabel(this.sampler, `LinearSampler`);
         }
 
         return this.sampler;
@@ -139,10 +159,6 @@ class WebgpuTexture {
      * @param {import('../texture.js').Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
-
-        if (!this.gpuTexture) {
-            this.create(device);
-        }
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
             this.uploadData(device);

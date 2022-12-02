@@ -30,6 +30,12 @@ void addRefraction() {
     uv += vec2(1.0);
     uv *= vec2(0.5);
 
+    // Grab pass texture is upside down.
+    // TODO: At some point we should create some macro.
+    #ifdef WEBGPU
+        uv.y = 1.0 - uv.y;
+    #endif
+
     #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip
         float iorToRoughness = (1.0 - dGlossiness) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);

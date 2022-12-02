@@ -107,15 +107,15 @@ function getDepthKey(meshInstance) {
  */
 class ShadowRenderer {
     /**
-     * @param {import('./forward-renderer.js').ForwardRenderer} forwardRenderer - The forward renderer.
+     * @param {import('./renderer.js').Renderer} renderer - The renderer.
      * @param {import('../lighting/light-texture-atlas.js').LightTextureAtlas} lightTextureAtlas - The
      * shadow map atlas.
      */
-    constructor(forwardRenderer, lightTextureAtlas) {
-        this.device = forwardRenderer.device;
+    constructor(renderer, lightTextureAtlas) {
+        this.device = renderer.device;
 
-        /** @type {import('./forward-renderer.js').ForwardRenderer} */
-        this.forwardRenderer = forwardRenderer;
+        /** @type {import('./renderer.js').Renderer} */
+        this.renderer = renderer;
 
         /** @type {import('../lighting/light-texture-atlas.js').LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
@@ -199,13 +199,13 @@ class ShadowRenderer {
         visible.length = count;
 
         // TODO: we should probably sort shadow meshes by shader and not depth
-        visible.sort(this.forwardRenderer.depthSortCompare);
+        visible.sort(this.renderer.sortCompareDepth);
     }
 
     // cull local shadow map
     cullLocal(light, drawCalls) {
 
-        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+        const isClustered = this.renderer.scene.clusteredLightingEnabled;
 
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
@@ -254,7 +254,7 @@ class ShadowRenderer {
             }
 
             // cull shadow casters
-            this.forwardRenderer.updateCameraFrustum(shadowCam);
+            this.renderer.updateCameraFrustum(shadowCam);
             this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
         }
     }
@@ -357,7 +357,7 @@ class ShadowRenderer {
             shadowCam.orthoHeight = radius;
 
             // cull shadow casters
-            this.forwardRenderer.updateCameraFrustum(shadowCam);
+            this.renderer.updateCameraFrustum(shadowCam);
             this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
 
             // find out AABB of visible shadow casters
@@ -387,7 +387,7 @@ class ShadowRenderer {
 
     setupRenderState(device, light) {
 
-        const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+        const isClustered = this.renderer.scene.clusteredLightingEnabled;
 
         // depth bias
         if (device.webgl2) {
@@ -442,7 +442,7 @@ class ShadowRenderer {
 
         // position / range
         if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-            this.forwardRenderer.dispatchViewPos(shadowCamNode.getPosition());
+            this.renderer.dispatchViewPos(shadowCamNode.getPosition());
             this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
         }
 
@@ -472,8 +472,8 @@ class ShadowRenderer {
     submitCasters(visibleCasters, light) {
 
         const device = this.device;
-        const forwardRenderer = this.forwardRenderer;
-        const scene = forwardRenderer.scene;
+        const renderer = this.renderer;
+        const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
 
         // Sort shadow casters
@@ -489,8 +489,8 @@ class ShadowRenderer {
             const material = meshInstance.material;
 
             // set basic material states/parameters
-            forwardRenderer.setBaseConstants(device, material);
-            forwardRenderer.setSkinning(device, meshInstance, material);
+            renderer.setBaseConstants(device, material);
+            renderer.setSkinning(device, meshInstance);
 
             if (material.dirty) {
                 material.updateUniforms(device, scene);
@@ -499,7 +499,7 @@ class ShadowRenderer {
 
             if (material.chunks) {
 
-                forwardRenderer.setCullMode(true, false, meshInstance);
+                renderer.setCullMode(true, false, meshInstance);
 
                 // Uniforms I (shadow): material
                 material.setParameters(device);
@@ -520,15 +520,15 @@ class ShadowRenderer {
             }
 
             // set buffers
-            forwardRenderer.setVertexBuffers(device, mesh);
-            forwardRenderer.setMorphing(device, meshInstance.morphInstance);
+            renderer.setVertexBuffers(device, mesh);
+            renderer.setMorphing(device, meshInstance.morphInstance);
 
             const style = meshInstance.renderStyle;
             device.setIndexBuffer(mesh.indexBuffer[style]);
 
             // draw
-            forwardRenderer.drawInstance(device, meshInstance, mesh, style);
-            forwardRenderer._shadowDrawCalls++;
+            renderer.drawInstance(device, meshInstance, mesh, style);
+            renderer._shadowDrawCalls++;
         }
     }
 
@@ -545,9 +545,9 @@ class ShadowRenderer {
             const shadowType = light._shadowType;
             const faceCount = light.numShadowFaces;
 
-            const forwardRenderer = this.forwardRenderer;
-            forwardRenderer._shadowMapUpdates += faceCount;
-            const isClustered = forwardRenderer.scene.clusteredLightingEnabled;
+            const renderer = this.renderer;
+            renderer._shadowMapUpdates += faceCount;
+            const isClustered = renderer.scene.clusteredLightingEnabled;
 
             DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name}`);
 
@@ -571,7 +571,7 @@ class ShadowRenderer {
 
                 this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
-                forwardRenderer.setCamera(shadowCam, shadowCam.renderTarget, true);
+                renderer.setCamera(shadowCam, shadowCam.renderTarget, true);
 
                 // render mesh instances
                 this.submitCasters(lightRenderData.visibleCasters, light);
@@ -583,7 +583,7 @@ class ShadowRenderer {
             if (light._isVsm && light._vsmBlurSize > 1) {
 
                 // all non-clustered and directional lights support vsm
-                const isClustered = this.forwardRenderer.scene.clusteredLightingEnabled;
+                const isClustered = renderer.scene.clusteredLightingEnabled;
                 if (!isClustered || type === LIGHTTYPE_DIRECTIONAL) {
                     this.applyVsmBlur(light, camera);
                 }
