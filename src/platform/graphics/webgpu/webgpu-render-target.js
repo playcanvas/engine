@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * A WebGPU implementation of the RenderTarget.
@@ -135,8 +135,14 @@ class WebgpuRenderTarget {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             };
 
+            // single sampled depth buffer can be copied out (grab pass), multisampled cannot
+            if (samples <= 1) {
+                depthTextureDesc.usage |= GPUTextureUsage.COPY_SRC;
+            }
+
             // allocate depth buffer
             this.depthTexture = wgpu.createTexture(depthTextureDesc);
+            DebugHelper.setLabel(this.depthTexture, `${renderTarget.name}.depthTexture`);
 
             // @type {GPURenderPassDepthStencilAttachment}
             this.renderPassDescriptor.depthStencilAttachment = {

@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
     DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8
@@ -334,6 +334,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // as a destination of the copy operation
         if (rt === this.frameBuffer) {
             const outColorBuffer = this.gpuContext.getCurrentTexture();
+            DebugHelper.setLabel(outColorBuffer, rt.name);
             wrt.assignColorTexture(outColorBuffer);
         }
 
@@ -447,7 +448,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         if (depth) {
-            Debug.assert("copyRenderTarget does not handle depth copy yet.");
+
+            // read from supplied render target, or from the framebuffer
+            const sourceRT = source ? source : this.renderTarget;
+
+            // cannot copy depth from multisampled buffer. On WebGPU, it cannot be resolve at the end of the pass either,
+            // and so we need to implement a custom depth resolve shader based copy
+            // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
+            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture`, sourceRT);
+
+            // type {GPUImageCopyTexture}
+            const copySrc = {
+                texture: sourceRT.impl.depthTexture,
+                mipLevel: 0
+            };
+
+            // write to supplied render target, or to the framebuffer
+            // type {GPUImageCopyTexture}
+            const copyDst = {
+                texture: dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture,
+                mipLevel: 0
+            };
+
+            Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
+            commandEncoder.copyTextureToTexture(copySrc, copyDst, copySize);
         }
 
         // submit the encoded commands if we created the encoder
