@@ -71,8 +71,10 @@ class GroundFogExample {
                 vec4 diffusTexture2 = texture2D (uTexture, texCoord2);
                 float alpha = 0.5 * (diffusTexture0.r + diffusTexture1.r + diffusTexture2.r);
 
+                // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords
+                vec2 screenCoord = getGrabScreenPos(screenPos);
+
                 // read the depth from the depth buffer
-                vec2 screenCoord = (screenPos.xy / screenPos.w) * 0.5 + 0.5;
                 float sceneDepth = getLinearScreenDepth(screenCoord) * camera_params.x;
 
                 // depth of the current fragment (on the fog plane)
@@ -221,7 +223,7 @@ class GroundFogExample {
                 // @ts-ignore
                 const vertex = `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'];
                 // @ts-ignore
-                const fragment = `precision ${app.graphicsDevice.precision} float;\n` + pc.shaderChunks.screenDepthPS + files['shader.frag'];
+                const fragment = pc.shaderChunks.screenDepthPS + files['shader.frag'];
                 const shader = pc.createShaderFromCode(app.graphicsDevice, vertex, fragment, 'GroundFogShader');
 
                 // and set up a material using this shader

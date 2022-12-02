@@ -11,6 +11,7 @@ import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
+import sharedFS from './shader-chunks/frag/shared.js';
 
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -77,6 +78,7 @@ class ShaderUtils {
         ShaderUtils.versionCode(device) +
             ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             (options.fragmentCode || ShaderUtils.dummyFragmentCode());
 

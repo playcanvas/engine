@@ -103,7 +103,27 @@ class WebgpuTexture {
         this.gpuTexture = wgpu.createTexture(this.descr);
         DebugHelper.setLabel(this.gpuTexture, texture.name);
 
-        this.view = this.gpuTexture.createView();
+        // default texture view descriptor
+        // type {GPUTextureViewDescriptor}
+        const textureDescr = this.descr;
+        const viewDescr = {
+            format: textureDescr.format,
+            dimension: textureDescr.dimension,
+            aspect: 'all',
+            baseMipLevel: 0,
+            mipLevelCount: textureDescr.mipLevelCount,
+            baseArrayLayer: 0,
+            arrayLayerCount: 1
+        };
+
+        // some format require custom default texture view
+        if (this.texture.format === PIXELFORMAT_DEPTHSTENCIL) {
+            // we expose the depth part of the format
+            viewDescr.format = 'depth24plus';
+            viewDescr.aspect = 'depth-only';
+        }
+
+        this.view = this.gpuTexture.createView(viewDescr);
         DebugHelper.setLabel(this.view, `DefaultView: ${this.texture.name}`);
     }
 
@@ -133,7 +153,7 @@ class WebgpuTexture {
             };
 
             // TODO: this is temporary and needs to be made generic
-            if (this.texture.format === PIXELFORMAT_RGBA32F) {
+            if (this.texture.format === PIXELFORMAT_RGBA32F || this.texture.format === PIXELFORMAT_DEPTHSTENCIL) {
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';
