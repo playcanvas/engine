@@ -1305,7 +1305,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     material.specularTint = true;
     material.specularVertexColor = true;
 
-    material.chunks.APIVersion = CHUNKAPI_1_57;
+    material.chunks.APIVersion = CHUNKAPI_1_58;
 
     if (gltfMaterial.hasOwnProperty('name')) {
         material.name = gltfMaterial.name;
