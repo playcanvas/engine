@@ -18,7 +18,7 @@ import {
     PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP, PRIMITIVE_LINES, PRIMITIVE_POINTS, PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, CHUNKAPI_1_57
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, CHUNKAPI_1_58
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -1305,7 +1305,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     material.specularTint = true;
     material.specularVertexColor = true;
 
-    material.chunks.APIVersion = CHUNKAPI_1_57;
+    material.chunks.APIVersion = CHUNKAPI_1_58;
 
     if (gltfMaterial.hasOwnProperty('name')) {
         material.name = gltfMaterial.name;
