@@ -85,18 +85,27 @@ class DefaultAnimBinder {
                     weightName = Number(weightName);
                 }
                 const meshInstances = findMeshInstances(node);
+                let setters;
                 if (meshInstances) {
                     for (let i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
+                            if (!setters) setters = [];
                             const morphInstance = meshInstances[i].morphInstance;
                             const func = (value) => {
                                 morphInstance.setWeight(weightName, value[0]);
                             };
-                            return DefaultAnimBinder.createAnimTarget(func, 'number', 1, node, `weight.${weightName}`);
+                            setters.push(func);
                         }
                     }
                 }
-
+                if (setters) {
+                    const callSetters = (value) => {
+                        for (let i = 0; i < setters.length; ++i) {
+                            setters[i](value);
+                        }
+                    };
+                    return DefaultAnimBinder.createAnimTarget(callSetters, 'number', 1, node, `weight.${weightName}`);
+                }
                 return null;
             },
             'materialTexture': (node, textureName) => {
