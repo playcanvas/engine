@@ -73,9 +73,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     initDeviceCaps() {
-        this.precision = 'hiphp';
+        this.precision = 'highp';
+        this.maxPrecision = 'highp';
         this.maxSamples = 4;
         this.maxTextures = 16;
+        this.maxTextureSize = 4096;
+        this.maxCubeMapSize = 4096;
+        this.maxVolumeSize = 2048;
         this.maxPixelRatio = 1;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
@@ -88,7 +92,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.textureHalfFloatUpdatable = true;
-        this.maxTextureSize = 4096;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
@@ -236,34 +239,36 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     draw(primitive, numInstances = 1, keepBuffers) {
 
-        const passEncoder = this.passEncoder;
+        if (this.shader.ready) {
+            const passEncoder = this.passEncoder;
 
-        // vertex buffers
-        const vb0 = this.vertexBuffers[0];
-        const vbSlot = this.submitVertexBuffer(vb0, 0);
-        const vb1 = this.vertexBuffers[1];
-        if (vb1) {
-            this.submitVertexBuffer(vb1, vbSlot);
-        }
-        this.vertexBuffers.length = 0;
+            // vertex buffers
+            const vb0 = this.vertexBuffers[0];
+            const vbSlot = this.submitVertexBuffer(vb0, 0);
+            const vb1 = this.vertexBuffers[1];
+            if (vb1) {
+                this.submitVertexBuffer(vb1, vbSlot);
+            }
+            this.vertexBuffers.length = 0;
 
-        // render pipeline
-        const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
-                                                 this.bindGroupFormats, this.renderState);
-        Debug.assert(pipeline);
+            // render pipeline
+            const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
+                                                     this.bindGroupFormats, this.renderState);
+            Debug.assert(pipeline);
 
-        if (this.pipeline !== pipeline) {
-            this.pipeline = pipeline;
-            passEncoder.setPipeline(pipeline);
-        }
+            if (this.pipeline !== pipeline) {
+                this.pipeline = pipeline;
+                passEncoder.setPipeline(pipeline);
+            }
 
-        // draw
-        const ib = this.indexBuffer;
-        if (ib) {
-            passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-            passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
-        } else {
-            passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
+            // draw
+            const ib = this.indexBuffer;
+            if (ib) {
+                passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
+                passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
+            } else {
+                passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
+            }
         }
     }
 
@@ -343,12 +348,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // create a new encoder for each pass to keep the GPU busy with commands
         this.commandEncoder = this.wgpu.createCommandEncoder();
+        DebugHelper.setLabel(this.commandEncoder, renderPass.name);
 
         // clear cached encoder state
         this.pipeline = null;
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
+        DebugHelper.setLabel(this.passEncoder, renderPass.name);
     }
 
     /**

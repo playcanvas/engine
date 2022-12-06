@@ -159,7 +159,19 @@ class WebgpuRenderTarget {
         this.renderPassDescriptor.colorAttachments = [colorAttachment];
 
         const colorBuffer = renderTarget.colorBuffer;
-        const colorView = colorBuffer ? colorBuffer.impl.getView(device) : null;
+        let colorView = null;
+        if (colorBuffer) {
+            colorView = colorBuffer.impl.getView(device);
+
+            // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+            if (colorBuffer.cubemap) {
+                colorView = colorBuffer.impl.createView({
+                    dimension: '2d',
+                    baseArrayLayer: renderTarget.face,
+                    arrayLayerCount: 1
+                });
+            }
+        }
 
         // multi-sampled color buffer
         if (samples > 1) {

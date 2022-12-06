@@ -48,19 +48,27 @@ class WebgpuShader {
     }
 
     process() {
+        const shader = this.shader;
+
         // process the shader source to allow for uniforms
-        const processed = ShaderProcessor.run(this.shader.device, this.shader.definition, this.shader);
+        const processed = ShaderProcessor.run(shader.device, shader.definition, shader);
 
         // keep reference to processed shaders in debug mode
         Debug.call(() => {
             this.processed = processed;
         });
 
-        this._vertexCode = this.transpile(processed.vshader, 'vertex', this.shader.definition.vshader);
-        this._fragmentCode = this.transpile(processed.fshader, 'fragment', this.shader.definition.fshader);
+        this._vertexCode = this.transpile(processed.vshader, 'vertex', shader.definition.vshader);
+        this._fragmentCode = this.transpile(processed.fshader, 'fragment', shader.definition.fshader);
 
-        this.shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
-        this.shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        if (!(this._vertexCode && this._fragmentCode)) {
+            shader.failed = true;
+        } else {
+            shader.ready = true;
+        }
+
+        shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
+        shader.meshBindGroupFormat = processed.meshBindGroupFormat;
     }
 
     transpile(src, shaderType, originalSrc) {
