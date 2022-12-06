@@ -9,9 +9,9 @@ layout(location = 0) out highp vec4 pc_fragColor;
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
 #define texture2DBias(res, uv, bias) texture(sampler2D(res, res ## _sampler), uv, bias)
 #define texture2DLodEXT(res, uv, lod) textureLod(sampler2D(res, res ## _sampler), uv, lod)
+#define textureCube(res, uv) texture(samplerCube(res, res ## _sampler), uv)
 
 // TODO: implement other texture sampling macros
-// #define textureCube texture
 // #define texture2DProj textureProj
 // #define texture2DProjLodEXT textureProjLod
 // #define textureCubeLodEXT textureLod

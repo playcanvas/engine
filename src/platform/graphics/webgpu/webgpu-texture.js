@@ -89,11 +89,15 @@ class WebgpuTexture {
         const wgpu = device.wgpu;
 
         this.descr = {
-            size: { width: texture.width, height: texture.height },
+            size: {
+                width: texture.width,
+                height: texture.height,
+                depthOrArrayLayers: texture.cubemap ? 6 : 1
+            },
             format: this.format,
             mipLevelCount: 1,
             sampleCount: 1,
-            dimension: '2d',
+            dimension: texture.volume ? '3d' : '2d',
 
             // TODO: use only required usage flags
             // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
@@ -101,30 +105,21 @@ class WebgpuTexture {
         };
 
         this.gpuTexture = wgpu.createTexture(this.descr);
-        DebugHelper.setLabel(this.gpuTexture, texture.name);
+        DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
         // default texture view descriptor
-        // type {GPUTextureViewDescriptor}
-        const textureDescr = this.descr;
-        const viewDescr = {
-            format: textureDescr.format,
-            dimension: textureDescr.dimension,
-            aspect: 'all',
-            baseMipLevel: 0,
-            mipLevelCount: textureDescr.mipLevelCount,
-            baseArrayLayer: 0,
-            arrayLayerCount: 1
-        };
+        let viewDescr;
 
         // some format require custom default texture view
         if (this.texture.format === PIXELFORMAT_DEPTHSTENCIL) {
             // we expose the depth part of the format
-            viewDescr.format = 'depth24plus';
-            viewDescr.aspect = 'depth-only';
+            viewDescr = {
+                format: 'depth24plus',
+                aspect: 'depth-only'
+            };
         }
 
-        this.view = this.gpuTexture.createView(viewDescr);
-        DebugHelper.setLabel(this.view, `DefaultView: ${this.texture.name}`);
+        this.view = this.createView(viewDescr);
     }
 
     destroy(device) {
@@ -136,6 +131,36 @@ class WebgpuTexture {
 
         Debug.assert(this.view);
         return this.view;
+    }
+
+    createView(viewDescr) {
+
+        const options = viewDescr ?? {};
+        const textureDescr = this.descr;
+        const texture = this.texture;
+
+        // '1d', '2d', '2d-array', 'cube', 'cube-array', '3d'
+        const defaultViewDimension = () => {
+            if (texture.cubemap) return 'cube';
+            if (texture.volume) return '3d';
+            return '2d';
+        };
+
+        // type {GPUTextureViewDescriptor}
+        const descr = {
+            format: options.format ?? textureDescr.format,
+            dimension: options.dimension ?? defaultViewDimension(),
+            aspect: options.aspect ?? 'all',
+            baseMipLevel: options.baseMipLevel ?? 0,
+            mipLevelCount: options.mipLevelCount ?? textureDescr.mipLevelCount,
+            baseArrayLayer: options.baseArrayLayer ?? 0,
+            arrayLayerCount: options.arrayLayerCount ?? textureDescr.depthOrArrayLayers
+        };
+
+        const view = this.gpuTexture.createView(descr);
+        DebugHelper.setLabel(view, `${viewDescr ? `CustomView${JSON.stringify(viewDescr)}` : 'DefaultView'}:${this.texture.name}`);
+
+        return view;
     }
 
     // TODO: handle the case where those properties get changed
@@ -196,6 +221,11 @@ class WebgpuTexture {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
+
+        if (this.texture.cubemap) {
+            Debug.warn('Cubemap texture data upload is not supported yet', this.texture);
+            return;
+        }
 
         // upload texture data if any
         const mipLevel = 0;

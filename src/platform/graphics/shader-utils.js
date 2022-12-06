@@ -75,7 +75,7 @@ class ShaderUtils {
         // fragment code
         const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
-        ShaderUtils.versionCode(device) +
+            ShaderUtils.versionCode(device) +
             ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
             sharedFS +
@@ -134,27 +134,32 @@ class ShaderUtils {
 
         let code = '';
 
+        if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
+            forcePrecision = null;
+        }
+
+        if (forcePrecision) {
+            if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
+                forcePrecision = 'mediump';
+            }
+            if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
+                forcePrecision = 'lowp';
+            }
+        }
+
+        const precision = forcePrecision ? forcePrecision : device.precision;
+
         if (device.deviceType === DEVICETYPE_WEBGL) {
 
-            if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
-                forcePrecision = null;
-            }
-
-            if (forcePrecision) {
-                if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
-                    forcePrecision = 'mediump';
-                }
-                if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
-                    forcePrecision = 'lowp';
-                }
-            }
-
-            const precision = forcePrecision ? forcePrecision : device.precision;
             code = `precision ${precision} float;\n`;
 
             if (device.webgl2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
             }
+
+        } else { // WebGPU
+
+            code = `precision ${precision} float;\nprecision ${precision} int;\n`;
         }
 
         return code;
