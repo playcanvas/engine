@@ -89,11 +89,11 @@ class DefaultAnimBinder {
                 if (meshInstances) {
                     for (let i = 0; i < meshInstances.length; ++i) {
                         if (meshInstances[i].node.name === node.name && meshInstances[i].morphInstance) {
-                            if (!setters) setters = [];
                             const morphInstance = meshInstances[i].morphInstance;
                             const func = (value) => {
                                 morphInstance.setWeight(weightName, value[0]);
                             };
+                            if (!setters) setters = [];
                             setters.push(func);
                         }
                     }
