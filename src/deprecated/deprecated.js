@@ -71,6 +71,8 @@ import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
+import { Options } from '../scene/materials/options.js';
+import { LitOptions } from '../scene/materials/lit-options.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
 import { Skeleton } from '../scene/animation/skeleton.js';
@@ -784,6 +786,24 @@ _defineAlias('metalnessVertexColor', 'metalnessMapVertexColor');
 _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
+
+function _defineOption(name) {
+    Object.defineProperty(Options.prototype, name, {
+        get: function () {
+            Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions.`);
+            return null;
+        },
+        set: function (value) {
+            Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions.`);
+        }
+    });
+}
+
+const tempOptions = new LitOptions();
+const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
+for (const litOption in litOptionProperties) {
+    _defineOption(litOptionProperties[litOption]);
+}
 
 // ANIMATION
 

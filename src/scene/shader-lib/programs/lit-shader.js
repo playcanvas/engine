@@ -750,7 +750,7 @@ class LitShader {
             }
         }
 
-        const useAo = options.aoMapEnabled || options.aoVertexColors;
+        const useAo = options.aoMapEnabled || options.useAoVertexColors;
 
         if (useAo) {
             code += chunks.aoDiffuseOccPS;
@@ -876,11 +876,11 @@ class LitShader {
         code += chunks.combinePS;
 
         // lightmap support
-        if (options.lightMapEnabled || options.lightMapVertexColors) {
+        if (options.lightMapEnabled || options.useLightMapVertexColors) {
             code += (options.useSpecular && options.dirLightMapEnabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
         }
 
-        const addAmbient = (!options.lightMapEnabled && !options.lightMapVertexColors) || options.lightMapWithoutAmbient;
+        const addAmbient = (!options.lightMapEnabled && !options.useLightMapVertexColors) || options.lightMapWithoutAmbient;
 
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
@@ -1025,7 +1025,7 @@ class LitShader {
             code += "    occludeDiffuse();\n";
         }
 
-        if (options.lightMapEnabled || options.lightMapVertexColors) {
+        if (options.lightMapEnabled || options.useLightMapVertexColors) {
             code += "    addLightMap();\n";
         }
 

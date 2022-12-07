@@ -122,13 +122,13 @@ class StandardMaterialOptionsBuilder {
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
-        options.litOptions.lightMapVertexColors = options.lightVertexColors;
+        options.litOptions.useLightMapVertexColors = options.lightVertexColors;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.heightMapEnabled = options.heightMap;
         options.litOptions.normalMapEnabled = options.normalMap;
         options.litOptions.clearCoatNormalMapEnabled = options.clearCoatNormalMap;
         options.litOptions.aoMapEnabled = options.aoMap;
-        options.litOptions.aoVertexColors = options.aoVertexColors;
+        options.litOptions.useAoVertexColors = options.aoVertexColors;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 

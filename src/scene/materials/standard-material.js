@@ -20,7 +20,6 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
-import { LitOptions } from './lit-options.js';
 
 // properties that get created on a standard material
 const _props = {};
@@ -898,13 +897,6 @@ class StandardMaterial extends Material {
         // execute user callback to modify the options
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
-            const litOptions = new LitOptions();
-            for (const key in options) {
-                if (key !== "chunks" &&
-                 litOptions[key] !== undefined) {
-                    Debug.warn(`Option moved to options.litOptions: ${key}`);
-                }
-            }
         }
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);

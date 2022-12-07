@@ -30,13 +30,13 @@ class LitOptions {
 
         this.vertexColors = false;
         this.lightMapEnabled = false;
-        this.lightMapVertexColors = false;
+        this.useLightMapVertexColors = false;
         this.dirLightMapEnabled = false;
         this.heightMapEnabled = false;
         this.normalMapEnabled = false;
         this.clearCoatNormalMapEnabled = false;
         this.aoMapEnabled = false;
-        this.aoVertexColors = false;
+        this.useAoVertexColors = false;
         this.diffuseMapEnabled = false;
 
         this.useAmbientTint = false;
