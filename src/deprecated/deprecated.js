@@ -788,16 +788,18 @@ _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
 
 function _defineOption(name, newName) {
-    Object.defineProperty(StandardMaterialOptions.prototype, name, {
-        get: function () {
-            Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
-            return this.litOptions[newName || name];
-        },
-        set: function (value) {
-            Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
-            this.litOptions[newName || name] = value;
-        }
-    });
+    if (name !== 'chunks') {
+        Object.defineProperty(StandardMaterialOptions.prototype, name, {
+            get: function () {
+                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                return this.litOptions[newName || name];
+            },
+            set: function (value) {
+                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                this.litOptions[newName || name] = value;
+            }
+        });
+    }
 }
 _defineOption('refraction', 'useRefraction');
 
