@@ -35,6 +35,8 @@ class Tracing {
      * - {@link TRACEID_VRAM_TEXTURE}
      * - {@link TRACEID_VRAM_VB}
      * - {@link TRACEID_VRAM_IB}
+     * - {@link TRACEID_RENDERPIPELINE_ALLOC}
+     * - {@link TRACEID_PIPELINELAYOUT_ALLOC}
      *
      * @param {boolean} enabled - New enabled state for the channel.
      */
