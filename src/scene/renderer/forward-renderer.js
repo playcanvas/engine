@@ -418,7 +418,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderShadows(lights, camera) {
+    renderShadowsLocal(lights, camera) {
 
         const isClustered = this.scene.clusteredLightingEnabled;
 
@@ -428,8 +428,9 @@ class ForwardRenderer extends Renderer {
 
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
+            Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
 
-            if (isClustered && light._type !== LIGHTTYPE_DIRECTIONAL) {
+            if (isClustered) {
 
                 // skip clustered shadows with no assigned atlas slot
                 if (!light.atlasViewportAllocated) {
@@ -442,7 +443,25 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            this._shadowRenderer.render(light, camera);
+            this._shadowRendererLocal.render(light, camera);
+        }
+
+        // #if _PROFILER
+        this._shadowMapTime += now() - shadowMapStartTime;
+        // #endif
+    }
+
+    renderShadowsDirectional(lights, camera) {
+
+        // #if _PROFILER
+        const shadowMapStartTime = now();
+        // #endif
+
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+            Debug.assert(light._type === LIGHTTYPE_DIRECTIONAL);
+
+            this._shadowRendererDirectional.render(light, camera);
         }
 
         // #if _PROFILER
@@ -867,8 +886,8 @@ class ForwardRenderer extends Renderer {
 
             // render shadows for all local visible lights - these shadow maps are shared by all cameras
             if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
-                this.renderShadows(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                this.renderShadows(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_SPOT]);
+                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_OMNI]);
             }
 
             // update light clusters
@@ -1048,7 +1067,7 @@ class ForwardRenderer extends Renderer {
         const layer = layerComposition.layerList[renderAction.layerIndex];
         const camera = layer.cameras[renderAction.cameraIndex];
 
-        this.renderShadows(renderAction.directionalLights, camera.camera);
+        this.renderShadowsDirectional(renderAction.directionalLights, camera.camera);
     }
 
     renderPassPostprocessing(renderAction, layerComposition) {

@@ -30,7 +30,9 @@ import { BindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
-import { ShadowRenderer } from './shadow-renderer.js';
+import { ShadowMapCache } from './shadow-map-cache.js';
+import { ShadowRendererLocal } from './shadow-renderer-local.js';
+import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
 
@@ -85,7 +87,9 @@ class Renderer {
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
 
         // shadows
-        this._shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+        this.shadowMapCache = new ShadowMapCache();
+        this._shadowRendererLocal = new ShadowRendererLocal(this, this.lightTextureAtlas);
+        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.lightTextureAtlas);
 
         // cookies
         this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
@@ -146,8 +150,11 @@ class Renderer {
     }
 
     destroy() {
-        this._shadowRenderer.destroy();
-        this._shadowRenderer = null;
+        this._shadowRendererLocal = null;
+        this._shadowRendererDirectional = null;
+
+        this.shadowMapCache.destroy();
+        this.shadowMapCache = null;
 
         this._cookieRenderer.destroy();
         this._cookieRenderer = null;
@@ -844,7 +851,7 @@ class Renderer {
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     const casters = comp._lightCompositionData[i].shadowCastersList;
-                    this._shadowRenderer.cullLocal(light, casters);
+                    this._shadowRendererLocal.cull(light, casters);
                 }
             }
         }
@@ -859,7 +866,7 @@ class Renderer {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
                 const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
-                this._shadowRenderer.cullDirectional(light, casters, renderAction.camera.camera);
+                this._shadowRendererDirectional.cull(light, casters, renderAction.camera.camera);
             }
         }
     }
