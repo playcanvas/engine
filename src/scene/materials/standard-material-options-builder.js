@@ -70,6 +70,7 @@ class StandardMaterialOptionsBuilder {
         options.forceUv1 = stdMat.forceUv1;
         options.chunks = stdMat.chunks || '';
 
+        options.pass = pass;
         options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';

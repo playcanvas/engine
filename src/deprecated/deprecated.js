@@ -788,7 +788,7 @@ _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
 
 function _defineOption(name, newName) {
-    if (name !== 'chunks') {
+    if (name !== 'chunks' || name == 'pass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
             get: function () {
                 Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);

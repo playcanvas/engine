@@ -96,7 +96,7 @@ class ProgramLibrary {
 
             const device = this._device;
             def = generator.createShaderDefinition(device, options);
-            def.name = `${name}-pass:${options.litOptions?.pass}`;
+            def.name = `${name}-pass:${options.pass}`;
             this.definitionsCache.set(key, def);
         }
         return def;
@@ -152,7 +152,7 @@ class ProgramLibrary {
         let opt = {};
         if (name === "standard") {
             // For standard material saving all default values is overkill, so we store only diff
-            const defaultMat = this._getDefaultStdMatOptions(options.litOptions?.pass);
+            const defaultMat = this._getDefaultStdMatOptions(options.pass);
 
             for (const p in options) {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
@@ -235,7 +235,7 @@ class ProgramLibrary {
                 // back into the loaded options
                 if (cache[i].name === "standard") {
                     const opt = cache[i].options;
-                    const defaultMat = this._getDefaultStdMatOptions(opt.litOptions?.pass);
+                    const defaultMat = this._getDefaultStdMatOptions(opt.pass);
                     for (const p in defaultMat) {
                         if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
                             opt[p] = defaultMat[p];

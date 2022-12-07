@@ -1,6 +1,8 @@
 import { LitOptions } from "./lit-options";
 
 /**
+ * - pass: value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
+ * same in {@link LitOptions#pass}.
  * - forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be
  * declared as "vUv1" and passed to the fragment shader.
  * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
@@ -22,7 +24,7 @@ import { LitOptions } from "./lit-options";
 class StandardMaterialOptions {
     constructor() {
         this.chunks = [];
-
+        this.pass = 0;
         this.forceUv1 = false;
         this.ambientTint = false;
         this.diffuseTint = false;

@@ -2,8 +2,10 @@ import {
     BLEND_NONE, GAMMA_NONE
 } from '../constants.js';
 
+import { StandardMaterialOptions } from './standard-material-options.js';
 /**
- * - pass: value of {@link Layer#shaderPass} of the Layer being rendered.
+ * - pass: value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
+ * same in {@link StandardMaterialOptions#pass}.
  * - chunks: Object containing custom shader chunks that will replace default ones.
  * - customFragmentShader: Completely replace fragment shader with this code.
  * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of

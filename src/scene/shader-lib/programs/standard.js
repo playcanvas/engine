@@ -89,7 +89,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = ShaderPass.isForward(options.litOptions.pass);
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -293,7 +293,7 @@ const standard = {
             decl.append(`uniform float textureBias;`);
         }
 
-        if (ShaderPass.isForward(options.litOptions.pass)) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {
