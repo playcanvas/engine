@@ -2,7 +2,6 @@ import {
     BLEND_NONE, GAMMA_NONE
 } from '../constants.js';
 
-import { StandardMaterialOptions } from './standard-material-options.js';
 /**
  * - pass: value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
  * same in {@link StandardMaterialOptions#pass}.

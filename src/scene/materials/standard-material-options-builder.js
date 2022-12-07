@@ -17,8 +17,6 @@ import {
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 
-import { LitOptions } from './lit-options.js';
-
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
         return false;

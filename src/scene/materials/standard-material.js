@@ -19,8 +19,6 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
-import { StandardMaterialOptions } from './standard-material-options.js';
-import { LitOptions } from './lit-options.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 // properties that get created on a standard material
