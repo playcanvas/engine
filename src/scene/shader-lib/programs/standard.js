@@ -10,14 +10,14 @@ import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
-import { Options } from '../../materials/options.js';
+import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 
 const _matTex2D = [];
 
 const standard = {
     // Shared Standard Material option structures
-    optionsContext: new Options(),
-    optionsContextMin: new Options(),
+    optionsContext: new StandardMaterialOptions(),
+    optionsContextMin: new StandardMaterialOptions(),
 
     /** @type { Function } */
     generateKey: function (options) {

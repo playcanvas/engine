@@ -71,7 +71,7 @@ import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
-import { Options } from '../scene/materials/options.js';
+import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitOptions } from '../scene/materials/lit-options.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
@@ -787,17 +787,19 @@ _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
 
-function _defineOption(name) {
-    Object.defineProperty(Options.prototype, name, {
+function _defineOption(name, newName) {
+    Object.defineProperty(StandardMaterialOptions.prototype, name, {
         get: function () {
-            Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions.`);
-            return null;
+            Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+            return this.litOptions[newName || name];
         },
         set: function (value) {
-            Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions.`);
+            Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+            this.litOptions[newName || name] = value;
         }
     });
 }
+_defineOption('refraction', 'useRefraction');
 
 const tempOptions = new LitOptions();
 const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
