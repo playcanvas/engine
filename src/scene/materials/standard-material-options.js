@@ -1,4 +1,4 @@
-import { LitOptions } from "./lit-options";
+import { LitOptions } from "./lit-options.js";
 
 /**
  * - pass: value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
