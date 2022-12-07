@@ -75,7 +75,7 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
-        this.shadowMapCache = renderer._shadowRenderer.shadowMapCache;
+        this.shadowMapCache = renderer.shadowMapCache;
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -852,12 +852,12 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
+                this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
+                this.renderer.renderShadowsDirectional(lightArray[light.type], this.camera);
             } else {
-                this.renderer._shadowRenderer.cullLocal(light, casters);
+                this.renderer._shadowRendererLocal.cull(light, casters);
+                this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
             }
-
-            this.renderer.renderShadows(lightArray[light.type], this.camera);
         }
 
         return true;
