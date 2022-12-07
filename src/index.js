@@ -128,6 +128,8 @@ export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
+export { LitOptions } from './scene/materials/lit-options.js';
 export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
