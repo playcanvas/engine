@@ -2,6 +2,50 @@ import {
     BLEND_NONE, GAMMA_NONE
 } from '../constants.js';
 
+/**
+ * - pass: value of {@link Layer#shaderPass} of the Layer being rendered.
+ * - chunks: Object containing custom shader chunks that will replace default ones.
+ * - customFragmentShader: Completely replace fragment shader with this code.
+ * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of
+ * possible values.
+ * - gamma: the type of gamma correction being applied in the shader. See
+ * {@link Scene#gammaCorrection} for the list of possible values.
+ * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
+ * for the list of possible values.
+ * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
+ * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
+ * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
+ * - shadingModel: the value of {@link StandardMaterial#shadingModel}.
+ * - fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
+ * - cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
+ * - useMetalness: the value of {@link StandardMaterial#useMetalness}.
+ * - blendType: the value of {@link Material#blendType}.
+ * - twoSidedLighting: the value of {@link Material#twoSidedLighting}.
+ * - occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant
+ * should affect specular occlusion.
+ * - alphaTest: enable alpha testing. See {@link Material#alphaTest}.
+ * - alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
+ * - opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
+ * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
+ * ambient on certain platform (mostly Android) for performance reasons.
+ * - useSpecular: if any specular or reflections are needed at all.
+ * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+ * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
+ * "highp" or null to use default.
+ * - fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
+ * buggy sometimes.
+ * - useRefraction: if refraction is used.
+ * - skyboxIntensity: if reflected skybox intensity should be modulated.
+ * - useCubeMapRotation: if cube map rotation is enabled.
+ * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read
+ * from per-instance {@link VertexBuffer} instead of shader's uniforms.
+ * - useMorphPosition: if morphing code should be generated to morph positions.
+ * - useMorphNormal: if morphing code should be generated to morph normals.
+ * - reflectionSource: one of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
+ * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * - ambientSource: one of "ambientSH", "envAtlas", "constant"
+ * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ */
 class LitOptions {
     constructor() {
         this.hasTangents = false;

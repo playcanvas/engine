@@ -19,6 +19,8 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
+import { StandardMaterialOptions } from './standard-material-options.js';
+import { LitOptions } from './lit-options.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 // properties that get created on a standard material
@@ -500,68 +502,8 @@ let _params = new Set();
  * on the same material. For example, you may wish to render a depth or normal pass using textures
  * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
  * split into two sections, generic standard material options and lit options. Properties of the
- * standard material topions passed into this function are:
- * - forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be
- * declared as "vUv1" and passed to the fragment shader.
- * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
- * - diffuseTint: defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
- * - specularTint: defines if {@link StandardMaterial#specular} constant should affect specular
- * color.
- * - metalnessTint: defines if {@link StandardMaterial#metalness} constant should affect metalness
- * value.
- * - glossTint: defines if {@link StandardMaterial#shininess} constant should affect glossiness
- * value.
- * - emissiveTint: defines if {@link StandardMaterial#emissive} constant should affect emission
- * value.
- * - opacityTint: defines if {@link StandardMaterial#opacity} constant should affect opacity value.
- * - emissiveEncoding: how emissiveMap is encoded. This value is based on Texture#encoding.
- * - lightMapEncoding: how lightMap is encoded. This value is based on on Texture#encoding.
- * - packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
- *
- * And the properties of the lit options are:
- *
- * - pass: value of {@link Layer#shaderPass} of the Layer being rendered.
- * - chunks: Object containing custom shader chunks that will replace default ones.
- * - customFragmentShader: Completely replace fragment shader with this code.
- * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of
- * possible values.
- * - gamma: the type of gamma correction being applied in the shader. See
- * {@link Scene#gammaCorrection} for the list of possible values.
- * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
- * for the list of possible values.
- * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
- * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
- * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
- * - shadingModel: the value of {@link StandardMaterial#shadingModel}.
- * - fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
- * - cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
- * - useMetalness: the value of {@link StandardMaterial#useMetalness}.
- * - blendType: the value of {@link Material#blendType}.
- * - twoSidedLighting: the value of {@link Material#twoSidedLighting}.
- * - occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant
- * should affect specular occlusion.
- * - alphaTest: enable alpha testing. See {@link Material#alphaTest}.
- * - alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
- * - opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
- * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
- * ambient on certain platform (mostly Android) for performance reasons.
- * - useSpecular: if any specular or reflections are needed at all.
- * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
- * "highp" or null to use default.
- * - fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
- * buggy sometimes.
- * - useRefraction: if refraction is used.
- * - skyboxIntensity: if reflected skybox intensity should be modulated.
- * - useCubeMapRotation: if cube map rotation is enabled.
- * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read
- * from per-instance {@link VertexBuffer} instead of shader's uniforms.
- * - useMorphPosition: if morphing code should be generated to morph positions.
- * - useMorphNormal: if morphing code should be generated to morph normals.
- * - reflectionSource: one of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
- * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
- * - ambientSource: one of "ambientSH", "envAtlas", "constant"
- * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * standard material options are {@link StandardMaterialOptions} and the options for the lit options
+ * are {@link LitOptions}
  * @augments Material
  */
 class StandardMaterial extends Material {
