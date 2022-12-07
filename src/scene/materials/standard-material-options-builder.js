@@ -46,7 +46,6 @@ class StandardMaterialOptionsBuilder {
 
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = new LitOptions();
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
@@ -54,7 +53,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = new LitOptions();
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
@@ -281,7 +279,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecularColor = useSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
+        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.litOptions.reflectionSource);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;

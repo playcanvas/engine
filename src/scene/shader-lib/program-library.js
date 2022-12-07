@@ -5,6 +5,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
+import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -37,8 +38,8 @@ class ProgramLibrary {
 
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
-        this._defaultStdMatOption = {};
-        this._defaultStdMatOptionMin = {};
+        this._defaultStdMatOption = new StandardMaterialOptions();
+        this._defaultStdMatOptionMin = new StandardMaterialOptions();
 
         standardMaterial.shaderOptBuilder.updateRef(
             this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
