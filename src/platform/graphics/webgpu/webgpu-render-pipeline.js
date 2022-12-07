@@ -1,6 +1,10 @@
-import { Debug } from "../../../core/debug.js";
+import { Debug, DebugHelper } from "../../../core/debug.js";
+import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
 
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
+
+let _pipelineId = 0;
+let _layoutId = 0;
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -64,8 +68,6 @@ class WebgpuRenderPipeline {
         this.cache = new Map();
     }
 
-    // TODO: somehow pass entity name to assign to things, maybe hook up to GraphicsDebug stuff
-
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, renderState) {
 
         // render pipeline unique key
@@ -118,10 +120,18 @@ class WebgpuRenderPipeline {
             _bindGroupLayouts.push(format.bindGroupLayout);
         });
 
-        // type {GPUPipelineLayout}
-        const pipelineLayout = this.device.wgpu.createPipelineLayout({
+        const descr = {
             bindGroupLayouts: _bindGroupLayouts
-        });
+        };
+
+        _layoutId++;
+        DebugHelper.setLabel(descr, `PipelineLayoutDescr-${_layoutId}`);
+
+        // type {GPUPipelineLayout}
+        const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
+        DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
+        Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, descr);
+
         _bindGroupLayouts.length = 0;
 
         return pipelineLayout;
@@ -197,7 +207,15 @@ class WebgpuRenderPipeline {
             layout: pipelineLayout
         };
 
-        return wgpu.createRenderPipeline(descr);
+        _pipelineId++;
+        DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
+
+        const pipeline = wgpu.createRenderPipeline(descr);
+
+        DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
+        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, descr);
+
+        return pipeline;
     }
 }
 
