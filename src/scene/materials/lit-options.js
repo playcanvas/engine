@@ -145,8 +145,7 @@ class LitOptions {
     }
 
     get pass() {
-        Debug.warn(`pc.LitOptions#pass should be accessed by its parent pc.StandardMaterialOptions.`);
-        return 0;
+        return this._pass;
     }
 }
 
