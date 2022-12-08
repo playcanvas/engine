@@ -1,51 +1,48 @@
+import { Debug } from 'src/core/debug.js';
 import {
     BLEND_NONE, GAMMA_NONE
 } from '../constants.js';
 
 /**
- * - pass: value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
- * same in {@link StandardMaterialOptions#pass}.
- * - chunks: Object containing custom shader chunks that will replace default ones.
- * - customFragmentShader: Completely replace fragment shader with this code.
- * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of
+ * @property {object} chunks Object containing custom shader chunks that will replace default ones.
+ * @property {string} customFragmentShader Replaced the whole fragment shader with this string.
+ * @property {number} fog The type of fog being applied in the shader. See {@link Scene#fog} for the list of
  * possible values.
- * - gamma: the type of gamma correction being applied in the shader. See
+ * @property {number} gamma The type of gamma correction being applied in the shader. See
  * {@link Scene#gammaCorrection} for the list of possible values.
- * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
+ * @property {number} toneMap The type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
  * for the list of possible values.
- * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
- * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
- * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
- * - shadingModel: the value of {@link StandardMaterial#shadingModel}.
- * - fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
- * - cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
- * - useMetalness: the value of {@link StandardMaterial#useMetalness}.
- * - blendType: the value of {@link Material#blendType}.
- * - twoSidedLighting: the value of {@link Material#twoSidedLighting}.
- * - occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant
+ * @property {boolean} conserveEnergy The value of {@link StandardMaterial#conserveEnergy}.
+ * @property {number} occludeSpecular The value of {@link StandardMaterial#occludeSpecular}.
+ * @property {boolean} occludeDirect The value of {@link StandardMaterial#occludeDirect}.
+ * @property {number} shadingModel The value of {@link StandardMaterial#shadingModel}.
+ * @property {number} fresnelModel The value of {@link StandardMaterial#fresnelModel}.
+ * @property {number} cubeMapProjection The value of {@link StandardMaterial#cubeMapProjection}.
+ * @property {boolean} useMetalness The value of {@link StandardMaterial#useMetalness}.
+ * @property {number} blendType The value of {@link Material#blendType}.
+ * @property {boolean} twoSidedLighting The value of {@link Material#twoSidedLighting}.
+ * @property {number} occludeSpecularFloat Defines if {@link StandardMaterial#occludeSpecularIntensity} constant
  * should affect specular occlusion.
- * - alphaTest: enable alpha testing. See {@link Material#alphaTest}.
- * - alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
- * - opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
- * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
+ * @property {boolean} alphaTest Enable alpha testing. See {@link Material#alphaTest}.
+ * @property {boolean} alphaToCoverage Enable alpha to coverage. See {@link Material#alphaToCoverage}.
+ * @property {boolean} opacityFadesSpecular Enable specular fade. See {@link Material#opacityFadesSpecular}.
+ * @property {float} ambientSH If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
  * ambient on certain platform (mostly Android) for performance reasons.
- * - useSpecular: if any specular or reflections are needed at all.
- * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
+ * @property {boolean} useSpecular If any specular or reflections are needed at all.
+ * @property {boolean} fixSeams If cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+ * @property {string} forceFragmentPrecision Override fragment shader numeric precision. Can be "lowp", "mediump",
  * "highp" or null to use default.
- * - fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
+ * @property {boolean} fastTbn Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
  * buggy sometimes.
- * - useRefraction: if refraction is used.
- * - skyboxIntensity: if reflected skybox intensity should be modulated.
- * - useCubeMapRotation: if cube map rotation is enabled.
- * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read
+ * @property {boolean} useRefraction If refraction is used.
+ * @property {number} skyboxIntensity If reflected skybox intensity should be modulated.
+ * @property {boolean} useCubeMapRotation If cube map rotation is enabled.
+ * @property {boolean} useInstancing If hardware instancing compatible shader should be generated. Transform is read
  * from per-instance {@link VertexBuffer} instead of shader's uniforms.
- * - useMorphPosition: if morphing code should be generated to morph positions.
- * - useMorphNormal: if morphing code should be generated to morph normals.
- * - reflectionSource: one of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
- * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
- * - ambientSource: one of "ambientSH", "envAtlas", "constant"
- * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * @property {boolean} useMorphPosition If morphing code should be generated to morph positions.
+ * @property {boolean} useMorphNormal If morphing code should be generated to morph normals.
+ * @property {string} reflectionSource One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
+ * @property {boolean} ambientSource One of "ambientSH", "envAtlas", "constant"
  */
 class LitOptions {
     constructor() {
@@ -141,6 +138,15 @@ class LitOptions {
         this.lights = [];
         this.noShadow = false;
         this.lightMaskDynamic = 0x0;
+    }
+
+    set pass(p) {
+        Debug.warn(`pc.LitOptions#pass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
+    }
+
+    get pass() {
+        Debug.warn(`pc.LitOptions#pass should be accessed by its parent pc.StandardMaterialOptions.`);
+        return 0;
     }
 }
 
