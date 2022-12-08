@@ -41,8 +41,8 @@ import {
  * from per-instance {@link VertexBuffer} instead of shader's uniforms.
  * @property {boolean} useMorphPosition If morphing code should be generated to morph positions.
  * @property {boolean} useMorphNormal If morphing code should be generated to morph normals.
- * @property {string} reflectionSource One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
- * @property {boolean} ambientSource One of "ambientSH", "envAtlas", "constant"
+ * @property {string} reflectionSource One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
+ * @property {boolean} ambientSource One of "ambientSH", "envAtlas", "constant".
  */
 class LitOptions {
     constructor() {
