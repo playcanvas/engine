@@ -1,6 +1,6 @@
 import { Debug } from 'src/core/debug.js';
 import {
-    BLEND_NONE, GAMMA_NONE
+    BLEND_NONE, FOG_NONE, GAMMA_NONE
 } from '../constants.js';
 
 /**
@@ -119,7 +119,7 @@ class LitOptions {
         this.useMetalness = false;
         this.useDynamicRefraction = false;
 
-        this.fog = 'none';
+        this.fog = FOG_NONE;
         this.gamma = GAMMA_NONE;
         this.toneMap = -1;
         this.fixSeams = false;
