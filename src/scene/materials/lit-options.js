@@ -4,6 +4,9 @@ import {
 } from '../constants.js';
 
 /**
+ * The lit options determines how the lit-shader gets generated. It specifies a set of
+ * parameters which triggers different fragment and vertex shader generation in the backend.
+ *
  * @property {object} chunks Object containing custom shader chunks that will replace default ones.
  * @property {string} customFragmentShader Replaced the whole fragment shader with this string.
  * @property {number} fog The type of fog being applied in the shader. See {@link Scene#fog} for the list of

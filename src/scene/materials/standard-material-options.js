@@ -1,6 +1,9 @@
 import { LitOptions } from "./lit-options.js";
 
 /**
+ * The standard material options define a set of options used to control the shader frontend shader generation,
+ * such as textures, tints and multipliers.
+ *
  * @property {number} pass Value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the
  * same in {@link LitOptions#pass}.
  * @property {boolean} forceUv1 If UV1 (second set of texture coordinates) is required in the shader. Will be
@@ -17,7 +20,6 @@ import { LitOptions } from "./lit-options.js";
  * value.
  * @property {boolean} opacityTint Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
  * @property {boolean} packedNormal If normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
- *
  */
 class StandardMaterialOptions {
     constructor() {
