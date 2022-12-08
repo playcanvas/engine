@@ -22,7 +22,7 @@ import { LitOptions } from "./lit-options.js";
 class StandardMaterialOptions {
     constructor() {
         this.chunks = [];
-        this.pass = 0;
+        this._pass = 0;
         this.forceUv1 = false;
         this.ambientTint = false;
         this.diffuseTint = false;
@@ -39,12 +39,12 @@ class StandardMaterialOptions {
     }
 
     set pass(p) {
-        this.pass = p;
-        this.litOptions.pass = p;
+        this._pass = p;
+        this.litOptions._pass = p;
     }
 
     get pass() {
-        return this.pass;
+        return this._pass;
     }
 }
 

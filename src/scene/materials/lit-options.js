@@ -49,7 +49,7 @@ class LitOptions {
         this.hasTangents = false;
         this.chunks = [];
 
-        this.pass = 0;
+        this._pass = 0;
         this.alphaTest = false;
         this.forceFragmentPrecision = false;
         this.blendType = BLEND_NONE;
