@@ -34,10 +34,11 @@ let _params = new Set();
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
  * @callback UpdateShaderCallback
- * @param {*} options - An object with shader generator settings (based on current material and
- * scene properties), that you can change and then return. Properties of the object passed into
- * this function are documented in {@link StandardMaterial#onUpdateShader}.
- * @returns {*} Returned settings will be used by the shader.
+ * @param {StandardMaterialOptions} options - An object with shader generator settings (based on current
+ * material and scene properties), that you can change and then return. Properties of the object passed
+ * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
+ * which holds some of the options only used by the lit shader backend {@link LitOptions}.
+ * @returns {StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
 /**
