@@ -39,7 +39,7 @@ const _quat = new Quat();
  * Defaults to "box".
  * @property {Vec3} halfExtents The half-extents of the
  * box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
- * @property {Vec3} linearOffset The positional offset of the collision shape from the Entity position in local space.
+ * @property {Vec3} linearOffset The positional offset of the collision shape from the Entity position along the local axes.
  * Defaults to [0, 0, 0].
  * @property {Quat} angularOffset The rotational offset of the collision shape from the Entity rotation in local space.
  * Defaults to identity.
