@@ -1,4 +1,4 @@
-import { Debug } from 'src/core/debug.js';
+import { Debug } from '../../core/debug.js';
 import {
     BLEND_NONE, FOG_NONE, GAMMA_NONE
 } from '../constants.js';
