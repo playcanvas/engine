@@ -501,7 +501,7 @@ let _params = new Set();
  * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitOptions}
+ * are {@link LitOptions}.
  * @augments Material
  */
 class StandardMaterial extends Material {
