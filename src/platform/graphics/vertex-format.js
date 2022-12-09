@@ -203,7 +203,7 @@ class VertexFormat {
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to create this vertex format.
      *
-     * @returns {VertexFormat}
+     * @returns {VertexFormat} The default instancing vertex format.
      */
     static getDefaultInstancingFormat(graphicsDevice) {
 
