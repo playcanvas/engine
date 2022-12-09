@@ -54,7 +54,6 @@ class ForwardRenderer extends Renderer {
 
         this._forwardDrawCalls = 0;
         this._materialSwitches = 0;
-        this._shadowMapTime = 0;
         this._depthMapTime = 0;
         this._forwardTime = 0;
         this._sortTime = 0;
@@ -422,10 +421,6 @@ class ForwardRenderer extends Renderer {
 
         const isClustered = this.scene.clusteredLightingEnabled;
 
-        // #if _PROFILER
-        const shadowMapStartTime = now();
-        // #endif
-
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
@@ -445,28 +440,6 @@ class ForwardRenderer extends Renderer {
 
             this._shadowRendererLocal.render(light, camera);
         }
-
-        // #if _PROFILER
-        this._shadowMapTime += now() - shadowMapStartTime;
-        // #endif
-    }
-
-    renderShadowsDirectional(lights, camera) {
-
-        // #if _PROFILER
-        const shadowMapStartTime = now();
-        // #endif
-
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            Debug.assert(light._type === LIGHTTYPE_DIRECTIONAL);
-
-            this._shadowRendererDirectional.render(light, camera);
-        }
-
-        // #if _PROFILER
-        this._shadowMapTime += now() - shadowMapStartTime;
-        // #endif
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
@@ -921,12 +894,7 @@ class ForwardRenderer extends Renderer {
 
             // directional shadows get re-rendered for each camera
             if (renderAction.hasDirectionalShadowLights && camera) {
-                const renderPass = new RenderPass(this.device, () => {
-                    this.renderPassDirectionalShadows(renderAction, layerComposition);
-                });
-                renderPass.requiresCubemaps = false;
-                DebugHelper.setName(renderPass, `DirShadowMap`);
-                frameGraph.addRenderPass(renderPass);
+                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction, camera);
             }
 
             // start of block of render actions rendering to the same render target
@@ -1050,24 +1018,6 @@ class ForwardRenderer extends Renderer {
 
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
-    }
-
-    /**
-     * Render pass for directional shadow maps of the camera.
-     *
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition.
-     * @ignore
-     */
-    renderPassDirectionalShadows(renderAction, layerComposition) {
-
-        Debug.assert(renderAction.directionalLights.length > 0);
-        const layer = layerComposition.layerList[renderAction.layerIndex];
-        const camera = layer.cameras[renderAction.cameraIndex];
-
-        this.renderShadowsDirectional(renderAction.directionalLights, camera.camera);
     }
 
     renderPassPostprocessing(renderAction, layerComposition) {

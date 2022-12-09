@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
@@ -321,66 +322,129 @@ class ShadowRenderer {
         }
     }
 
+    needsShadowRendering(light) {
+
+        const needs = light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+
+        if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+            light.shadowUpdateMode = SHADOWUPDATE_NONE;
+        }
+
+        this.renderer._shadowMapUpdates += light.numShadowFaces;
+
+        return needs;
+    }
+
+    getLightRenderData(light, camera, face) {
+        // directional shadows are per camera, so get appropriate render data
+        return light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
+    }
+
+    setupRenderPass(renderPass, shadowCamera) {
+
+        const rt = shadowCamera.renderTarget;
+        renderPass.init(rt);
+
+        // color
+        const clearColor = shadowCamera.clearColorBuffer;
+        renderPass.colorOps.clear = clearColor;
+        if (clearColor)
+            renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
+
+        // depth
+        renderPass.depthStencilOps.storeDepth = !clearColor;
+        renderPass.setClearDepth(1.0);
+
+        // not sampling dynamically generated cubemaps
+        renderPass.requiresCubemaps = false;
+    }
+
+    // prepares render target / render target settings to allow render pass to be set up
+    prepareFace(light, camera, face) {
+
+        const type = light._type;
+        const shadowType = light._shadowType;
+        const isClustered = this.renderer.scene.clusteredLightingEnabled;
+
+        const lightRenderData = this.getLightRenderData(light, camera, face);
+        const shadowCam = lightRenderData.shadowCamera;
+
+        // camera clear setting
+        // Note: when clustered lighting is the only light type, this code can be moved to createShadowCamera function
+        ShadowRenderer.setShadowCameraSettings(shadowCam, this.device, shadowType, type, isClustered);
+
+        // assign render target for the face
+        const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
+        shadowCam.renderTarget = light._shadowMap.renderTargets[renderTargetIndex];
+
+        return shadowCam;
+    }
+
+    renderFace(light, camera, face, clear) {
+
+        const device = this.device;
+
+        // #if _PROFILER
+        const shadowMapStartTime = now();
+        // #endif
+
+        DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name} FACE ${face}`);
+
+        this.setupRenderState(device, light);
+
+        const lightRenderData = this.getLightRenderData(light, camera, face);
+        const shadowCam = lightRenderData.shadowCamera;
+
+        this.dispatchUniforms(light, shadowCam, lightRenderData, face);
+
+        const rt = shadowCam.renderTarget;
+        this.renderer.setCameraUniforms(shadowCam, rt, null);
+
+        // if this is called from a render pass, no clearing takes place
+        if (clear) {
+            this.renderer.clearView(shadowCam, rt, true, false);
+        } else {
+            this.renderer.setupViewport(shadowCam, rt);
+        }
+
+        // render mesh instances
+        this.submitCasters(lightRenderData.visibleCasters, light);
+
+        this.restoreRenderState(device);
+
+        DebugGraphics.popGpuMarker(device);
+
+        // #if _PROFILER
+        this.renderer._shadowMapTime += now() - shadowMapStartTime;
+        // #endif
+    }
+
     render(light, camera) {
 
-        if (light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame) {
-            const device = this.device;
-
-            if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                light.shadowUpdateMode = SHADOWUPDATE_NONE;
-            }
-
-            const type = light._type;
-            const shadowType = light._shadowType;
+        if (this.needsShadowRendering(light)) {
             const faceCount = light.numShadowFaces;
 
-            const renderer = this.renderer;
-            renderer._shadowMapUpdates += faceCount;
-            const isClustered = renderer.scene.clusteredLightingEnabled;
-
-            DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name}`);
-
-            this.setupRenderState(device, light);
-
+            // render faces
             for (let face = 0; face < faceCount; face++) {
-
-                DebugGraphics.pushGpuMarker(device, `FACE ${face}`);
-
-                // directional shadows are per camera, so get appropriate render data
-                const lightRenderData = light.getRenderData(type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
-                const shadowCam = lightRenderData.shadowCamera;
-
-                // camera clear setting
-                // Note: when clustered lighting is the only light type, this code can be moved to createShadowCamera function
-                ShadowRenderer.setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered);
-
-                // assign render target for the face
-                const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
-                shadowCam.renderTarget = light._shadowMap.renderTargets[renderTargetIndex];
-
-                this.dispatchUniforms(light, shadowCam, lightRenderData, face);
-
-                renderer.setCamera(shadowCam, shadowCam.renderTarget, true);
-
-                // render mesh instances
-                this.submitCasters(lightRenderData.visibleCasters, light);
-
-                DebugGraphics.popGpuMarker(device);
+                this.prepareFace(light, camera, face);
+                this.renderFace(light, camera, face, true);
             }
 
-            // VSM blur
-            if (light._isVsm && light._vsmBlurSize > 1) {
+            // apply vsm
+            this.renderVms(light, camera);
+        }
+    }
 
-                // all non-clustered and directional lights support vsm
-                const isClustered = renderer.scene.clusteredLightingEnabled;
-                if (!isClustered || type === LIGHTTYPE_DIRECTIONAL) {
-                    this.applyVsmBlur(light, camera);
-                }
+    renderVms(light, camera) {
+
+        // VSM blur if light supports vsm (directional and spot in general)
+        if (light._isVsm && light._vsmBlurSize > 1) {
+
+            // in clustered mode, only directional light can be vms
+            const isClustered = this.renderer.scene.clusteredLightingEnabled;
+            if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                this.applyVsmBlur(light, camera);
             }
-
-            this.restoreRenderState(device);
-
-            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -414,7 +478,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, 'VSM');
+        DebugGraphics.pushGpuMarker(device, `VSM ${light._node.name}`);
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;

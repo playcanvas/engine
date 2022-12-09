@@ -853,7 +853,7 @@ class Lightmapper {
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
-                this.renderer.renderShadowsDirectional(lightArray[light.type], this.camera);
+                this.renderer._shadowRendererDirectional.render(light, this.camera);
             } else {
                 this.renderer._shadowRendererLocal.cull(light, casters);
                 this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
