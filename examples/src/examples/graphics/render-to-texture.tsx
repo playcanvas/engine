@@ -36,7 +36,9 @@ class RenderToTextureExample {
                 // @ts-ignore
                 pc.LightComponentSystem,
                 // @ts-ignore
-                pc.ScriptComponentSystem
+                pc.ScriptComponentSystem,
+                // @ts-ignore
+                pc.ParticleSystemComponentSystem
             ];
             createOptions.resourceHandlers = [
                 // @ts-ignore
