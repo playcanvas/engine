@@ -44,7 +44,6 @@ class StandardMaterialOptionsBuilder {
 
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = {};
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
@@ -52,13 +51,12 @@ class StandardMaterialOptionsBuilder {
     }
 
     updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
-        options.litOptions = {};
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
-            if (options.gamma) options.gamma = GAMMA_SRGBHDR;
-            options.toneMap = TONEMAP_LINEAR;
+            if (options.litOptions.gamma) options.litOptions.gamma = GAMMA_SRGBHDR;
+            options.litOptions.toneMap = TONEMAP_LINEAR;
         }
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
@@ -70,7 +68,7 @@ class StandardMaterialOptionsBuilder {
         options.forceUv1 = stdMat.forceUv1;
         options.chunks = stdMat.chunks || '';
 
-        options.litOptions.pass = pass;
+        options.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';
         options.litOptions.blendType = stdMat.blendType;
@@ -120,13 +118,13 @@ class StandardMaterialOptionsBuilder {
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
-        options.litOptions.lightMapVertexColors = options.lightVertexColors;
+        options.litOptions.useLightMapVertexColors = options.lightVertexColors;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.heightMapEnabled = options.heightMap;
         options.litOptions.normalMapEnabled = options.normalMap;
         options.litOptions.clearCoatNormalMapEnabled = options.clearCoatNormalMap;
         options.litOptions.aoMapEnabled = options.aoMap;
-        options.litOptions.aoVertexColors = options.aoVertexColors;
+        options.litOptions.useAoVertexColors = options.aoVertexColors;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
@@ -248,7 +246,7 @@ class StandardMaterialOptionsBuilder {
         options.sheenGlossinessTint = 1;
 
         // LIT OPTIONS
-        options.litOptions.ambientTint = options.ambientTint;
+        options.litOptions.useAmbientTint = options.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
@@ -279,7 +277,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecularColor = useSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.reflectionSource);
+        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.litOptions.reflectionSource);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;

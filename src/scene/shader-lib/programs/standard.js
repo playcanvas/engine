@@ -10,13 +10,14 @@ import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
+import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 
 const _matTex2D = [];
 
 const standard = {
     // Shared Standard Material option structures
-    optionsContext: {},
-    optionsContextMin: {},
+    optionsContext: new StandardMaterialOptions(),
+    optionsContextMin: new StandardMaterialOptions(),
 
     /** @type { Function } */
     generateKey: function (options) {
@@ -88,7 +89,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = ShaderPass.isForward(options.litOptions.pass);
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -292,7 +293,7 @@ const standard = {
             decl.append(`uniform float textureBias;`);
         }
 
-        if (ShaderPass.isForward(options.litOptions.pass)) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {
