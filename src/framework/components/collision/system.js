@@ -650,7 +650,13 @@ class CollisionComponentSystem extends ComponentSystem {
         }
 
         if (Array.isArray(data.angularOffset)) {
-            data.angularOffset = new Quat(data.angularOffset);
+            // Allow for euler angles to be passed as a 3 length array
+            const values = data.angularOffset;
+            if (values.length === 3) {
+                data.angularOffset = new Quat().setFromEulerAngles(values[0], values[1], values[2]);
+            } else {
+                data.angularOffset = new Quat(data.angularOffset);
+            }
         }
 
         const impl = this._createImplementation(data.type);
