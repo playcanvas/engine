@@ -55,8 +55,8 @@ class StandardMaterialOptionsBuilder {
         this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
         if (pass === SHADER_FORWARDHDR) {
-            if (options.gamma) options.gamma = GAMMA_SRGBHDR;
-            options.toneMap = TONEMAP_LINEAR;
+            if (options.litOptions.gamma) options.litOptions.gamma = GAMMA_SRGBHDR;
+            options.litOptions.toneMap = TONEMAP_LINEAR;
         }
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
@@ -69,7 +69,6 @@ class StandardMaterialOptionsBuilder {
         options.chunks = stdMat.chunks || '';
 
         options.pass = pass;
-        options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';
         options.litOptions.blendType = stdMat.blendType;
