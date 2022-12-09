@@ -200,12 +200,15 @@ class VertexFormat {
     /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
-     * @type {VertexFormat}
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to create this vertex format.
+     *
+     * @returns {VertexFormat} The default instancing vertex format.
      */
-    static get defaultInstancingFormat() {
+    static getDefaultInstancingFormat(graphicsDevice) {
 
         if (!VertexFormat._defaultInstancingFormat) {
-            VertexFormat._defaultInstancingFormat = new VertexFormat(null, [
+            VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, [
                 { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
