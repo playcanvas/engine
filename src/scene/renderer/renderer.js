@@ -101,6 +101,7 @@ class Renderer {
         this._skinTime = 0;
         this._morphTime = 0;
         this._cullTime = 0;
+        this._shadowMapTime = 0;
         this._lightClustersTime = 0;
         this._layerCompositionUpdateTime = 0;
 
@@ -384,7 +385,7 @@ class Renderer {
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
     // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes.
+    // when the functionality moves to the render passes. Note that Editor uses it as well.
     setCamera(camera, target, clear, renderAction = null) {
 
         this.setCameraUniforms(camera, target, renderAction);
