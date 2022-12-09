@@ -51,6 +51,8 @@ import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
+import { ShaderUtils } from '../platform/graphics/shader-utils.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
@@ -111,7 +113,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
-import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 
 // CORE
 
@@ -461,6 +462,13 @@ Object.defineProperties(RenderTarget.prototype, {
         set: function (rgbm) {
             Debug.deprecated('pc.RenderTarget#_glFrameBuffer is deprecated. Use pc.RenderTarget.impl#_glFrameBuffer instead.');
         }
+    }
+});
+
+Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
+    get: function () {
+        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
     }
 });
 
