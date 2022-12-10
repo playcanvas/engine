@@ -50,7 +50,7 @@ class MouseEvent {
              * @type {number}
              */
             this.y = coords.y;
-        } else if (isMousePointerLocked()) {
+        } else if (isMousePointerLocked() || event.type === 'mouseout') {
             this.x = 0;
             this.y = 0;
         } else {

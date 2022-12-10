@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
+import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEOUT, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 /**
@@ -36,6 +36,7 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
+        this._outHandler = this._handleOut.bind(this);
         this._contextMenuHandler = (event) => {
             event.preventDefault();
         };
@@ -98,6 +99,7 @@ class Mouse extends EventHandler {
         window.addEventListener('mouseup', this._upHandler, opts);
         window.addEventListener('mousedown', this._downHandler, opts);
         window.addEventListener('mousemove', this._moveHandler, opts);
+        window.addEventListener('mouseout', this._outHandler, opts);
         window.addEventListener('wheel', this._wheelHandler, opts);
     }
 
@@ -113,6 +115,7 @@ class Mouse extends EventHandler {
         window.removeEventListener('mouseup', this._upHandler, opts);
         window.removeEventListener('mousedown', this._downHandler, opts);
         window.removeEventListener('mousemove', this._moveHandler, opts);
+        window.removeEventListener('mouseout', this._outHandler, opts);
         window.removeEventListener('wheel', this._wheelHandler, opts);
     }
 
@@ -287,6 +290,13 @@ class Mouse extends EventHandler {
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEWHEEL, e);
+    }
+
+    _handleOut(event) {
+        const e = new MouseEvent(this, event);
+        if (!e.event) return;
+
+        this.fire(EVENT_MOUSEOUT, e);
     }
 
     _getTargetCoords(event) {
