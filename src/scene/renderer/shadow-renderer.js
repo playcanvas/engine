@@ -160,21 +160,6 @@ class ShadowRenderer {
         visible.sort(this.renderer.sortCompareDepth);
     }
 
-    // function to generate frustum split distances
-    generateSplitDistances(light, nearDist, farDist) {
-
-        light._shadowCascadeDistances.fill(farDist);
-        for (let i = 1; i < light.numCascades; i++) {
-
-            //  lerp between linear and logarithmic distance, called practical split distance
-            const fraction = i / light.numCascades;
-            const linearDist = nearDist + (farDist - nearDist) * fraction;
-            const logDist = nearDist * (farDist / nearDist) ** fraction;
-            const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
-            light._shadowCascadeDistances[i - 1] = dist;
-        }
-    }
-
     setupRenderState(device, light) {
 
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
@@ -340,20 +325,23 @@ class ShadowRenderer {
         return light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, face);
     }
 
-    setupRenderPass(renderPass, shadowCamera) {
+    setupRenderPass(renderPass, shadowCamera, clearRenderTarget) {
 
         const rt = shadowCamera.renderTarget;
         renderPass.init(rt);
 
-        // color
-        const clearColor = shadowCamera.clearColorBuffer;
-        renderPass.colorOps.clear = clearColor;
-        if (clearColor)
-            renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
+        // only clear the render pass target if all faces (cascades) are getting rendered
+        if (clearRenderTarget) {
+            // color
+            const clearColor = shadowCamera.clearColorBuffer;
+            renderPass.colorOps.clear = clearColor;
+            if (clearColor)
+                renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
 
-        // depth
-        renderPass.depthStencilOps.storeDepth = !clearColor;
-        renderPass.setClearDepth(1.0);
+            // depth
+            renderPass.depthStencilOps.storeDepth = !clearColor;
+            renderPass.setClearDepth(1.0);
+        }
 
         // not sampling dynamically generated cubemaps
         renderPass.requiresCubemaps = false;

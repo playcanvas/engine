@@ -9,7 +9,7 @@ import {
     LIGHTFALLOFF_LINEAR,
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOW_PCF3,
-    SHADOWUPDATE_REALTIME
+    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../../scene/constants.js';
 
 import { Asset } from '../../asset/asset.js';
@@ -225,10 +225,6 @@ class LightComponent extends Component {
             this.onEnable();
     }
 
-    updateShadow() {
-        this.light.updateShadow();
-    }
-
     onCookieAssetSet() {
         let forceLoad = false;
 
@@ -320,6 +316,19 @@ class LightComponent extends Component {
 
         // remove cookie asset events
         this.cookieAsset = null;
+    }
+
+    /**
+     * Returns an array of SHADOWUPDATE_ setting per shadow cascade, or undefined if not used.
+     *
+     * @type {number[]}
+     */
+    set faceUpdateModes(values) {
+        this.light.faceUpdateModes = values;
+    }
+
+    get faceUpdateModes() {
+        return this.light.faceUpdateModes;
     }
 }
 
