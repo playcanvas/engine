@@ -9,7 +9,7 @@ import {
     LIGHTFALLOFF_LINEAR,
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     SHADOW_PCF3,
-    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_REALTIME
 } from '../../../scene/constants.js';
 
 import { Asset } from '../../asset/asset.js';
