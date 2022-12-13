@@ -1,10 +1,11 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    LIGHTTYPE_DIRECTIONAL
+    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -63,7 +64,13 @@ class ShadowRendererDirectional extends ShadowRenderer {
         const nearDist = camera._nearClip;
         this.generateSplitDistances(light, nearDist, light.shadowDistance);
 
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
+
+            // if manually controlling cascade rendering and the cascade does not render this frame
+            if (shadowUpdateOverrides?.[cascade] === SHADOWUPDATE_NONE) {
+                break;
+            }
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
@@ -160,14 +167,35 @@ class ShadowRendererDirectional extends ShadowRenderer {
         }
     }
 
+    // function to generate frustum split distances
+    generateSplitDistances(light, nearDist, farDist) {
+
+        light._shadowCascadeDistances.fill(farDist);
+        for (let i = 1; i < light.numCascades; i++) {
+
+            //  lerp between linear and logarithmic distance, called practical split distance
+            const fraction = i / light.numCascades;
+            const linearDist = nearDist + (farDist - nearDist) * fraction;
+            const logDist = nearDist * (farDist / nearDist) ** fraction;
+            const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
+            light._shadowCascadeDistances[i - 1] = dist;
+        }
+    }
+
     addLightRenderPasses(frameGraph, light, camera) {
 
         // shadow cascades have more faces rendered within a singe render pass
         const faceCount = light.numShadowFaces;
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
         // prepare render targets / cameras for rendering
+        let allCascadesRendering = true;
         let shadowCamera;
         for (let face = 0; face < faceCount; face++) {
+
+            if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
+                allCascadesRendering = false;
+
             shadowCamera = this.prepareFace(light, camera, face);
         }
 
@@ -175,7 +203,14 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
             // inside the render pass, render all faces
             for (let face = 0; face < faceCount; face++) {
-                this.renderFace(light, camera, face, false);
+
+                if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
+                    this.renderFace(light, camera, face, !allCascadesRendering);
+                }
+
+                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_THISFRAME) {
+                    shadowUpdateOverrides[face] = SHADOWUPDATE_NONE;
+                }
             }
 
         }, () => {
@@ -186,7 +221,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
         });
 
         // setup render pass using any of the cameras, they all have the same pass related properties
-        this.setupRenderPass(renderPass, shadowCamera);
+        this.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
         DebugHelper.setName(renderPass, `DirShadow-${light._node.name}`);
 
         frameGraph.addRenderPass(renderPass);
