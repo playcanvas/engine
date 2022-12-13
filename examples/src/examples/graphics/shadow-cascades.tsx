@@ -192,12 +192,12 @@ class ShadowCascadesExample {
                 if (updateEveryFrame) {
 
                     // no per cascade rendering control
-                    dirLight.light.faceUpdateModes = null;
+                    dirLight.light.shadowUpdateOverrides = null;
 
                 } else {
 
-                    // set up shadow update modes, nearest cascade updates each frame, then next one every 5 and so on
-                    dirLight.light.faceUpdateModes = [
+                    // set up shadow update overrides, nearest cascade updates each frame, then next one every 5 and so on
+                    dirLight.light.shadowUpdateOverrides = [
                         pc.SHADOWUPDATE_THISFRAME,
                         (frameNumber % 5) === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,
                         (frameNumber % 10) === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,

@@ -323,12 +323,12 @@ class LightComponent extends Component {
      *
      * @type {number[]}
      */
-    set faceUpdateModes(values) {
-        this.light.faceUpdateModes = values;
+    set shadowUpdateOverrides(values) {
+        this.light.shadowUpdateOverrides = values;
     }
 
-    get faceUpdateModes() {
-        return this.light.faceUpdateModes;
+    get shadowUpdateOverrides() {
+        return this.light.shadowUpdateOverrides;
     }
 }
 

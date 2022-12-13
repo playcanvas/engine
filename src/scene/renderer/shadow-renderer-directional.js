@@ -64,11 +64,11 @@ class ShadowRendererDirectional extends ShadowRenderer {
         const nearDist = camera._nearClip;
         this.generateSplitDistances(light, nearDist, light.shadowDistance);
 
-        const faceUpdateModes = light.faceUpdateModes;
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
 
             // if manually controlling cascade rendering and the cascade does not render this frame
-            if (faceUpdateModes?.[cascade] === SHADOWUPDATE_NONE) {
+            if (shadowUpdateOverrides?.[cascade] === SHADOWUPDATE_NONE) {
                 break;
             }
 
@@ -186,14 +186,14 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
         // shadow cascades have more faces rendered within a singe render pass
         const faceCount = light.numShadowFaces;
-        const faceUpdateModes = light.faceUpdateModes;
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
         // prepare render targets / cameras for rendering
         let allCascadesRendering = true;
         let shadowCamera;
         for (let face = 0; face < faceCount; face++) {
 
-            if (faceUpdateModes?.[face] === SHADOWUPDATE_NONE)
+            if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
                 allCascadesRendering = false;
 
             shadowCamera = this.prepareFace(light, camera, face);
@@ -204,12 +204,12 @@ class ShadowRendererDirectional extends ShadowRenderer {
             // inside the render pass, render all faces
             for (let face = 0; face < faceCount; face++) {
 
-                if (faceUpdateModes?.[face] !== SHADOWUPDATE_NONE) {
+                if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
                     this.renderFace(light, camera, face, !allCascadesRendering);
                 }
 
-                if (faceUpdateModes?.[face] === SHADOWUPDATE_THISFRAME) {
-                    faceUpdateModes[face] = SHADOWUPDATE_NONE;
+                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_THISFRAME) {
+                    shadowUpdateOverrides[face] = SHADOWUPDATE_NONE;
                 }
             }
 

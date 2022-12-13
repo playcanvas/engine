@@ -173,7 +173,7 @@ class Light {
         this.shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
-        this.faceUpdateModes = null;
+        this.shadowUpdateOverrides = null;
         this._isVsm = false;
         this._isPcf = true;
 
@@ -253,7 +253,7 @@ class Light {
 
         const stype = this._shadowType;
         this._shadowType = null;
-        this.faceUpdateModes = null;
+        this.shadowUpdateOverrides = null;
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
 
@@ -580,10 +580,10 @@ class Light {
             this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
         }
 
-        if (this.faceUpdateModes) {
-            for (let i = 0; i < this.faceUpdateModes.length; i++) {
-                if (this.faceUpdateModes[i] === SHADOWUPDATE_NONE) {
-                    this.faceUpdateModes[i] = SHADOWUPDATE_THISFRAME;
+        if (this.shadowUpdateOverrides) {
+            for (let i = 0; i < this.shadowUpdateOverrides.length; i++) {
+                if (this.shadowUpdateOverrides[i] === SHADOWUPDATE_NONE) {
+                    this.shadowUpdateOverrides[i] = SHADOWUPDATE_THISFRAME;
                 }
             }
         }
@@ -633,8 +633,8 @@ class Light {
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 
-        if (this.faceUpdateModes) {
-            clone.faceUpdateModes = this.faceUpdateModes.slice();
+        if (this.shadowUpdateOverrides) {
+            clone.shadowUpdateOverrides = this.shadowUpdateOverrides.slice();
         }
 
         // Spot properties
