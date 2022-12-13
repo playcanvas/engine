@@ -319,7 +319,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Returns an array of SHADOWUPDATE_ setting per shadow cascade, or undefined if not used.
+     * Returns an array of SHADOWUPDATE_ settings per shadow cascade, or undefined if not used.
      *
      * @type {number[]}
      */
