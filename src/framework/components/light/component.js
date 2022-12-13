@@ -321,7 +321,7 @@ class LightComponent extends Component {
     /**
      * Returns an array of SHADOWUPDATE_ settings per shadow cascade, or undefined if not used.
      *
-     * @type {number[]}
+     * @type {number[] | null}
      */
     set shadowUpdateOverrides(values) {
         this.light.shadowUpdateOverrides = values;
