@@ -53,7 +53,7 @@ export const EVENT_MOUSEUP = 'mouseup';
 export const EVENT_MOUSEWHEEL = 'mousewheel';
 
 /**
- * Name of event fired when the mouse moves out or enters another element.
+ * Name of event fired when the mouse moves out or enters another DOM element.
  *
  * @type {string}
  */
