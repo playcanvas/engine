@@ -208,9 +208,9 @@ class ShadowCascadesExample {
                 // move the clouds around
                 clouds.forEach((cloud, index: number) => {
                     const redialOffset = (index / clouds.length) * (6.24 / cloudSpeed);
-                    const radius = 8 + 2 * Math.sin(redialOffset);
+                    const radius = 9 + 4 * Math.sin(redialOffset);
                     const cloudTime = time + redialOffset;
-                    cloud.setLocalPosition(radius * Math.sin(cloudTime * cloudSpeed), 4, radius * Math.cos(cloudTime * cloudSpeed));
+                    cloud.setLocalPosition(2 + radius * Math.sin(cloudTime * cloudSpeed), 4, -5 + radius * Math.cos(cloudTime * cloudSpeed));
                 });
 
                 frameNumber++;
