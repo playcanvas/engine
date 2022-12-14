@@ -6,8 +6,7 @@ import { Color } from '../../core/math/color.js';
 
 import {
     FUNC_ALWAYS,
-    STENCILOP_KEEP,
-    BINDGROUP_MESH
+    STENCILOP_KEEP
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -557,7 +556,6 @@ class ForwardRenderer extends Renderer {
 
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
-        const supportsUniformBuffers = device.supportsUniformBuffers;
         const scene = this.scene;
         const passFlag = 1 << pass;
 
