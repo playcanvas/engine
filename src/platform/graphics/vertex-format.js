@@ -5,7 +5,7 @@ import { math } from '../../core/math/math.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, DEVICETYPE_WEBGPU
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
 } from './constants.js';
 
 /**
@@ -115,6 +115,7 @@ class VertexFormat {
      * ]);
      */
     constructor(graphicsDevice, description, vertexCount) {
+        this.device = graphicsDevice;
         this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
@@ -217,6 +218,17 @@ class VertexFormat {
         }
 
         return VertexFormat._defaultInstancingFormat;
+    }
+
+    /**
+     * Applies any changes made to the VertexFormat's properties.
+     *
+     * @private
+     */
+    update() {
+        // Note that this is used only by vertex attribute morphing on the WebGL.
+        Debug.assert(this.device.deviceType === DEVICETYPE_WEBGL, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
+        this._evaluateHash();
     }
 
     /**
