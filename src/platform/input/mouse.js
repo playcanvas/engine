@@ -21,6 +21,7 @@ class Mouse extends EventHandler {
      * @private
      */
     _target;
+
     /**
      * Create a new Mouse instance.
      *
