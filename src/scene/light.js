@@ -75,6 +75,19 @@ class LightRenderData {
 
         // visible shadow casters
         this.visibleCasters = [];
+
+        // an array of view bind groups, single entry is used for shadows
+        /** @type {import('../platform/graphics/bind-group.js').BindGroup[]} */
+        this.viewBindGroups = [];
+    }
+
+    // releases GPU resources
+    destroy() {
+        this.viewBindGroups.forEach((bg) => {
+            bg.defaultUniformBuffer.destroy();
+            bg.destroy();
+        });
+        this.viewBindGroups.length = 0;
     }
 
     // returns shadow buffer currently attached to the shadow camera
@@ -203,7 +216,20 @@ class Light {
 
     destroy() {
         this._destroyShadowMap();
+
+        this.releaseRenderData();
         this._renderData = null;
+    }
+
+    releaseRenderData() {
+
+        if (this._renderData) {
+            for (let i = 0; i < this._renderData.length; i++) {
+                this._renderData[i].destroy();
+            }
+
+            this._renderData.length = 0;
+        }
     }
 
     set numCascades(value) {
@@ -565,9 +591,7 @@ class Light {
     // need to be recreated
     _destroyShadowMap() {
 
-        if (this._renderData) {
-            this._renderData.length = 0;
-        }
+        this.releaseRenderData();
 
         if (this._shadowMap) {
             if (!this._shadowMap.cached) {

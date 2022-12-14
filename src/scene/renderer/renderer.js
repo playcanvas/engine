@@ -17,7 +17,7 @@ import { Material } from '../materials/material.js';
 import {
     DEVICETYPE_WEBGPU,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
@@ -35,6 +35,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
+import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -88,12 +89,14 @@ class Renderer {
 
         // shadows
         this.shadowMapCache = new ShadowMapCache();
-        this._shadowRendererLocal = new ShadowRendererLocal(this, this.lightTextureAtlas);
-        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.lightTextureAtlas);
+        this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+        this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
+        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // cookies
         this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
 
+        // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
         this.viewBindGroupFormat = null;
 
@@ -151,6 +154,7 @@ class Renderer {
     }
 
     destroy() {
+        this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
 
@@ -272,7 +276,7 @@ class Renderer {
         }
     }
 
-    setCameraUniforms(camera, target, renderAction) {
+    setCameraUniforms(camera, target) {
 
         // flipping proj matrix
         const flipY = target?.flipY;
@@ -378,9 +382,7 @@ class Renderer {
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
-        if (this.device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(renderAction, viewCount);
-        }
+        return viewCount;
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
@@ -388,7 +390,7 @@ class Renderer {
     // when the functionality moves to the render passes. Note that Editor uses it as well.
     setCamera(camera, target, clear, renderAction = null) {
 
-        this.setCameraUniforms(camera, target, renderAction);
+        this.setCameraUniforms(camera, target);
         this.clearView(camera, target, clear, false);
     }
 
@@ -668,28 +670,44 @@ class Renderer {
         }
     }
 
-    setupViewUniformBuffers(renderAction, viewCount) {
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
 
-        Debug.assert(renderAction, "RenderAction cannot be null");
-        if (renderAction) {
+        Debug.assert(Array.isArray(viewBindGroups), "viewBindGroups must be an array");
 
-            const device = this.device;
-            Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+        const device = this.device;
+        Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
-            while (renderAction.viewBindGroups.length < viewCount) {
-                const ub = new UniformBuffer(device, this.viewUniformFormat);
-                const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
-                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
-                renderAction.viewBindGroups.push(bg);
-            }
+        while (viewBindGroups.length < viewCount) {
+            const ub = new UniformBuffer(device, viewUniformFormat);
+            const bg = new BindGroup(device, viewBindGroupFormat, ub);
+            DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
+            viewBindGroups.push(bg);
+        }
 
-            // update view bind group / uniforms
-            const viewBindGroup = renderAction.viewBindGroups[0];
-            viewBindGroup.defaultUniformBuffer.update();
-            viewBindGroup.update();
+        // update view bind group / uniforms
+        const viewBindGroup = viewBindGroups[0];
+        viewBindGroup.defaultUniformBuffer.update();
+        viewBindGroup.update();
 
-            // TODO; this needs to be moved to drawInstance functions to handle XR
-            device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+        // TODO; this needs to be moved to drawInstance functions to handle XR
+        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+    }
+
+    setupMeshUniformBuffers(meshInstance, pass) {
+
+        const device = this.device;
+        if (device.supportsUniformBuffers) {
+
+            // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
+            // earlier here. This needs to be refactored for multi-view anyways.
+            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
+
+            // update mesh bind group / uniform buffer
+            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            meshBindGroup.defaultUniformBuffer.update();
+            meshBindGroup.update();
+            device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
         }
     }
 
@@ -1154,7 +1172,7 @@ class Renderer {
         return updated;
     }
 
-    baseUpdate() {
+    frameUpdate() {
 
         this.clustersDebugRendered = false;
 

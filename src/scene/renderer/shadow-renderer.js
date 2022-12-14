@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { FUNC_LESSEQUAL } from '../../platform/graphics/constants.js';
+import { BINDGROUP_MESH, FUNC_LESSEQUAL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 
@@ -21,6 +21,8 @@ import { ShaderPass } from '../shader-pass.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
+import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -106,6 +108,10 @@ class ShadowRenderer {
 
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
+
+        // view bind group format with its uniform buffer format
+        this.viewUniformFormat = null;
+        this.viewBindGroupFormat = null;
     }
 
     // creates shadow camera for a light and sets up its constant properties
@@ -249,6 +255,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
+        const supportsUniformBuffers = device.supportsUniformBuffers;
 
         // Sort shadow casters
         const shadowPass = ShaderPass.getShadow(light._type, light._shadowType);
@@ -285,7 +292,7 @@ class ShadowRenderer {
             // set shader
             let shadowShader = meshInstance._shader[shadowPass];
             if (!shadowShader) {
-                meshInstance.updatePassShader(scene, shadowPass);
+                meshInstance.updatePassShader(scene, shadowPass, null, null, this.viewUniformFormat, this.viewBindGroupFormat);
                 shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
@@ -296,6 +303,8 @@ class ShadowRenderer {
             // set buffers
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
+
+            this.renderer.setupMeshUniformBuffers(meshInstance, shadowPass);
 
             const style = meshInstance.renderStyle;
             device.setIndexBuffer(mesh.indexBuffer[style]);
@@ -385,7 +394,10 @@ class ShadowRenderer {
         this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
         const rt = shadowCam.renderTarget;
-        this.renderer.setCameraUniforms(shadowCam, rt, null);
+        this.renderer.setCameraUniforms(shadowCam, rt);
+        if (device.supportsUniformBuffers) {
+            this.renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
+        }
 
         // if this is called from a render pass, no clearing takes place
         if (clear) {
@@ -504,6 +516,27 @@ class ShadowRenderer {
         this.renderer.shadowMapCache.add(light, tempShadowMap);
 
         DebugGraphics.popGpuMarker(device);
+    }
+
+    initViewBindGroupFormat() {
+
+        if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
+
+            // format of the view uniform buffer
+            this.viewUniformFormat = new UniformBufferFormat(this.device, [
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
+            ]);
+
+            // format of the view bind group - contains single uniform buffer, and no textures
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+            ], [
+            ]);
+        }
+    }
+
+    frameUpdate() {
+        this.initViewBindGroupFormat();
     }
 }
 

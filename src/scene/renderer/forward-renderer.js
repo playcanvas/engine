@@ -438,7 +438,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            this._shadowRendererLocal.render(light, camera);
+            this.shadowRenderer.render(light, camera);
         }
     }
 
@@ -675,19 +675,7 @@ class ForwardRenderer extends Renderer {
                 this.setMorphing(device, drawCall.morphInstance);
                 this.setSkinning(device, drawCall);
 
-                if (supportsUniformBuffers) {
-
-                    // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
-                    // earlier here. This needs to be refactored for multi-view anyways.
-                    this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
-                    this.normalMatrixId.setValue(drawCall.node.normalMatrix.data);
-
-                    // update mesh bind group / uniform buffer
-                    const meshBindGroup = drawCall.getBindGroup(device, pass);
-                    meshBindGroup.defaultUniformBuffer.update();
-                    meshBindGroup.update();
-                    device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
-                }
+                this.setupMeshUniformBuffers(drawCall, pass);
 
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
@@ -995,7 +983,8 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
-        this.baseUpdate();
+        this.frameUpdate();
+        this.shadowRenderer.frameUpdate();
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
@@ -1138,7 +1127,10 @@ class ForwardRenderer extends Renderer {
             // Set the not very clever global variable which is only useful when there's just one camera
             this.scene._activeCamera = camera.camera;
 
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
+            const viewCount = this.setCameraUniforms(camera.camera, renderAction.renderTarget);
+            if (device.supportsUniformBuffers) {
+                this.setupViewUniformBuffers(renderAction.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+            }
 
             // enable flip faces if either the camera has _flipFaces enabled or the render target
             // has flipY enabled

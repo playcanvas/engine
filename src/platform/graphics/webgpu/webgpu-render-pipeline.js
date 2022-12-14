@@ -172,19 +172,25 @@ class WebgpuRenderPipeline {
             format: renderTarget.impl.depthFormat
         } : undefined;
 
+        const vertexModule = wgpu.createShaderModule({
+            code: webgpuShader.vertexCode
+        });
+        DebugHelper.setLabel(vertexModule, `Vertex ${webgpuShader.shader.label}`);
+
+        const fragmentModule = wgpu.createShaderModule({
+            code: webgpuShader.fragmentCode
+        });
+        DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
+
         // type {GPURenderPipelineDescriptor}
         const descr = {
             vertex: {
-                module: wgpu.createShaderModule({
-                    code: webgpuShader.vertexCode
-                }),
+                module: vertexModule,
                 entryPoint: 'main',
                 buffers: vertexBufferLayout
             },
             fragment: {
-                module: wgpu.createShaderModule({
-                    code: webgpuShader.fragmentCode
-                }),
+                module: fragmentModule,
                 entryPoint: 'main',
                 targets: [{
                     format: renderTarget.impl.colorFormat,

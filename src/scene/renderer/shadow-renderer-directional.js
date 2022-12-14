@@ -9,7 +9,6 @@ import {
 } from '../constants.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
-import { ShadowRenderer } from "./shadow-renderer.js";
 import { ShadowMap } from './shadow-map.js';
 
 const visibleSceneAabb = new BoundingBox();
@@ -49,7 +48,13 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
 /**
  * @ignore
  */
-class ShadowRendererDirectional extends ShadowRenderer {
+class ShadowRendererDirectional {
+    constructor(renderer, shadowRenderer) {
+        this.renderer = renderer;
+        this.shadowRenderer = shadowRenderer;
+        this.device = renderer.device;
+    }
+
     // cull directional shadow map
     cull(light, drawCalls, camera) {
 
@@ -140,7 +145,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
 
             // find out AABB of visible shadow casters
             let emptyAabb = true;
@@ -196,7 +201,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
             if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
                 allCascadesRendering = false;
 
-            shadowCamera = this.prepareFace(light, camera, face);
+            shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
         }
 
         const renderPass = new RenderPass(this.device, () => {
@@ -205,7 +210,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
             for (let face = 0; face < faceCount; face++) {
 
                 if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
-                    this.renderFace(light, camera, face, !allCascadesRendering);
+                    this.shadowRenderer.renderFace(light, camera, face, !allCascadesRendering);
                 }
 
                 if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_THISFRAME) {
@@ -216,12 +221,12 @@ class ShadowRendererDirectional extends ShadowRenderer {
         }, () => {
 
             // after the pass is done, apply VSM blur if needed
-            this.renderVms(light, camera);
+            this.shadowRenderer.renderVms(light, camera);
 
         });
 
         // setup render pass using any of the cameras, they all have the same pass related properties
-        this.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
+        this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
         DebugHelper.setName(renderPass, `DirShadow-${light._node.name}`);
 
         frameGraph.addRenderPass(renderPass);
@@ -243,7 +248,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
             const light = lights[i];
             Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
-            if (this.needsShadowRendering(light)) {
+            if (this.shadowRenderer.needsShadowRendering(light)) {
                 this.addLightRenderPasses(frameGraph, light, camera.camera);
             }
         }
