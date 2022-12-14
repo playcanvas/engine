@@ -60,6 +60,13 @@ export const EVENT_MOUSEWHEEL = 'mousewheel';
 export const EVENT_MOUSEOUT = 'mouseout';
 
 /**
+ * Name of event fired when the mouse moves out or enters another DOM element.
+ *
+ * @type {string}
+ */
+export const EVENT_MOUSEENTER = 'mouseenter';
+
+/**
  * Name of event fired when a new touch occurs. For example, a finger is placed on the device.
  *
  * @type {string}

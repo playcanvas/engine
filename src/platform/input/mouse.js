@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEOUT, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
+import { EVENT_MOUSEDOWN, EVENT_MOUSEENTER, EVENT_MOUSEMOVE, EVENT_MOUSEOUT, EVENT_MOUSEUP, EVENT_MOUSEWHEEL } from './constants.js';
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 /**
@@ -36,6 +36,7 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
+        this._enterHandler = this._handleEnter.bind(this);
         this._outHandler = this._handleOut.bind(this);
         this._contextMenuHandler = (event) => {
             event.preventDefault();
@@ -99,8 +100,9 @@ class Mouse extends EventHandler {
         window.addEventListener('mouseup', this._upHandler, opts);
         window.addEventListener('mousedown', this._downHandler, opts);
         window.addEventListener('mousemove', this._moveHandler, opts);
-        window.addEventListener('mouseout', this._outHandler, opts);
         window.addEventListener('wheel', this._wheelHandler, opts);
+        element.addEventListener('mouseenter', this._enterHandler, opts);
+        element.addEventListener('mouseout', this._outHandler, opts);
     }
 
     /**
@@ -109,14 +111,15 @@ class Mouse extends EventHandler {
     detach() {
         if (!this._attached) return;
         this._attached = false;
-        this._target = null;
 
         const opts = platform.passiveEvents ? { passive: false } : false;
         window.removeEventListener('mouseup', this._upHandler, opts);
         window.removeEventListener('mousedown', this._downHandler, opts);
         window.removeEventListener('mousemove', this._moveHandler, opts);
-        window.removeEventListener('mouseout', this._outHandler, opts);
         window.removeEventListener('wheel', this._wheelHandler, opts);
+        this._target.removeEventListener('mousein', this._enterHandler, opts);
+        this._target.removeEventListener('mouseout', this._outHandler, opts);
+        this._target = null;
     }
 
     /**
@@ -290,6 +293,13 @@ class Mouse extends EventHandler {
         if (!e.event) return;
 
         this.fire(EVENT_MOUSEWHEEL, e);
+    }
+
+    _handleEnter(event) {
+        const e = new MouseEvent(this, event);
+        if (!e.event) return;
+
+        this.fire(EVENT_MOUSEENTER, e);
     }
 
     _handleOut(event) {
