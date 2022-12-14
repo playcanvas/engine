@@ -17,6 +17,11 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  */
 class Mouse extends EventHandler {
     /**
+     * @type {Element|null}
+     * @private
+     */
+    _target;
+    /**
      * Create a new Mouse instance.
      *
      * @param {Element} [element] - The Element that the mouse events are attached to.
@@ -88,7 +93,7 @@ class Mouse extends EventHandler {
     /**
      * Attach mouse events to an Element.
      *
-     * @param {Element} element - The DOM element to attach the mouse to.
+     * @param {Element} [element] - The DOM element to attach the mouse to.
      */
     attach(element) {
         this._target = element;
@@ -101,8 +106,10 @@ class Mouse extends EventHandler {
         window.addEventListener('mousedown', this._downHandler, opts);
         window.addEventListener('mousemove', this._moveHandler, opts);
         window.addEventListener('wheel', this._wheelHandler, opts);
-        element.addEventListener('mouseenter', this._enterHandler, opts);
-        element.addEventListener('mouseout', this._outHandler, opts);
+        if (element) {
+            element.addEventListener('mouseenter', this._enterHandler, opts);
+            element.addEventListener('mouseout', this._outHandler, opts);
+        }
     }
 
     /**
@@ -117,9 +124,11 @@ class Mouse extends EventHandler {
         window.removeEventListener('mousedown', this._downHandler, opts);
         window.removeEventListener('mousemove', this._moveHandler, opts);
         window.removeEventListener('wheel', this._wheelHandler, opts);
-        this._target.removeEventListener('mousein', this._enterHandler, opts);
-        this._target.removeEventListener('mouseout', this._outHandler, opts);
-        this._target = null;
+        if (this._target) {
+            this._target.removeEventListener('mousein', this._enterHandler, opts);
+            this._target.removeEventListener('mouseout', this._outHandler, opts);
+            this._target = null;
+        }
     }
 
     /**
