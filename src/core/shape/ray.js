@@ -9,14 +9,14 @@ class Ray {
      *
      * @type {Vec3}
      */
-    origin = new Vec3();
+    origin = Vec3.ZERO.clone();
 
     /**
      * The direction of the ray.
      *
      * @type {Vec3}
      */
-    direction = new Vec3();
+    direction = Vec3.FORWARD.clone();
 
     /**
      * Creates a new Ray instance. The ray is infinite, starting at a given origin and pointing in
@@ -31,8 +31,13 @@ class Ray {
      * // the entity's negative Z axis
      * var ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
      */
-    constructor(origin = Vec3.ZERO, direction = Vec3.FORWARD) {
-        this.set(origin, direction);
+    constructor(origin, direction) {
+        if (origin) {
+            this.origin.copy(origin);
+        }
+        if (direction) {
+            this.direction.copy(direction);
+        }
     }
 
     /**

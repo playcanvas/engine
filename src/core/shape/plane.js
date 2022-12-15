@@ -13,14 +13,14 @@ class Plane {
      *
      * @type {Vec3}
      */
-    point = new Vec3();
+    point = Vec3.ZERO.clone();
 
     /**
      * The normal of the plane.
      *
      * @type {Vec3}
      */
-    normal = new Vec3();
+    normal = Vec3.BACK.clone();
 
     /**
      * Create a new Plane instance.
@@ -28,8 +28,13 @@ class Plane {
      * @param {Vec3} [point] - Point position on the plane. The constructor copies this parameter.
      * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter.
      */
-    constructor(point = Vec3.ZERO, normal = Vec3.BACK) {
-        this.set(point, normal);
+    constructor(point, normal) {
+        if (point) {
+            this.point.copy(point);
+        }
+        if (normal) {
+            this.normal.copy(normal);
+        }
     }
 
     /**
