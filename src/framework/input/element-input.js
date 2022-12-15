@@ -1176,12 +1176,13 @@ class ElementInput {
      * padding specified, we need to expand the screenCorners to incorporate the
      * padding.
      * NOTE: Used by Editor for visualization in the viewport
+     *
      * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
      * @param {Vec3[]} screenOrWorldCorners - Array of four corners.
-     * @param {number} scaleX - The scale.
+     * @param {Vec3} scale - The scale.
      * @returns {Vec3[]} Array of four corners.
      * @private
-     */    
+     */
     static buildHitCorners(element, screenOrWorldCorners, scale) {
         let hitCorners = screenOrWorldCorners;
         const button = element.entity && element.entity.button;
