@@ -131,17 +131,20 @@ class FrameGraph {
 
             this.renderPasses.forEach((renderPass, index) => {
 
+                const hasColor = renderPass.renderTarget?.colorBuffer;
+                const hasDepth = renderPass.renderTarget?.depth;
+                const hasStencil = renderPass.renderTarget?.stencil;
                 const rt = renderPass.renderTarget === undefined ? '' : ` RT: ${(renderPass.renderTarget ? renderPass.renderTarget.name : 'NULL')} ` +
-                    `${renderPass.renderTarget?.colorBuffer ? '[Color]' : ''}` +
-                    `${renderPass.renderTarget?.depth ? '[Depth]' : ''}` +
-                    `${renderPass.renderTarget?.stencil ? '[Stencil]' : ''}` +
+                    `${hasColor ? '[Color]' : ''}` +
+                    `${hasDepth ? '[Depth]' : ''}` +
+                    `${hasStencil ? '[Stencil]' : ''}` +
                     `${(renderPass.samples > 0 ? ' samples: ' + renderPass.samples : '')}`;
 
                 Debug.trace(TRACEID_RENDER_PASS,
                             `${index.toString().padEnd(2, ' ')}: ${renderPass.name.padEnd(20, ' ')}` +
                             rt.padEnd(30));
 
-                if (renderPass.colorOps) {
+                if (renderPass.colorOps && hasColor) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
                                 `${renderPass.colorOps.clear ? 'clear' : 'load'}->` +
                                 `${renderPass.colorOps.store ? 'store' : 'discard'} ` +
@@ -150,13 +153,18 @@ class FrameGraph {
                 }
 
                 if (renderPass.depthStencilOps) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
-                                `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
 
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
-                                `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                    if (hasDepth) {
+                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                                    `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
+                                    `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
+                    }
+
+                    if (hasStencil) {
+                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                                    `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
+                                    `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                    }
                 }
             });
         }

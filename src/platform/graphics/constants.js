@@ -623,7 +623,19 @@ export const PIXELFORMAT_ATC_RGB = 29;
  */
 export const PIXELFORMAT_ATC_RGBA = 30;
 
-// only add compressed formats next
+/**
+ * 32-bit BGRA (8-bits for blue channel, 8 for green, 8 for red with 8-bit alpha).
+ *
+ * @type {number}
+ * @ignore
+ */
+export const PIXELFORMAT_BGRA8 = 31;
+
+// update this function when exposing additional compressed pixel formats
+export function isCompressedPixelFormat(format) {
+    return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
+           (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
+}
 
 /**
  * List of distinct points.
@@ -1177,6 +1189,7 @@ export const bindGroupNames = ['view', 'mesh'];
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
+export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32'];
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {

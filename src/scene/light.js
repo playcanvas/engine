@@ -5,6 +5,8 @@ import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 
+import { DEVICETYPE_WEBGPU } from '../platform/graphics/constants.js';
+
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
@@ -73,6 +75,19 @@ class LightRenderData {
 
         // visible shadow casters
         this.visibleCasters = [];
+
+        // an array of view bind groups, single entry is used for shadows
+        /** @type {import('../platform/graphics/bind-group.js').BindGroup[]} */
+        this.viewBindGroups = [];
+    }
+
+    // releases GPU resources
+    destroy() {
+        this.viewBindGroups.forEach((bg) => {
+            bg.defaultUniformBuffer.destroy();
+            bg.destroy();
+        });
+        this.viewBindGroups.length = 0;
     }
 
     // returns shadow buffer currently attached to the shadow camera
@@ -171,6 +186,7 @@ class Light {
         this.shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
+        this.shadowUpdateOverrides = null;
         this._isVsm = false;
         this._isPcf = true;
 
@@ -200,7 +216,20 @@ class Light {
 
     destroy() {
         this._destroyShadowMap();
+
+        this.releaseRenderData();
         this._renderData = null;
+    }
+
+    releaseRenderData() {
+
+        if (this._renderData) {
+            for (let i = 0; i < this._renderData.length; i++) {
+                this._renderData[i].destroy();
+            }
+
+            this._renderData.length = 0;
+        }
     }
 
     set numCascades(value) {
@@ -250,6 +279,7 @@ class Light {
 
         const stype = this._shadowType;
         this._shadowType = null;
+        this.shadowUpdateOverrides = null;
         this.shadowType = stype; // refresh shadow type; switching from direct/spot to omni and back may change it
     }
 
@@ -294,7 +324,8 @@ class Light {
         if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
-        if (value === SHADOW_PCF5 && !device.webgl2) {
+        const supportsPCF5 = device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU;
+        if (value === SHADOW_PCF5 && !supportsPCF5) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }
 
@@ -560,9 +591,7 @@ class Light {
     // need to be recreated
     _destroyShadowMap() {
 
-        if (this._renderData) {
-            this._renderData.length = 0;
-        }
+        this.releaseRenderData();
 
         if (this._shadowMap) {
             if (!this._shadowMap.cached) {
@@ -573,6 +602,14 @@ class Light {
 
         if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
             this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+        }
+
+        if (this.shadowUpdateOverrides) {
+            for (let i = 0; i < this.shadowUpdateOverrides.length; i++) {
+                if (this.shadowUpdateOverrides[i] === SHADOWUPDATE_NONE) {
+                    this.shadowUpdateOverrides[i] = SHADOWUPDATE_THISFRAME;
+                }
+            }
         }
     }
 
@@ -619,6 +656,10 @@ class Light {
         clone.vsmBias = this.vsmBias;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
+
+        if (this.shadowUpdateOverrides) {
+            clone.shadowUpdateOverrides = this.shadowUpdateOverrides.slice();
+        }
 
         // Spot properties
         clone.innerConeAngle = this._innerConeAngle;
@@ -799,12 +840,6 @@ class Light {
         }
 
         this._updateFinalColor();
-    }
-
-    updateShadow() {
-        if (this.shadowUpdateMode !== SHADOWUPDATE_REALTIME) {
-            this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-        }
     }
 
     layersDirty() {

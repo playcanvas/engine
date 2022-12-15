@@ -7,7 +7,7 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
 } from '../constants.js';
 
 /**
@@ -268,6 +268,9 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.SRGB8_ALPHA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_BGRA8:
+                Debug.error("BGRA8 texture format is not supported by WebGL.");
                 break;
         }
     }

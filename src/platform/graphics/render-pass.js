@@ -130,12 +130,16 @@ class RenderPass {
      * graphics device.
      * @param {Function} execute - Custom function that is called when the pass needs to be
      * rendered.
+     * @param {Function} [after] - Custom function that is called after the pass has fnished.
      */
-    constructor(graphicsDevice, execute) {
+    constructor(graphicsDevice, execute, after = null) {
         this.device = graphicsDevice;
 
         /** @type {Function} */
         this.execute = execute;
+
+        /** @type {Function} */
+        this.after = after;
     }
 
     /**
@@ -216,6 +220,8 @@ class RenderPass {
         if (realPass) {
             device.endPass(this);
         }
+
+        this.after?.();
 
         DebugGraphics.popGpuMarker(device);
 

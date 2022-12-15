@@ -3,6 +3,7 @@ import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constant
 import { math } from '../../core/math/math.js';
 
 import {
+    isCompressedPixelFormat,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
@@ -244,10 +245,7 @@ class Texture {
             // #endif
         }
 
-        this._compressed = (this._format === PIXELFORMAT_DXT1 ||
-                            this._format === PIXELFORMAT_DXT3 ||
-                            this._format === PIXELFORMAT_DXT5 ||
-                            this._format >= PIXELFORMAT_ETC1);
+        this._compressed = isCompressedPixelFormat(this._format);
 
         // Mip levels
         this._invalid = false;

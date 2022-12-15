@@ -225,10 +225,6 @@ class LightComponent extends Component {
             this.onEnable();
     }
 
-    updateShadow() {
-        this.light.updateShadow();
-    }
-
     onCookieAssetSet() {
         let forceLoad = false;
 
@@ -320,6 +316,19 @@ class LightComponent extends Component {
 
         // remove cookie asset events
         this.cookieAsset = null;
+    }
+
+    /**
+     * Returns an array of SHADOWUPDATE_ settings per shadow cascade, or undefined if not used.
+     *
+     * @type {number[] | null}
+     */
+    set shadowUpdateOverrides(values) {
+        this.light.shadowUpdateOverrides = values;
+    }
+
+    get shadowUpdateOverrides() {
+        return this.light.shadowUpdateOverrides;
     }
 }
 

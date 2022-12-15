@@ -85,7 +85,7 @@ class Shader {
 
         this.impl = graphicsDevice.createShaderImpl(this);
 
-        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`, {
+        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: ${this.label}`, {
             instance: this
         });
     }
@@ -98,6 +98,10 @@ class Shader {
     init() {
         this.ready = false;
         this.failed = false;
+    }
+
+    get label() {
+        return `Shader Id ${this.id} ${this.name}`;
     }
 
     /**

@@ -1065,124 +1065,6 @@ class ElementInput {
         return result;
     }
 
-    /**
-     * In most cases the corners used for hit testing will just be the element's
-     * screen corners. However, in cases where the element has additional hit
-     * padding specified, we need to expand the screenCorners to incorporate the
-     * padding.
-     *
-     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
-     * @param {Vec3[]} screenOrWorldCorners - Array of four corners.
-     * @param {number} scaleX - Scale of X coordinate.
-     * @param {number} scaleY - Scale of Y coordinate.
-     * @param {number} scaleZ - Scale of Z coordinate.
-     * @returns {Vec3[]} Array of four corners.
-     * @private
-     */
-    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
-        let hitCorners = screenOrWorldCorners;
-        const button = element.entity && element.entity.button;
-
-        if (button) {
-            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
-
-            _paddingTop.copy(element.entity.up);
-            _paddingBottom.copy(_paddingTop).mulScalar(-1);
-            _paddingRight.copy(element.entity.right);
-            _paddingLeft.copy(_paddingRight).mulScalar(-1);
-
-            _paddingTop.mulScalar(hitPadding.w * scaleY);
-            _paddingBottom.mulScalar(hitPadding.y * scaleY);
-            _paddingRight.mulScalar(hitPadding.z * scaleX);
-            _paddingLeft.mulScalar(hitPadding.x * scaleX);
-
-            _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
-            _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
-            _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
-            _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
-
-            hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
-        }
-
-        // make sure the corners are in the right order [bl, br, tr, tl]
-        // for x and y: simply invert what is considered "left/right" and "top/bottom"
-        if (scaleX < 0) {
-            const left = hitCorners[2].x;
-            const right = hitCorners[0].x;
-            hitCorners[0].x = left;
-            hitCorners[1].x = right;
-            hitCorners[2].x = right;
-            hitCorners[3].x = left;
-        }
-        if (scaleY < 0) {
-            const bottom = hitCorners[2].y;
-            const top = hitCorners[0].y;
-            hitCorners[0].y = bottom;
-            hitCorners[1].y = bottom;
-            hitCorners[2].y = top;
-            hitCorners[3].y = top;
-        }
-        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
-        if (scaleZ < 0) {
-            const x = hitCorners[2].x;
-            const y = hitCorners[2].y;
-            const z = hitCorners[2].z;
-
-            hitCorners[2].x = hitCorners[0].x;
-            hitCorners[2].y = hitCorners[0].y;
-            hitCorners[2].z = hitCorners[0].z;
-            hitCorners[0].x = x;
-            hitCorners[0].y = y;
-            hitCorners[0].z = z;
-        }
-
-        return hitCorners;
-    }
-
-    /**
-     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
-     * @returns {Vec3} The accumulated scale.
-     * @private
-     */
-    _calculateScaleToScreen(element) {
-        let current = element.entity;
-        const screenScale = element.screen.screen.scale;
-
-        _accumulatedScale.set(screenScale, screenScale, screenScale);
-
-        while (current && !current.screen) {
-            _accumulatedScale.mul(current.getLocalScale());
-            current = current.parent;
-        }
-
-        return _accumulatedScale;
-    }
-
-    /**
-     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
-     * @returns {Vec3} The accumulated scale.
-     * @private
-     */
-    _calculateScaleToWorld(element) {
-        let current = element.entity;
-        _accumulatedScale.set(1, 1, 1);
-
-        while (current) {
-            _accumulatedScale.mul(current.getLocalScale());
-            current = current.parent;
-        }
-
-        return _accumulatedScale;
-    }
-
-    /**
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera component.
-     * @param {Ray} ray - The ray.
-     * @returns {boolean} Boolean result.
-     * @private
-     */
     _calculateRayScreen(x, y, camera, ray) {
         const sw = this.app.graphicsDevice.width;
         const sh = this.app.graphicsDevice.height;
@@ -1278,14 +1160,114 @@ class ElementInput {
 
         let scale;
         if (screen) {
-            scale = this._calculateScaleToScreen(element);
+            scale = ElementInput.calculateScaleToScreen(element);
         } else {
-            scale = this._calculateScaleToWorld(element);
+            scale = ElementInput.calculateScaleToWorld(element);
         }
 
-        const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
+        const corners = ElementInput.buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
+    }
+
+    /**
+     * In most cases the corners used for hit testing will just be the element's
+     * screen corners. However, in cases where the element has additional hit
+     * padding specified, we need to expand the screenCorners to incorporate the
+     * padding.
+     * NOTE: Used by Editor for visualization in the viewport
+     * @param {import('../components/element/component.js').ElementComponent} element - The ElementComponent.
+     * @param {Vec3[]} screenOrWorldCorners - Array of four corners.
+     * @param {number} scaleX - The scale.
+     * @returns {Vec3[]} Array of four corners.
+     * @private
+     */    
+    static buildHitCorners(element, screenOrWorldCorners, scale) {
+        let hitCorners = screenOrWorldCorners;
+        const button = element.entity && element.entity.button;
+
+        if (button) {
+            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+
+            _paddingTop.copy(element.entity.up);
+            _paddingBottom.copy(_paddingTop).mulScalar(-1);
+            _paddingRight.copy(element.entity.right);
+            _paddingLeft.copy(_paddingRight).mulScalar(-1);
+
+            _paddingTop.mulScalar(hitPadding.w * scale.y);
+            _paddingBottom.mulScalar(hitPadding.y * scale.y);
+            _paddingRight.mulScalar(hitPadding.z * scale.x);
+            _paddingLeft.mulScalar(hitPadding.x * scale.x);
+
+            _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
+            _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
+            _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
+            _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
+
+            hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
+        }
+
+        // make sure the corners are in the right order [bl, br, tr, tl]
+        // for x and y: simply invert what is considered "left/right" and "top/bottom"
+        if (scale.x < 0) {
+            const left = hitCorners[2].x;
+            const right = hitCorners[0].x;
+            hitCorners[0].x = left;
+            hitCorners[1].x = right;
+            hitCorners[2].x = right;
+            hitCorners[3].x = left;
+        }
+        if (scale.y < 0) {
+            const bottom = hitCorners[2].y;
+            const top = hitCorners[0].y;
+            hitCorners[0].y = bottom;
+            hitCorners[1].y = bottom;
+            hitCorners[2].y = top;
+            hitCorners[3].y = top;
+        }
+        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
+        if (scale.z < 0) {
+            const x = hitCorners[2].x;
+            const y = hitCorners[2].y;
+            const z = hitCorners[2].z;
+
+            hitCorners[2].x = hitCorners[0].x;
+            hitCorners[2].y = hitCorners[0].y;
+            hitCorners[2].z = hitCorners[0].z;
+            hitCorners[0].x = x;
+            hitCorners[0].y = y;
+            hitCorners[0].z = z;
+        }
+
+        return hitCorners;
+    }
+
+    // NOTE: Used by Editor for visualization in the viewport
+    static calculateScaleToScreen(element) {
+        let current = element.entity;
+        const screenScale = element.screen.screen.scale;
+
+        _accumulatedScale.set(screenScale, screenScale, screenScale);
+
+        while (current && !current.screen) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
+    }
+
+    // NOTE: Used by Editor for visualization in the viewport
+    static calculateScaleToWorld(element) {
+        let current = element.entity;
+        _accumulatedScale.set(1, 1, 1);
+
+        while (current) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
     }
 }
 

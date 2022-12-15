@@ -131,6 +131,10 @@ class AnimClip {
         }
     }
 
+    progressForTime(time) {
+        return (time * this._speed) / this._track.duration;
+    }
+
     _update(deltaTime) {
         if (this._playing) {
             let time = this._time;

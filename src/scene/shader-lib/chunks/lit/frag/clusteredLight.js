@@ -25,9 +25,14 @@ uniform highp sampler2D lightsTextureFloat;
     uniform sampler2D cookieAtlasTexture;
 #endif
 
+#ifdef GL2
+    uniform int clusterMaxCells;
+#else
+    uniform vec4 lightsTextureInvSize;
+#endif
+
 uniform float clusterPixelsPerCell;
 uniform vec3 clusterCellsCountByBoundsSize;
-uniform vec4 lightsTextureInvSize;
 uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
 uniform vec3 clusterBoundsDelta;
@@ -39,8 +44,13 @@ uniform vec2 shadowAtlasParams;
 // structure storing light properties of a clustered light
 struct ClusterLightData {
 
-    // v coordinate to look up the light textures
-    float lightV;
+    #ifdef GL2
+        // light index
+        int lightIndex;
+    #else
+        // v coordinate to look up the light textures - this is the same as lightIndex but in 0..1 range
+        float lightV;
+    #endif
 
     // type of the light (spot or omni)
     float type;
@@ -135,18 +145,36 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     );
 }
 
-vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-    return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
-}
+#ifdef GL2
 
-vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-    return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
-}
+    vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
+        return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
+    }
+
+    vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
+        return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
+    }
+
+#else
+
+    vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
+        return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
+    }
+
+    vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
+        return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
+    }
+
+#endif
 
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
 
-    // read omni light properties
-    clusterLightData.lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
+    // light index
+    #ifdef GL2
+        clusterLightData.lightIndex = int(lightIndex);
+    #else
+        clusterLightData.lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
+    #endif
 
     // shared data from 8bit texture
     vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
@@ -555,30 +583,54 @@ void addClusteredLights() {
         // convert cell index to uv coordinates
         float clusterV = floor(cellIndex * clusterTextureSize.y);
         float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
-        clusterV = (clusterV + 0.5) * clusterTextureSize.z;
 
-        // loop over maximum possible number of supported light cells
-        const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
-        for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+        #ifdef GL2
 
-            vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
-            vec4 indices = lightIndices * 255.0;
+            // loop over maximum number of light cells
+            for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
-            // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
-            for (int i = 0; i < 4; i++) {
-                
-                if (indices.x <= 0.0)
-                    return;
+                vec4 lightIndices = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0);
 
-                evaluateClusterLight(indices.x); 
-                indices = indices.yzwx;
+                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+                vec4 indices = lightIndices * 255.0;
+                for (int i = 0; i < 4; i++) {
+                    
+                    if (indices.x <= 0.0)
+                        return;
+
+                    evaluateClusterLight(indices.x); 
+                    indices = indices.yzwx;
+                }
             }
 
-            // end of the cell array
-            if (lightCellIndex > clusterPixelsPerCell) {
-                break;
+        #else
+
+            clusterV = (clusterV + 0.5) * clusterTextureSize.z;
+
+            // loop over maximum possible number of supported light cells
+            const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+            for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
+
+                vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
+                vec4 indices = lightIndices * 255.0;
+
+                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
+                for (int i = 0; i < 4; i++) {
+                    
+                    if (indices.x <= 0.0)
+                        return;
+
+                    evaluateClusterLight(indices.x); 
+                    indices = indices.yzwx;
+                }
+
+                // end of the cell array
+                if (lightCellIndex > clusterPixelsPerCell) {
+                    break;
+                }
             }
-        }
+
+        #endif
     }
 }
 `;

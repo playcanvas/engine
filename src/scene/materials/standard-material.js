@@ -34,10 +34,11 @@ let _params = new Set();
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
  * @callback UpdateShaderCallback
- * @param {*} options - An object with shader generator settings (based on current material and
- * scene properties), that you can change and then return. Properties of the object passed into
- * this function are documented in {@link StandardMaterial#onUpdateShader}.
- * @returns {*} Returned settings will be used by the shader.
+ * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
+ * material and scene properties), that you can change and then return. Properties of the object passed
+ * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
+ * which holds some of the options only used by the lit shader backend {@link LitOptions}.
+ * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
 /**
@@ -331,8 +332,8 @@ let _params = new Set();
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
- * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
- * This color value is 3-component (RGB), where each component is between 0 and 1.
+ * @property {number} sheenGlossiness The glossiness of the sheen (fabric) microfiber structure.
+ * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
@@ -498,70 +499,10 @@ let _params = new Set();
  * properties), that you can change and then return. Returned value will be used instead. This is
  * mostly useful when rendering the same set of objects, but with different shader variations based
  * on the same material. For example, you may wish to render a depth or normal pass using textures
- * assigned to the material, a reflection pass with simpler shaders and so on. Properties of the
- * object passed into this function are:
- *
- * - pass: value of {@link Layer#shaderPass} of the Layer being rendered.
- * - chunks: Object containing custom shader chunks that will replace default ones.
- * - customFragmentShader: Completely replace fragment shader with this code.
- * - forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be
- * declared as "vUv1" and passed to the fragment shader.
- * - fog: the type of fog being applied in the shader. See {@link Scene#fog} for the list of
- * possible values.
- * - gamma: the type of gamma correction being applied in the shader. See
- * {@link Scene#gammaCorrection} for the list of possible values.
- * - toneMap: the type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
- * for the list of possible values.
- * - ambientTint: the value of {@link StandardMaterial#ambientTint}.
- * - conserveEnergy: the value of {@link StandardMaterial#conserveEnergy}.
- * - occludeSpecular: the value of {@link StandardMaterial#occludeSpecular}.
- * - occludeDirect: the value of {@link StandardMaterial#occludeDirect}.
- * - shadingModel: the value of {@link StandardMaterial#shadingModel}.
- * - fresnelModel: the value of {@link StandardMaterial#fresnelModel}.
- * - cubeMapProjection: the value of {@link StandardMaterial#cubeMapProjection}.
- * - useMetalness: the value of {@link StandardMaterial#useMetalness}.
- * - blendType: the value of {@link Material#blendType}.
- * - twoSidedLighting: the value of {@link Material#twoSidedLighting}.
- * - diffuseTint: defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
- * - specularTint: defines if {@link StandardMaterial#specular} constant should affect specular
- * color.
- * - metalnessTint: defines if {@link StandardMaterial#metalness} constant should affect metalness
- * value.
- * - glossTint: defines if {@link StandardMaterial#shininess} constant should affect glossiness
- * value.
- * - emissiveTint: defines if {@link StandardMaterial#emissive} constant should affect emission
- * value.
- * - opacityTint: defines if {@link StandardMaterial#opacity} constant should affect opacity value.
- * - occludeSpecularFloat: defines if {@link StandardMaterial#occludeSpecularIntensity} constant
- * should affect specular occlusion.
- * - alphaTest: enable alpha testing. See {@link Material#alphaTest}.
- * - alphaToCoverage: enable alpha to coverage. See {@link Material#alphaToCoverage}.
- * - opacityFadesSpecular: enable specular fade. See {@link Material#opacityFadesSpecular}.
- * - alphaFade: fade value. See {@link Material#alphaFade}.
- * - sphereMap: if {@link StandardMaterial#sphereMap} is used.
- * - cubeMap: if {@link StandardMaterial#cubeMap} is used.
- * - ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
- * ambient on certain platform (mostly Android) for performance reasons.
- * - useSpecular: if any specular or reflections are needed at all.
- * - fixSeams: if cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * - emissiveEncoding: how emissiveMap is encoded. This value is based on Texture#encoding.
- * - lightMapEncoding: how lightMap is encoded. This value is based on on Texture#encoding.
- * - packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
- * - forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump",
- * "highp" or null to use default.
- * - fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
- * buggy sometimes.
- * - refraction: if refraction is used.
- * - skyboxIntensity: if reflected skybox intensity should be modulated.
- * - useCubeMapRotation: if cube map rotation is enabled.
- * - useInstancing: if hardware instancing compatible shader should be generated. Transform is read
- * from per-instance {@link VertexBuffer} instead of shader's uniforms.
- * - useMorphPosition: if morphing code should be generated to morph positions.
- * - useMorphNormal: if morphing code should be generated to morph normals.
- * - reflectionSource: one of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap"
- * - reflectionEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
- * - ambientSource: one of "ambientSH", "envAtlas", "constant"
- * - ambientEncoding: one of null, "rgbm", "rgbe", "linear", "srgb"
+ * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
+ * split into two sections, generic standard material options and lit options. Properties of the
+ * standard material options are {@link StandardMaterialOptions} and the options for the lit options
+ * are {@link LitOptions}.
  * @augments Material
  */
 class StandardMaterial extends Material {
@@ -754,7 +695,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheen', getUniform('sheen'));
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGloss', this.sheenGloss);
+                this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
             }
 
             if (this.refractionIndex !== 1.0 / 1.5) {
@@ -1162,7 +1103,7 @@ function _defineMaterialProps() {
     _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
-    _defineFloat('sheenGloss', 0);
+    _defineFloat('sheenGlossiness', 0.0);
 
     _defineFloat('shininess', 25, (material, device, scene) => {
         // Shininess is 0-100 value which is actually a 0-1 glossiness value.

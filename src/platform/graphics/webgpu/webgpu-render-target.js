@@ -1,4 +1,4 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * A WebGPU implementation of the RenderTarget.
@@ -28,6 +28,11 @@ class WebgpuRenderTarget {
     // type {GPUTexture}
     depthTexture = null;
 
+    // Texture assigned each frame, and not owned by this render target. This is used on the framebuffer
+    // to assign per frame texture obtained from the context.
+    // type {GPUTexture}
+    assignedColorTexture = null;
+
     /**
      * Render pass descriptor used when starting a render pass for this render target.
      *
@@ -42,10 +47,14 @@ class WebgpuRenderTarget {
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
 
+        // color format is based on the texture
+        if (renderTarget.colorBuffer) {
+            this.colorFormat = renderTarget.colorBuffer.impl.format;
+        }
+
         // TODO: handle shadow map case (depth only, no color)
 
-        // key used by render pipeline creation
-        this.key = `${this.colorFormat}-${renderTarget.depth ? this.depthFormat : ''}-${renderTarget.samples}`;
+        this.updateKey();
     }
 
     /**
@@ -59,8 +68,16 @@ class WebgpuRenderTarget {
         this.depthTexture?.destroy();
         this.depthTexture = null;
 
+        this.assignedColorTexture = null;
+
         this.multisampledColorBuffer?.destroy();
         this.multisampledColorBuffer = null;
+    }
+
+    updateKey() {
+        // key used by render pipeline creation
+        const rt = this.renderTarget;
+        this.key = `${this.colorFormat}-${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
     }
 
     /**
@@ -72,6 +89,8 @@ class WebgpuRenderTarget {
     assignColorTexture(gpuTexture) {
 
         Debug.assert(gpuTexture);
+        this.assignedColorTexture = gpuTexture;
+
         const view = gpuTexture.createView();
 
         // use it as render buffer or resolve target
@@ -82,6 +101,10 @@ class WebgpuRenderTarget {
         } else {
             colorAttachment.view = view;
         }
+
+        // for main framebuffer, this is how the format is obtained
+        this.colorFormat = gpuTexture.format;
+        this.updateKey();
     }
 
     /**
@@ -112,8 +135,14 @@ class WebgpuRenderTarget {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             };
 
+            // single sampled depth buffer can be copied out (grab pass), multisampled cannot
+            if (samples <= 1) {
+                depthTextureDesc.usage |= GPUTextureUsage.COPY_SRC;
+            }
+
             // allocate depth buffer
             this.depthTexture = wgpu.createTexture(depthTextureDesc);
+            DebugHelper.setLabel(this.depthTexture, `${renderTarget.name}.depthTexture`);
 
             // @type {GPURenderPassDepthStencilAttachment}
             this.renderPassDescriptor.depthStencilAttachment = {
@@ -130,7 +159,19 @@ class WebgpuRenderTarget {
         this.renderPassDescriptor.colorAttachments = [colorAttachment];
 
         const colorBuffer = renderTarget.colorBuffer;
-        const colorView = colorBuffer ? colorBuffer.impl.getView(device) : null;
+        let colorView = null;
+        if (colorBuffer) {
+            colorView = colorBuffer.impl.getView(device);
+
+            // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+            if (colorBuffer.cubemap) {
+                colorView = colorBuffer.impl.createView({
+                    dimension: '2d',
+                    baseArrayLayer: renderTarget.face,
+                    arrayLayerCount: 1
+                });
+            }
+        }
 
         // multi-sampled color buffer
         if (samples > 1) {
@@ -177,12 +218,12 @@ class WebgpuRenderTarget {
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;
         if (depthAttachment) {
             depthAttachment.depthClearValue = renderPass.depthStencilOps.clearDepthValue;
-            depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'discard';
+            depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'load';
             depthAttachment.depthStoreOp = renderPass.depthStencilOps.storeDepth ? 'store' : 'discard';
             depthAttachment.depthReadOnly = false;
 
             depthAttachment.stencilClearValue = renderPass.depthStencilOps.clearStencilValue;
-            depthAttachment.stencilLoadOp = renderPass.depthStencilOps.clearStencil ? 'clear' : 'discard';
+            depthAttachment.stencilLoadOp = renderPass.depthStencilOps.clearStencil ? 'clear' : 'load';
             depthAttachment.stencilStoreOp = renderPass.depthStencilOps.storeStencil ? 'store' : 'discard';
             depthAttachment.stencilReadOnly = false;
         }
