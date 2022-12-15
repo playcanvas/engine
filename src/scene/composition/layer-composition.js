@@ -324,7 +324,8 @@ class LayerComposition extends EventHandler {
                 for (let j = 0; j < len; j++) {
 
                     const layer = this.layerList[j];
-                    if (layer) {
+                    const isLayerEnabled = this.subLayerEnabled[j];
+                    if (layer && isLayerEnabled) {
 
                         // if layer needs to be rendered
                         if (layer.cameras.length > 0) {
