@@ -1,6 +1,5 @@
 import { math } from '../../core/math/math.js';
 
-import { ShadowRenderer } from "./shadow-renderer.js";
 import { ShadowMap } from './shadow-map.js';
 import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
@@ -9,7 +8,13 @@ import {
 /**
  * @ignore
  */
-class ShadowRendererLocal extends ShadowRenderer {
+class ShadowRendererLocal {
+    constructor(renderer, shadowRenderer) {
+        this.renderer = renderer;
+        this.shadowRenderer = shadowRenderer;
+        this.device = renderer.device;
+    }
+
     // cull local shadow map
     cull(light, drawCalls) {
 
@@ -52,9 +57,9 @@ class ShadowRendererLocal extends ShadowRenderer {
 
                 // when rendering omni shadows to an atlas, use larger fov by few pixels to allow shadow filtering to stay on a single face
                 if (isClustered) {
-                    const tileSize = this.lightTextureAtlas.shadowAtlasResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
+                    const tileSize = this.shadowRenderer.lightTextureAtlas.shadowAtlasResolution * light.atlasViewport.z / 3;    // using 3x3 for cubemap
                     const texelSize = 2 / tileSize;
-                    const filterSize = texelSize * this.lightTextureAtlas.shadowEdgePixels;
+                    const filterSize = texelSize * this.shadowRenderer.lightTextureAtlas.shadowEdgePixels;
                     shadowCam.fov = Math.atan(1 + filterSize) * math.RAD_TO_DEG * 2;
                 } else {
                     shadowCam.fov = 90;
@@ -63,7 +68,7 @@ class ShadowRendererLocal extends ShadowRenderer {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
         }
     }
 }
