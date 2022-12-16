@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
+    SAMPLETYPE_FLOAT
 } from './constants.js';
 
 let id = 0;
