@@ -7,7 +7,7 @@ class HardwareInstancingExample {
     example(canvas: HTMLCanvasElement): void {
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
         };
 
         pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
