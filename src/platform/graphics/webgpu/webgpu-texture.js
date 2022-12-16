@@ -182,6 +182,12 @@ class WebgpuTexture {
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';
+            } else if (texture.compareOnRead) { // depth compare sampler
+                // TODO: depth texture can be exposed for sampling, not only compare sampling (for example debug
+                // rendering of depth). Find some good way to expose this, perhaps based on what sampling shader needs.
+                descr.compare = 'less';
+                descr.magFilter = 'linear';
+                descr.minFilter = 'linear';
             } else {
                 descr.magFilter = 'linear';
                 descr.minFilter = 'linear';

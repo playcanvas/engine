@@ -124,9 +124,6 @@ class BindGroupFormat {
             const textureType = textureDimensionInfo[format.textureDimension];
             Debug.assert(textureType, "Unsupported texture type");
 
-            // TODO: suport depth samplers
-            Debug.assert(format.sampleType !== SAMPLETYPE_DEPTH, format);
-
             code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name};\n` +
                     `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;
         });

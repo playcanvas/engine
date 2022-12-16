@@ -99,7 +99,7 @@ class LightRenderData {
                 return rt.colorBuffer;
             }
 
-            return light._isPcf && light.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
+            return light._isPcf && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;
@@ -324,7 +324,7 @@ class Light {
         if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
-        const supportsPCF5 = device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU;
+        const supportsPCF5 = device.supportsDepthShadow;
         if (value === SHADOW_PCF5 && !supportsPCF5) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }

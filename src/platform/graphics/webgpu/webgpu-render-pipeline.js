@@ -177,26 +177,12 @@ class WebgpuRenderPipeline {
         });
         DebugHelper.setLabel(vertexModule, `Vertex ${webgpuShader.shader.label}`);
 
-        const fragmentModule = wgpu.createShaderModule({
-            code: webgpuShader.fragmentCode
-        });
-        DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
-
         // type {GPURenderPipelineDescriptor}
         const descr = {
             vertex: {
                 module: vertexModule,
                 entryPoint: 'main',
                 buffers: vertexBufferLayout
-            },
-            fragment: {
-                module: fragmentModule,
-                entryPoint: 'main',
-                targets: [{
-                    format: renderTarget.impl.colorFormat,
-                    writeMask: GPUColorWrite.ALL,
-                    blend: this.getBlend(renderState)
-                }]
             },
             primitive: {
                 topology: primitiveTopology,
@@ -212,6 +198,28 @@ class WebgpuRenderPipeline {
             // uniform / texture binding layout
             layout: pipelineLayout
         };
+
+        // provide fragment state only when render target contains color buffer, otherwise rendering to depth only
+        // TODO: the exclusion of fragment here should be reflected in the key generation (no blend, no frag ..)
+        const colorFormat = renderTarget.impl.colorFormat;
+        if (colorFormat) {
+
+            const fragmentModule = wgpu.createShaderModule({
+                code: webgpuShader.fragmentCode
+            });
+            DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
+
+            // type {GPUFragmentState}
+            descr.fragment = {
+                module: fragmentModule,
+                entryPoint: 'main',
+                targets: [{
+                    format: renderTarget.impl.colorFormat,
+                    writeMask: GPUColorWrite.ALL,
+                    blend: this.getBlend(renderState)
+                }]
+            };
+        }
 
         _pipelineId++;
         DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
