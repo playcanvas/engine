@@ -713,6 +713,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
+        this.supportsDepthShadow = this.webgl2;
 
         this._textureFloatHighPrecision = undefined;
         this._textureHalfFloatUpdatable = undefined;

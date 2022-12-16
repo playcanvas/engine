@@ -5,8 +5,6 @@ import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 
-import { DEVICETYPE_WEBGPU } from '../platform/graphics/constants.js';
-
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
@@ -99,7 +97,7 @@ class LightRenderData {
                 return rt.colorBuffer;
             }
 
-            return light._isPcf && light.device.webgl2 ? rt.depthBuffer : rt.colorBuffer;
+            return light._isPcf && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;
@@ -324,7 +322,7 @@ class Light {
         if (this._type === LIGHTTYPE_OMNI)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
-        const supportsPCF5 = device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU;
+        const supportsPCF5 = device.supportsDepthShadow;
         if (value === SHADOW_PCF5 && !supportsPCF5) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }

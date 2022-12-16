@@ -86,6 +86,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
+        this.supportsDepthShadow = true;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -332,14 +333,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.renderTarget = rt;
         const wrt = rt.impl;
 
+        // current frame color buffer
+        let outColorBuffer;
+        if (rt === this.frameBuffer) {
+            outColorBuffer = this.gpuContext.getCurrentTexture();
+            DebugHelper.setLabel(outColorBuffer, rt.name);
+
+            // assign the format, allowing following init call to use it to allocate matching multisampled buffer
+            wrt.colorFormat = outColorBuffer.format;
+        }
+
         this.initRenderTarget(rt);
 
         // assign current frame's render texture if rendering to the main frame buffer
         // TODO: this should probably be done at the start of the frame, so that it can be used
         // as a destination of the copy operation
-        if (rt === this.frameBuffer) {
-            const outColorBuffer = this.gpuContext.getCurrentTexture();
-            DebugHelper.setLabel(outColorBuffer, rt.name);
+        if (outColorBuffer) {
             wrt.assignColorTexture(outColorBuffer);
         }
 
@@ -388,6 +397,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthBias(on) {
+    }
+
+    setDepthBiasValues(constBias, slopeBias) {
     }
 
     setStencilTest(enable) {
