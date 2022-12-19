@@ -2,7 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { TRACEID_SHADER_COMPILE } from '../../../core/constants.js';
 import { now } from '../../../core/time.js';
 
-import { ShaderInput } from '../shader-input.js';
+import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 
 let _totalCompileTime = 0;
@@ -253,7 +253,7 @@ class WebglShader {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
             }
 
-            const shaderInput = new ShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
+            const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
 
             this.attributes.push(shaderInput);
         }
@@ -265,7 +265,7 @@ class WebglShader {
             const info = gl.getActiveUniform(glProgram, i++);
             const location = gl.getUniformLocation(glProgram, info.name);
 
-            const shaderInput = new ShaderInput(device, info.name, device.pcUniformType[info.type], location);
+            const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                 (device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
