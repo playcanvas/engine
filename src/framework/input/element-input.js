@@ -837,6 +837,10 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
+        if (eventType === 'selectmove' && hoveredBefore) {
+            this._fireEvent('selectmove', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+        }
+
         if (eventType === 'selectstart') {
             this._selectedPressedElements[inputSource.id] = hoveredNow;
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
