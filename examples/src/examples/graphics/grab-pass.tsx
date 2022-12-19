@@ -33,6 +33,9 @@ class GrabPassExample {
             // roughness map
             uniform sampler2D uRoughnessMap;
 
+            // tint colors
+            uniform vec3 tints[4];
+
             // engine built-in constant storing render target size in .xy and inverse size in .zw
             uniform vec4 uScreenSize;
 
@@ -57,6 +60,10 @@ class GrabPassExample {
 
                 // get background pixel color with distorted offset
                 vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
+
+                // tint the material based on mipmap
+                float tintIndex = clamp(mipmap, 0.0, 3.0);
+                grabColor *= tints[int(tintIndex)];
 
                 // brighten the refracted texture a little bit
                 // brighten even more the rough parts of the glass
@@ -182,6 +189,14 @@ class GrabPassExample {
 
                 // set roughness map
                 refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
+
+                // tint colors
+                refractionMaterial.setParameter('tints[0]', new Float32Array([
+                    1, 0.7, 0.7,    // red
+                    1, 1, 1,        // white
+                    0.7, 0.7, 1,    // blue
+                    1, 1, 1         // white
+                ]));
 
                 // transparency
                 refractionMaterial.blendType = pc.BLEND_NORMAL;

@@ -3,6 +3,7 @@ import {
     uniformTypeToName,
     UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4,
+    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
     UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
 } from './constants.js';
 
@@ -91,6 +92,30 @@ _updateFunctions[UNIFORMTYPE_MAT3] = (uniformBuffer, value, offset) => {
     dst[offset + 10] = value[8];
 };
 
+_updateFunctions[UNIFORMTYPE_FLOATARRAY] = function (uniformBuffer, value, offset, count) {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_VEC2ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 2];
+        dst[offset + i * 4 + 1] = value[i * 2 + 1];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_VEC3ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 3];
+        dst[offset + i * 4 + 1] = value[i * 3 + 1];
+        dst[offset + i * 4 + 2] = value[i * 3 + 2];
+    }
+};
+
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
  *
@@ -159,9 +184,10 @@ class UniformBuffer {
         const value = uniformFormat.scopeId.value;
 
         if (value !== null && value !== undefined) {
-            const updateFunction = _updateFunctions[uniformFormat.type];
+
+            const updateFunction = _updateFunctions[uniformFormat.updateType];
             if (updateFunction) {
-                updateFunction(this, value, offset);
+                updateFunction(this, value, offset, uniformFormat.count);
             } else {
                 this.storageFloat32.set(value, offset);
             }

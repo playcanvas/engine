@@ -560,6 +560,7 @@ class ForwardRenderer extends Renderer {
         const passFlag = 1 << pass;
 
         // Render the scene
+        let skipMaterial = false;
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
@@ -585,6 +586,11 @@ class ForwardRenderer extends Renderer {
                     if (!shader.failed && !device.setShader(shader)) {
                         Debug.error(`Error compiling shader for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                     }
+
+                    // skip rendering with the material if shader failed
+                    skipMaterial = shader.failed;
+                    if (skipMaterial)
+                        break;
 
                     // Uniforms I: material
                     material.setParameters(device);

@@ -1,17 +1,17 @@
 import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4,
-    UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY } from './constants.js';
-import { Version } from './version.js';
+    UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY } from '../constants.js';
+import { Version } from '../version.js';
 
 /**
  * Representation of a shader uniform.
  *
  * @ignore
  */
-class ShaderInput {
+class WebglShaderInput {
     /**
-     * Create a new ShaderInput instance.
+     * Create a new WebglShaderInput instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * @param {import('../graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this shader input.
      * @param {string} name - The name of the shader input.
      * @param {number} type - The type of the shader input.
@@ -47,4 +47,4 @@ class ShaderInput {
     }
 }
 
-export { ShaderInput };
+export { WebglShaderInput };
