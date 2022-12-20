@@ -6,8 +6,6 @@ class SpineboyExample {
 
     example(canvas: HTMLCanvasElement): void {
 
-        const app = new pc.Application(canvas, {});
-
         const assets = {
             'skeleton': new pc.Asset('skeleton', 'json', { url: '/static/assets/spine/spineboy-pro.json' }),
             'atlas': new pc.Asset('atlas', 'text', { url: '/static/assets/spine/spineboy-pro.atlas' }),
@@ -15,43 +13,74 @@ class SpineboyExample {
             'spinescript': new pc.Asset('spinescript', 'script', { url: '/static/scripts/spine/playcanvas-spine.3.8.js' })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
 
-            // create camera entity
-            const camera = new pc.Entity('camera');
-            camera.addComponent('camera', {
-                clearColor: new pc.Color(0.5, 0.6, 0.9)
-            });
-            app.root.addChild(camera);
-            camera.translateLocal(0, 7, 20);
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
 
-            const createSpineInstance = (position: pc.Vec3, scale: pc.Vec3, timeScale: number) => {
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.ScriptComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ScriptHandler,
+                // @ts-ignore
+                pc.JsonHandler,
+                // @ts-ignore
+                pc.TextHandler
+            ];
 
-                const spineEntity = new pc.Entity();
-                spineEntity.addComponent("spine", {
-                    atlasAsset: assets.atlas.id,
-                    skeletonAsset: assets.skeleton.id,
-                    textureAssets: [assets.texture.id]
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
+
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
+
+                app.start();
+
+                // create camera entity
+                const camera = new pc.Entity('camera');
+                camera.addComponent('camera', {
+                    clearColor: new pc.Color(0.5, 0.6, 0.9)
                 });
-                spineEntity.setLocalPosition(position);
-                spineEntity.setLocalScale(scale);
-                app.root.addChild(spineEntity);
+                app.root.addChild(camera);
+                camera.translateLocal(0, 7, 20);
 
-                // play spine animation
-                // @ts-ignore
-                spineEntity.spine.state.setAnimation(0, "portal", true);
+                const createSpineInstance = (position: pc.Vec3, scale: pc.Vec3, timeScale: number) => {
 
-                // @ts-ignore
-                spineEntity.spine.state.timeScale = timeScale;
-            };
+                    const spineEntity = new pc.Entity();
+                    spineEntity.addComponent("spine", {
+                        atlasAsset: assets.atlas.id,
+                        skeletonAsset: assets.skeleton.id,
+                        textureAssets: [assets.texture.id]
+                    });
+                    spineEntity.setLocalPosition(position);
+                    spineEntity.setLocalScale(scale);
+                    app.root.addChild(spineEntity);
 
-            // create spine entity 1
-            createSpineInstance(new pc.Vec3(2, 2, 0), new pc.Vec3(1, 1, 1), 1);
+                    // play spine animation
+                    // @ts-ignore
+                    spineEntity.spine.state.setAnimation(0, "portal", true);
 
-            // create spine entity 2
-            createSpineInstance(new pc.Vec3(2, 10, 0), new pc.Vec3(-0.5, 0.5, 0.5), 0.5);
+                    // @ts-ignore
+                    spineEntity.spine.state.timeScale = timeScale;
+                };
+
+                // create spine entity 1
+                createSpineInstance(new pc.Vec3(2, 2, 0), new pc.Vec3(1, 1, 1), 1);
+
+                // create spine entity 2
+                createSpineInstance(new pc.Vec3(2, 10, 0), new pc.Vec3(-0.5, 0.5, 0.5), 0.5);
+            });
         });
     }
 }
