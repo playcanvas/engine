@@ -101,10 +101,12 @@ const path = {
      * filename.
      */
     split: function (pathname) {
-        const parts = pathname.split(path.delimiter);
-        const tail = parts.slice(parts.length - 1)[0];
-        const head = parts.slice(0, parts.length - 1).join(path.delimiter);
-        return [head, tail];
+        const lastDelimiterIndex = pathname.lastIndexOf(path.delimiter);
+        if (lastDelimiterIndex !== -1) {
+            return [pathname.substring(0, lastDelimiterIndex), pathname.substring(lastDelimiterIndex + 1)];
+        } else {
+            return ["", pathname];
+        }
     },
 
     /**
@@ -129,8 +131,7 @@ const path = {
      * @returns {string} The directory part of the path.
      */
     getDirectory: function (pathname) {
-        const parts = pathname.split(path.delimiter);
-        return parts.slice(0, parts.length - 1).join(path.delimiter);
+        return path.split(pathname)[0];
     },
 
     /**
