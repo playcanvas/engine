@@ -718,11 +718,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._textureFloatHighPrecision = undefined;
         this._textureHalfFloatUpdatable = undefined;
 
-        // #if _DEBUG
-        this._spectorMarkers = [];
-        this._spectorCurrentMarker = "";
-        // #endif
-
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
@@ -780,29 +775,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // #if _DEBUG
-    updateMarker() {
-        this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
-    }
-
     pushMarker(name) {
         if (window.spector) {
-            this._spectorMarkers.push(name);
-            this.updateMarker();
-            window.spector.setMarker(this._spectorCurrentMarker);
+            const label = DebugGraphics.toString();
+            window.spector.setMarker(`${label} #`);
         }
     }
 
     popMarker() {
         if (window.spector) {
-            if (this._spectorMarkers.length) {
-                this._spectorMarkers.pop();
-                this.updateMarker();
-
-                if (this._spectorMarkers.length)
-                    window.spector.setMarker(this._spectorCurrentMarker);
-                else
-                    window.spector.clearMarker();
-            }
+            const label = DebugGraphics.toString();
+            if (label.length)
+                window.spector.setMarker(`${label} #`);
+            else
+                window.spector.clearMarker();
         }
     }
     // #endif
