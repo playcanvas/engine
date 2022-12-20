@@ -104,9 +104,8 @@ const path = {
         const lastDelimiterIndex = pathname.lastIndexOf(path.delimiter);
         if (lastDelimiterIndex !== -1) {
             return [pathname.substring(0, lastDelimiterIndex), pathname.substring(lastDelimiterIndex + 1)];
-        } else {
-            return ["", pathname];
         }
+        return ["", pathname];
     },
 
     /**
