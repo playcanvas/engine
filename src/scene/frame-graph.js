@@ -1,7 +1,7 @@
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { Tracing } from '../core/tracing.js';
-import { DEVICETYPE_WEBGPU } from '../index.js';
+import { DEVICETYPE_WEBGPU } from '../platform/graphics/constants.js';
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
