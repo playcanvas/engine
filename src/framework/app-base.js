@@ -1215,7 +1215,7 @@ class AppBase extends EventHandler {
     // render a layer composition
     renderComposition(layerComposition) {
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
-        this.frameGraph.render();
+        this.frameGraph.render(this.graphicsDevice);
     }
 
     /**
