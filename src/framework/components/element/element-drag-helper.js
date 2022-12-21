@@ -215,7 +215,7 @@ class ElementDragHelper extends EventHandler {
 
         dragScale.x = 1 / dragScale.x;
         dragScale.y = 1 / dragScale.y;
-        dragScale.z = 1 / dragScale.z;
+        dragScale.z = 0;
     }
 
     /**
