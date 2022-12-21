@@ -46,7 +46,7 @@ import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-pr
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { ScopeId } from '../platform/graphics/scope-id.js';
 import { Shader } from '../platform/graphics/shader.js';
-import { ShaderInput } from '../platform/graphics/shader-input.js';
+import { WebglShaderInput } from '../platform/graphics/webgl/webgl-shader-input.js';
 import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
@@ -405,7 +405,7 @@ export const gfx = {
     RenderTarget: RenderTarget,
     ScopeId: ScopeId,
     Shader: Shader,
-    ShaderInput: ShaderInput,
+    ShaderInput: WebglShaderInput,
     Texture: Texture,
     UnsupportedBrowserError: UnsupportedBrowserError,
     VertexBuffer: VertexBuffer,
