@@ -791,6 +791,9 @@ _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
 
+_defineAlias('sheenGloss', 'sheenGlossiess');
+_defineAlias('clearCoatGloss', 'clearCostGlossiness');
+
 function _defineOption(name, newName) {
     if (name !== 'chunks' && name !== '_pass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
@@ -952,7 +955,7 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 
 // INPUT
 
-export const input = {
+export const input_aaaa = {
     getTouchTargetCoords: getTouchTargetCoords,
     Controller: Controller,
     GamePads: GamePads,

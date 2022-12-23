@@ -136,52 +136,53 @@ let _params = new Set();
  * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
  * increases as anisotropy value increases to maximum of 1.
  *
- * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer
+ * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatMap Monochrome
- * clear coat intensity map (default is null). If specified, will be multiplied by normalized
+ * clearcoat intensity map (default is null). If specified, will be multiplied by normalized
  * 'clearCoat' value and/or vertex colors.
- * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
- * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
- * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each
+ * @property {number} clearCoatMapUv Clearcoat intensity map UV channel.
+ * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clearcoat intensity map.
+ * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clearcoat intensity map. Each
  * component is between 0 and 1.
- * @property {number} clearCoatMapRotation Controls the 2D rotation (in degrees) of the clear coat
+ * @property {number} clearCoatMapRotation Controls the 2D rotation (in degrees) of the clearcoat
  * intensity map.
- * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can
+ * @property {string} clearCoatMapChannel Color channel of the clearcoat intensity map to use. Can
  * be "r", "g", "b" or "a".
- * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If
+ * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clearcoat intensity. If
  * clearCoatMap is set, it'll be multiplied by vertex colors.
- * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat
+ * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clearcoat
  * intensity. Can be "r", "g", "b" or "a".
- * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer
+ * @property {number} clearCoatGloss Defines the clearcoat glossiness of the clearcoat layer
  * from 0 (rough) to 1 (mirror).
+ * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss channel.
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatGlossMap Monochrome
- * clear coat glossiness map (default is null). If specified, will be multiplied by normalized
- * 'clearCoatGlossiness' value and/or vertex colors.
- * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
- * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
- * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map.
+ * clearcoat glossiness map (default is null). If specified, will be multiplied by normalized
+ * 'clearCoatGloss' value and/or vertex colors.
+ * @property {number} clearCoatGlossMapUv Clearcoat gloss map UV channel.
+ * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clearcoat gloss map.
+ * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clearcoat gloss map.
  * Each component is between 0 and 1.
  * @property {number} clearCoatGlossMapRotation Controls the 2D rotation (in degrees) of the clear
  * coat gloss map.
- * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use.
+ * @property {string} clearCoatGlossMapChannel Color channel of the clearcoat gloss map to use.
  * Can be "r", "g", "b" or "a".
- * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness.
+ * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clearcoat glossiness.
  * If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
- * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat
+ * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clearcoat
  * glossiness. Can be "r", "g", "b" or "a".
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatNormalMap The
- * clear coat normal map of the material (default is null). The texture must contains normalized,
+ * clearcoat normal map of the material (default is null). The texture must contains normalized,
  * tangent space normals.
- * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
- * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal
+ * @property {number} clearCoatNormalMapUv Clearcoat normal map UV channel.
+ * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clearcoat normal
  * map.
- * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal
+ * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clearcoat normal
  * map. Each component is between 0 and 1.
  * @property {number} clearCoatNormalMapRotation Controls the 2D rotation (in degrees) of the main
- * clear coat map.
- * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales
- * the assigned main clear coat normal map. It should be normally between 0 (no bump mapping) and 1
+ * clearcoat map.
+ * @property {number} clearCoatBumpiness The bumpiness of the clearcoat layer. This value scales
+ * the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
  * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceMap The
@@ -241,9 +242,11 @@ let _params = new Set();
  * mirror). A higher shininess value results in a more focused specular highlight. Glossiness map/
  * vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used
  * directly as constant output.
+ * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
  * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
  * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
  * vertex colors.
+ * @property {boolean} glossInvert Invert the gloss channel.
  * @property {number} glossMapUv Gloss map UV channel.
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b"
  * or "a".
@@ -332,8 +335,9 @@ let _params = new Set();
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
- * @property {number} sheenGlossiness The glossiness of the sheen (fabric) microfiber structure.
+ * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
  * This color value is a single value between 0 and 1.
+ * @property {boolean} sheenGlossInvert Invert the sheen gloss channel.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
@@ -467,7 +471,7 @@ let _params = new Set();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
+* @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
  * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
  * disable it in case when all reflection comes only from a few light sources, and you don't use an
  * environment map, therefore having mostly black reflection.
@@ -695,7 +699,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheen', getUniform('sheen'));
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
+                this._setParameter('material_sheenGlossiness', this.sheenGloss);
             }
 
             if (this.refractionIndex !== 1.0 / 1.5) {
@@ -714,11 +718,11 @@ class StandardMaterial extends Material {
 
         if (this.clearCoat > 0) {
             this._setParameter('material_clearCoat', this.clearCoat);
-            this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
+            this._setParameter('material_clearCoatGlossiness', this.clearCoatGloss);
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter('material_shininess', getUniform('shininess'));
+        this._setParameter('material_glossiness', getUniform('gloss'));
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
@@ -1103,15 +1107,27 @@ function _defineMaterialProps() {
     _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
-    _defineFloat('sheenGlossiness', 0.0);
+    _defineFloat('sheenGloss', 0.0);
+    _defineFlag('sheenGlossInvert', false);
 
-    _defineFloat('shininess', 25, (material, device, scene) => {
-        // Shininess is 0-100 value which is actually a 0-1 glossiness value.
+    _defineFloat('gloss', 0.25, (material, device, scene) => {
         return material.shadingModel === SPECULAR_PHONG ?
             // legacy: expand back to specular power
-            Math.pow(2, material.shininess * 0.01 * 11) :
-            material.shininess * 0.01;
+            Math.pow(2, material.gloss * 11) :
+            material.gloss;
     });
+    _defineFlag('glossInvert', false);
+
+    // shininess (range 0..100) - maps to internal gloss value (range 0..1)
+    Object.defineProperty(StandardMaterial.prototype, 'shininess', {
+        get: function() {
+            return this.gloss * 100;
+        },
+        set: function(value) {
+            this.gloss = value * 0.01;
+        }
+    });
+
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
@@ -1129,7 +1145,8 @@ function _defineMaterialProps() {
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
-    _defineFloat('clearCoatGlossiness', 1);
+    _defineFloat('clearCoatGloss', 1);
+    _defineFlag('clearCoatGlossInvert', false);
     _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
 

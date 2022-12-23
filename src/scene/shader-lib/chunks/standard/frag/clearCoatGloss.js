@@ -18,6 +18,10 @@ void getClearCoatGlossiness() {
     ccGlossiness *= saturate(vVertexColor.$VC);
     #endif
 
+    #ifdef MAPINVERT
+    ccGlossiness = 1.0 - ccGlossiness;
+    #endif
+
     ccGlossiness += 0.0000001;
 }
 `;

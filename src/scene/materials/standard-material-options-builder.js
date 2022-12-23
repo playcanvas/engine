@@ -237,13 +237,17 @@ class StandardMaterialOptionsBuilder {
         options.normalDetail = !!stdMat.normalMap;
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
-        options.clearCoatGlossiness = !!stdMat.clearCoatGlossiness;
-        options.clearCoatGlossTint = (stdMat.clearCoatGlossiness !== 1.0) ? 1 : 0;
+        options.clearCoatGloss = !!stdMat.clearCoatGloss;
+        options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0) ? 1 : 0;
 
         options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
         options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
-        options.sheenGlossinessTint = 1;
+        options.sheenGlossTint = 1;
+
+        options.glossInvert = stdMat.glossInvert;
+        options.sheenGlossInvert = stdMat.sheenGlossInvert;
+        options.clearCoatGlossInvert = stdMat.clearCoatGlossInvert;
 
         // LIT OPTIONS
         options.litOptions.useAmbientTint = options.ambientTint;

@@ -1007,9 +1007,9 @@ const extensionPbrSpecGlossiness = function (data, material, textures) {
         material.specular.set(1, 1, 1);
     }
     if (data.hasOwnProperty('glossinessFactor')) {
-        material.shininess = 100 * data.glossinessFactor;
+        material.gloss = data.glossinessFactor;
     } else {
-        material.shininess = 100;
+        material.gloss = 1.0;
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
@@ -1036,9 +1036,9 @@ const extensionClearCoat = function (data, material, textures) {
         extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
     }
     if (data.hasOwnProperty('clearcoatRoughnessFactor')) {
-        material.clearCoatGlossiness = data.clearcoatRoughnessFactor;
+        material.clearCoatGloss = data.clearcoatRoughnessFactor;
     } else {
-        material.clearCoatGlossiness = 0;
+        material.clearCoatGloss = 0;
     }
     if (data.hasOwnProperty('clearcoatRoughnessTexture')) {
         const clearcoatRoughnessTexture = data.clearcoatRoughnessTexture;
@@ -1058,32 +1058,7 @@ const extensionClearCoat = function (data, material, textures) {
         }
     }
 
-    const clearCoatGlossChunk = /* glsl */`
-        #ifdef MAPFLOAT
-        uniform float material_clearCoatGlossiness;
-        #endif
-        
-        void getClearCoatGlossiness() {
-            ccGlossiness = 1.0;
-        
-        #ifdef MAPFLOAT
-            ccGlossiness *= material_clearCoatGlossiness;
-        #endif
-        
-        #ifdef MAPTEXTURE
-            ccGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
-        #endif
-        
-        #ifdef MAPVERTEX
-            ccGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-        
-            ccGlossiness = 1.0 - ccGlossiness;
-        
-            ccGlossiness += 0.0000001;
-        }
-        `;
-    material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
+    material.clearCoatGlossInvert = true;
 };
 
 const extensionUnlit = function (data, material, textures) {
@@ -1181,36 +1156,7 @@ const extensionSheen = function (data, material, textures) {
         extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGlossiness']);
     }
 
-    const sheenGlossChunk = `
-    #ifdef MAPFLOAT
-    uniform float material_sheenGlossiness;
-    #endif
-
-    #ifdef MAPTEXTURE
-    uniform sampler2D texture_sheenGlossinessMap;
-    #endif
-
-    void getSheenGlossiness() {
-        float sheenGlossiness = 1.0;
-
-        #ifdef MAPFLOAT
-        sheenGlossiness *= material_sheenGlossiness;
-        #endif
-
-        #ifdef MAPTEXTURE
-        sheenGlossiness *= texture2DBias(texture_sheenGlossinessMap, $UV, textureBias).$CH;
-        #endif
-
-        #ifdef MAPVERTEX
-        sheenGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-
-        sheenGlossiness = 1.0 - sheenGlossiness;
-        sheenGlossiness += 0.0000001;
-        sGlossiness = sheenGlossiness;
-    }
-    `;
-    material.chunks.sheenGlossPS = sheenGlossChunk;
+    material.sheenGlossInvert = true;
 };
 
 const extensionVolume = function (data, material, textures) {
@@ -1266,34 +1212,6 @@ const extensionIridescence = function (data, material, textures) {
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
-    // TODO: integrate these shader chunks into the native engine
-    const glossChunk = `
-        #ifdef MAPFLOAT
-        uniform float material_shininess;
-        #endif
-        
-        void getGlossiness() {
-            dGlossiness = 1.0;
-        
-        #ifdef MAPFLOAT
-            dGlossiness *= material_shininess;
-        #endif
-        
-        #ifdef MAPTEXTURE
-            dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
-        #endif
-        
-        #ifdef MAPVERTEX
-            dGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-        
-            dGlossiness = 1.0 - dGlossiness;
-        
-            dGlossiness += 0.0000001;
-        }
-        `;
-
-
     const material = new StandardMaterial();
 
     // glTF doesn't define how to occlude specular
@@ -1343,10 +1261,11 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             material.metalness = 1;
         }
         if (pbrData.hasOwnProperty('roughnessFactor')) {
-            material.shininess = 100 * pbrData.roughnessFactor;
+            material.gloss = pbrData.roughnessFactor;
         } else {
-            material.shininess = 100;
+            material.gloss = 1;
         }
+        material.glossInvert = true;
         if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
             const metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
@@ -1355,8 +1274,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
             extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
         }
-
-        material.chunks.glossPS = glossChunk;
     }
 
     if (gltfMaterial.hasOwnProperty('normalTexture')) {
@@ -1415,6 +1332,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     } else {
         material.blendType = BLEND_NONE;
     }
+
     if (gltfMaterial.hasOwnProperty('doubleSided')) {
         material.twoSidedLighting = gltfMaterial.doubleSided;
         material.cull = gltfMaterial.doubleSided ? CULLFACE_NONE : CULLFACE_BACK;

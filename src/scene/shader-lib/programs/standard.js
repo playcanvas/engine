@@ -117,11 +117,12 @@ const standard = {
         return enabled ? `#define ${name}\n` : `#undef ${name}\n`;
     },
 
-    _addMapDefs: function (float, color, vertex, map) {
+    _addMapDefs: function (float, color, vertex, map, invert) {
         return this._addMapDef("MAPFLOAT", float) +
                this._addMapDef("MAPCOLOR", color) +
                this._addMapDef("MAPVERTEX", vertex) +
-               this._addMapDef("MAPTEXTURE", map);
+               this._addMapDef("MAPTEXTURE", map) +
+               this._addMapDef("MAPINVERT", invert);
     },
 
     /**
@@ -146,6 +147,7 @@ const standard = {
         const tintPropName = propName + "Tint";
         const vertexColorPropName = propName + "VertexColor";
         const detailModePropName = propName + "Mode";
+        const invertName = propName + "Invert";
 
         const tintOption = options[tintPropName];
         const vertexColorOption = options[vertexColorPropName];
@@ -204,8 +206,9 @@ const standard = {
 
         const isFloatTint = !!(tintOption & 1);
         const isVecTint = !!(tintOption & 2);
+        const invertOption = !!(options[invertName]);
 
-        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
+        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption, invertOption) + subCode;
         return subCode.replace(/\$/g, "");
     },
 
@@ -388,7 +391,7 @@ const standard = {
                     func.append("getSheen();");
 
                     decl.append("float sGlossiness;");
-                    code.append(this._addMap("sheenGlossiness", "sheenGlossPS", options, litShader.chunks, textureMapping));
+                    code.append(this._addMap("sheenGloss", "sheenGlossPS", options, litShader.chunks, textureMapping));
                     func.append("getSheenGlossiness();");
                 }
                 if (options.litOptions.useMetalness) {
