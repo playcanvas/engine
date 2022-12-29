@@ -471,7 +471,7 @@ let _params = new Set();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
-* @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
+ * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
  * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
  * disable it in case when all reflection comes only from a few light sources, and you don't use an
  * environment map, therefore having mostly black reflection.
@@ -1120,10 +1120,10 @@ function _defineMaterialProps() {
 
     // shininess (range 0..100) - maps to internal gloss value (range 0..1)
     Object.defineProperty(StandardMaterial.prototype, 'shininess', {
-        get: function() {
+        get: function () {
             return this.gloss * 100;
         },
-        set: function(value) {
+        set: function (value) {
             this.gloss = value * 0.01;
         }
     });
