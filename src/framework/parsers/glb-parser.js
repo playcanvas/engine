@@ -1146,14 +1146,14 @@ const extensionSheen = function (data, material, textures) {
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
     if (data.hasOwnProperty('sheenRoughnessFactor')) {
-        material.sheenGlossiness = data.sheenRoughnessFactor;
+        material.sheenGloss = data.sheenRoughnessFactor;
     } else {
-        material.sheenGlossiness = 0.0;
+        material.sheenGloss = 0.0;
     }
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
-        material.sheenGlossinessMap = textures[data.sheenRoughnessTexture.index];
-        material.sheenGlossinessMapChannel = 'a';
-        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGlossiness']);
+        material.sheenGlossMap = textures[data.sheenRoughnessTexture.index];
+        material.sheenGlossMapChannel = 'a';
+        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGloss']);
     }
 
     material.sheenGlossInvert = true;

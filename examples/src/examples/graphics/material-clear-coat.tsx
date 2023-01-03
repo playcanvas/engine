@@ -90,7 +90,7 @@ class MaterialClearCoatExample {
             clearCoatMaterial.bumpiness = 0.7;
             clearCoatMaterial.useMetalness = true;
             clearCoatMaterial.clearCoat = 0.25;
-            clearCoatMaterial.clearCoatGlossiness = 0.9;
+            clearCoatMaterial.clearCoatGloss = 0.9;
             clearCoatMaterial.update();
 
             createSphere(0.5, 0, 0, clearCoatMaterial);
