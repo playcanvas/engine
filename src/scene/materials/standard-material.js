@@ -924,9 +924,9 @@ const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
-function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
+function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
     // store texture name
-    _matTex2D[name] = channels;
+    _matTex2D[name] = channel.length || -1;
 
     defineProp({
         name: `${name}Map`,
@@ -959,32 +959,23 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
         defaultValue: uv
     });
 
-    if (channels > 0) {
+    if (channel) {
         defineProp({
             name: `${name}MapChannel`,
-            defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
-        });
-    }
-
-    if (vertexColor) {
-        defineProp({
-            name: `${name}VertexColor`,
-            defaultValue: false
+            defaultValue: channel
         });
 
-        if (channels > 0) {
+        if (vertexColor) {
+            defineProp({
+                name: `${name}VertexColor`,
+                defaultValue: false
+            });
+
             defineProp({
                 name: `${name}VertexColorChannel`,
-                defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
+                defaultValue: channel
             });
         }
-    }
-
-    if (detailMode) {
-        defineProp({
-            name: `${name}Mode`,
-            defaultValue: DETAILMODE_MUL
-        });
     }
 
     // construct the transform uniform
@@ -1215,30 +1206,31 @@ function _defineMaterialProps() {
     _defineFlag('msdfTextAttribute', false);
     _defineFlag('useIridescence', false);
 
-    _defineTex2D('diffuse', 0, 3, '', true);
-    _defineTex2D('specular', 0, 3, '', true);
-    _defineTex2D('emissive', 0, 3, '', true);
-    _defineTex2D('thickness', 0, 1, '', true);
-    _defineTex2D('specularityFactor', 0, 1, '', true);
-    _defineTex2D('normal', 0, -1, '', false);
-    _defineTex2D('metalness', 0, 1, '', true);
-    _defineTex2D('gloss', 0, 1, '', true);
-    _defineTex2D('opacity', 0, 1, 'a', true);
-    _defineTex2D('refraction', 0, 1, '', true);
-    _defineTex2D('height', 0, 1, '', false);
-    _defineTex2D('ao', 0, 1, '', true);
-    _defineTex2D('light', 1, 3, '', true);
-    _defineTex2D('msdf', 0, 3, '', false);
-    _defineTex2D('diffuseDetail', 0, 3, '', false, true);
-    _defineTex2D('normalDetail', 0, -1, '', false);
-    _defineTex2D('clearCoat', 0, 1, '', true);
-    _defineTex2D('clearCoatGloss', 0, 1, '', true);
-    _defineTex2D('clearCoatNormal', 0, -1, '', false);
-    _defineTex2D('sheen', 0, 3, '', true);
-    _defineTex2D('sheenGloss', 0, 1, '', true);
+    _defineTex2D('diffuse');
+    _defineTex2D('specular');
+    _defineTex2D('emissive');
+    _defineTex2D('thickness', 'g');
+    _defineTex2D('specularityFactor', 'g');
+    _defineTex2D('normal', '');
+    _defineTex2D('metalness', 'g');
+    _defineTex2D('gloss', 'g');
+    _defineTex2D('opacity', 'a');
+    _defineTex2D('refraction', 'g');
+    _defineTex2D('height', 'g', false);
+    _defineTex2D('ao', 'g');
+    _defineTex2D('light', 'rgb', true, 1);
+    _defineTex2D('msdf', '');
+    _defineTex2D('diffuseDetail', 'rgb', false);
+    _defineTex2D('normalDetail', '');
+    _defineTex2D('clearCoat', 'g');
+    _defineTex2D('clearCoatGloss', 'g');
+    _defineTex2D('clearCoatNormal', '');
+    _defineTex2D('sheen', 'rgb');
+    _defineTex2D('sheenGloss', 'g');
+    _defineTex2D('iridescence', 'g');
+    _defineTex2D('iridescenceThickness', 'g');
 
-    _defineTex2D('iridescence', 0, 1, '', true);
-    _defineTex2D('iridescenceThickness', 0, 1, '', true);
+    _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');

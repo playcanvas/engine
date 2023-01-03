@@ -1,13 +1,18 @@
-function _textureParameter(name, channel = true) {
-    const tex = {};
-    tex[`${name}Map`] = 'texture';
-    if (channel)
-        tex[`${name}MapChannel`] = 'string';
-    tex[`${name}MapUv`] = 'number';
-    tex[`${name}MapTiling`] = 'vec2';
-    tex[`${name}MapOffset`] = 'vec2';
-    tex[`${name}MapRotation`] = 'number';
-    return tex;
+function _textureParameter(name, channel = true, vertexColor = true) {
+    const result = {};
+    result[`${name}Map`] = 'texture';
+    result[`${name}MapTiling`] = 'vec2';
+    result[`${name}MapOffset`] = 'vec2';
+    result[`${name}MapRotation`] = 'number';
+    result[`${name}MapUv`] = 'number';
+    if (channel) {
+        result[`${name}MapChannel`] = 'string';
+        if (vertexColor) {
+            result[`${name}VertexColor`] = 'boolean';
+            result[`${name}VertexColorChannel`] = 'string';
+        }
+    }
+    return result;
 }
 
 const standardMaterialParameterTypes = {
@@ -26,22 +31,16 @@ const standardMaterialParameterTypes = {
 
     diffuse: 'rgb',
     diffuseTint: 'boolean',
-    diffuseVertexColor: 'boolean',
-    diffuseVertexColorChannel: 'string',
     ..._textureParameter('diffuse'),
-    ..._textureParameter('diffuseDetail'),
+    ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
 
     specular: 'rgb',
     specularTint: 'boolean',
-    specularVertexColor: 'boolean',
-    specularVertexColorChannel: 'string',
     ..._textureParameter('specular'),
     occludeSpecular: 'enum:occludeSpecular',
     specularityFactor: 'number',
     specularityFactorTint: 'boolean',
-    specularityFactorVertexColor: 'boolean',
-    specularityFactorVertexColorChannel: 'string',
     ..._textureParameter('specularityFactor'),
 
     useMetalness: 'boolean',
@@ -49,8 +48,6 @@ const standardMaterialParameterTypes = {
     enableGGXSpecular: 'boolean',
     anisotropy: 'number',
     metalnessTint: 'boolean',
-    metalnessVertexColor: 'boolean',
-    metalnessVertexColorChannel: 'string',
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
 
@@ -58,41 +55,29 @@ const standardMaterialParameterTypes = {
     shininess: 'number',
     gloss: 'number',
     glossInvert: 'boolean',
-    glossVertexColor: 'boolean',
-    glossVertexColorChannel: 'string',
     ..._textureParameter('gloss'),
 
     clearCoat: 'number',
-    clearCoatVertexColor: 'boolean',
-    clearCoatVertexColorChannel: 'string',
     ..._textureParameter('clearCoat'),
     clearCoatGloss: 'number',
     clearCoatGlossInvert: 'boolean',
-    clearCoatGlossVertexColor: 'boolean',
-    clearCoatGlossVertexColorChannel: 'string',
     ..._textureParameter('clearCoatGloss'),
     clearCoatBumpiness: 'number',
     ..._textureParameter('clearCoatNormal', false),
 
     useSheen: 'boolean',
     sheen: 'rgb',
-    ..._textureParameter('sheen'),
     sheenTint: 'boolean',
-    sheenVertexColor: 'boolean',
-    sheenVertexColorChannel: 'string',
+    ..._textureParameter('sheen'),
     sheenGloss: 'number',
+    sheenGlossTint: 'boolean',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
-    sheenGlossTint: 'boolean',
-    sheenGlossVertexColor: 'boolean',
-    sheenGlossVertexColorChannel: 'string',
 
     fresnelModel: 'number',
 
     emissive: 'rgb',
     emissiveTint: 'boolean',
-    emissiveVertexColor: 'boolean',
-    emissiveVertexColorChannel: 'string',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 
@@ -102,30 +87,24 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('normalDetail', false),
     normalDetailMapBumpiness: 'number',
 
-    ..._textureParameter('height'),
+    ..._textureParameter('height', true, false),
     heightMapFactor: 'number',
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
     alphaFade: 'number',
     opacity: 'number',
-    opacityVertexColor: 'boolean',
-    opacityVertexColorChannel: 'string',
     ..._textureParameter('opacity'),
     opacityFadesSpecular: 'boolean',
 
     reflectivity: 'number',
     refraction: 'number',
-    ..._textureParameter('refraction'),
     refractionTint: 'boolean',
-    refractionVertexColor: 'boolean',
-    refractionVertexColorChannel: 'string',
+    ..._textureParameter('refraction'),
     refractionIndex: 'number',
     thickness: 'number',
-    ..._textureParameter('thickness'),
     thicknessTint: 'boolean',
-    thicknessVertexColor: 'boolean',
-    thicknessVertexColorChannel: 'string',
+    ..._textureParameter('thickness'),
     attenuation: 'rgb',
     attenuationDistance: 'number',
     useDynamicRefraction: 'boolean',
@@ -136,17 +115,13 @@ const standardMaterialParameterTypes = {
 
     useIridescence: 'boolean',
     iridescence: 'number',
-    ..._textureParameter('iridescence'),
     iridescenceTint: 'boolean',
-    iridescenceVertexColor: 'boolean',
-    iridescenceVertexColorChannel: 'string',
+    ..._textureParameter('iridescence'),
+    iridescenceThicknessTint: 'boolean',
     iridescenceThicknessMin: 'number',
     iridescenceThicknessMax: 'number',
-    ..._textureParameter('iridescenceThickness'),
-    iridescenceThicknessTint: 'boolean',
-    iridescenceThicknessVertexColor: 'boolean',
-    iridescenceThicknessVertexColorChannel: 'string',
     iridescenceRefractionIndex: 'number',
+    ..._textureParameter('iridescenceThickness'),
 
     lightVertexColor: 'boolean',
     lightVertexColorChannel: 'string',
