@@ -20,6 +20,9 @@ import { LitOptions } from "./lit-options.js";
  * value.
  * @property {boolean} opacityTint Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
  * @property {boolean} packedNormal If normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.
+ * @property {boolean} glossInvert Invert the gloss channel.
+ * @property {boolean} sheenGlossInvert Invert the sheen gloss channel.
+ * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss channel.
  */
 class StandardMaterialOptions {
     constructor() {
@@ -36,6 +39,9 @@ class StandardMaterialOptions {
         this.emissiveEncoding = 'linear';
         this.lightMapEncoding = 'linear';
         this.packedNormal = false;
+        this.glossInvert = false;
+        this.sheenGlossInvert = false;
+        this.clearCoatGlossInvert = false;
 
         this.litOptions = new LitOptions();
     }
