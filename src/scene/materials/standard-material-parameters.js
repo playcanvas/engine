@@ -24,9 +24,6 @@ const standardMaterialParameterTypes = {
 
     ambient: 'rgb',
     ambientTint: 'boolean',
-
-    aoVertexColor: 'boolean',
-    aoVertexColorChannel: 'string',
     ..._textureParameter('ao'),
 
     diffuse: 'rgb',
@@ -123,8 +120,6 @@ const standardMaterialParameterTypes = {
     iridescenceRefractionIndex: 'number',
     ..._textureParameter('iridescenceThickness'),
 
-    lightVertexColor: 'boolean',
-    lightVertexColorChannel: 'string',
     ..._textureParameter('light'),
 
     depthTest: 'boolean',

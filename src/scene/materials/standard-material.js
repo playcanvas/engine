@@ -1099,7 +1099,6 @@ function _defineMaterialProps() {
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
-    _defineFlag('sheenGlossInvert', false);
 
     _defineFloat('gloss', 0.25, (material, device, scene) => {
         return material.shadingModel === SPECULAR_PHONG ?
@@ -1107,7 +1106,6 @@ function _defineMaterialProps() {
             Math.pow(2, material.gloss * 11) :
             material.gloss;
     });
-    _defineFlag('glossInvert', false);
 
     // shininess (range 0..100) - maps to internal gloss value (range 0..1)
     Object.defineProperty(StandardMaterial.prototype, 'shininess', {
@@ -1137,7 +1135,6 @@ function _defineMaterialProps() {
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
     _defineFloat('clearCoatGloss', 1);
-    _defineFlag('clearCoatGlossInvert', false);
     _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
 
@@ -1205,6 +1202,9 @@ function _defineMaterialProps() {
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
     _defineFlag('msdfTextAttribute', false);
     _defineFlag('useIridescence', false);
+    _defineFlag('glossInvert', false);
+    _defineFlag('sheenGlossInvert', false);
+    _defineFlag('clearCoatGlossInvert', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
