@@ -155,7 +155,8 @@ let _params = new Set();
  * intensity. Can be "r", "g", "b" or "a".
  * @property {number} clearCoatGloss Defines the clearcoat glossiness of the clearcoat layer
  * from 0 (rough) to 1 (mirror).
- * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss channel.
+ * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss component (default is false).
+ * Enabling this flag results in material treating the clear coat gloss members as roughness.
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatGlossMap Monochrome
  * clearcoat glossiness map (default is null). If specified, will be multiplied by normalized
  * 'clearCoatGloss' value and/or vertex colors.
@@ -246,7 +247,8 @@ let _params = new Set();
  * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
  * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
  * vertex colors.
- * @property {boolean} glossInvert Invert the gloss channel.
+ * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
+ * flag results in material treating the gloss members as roughness.
  * @property {number} glossMapUv Gloss map UV channel.
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b"
  * or "a".
@@ -337,7 +339,8 @@ let _params = new Set();
  * sheen tint are set, they'll be multiplied by vertex colors.
  * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
  * This color value is a single value between 0 and 1.
- * @property {boolean} sheenGlossInvert Invert the sheen gloss channel.
+ * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
+ * Enabling this flag results in material treating the sheen gloss members as roughness.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
