@@ -9,7 +9,7 @@ import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADOWUPDATE_NONE
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
@@ -864,10 +864,20 @@ class Renderer {
      */
     cullShadowmaps(comp) {
 
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         // shadow casters culling for local (point and spot) lights
         for (let i = 0; i < comp._lights.length; i++) {
             const light = comp._lights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+
+                if (isClustered) {
+                    // if atlas slot is reassigned, make sure to update the shadow map, including the culling
+                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                    }
+                }
+
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     const casters = comp._lightCompositionData[i].shadowCastersList;
                     this._shadowRendererLocal.cull(light, casters);
@@ -958,6 +968,10 @@ class Renderer {
                 }
             }
         }
+
+        // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
+        // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
+        this.updateLightTextureAtlas(comp);
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);
