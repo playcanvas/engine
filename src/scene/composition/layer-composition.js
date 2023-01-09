@@ -542,6 +542,8 @@ class LayerComposition extends EventHandler {
             const ra = this._renderActions[i];
             const layer = this.layerList[ra.layerIndex];
 
+            ra.lightClusters = null;
+
             // if the layer has lights used by clusters
             if (layer.hasClusteredLights) {
 
