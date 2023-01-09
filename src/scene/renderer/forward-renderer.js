@@ -17,8 +17,7 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
-    SHADOWUPDATE_NONE,
-    SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    LAYERID_DEPTH
 } from '../constants.js';
 
 import { Renderer } from './renderer.js';
@@ -424,17 +423,9 @@ class ForwardRenderer extends Renderer {
             const light = lights[i];
             Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
 
-            if (isClustered) {
-
-                // skip clustered shadows with no assigned atlas slot
-                if (!light.atlasViewportAllocated) {
-                    continue;
-                }
-
-                // if atlas slot is reassigned, make sure shadow is updated
-                if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                    light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                }
+            // skip clustered shadows with no assigned atlas slot
+            if (isClustered && !light.atlasViewportAllocated) {
+                continue;
             }
 
             this.shadowRenderer.render(light, camera);
@@ -830,9 +821,6 @@ class ForwardRenderer extends Renderer {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
         if (clusteredLightingEnabled) {
-
-            // update shadow / cookie atlas allocation for the visible lights
-            this.updateLightTextureAtlas(layerComposition);
 
             const renderPass = new RenderPass(this.device, () => {
                 // render cookies for all local visible lights
