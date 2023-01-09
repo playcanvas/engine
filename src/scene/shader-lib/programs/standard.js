@@ -59,15 +59,20 @@ const standard = {
         }
 
         if (options.litOptions) {
-            for (const m in options.litOptions)
-                key += m + options.litOptions[m];
-            if (options.litOptions.lights) {
-                const isClustered = options.litOptions.clusteredLightingEnabled;
-                for (let i = 0; i < options.litOptions.lights.length; i++) {
-                    const light = options.litOptions.lights[i];
-                    if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                        key += light.key;
+
+            for (const m in options.litOptions) {
+
+                // handle lights in a custom way
+                if (m === 'lights') {
+                    const isClustered = options.litOptions.clusteredLightingEnabled;
+                    for (let i = 0; i < options.litOptions.lights.length; i++) {
+                        const light = options.litOptions.lights[i];
+                        if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                            key += light.key;
+                        }
                     }
+                } else {
+                    key += m + options.litOptions[m];
                 }
             }
         }
