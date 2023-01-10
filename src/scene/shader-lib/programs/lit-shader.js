@@ -1016,7 +1016,7 @@ class LitShader {
         if (addAmbient) {
             code += "    addAmbient();\n";
             if (options.conserveEnergy && options.useSpecular) {
-                code += `   dDiffuseLight = mix(dDiffuseLight, vec3(0), dSpecularity);`;
+                code += `   dDiffuseLight = dDiffuseLight * (1.0 - dSpecularity);`;
             }
 
             // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
@@ -1219,7 +1219,7 @@ class LitShader {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
                     if (options.conserveEnergy && options.useSpecular) {
-                        code += "    dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
+                        code += "    dDiffuseLight += ((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dLTCSpecFres);\n";
                     } else {
                         code += "    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
@@ -1227,7 +1227,7 @@ class LitShader {
 
                     // punctual light
                     if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
-                        code += "    dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
+                        code += "    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dSpecularity);\n";
                     } else {
                         code += "    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
