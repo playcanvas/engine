@@ -21,7 +21,7 @@ class CompiledShaderCache {
     // maps shader source to a compiled WebGL shader
     map = new Map();
 
-    // destroy all created shaders when the device is dstroyed
+    // destroy all created shaders when the device is destroyed
     destroy(device) {
         this.map.forEach((shader) => {
             device.gl.deleteShader(shader);
