@@ -1248,7 +1248,7 @@ semanticToLocation[SEMANTIC_ATTR13] = 13;
 semanticToLocation[SEMANTIC_ATTR14] = 14;
 semanticToLocation[SEMANTIC_ATTR15] = 15;
 
-/**s
+/**
  * Chunk API versions
  *
  * @type {string}
