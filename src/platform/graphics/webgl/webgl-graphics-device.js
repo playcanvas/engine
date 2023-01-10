@@ -2714,7 +2714,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             if (shader.failed) {
                 return false;
-            } else if (!shader.ready && !shader.impl.postLink(this, shader)) {
+            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
                 shader.failed = true;
                 return false;
             }

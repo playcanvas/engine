@@ -47,7 +47,11 @@ class WebglShader {
 
     constructor(shader) {
         this.init();
-        this.compileAndLink(shader.device, shader);
+
+        // kick off vertex and fragment shader compilation, but not linking here, as that would
+        // make it blocking.
+        this.compile(shader.device, shader);
+
         shader.device.shaders.push(shader);
     }
 
@@ -87,16 +91,29 @@ class WebglShader {
      * @param {import('../shader.js').Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
-        this.compileAndLink(device, shader);
+        this.compile(device, shader);
     }
 
     /**
-     * Compile and link a shader program.
+     * Compile shader programs.
      *
      * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
      * @param {import('../shader.js').Shader} shader - The shader to compile.
      */
-    compileAndLink(device, shader) {
+    compile(device, shader) {
+
+        const definition = shader.definition;
+        this.glVertexShader = this._compileShaderSource(device, definition.vshader, true);
+        this.glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
+    }
+
+    /**
+     * Link shader programs. This is called at a later stage, to allow many shaders to compile in parallel.
+     *
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../shader.js').Shader} shader - The shader to compile.
+     */
+    link(device, shader) {
 
         let startTime = 0;
         Debug.call(() => {
@@ -104,16 +121,14 @@ class WebglShader {
             startTime = now();
         });
 
-        const definition = shader.definition;
-        const glVertexShader = this._compileShaderSource(device, definition.vshader, true);
-        const glFragmentShader = this._compileShaderSource(device, definition.fshader, false);
-
         const gl = device.gl;
         const glProgram = gl.createProgram();
+        this.glProgram = glProgram;
 
-        gl.attachShader(glProgram, glVertexShader);
-        gl.attachShader(glProgram, glFragmentShader);
+        gl.attachShader(glProgram, this.glVertexShader);
+        gl.attachShader(glProgram, this.glFragmentShader);
 
+        const definition = shader.definition;
         const attrs = definition.attributes;
         if (device.webgl2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
@@ -140,11 +155,6 @@ class WebglShader {
         }
 
         gl.linkProgram(glProgram);
-
-        // Cache the WebGL objects on the shader
-        this.glVertexShader = glVertexShader;
-        this.glFragmentShader = glFragmentShader;
-        this.glProgram = glProgram;
 
         Debug.call(() => {
             this.compileDuration = now() - startTime;
@@ -216,15 +226,18 @@ class WebglShader {
     }
 
     /**
-     * Extract attribute and uniform information from a successfully linked shader.
+     * Link the shader, and extract its attributes and uniform information.
      *
      * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
      * @param {import('../shader.js').Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
-    postLink(device, shader) {
-        const gl = device.gl;
+    finalize(device, shader) {
 
+        // finish linking at this point, giving system more time to compile shaders by now
+        this.link(device, shader);
+
+        const gl = device.gl;
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
@@ -241,14 +254,14 @@ class WebglShader {
             linkStartTime = now();
         });
 
-        // Check for compilation errors
-        if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
-            return false;
-
-        if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
-            return false;
-
         if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+
+            // Check for compilation errors
+            if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
+                return false;
+
+            if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
+                return false;
 
             const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
 
