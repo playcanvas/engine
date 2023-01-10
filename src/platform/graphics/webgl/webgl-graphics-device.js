@@ -738,7 +738,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteTransformFeedback(this.feedback);
         }
 
-        this.clearShaderCache();
         this.clearVertexArrayObjectCache();
 
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
@@ -1089,10 +1088,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     initializeContextCaches() {
         super.initializeContextCaches();
-
-        // Shader code to WebGL shader cache
-        this.vertexShaderCache = {};
-        this.fragmentShaderCache = {};
 
         // cache of VAOs
         this._vaoMap = new Map();
@@ -2769,23 +2764,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             return PIXELFORMAT_RGBA32F;
         } /* else */
         return null;
-    }
-
-    /**
-     * Frees memory from all shaders ever allocated with this device.
-     *
-     * @ignore
-     */
-    clearShaderCache() {
-        const gl = this.gl;
-        for (const shaderSrc in this.fragmentShaderCache) {
-            gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
-            delete this.fragmentShaderCache[shaderSrc];
-        }
-        for (const shaderSrc in this.vertexShaderCache) {
-            gl.deleteShader(this.vertexShaderCache[shaderSrc]);
-            delete this.vertexShaderCache[shaderSrc];
-        }
     }
 
     /**

@@ -158,6 +158,8 @@ class ProgramLibrary {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
             }
+
+            // Note: this was added in #4792 and it does not filter out the default values, like the loop above
             for (const p in options.litOptions) {
                 opt[p] = options.litOptions[p];
             }

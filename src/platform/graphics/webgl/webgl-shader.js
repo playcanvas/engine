@@ -4,6 +4,7 @@ import { now } from '../../../core/time.js';
 
 import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
+import { DeviceCache } from '../device-cache.js';
 
 let _totalCompileTime = 0;
 
@@ -14,6 +15,27 @@ const _vertexShaderBuiltins = [
     'gl_BaseVertex',
     'gl_BaseInstance'
 ];
+
+// class used to hold compiled WebGL vertex or fragment shaders in the device cache
+class CompiledShaderCache {
+    // maps shader source to a compiled WebGL shader
+    map = new Map();
+
+    // destroy all created shaders when the device is destroyed
+    destroy(device) {
+        this.map.forEach((shader) => {
+            device.gl.deleteShader(shader);
+        });
+    }
+
+    // just empty the cache when the context is lost
+    loseContext(device) {
+        this.map.clear();
+    }
+}
+
+const _vertexShaderCache = new DeviceCache();
+const _fragmentShaderCache = new DeviceCache();
 
 /**
  * A WebGL implementation of the Shader.
@@ -148,8 +170,15 @@ class WebglShader {
      */
     _compileShaderSource(device, src, isVertexShader) {
         const gl = device.gl;
-        const shaderCache = isVertexShader ? device.vertexShaderCache : device.fragmentShaderCache;
-        let glShader = shaderCache[src];
+
+        // device cache for current device, containing cache of compiled shaders
+        const shaderDeviceCache = isVertexShader ? _vertexShaderCache : _fragmentShaderCache;
+        const shaderCache = shaderDeviceCache.get(device, () => {
+            return new CompiledShaderCache();
+        });
+
+        // try to get compiled shader from the cache
+        let glShader = shaderCache.map.get(src);
 
         if (!glShader) {
             // #if _PROFILER
@@ -165,7 +194,7 @@ class WebglShader {
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);
 
-            shaderCache[src] = glShader;
+            shaderCache.map.set(src, glShader);
 
             // #if _PROFILER
             const endTime = now();
