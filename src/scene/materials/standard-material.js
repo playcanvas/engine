@@ -702,7 +702,7 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheen', getUniform('sheen'));
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGlossiness', this.sheenGloss);
+                this._setParameter('material_sheenGloss', this.sheenGloss);
             }
 
             if (this.refractionIndex !== 1.0 / 1.5) {
@@ -721,11 +721,11 @@ class StandardMaterial extends Material {
 
         if (this.clearCoat > 0) {
             this._setParameter('material_clearCoat', this.clearCoat);
-            this._setParameter('material_clearCoatGlossiness', this.clearCoatGloss);
+            this._setParameter('material_clearCoatGloss', this.clearCoatGloss);
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter('material_glossiness', getUniform('gloss'));
+        this._setParameter('material_gloss', getUniform('gloss'));
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));

@@ -1,13 +1,13 @@
 export default /* glsl */`
 #ifdef MAPFLOAT
-uniform float material_clearCoatGlossiness;
+uniform float material_clearCoatGloss;
 #endif
 
 void getClearCoatGlossiness() {
     ccGlossiness = 1.0;
 
     #ifdef MAPFLOAT
-    ccGlossiness *= material_clearCoatGlossiness;
+    ccGlossiness *= material_clearCoatGloss;
     #endif
 
     #ifdef MAPTEXTURE
