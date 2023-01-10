@@ -1015,6 +1015,9 @@ class LitShader {
 
         if (addAmbient) {
             code += "    addAmbient();\n";
+            if (options.conserveEnergy && options.useSpecular) {
+                code += `   dDiffuseLight = mix(dDiffuseLight, vec3(0), dSpecularity);`;
+            }
 
             // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
             if (options.separateAmbient) {
