@@ -137,9 +137,10 @@ const standardMaterialParameterTypes = {
     useSkybox: 'boolean',
     useGammaTonemap: 'boolean',
 
-    envAtlas: 'texture'
+    envAtlas: 'texture',
 
-    // twoSidedLighting
+    twoSidedLighting: 'boolean'
+
     // nineSlicedMode
     // pixelSnap
     // forceUv1

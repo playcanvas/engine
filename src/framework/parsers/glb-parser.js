@@ -1167,6 +1167,7 @@ const extensionVolume = function (data, material, textures) {
     }
     if (data.hasOwnProperty('thicknessTexture')) {
         material.thicknessMap = textures[data.thicknessTexture.index];
+        material.thicknessMapChannel = 'g';
         extractTextureTransform(data.thicknessTexture, material, ['thickness']);
     }
     if (data.hasOwnProperty('attenuationDistance')) {
