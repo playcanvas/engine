@@ -1015,7 +1015,7 @@ class LitShader {
 
         if (addAmbient) {
             code += "    addAmbient();\n";
-            if (options.conserveEnergy && options.useSpecular && options.shadingModel !== SPECULAR_PHONG) {
+            if (options.conserveEnergy && options.useSpecular) {
                 code += `   dDiffuseLight = dDiffuseLight * (1.0 - dSpecularity);`;
             }
 
