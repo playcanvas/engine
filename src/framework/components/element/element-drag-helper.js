@@ -79,6 +79,7 @@ class ElementDragHelper extends EventHandler {
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
+        this._element[onOrOff]('selectstart', this._onMouseDownOrTouchStart, this);
     }
 
     /**
@@ -105,6 +106,10 @@ class ElementDragHelper extends EventHandler {
             this._element[onOrOff]('touchend', this._onMouseUpOrTouchEnd, this);
             this._element[onOrOff]('touchcancel', this._onMouseUpOrTouchEnd, this);
         }
+
+        // webxr events
+        this._element[onOrOff]('selectmove', this._onMove, this);
+        this._element[onOrOff]('selectend', this._onMouseUpOrTouchEnd, this);
 
         this._hasDragListeners = isOn;
     }
@@ -140,14 +145,18 @@ class ElementDragHelper extends EventHandler {
      * This method calculates the `Vec3` intersection point of plane/ray intersection based on
      * the mouse/touch input event. If there is no intersection, it returns `null`.
      *
-     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent | import('../../input/element-input').ElementMouseEvent | import('../../input/element-input').ElementSelectEvent} event - The event.
      * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
      * is an intersection, otherwise `null`
      * @private
      */
     _screenToLocal(event) {
-        this._determineInputPosition(event);
-        this._chooseRayOriginAndDirection();
+        if (event.inputSource) {
+            _ray.set(event.inputSource.getOrigin(), event.inputSource.getDirection());
+        } else {
+            this._determineInputPosition(event);
+            this._chooseRayOriginAndDirection();
+        }
 
         _plane.point.copy(this._element.entity.getPosition());
         _plane.normal.copy(this._element.entity.forward).mulScalar(-1);
