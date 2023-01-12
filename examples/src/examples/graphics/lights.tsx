@@ -92,7 +92,9 @@ class LightsExample {
                 // @ts-ignore
                 pc.TextureHandler,
                 // @ts-ignore
-                pc.ContainerHandler
+                pc.ContainerHandler,
+                // @ts-ignore
+                pc.CubemapHandler
             ];
 
             const app = new pc.AppBase(canvas);
