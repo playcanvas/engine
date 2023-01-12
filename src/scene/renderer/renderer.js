@@ -971,7 +971,9 @@ class Renderer {
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
         // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
-        this.updateLightTextureAtlas(comp);
+        if (this.scene.clusteredLightingEnabled) {
+            this.updateLightTextureAtlas(comp);
+        }
 
         // cull shadow casters for all lights
         this.cullShadowmaps(comp);

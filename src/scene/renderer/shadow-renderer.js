@@ -322,7 +322,9 @@ class ShadowRenderer {
             light.shadowUpdateMode = SHADOWUPDATE_NONE;
         }
 
-        this.renderer._shadowMapUpdates += light.numShadowFaces;
+        if (needs) {
+            this.renderer._shadowMapUpdates += light.numShadowFaces;
+        }
 
         return needs;
     }
