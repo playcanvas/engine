@@ -1866,7 +1866,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
                 // #endif
 
-                continue; // Because unset constants shouldn't raise random errors
+                Debug.errorOnce(`Shader [${shader.label}] requires texture sampler [${samplerName}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+
+                // skip this draw call to avoid incorrect rendering / webgl errors
+                return;
             }
 
             if (samplerValue instanceof Texture) {
@@ -1920,6 +1923,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // Call the function to commit the uniform value
                 if (scopeId.value !== null) {
                     this.commitFunction[uniform.dataType](uniform, scopeId.value);
+                } else {
+                    // commented out till engine issue #4971 is sorted out
+                    // Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
                 }
             }
         }
