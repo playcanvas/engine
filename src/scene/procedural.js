@@ -102,6 +102,7 @@ function calculateNormals(positions, indices) {
  *     tangents: tangents,
  *     uvs: uvs,
  *     indices: indices
+ * });
  */
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
