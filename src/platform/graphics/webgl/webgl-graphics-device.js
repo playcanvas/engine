@@ -1156,6 +1156,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Called after a batch of shaders was created, to guide in their optimal preparation for rendering.
+     *
+     * @ignore
+     */
+    endShaderBatch() {
+        WebglShader.endShaderBatch(this);
+    }
+
+    /**
      * Set the active rectangle for rendering on the specified device.
      *
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.

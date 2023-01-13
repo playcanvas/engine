@@ -513,6 +513,9 @@ class ForwardRenderer extends Renderer {
 
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
 
+                    // marker to allow us to see the source node for shader alloc
+                    DebugGraphics.pushGpuMarker(device, drawCall.node.name);
+
                     // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
                     if (!drawCall.isStatic) {
@@ -529,6 +532,8 @@ class ForwardRenderer extends Renderer {
                         drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
                     }
                     drawCall._lightHash = lightHash;
+
+                    DebugGraphics.popGpuMarker(device);
                 }
 
                 Debug.assert(drawCall._shader[pass], "no shader for pass", material);
@@ -541,6 +546,9 @@ class ForwardRenderer extends Renderer {
                 prevStatic = drawCall.isStatic;
             }
         }
+
+        // process any catch of shaders created here
+        device.endShaderBatch();
 
         return _drawCallList;
     }

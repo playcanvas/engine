@@ -259,6 +259,9 @@ class ShadowRenderer {
         // Sort shadow casters
         const shadowPass = ShaderPass.getShadow(light._type, light._shadowType);
 
+        // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
+        // and endShaderBatch should be called at its end
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {

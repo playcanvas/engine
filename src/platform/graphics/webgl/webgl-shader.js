@@ -34,8 +34,18 @@ class CompiledShaderCache {
     }
 }
 
+// class used to hold a list of recently created shaders forming a batch, to allow their more optimized compilation
+class ShaderBatchCache {
+    shaders = [];
+
+    loseContext(device) {
+        this.shaders = [];
+    }
+}
+
 const _vertexShaderCache = new DeviceCache();
 const _fragmentShaderCache = new DeviceCache();
+const _shaderBatchCache = new DeviceCache();
 
 /**
  * A WebGL implementation of the Shader.
@@ -52,6 +62,10 @@ class WebglShader {
         // make it blocking.
         this.compile(shader.device, shader);
 
+        // add the shader to recently created list
+        WebglShader.getBatchShaders(shader.device).push(shader);
+
+        // add it to a device list of all shaders
         shader.device.shaders.push(shader);
     }
 
@@ -75,6 +89,22 @@ class WebglShader {
         this.glProgram = null;
         this.glVertexShader = null;
         this.glFragmentShader = null;
+    }
+
+    static getBatchShaders(device) {
+        const batchCache = _shaderBatchCache.get(device, () => {
+            return new ShaderBatchCache();
+        });
+        return batchCache.shaders;
+    }
+
+    static endShaderBatch(device) {
+
+        // Trigger link step for all recently created shaders. This allows linking to be done in parallel, before
+        // the blocking wait on the linking result is triggered in finalize function
+        const shaders = WebglShader.getBatchShaders(device);
+        shaders.forEach(shader => shader.impl.link(device, shader));
+        shaders.length = 0;
     }
 
     /**
@@ -114,6 +144,10 @@ class WebglShader {
      * @param {import('../shader.js').Shader} shader - The shader to compile.
      */
     link(device, shader) {
+
+        // if the shader was already linked
+        if (this.glProgram)
+            return;
 
         let startTime = 0;
         Debug.call(() => {
@@ -234,8 +268,9 @@ class WebglShader {
      */
     finalize(device, shader) {
 
-        // finish linking at this point, giving system more time to compile shaders by now
-        this.link(device, shader);
+        // if the program wasn't linked yet (shader was not created in batch)
+        if (!this.glProgram)
+            this.link(device, shader);
 
         const gl = device.gl;
         const glProgram = this.glProgram;
@@ -249,12 +284,14 @@ class WebglShader {
         });
         // #endif
 
+        // this is the main thead blocking part of the shader compilation, time it
         let linkStartTime = 0;
         Debug.call(() => {
             linkStartTime = now();
         });
 
-        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+        const linkStatus = gl.getProgramParameter(glProgram, gl.LINK_STATUS);
+        if (!linkStatus) {
 
             // Check for compilation errors
             if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
