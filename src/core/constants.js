@@ -6,6 +6,13 @@
 export const TRACEID_RENDER_FRAME = 'RenderFrame';
 
 /**
+ * Logs a frame time.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_FRAME_TIME = 'RenderFrameTime';
+
+/**
  * Logs basic information about generated render passes.
  *
  * @type {string}
