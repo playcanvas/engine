@@ -27,7 +27,7 @@ export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
-export { Timer, now } from './core/time.js';
+export { now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
 export { Tracing } from './core/tracing.js';
 

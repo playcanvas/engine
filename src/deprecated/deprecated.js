@@ -1,6 +1,6 @@
 import { revision, version } from '../core/core.js';
 import { string } from '../core/string.js';
-import { Timer, now } from '../core/time.js';
+import { now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
 import { math } from '../core/math/math.js';
@@ -170,6 +170,28 @@ string.startsWith = function (s, subs) {
     Debug.deprecated('pc.string.startsWith is deprecated. Use String#startsWith instead.');
     return s.startsWith(subs);
 };
+
+class Timer {
+    constructor() {
+        this._isRunning = false;
+        this._a = 0;
+        this._b = 0;
+    }
+
+    start() {
+        this._isRunning = true;
+        this._a = now();
+    }
+
+    stop() {
+        this._isRunning = false;
+        this._b = now();
+    }
+
+    getMilliseconds() {
+        return this._b - this._a;
+    }
+}
 
 export const time = {
     now: now,
