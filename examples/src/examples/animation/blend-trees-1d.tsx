@@ -1,8 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { LabelGroup, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class BlendTrees1DExample {
