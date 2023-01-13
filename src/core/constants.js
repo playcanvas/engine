@@ -6,7 +6,7 @@
 export const TRACEID_RENDER_FRAME = 'RenderFrame';
 
 /**
- * Logs a frame times.
+ * Logs a frame time.
  *
  * @type {string}
  */
