@@ -43,7 +43,7 @@ class DeviceCache {
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      */
     remove(device) {
-        this._cache.get(device)?.destroy(device);
+        this._cache.get(device)?.destroy?.(device);
         this._cache.delete(device);
     }
 }
