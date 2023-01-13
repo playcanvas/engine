@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Container, Spinner } from '@playcanvas/pcui/react';
+import { Container, Spinner } from 'pcui/react';
 import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
 // @ts-ignore: library file import

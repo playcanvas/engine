@@ -1,7 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { Button } from '@playcanvas/pcui/react';
+import { Button } from 'pcui/react';
 
 class ComponentPropertiesExample {
     static CATEGORY = 'Animation';

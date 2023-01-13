@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from 'pcui/react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';

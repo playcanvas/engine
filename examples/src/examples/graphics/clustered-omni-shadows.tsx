@@ -1,7 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from 'pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class ClusteredOmniShadowsExample {

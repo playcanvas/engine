@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { Button, Container, Panel } from '@playcanvas/pcui/react';
+import { Button, Container, Panel } from 'pcui/react';
 
 const ControlPanel = (props: any) => {
     const [state, setState] = useState({

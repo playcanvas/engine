@@ -1,7 +1,7 @@
 import React from 'react';
 
 import * as pc from '../../../../';
-import { Panel, Button } from '@playcanvas/pcui/react';
+import { Panel, Button } from 'pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class AssetViewerExample {
