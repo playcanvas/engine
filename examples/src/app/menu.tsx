@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Button, Container } from 'pcui/react';
+import { Button, Container } from '@playcanvas/pcui/react';
 
 interface MenuProps {
     useTypeScript: boolean,

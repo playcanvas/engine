@@ -1,7 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay, BooleanInput, Button, LabelGroup } from 'pcui/react';
+import { BindingTwoWay, BooleanInput, Button, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class LocomotionExample {

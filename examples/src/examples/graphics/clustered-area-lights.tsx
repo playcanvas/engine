@@ -1,6 +1,6 @@
 import React from 'react';
 import * as pc from '../../../../';
-import { BindingTwoWay, LabelGroup, Panel, SliderInput } from 'pcui/react';
+import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class AreaLightsExample {

@@ -1,7 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from 'pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class GroundFogExample {

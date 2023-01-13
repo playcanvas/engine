@@ -14,15 +14,15 @@ const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 // define supported module overrides
 const aliasEntries = {
-    'pcui/react': PCUI_REACT_PATH,
-    'pcui/styles': PCUI_STYLES_PATH
+    '@playcanvas/pcui/react': PCUI_REACT_PATH,
+    '@playcanvas/pcui/styles': PCUI_STYLES_PATH
 };
 
 const tsCompilerOptions = {
     baseUrl: '.',
     paths: {
-        'pcui/react': [PCUI_REACT_PATH],
-        'pcui/styles': [PCUI_STYLES_PATH]
+        '@playcanvas/pcui/react': [PCUI_REACT_PATH],
+        '@playcanvas/pcui/styles': [PCUI_STYLES_PATH]
     }
 };
 
