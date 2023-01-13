@@ -4,7 +4,7 @@ import { version, revision } from '../core/core.js';
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { TRACEID_RENDER_FRAME } from '../core/constants.js';
+import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Color } from '../core/math/color.js';
@@ -2170,16 +2170,24 @@ const makeTick = function (_app) {
         }
 
         if (shouldRenderFrame) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
             application.update(dt);
 
             application.fire("framerender");
 
-            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
             if (application.autoRender || application.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
                 application.updateCanvasSize();
                 application.render();
                 application.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
             // set event data
