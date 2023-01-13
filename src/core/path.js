@@ -1,4 +1,4 @@
-import { isDefined } from './core.js';
+import { Debug } from './debug.js';
 
 /**
  * File path API.
@@ -31,10 +31,11 @@ const path = {
 
         for (let index = 0; index < num - 1; ++index) {
             const one = arguments[index];
+            Debug.assert(one !== undefined);
+
             const two = arguments[index + 1];
-            if (!isDefined(one) || !isDefined(two)) {
-                throw new Error('undefined argument to pc.path.join');
-            }
+            Debug.assert(two !== undefined);
+
             if (two[0] === path.delimiter) {
                 result = two;
                 continue;
