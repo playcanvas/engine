@@ -1156,6 +1156,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Called after a batch of shaders was created, to guide in their optimal preparation for rendering.
+     *
+     * @ignore
+     */
+    endShaderBatch() {
+        WebglShader.endShaderBatch(this);
+    }
+
+    /**
      * Set the active rectangle for rendering on the specified device.
      *
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.
@@ -2720,7 +2729,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             if (shader.failed) {
                 return false;
-            } else if (!shader.ready && !shader.impl.postLink(this, shader)) {
+            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
                 shader.failed = true;
                 return false;
             }
