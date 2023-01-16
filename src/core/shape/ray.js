@@ -9,7 +9,7 @@ class Ray {
      *
      * @type {Vec3}
      */
-    origin = Vec3.ZERO.clone();
+    origin = new Vec3();
 
     /**
      * The direction of the ray.
