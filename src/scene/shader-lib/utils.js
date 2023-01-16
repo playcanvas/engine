@@ -31,11 +31,12 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * @param {string} fsCode - The fragment shader code.
  * @param {string} uniqueName - Unique name for the shader.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string} [fragmentPreamble] - An optional 'preamble' string for the fragment shader. Defaults
- * to ''.
+ * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
+ * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
+ * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @returns {Shader} The newly created shader.
  */
-function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFeedback = false, fragmentPreamble = '') {
+function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFeedback = false, attributes) {
     const programLibrary = getProgramLibrary(device);
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
@@ -43,7 +44,7 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, useTransformFe
             name: uniqueName,
             vertexCode: vsCode,
             fragmentCode: fsCode,
-            fragmentPreamble: fragmentPreamble,
+            attributes: attributes,
             useTransformFeedback: useTransformFeedback
         }));
         programLibrary.setCachedShader(uniqueName, shader);
