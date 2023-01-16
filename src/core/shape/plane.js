@@ -13,7 +13,7 @@ class Plane {
      *
      * @type {Vec3}
      */
-    point = Vec3.ZERO.clone();
+    point = new Vec3();
 
     /**
      * The normal of the plane.
