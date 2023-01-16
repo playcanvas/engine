@@ -105,16 +105,11 @@ void main(void)
                 app.root.addChild(camera);
                 app.root.addChild(light);
 
-                // Create the shader definition and shader from the vertex and fragment shaders
-                const shaderDefinition = {
-                    attributes: {
-                        aPosition: pc.SEMANTIC_POSITION,
-                        aUv0: pc.SEMANTIC_TEXCOORD0
-                    },
-                    vshader: files['shader.vert'],
-                    fshader: files['shader.frag']
-                };
-                const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+                // Create the shader from the vertex and fragment shaders
+                const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
+                    aPosition: pc.SEMANTIC_POSITION,
+                    aUv0: pc.SEMANTIC_TEXCOORD0
+                });
 
                 // Create a new material with the new shader
                 const material = new pc.Material();

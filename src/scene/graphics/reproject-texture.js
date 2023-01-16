@@ -447,24 +447,13 @@ function reprojectTexture(source, target, options = {}) {
             `#define SOURCE_FUNC ${sourceFunc}\n` +
             `#define TARGET_FUNC ${targetFunc}\n` +
             `#define NUM_SAMPLES ${numSamples}\n` +
-            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n` +
-            (device.extTextureLod ? `#define SUPPORTS_TEXLOD\n` : '');
-
-        let extensions = '';
-        if (!device.webgl2) {
-            extensions = '#extension GL_OES_standard_derivatives: enable\n';
-            if (device.extTextureLod) {
-                extensions += '#extension GL_EXT_shader_texture_lod: enable\n\n';
-            }
-        }
+            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n`;
 
         shader = createShaderFromCode(
             device,
             vsCode,
             `${defines}\n${shaderChunks.reprojectPS}`,
-            shaderKey,
-            false,
-            extensions
+            shaderKey
         );
     }
 

@@ -329,7 +329,8 @@ class WebglShader {
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
-                console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition.`);
+                console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
+                shader.failed = true;
             }
 
             const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);

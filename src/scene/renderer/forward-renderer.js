@@ -547,8 +547,8 @@ class ForwardRenderer extends Renderer {
             }
         }
 
-        // process any catch of shaders created here
-        device.endShaderBatch();
+        // process the batch of shaders created here
+        device.endShaderBatch?.();
 
         return _drawCallList;
     }
@@ -583,7 +583,7 @@ class ForwardRenderer extends Renderer {
 
                     const shader = drawCall._shader[pass];
                     if (!shader.failed && !device.setShader(shader)) {
-                        Debug.error(`Error compiling shader for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
+                        Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                     }
 
                     // skip rendering with the material if shader failed
