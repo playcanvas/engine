@@ -11,6 +11,7 @@ class Plane {
     /**
      * The starting point of the plane.
      *
+     * @readonly
      * @type {Vec3}
      */
     point = new Vec3();
@@ -18,6 +19,7 @@ class Plane {
     /**
      * The normal of the plane.
      *
+     * @readonly
      * @type {Vec3}
      */
     normal = Vec3.BACK.clone();

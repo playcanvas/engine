@@ -7,6 +7,7 @@ class Ray {
     /**
      * The starting point of the ray.
      *
+     * @readonly
      * @type {Vec3}
      */
     origin = new Vec3();
@@ -14,6 +15,7 @@ class Ray {
     /**
      * The direction of the ray.
      *
+     * @readonly
      * @type {Vec3}
      */
     direction = Vec3.FORWARD.clone();
