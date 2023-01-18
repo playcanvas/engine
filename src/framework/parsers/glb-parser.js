@@ -208,7 +208,7 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
         // data values data
         const valuesAccessor = {
             count: sparse.count,
-            type: gltfAccessor.scalar,
+            type: gltfAccessor.type,
             componentType: gltfAccessor.componentType
         };
         const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews, true);
