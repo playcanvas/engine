@@ -57,7 +57,52 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
     return shader;
 }
 
+/**
+ * Process shader using shader processing options, utilizing cache of the ProgramLibrary
+ *
+ * @param {Shader} shader - The shader to be processed.
+ * @param {import('../../platform/graphics/shader-processor-options.js').ShaderProcessorOptions} processingOptions -
+ * The shader processing options.
+ * @returns {Shader} The processed shader.
+ * @ignore
+ */
+function processShader(shader, processingOptions) {
+
+    Debug.assert(shader);
+    const shaderDefinition = shader.definition;
+
+    // 'shader' generator for a material - simply return existing shader definition. Use generator and getProgram
+    // to allow for shader processing to be cached
+    const name = shaderDefinition.name ?? 'shader';
+    const key = `${name}-id-${shader.id}`;
+    const materialGenerator = {
+        generateKey: function (options) {
+            // unique name based of the shader id
+            return key;
+        },
+
+        createShaderDefinition: function (device, options) {
+            return shaderDefinition;
+        }
+    };
+
+    // temporarily register the program generator
+    const libraryModuleName = 'shader';
+    const library = getProgramLibrary(shader.device);
+    Debug.assert(!library.isRegistered(libraryModuleName));
+    library.register(libraryModuleName, materialGenerator);
+
+    // generate shader variant - its the same shader, but with different processing options
+    const variant = library.getProgram(libraryModuleName, {}, processingOptions);
+
+    // unregister it again
+    library.unregister(libraryModuleName);
+
+    return variant;
+}
+
+
 shaderChunks.createShader = createShader;
 shaderChunks.createShaderFromCode = createShaderFromCode;
 
-export { createShader, createShaderFromCode };
+export { createShader, createShaderFromCode, processShader };

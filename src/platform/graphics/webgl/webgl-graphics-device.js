@@ -20,11 +20,11 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
-    semanticToLocation
+    semanticToLocation,
+    PRIMITIVE_TRISTRIP
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
-import { drawQuadWithShader } from '../simple-post-effect.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -78,6 +78,49 @@ void main(void) {
     gl_FragColor = texture2D(source, vUv0);
 }
 `;
+
+function quadWithShader(device, target, shader) {
+
+    DebugGraphics.pushGpuMarker(device, "QuadWithShader");
+
+    const oldRt = device.renderTarget;
+    device.setRenderTarget(target);
+    device.updateBegin();
+
+    const oldDepthTest = device.getDepthTest();
+    const oldDepthWrite = device.getDepthWrite();
+    const oldCullMode = device.getCullMode();
+    const oldWR = device.writeRed;
+    const oldWG = device.writeGreen;
+    const oldWB = device.writeBlue;
+    const oldWA = device.writeAlpha;
+    device.setDepthTest(false);
+    device.setDepthWrite(false);
+    device.setCullMode(CULLFACE_NONE);
+    device.setColorWrite(true, true, true, true);
+
+    device.setVertexBuffer(device.quadVertexBuffer, 0);
+    device.setShader(shader);
+
+    device.draw({
+        type: PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    });
+
+    device.setDepthTest(oldDepthTest);
+    device.setDepthWrite(oldDepthWrite);
+    device.setCullMode(oldCullMode);
+    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
+
+    device.updateEnd();
+
+    device.setRenderTarget(oldRt);
+    device.updateBegin();
+
+    DebugGraphics.popGpuMarker(device);
+}
 
 function testRenderable(gl, pixelFormat) {
     let result = true;
@@ -170,7 +213,7 @@ function testTextureFloatHighPrecision(device) {
         colorBuffer: tex1,
         depth: false
     });
-    drawQuadWithShader(device, targ1, shader1);
+    quadWithShader(device, targ1, shader1);
 
     textureOptions.format = PIXELFORMAT_RGBA8;
     const tex2 = new Texture(device, textureOptions);
@@ -179,7 +222,7 @@ function testTextureFloatHighPrecision(device) {
         depth: false
     });
     device.constantTexSource.setValue(tex1);
-    drawQuadWithShader(device, targ2, shader2);
+    quadWithShader(device, targ2, shader2);
 
     const prevFramebuffer = device.activeFramebuffer;
     device.setFramebuffer(targ2.impl._glFrameBuffer);
@@ -725,6 +768,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
+
+        this.postInit();
     }
 
     /**
@@ -987,6 +1032,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     initializeRenderState() {
+        super.initializeRenderState();
+
         const gl = this.gl;
 
         // Initialize render state to a known start state
@@ -1060,10 +1107,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.clearStencil = 0;
         gl.clearStencil(0);
-
-        // Cached viewport and scissor dimensions
-        this.vx = this.vy = this.vw = this.vh = 0;
-        this.sx = this.sy = this.sw = this.sh = 0;
 
         if (this.webgl2) {
             gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
@@ -1281,7 +1324,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else {
             const shader = this.getCopyShader();
             this.constantTexSource.setValue(source._colorBuffer);
-            drawQuadWithShader(this, dest, shader);
+            quadWithShader(this, dest, shader);
         }
 
         DebugGraphics.popGpuMarker(this);
@@ -1356,7 +1399,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass);
+        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);

@@ -217,13 +217,12 @@ class ShadowRendererDirectional {
                     shadowUpdateOverrides[face] = SHADOWUPDATE_NONE;
                 }
             }
+        });
 
-        }, () => {
-
+        renderPass.after = () => {
             // after the pass is done, apply VSM blur if needed
             this.shadowRenderer.renderVms(light, camera);
-
-        });
+        };
 
         // setup render pass using any of the cameras, they all have the same pass related properties
         this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);

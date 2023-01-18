@@ -124,22 +124,32 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
+     * Custom function that is called before the pass has started.
+     *
+     * @type {Function}
+     */
+    before;
+
+    /**
+     * Custom function that is called after the pass has fnished.
+     *
+     * @type {Function}
+     */
+    after;
+
+    /**
      * Creates an instance of the RenderPass.
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
      * @param {Function} execute - Custom function that is called when the pass needs to be
      * rendered.
-     * @param {Function} [after] - Custom function that is called after the pass has fnished.
      */
-    constructor(graphicsDevice, execute, after = null) {
+    constructor(graphicsDevice, execute) {
         this.device = graphicsDevice;
 
         /** @type {Function} */
         this.execute = execute;
-
-        /** @type {Function} */
-        this.after = after;
     }
 
     /**
@@ -210,6 +220,8 @@ class RenderPass {
         const device = this.device;
         const realPass = this.renderTarget !== undefined;
         DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
+
+        this.before?.();
 
         if (realPass) {
             device.startPass(this);

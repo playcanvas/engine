@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
-    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8
+    DEVICETYPE_WEBGPU, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -69,7 +69,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas);
         this.deviceType = DEVICETYPE_WEBGPU;
 
+        // TODO: refactor as needed
+        this.writeRed = true;
+        this.writeGreen = true;
+        this.writeBlue = true;
+        this.writeAlpha = true;
+
         this.initDeviceCaps();
+    }
+
+    /**
+     * Destroy the graphics device.
+     */
+    destroy() {
+        super.destroy();
     }
 
     initDeviceCaps() {
@@ -164,6 +177,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.createFramebuffer();
 
+        this.postInit();
+
         return this;
     }
 
@@ -242,6 +257,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (this.shader.ready) {
             const passEncoder = this.passEncoder;
+            Debug.assert(passEncoder);
 
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
@@ -303,7 +319,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     setDepthTest(depthTest) {
     }
 
+    getDepthTest() {
+        return true;
+    }
+
     setCullMode(cullMode) {
+    }
+
+    getCullMode() {
+        return CULLFACE_BACK;
     }
 
     setAlphaToCoverage(state) {
@@ -313,6 +337,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthWrite(writeDepth) {
+    }
+
+    getDepthWrite() {
+        return true;
     }
 
     initializeContextCaches() {
@@ -365,6 +393,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
+
+        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
+        this.insideRenderPass = true;
     }
 
     /**
@@ -380,6 +411,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.wgpu.queue.submit([this.commandEncoder.finish()]);
         this.commandEncoder = null;
+
+        // each render pass can use different number of bind groups
+        this.bindGroupFormats.length = 0;
+
+        this.insideRenderPass = false;
     }
 
     clear(options) {
@@ -410,6 +446,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            this.vx = x;
+            this.vy = y;
+            this.vw = w;
+            this.vh = h;
+
             this.passEncoder.setViewport(x, this.renderTarget.height - y - h, w, h, 0, 1);
         }
     }
@@ -419,6 +461,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
+
+            this.sx = x;
+            this.sy = y;
+            this.sw = w;
+            this.sh = h;
+
             this.passEncoder.setScissorRect(x, this.renderTarget.height - y - h, w, h);
         }
     }

@@ -5,7 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
 import { EMITTERSHAPE_BOX } from '../constants.js';
 

@@ -297,7 +297,9 @@ class ShaderProcessor {
         });
 
         // and also for generated mesh format, which is at the slot 0 of the bind group
-        code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH, 0);
+        if (meshUniformBufferFormat) {
+            code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH, 0);
+        }
 
         // generate code for textures
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {

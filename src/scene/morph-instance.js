@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
@@ -319,8 +319,11 @@ class MorphInstance {
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
 
             // blend morph targets into render targets
-            this._updateTextureRenderTarget(this.rtPositions, 'texturePositions');
-            this._updateTextureRenderTarget(this.rtNormals, 'textureNormals');
+            if (this.rtPositions)
+                this._updateTextureRenderTarget(this.rtPositions, 'texturePositions');
+
+            if (this.rtNormals)
+                this._updateTextureRenderTarget(this.rtNormals, 'textureNormals');
 
             // textures were cleared if no active targets
             this.zeroTextures = this._activeTargets.length === 0;

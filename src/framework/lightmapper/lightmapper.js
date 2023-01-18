@@ -16,7 +16,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';

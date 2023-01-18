@@ -10,7 +10,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
