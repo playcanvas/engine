@@ -281,6 +281,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // draw
             const ib = this.indexBuffer;
             if (ib) {
+                this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
                 passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
             } else {
@@ -393,6 +394,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
+
+        // the pass always clears full target
+        // TODO: avoid this setting the actual viewport/scissor on webgpu as those are automatically reset to full
+        // render target. We just need to update internal state, for the get functionality to return it.
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
 
         Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
         this.insideRenderPass = true;

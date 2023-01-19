@@ -67,8 +67,7 @@ class MorphInstance {
             const createRT = (name, textureVar) => {
 
                 // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-                const format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-                this[textureVar] = morph._createTexture(name, format);
+                this[textureVar] = morph._createTexture(name, morph._renderTextureFormat);
                 return new RenderTarget({
                     colorBuffer: this[textureVar],
                     depth: false
