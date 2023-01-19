@@ -25,13 +25,13 @@ class MorphInstance {
     /**
      * Create a new MorphInstance instance.
      *
-     * @param {Morph} morph - The {@link Morph} to instance.
+     * @param {import('./morph.js').Morph} morph - The {@link Morph} to instance.
      */
     constructor(morph) {
         /**
          * The morph with its targets, which is being instanced.
          *
-         * @type {Morph}
+         * @type {import('./morph.js').Morph}
          */
         this.morph = morph;
         morph.incRefCount();
