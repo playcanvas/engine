@@ -138,25 +138,32 @@ class WebgpuRenderPipeline {
     }
 
     getBlend(renderState) {
-        // type {GPUBlendState}
-        const blend = {
-            color: {
-                operation: _blendOperation[renderState.blendEquationColor],
-                srcFactor: _blendFactor[renderState.blendSrcColor],
-                dstFactor: _blendFactor[renderState.blendDstColor]
-            },
-            alpha: {
-                operation: _blendOperation[renderState.blendEquationAlpha],
-                srcFactor: _blendFactor[renderState.blendSrcAlpha],
-                dstFactor: _blendFactor[renderState.blendDstAlpha]
-            }
-        };
 
-        // unsupported blend factors
-        Debug.assert(blend.color.srcFactor !== undefined);
-        Debug.assert(blend.color.dstFactor !== undefined);
-        Debug.assert(blend.alpha.srcFactor !== undefined);
-        Debug.assert(blend.alpha.dstFactor !== undefined);
+        // blend needs to be undefined when blending is disabled
+        let blend;
+
+        if (renderState.blending) {
+
+            // type {GPUBlendState}
+            blend = {
+                color: {
+                    operation: _blendOperation[renderState.blendEquationColor],
+                    srcFactor: _blendFactor[renderState.blendSrcColor],
+                    dstFactor: _blendFactor[renderState.blendDstColor]
+                },
+                alpha: {
+                    operation: _blendOperation[renderState.blendEquationAlpha],
+                    srcFactor: _blendFactor[renderState.blendSrcAlpha],
+                    dstFactor: _blendFactor[renderState.blendDstAlpha]
+                }
+            };
+
+            // unsupported blend factors
+            Debug.assert(blend.color.srcFactor !== undefined);
+            Debug.assert(blend.color.dstFactor !== undefined);
+            Debug.assert(blend.alpha.srcFactor !== undefined);
+            Debug.assert(blend.alpha.dstFactor !== undefined);
+        }
 
         return blend;
     }

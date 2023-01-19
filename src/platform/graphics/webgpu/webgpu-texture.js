@@ -178,7 +178,9 @@ class WebgpuTexture {
             };
 
             // TODO: this is temporary and needs to be made generic
-            if (this.texture.format === PIXELFORMAT_RGBA32F || this.texture.format === PIXELFORMAT_DEPTHSTENCIL) {
+            if (this.texture.format === PIXELFORMAT_RGBA32F ||
+                this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
+                this.texture.format === PIXELFORMAT_RGBA16F) {
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';

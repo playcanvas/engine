@@ -1,12 +1,11 @@
 import { Debug } from '../core/debug.js';
 
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F } from '../platform/graphics/constants.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 import { createShaderFromCode } from './shader-lib/utils.js';
-import { Morph } from './morph.js';
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
@@ -26,13 +25,13 @@ class MorphInstance {
     /**
      * Create a new MorphInstance instance.
      *
-     * @param {Morph} morph - The {@link Morph} to instance.
+     * @param {import('./morph.js').Morph} morph - The {@link Morph} to instance.
      */
     constructor(morph) {
         /**
          * The morph with its targets, which is being instanced.
          *
-         * @type {Morph}
+         * @type {import('./morph.js').Morph}
          */
         this.morph = morph;
         morph.incRefCount();
@@ -67,8 +66,7 @@ class MorphInstance {
             const createRT = (name, textureVar) => {
 
                 // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-                const format = morph._renderTextureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-                this[textureVar] = morph._createTexture(name, format);
+                this[textureVar] = morph._createTexture(name, morph._renderTextureFormat);
                 return new RenderTarget({
                     colorBuffer: this[textureVar],
                     depth: false

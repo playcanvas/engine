@@ -69,6 +69,7 @@ class ShaderUtils {
         const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 

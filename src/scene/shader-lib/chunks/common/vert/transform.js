@@ -25,7 +25,8 @@ vec2 getTextureMorphCoords() {
     float morphGridU = vertexId - (morphGridV * textureSize.x);
 
     // convert grid coordinates to uv coordinates with half pixel offset
-    return (vec2(morphGridU, morphGridV) * invTextureSize) + (0.5 * invTextureSize);
+    vec2 uv = (vec2(morphGridU, morphGridV) * invTextureSize) + (0.5 * invTextureSize);
+    return getImageEffectUV(uv);
 }
 #endif
 
