@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 import { CULLFACE_NONE, DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
@@ -60,6 +60,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     const renderPass = new RenderPass(device, () => {
         quad.render(rect, scissorRect);
     });
+    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : ''}`);
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;
