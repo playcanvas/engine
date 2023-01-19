@@ -7,7 +7,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 import { DEVICETYPE_WEBGPU, FUNC_LESSEQUAL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
 import {
     BLUR_GAUSSIAN,

@@ -16,7 +16,7 @@ import {
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX
 } from '../constants.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
 
 let id = 0;
@@ -381,37 +381,9 @@ class Material {
 
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
-        Debug.assert(this._shader, 'Material does not have a shader set', this);
-
-        // default generator for a material - simply return existing shader definition. Use generator and getProgram
-        // to allow for shader processing to be cached
-        const key = `shader-id-${this._shader.id}`;
-        const shaderDefinition = this._shader.definition;
-        const materialGenerator = {
-            generateKey: function (options) {
-                // unique name based of the shader id
-                return key;
-            },
-
-            createShaderDefinition: function (device, options) {
-                return shaderDefinition;
-            }
-        };
-
-        // temporarily register the program generator
-        const libraryModuleName = 'shader';
-        const library = getProgramLibrary(device);
-        Debug.assert(!library.isRegistered(libraryModuleName));
-        library.register(libraryModuleName, materialGenerator);
-
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
-        const variant = library.getProgram(libraryModuleName, {}, processingOptions);
-
-        // unregister it again
-        library.unregister(libraryModuleName);
-
-        return variant;
+        return processShader(this._shader, processingOptions);
     }
 
     /**

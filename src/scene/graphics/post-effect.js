@@ -1,6 +1,4 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP, SEMANTIC_POSITION, TYPE_FLOAT32, BUFFER_STATIC } from '../../platform/graphics/constants.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { CULLFACE_NONE, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
 
 // Primitive for drawFullscreenQuad
 const primitive = {
@@ -41,9 +39,9 @@ class PostEffect {
         /**
          * The vertex buffer for the fullscreen quad. Used when calling {@link drawFullscreenQuad}.
          *
-         * @type {VertexBuffer}
+         * @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer}
          */
-        this.vertexBuffer = createFullscreenQuad(graphicsDevice);
+        this.vertexBuffer = graphicsDevice.quadVertexBuffer;
 
         /**
          * The property that should to be set to `true` (by the custom post effect) if a depth map
@@ -52,8 +50,6 @@ class PostEffect {
          * @type {boolean}
          */
         this.needsDepthBuffer = false;
-
-        this.depthMap = null;
     }
 
     /**
@@ -71,25 +67,6 @@ class PostEffect {
 }
 
 /**
- * Create a vertex buffer with 4 vertices representing a fullscreen quad.
- *
- * @param {import('../../platform//graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
- * @returns {VertexBuffer} - The fullscreen quad vertex buffer.
- * @ignore
- */
-function createFullscreenQuad(device) {
-    // Create the vertex format
-    const vertexFormat = new VertexFormat(device, [
-        { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
-    ]);
-
-    // Create a vertex buffer
-    const data = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-    return new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, data.buffer);
-}
-
-/**
  * Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post
  * effects based on {@link PostEffect}.
  *
@@ -97,7 +74,7 @@ function createFullscreenQuad(device) {
  * graphics device of the application.
  * @param {import('../../platform/graphics/render-target.js').RenderTarget} target - The output
  * render target.
- * @param {VertexBuffer} vertexBuffer - The vertex buffer for the rectangle mesh. When calling from
+ * @param {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer for the rectangle mesh. When calling from
  * a custom post effect, pass the field {@link PostEffect#vertexBuffer}.
  * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used for
  * drawing the rectangle. When calling from a custom post effect, pass the field
@@ -167,4 +144,4 @@ function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     device.setScissor(oldSx, oldSy, oldSw, oldSh);
 }
 
-export { createFullscreenQuad, drawFullscreenQuad, PostEffect };
+export { drawFullscreenQuad, PostEffect };

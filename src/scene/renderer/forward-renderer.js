@@ -940,8 +940,26 @@ class ForwardRenderer extends Renderer {
 
         const renderActions = layerComposition._renderActions;
         const startRenderAction = renderActions[startIndex];
+        const endRenderAction = renderActions[endIndex];
         const startLayer = layerComposition.layerList[startRenderAction.layerIndex];
         const camera = startLayer.cameras[startRenderAction.cameraIndex];
+
+        if (camera) {
+
+            // callback on the camera component before rendering with this camera for the first time
+            if (startRenderAction.firstCameraUse && camera.onPreRender) {
+                renderPass.before = () => {
+                    camera.onPreRender();
+                };
+            }
+
+            // callback on the camera component when we're done rendering with this camera
+            if (endRenderAction.lastCameraUse && camera.onPostRender) {
+                renderPass.after = () => {
+                    camera.onPostRender();
+                };
+            }
+        }
 
         // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
         const grabPassRequired = isGrabPass && SceneGrab.requiresRenderPass(this.device, camera);
@@ -1065,13 +1083,6 @@ class ForwardRenderer extends Renderer {
         const drawTime = now();
         // #endif
 
-        if (camera) {
-            // callback on the camera component before rendering with this camera for the first time during the frame
-            if (renderAction.firstCameraUse && camera.onPreRender) {
-                camera.onPreRender();
-            }
-        }
-
         // Call prerender callback if there's one
         if (!transparent && layer.onPreRenderOpaque) {
             layer.onPreRenderOpaque(cameraPass);
@@ -1155,11 +1166,6 @@ class ForwardRenderer extends Renderer {
             device.setStencilTest(false); // don't leak stencil state
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);
-
-            // callback on the camera component when we're done rendering all layers with this camera
-            if (renderAction.lastCameraUse && camera.onPostRender) {
-                camera.onPostRender();
-            }
         }
 
         // Call layer's postrender callback if there's one

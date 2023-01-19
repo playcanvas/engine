@@ -58,7 +58,6 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export { drawQuadWithShader, drawTexture } from './platform/graphics/simple-post-effect.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -102,6 +101,7 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
+export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
@@ -124,6 +124,7 @@ export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
+export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';

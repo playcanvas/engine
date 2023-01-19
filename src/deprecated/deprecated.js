@@ -35,11 +35,11 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../platform/graphics/constants.js';
 import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
-import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
-import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
+import { drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
@@ -436,7 +436,9 @@ export const gfx = {
 };
 
 export const posteffect = {
-    createFullscreenQuad: createFullscreenQuad,
+    createFullscreenQuad: (device) => {
+        return device.quadVertexBuffer;
+    },
     drawFullscreenQuad: drawFullscreenQuad,
     PostEffect: PostEffect,
     PostEffectQueue: PostEffectQueue

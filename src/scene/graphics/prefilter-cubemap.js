@@ -5,7 +5,7 @@ import {
     PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
