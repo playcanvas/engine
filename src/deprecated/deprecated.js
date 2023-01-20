@@ -75,6 +75,7 @@ import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitOptions } from '../scene/materials/lit-options.js';
+import { Layer } from '../scene/layer.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
 import { Skeleton } from '../scene/animation/skeleton.js';
@@ -607,6 +608,17 @@ Object.defineProperty(Scene.prototype, 'models', {
             this._models = [];
         }
         return this._models;
+    }
+});
+
+Object.defineProperty(Layer.prototype, 'renderTarget', {
+    set: function (rt) {
+        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
+        this._renderTarget = rt;
+        this._dirtyCameras = true;
+    },
+    get: function () {
+        return this._renderTarget;
     }
 });
 
