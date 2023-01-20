@@ -1,10 +1,12 @@
 export default /* glsl */`
 #define texture2DBias texture2D
 
-// pass / accept shadow map as a function parameter, on webgl this is simply passsed as is and this is
-// needed for ebGPU
+// pass / accept shadow map or texture as a function parameter, on webgl this is simply passsed as is
+// but this is needed for WebGPU
 #define SHADOWMAP_PASS(name) name
 #define SHADOWMAP_ACCEPT(name) sampler2D name
+#define TEXTURE_PASS(name) name
+#define TEXTURE_ACCEPT(name) sampler2D name
 
 #ifndef SUPPORTS_TEXLOD
 

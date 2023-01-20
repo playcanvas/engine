@@ -19,10 +19,12 @@ out highp vec4 pc_fragColor;
 // lod instruction for DirectX correctly and uses SampleCmp instead of SampleCmpLevelZero or similar.
 #define textureShadow(res, uv) textureGrad(res, uv, vec2(1, 1), vec2(1, 1))
 
-// pass / accept shadow map as a function parameter, on webgl this is simply passsed as is and this is
-// needed for ebGPU
+// pass / accept shadow map or texture as a function parameter, on webgl this is simply passsed as is
+// but this is needed for WebGPU
 #define SHADOWMAP_PASS(name) name
 #define SHADOWMAP_ACCEPT(name) sampler2DShadow name
+#define TEXTURE_PASS(name) name
+#define TEXTURE_ACCEPT(name) sampler2D name
 
 #define GL2
 #define SUPPORTS_TEXLOD

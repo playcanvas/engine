@@ -24,6 +24,8 @@ layout(location = 0) out highp vec4 pc_fragColor;
 // as the combined sampler can be only created at a point of use
 #define SHADOWMAP_PASS(name) name, name ## _sampler
 #define SHADOWMAP_ACCEPT(name) texture2D name, sampler name ## _sampler
+#define TEXTURE_PASS(name) name, name ## _sampler
+#define TEXTURE_ACCEPT(name) texture2D name, sampler name ## _sampler
 
 #define GL2
 #define WEBGPU
