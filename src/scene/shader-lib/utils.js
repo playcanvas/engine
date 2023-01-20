@@ -24,13 +24,17 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
 }
 
 /**
- * Create a shader from the supplied source code.
+ * Create a shader from the supplied source code. Note that this function adds additional shader
+ * blocks to both vertex and fragment shaders, which allow the shader to use more features and
+ * compile on both WebGL and WebGPU. Specifically, these blocks are added, and should not be
+ * part of provided vsCode and fsCode: shader version, shader precision, commonly used extensions.
  *
  * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
  * graphics device.
  * @param {string} vsCode - The vertex shader code.
  * @param {string} fsCode - The fragment shader code.
- * @param {string} uniqueName - Unique name for the shader.
+ * @param {string} uniqueName - Unique name for the shader. If a shader with this name already
+ * exists, it will be returned instead of a new shader instance.
  * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
