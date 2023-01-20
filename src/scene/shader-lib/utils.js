@@ -24,7 +24,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
 }
 
 /**
- * Create a shader from the supplied source code. Note that this functions adds additional shader
+* Create a shader from the supplied source code. Note that this function adds additional shader
  * blocks to both vertex and fragment shaders, which allow the shader to use more features and
  * compile on both WebGL and WebGPU. Specifically, these blocks are added, and should not be
  * part of provided vsCode and fsCode: shader version, shader precision, commonly used extensions.
