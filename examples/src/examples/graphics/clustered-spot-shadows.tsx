@@ -140,10 +140,10 @@ class ClusteredSpotShadowsExample {
                 lighting.maxLightsPerCell = maxLights;
 
                 // enable clustered shadows (it's enabled by default as well)
-                lighting.shadowsEnabled = true;
+                lighting.shadowsEnabled = data.get('settings.shadowsEnabled');
 
                 // enable clustered cookies
-                lighting.cookiesEnabled = true;
+                lighting.cookiesEnabled = data.get('settings.cookiesEnabled');
 
                 // resolution of the shadow and cookie atlas
                 lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
@@ -172,26 +172,33 @@ class ClusteredSpotShadowsExample {
 
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
-                groundMaterial.shininess = 25;
+                groundMaterial.shininess = 55;
                 groundMaterial.metalness = 0.4;
                 groundMaterial.useMetalness = true;
-
-                // normal map
                 groundMaterial.normalMap = assets.normal.resource;
                 groundMaterial.normalMapTiling.set(10, 10);
                 groundMaterial.bumpiness = 0.5;
-
                 groundMaterial.update();
 
+                // cube material
+                const cubeMaterial = new pc.StandardMaterial();
+                cubeMaterial.shininess = 55;
+                cubeMaterial.metalness = 0.4;
+                cubeMaterial.useMetalness = true;
+                cubeMaterial.normalMap = assets.normal.resource;
+                cubeMaterial.normalMapTiling.set(0.25, 0.25);
+                cubeMaterial.bumpiness = 0.5;
+                cubeMaterial.update();
+
                 // helper function to create a 3d primitive including its material
-                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
+                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, mat: pc.Material) {
 
                     // create the primitive using the material
                     const primitive = new pc.Entity();
                     primitive.addComponent('render', {
                         type: primitiveType,
                         castShadows: true,
-                        material: groundMaterial
+                        material: mat
                     });
 
                     // set position and scale and add it to scene
@@ -203,7 +210,7 @@ class ClusteredSpotShadowsExample {
                 }
 
                 // create some visible geometry
-                const ground = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 0, 500));
+                const ground = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 1, 500), groundMaterial);
 
                 const numTowers = 8;
                 for (let i = 0; i < numTowers; i++) {
@@ -214,7 +221,7 @@ class ClusteredSpotShadowsExample {
                     for (let y = 0; y <= 10; y++) {
                         const elevationRadius = radius * (1 - (y / numCubes));
                         const pos = new pc.Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
-                        const prim = createPrimitive("box", pos, new pc.Vec3(scale, scale, scale));
+                        const prim = createPrimitive("box", pos, new pc.Vec3(scale, scale, scale), cubeMaterial);
                         prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
                     }
                     scale -= 1.5;
