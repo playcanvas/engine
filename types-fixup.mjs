@@ -571,3 +571,13 @@ dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');
 fs.writeFileSync(path, dts);
+
+// AppOptions expects types, and not instances of objects of the types.
+path = './types/framework/app-options.d.ts';
+dts = fs.readFileSync(path, 'utf8');
+[
+    "import('../scene/batching/batch-manager"
+].forEach((original) => {
+    dts = dts.replace(original, `typeof ${original}`);
+});
+fs.writeFileSync(path, dts);
