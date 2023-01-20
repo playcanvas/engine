@@ -448,23 +448,6 @@ class Layer {
     }
 
     /**
-     * @type {import('../platform/graphics/render-target.js').RenderTarget}
-     * @ignore
-     */
-    set renderTarget(rt) {
-        /**
-         * @type {import('../platform/graphics/render-target.js').RenderTarget}
-         * @private
-         */
-        this._renderTarget = rt;
-        this._dirtyCameras = true;
-    }
-
-    get renderTarget() {
-        return this._renderTarget;
-    }
-
-    /**
      * Enable the layer. Disabled layers are skipped. Defaults to true.
      *
      * @type {boolean}

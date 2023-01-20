@@ -3,7 +3,8 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
-    PIXELFORMAT_RGBA8
+    PIXELFORMAT_RGBA8,
+    DEVICETYPE_WEBGPU
 } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -85,12 +86,12 @@ class LitShader {
             this.chunks = shaderChunks;
         }
 
-        this.lighting = (options.lights.length > 0) || !!options.dirLightMap || !!options.clusteredLightingEnabled;
+        this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
-        if (!options.useSpecular) options.specularMap = options.glossMap = null;
         this.shadowPass = ShaderPass.isShadow(options.pass);
-        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMap || options.enableGGXSpecular ||
-                            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMap;
+        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMapEnabled || options.enableGGXSpecular ||
+                            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
+        this.needsNormal = this.needsNormal && !this.shadowPass;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
         this.needsTransforms = options.useDynamicRefraction;
@@ -178,8 +179,10 @@ class LitShader {
         // shadow coordinate generation
         code += coordsFunctionName + shadowCoordArgs;
 
-        // stop shadow at the far distance
-        code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
+        if (this.device.deviceType !== DEVICETYPE_WEBGPU) {
+            // stop shadow at the far distance
+            code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
+        }
         return code;
     }
 
@@ -187,7 +190,7 @@ class LitShader {
         const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
-                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
+                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 }
                 return "       getShadowCoordPersp" + shadowCoordArgs;
@@ -195,7 +198,7 @@ class LitShader {
             return this._directionalShadowMapProjection(light, shadowCoordArgs, shadowParamArg, lightIndex, "getShadowCoordOrtho");
         }
         if (light._type === LIGHTTYPE_SPOT) {
-            if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
+            if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
                 return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
             }
             return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
@@ -259,7 +262,7 @@ class LitShader {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if (options.hasTangents && (options.heightMap || options.normalMap || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.heightMapEnabled || options.normalMapEnabled || options.enableGGXSpecular)) {
                 this.attributes.vertex_tangent = SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -298,7 +301,7 @@ class LitShader {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
-        if (options.msdf && options.msdfTextAttribute) {
+        if (options.useMsdf && options.msdfTextAttribute) {
             this.attributes.vertex_outlineParameters = SEMANTIC_ATTR8;
             this.attributes.vertex_shadowParameters = SEMANTIC_ATTR9;
 
@@ -475,7 +478,7 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && !device.webgl2) {
+        if (device.extStandardDerivatives && !device.webgl2 && device.deviceType !== DEVICETYPE_WEBGPU) {
             code += 'uniform vec2 polygonOffset;\n';
         }
 
@@ -498,7 +501,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || lightType === LIGHTTYPE_OMNI)) {
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || device.deviceType !== DEVICETYPE_WEBGPU || lightType === LIGHTTYPE_OMNI)) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n";
@@ -514,7 +517,7 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives;
+        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && device.deviceType !== DEVICETYPE_WEBGPU;
 
         if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
@@ -566,7 +569,7 @@ class LitShader {
                 this.defines.push("LIT_REFLECTIONS");
             }
 
-            if (options.clearCoat) {
+            if (options.useClearCoat) {
                 this.defines.push("LIT_CLEARCOAT");
             }
 
@@ -579,11 +582,11 @@ class LitShader {
                 this.defines.push("LIT_CONSERVE_ENERGY");
             }
 
-            if (options.sheen) {
+            if (options.useSheen) {
                 this.defines.push("LIT_SHEEN");
             }
 
-            if (options.iridescence) {
+            if (options.useIridescence) {
                 this.defines.push("LIT_IRIDESCENCE");
             }
         }
@@ -653,8 +656,13 @@ class LitShader {
 
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
-                    code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
-                    code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+
+                    // TODO: add support for shadow cascades to WebGPU
+                    if (device.deviceType !== DEVICETYPE_WEBGPU) {
+                        code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                        code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
+                    }
+
                     code += "uniform float light" + i + "_shadowCascadeCount;\n";
                 }
 
@@ -667,7 +675,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
-                    if (light._isPcf && device.webgl2) {
+                    if (light._isPcf && device.supportsDepthShadow) {
                         code += "uniform sampler2DShadow light" + i + "_shadowMap;\n";
                     } else {
                         code += "uniform sampler2D light" + i + "_shadowMap;\n";
@@ -676,7 +684,7 @@ class LitShader {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives) && lightType === LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
+                if (light._isPcf && (device.supportsDepthShadow || device.extStandardDerivatives) && lightType === LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -702,13 +710,13 @@ class LitShader {
         code += "\n"; // End of uniform declarations
 
         // TBN
-        const hasTBN = this.needsNormal && (options.normalMap || options.clearCoatNormalMap || (options.enableGGXSpecular && !options.heightMap));
+        const hasTBN = this.needsNormal && (options.normalMapEnabled || options.clearCoatNormalMapEnabled || (options.enableGGXSpecular && !options.heightMapEnabled));
 
         if (hasTBN) {
             if (options.hasTangents) {
                 code += options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
             } else {
-                if (device.extStandardDerivatives && (options.normalMap || options.clearCoatNormalMap)) {
+                if (device.extStandardDerivatives && (options.normalMapEnabled || options.clearCoatNormalMapEnabled)) {
                     code += chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv);
                 } else {
                     code += chunks.TBNObjectSpacePS;
@@ -746,12 +754,12 @@ class LitShader {
                 code += chunks.fresnelSchlickPS;
             }
 
-            if (options.iridescence) {
+            if (options.useIridescence) {
                 code += chunks.iridescenceDiffractionPS;
             }
         }
 
-        const useAo = options.aoMap || options.aoVertexColor;
+        const useAo = options.aoMapEnabled || options.useAoVertexColors;
 
         if (useAo) {
             code += chunks.aoDiffuseOccPS;
@@ -783,15 +791,15 @@ class LitShader {
         }
 
         if (this.reflections) {
-            if (options.clearCoat) {
+            if (options.useClearCoat) {
                 code += chunks.reflectionCCPS;
             }
-            if (options.sheen) {
+            if (options.useSheen) {
                 code += chunks.reflectionSheenPS;
             }
         }
 
-        if (options.refraction) {
+        if (options.useRefraction) {
             if (options.useDynamicRefraction) {
                 code += chunks.refractionDynamicPS;
             } else if (this.reflections) {
@@ -799,7 +807,7 @@ class LitShader {
             }
         }
 
-        if (options.sheen) {
+        if (options.useSheen) {
             code += chunks.lightSheenPS;
         }
 
@@ -826,7 +834,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && device.webgl2) {
+            if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU)) {
                 code += chunks.shadowStandardGL2PS;
             }
             if (useVsm) {
@@ -842,7 +850,7 @@ class LitShader {
                 }
             }
 
-            if (!(device.webgl2 || device.extStandardDerivatives)) {
+            if (!(device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
                 code += chunks.biasConstPS;
             }
 
@@ -855,7 +863,7 @@ class LitShader {
 
         if (this.lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if (hasAreaLights || options.clusteredLightingEnabled) code += chunks.ltc;
+            if (hasAreaLights || options.clusteredLightingAreaLightsEnabled) code += chunks.ltcPS;
         }
 
         code += '\n';
@@ -867,7 +875,7 @@ class LitShader {
                 code += options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
-            if (!options.fresnelModel && !this.reflections && !options.diffuseMap) {
+            if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
                 code += "    uniform vec3 material_ambient;\n";
                 code += "#define LIT_OLD_AMBIENT";
                 useOldAmbient = true;
@@ -877,11 +885,11 @@ class LitShader {
         code += chunks.combinePS;
 
         // lightmap support
-        if (options.lightMap || options.lightVertexColor) {
-            code += (options.useSpecular && options.dirLightMap) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
+        if (options.lightMapEnabled || options.useLightMapVertexColors) {
+            code += (options.useSpecular && options.dirLightMapEnabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS;
         }
 
-        const addAmbient = (!options.lightMap && !options.lightVertexColor) || options.lightMapWithoutAmbient;
+        const addAmbient = (!options.lightMapEnabled && !options.useLightMapVertexColors) || options.lightMapWithoutAmbient;
 
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
@@ -896,11 +904,11 @@ class LitShader {
             }
         }
 
-        if (options.ambientTint && !useOldAmbient) {
+        if (options.useAmbientTint && !useOldAmbient) {
             code += "uniform vec3 material_ambient;\n";
         }
 
-        if (options.msdf) {
+        if (options.useMsdf) {
             if (!options.msdfTextAttribute) {
                 code += "\n#define UNIFORM_TEXT_PARAMETERS";
             }
@@ -966,7 +974,7 @@ class LitShader {
                 code += "    dVertexNormalW = normalize(vNormalW);\n";
             }
 
-            if ((options.heightMap || options.normalMap) && options.hasTangents) {
+            if ((options.heightMapEnabled || options.normalMapEnabled) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;\n";
                     code += "    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;\n";
@@ -991,7 +999,7 @@ class LitShader {
                 code += "    getReflDir();\n";
             }
 
-            if (options.clearCoat) {
+            if (options.useClearCoat) {
                 code += "    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));\n";
             }
         }
@@ -1001,13 +1009,16 @@ class LitShader {
                 code += "    getMetalnessModulate();\n";
             }
 
-            if (options.iridescence) {
+            if (options.useIridescence) {
                 code += "    getIridescence(saturate(dot(dViewDirW, dNormalW)));\n";
             }
         }
 
         if (addAmbient) {
             code += "    addAmbient();\n";
+            if (options.conserveEnergy && options.useSpecular) {
+                code += `   dDiffuseLight = dDiffuseLight * (1.0 - dSpecularity);`;
+            }
 
             // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
             if (options.separateAmbient) {
@@ -1018,7 +1029,7 @@ class LitShader {
             }
         }
 
-        if (options.ambientTint && !useOldAmbient) {
+        if (options.useAmbientTint && !useOldAmbient) {
             code += "    dDiffuseLight *= material_ambient;\n";
         }
 
@@ -1026,13 +1037,13 @@ class LitShader {
             code += "    occludeDiffuse();\n";
         }
 
-        if (options.lightMap || options.lightVertexColor) {
+        if (options.lightMapEnabled || options.useLightMapVertexColors) {
             code += "    addLightMap();\n";
         }
 
         if (this.lighting || this.reflections) {
             if (this.reflections) {
-                if (options.clearCoat) {
+                if (options.useClearCoat) {
                     code += "    addReflectionCC();\n";
                     if (options.fresnelModel > 0) {
                         code += "    ccFresnel = getFresnelCC(dot(dViewDirW, ccNormalW));\n";
@@ -1045,7 +1056,7 @@ class LitShader {
                     code += "    ccReflection.rgb *= dSpecularityFactor;\n";
                 }
 
-                if (options.sheen) {
+                if (options.useSheen) {
                     code += "    addReflectionSheen();\n";
                 }
 
@@ -1199,7 +1210,7 @@ class LitShader {
                             code += this._nonPointShadowMapProjection(device, options.lights[i], shadowMatArg, shadowParamArg, i);
 
                             if (lightType === LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += `    float shadow${i} = getShadow${shadowReadMode}(light${i}_shadowMap, light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
+                            code += `    float shadow${i} = getShadow${shadowReadMode}(SHADOWMAP_PASS(light${i}_shadowMap), light${i}_shadowParams${(light._isVsm ? ", " + evsmExp : "")});\n`;
                             code += `    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);\n`;
                         }
                     }
@@ -1209,7 +1220,7 @@ class LitShader {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
                     if (options.conserveEnergy && options.useSpecular) {
-                        code += "    dDiffuseLight += mix((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dLTCSpecFres);\n";
+                        code += "    dDiffuseLight += ((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dLTCSpecFres);\n";
                     } else {
                         code += "    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
@@ -1217,7 +1228,7 @@ class LitShader {
 
                     // punctual light
                     if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
-                        code += "    dDiffuseLight += mix(dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ", vec3(0), dSpecularity);\n";
+                        code += "    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dSpecularity);\n";
                     } else {
                         code += "    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     }
@@ -1231,7 +1242,7 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light
-                    if (options.clearCoat) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
+                    if (options.useClearCoat) code += "    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
                     if (options.useSpecular) code += "    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";\n";
 
                 } else {
@@ -1241,13 +1252,13 @@ class LitShader {
                     }
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                    if (options.clearCoat) {
+                    if (options.useClearCoat) {
                         code += "    ccSpecularLight += getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code += calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW))" : "";
                         code +=  ";\n";
                     }
-                    if (options.sheen) {
+                    if (options.useSheen) {
                         code += "    sSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
                         code +=  ";\n";
@@ -1255,7 +1266,7 @@ class LitShader {
                     if (options.useSpecular) {
                         code += "    dSpecularLight += getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color";
                         code += usesCookieNow ? " * dAtten3" : "";
-                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : "";
+                        code += calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity)" : "* dSpecularity";
                         code += ";\n";
                     }
                 }
@@ -1277,7 +1288,7 @@ class LitShader {
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                if (options.clearCoat) {
+                if (options.useClearCoat) {
                     code += "    ccSpecularity = 1.0;\n";
                 }
                 if (options.useSpecular) {
@@ -1285,7 +1296,7 @@ class LitShader {
                 }
             }
 
-            if (options.refraction) {
+            if (options.useRefraction) {
                 code += "    addRefraction();\n";
             }
         }
@@ -1322,7 +1333,7 @@ class LitShader {
             code += chunks.outputAlphaOpaquePS;
         }
 
-        if (options.msdf) {
+        if (options.useMsdf) {
             code += "    gl_FragColor = applyMsdf(gl_FragColor);\n";
         }
 

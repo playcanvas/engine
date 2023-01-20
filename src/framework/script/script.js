@@ -9,7 +9,7 @@ import { ScriptType } from './script-type.js';
 import { ScriptTypes } from './script-types.js';
 
 const reservedScriptNames = new Set([
-    'system', 'entity', 'create', 'destroy', 'swap', 'move',
+    'system', 'entity', 'create', 'destroy', 'swap', 'move', 'data',
     'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
     'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
     '_onSetEnabled', '_checkState', '_onBeforeRemove',
@@ -17,6 +17,10 @@ const reservedScriptNames = new Set([
     '_onUpdate', '_onPostUpdate',
     '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
 ]);
+
+function getReservedScriptNames() {
+    return reservedScriptNames;
+}
 
 /**
  * Create and register a new {@link ScriptType}. It returns new class type (constructor function),
@@ -58,7 +62,7 @@ function createScript(name, app) {
     }
 
     if (reservedScriptNames.has(name))
-        throw new Error(`script name: '${name}' is reserved, please change script name`);
+        throw new Error(`Script name '${name}' is reserved, please rename the script`);
 
     const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
@@ -147,4 +151,4 @@ function registerScript(script, name, app) {
 }
 /* eslint-enable jsdoc/check-examples */
 
-export { createScript, registerScript };
+export { createScript, registerScript, getReservedScriptNames };

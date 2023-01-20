@@ -2,7 +2,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
@@ -115,6 +115,8 @@ class WorldClusters {
 
     registerUniforms(device) {
 
+        this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
+
         this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
         this._clusterPixelsPerCellId = device.scope.resolve('clusterPixelsPerCell');
 
@@ -215,6 +217,8 @@ class WorldClusters {
         this._clusterWorldTextureId.setValue(this.clusterTexture);
 
         // uniform values
+        this._clusterMaxCellsId.setValue(this._pixelsPerCellCount);
+
         const boundsDelta = this.boundsDelta;
         this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / boundsDelta.x;
         this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / boundsDelta.y;
@@ -274,7 +278,8 @@ class WorldClusters {
 
         lights.forEach((light) => {
             const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
-            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight) {
+            const zeroAngleSpotlight = light.type === LIGHTTYPE_SPOT && light._outerConeAngle === 0;
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight && !zeroAngleSpotlight) {
 
                 // within light limit
                 if (lightIndex < maxLights) {

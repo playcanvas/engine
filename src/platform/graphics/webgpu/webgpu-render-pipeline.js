@@ -1,6 +1,10 @@
-import { Debug } from "../../../core/debug.js";
+import { Debug, DebugHelper } from "../../../core/debug.js";
+import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
 
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
+
+let _pipelineId = 0;
+let _layoutId = 0;
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -64,8 +68,6 @@ class WebgpuRenderPipeline {
         this.cache = new Map();
     }
 
-    // TODO: somehow pass entity name to assign to things, maybe hook up to GraphicsDebug stuff
-
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, renderState) {
 
         // render pipeline unique key
@@ -118,35 +120,50 @@ class WebgpuRenderPipeline {
             _bindGroupLayouts.push(format.bindGroupLayout);
         });
 
-        // type {GPUPipelineLayout}
-        const pipelineLayout = this.device.wgpu.createPipelineLayout({
+        const descr = {
             bindGroupLayouts: _bindGroupLayouts
-        });
+        };
+
+        _layoutId++;
+        DebugHelper.setLabel(descr, `PipelineLayoutDescr-${_layoutId}`);
+
+        // type {GPUPipelineLayout}
+        const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
+        DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
+        Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, descr);
+
         _bindGroupLayouts.length = 0;
 
         return pipelineLayout;
     }
 
     getBlend(renderState) {
-        // type {GPUBlendState}
-        const blend = {
-            color: {
-                operation: _blendOperation[renderState.blendEquationColor],
-                srcFactor: _blendFactor[renderState.blendSrcColor],
-                dstFactor: _blendFactor[renderState.blendDstColor]
-            },
-            alpha: {
-                operation: _blendOperation[renderState.blendEquationAlpha],
-                srcFactor: _blendFactor[renderState.blendSrcAlpha],
-                dstFactor: _blendFactor[renderState.blendDstAlpha]
-            }
-        };
 
-        // unsupported blend factors
-        Debug.assert(blend.color.srcFactor !== undefined);
-        Debug.assert(blend.color.dstFactor !== undefined);
-        Debug.assert(blend.alpha.srcFactor !== undefined);
-        Debug.assert(blend.alpha.dstFactor !== undefined);
+        // blend needs to be undefined when blending is disabled
+        let blend;
+
+        if (renderState.blending) {
+
+            // type {GPUBlendState}
+            blend = {
+                color: {
+                    operation: _blendOperation[renderState.blendEquationColor],
+                    srcFactor: _blendFactor[renderState.blendSrcColor],
+                    dstFactor: _blendFactor[renderState.blendDstColor]
+                },
+                alpha: {
+                    operation: _blendOperation[renderState.blendEquationAlpha],
+                    srcFactor: _blendFactor[renderState.blendSrcAlpha],
+                    dstFactor: _blendFactor[renderState.blendDstAlpha]
+                }
+            };
+
+            // unsupported blend factors
+            Debug.assert(blend.color.srcFactor !== undefined);
+            Debug.assert(blend.color.dstFactor !== undefined);
+            Debug.assert(blend.alpha.srcFactor !== undefined);
+            Debug.assert(blend.alpha.dstFactor !== undefined);
+        }
 
         return blend;
     }
@@ -162,24 +179,17 @@ class WebgpuRenderPipeline {
             format: renderTarget.impl.depthFormat
         } : undefined;
 
-        return wgpu.createRenderPipeline({
+        const vertexModule = wgpu.createShaderModule({
+            code: webgpuShader.vertexCode
+        });
+        DebugHelper.setLabel(vertexModule, `Vertex ${webgpuShader.shader.label}`);
+
+        // type {GPURenderPipelineDescriptor}
+        const descr = {
             vertex: {
-                module: wgpu.createShaderModule({
-                    code: webgpuShader.vertexCode
-                }),
+                module: vertexModule,
                 entryPoint: 'main',
                 buffers: vertexBufferLayout
-            },
-            fragment: {
-                module: wgpu.createShaderModule({
-                    code: webgpuShader.fragmentCode
-                }),
-                entryPoint: 'main',
-                targets: [{
-                    format: renderTarget.impl.colorFormat,
-                    writeMask: GPUColorWrite.ALL,
-                    blend: this.getBlend(renderState)
-                }]
             },
             primitive: {
                 topology: primitiveTopology,
@@ -194,7 +204,39 @@ class WebgpuRenderPipeline {
 
             // uniform / texture binding layout
             layout: pipelineLayout
-        });
+        };
+
+        // provide fragment state only when render target contains color buffer, otherwise rendering to depth only
+        // TODO: the exclusion of fragment here should be reflected in the key generation (no blend, no frag ..)
+        const colorFormat = renderTarget.impl.colorFormat;
+        if (colorFormat) {
+
+            const fragmentModule = wgpu.createShaderModule({
+                code: webgpuShader.fragmentCode
+            });
+            DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
+
+            // type {GPUFragmentState}
+            descr.fragment = {
+                module: fragmentModule,
+                entryPoint: 'main',
+                targets: [{
+                    format: renderTarget.impl.colorFormat,
+                    writeMask: GPUColorWrite.ALL,
+                    blend: this.getBlend(renderState)
+                }]
+            };
+        }
+
+        _pipelineId++;
+        DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
+
+        const pipeline = wgpu.createRenderPipeline(descr);
+
+        DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
+        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, descr);
+
+        return pipeline;
     }
 }
 

@@ -2,8 +2,9 @@ import { Debug } from "../../../core/debug.js";
 
 import {
     semanticToLocation,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, vertexTypesNames
 } from '../constants.js';
+import { DebugGraphics } from "../debug-graphics.js";
 
 // map of TYPE_*** to GPUVertexFormat
 const gpuVertexFormats = [];
@@ -56,6 +57,7 @@ class WebgpuVertexBufferLayout {
 
         const addFormat = (format) => {
             const interleaved = format.interleaved;
+            const stepMode = format.instancing ? 'instance' : 'vertex';
             let attributes = [];
             const elementCount = format.elements.length;
             for (let i = 0; i < elementCount; i++) {
@@ -63,19 +65,19 @@ class WebgpuVertexBufferLayout {
                 const location = semanticToLocation[element.name];
 
                 // A WGL shader needs attributes to have matching types, but glslang translator we use does not allow us to set those
-                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported, semantic: ${element.name}.`);
+                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${vertexTypesNames[element.dataType]} is not supported, semantic: ${element.name}, stack: ${DebugGraphics.toString()}`, element);
 
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${gpuVertexFormats[element.dataType]}x${element.numComponents}`
+                    format: `${gpuVertexFormats[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
                     layout.push({
                         attributes: attributes,
                         arrayStride: element.stride,
-                        stepMode: 'vertex'          // for instancing, this need to change
+                        stepMode: stepMode
                     });
                     attributes = [];
                 }

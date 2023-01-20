@@ -36,6 +36,7 @@ class Batch {
         if (this.meshInstance) {
             this.removeFromLayers(scene, layers);
             this.meshInstance.destroy();
+            this.meshInstance = null;
         }
     }
 

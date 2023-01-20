@@ -132,7 +132,9 @@ class JsonStandardMaterialParser {
             ['diffuseMapTint', 'diffuseTint'],
             ['specularMapTint', 'specularTint'],
             ['emissiveMapTint', 'emissiveTint'],
-            ['metalnessMapTint', 'metalnessTint']
+            ['metalnessMapTint', 'metalnessTint'],
+
+            ['clearCoatGlossiness', 'clearCoatGloss']
         ];
 
         // if an old property name exists without a new one,

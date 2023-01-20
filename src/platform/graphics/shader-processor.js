@@ -20,6 +20,9 @@ const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
 
+// an array identifier, for example 'data[4]' - group 1 is 'data', group 2 is everything in brackets: '4'
+const ARRAY_IDENTIFIER = /([\w-]+)\[(.*?)\]/;
+
 const precisionQualifiers = new Set(['highp', 'mediump', 'lowp']);
 const shadowSamplers = new Set(['sampler2DShadow', 'samplerCubeShadow']);
 const textureDimensions = {
@@ -33,21 +36,41 @@ const textureDimensions = {
 };
 
 class UniformLine {
-    constructor(line) {
+    constructor(line, shader) {
+
+        // example: `lowp vec4 tints[2 * 4]`
         this.line = line;
 
         // split to words handling any number of spaces
         const words = line.trim().split(/\s+/);
 
-        this.precision = undefined;
-        this.type = words[0];
-        this.name = words[1];
+        // optional precision
+        if (precisionQualifiers.has(words[0])) {
+            this.precision = words.shift();
+        }
 
-        // if this is a precision qualifier
-        if (precisionQualifiers.has(this.type)) {
-            this.precision = words[0];
-            this.type = words[1];
-            this.name = words[2];
+        // type
+        this.type = words.shift();
+
+        // array of uniforms
+        if (line.includes('[')) {
+
+            const rest = words.join(' ');
+            const match = ARRAY_IDENTIFIER.exec(rest);
+            Debug.assert(match);
+
+            this.name = match[1];
+            this.arraySize = Number(match[2]);
+            if (isNaN(this.arraySize)) {
+                shader.failed = true;
+                Debug.error(`Only numerically specified uniform array sizes are supported, this uniform is not supported: '${line}'`, shader);
+            }
+
+        } else {
+
+            // simple uniform
+            this.name = words.shift();
+            this.arraySize = 1;
         }
 
         this.isSampler = this.type.indexOf('sampler') !== -1;
@@ -66,9 +89,10 @@ class ShaderProcessor {
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
+     * @param {import('./shader.js').Shader} shader - The shader definition.
      * @returns {object} - The processed shader data.
      */
-    static run(device, shaderDefinition) {
+    static run(device, shaderDefinition, shader) {
 
         /** @type {Map<string, number>} */
         const varyingMap = new Map();
@@ -90,12 +114,23 @@ class ShaderProcessor {
         const outBlock = ShaderProcessor.processOuts(fragmentExtracted.outs);
 
         // uniforms - merge vertex and fragment uniforms, and create shared uniform buffers
-        const uniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
+        // Note that as both vertex and fragment can declare the same uniform, we need to remove duplicates
+        const concatUniforms = vertexExtracted.uniforms.concat(fragmentExtracted.uniforms);
+        const uniforms = Array.from(new Set(concatUniforms));
 
         // parse uniform lines
-        const parsedUniforms = uniforms.map(line => new UniformLine(line));
+        const parsedUniforms = uniforms.map(line => new UniformLine(line, shader));
 
-        const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions);
+        // validation - as uniforms go to a shared uniform buffer, vertex and fragment versions need to match
+        Debug.call(() => {
+            const map = new Map();
+            parsedUniforms.forEach((uni) => {
+                const existing = map.get(uni.name);
+                Debug.assert(!existing, `Vertex and fragment shaders cannot use the same uniform name with different types: '${existing}' and '${uni.line}'`, shader);
+                map.set(uni.name, uni.line);
+            });
+        });
+        const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
 
         // VS - insert the blocks to the source
         const vBlock = attributesBlock + '\n' + vertexVaryingsBlock + '\n' + uniformsData.code;
@@ -183,10 +218,11 @@ class ShaderProcessor {
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
      * @param {import('./shader-processor-options.js').ShaderProcessorOptions} processingOptions -
      * Uniform formats.
+     * @param {import('./shader.js').Shader} shader - The shader definition.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
-    static processUniforms(device, uniforms, processingOptions) {
+    static processUniforms(device, uniforms, processingOptions, shader) {
 
         // split uniform lines into samplers and the rest
         /** @type {Array<UniformLine>} */
@@ -208,7 +244,8 @@ class ShaderProcessor {
             if (!processingOptions.hasUniform(uniform.name)) {
                 const uniformType = uniformTypeToName.indexOf(uniform.type);
                 Debug.assert(uniformType >= 0, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
-                const uniformFormat = new UniformFormat(uniform.name, uniformType);
+                const uniformFormat = new UniformFormat(uniform.name, uniformType, uniform.arraySize);
+                Debug.assert(!uniformFormat.invalid, `Invalid uniform line: ${uniform.line}`, shader);
                 meshUniforms.push(uniformFormat);
             }
 
@@ -260,7 +297,9 @@ class ShaderProcessor {
         });
 
         // and also for generated mesh format, which is at the slot 0 of the bind group
-        code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH, 0);
+        if (meshUniformBufferFormat) {
+            code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH, 0);
+        }
 
         // generate code for textures
         processingOptions.bindGroupFormats.forEach((format, bindGroupIndex) => {

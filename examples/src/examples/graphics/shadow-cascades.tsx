@@ -1,8 +1,7 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class ShadowCascadesExample {
@@ -24,6 +23,9 @@ class ShadowCascadesExample {
                 </LabelGroup>}
                 <LabelGroup text='Count'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.numCascades' }} min={1} max={4} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Every Frame'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.everyFrame' }} value={data.get('settings.light.everyFrame')}/>
                 </LabelGroup>
                 <LabelGroup text='Resolution'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowResolution' }} min={128} max={2048} precision={0}/>
@@ -61,7 +63,8 @@ class ShadowCascadesExample {
                     shadowResolution: 2048,     // shadow map resolution storing 4 cascades
                     cascadeDistribution: 0.5,   // distribution of cascade distances to prefer sharpness closer to the camera
                     shadowType: pc.SHADOW_PCF3, // shadow filter type
-                    vsmBlurSize: 11             // shader filter blur size for VSM shadows
+                    vsmBlurSize: 11,            // shader filter blur size for VSM shadows
+                    everyFrame: true            // true if all cascades update every frame
                 }
             });
 
@@ -84,6 +87,34 @@ class ShadowCascadesExample {
             terrain.setLocalScale(30, 30, 30);
             app.root.addChild(terrain);
 
+            // get the clouds so that we can animate them
+            const srcClouds : Array<pc.Entity> = terrain.find((node: pc.GraphNode) => {
+
+                const isCloud = node.name.includes('Icosphere');
+
+                if (isCloud) {
+                    // no shadow receiving for clouds
+                    (node as pc.Entity).render.receiveShadows = false;
+                }
+
+                return isCloud;
+            });
+
+            // clone some additional clouds
+            const clouds : Array<pc.Entity> = [];
+            srcClouds.forEach((cloud) => {
+                clouds.push(cloud);
+
+                for (let i = 0; i < 3; i++) {
+                    const clone = cloud.clone() as pc.Entity;
+                    cloud.parent.addChild(clone);
+                    clouds.push(clone);
+                }
+            });
+
+            // shuffle the array to give clouds random order
+            clouds.sort(() => Math.random() - 0.5);
+
             // find a tree in the middle to use as a focus point
             const tree = terrain.findOne("name", "Arbol 2.002");
 
@@ -95,7 +126,7 @@ class ShadowCascadesExample {
             });
 
             // and position it in the world
-            camera.setLocalPosition(300, 60, 25);
+            camera.setLocalPosition(300, 160, 25);
 
             // add orbit camera script with a mouse and a touch support
             camera.addComponent("script");
@@ -129,21 +160,59 @@ class ShadowCascadesExample {
             app.root.addChild(dirLight);
             dirLight.setLocalEulerAngles(45, 350, 20);
 
+            // update mode of cascades
+            let updateEveryFrame = true;
+
             // handle HUD changes - update properties on the light
             data.on('*:set', (path: string, value: any) => {
                 const pathArray = path.split('.');
-                // @ts-ignore
-                dirLight.light[pathArray[2]] = value;
+
+                if (pathArray[2] === 'everyFrame') {
+                    updateEveryFrame = value;
+                } else {
+                    // @ts-ignore
+                    dirLight.light[pathArray[2]] = value;
+                }
             });
 
-            // on the first frame, when camera is updated, move it further away from the focus tree
-            let firstFrame = true;
-            app.on("update", function () {
-                if (firstFrame) {
-                    firstFrame = false;
+            const cloudSpeed = 0.2;
+            let frameNumber = 0;
+            let time = 0;
+            app.on("update", function (dt: number) {
+
+                time += dt;
+
+                // on the first frame, when camera is updated, move it further away from the focus tree
+                if (frameNumber === 0) {
                     // @ts-ignore engine-tsd
-                    camera.script.orbitCamera.distance = 320;
+                    camera.script.orbitCamera.distance = 470;
                 }
+
+                if (updateEveryFrame) {
+
+                    // no per cascade rendering control
+                    dirLight.light.shadowUpdateOverrides = null;
+
+                } else {
+
+                    // set up shadow update overrides, nearest cascade updates each frame, then next one every 5 and so on
+                    dirLight.light.shadowUpdateOverrides = [
+                        pc.SHADOWUPDATE_THISFRAME,
+                        (frameNumber % 5) === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,
+                        (frameNumber % 10) === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE,
+                        (frameNumber % 15) === 0 ? pc.SHADOWUPDATE_THISFRAME : pc.SHADOWUPDATE_NONE
+                    ];
+                }
+
+                // move the clouds around
+                clouds.forEach((cloud, index: number) => {
+                    const redialOffset = (index / clouds.length) * (6.24 / cloudSpeed);
+                    const radius = 9 + 4 * Math.sin(redialOffset);
+                    const cloudTime = time + redialOffset;
+                    cloud.setLocalPosition(2 + radius * Math.sin(cloudTime * cloudSpeed), 4, -5 + radius * Math.cos(cloudTime * cloudSpeed));
+                });
+
+                frameNumber++;
             });
         });
     }

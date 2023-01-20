@@ -79,8 +79,13 @@ class ElementDragHelper extends EventHandler {
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
+        this._element[onOrOff]('selectstart', this._onMouseDownOrTouchStart, this);
     }
 
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
+     */
     _toggleDragListeners(onOrOff) {
         const isOn = onOrOff === 'on';
 
@@ -89,22 +94,22 @@ class ElementDragHelper extends EventHandler {
             return;
         }
 
-        if (!this._handleMouseUpOrTouchEnd) {
-            this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
-        }
-
         // mouse events, if mouse is available
         if (this._app.mouse) {
             this._element[onOrOff]('mousemove', this._onMove, this);
-            this._element[onOrOff]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mouseup', this._onMouseUpOrTouchEnd, this);
         }
 
         // touch events, if touch is available
         if (platform.touch) {
             this._element[onOrOff]('touchmove', this._onMove, this);
-            this._element[onOrOff]('touchend', this._handleMouseUpOrTouchEnd, this);
-            this._element[onOrOff]('touchcancel', this._handleMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchend', this._onMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._onMouseUpOrTouchEnd, this);
         }
+
+        // webxr events
+        this._element[onOrOff]('selectmove', this._onMove, this);
+        this._element[onOrOff]('selectend', this._onMouseUpOrTouchEnd, this);
 
         this._hasDragListeners = isOn;
     }
@@ -140,16 +145,20 @@ class ElementDragHelper extends EventHandler {
      * This method calculates the `Vec3` intersection point of plane/ray intersection based on
      * the mouse/touch input event. If there is no intersection, it returns `null`.
      *
-     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input').ElementTouchEvent | import('../../input/element-input').ElementMouseEvent | import('../../input/element-input').ElementSelectEvent} event - The event.
      * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
      * is an intersection, otherwise `null`
      * @private
      */
     _screenToLocal(event) {
-        this._determineInputPosition(event);
-        this._chooseRayOriginAndDirection();
+        if (event.inputSource) {
+            _ray.set(event.inputSource.getOrigin(), event.inputSource.getDirection());
+        } else {
+            this._determineInputPosition(event);
+            this._chooseRayOriginAndDirection();
+        }
 
-        _plane.point.copy(this._element.entity.getLocalPosition());
+        _plane.point.copy(this._element.entity.getPosition());
         _plane.normal.copy(this._element.entity.forward).mulScalar(-1);
 
         const denominator = _plane.normal.dot(_ray.direction);
@@ -215,7 +224,7 @@ class ElementDragHelper extends EventHandler {
 
         dragScale.x = 1 / dragScale.x;
         dragScale.y = 1 / dragScale.y;
-        dragScale.z = 1 / dragScale.z;
+        dragScale.z = 0;
     }
 
     /**

@@ -33,6 +33,9 @@ class GrabPassExample {
             // roughness map
             uniform sampler2D uRoughnessMap;
 
+            // tint colors
+            uniform vec3 tints[4];
+
             // engine built-in constant storing render target size in .xy and inverse size in .zw
             uniform vec4 uScreenSize;
 
@@ -58,6 +61,13 @@ class GrabPassExample {
                 // get background pixel color with distorted offset
                 vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
+                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing
+                // (note - this could be worked around by using a series of if statements in this case)
+                #ifdef GL2
+                    float tintIndex = clamp(mipmap, 0.0, 3.0);
+                    grabColor *= tints[int(tintIndex)];
+                #endif
+
                 // brighten the refracted texture a little bit
                 // brighten even more the rough parts of the glass
                 gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
@@ -67,126 +77,150 @@ class GrabPassExample {
 
     example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
-        // Create the app and start the update loop
-        const app = new pc.Application(canvas, {
-            graphicsDeviceOptions: {
-                alpha: true
-            }
-        });
-
         const assets = {
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
             "roughness": new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
-            'helipad.dds': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM })
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
+            createOptions.mouse = new pc.Mouse(document.body);
+            createOptions.touch = new pc.TouchDevice(document.body);
+
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler
+            ];
+
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
+
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // setup skydome
-            app.scene.skyboxMip = 0;
-            app.scene.exposure = 2;
-            app.scene.setSkybox(assets['helipad.dds'].resources);
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
 
-            app.scene.toneMapping = pc.TONEMAP_ACES;
+                app.start();
 
-            // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
-            // Move the depth layer to take place after World and Skydome layers, to capture both of them.
-            const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
-            app.scene.layers.remove(depthLayer);
-            app.scene.layers.insertOpaque(depthLayer, 2);
+                // setup skydome
+                app.scene.skyboxMip = 0;
+                app.scene.exposure = 2;
+                app.scene.envAtlas = assets.helipad.resource;
 
-            // helper function to create a primitive with shape type, position, scale, color
-            function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
-                // create material of specified color
-                const material = new pc.StandardMaterial();
-                material.diffuse = color;
-                material.shininess = 60;
-                material.metalness = 0.4;
-                material.useMetalness = true;
-                material.update();
+                app.scene.toneMapping = pc.TONEMAP_ACES;
 
-                // create primitive
-                const primitive = new pc.Entity();
-                primitive.addComponent('render', {
-                    type: primitiveType,
-                    material: material
+                // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+                // Move the depth layer to take place after World and Skydome layers, to capture both of them.
+                const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+                app.scene.layers.remove(depthLayer);
+                app.scene.layers.insertOpaque(depthLayer, 2);
+
+                // helper function to create a primitive with shape type, position, scale, color
+                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
+                    // create material of specified color
+                    const material = new pc.StandardMaterial();
+                    material.diffuse = color;
+                    material.shininess = 60;
+                    material.metalness = 0.4;
+                    material.useMetalness = true;
+                    material.update();
+
+                    // create primitive
+                    const primitive = new pc.Entity();
+                    primitive.addComponent('render', {
+                        type: primitiveType,
+                        material: material
+                    });
+
+                    // set position and scale and add it to scene
+                    primitive.setLocalPosition(position);
+                    primitive.setLocalScale(scale);
+                    app.root.addChild(primitive);
+
+                    return primitive;
+                }
+
+                // create few primitives, keep their references to rotate them later
+                const primitives: any = [];
+                const count = 7;
+                const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+                for (let i = 0; i < count; i++) {
+                    const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
+                    const color = new pc.Color(Math.random(), Math.random(), Math.random());
+                    const angle = 2 * Math.PI * i / count;
+                    const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
+                    primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
+                }
+
+                // Create the camera, which renders entities
+                const camera = new pc.Entity("SceneCamera");
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.2, 0.2, 0.2)
                 });
+                app.root.addChild(camera);
+                camera.setLocalPosition(0, 10, 20);
+                camera.lookAt(pc.Vec3.ZERO);
 
-                // set position and scale and add it to scene
-                primitive.setLocalPosition(position);
-                primitive.setLocalScale(scale);
-                app.root.addChild(primitive);
+                // enable the camera to render the scene's color map.
+                camera.camera.requestSceneColorMap(true);
 
-                return primitive;
-            }
+                // create a primitive which uses refraction shader to distort the view behind it
+                const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
+                glass.render.castShadows = false;
+                glass.render.receiveShadows = false;
 
-            // create few primitives, keep their references to rotate them later
-            const primitives: any = [];
-            const count = 7;
-            const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
-            for (let i = 0; i < count; i++) {
-                const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
-                const color = new pc.Color(Math.random(), Math.random(), Math.random());
-                const angle = 2 * Math.PI * i / count;
-                const pos = new pc.Vec3(12 * Math.sin(angle), 0, 12 * Math.cos(angle));
-                primitives.push(createPrimitive(shapeName, pos, new pc.Vec3(4, 8, 4), color));
-            }
+                const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
 
-            // Create the camera, which renders entities
-            const camera = new pc.Entity("SceneCamera");
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.2, 0.2, 0.2)
-            });
-            app.root.addChild(camera);
-            camera.setLocalPosition(0, 10, 20);
-            camera.lookAt(pc.Vec3.ZERO);
+                // reflection material using the shader
+                const refractionMaterial = new pc.Material();
+                refractionMaterial.shader = shader;
+                glass.render.material = refractionMaterial;
 
-            // enable the camera to render the scene's color map.
-            camera.camera.requestSceneColorMap(true);
+                // set an offset map on the material
+                refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
 
-            // create a primitive which uses refraction shader to distort the view behind it
-            const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
-            glass.render.castShadows = false;
-            glass.render.receiveShadows = false;
+                // set roughness map
+                refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
 
-            const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
+                // tint colors
+                refractionMaterial.setParameter('tints[0]', new Float32Array([
+                    1, 0.7, 0.7,    // red
+                    1, 1, 1,        // white
+                    0.7, 0.7, 1,    // blue
+                    1, 1, 1         // white
+                ]));
 
-            // reflection material using the shader
-            const refractionMaterial = new pc.Material();
-            refractionMaterial.shader = shader;
-            glass.render.material = refractionMaterial;
+                // transparency
+                refractionMaterial.blendType = pc.BLEND_NORMAL;
+                refractionMaterial.update();
 
-            // set an offset map on the material
-            refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
+                // update things each frame
+                let time = 0;
+                app.on("update", function (dt) {
+                    time += dt;
 
-            // set roughness map
-            refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
+                    // rotate the primitives
+                    primitives.forEach((prim: pc.Entity) => {
+                        prim.rotate(0.3, 0.2, 0.1);
+                    });
 
-            // transparency
-            refractionMaterial.blendType = pc.BLEND_NORMAL;
-            refractionMaterial.update();
+                    glass.rotate(-0.1, 0.1, -0.15);
 
-            app.start();
-
-            // update things each frame
-            let time = 0;
-            app.on("update", function (dt) {
-                time += dt;
-
-                // rotate the primitives
-                primitives.forEach((prim: pc.Entity) => {
-                    prim.rotate(0.3, 0.2, 0.1);
+                    // orbit the camera
+                    camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
+                    camera.lookAt(new pc.Vec3(0, 2, 0));
                 });
-
-                glass.rotate(-0.1, 0.1, -0.15);
-
-                // orbit the camera
-                camera.setLocalPosition(20 * Math.sin(time * 0.2), 7, 20 * Math.cos(time * 0.2));
-                camera.lookAt(new pc.Vec3(0, 2, 0));
             });
         });
     }

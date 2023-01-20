@@ -6,12 +6,21 @@
  */
 class DebugGraphics {
     /**
+     * An array of markers, representing a stack.
+     *
+     * @type {string[]}
+     * @private
+     */
+    static markers = [];
+
+    /**
      * Push GPU marker to the stack on the device.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {string} name - The name of the marker.
      */
     static pushGpuMarker(device, name) {
+        DebugGraphics.markers.push(name);
         device.pushMarker(name);
     }
 
@@ -21,7 +30,19 @@ class DebugGraphics {
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      */
     static popGpuMarker(device) {
+        if (DebugGraphics.markers.length) {
+            DebugGraphics.markers.pop();
+        }
         device.popMarker();
+    }
+
+    /**
+     * Converts current markers into a single string format.
+     *
+     * @returns {string} String representation of current markers.
+     */
+    static toString() {
+        return DebugGraphics.markers.join(" | ");
     }
 }
 

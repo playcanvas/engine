@@ -1,5 +1,3 @@
-import { Debug } from '../../../core/debug.js';
-
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
@@ -13,8 +11,11 @@ import {
 import { Component } from '../component.js';
 
 // Shared math variable to avoid excessive allocation
-let ammoTransform;
-let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
+let _ammoTransform;
+let _ammoVec1, _ammoVec2, _ammoQuat;
+const _quat1 = new Quat();
+const _quat2 = new Quat();
+const _vec3 = new Vec3();
 
 /**
  * The rigidbody component, when combined with a {@link CollisionComponent}, allows your entities
@@ -28,8 +29,8 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * ```javascript
  * // Create a static 1x1x1 box-shaped rigid body
  * const entity = pc.Entity();
- * entity.addComponent("rigidbody"); // With no options specified, this defaults to a 'static' body
- * entity.addComponent("collision"); // With no options specified, this defaults to a 1x1x1 box shape
+ * entity.addComponent("rigidbody"); // Without options, this defaults to a 'static' body
+ * entity.addComponent("collision"); // Without options, this defaults to a 1x1x1 box shape
  * ```
  *
  * To create a dynamic sphere with mass of 10, do:
@@ -53,6 +54,51 @@ let ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
  * @augments Component
  */
 class RigidBodyComponent extends Component {
+    /** @private */
+    _angularDamping = 0;
+
+    /** @private */
+    _angularFactor = new Vec3(1, 1, 1);
+
+    /** @private */
+    _angularVelocity = new Vec3();
+
+    /** @private */
+    _body = null;
+
+    /** @private */
+    _friction = 0.5;
+
+    /** @private */
+    _group = BODYGROUP_STATIC;
+
+    /** @private */
+    _linearDamping = 0;
+
+    /** @private */
+    _linearFactor = new Vec3(1, 1, 1);
+
+    /** @private */
+    _linearVelocity = new Vec3();
+
+    /** @private */
+    _mask = BODYMASK_NOT_STATIC;
+
+    /** @private */
+    _mass = 1;
+
+    /** @private */
+    _restitution = 0;
+
+    /** @private */
+    _rollingFriction = 0;
+
+    /** @private */
+    _simulationEnabled = false;
+
+    /** @private */
+    _type = BODYTYPE_STATIC;
+
     /**
      * Create a new RigidBodyComponent instance.
      *
@@ -60,24 +106,8 @@ class RigidBodyComponent extends Component {
      * created this component.
      * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
      */
-    constructor(system, entity) {
+    constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);
-
-        this._angularDamping = 0;
-        this._angularFactor = new Vec3(1, 1, 1);
-        this._angularVelocity = new Vec3();
-        this._body = null;
-        this._friction = 0.5;
-        this._group = BODYGROUP_STATIC;
-        this._linearDamping = 0;
-        this._linearFactor = new Vec3(1, 1, 1);
-        this._linearVelocity = new Vec3();
-        this._mask = BODYMASK_NOT_STATIC;
-        this._mass = 1;
-        this._restitution = 0;
-        this._rollingFriction = 0;
-        this._simulationEnabled = false;
-        this._type = BODYTYPE_STATIC;
     }
 
     /**
@@ -115,15 +145,14 @@ class RigidBodyComponent extends Component {
      * @param {import('../../entity.js').Entity} other - The {@link Entity} with trigger volume that this rigid body exited.
      */
 
+    /** @ignore */
     static onLibraryLoaded() {
-
         // Lazily create shared variable
         if (typeof Ammo !== 'undefined') {
-            ammoTransform = new Ammo.btTransform();
-            ammoVec1 = new Ammo.btVector3();
-            ammoVec2 = new Ammo.btVector3();
-            ammoQuat = new Ammo.btQuaternion();
-            ammoOrigin = new Ammo.btVector3(0, 0, 0);
+            _ammoTransform = new Ammo.btTransform();
+            _ammoVec1 = new Ammo.btVector3();
+            _ammoVec2 = new Ammo.btVector3();
+            _ammoQuat = new Ammo.btQuaternion();
         }
     }
 
@@ -157,8 +186,8 @@ class RigidBodyComponent extends Component {
             this._angularFactor.copy(factor);
 
             if (this._body && this._type === BODYTYPE_DYNAMIC) {
-                ammoVec1.setValue(factor.x, factor.y, factor.z);
-                this._body.setAngularFactor(ammoVec1);
+                _ammoVec1.setValue(factor.x, factor.y, factor.z);
+                this._body.setAngularFactor(_ammoVec1);
             }
         }
     }
@@ -176,8 +205,8 @@ class RigidBodyComponent extends Component {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
 
-            ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
-            this._body.setAngularVelocity(ammoVec1);
+            _ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
+            this._body.setAngularVelocity(_ammoVec1);
 
             this._angularVelocity.copy(velocity);
         }
@@ -277,8 +306,8 @@ class RigidBodyComponent extends Component {
             this._linearFactor.copy(factor);
 
             if (this._body && this._type === BODYTYPE_DYNAMIC) {
-                ammoVec1.setValue(factor.x, factor.y, factor.z);
-                this._body.setLinearFactor(ammoVec1);
+                _ammoVec1.setValue(factor.x, factor.y, factor.z);
+                this._body.setLinearFactor(_ammoVec1);
             }
         }
     }
@@ -296,8 +325,8 @@ class RigidBodyComponent extends Component {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             this._body.activate();
 
-            ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
-            this._body.setLinearVelocity(ammoVec1);
+            _ammoVec1.setValue(velocity.x, velocity.y, velocity.z);
+            this._body.setLinearVelocity(_ammoVec1);
 
             this._linearVelocity.copy(velocity);
         }
@@ -350,9 +379,9 @@ class RigidBodyComponent extends Component {
                 }
 
                 // calculateLocalInertia writes local inertia to ammoVec1 here...
-                this._body.getCollisionShape().calculateLocalInertia(mass, ammoVec1);
+                this._body.getCollisionShape().calculateLocalInertia(mass, _ammoVec1);
                 // ...and then writes the calculated local inertia to the body
-                this._body.setMassProps(mass, ammoVec1);
+                this._body.setMassProps(mass, _ammoVec1);
                 this._body.updateInertiaTensor();
 
                 if (enabled) {
@@ -478,9 +507,9 @@ class RigidBodyComponent extends Component {
 
             const mass = this._type === BODYTYPE_DYNAMIC ? this._mass : 0;
 
-            this._getEntityTransform(ammoTransform);
+            this._getEntityTransform(_ammoTransform);
 
-            const body = this.system.createBody(mass, shape, ammoTransform);
+            const body = this.system.createBody(mass, shape, _ammoTransform);
 
             body.setRestitution(this._restitution);
             body.setFriction(this._friction);
@@ -489,12 +518,12 @@ class RigidBodyComponent extends Component {
 
             if (this._type === BODYTYPE_DYNAMIC) {
                 const linearFactor = this._linearFactor;
-                ammoVec1.setValue(linearFactor.x, linearFactor.y, linearFactor.z);
-                body.setLinearFactor(ammoVec1);
+                _ammoVec1.setValue(linearFactor.x, linearFactor.y, linearFactor.z);
+                body.setLinearFactor(_ammoVec1);
 
                 const angularFactor = this._angularFactor;
-                ammoVec1.setValue(angularFactor.x, angularFactor.y, angularFactor.z);
-                body.setAngularFactor(ammoVec1);
+                _ammoVec1.setValue(angularFactor.x, angularFactor.y, angularFactor.z);
+                body.setAngularFactor(_ammoVec1);
             } else if (this._type === BODYTYPE_KINEMATIC) {
                 body.setCollisionFlags(body.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
                 body.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
@@ -529,6 +558,11 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Add a body to the simulation.
+     *
+     * @ignore
+     */
     enableSimulation() {
         const entity = this.entity;
         if (entity.collision && entity.collision.enabled && !this._simulationEnabled) {
@@ -563,6 +597,11 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Remove a body from the simulation.
+     *
+     * @ignore
+     */
     disableSimulation() {
         const body = this._body;
         if (body && this._simulationEnabled) {
@@ -637,47 +676,26 @@ class RigidBodyComponent extends Component {
      * // Apply the force
      * this.entity.rigidbody.applyForce(force, relativePos);
      */
-    applyForce() {
-        let x, y, z;
-        let px, py, pz;
-        switch (arguments.length) {
-            case 1:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                break;
-            case 2:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                px = arguments[1].x;
-                py = arguments[1].y;
-                pz = arguments[1].z;
-                break;
-            case 3:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                break;
-            case 6:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                px = arguments[3];
-                py = arguments[4];
-                pz = arguments[5];
-                break;
-        }
+    applyForce(x, y, z, px, py, pz) {
         const body = this._body;
         if (body) {
             body.activate();
-            ammoVec1.setValue(x, y, z);
-            if (px !== undefined) {
-                ammoVec2.setValue(px, py, pz);
-                body.applyForce(ammoVec1, ammoVec2);
+
+            if (x instanceof Vec3) {
+                _ammoVec1.setValue(x.x, x.y, x.z);
             } else {
-                body.applyForce(ammoVec1, ammoOrigin);
+                _ammoVec1.setValue(x, y, z);
             }
+
+            if (y instanceof Vec3) {
+                _ammoVec2.setValue(y.x, y.y, y.z);
+            } else if (px !== undefined) {
+                _ammoVec2.setValue(px, py, pz);
+            } else {
+                _ammoVec2.setValue(0, 0, 0);
+            }
+
+            body.applyForce(_ammoVec1, _ammoVec2);
         }
     }
 
@@ -697,28 +715,17 @@ class RigidBodyComponent extends Component {
      * // Apply via numbers
      * entity.rigidbody.applyTorque(0, 10, 0);
      */
-    applyTorque() {
-        let x, y, z;
-        switch (arguments.length) {
-            case 1:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                break;
-            case 3:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                break;
-            default:
-                Debug.error('ERROR: applyTorque: function takes 1 or 3 arguments');
-                return;
-        }
+    applyTorque(x, y, z) {
         const body = this._body;
         if (body) {
             body.activate();
-            ammoVec1.setValue(x, y, z);
-            body.applyTorque(ammoVec1);
+
+            if (x instanceof Vec3) {
+                _ammoVec1.setValue(x.x, x.y, x.z);
+            } else {
+                _ammoVec1.setValue(x, y, z);
+            }
+            body.applyTorque(_ammoVec1);
         }
     }
 
@@ -733,11 +740,11 @@ class RigidBodyComponent extends Component {
      * at which to apply the impulse in the local-space of the entity or the y-component of the
      * impulse to apply in world-space.
      * @param {number} [z] - The z-component of the impulse to apply in world-space.
-     * @param {number} [px=0] - The x-component of the point at which to apply the impulse in the
+     * @param {number} [px] - The x-component of the point at which to apply the impulse in the
      * local-space of the entity.
-     * @param {number} [py=0] - The y-component of the point at which to apply the impulse in the
+     * @param {number} [py] - The y-component of the point at which to apply the impulse in the
      * local-space of the entity.
-     * @param {number} [pz=0] - The z-component of the point at which to apply the impulse in the
+     * @param {number} [pz] - The z-component of the point at which to apply the impulse in the
      * local-space of the entity.
      * @example
      * // Apply an impulse along the world-space positive y-axis at the entity's position.
@@ -757,50 +764,26 @@ class RigidBodyComponent extends Component {
      * // z-axis of the entity's local-space.
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
-    applyImpulse() {
-        let x, y, z;
-        let px, py, pz;
-        switch (arguments.length) {
-            case 1:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                break;
-            case 2:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                px = arguments[1].x;
-                py = arguments[1].y;
-                pz = arguments[1].z;
-                break;
-            case 3:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                break;
-            case 6:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                px = arguments[3];
-                py = arguments[4];
-                pz = arguments[5];
-                break;
-            default:
-                Debug.error('ERROR: applyImpulse: function takes 1, 2, 3 or 6 arguments');
-                return;
-        }
+    applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
         if (body) {
             body.activate();
-            ammoVec1.setValue(x, y, z);
-            if (px !== undefined) {
-                ammoVec2.setValue(px, py, pz);
-                body.applyImpulse(ammoVec1, ammoVec2);
+
+            if (x instanceof Vec3) {
+                _ammoVec1.setValue(x.x, x.y, x.z);
             } else {
-                body.applyImpulse(ammoVec1, ammoOrigin);
+                _ammoVec1.setValue(x, y, z);
             }
+
+            if (y instanceof Vec3) {
+                _ammoVec2.setValue(y.x, y.y, y.z);
+            } else if (px !== undefined) {
+                _ammoVec2.setValue(px, py, pz);
+            } else {
+                _ammoVec2.setValue(0, 0, 0);
+            }
+
+            body.applyImpulse(_ammoVec1, _ammoVec2);
         }
     }
 
@@ -821,28 +804,18 @@ class RigidBodyComponent extends Component {
      * // Apply via numbers
      * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
      */
-    applyTorqueImpulse() {
-        let x, y, z;
-        switch (arguments.length) {
-            case 1:
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-                break;
-            case 3:
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-                break;
-            default:
-                Debug.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
-                return;
-        }
+    applyTorqueImpulse(x, y, z) {
         const body = this._body;
         if (body) {
             body.activate();
-            ammoVec1.setValue(x, y, z);
-            body.applyTorqueImpulse(ammoVec1);
+
+            if (x instanceof Vec3) {
+                _ammoVec1.setValue(x.x, x.y, x.z);
+            } else {
+                _ammoVec1.setValue(x, y, z);
+            }
+
+            body.applyTorqueImpulse(_ammoVec1);
         }
     }
 
@@ -881,14 +854,22 @@ class RigidBodyComponent extends Component {
      */
     _getEntityTransform(transform) {
         const entity = this.entity;
-        const pos = entity.getPosition();
-        const rot = entity.getRotation();
 
-        ammoVec1.setValue(pos.x, pos.y, pos.z);
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        const component = entity.collision;
+        if (component) {
+            const bodyPos = component.getShapePosition();
+            const bodyRot = component.getShapeRotation();
+            _ammoVec1.setValue(bodyPos.x, bodyPos.y, bodyPos.z);
+            _ammoQuat.setValue(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
+        } else {
+            const pos = entity.getPosition();
+            const rot = entity.getRotation();
+            _ammoVec1.setValue(pos.x, pos.y, pos.z);
+            _ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
 
-        transform.setOrigin(ammoVec1);
-        transform.setRotation(ammoQuat);
+        transform.setOrigin(_ammoVec1);
+        transform.setRotation(_ammoQuat);
     }
 
     /**
@@ -901,14 +882,14 @@ class RigidBodyComponent extends Component {
     syncEntityToBody() {
         const body = this._body;
         if (body) {
-            this._getEntityTransform(ammoTransform);
+            this._getEntityTransform(_ammoTransform);
 
-            body.setWorldTransform(ammoTransform);
+            body.setWorldTransform(_ammoTransform);
 
             if (this._type === BODYTYPE_KINEMATIC) {
                 const motionState = body.getMotionState();
                 if (motionState) {
-                    motionState.setWorldTransform(ammoTransform);
+                    motionState.setWorldTransform(_ammoTransform);
                 }
             }
             body.activate();
@@ -931,12 +912,32 @@ class RigidBodyComponent extends Component {
             // state is technically redundant since the engine creates one for all bodies.
             const motionState = body.getMotionState();
             if (motionState) {
-                motionState.getWorldTransform(ammoTransform);
+                const entity = this.entity;
 
-                const p = ammoTransform.getOrigin();
-                const q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                motionState.getWorldTransform(_ammoTransform);
+
+                const p = _ammoTransform.getOrigin();
+                const q = _ammoTransform.getRotation();
+
+                const component = entity.collision;
+                if (component && component._hasOffset) {
+                    const lo = component.data.linearOffset;
+                    const ao = component.data.angularOffset;
+
+                    // Un-rotate the angular offset and then use the new rotation to
+                    // un-translate the linear offset in local space
+                    // Order of operations matter here
+                    const invertedAo = _quat2.copy(ao).invert();
+                    const entityRot = _quat1.set(q.x(), q.y(), q.z(), q.w()).mul(invertedAo);
+
+                    entityRot.transformVector(lo, _vec3);
+                    entity.setPosition(p.x() - _vec3.x, p.y() - _vec3.y, p.z() - _vec3.z);
+                    entity.setRotation(entityRot);
+
+                } else {
+                    entity.setPosition(p.x(), p.y(), p.z());
+                    entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                }
             }
         }
     }
@@ -949,8 +950,8 @@ class RigidBodyComponent extends Component {
     _updateKinematic() {
         const motionState = this._body.getMotionState();
         if (motionState) {
-            this._getEntityTransform(ammoTransform);
-            motionState.setWorldTransform(ammoTransform);
+            this._getEntityTransform(_ammoTransform);
+            motionState.setWorldTransform(_ammoTransform);
         }
     }
 
@@ -964,8 +965,8 @@ class RigidBodyComponent extends Component {
      *
      * @param {Vec3|number} x - A 3-dimensional vector holding the new position or the new position
      * x-coordinate.
-     * @param {Vec3|Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation
-     * or the new position y-coordinate.
+     * @param {Quat|Vec3|number} [y] - A 3-dimensional vector or quaternion holding the new
+     * rotation or the new position y-coordinate.
      * @param {number} [z] - The new position z-coordinate.
      * @param {number} [rx] - The new Euler x-angle value.
      * @param {number} [ry] - The new Euler y-angle value.
@@ -984,28 +985,25 @@ class RigidBodyComponent extends Component {
      * // Teleport the entity to world-space coordinate [1, 2, 3] and reset orientation
      * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
      */
-    teleport() {
-        if (arguments.length < 3) {
-            if (arguments[0]) {
-                this.entity.setPosition(arguments[0]);
-            }
-            if (arguments[1]) {
-                if (arguments[1] instanceof Quat) {
-                    this.entity.setRotation(arguments[1]);
-                } else {
-                    this.entity.setEulerAngles(arguments[1]);
-                }
-
-            }
+    teleport(x, y, z, rx, ry, rz) {
+        if (x instanceof Vec3) {
+            this.entity.setPosition(x);
         } else {
-            if (arguments.length === 6) {
-                this.entity.setEulerAngles(arguments[3], arguments[4], arguments[5]);
-            }
-            this.entity.setPosition(arguments[0], arguments[1], arguments[2]);
+            this.entity.setPosition(x, y, z);
         }
+
+        if (y instanceof Quat) {
+            this.entity.setRotation(y);
+        } else if (y instanceof Vec3) {
+            this.entity.setEulerAngles(y);
+        } else if (rx !== undefined) {
+            this.entity.setEulerAngles(rx, ry, rz);
+        }
+
         this.syncEntityToBody();
     }
 
+    /** @ignore */
     onEnable() {
         if (!this._body) {
             this.createBody();
@@ -1014,6 +1012,7 @@ class RigidBodyComponent extends Component {
         this.enableSimulation();
     }
 
+    /** @ignore */
     onDisable() {
         this.disableSimulation();
     }

@@ -87,7 +87,7 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
       // 创建一个立方体
       const box = new pc.Entity("cube");
-      box.addComponent("model", {
+      box.addComponent("render", {
         type: "box",
       });
       app.root.addChild(box);

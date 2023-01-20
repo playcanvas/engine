@@ -5,6 +5,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
+import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -37,8 +38,8 @@ class ProgramLibrary {
 
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
-        this._defaultStdMatOption = {};
-        this._defaultStdMatOptionMin = {};
+        this._defaultStdMatOption = new StandardMaterialOptions();
+        this._defaultStdMatOptionMin = new StandardMaterialOptions();
 
         standardMaterial.shaderOptBuilder.updateRef(
             this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
@@ -75,9 +76,9 @@ class ProgramLibrary {
         let def = this.definitionsCache.get(key);
         if (!def) {
             let lights;
-            if (options.lights) {
-                lights = options.lights;
-                options.lights = lights.map(function (l) {
+            if (options.litOptions?.lights) {
+                lights = options.litOptions.lights;
+                options.litOptions.lights = lights.map(function (l) {
                     // TODO: refactor this to avoid creating a clone of the light.
                     const lcopy = l.clone ? l.clone() : l;
                     lcopy.key = l.key;
@@ -87,15 +88,15 @@ class ProgramLibrary {
 
             this.storeNewProgram(name, options);
 
-            if (options.lights)
-                options.lights = lights;
+            if (options.litOptions?.lights)
+                options.litOptions.lights = lights;
 
             if (this._precached)
                 Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
 
             const device = this._device;
             def = generator.createShaderDefinition(device, options);
-            def.name = `${name}-pass:${options.pass}`;
+            def.name = def.name ?? (options.pass ? `${name}-pass:${options.pass}` : name);
             this.definitionsCache.set(key, def);
         }
         return def;
@@ -119,7 +120,7 @@ class ProgramLibrary {
         // we have a key for shader source code generation, a key for its further processing to work with
         // uniform buffers, and a final key to get the processed shader from the cache
         const generationKey = generator.generateKey(options);
-        const processingKey = JSON.stringify(processingOptions);
+        const processingKey = processingOptions.generateKey();
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
@@ -132,7 +133,7 @@ class ProgramLibrary {
 
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
-                name: name,
+                name: `${generatedShaderDef.name}-processed`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -156,6 +157,11 @@ class ProgramLibrary {
             for (const p in options) {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
+            }
+
+            // Note: this was added in #4792 and it does not filter out the default values, like the loop above
+            for (const p in options.litOptions) {
+                opt[p] = options.litOptions[p];
             }
         } else {
             // Other shaders have only dozen params

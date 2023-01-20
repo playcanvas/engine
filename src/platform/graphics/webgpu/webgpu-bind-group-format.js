@@ -32,6 +32,11 @@ class WebgpuBindGroupFormat {
          */
         this.key = key;
 
+        // keep descr in debug mode
+        Debug.call(() => {
+            this.descr = descr;
+        });
+
         // type {GPUBindGroupLayout}
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);

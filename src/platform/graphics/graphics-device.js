@@ -4,9 +4,12 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 
 import {
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN
+    BUFFER_STATIC,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
 import { ScopeSpace } from './scope-space.js';
+import { VertexBuffer } from './vertex-buffer.js';
+import { VertexFormat } from './vertex-format.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
@@ -124,6 +127,14 @@ class GraphicsDevice extends EventHandler {
       */
     textureHalfFloatRenderable;
 
+    /**
+     * A vertex buffer representing a quad.
+     *
+     * @type {VertexBuffer}
+     * @ignore
+     */
+    quadVertexBuffer;
+
     constructor(canvas) {
         super();
 
@@ -133,7 +144,9 @@ class GraphicsDevice extends EventHandler {
         this._width = 0;
         this._height = 0;
 
-        this._maxPixelRatio = 1;
+        // Some devices window.devicePixelRatio can be less than one
+        // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
+        this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
         // Array of objects that need to be re-initialized after a context restore event
         /** @type {import('./shader.js').Shader[]} */
@@ -187,6 +200,19 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Function that executes after the device has been created.
+     */
+    postInit() {
+
+        // create quad vertex buffer
+        const vertexFormat = new VertexFormat(this, [
+            { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
+        ]);
+        const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+    }
+
+    /**
      * Fired when the canvas is resized.
      *
      * @event GraphicsDevice#resizecanvas
@@ -201,6 +227,9 @@ class GraphicsDevice extends EventHandler {
         // fire the destroy event.
         // textures and other device resources may destroy themselves in response.
         this.fire('destroy');
+
+        this.quadVertexBuffer?.destroy();
+        this.quadVertexBuffer = null;
     }
 
     onDestroyShader(shader) {
@@ -228,6 +257,12 @@ class GraphicsDevice extends EventHandler {
         this.vertexBuffers = [];
         this.shader = null;
         this.renderTarget = null;
+    }
+
+    initializeRenderState() {
+        // Cached viewport and scissor dimensions
+        this.vx = this.vy = this.vw = this.vh = 0;
+        this.sx = this.sy = this.sw = this.sh = 0;
     }
 
     /**
