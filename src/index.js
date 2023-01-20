@@ -140,7 +140,7 @@ export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
 export { EnvLighting } from './scene/graphics/env-lighting.js';
-export { PostEffect, drawFullscreenQuad } from './scene/graphics/post-effect.js';
+export { PostEffect } from './scene/graphics/post-effect.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 

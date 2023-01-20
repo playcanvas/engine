@@ -39,7 +39,7 @@ import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
-import { drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
+import { PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
@@ -435,6 +435,23 @@ export const gfx = {
     VertexFormat: VertexFormat,
     VertexIterator: VertexIterator
 };
+
+const _viewport = new Vec4();
+
+export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
+
+    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+
+    // convert rect in normalized space to viewport in pixel space
+    let viewport;
+    if (rect) {
+        const w = target ? target.width : device.width;
+        const h = target ? target.height : device.height;
+        viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
+    }
+
+    drawQuadWithShader(device, target, shader, viewport);
+}
 
 export const posteffect = {
     createFullscreenQuad: (device) => {
