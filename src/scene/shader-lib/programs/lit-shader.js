@@ -863,7 +863,7 @@ class LitShader {
 
         if (this.lighting) {
             code += chunks.lightDiffuseLambertPS;
-            if (hasAreaLights || options.clusteredLightingEnabled) code += chunks.ltc;
+            if (hasAreaLights || options.clusteredLightingAreaLightsEnabled) code += chunks.ltcPS;
         }
 
         code += '\n';
