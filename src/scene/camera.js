@@ -78,7 +78,6 @@ class Camera {
      * True if the camera clears the full render target. (viewport / scissor are full size)
      */
     get fullSizeClearRect() {
-
         const rect = this._scissorRectClear ? this.scissorRect : this._rect;
         return rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1;
     }
@@ -367,14 +366,15 @@ class Camera {
      * @returns {Camera} Self for chaining.
      */
     copy(other) {
-        // If we are in an XR session, then the getters for these
-        // properties will return the XR projection values
-        // Make sure we copy the no XR values
-        this.aspectRatio = other._aspectRatio;
-        this.farClip = other._farClip;
-        this.fov = other._fov;
-        this.horizontalFov = other._horizontalFov;
-        this.nearClip = other._nearClip;
+        // We aren't using the getters and setters because there is additional logic
+        // around using WebXR in the getters for these properties so that functions
+        // like screenToWorld work correctly with other systems like the UI input
+        // system
+        this._aspectRatio = other._aspectRatio;
+        this._farClip = other._farClip;
+        this._fov = other._fov;
+        this._horizontalFov = other._horizontalFov;
+        this._nearClip = other._nearClip;
 
         this._xrAspectRatio = other._xrAspectRatio;
         this._xrFarClip = other._xrFarClip;
@@ -404,6 +404,9 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+
+        this._projMatDirty = true;
+
         return this;
     }
 
