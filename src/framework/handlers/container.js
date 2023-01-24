@@ -8,6 +8,10 @@ import { GlbParser } from '../parsers/glb-parser.js';
  * @interface
  * @name ContainerResource
  * @description Container for a list of animations, textures, materials, renders and a model.
+ * @property {import('../asset/asset.js').Asset[]} renders An array of the Render assets.
+ * @property {import('../asset/asset.js').Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
+ * @property {import('../asset/asset.js').Asset[]} textures An array of the {@link Texture} assets.
+ * @property {import('../asset/asset.js').Asset[]} animations An array of the {@link Animation} assets.
  */
 class ContainerResource {
     /**
