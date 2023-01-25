@@ -266,6 +266,7 @@ const stripFunctions = [
     'DebugHelper.setName',
     'DebugHelper.setLabel',
     'DebugGraphics.toString',
+    'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
     'DebugGraphics.popGpuMarker',
     'WorldClustersDebug.render'

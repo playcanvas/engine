@@ -17,6 +17,7 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
 import {
@@ -1214,6 +1215,7 @@ class AppBase extends EventHandler {
 
     // render a layer composition
     renderComposition(layerComposition) {
+        DebugGraphics.clearGpuMarkers();
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
     }
