@@ -1,12 +1,7 @@
-import { CULLFACE_NONE, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
 
-// Primitive for drawFullscreenQuad
-const primitive = {
-    type: PRIMITIVE_TRISTRIP,
-    base: 0,
-    count: 4,
-    indexed: false
-};
+const _viewport = new Vec4();
 
 /**
  * Base class for all post effects. Post effects take a a render target as input apply effects to
@@ -29,21 +24,6 @@ class PostEffect {
         this.device = graphicsDevice;
 
         /**
-         * The shader definition for the fullscreen quad. Needs to be set by the custom post effect
-         * (default is null). Used when calling {@link drawFullscreenQuad}.
-         *
-         * @type {import('../../platform/graphics/shader.js').Shader|null}
-         */
-        this.shader = null;
-
-        /**
-         * The vertex buffer for the fullscreen quad. Used when calling {@link drawFullscreenQuad}.
-         *
-         * @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer}
-         */
-        this.vertexBuffer = graphicsDevice.quadVertexBuffer;
-
-        /**
          * The property that should to be set to `true` (by the custom post effect) if a depth map
          * is necessary (default is false).
          *
@@ -51,6 +31,20 @@ class PostEffect {
          */
         this.needsDepthBuffer = false;
     }
+
+    /**
+     * A simple vertx shader used to render a quad, which requires 'vec2 aPosition' in the vertex
+     * buffer, and generates uv coordinates vUv0 for use in the fragment shader.
+     */
+    static quadVertexShader = `
+        attribute vec2 aPosition;
+        varying vec2 vUv0;
+        void main(void)
+        {
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+            vUv0 = getImageEffectUV((aPosition.xy + 1.0) * 0.5);
+        }
+    `;
 
     /**
      * Render the post effect using the specified inputTarget to the specified outputTarget.
@@ -64,84 +58,28 @@ class PostEffect {
      */
     render(inputTarget, outputTarget, rect) {
     }
-}
 
-/**
- * Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post
- * effects based on {@link PostEffect}.
- *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device of the application.
- * @param {import('../../platform/graphics/render-target.js').RenderTarget} target - The output
- * render target.
- * @param {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer for the rectangle mesh. When calling from
- * a custom post effect, pass the field {@link PostEffect#vertexBuffer}.
- * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used for
- * drawing the rectangle. When calling from a custom post effect, pass the field
- * {@link PostEffect#shader}.
- * @param {import('../../core/math/vec4.js').Vec4} [rect] - The normalized screen-space position
- * (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
- */
-function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
-    const oldRt = device.getRenderTarget();
-    device.setRenderTarget(target);
-    device.updateBegin();
+    /**
+     * Draw a screen-space rectangle in a render target, using a specified shader.
+     *
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget} target - The output
+     * render target.
+     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used for
+     * drawing the rectangle.
+     * @param {import('../../core/math/vec4.js').Vec4} [rect] - The normalized screen-space position
+     * (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
+     */
+    drawQuad(target, shader, rect) {
+        let viewport;
+        if (rect) {
+            // convert rect in normalized space to viewport in pixel space
+            const w = target ? target.width : this.device.width;
+            const h = target ? target.height : this.device.height;
+            viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
+        }
 
-    let w = target ? target.width : device.width;
-    let h = target ? target.height : device.height;
-    let x = 0;
-    let y = 0;
-
-    if (rect) {
-        x = rect.x * w;
-        y = rect.y * h;
-        w *= rect.z;
-        h *= rect.w;
+        drawQuadWithShader(this.device, target, shader, viewport);
     }
-
-    const oldVx = device.vx;
-    const oldVy = device.vy;
-    const oldVw = device.vw;
-    const oldVh = device.vh;
-    device.setViewport(x, y, w, h);
-    const oldSx = device.sx;
-    const oldSy = device.sy;
-    const oldSw = device.sw;
-    const oldSh = device.sh;
-    device.setScissor(x, y, w, h);
-
-    const oldBlending = device.getBlending();
-    const oldDepthTest = device.getDepthTest();
-    const oldDepthWrite = device.getDepthWrite();
-    const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
-    device.setBlending(false);
-    device.setDepthTest(false);
-    device.setDepthWrite(false);
-    device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
-
-    device.setVertexBuffer(vertexBuffer, 0);
-    device.setShader(shader);
-
-    device.draw(primitive);
-
-    device.setBlending(oldBlending);
-    device.setDepthTest(oldDepthTest);
-    device.setDepthWrite(oldDepthWrite);
-    device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
-
-    device.updateEnd();
-
-    device.setRenderTarget(oldRt);
-    device.updateBegin();
-
-    device.setViewport(oldVx, oldVy, oldVw, oldVh);
-    device.setScissor(oldSx, oldSy, oldSw, oldSh);
 }
 
-export { drawFullscreenQuad, PostEffect };
+export { PostEffect };
