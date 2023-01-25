@@ -14,6 +14,14 @@ class DebugGraphics {
     static markers = [];
 
     /**
+     * Clear internal stack of the GPU markers. It should be called at the start of the frame to
+     * prevent the array growing if there are exceptions during the rendering.
+     */
+    static clearGpuMarkers() {
+        DebugGraphics.markers.length = 0;
+    }
+
+    /**
      * Push GPU marker to the stack on the device.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
