@@ -13,41 +13,27 @@ function BrightnessContrastEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
 
     // Shader author: tapio / http://tapio.github.com/
-    this.shader = new pc.Shader(graphicsDevice, {
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION
-        },
-        vshader: [
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
-        fshader: [
-            "precision " + graphicsDevice.precision + " float;",
-            "",
-            "uniform sampler2D uColorBuffer;",
-            "uniform float uBrightness;",
-            "uniform float uContrast;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main() {",
-            "    gl_FragColor = texture2D( uColorBuffer, vUv0 );",
-            "    gl_FragColor.rgb += uBrightness;",
-            "",
-            "    if (uContrast > 0.0) {",
-            "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;",
-            "    } else {",
-            "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;",
-            "    }",
-            "}"
-        ].join("\n")
+    var fshader = [
+        "uniform sampler2D uColorBuffer;",
+        "uniform float uBrightness;",
+        "uniform float uContrast;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main() {",
+        "    gl_FragColor = texture2D( uColorBuffer, vUv0 );",
+        "    gl_FragColor.rgb += uBrightness;",
+        "",
+        "    if (uContrast > 0.0) {",
+        "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;",
+        "    } else {",
+        "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;",
+        "    }",
+        "}"
+    ].join("\n");
+
+    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'BrightnessContrastShader', {
+        aPosition: pc.SEMANTIC_POSITION
     });
 
     // Uniforms
@@ -66,7 +52,7 @@ Object.assign(BrightnessContrastEffect.prototype, {
         scope.resolve("uBrightness").setValue(this.brightness);
         scope.resolve("uContrast").setValue(this.contrast);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+        this.drawQuad(outputTarget, this.shader, rect);
     }
 });
 
