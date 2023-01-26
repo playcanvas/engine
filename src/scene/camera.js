@@ -92,7 +92,7 @@ class Camera {
     }
 
     get aspectRatio() {
-        return (this.xr && this.xr.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
+        return (this.xr?.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
@@ -195,7 +195,7 @@ class Camera {
     }
 
     get farClip() {
-        return (this.xr && this.xr.active) ? this._xrProperties.farClip : this._farClip;
+        return (this.xr?.active) ? this._xrProperties.farClip : this._farClip;
     }
 
     set flipFaces(newValue) {
@@ -214,7 +214,7 @@ class Camera {
     }
 
     get fov() {
-        return (this.xr && this.xr.active) ? this._xrProperties.fov : this._fov;
+        return (this.xr?.active) ? this._xrProperties.fov : this._fov;
     }
 
     set frustumCulling(newValue) {
@@ -233,7 +233,7 @@ class Camera {
     }
 
     get horizontalFov() {
-        return (this.xr && this.xr.active) ? this._xrProperties.horizontalFov : this._horizontalFov;
+        return (this.xr?.active) ? this._xrProperties.horizontalFov : this._horizontalFov;
     }
 
     set layers(newValue) {
@@ -257,7 +257,7 @@ class Camera {
     }
 
     get nearClip() {
-        return (this.xr && this.xr.active) ? this._xrProperties.nearClip : this._nearClip;
+        return (this.xr?.active) ? this._xrProperties.nearClip : this._nearClip;
     }
 
     set node(newValue) {
