@@ -67,11 +67,13 @@ class Camera {
         this.frustum = new Frustum();
 
         // Set by XrManager
-        this._xrHorizontalFov = this._horizontalFov;
-        this._xrFov = this._fov;
-        this._xrAspectRatio = this._aspectRatio;
-        this._xrFarClip = this._farClip;
-        this._xrNearClip = this._nearClip;
+        this._xrProperties = {
+            horizontalFov: this._horizontalFov,
+            fov: this._fov,
+            aspectRatio: this._aspectRatio,
+            farClip: this._farClip,
+            nearClip: this._nearClip
+        }
     }
 
     /**
@@ -90,7 +92,7 @@ class Camera {
     }
 
     get aspectRatio() {
-        return (this.xr && this.xr.active) ? this._xrAspectRatio : this._aspectRatio;
+        return (this.xr && this.xr.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
@@ -193,7 +195,7 @@ class Camera {
     }
 
     get farClip() {
-        return (this.xr && this.xr.active) ? this._xrFarClip : this._farClip;
+        return (this.xr && this.xr.active) ? this._xrProperties.farClip : this._farClip;
     }
 
     set flipFaces(newValue) {
@@ -212,7 +214,7 @@ class Camera {
     }
 
     get fov() {
-        return (this.xr && this.xr.active) ? this._xrFov : this._fov;
+        return (this.xr && this.xr.active) ? this._xrProperties.fov : this._fov;
     }
 
     set frustumCulling(newValue) {
@@ -231,7 +233,7 @@ class Camera {
     }
 
     get horizontalFov() {
-        return (this.xr && this.xr.active) ? this._xrHorizontalFov : this._horizontalFov;
+        return (this.xr && this.xr.active) ? this._xrProperties.horizontalFov : this._horizontalFov;
     }
 
     set layers(newValue) {
@@ -255,7 +257,7 @@ class Camera {
     }
 
     get nearClip() {
-        return (this.xr && this.xr.active) ? this._xrNearClip : this._nearClip;
+        return (this.xr && this.xr.active) ? this._xrProperties.nearClip : this._nearClip;
     }
 
     set node(newValue) {
@@ -376,11 +378,11 @@ class Camera {
         this._horizontalFov = other._horizontalFov;
         this._nearClip = other._nearClip;
 
-        this._xrAspectRatio = other._xrAspectRatio;
-        this._xrFarClip = other._xrFarClip;
-        this._xrFov = other._xrFov;
-        this._xrHorizontalFov = other._xrHorizontalFov;
-        this._xrNearClip = other._xrNearClip;
+        this._xrProperties.aspectRatio = other._xrProperties.aspectRatio;
+        this._xrProperties.farClip = other._xrProperties.farClip;
+        this._xrProperties.fov = other._xrProperties.fov;
+        this._xrProperties.horizontalFov = other._xrProperties.horizontalFov;
+        this._xrProperties.nearClip = other._xrProperties.nearClip;
 
         this.aspectRatioMode = other.aspectRatioMode;
         this.calculateProjection = other.calculateProjection;
