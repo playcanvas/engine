@@ -67,6 +67,7 @@ class Camera {
         this.frustum = new Frustum();
 
         // Set by XrManager
+        this._xr = null;
         this._xrProperties = {
             horizontalFov: this._horizontalFov,
             fov: this._fov,
@@ -350,6 +351,17 @@ class Camera {
 
     get shutter() {
         return this._shutter;
+    }
+
+    set xr(newValue) {
+        if (this._xr !== newValue) {
+            this._xr = newValue;
+            this._projMatDirty = true;
+        }
+    }
+
+    get xr() {
+        return this._xr;
     }
 
     /**
