@@ -667,7 +667,7 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
             storageType: storageType,
 
             // there are glb files around where 8bit colors are missing normalized flag
-            normalized: (semantic === SEMANTIC_COLOR && storageType === TYPE_UINT8) ? true : attribute.normalized()
+            normalized: (semantic === SEMANTIC_COLOR && (storageType === TYPE_UINT8 || storageType === TYPE_UINT16)) ? true : attribute.normalized()
         };
     };
 
