@@ -613,6 +613,21 @@ class Camera {
 
         return points;
     }
+
+    /**
+     * Sets XR camera properties that should be derived physical camera in {@link XrManager}.
+     *
+     * @param {object} [properties] - Properties object.
+     * @param {number} [properties.aspectRatio]
+     * @param {number} [properties.farClip]
+     * @param {number} [properties.fov]
+     * @param {boolean} [properties.horizontalFov]
+     * @param {number} [properties.nearClip]
+     */
+    setXrProperties(properties) {
+        Object.assign(properties, this._xrProperties);
+        this._projMatDirty = true;
+    }
 }
 
 export { Camera };

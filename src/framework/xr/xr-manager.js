@@ -761,13 +761,13 @@ class XrManager extends EventHandler {
             const nearClip = data[14] / (data[10] - 1);
 
             const camera = this._camera.camera;
-            camera._xrProperties.aspectRatio = aspectRatio;
-            camera._xrProperties.farClip = farClip;
-            camera._xrProperties.fov = fov;
-            camera._xrProperties.horizontalFov = false;
-            camera._xrProperties.nearClip = nearClip;
-
-            camera._projMatDirty = true;
+            camera.setXrProperties({
+                aspectRatio,
+                farClip,
+                fov,
+                horizontalFov,
+                nearClip
+            });
         }
 
         // position and rotate camera based on calculated vectors
