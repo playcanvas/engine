@@ -42,7 +42,17 @@ uniform vec2 clusterCompressionLimit0;
 uniform vec2 shadowAtlasParams;
 
 // structure storing light properties of a clustered light
+// it's sorted to have all vectors aligned to 4 floats to limit padding
 struct ClusterLightData {
+
+    // area light sizes / orientation
+    vec3 halfWidth;
+
+    // type of the light (spot or omni)
+    float type;
+
+    // area light sizes / orientation
+    vec3 halfHeight;
 
     #ifdef GL2
         // light index
@@ -52,44 +62,40 @@ struct ClusterLightData {
         float lightV;
     #endif
 
-    // type of the light (spot or omni)
-    float type;
+    // world space position
+    vec3 position;
 
     // area light shape
     float shape;
 
-    // area light sizes / orientation
-    vec3 halfWidth;
-    vec3 halfHeight;
+    // world space direction (spot light only)
+    vec3 direction;
 
     // light follow mode
     float falloffMode;
 
+    // color
+    vec3 color;
+
     // 0.0 if the light doesn't cast shadows
     float shadowIntensity;
+
+    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
+    vec3 omniAtlasViewport;
+
+    // range of the light
+    float range;
+
+    // channel mask - one of the channels has 1, the others are 0
+    vec4 cookieChannelMask;
 
     // shadow bias values
     float shadowBias;
     float shadowNormalBias;
 
-    // world space position
-    vec3 position;
-
-    // world space direction (spot light only)
-    vec3 direction;
-
-    // range of the light
-    float range;
-
     // spot light inner and outer angle cosine
     float innerConeAngleCos;
     float outerConeAngleCos;
-
-    // color
-    vec3 color;
-
-    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
-    vec3 omniAtlasViewport;
 
     // 1.0 if the light has a cookie texture
     float cookie;
@@ -99,9 +105,6 @@ struct ClusterLightData {
 
     // intensity of the cookie
     float cookieIntensity;
-
-    // channel mask - one of the channels has 1, the others are 0
-    vec4 cookieChannelMask;
 
     // light mask
     float mask;
