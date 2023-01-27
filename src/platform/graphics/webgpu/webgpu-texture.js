@@ -266,7 +266,7 @@ class WebgpuTexture {
             mipLevel: 0
         };
 
-        // TODO: handle update to
+        // TODO: handle update to mipmap levels other than 0
         const pixelSize = pixelFormatByteSizes[texture.format] ?? 0;
         Debug.assert(pixelSize);
         const bytesPerRow = texture.width * pixelSize;
