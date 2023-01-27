@@ -49,7 +49,7 @@ struct ClusterLightData {
     vec3 halfWidth;
 
     // type of the light (spot or omni)
-    float type;
+    float lightType;
 
     // area light sizes / orientation
     vec3 halfHeight;
@@ -121,7 +121,7 @@ mat4 lightProjectionMatrix;
 #define isClusteredLightCastShadow(light) ( light.shadowIntensity > 0.0 )
 #define isClusteredLightCookie(light) (light.cookie > 0.5 )
 #define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
-#define isClusteredLightSpot(light) ( light.type > 0.5 )
+#define isClusteredLightSpot(light) ( light.lightType > 0.5 )
 #define isClusteredLightFalloffLinear(light) ( light.falloffMode < 0.5 )
 
 // macros to test light shape
@@ -181,7 +181,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 
     // shared data from 8bit texture
     vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
-    clusterLightData.type = lightInfo.x;
+    clusterLightData.lightType = lightInfo.x;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
     clusterLightData.shadowIntensity = lightInfo.w;
