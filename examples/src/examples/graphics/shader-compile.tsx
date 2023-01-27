@@ -100,8 +100,8 @@ class ShaderCompileExample {
             camera.lookAt(0, 0, 0);
 
             // generate a grid of spheres, each with a unique material / shader
-            for (let x = -10; x <= 10; x += 4) {
-                for (let y = -10; y <= 10; y += 4) {
+            for (let x = -10; x <= 10; x += 6) {
+                for (let y = -10; y <= 10; y += 6) {
                     const pos = new pc.Vec3(x, 0.6, y);
                     const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
                     createPrimitive("sphere", pos, new pc.Vec3(1, 1, 1), color, assets, true);

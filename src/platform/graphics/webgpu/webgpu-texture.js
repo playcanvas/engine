@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
+    pixelFormatByteSizes,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -13,9 +14,9 @@ import {
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
 const gpuTextureFormats = [];
-gpuTextureFormats[PIXELFORMAT_A8] = '';
-gpuTextureFormats[PIXELFORMAT_L8] = '';
-gpuTextureFormats[PIXELFORMAT_LA8] = '';
+gpuTextureFormats[PIXELFORMAT_A8] = 'r8unorm';
+gpuTextureFormats[PIXELFORMAT_L8] = 'r8unorm';
+gpuTextureFormats[PIXELFORMAT_LA8] = 'rg8unorm';
 gpuTextureFormats[PIXELFORMAT_RGB565] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA5551] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA4] = '';
@@ -265,13 +266,19 @@ class WebgpuTexture {
             mipLevel: 0
         };
 
-        // TODO: RGBA only for now, needs to be more generic
-        const numElementsPerPixel = 4;
+        // TODO: handle update to
+        const pixelSize = pixelFormatByteSizes[texture.format] ?? 0;
+        Debug.assert(pixelSize);
+        const bytesPerRow = texture.width * pixelSize;
+        const byteSize = bytesPerRow * texture.height;
+
+        Debug.assert(byteSize === data.byteLength,
+                     `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
         // type {GPUImageDataLayout}
         const dataLayout = {
             offset: 0,
-            bytesPerRow: texture.width * data.BYTES_PER_ELEMENT * numElementsPerPixel,
+            bytesPerRow: bytesPerRow,
             rowsPerImage: texture.height
         };
 

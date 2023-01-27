@@ -4,13 +4,13 @@ import { math } from '../../core/math/math.js';
 
 import {
     isCompressedPixelFormat,
+    pixelFormatByteSizes,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
+    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
@@ -20,7 +20,6 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-let _pixelSizeTable = null;
 let _blockSizeTable = null;
 
 let id = 0;
@@ -679,28 +678,6 @@ class Texture {
      * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
-        if (!_pixelSizeTable) {
-            _pixelSizeTable = [];
-            _pixelSizeTable[PIXELFORMAT_A8] = 1;
-            _pixelSizeTable[PIXELFORMAT_L8] = 1;
-            _pixelSizeTable[PIXELFORMAT_LA8] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGB565] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGBA5551] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGBA4] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGB8] = 4;
-            _pixelSizeTable[PIXELFORMAT_RGBA8] = 4;
-            _pixelSizeTable[PIXELFORMAT_RGB16F] = 8;
-            _pixelSizeTable[PIXELFORMAT_RGBA16F] = 8;
-            _pixelSizeTable[PIXELFORMAT_RGB32F] = 16;
-            _pixelSizeTable[PIXELFORMAT_RGBA32F] = 16;
-            _pixelSizeTable[PIXELFORMAT_R32F] = 4;
-            _pixelSizeTable[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-            _pixelSizeTable[PIXELFORMAT_DEPTHSTENCIL] = 4;
-            _pixelSizeTable[PIXELFORMAT_111110F] = 4;
-            _pixelSizeTable[PIXELFORMAT_SRGB] = 4;
-            _pixelSizeTable[PIXELFORMAT_SRGBA] = 4;
-        }
-
         if (!_blockSizeTable) {
             _blockSizeTable = [];
             _blockSizeTable[PIXELFORMAT_ETC1] = 8;
@@ -718,7 +695,7 @@ class Texture {
             _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
         }
 
-        const pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+        const pixelSize = pixelFormatByteSizes[format] ?? 0;
         const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
         let result = 0;
 
