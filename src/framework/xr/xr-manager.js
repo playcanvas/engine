@@ -759,6 +759,8 @@ class XrManager extends EventHandler {
             const aspectRatio = data[5] / data[0];
             const farClip = data[14] / (data[10] + 1);
             const nearClip = data[14] / (data[10] - 1);
+            const horizontalFov = false;
+
 
             const camera = this._camera.camera;
             camera.setXrProperties({

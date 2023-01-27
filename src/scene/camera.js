@@ -74,7 +74,7 @@ class Camera {
             aspectRatio: this._aspectRatio,
             farClip: this._farClip,
             nearClip: this._nearClip
-        }
+        };
     }
 
     /**
@@ -618,11 +618,11 @@ class Camera {
      * Sets XR camera properties that should be derived physical camera in {@link XrManager}.
      *
      * @param {object} [properties] - Properties object.
-     * @param {number} [properties.aspectRatio]
-     * @param {number} [properties.farClip]
-     * @param {number} [properties.fov]
-     * @param {boolean} [properties.horizontalFov]
-     * @param {number} [properties.nearClip]
+     * @param {number} [properties.aspectRatio] - Aspect ratio.
+     * @param {number} [properties.farClip] - Far clip.
+     * @param {number} [properties.fov] - Field of view.
+     * @param {boolean} [properties.horizontalFov] - Enable horizontal field of view.
+     * @param {number} [properties.nearClip] - Near clip.
      */
     setXrProperties(properties) {
         Object.assign(properties, this._xrProperties);
