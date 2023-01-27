@@ -10,35 +10,21 @@
 function LuminosityEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
 
-    this.shader = new pc.Shader(graphicsDevice, {
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION
-        },
-        vshader: [
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
-        fshader: [
-            "precision " + graphicsDevice.precision + " float;",
-            "",
-            "uniform sampler2D uColorBuffer;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main() {",
-            "    vec4 texel = texture2D(uColorBuffer, vUv0);",
-            "    vec3 luma = vec3(0.299, 0.587, 0.114);",
-            "    float v = dot(texel.xyz, luma);",
-            "    gl_FragColor = vec4(v, v, v, texel.w);",
-            "}"
-        ].join("\n")
+    var fshader = [
+        "uniform sampler2D uColorBuffer;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main() {",
+        "    vec4 texel = texture2D(uColorBuffer, vUv0);",
+        "    vec3 luma = vec3(0.299, 0.587, 0.114);",
+        "    float v = dot(texel.xyz, luma);",
+        "    gl_FragColor = vec4(v, v, v, texel.w);",
+        "}"
+    ].join("\n");
+
+    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'LuminosityShader', {
+        aPosition: pc.SEMANTIC_POSITION
     });
 }
 
@@ -51,7 +37,7 @@ Object.assign(LuminosityEffect.prototype, {
         var scope = device.scope;
 
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+        this.drawQuad(outputTarget, this.shader, rect);
     }
 });
 

@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
+    pixelFormatByteSizes,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -14,8 +15,8 @@ import {
 // map of PIXELFORMAT_*** to GPUTextureFormat
 const gpuTextureFormats = [];
 gpuTextureFormats[PIXELFORMAT_A8] = '';
-gpuTextureFormats[PIXELFORMAT_L8] = '';
-gpuTextureFormats[PIXELFORMAT_LA8] = '';
+gpuTextureFormats[PIXELFORMAT_L8] = 'r8unorm';
+gpuTextureFormats[PIXELFORMAT_LA8] = 'rg8unorm';
 gpuTextureFormats[PIXELFORMAT_RGB565] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA5551] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA4] = '';
@@ -95,11 +96,15 @@ class WebgpuTexture {
         const wgpu = device.wgpu;
 
         this.descr = {
-            size: { width: texture.width, height: texture.height },
+            size: {
+                width: texture.width,
+                height: texture.height,
+                depthOrArrayLayers: texture.cubemap ? 6 : 1
+            },
             format: this.format,
             mipLevelCount: 1,
             sampleCount: 1,
-            dimension: '2d',
+            dimension: texture.volume ? '3d' : '2d',
 
             // TODO: use only required usage flags
             // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
@@ -107,10 +112,21 @@ class WebgpuTexture {
         };
 
         this.gpuTexture = wgpu.createTexture(this.descr);
-        DebugHelper.setLabel(this.gpuTexture, texture.name);
+        DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
-        this.view = this.gpuTexture.createView();
-        DebugHelper.setLabel(this.view, `DefaultView: ${this.texture.name}`);
+        // default texture view descriptor
+        let viewDescr;
+
+        // some format require custom default texture view
+        if (this.texture.format === PIXELFORMAT_DEPTHSTENCIL) {
+            // we expose the depth part of the format
+            viewDescr = {
+                format: 'depth24plus',
+                aspect: 'depth-only'
+            };
+        }
+
+        this.view = this.createView(viewDescr);
     }
 
     destroy(device) {
@@ -122,6 +138,36 @@ class WebgpuTexture {
 
         Debug.assert(this.view);
         return this.view;
+    }
+
+    createView(viewDescr) {
+
+        const options = viewDescr ?? {};
+        const textureDescr = this.descr;
+        const texture = this.texture;
+
+        // '1d', '2d', '2d-array', 'cube', 'cube-array', '3d'
+        const defaultViewDimension = () => {
+            if (texture.cubemap) return 'cube';
+            if (texture.volume) return '3d';
+            return '2d';
+        };
+
+        // type {GPUTextureViewDescriptor}
+        const descr = {
+            format: options.format ?? textureDescr.format,
+            dimension: options.dimension ?? defaultViewDimension(),
+            aspect: options.aspect ?? 'all',
+            baseMipLevel: options.baseMipLevel ?? 0,
+            mipLevelCount: options.mipLevelCount ?? textureDescr.mipLevelCount,
+            baseArrayLayer: options.baseArrayLayer ?? 0,
+            arrayLayerCount: options.arrayLayerCount ?? textureDescr.depthOrArrayLayers
+        };
+
+        const view = this.gpuTexture.createView(descr);
+        DebugHelper.setLabel(view, `${viewDescr ? `CustomView${JSON.stringify(viewDescr)}` : 'DefaultView'}:${this.texture.name}`);
+
+        return view;
     }
 
     // TODO: handle the case where those properties get changed
@@ -139,10 +185,18 @@ class WebgpuTexture {
             };
 
             // TODO: this is temporary and needs to be made generic
-            if (this.texture.format === PIXELFORMAT_RGBA32F) {
+            if (this.texture.format === PIXELFORMAT_RGBA32F ||
+                this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
+                this.texture.format === PIXELFORMAT_RGBA16F) {
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';
+            } else if (texture.compareOnRead) { // depth compare sampler
+                // TODO: depth texture can be exposed for sampling, not only compare sampling (for example debug
+                // rendering of depth). Find some good way to expose this, perhaps based on what sampling shader needs.
+                descr.compare = 'less';
+                descr.magFilter = 'linear';
+                descr.minFilter = 'linear';
             } else {
                 descr.magFilter = 'linear';
                 descr.minFilter = 'linear';
@@ -183,6 +237,11 @@ class WebgpuTexture {
         const texture = this.texture;
         const wgpu = device.wgpu;
 
+        if (this.texture.cubemap) {
+            Debug.warn('Cubemap texture data upload is not supported yet', this.texture);
+            return;
+        }
+
         // upload texture data if any
         const mipLevel = 0;
         const mipObject = texture._levels[mipLevel];
@@ -213,13 +272,19 @@ class WebgpuTexture {
             mipLevel: 0
         };
 
-        // TODO: RGBA only for now, needs to be more generic
-        const numElementsPerPixel = 4;
+        // TODO: handle update to mipmap levels other than 0
+        const pixelSize = pixelFormatByteSizes[texture.format] ?? 0;
+        Debug.assert(pixelSize);
+        const bytesPerRow = texture.width * pixelSize;
+        const byteSize = bytesPerRow * texture.height;
+
+        Debug.assert(byteSize === data.byteLength,
+                     `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
         // type {GPUImageDataLayout}
         const dataLayout = {
             offset: 0,
-            bytesPerRow: texture.width * data.BYTES_PER_ELEMENT * numElementsPerPixel,
+            bytesPerRow: bytesPerRow,
             rowsPerImage: texture.height
         };
 

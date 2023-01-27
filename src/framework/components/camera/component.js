@@ -88,7 +88,7 @@ const properties = [
  * place. Defaults to 0.1.
  * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis).
  * Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
- * @property {import('../../../core/math/vec4.js').Vec4}} scissorRect Clips all pixels which are
+ * @property {import('../../../core/math/vec4.js').Vec4} scissorRect Clips all pixels which are
  * not in the rectangle. The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
  * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
  * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh

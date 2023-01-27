@@ -180,7 +180,8 @@ class MiniStatsExample {
                     // add vertex buffer
                     const vertexCount = 500;
                     const data = new Float32Array(vertexCount * 16);
-                    vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, vertexCount, pc.BUFFER_STATIC, data);
+                    vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
+                                                       vertexCount, pc.BUFFER_STATIC, data);
                     vertexBuffers.push(vertexBuffer);
 
                     // allocate texture

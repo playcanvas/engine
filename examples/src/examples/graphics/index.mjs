@@ -45,6 +45,7 @@ import RenderAssetExample from "./render-asset";
 import RenderCubemapExample from "./render-cubemap";
 import RenderToTextureExample from "./render-to-texture";
 import ShaderBurnExample from "./shader-burn";
+import ShaderCompileExample from "./shader-compile";
 import ShaderToonExample from "./shader-toon";
 import ShaderWobbleExample from "./shader-wobble";
 import ShadowCascadesExample from "./shadow-cascades";
@@ -101,6 +102,7 @@ export {
     RenderCubemapExample,
     RenderToTextureExample,
     ShaderBurnExample,
+    ShaderCompileExample,
     ShaderToonExample,
     ShaderWobbleExample,
     ShadowCascadesExample,

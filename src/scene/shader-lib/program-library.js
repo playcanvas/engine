@@ -5,6 +5,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
+import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -37,8 +38,8 @@ class ProgramLibrary {
 
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
-        this._defaultStdMatOption = {};
-        this._defaultStdMatOptionMin = {};
+        this._defaultStdMatOption = new StandardMaterialOptions();
+        this._defaultStdMatOptionMin = new StandardMaterialOptions();
 
         standardMaterial.shaderOptBuilder.updateRef(
             this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
@@ -95,7 +96,7 @@ class ProgramLibrary {
 
             const device = this._device;
             def = generator.createShaderDefinition(device, options);
-            def.name = `${name}-pass:${options.pass}`;
+            def.name = def.name ?? (options.pass ? `${name}-pass:${options.pass}` : name);
             this.definitionsCache.set(key, def);
         }
         return def;
@@ -119,7 +120,7 @@ class ProgramLibrary {
         // we have a key for shader source code generation, a key for its further processing to work with
         // uniform buffers, and a final key to get the processed shader from the cache
         const generationKey = generator.generateKey(options);
-        const processingKey = JSON.stringify(processingOptions);
+        const processingKey = processingOptions.generateKey();
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
@@ -132,7 +133,7 @@ class ProgramLibrary {
 
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
-                name: name,
+                name: `${generatedShaderDef.name}-processed`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -157,6 +158,8 @@ class ProgramLibrary {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
             }
+
+            // Note: this was added in #4792 and it does not filter out the default values, like the loop above
             for (const p in options.litOptions) {
                 opt[p] = options.litOptions[p];
             }

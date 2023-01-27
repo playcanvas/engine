@@ -20,11 +20,11 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
-    semanticToLocation
+    semanticToLocation,
+    PRIMITIVE_TRISTRIP
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
-import { drawQuadWithShader } from '../simple-post-effect.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -78,6 +78,49 @@ void main(void) {
     gl_FragColor = texture2D(source, vUv0);
 }
 `;
+
+function quadWithShader(device, target, shader) {
+
+    DebugGraphics.pushGpuMarker(device, "QuadWithShader");
+
+    const oldRt = device.renderTarget;
+    device.setRenderTarget(target);
+    device.updateBegin();
+
+    const oldDepthTest = device.getDepthTest();
+    const oldDepthWrite = device.getDepthWrite();
+    const oldCullMode = device.getCullMode();
+    const oldWR = device.writeRed;
+    const oldWG = device.writeGreen;
+    const oldWB = device.writeBlue;
+    const oldWA = device.writeAlpha;
+    device.setDepthTest(false);
+    device.setDepthWrite(false);
+    device.setCullMode(CULLFACE_NONE);
+    device.setColorWrite(true, true, true, true);
+
+    device.setVertexBuffer(device.quadVertexBuffer, 0);
+    device.setShader(shader);
+
+    device.draw({
+        type: PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    });
+
+    device.setDepthTest(oldDepthTest);
+    device.setDepthWrite(oldDepthWrite);
+    device.setCullMode(oldCullMode);
+    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
+
+    device.updateEnd();
+
+    device.setRenderTarget(oldRt);
+    device.updateBegin();
+
+    DebugGraphics.popGpuMarker(device);
+}
 
 function testRenderable(gl, pixelFormat) {
     let result = true;
@@ -170,7 +213,7 @@ function testTextureFloatHighPrecision(device) {
         colorBuffer: tex1,
         depth: false
     });
-    drawQuadWithShader(device, targ1, shader1);
+    quadWithShader(device, targ1, shader1);
 
     textureOptions.format = PIXELFORMAT_RGBA8;
     const tex2 = new Texture(device, textureOptions);
@@ -179,7 +222,7 @@ function testTextureFloatHighPrecision(device) {
         depth: false
     });
     device.constantTexSource.setValue(tex1);
-    drawQuadWithShader(device, targ2, shader2);
+    quadWithShader(device, targ2, shader2);
 
     const prevFramebuffer = device.activeFramebuffer;
     device.setFramebuffer(targ2.impl._glFrameBuffer);
@@ -713,14 +756,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
+        this.supportsDepthShadow = this.webgl2;
 
         this._textureFloatHighPrecision = undefined;
         this._textureHalfFloatUpdatable = undefined;
-
-        // #if _DEBUG
-        this._spectorMarkers = [];
-        this._spectorCurrentMarker = "";
-        // #endif
 
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
@@ -729,6 +768,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
+
+        this.postInit();
     }
 
     /**
@@ -742,7 +783,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteTransformFeedback(this.feedback);
         }
 
-        this.clearShaderCache();
         this.clearVertexArrayObjectCache();
 
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
@@ -779,29 +819,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // #if _DEBUG
-    updateMarker() {
-        this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
-    }
-
     pushMarker(name) {
         if (window.spector) {
-            this._spectorMarkers.push(name);
-            this.updateMarker();
-            window.spector.setMarker(this._spectorCurrentMarker);
+            const label = DebugGraphics.toString();
+            window.spector.setMarker(`${label} #`);
         }
     }
 
     popMarker() {
         if (window.spector) {
-            if (this._spectorMarkers.length) {
-                this._spectorMarkers.pop();
-                this.updateMarker();
-
-                if (this._spectorMarkers.length)
-                    window.spector.setMarker(this._spectorCurrentMarker);
-                else
-                    window.spector.clearMarker();
-            }
+            const label = DebugGraphics.toString();
+            if (label.length)
+                window.spector.setMarker(`${label} #`);
+            else
+                window.spector.clearMarker();
         }
     }
     // #endif
@@ -1001,6 +1032,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     initializeRenderState() {
+        super.initializeRenderState();
+
         const gl = this.gl;
 
         // Initialize render state to a known start state
@@ -1075,10 +1108,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.clearStencil = 0;
         gl.clearStencil(0);
 
-        // Cached viewport and scissor dimensions
-        this.vx = this.vy = this.vw = this.vh = 0;
-        this.sx = this.sy = this.sw = this.sh = 0;
-
         if (this.webgl2) {
             gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
         } else {
@@ -1102,10 +1131,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     initializeContextCaches() {
         super.initializeContextCaches();
-
-        // Shader code to WebGL shader cache
-        this.vertexShaderCache = {};
-        this.fragmentShaderCache = {};
 
         // cache of VAOs
         this._vaoMap = new Map();
@@ -1171,6 +1196,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
+    }
+
+    /**
+     * Called after a batch of shaders was created, to guide in their optimal preparation for rendering.
+     *
+     * @ignore
+     */
+    endShaderBatch() {
+        WebglShader.endShaderBatch(this);
     }
 
     /**
@@ -1290,7 +1324,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else {
             const shader = this.getCopyShader();
             this.constantTexSource.setValue(source._colorBuffer);
-            drawQuadWithShader(this, dest, shader);
+            quadWithShader(this, dest, shader);
         }
 
         DebugGraphics.popGpuMarker(this);
@@ -1365,7 +1399,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass);
+        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);
@@ -1884,7 +1918,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
                 // #endif
 
-                continue; // Because unset constants shouldn't raise random errors
+                Debug.errorOnce(`Shader [${shader.label}] requires texture sampler [${samplerName}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+
+                // skip this draw call to avoid incorrect rendering / webgl errors
+                return;
             }
 
             if (samplerValue instanceof Texture) {
@@ -1938,6 +1975,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // Call the function to commit the uniform value
                 if (scopeId.value !== null) {
                     this.commitFunction[uniform.dataType](uniform, scopeId.value);
+                } else {
+                    // commented out till engine issue #4971 is sorted out
+                    // Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
                 }
             }
         }
@@ -2732,7 +2772,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             if (shader.failed) {
                 return false;
-            } else if (!shader.ready && !shader.impl.postLink(this, shader)) {
+            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
                 shader.failed = true;
                 return false;
             }
@@ -2782,23 +2822,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             return PIXELFORMAT_RGBA32F;
         } /* else */
         return null;
-    }
-
-    /**
-     * Frees memory from all shaders ever allocated with this device.
-     *
-     * @ignore
-     */
-    clearShaderCache() {
-        const gl = this.gl;
-        for (const shaderSrc in this.fragmentShaderCache) {
-            gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
-            delete this.fragmentShaderCache[shaderSrc];
-        }
-        for (const shaderSrc in this.vertexShaderCache) {
-            gl.deleteShader(this.vertexShaderCache[shaderSrc]);
-            delete this.vertexShaderCache[shaderSrc];
-        }
     }
 
     /**

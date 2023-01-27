@@ -604,7 +604,9 @@ class CollisionComponentSystem extends ComponentSystem {
             'asset',
             'render',
             'renderAsset',
-            'enabled'
+            'enabled',
+            'linearOffset',
+            'angularOffset'
         ];
 
         // duplicate the input data because we are modifying it
@@ -639,8 +641,22 @@ class CollisionComponentSystem extends ComponentSystem {
         }
         component.data.type = data.type;
 
-        if (data.halfExtents && Array.isArray(data.halfExtents)) {
-            data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+        if (Array.isArray(data.halfExtents)) {
+            data.halfExtents = new Vec3(data.halfExtents);
+        }
+
+        if (Array.isArray(data.linearOffset)) {
+            data.linearOffset = new Vec3(data.linearOffset);
+        }
+
+        if (Array.isArray(data.angularOffset)) {
+            // Allow for euler angles to be passed as a 3 length array
+            const values = data.angularOffset;
+            if (values.length === 3) {
+                data.angularOffset = new Quat().setFromEulerAngles(values[0], values[1], values[2]);
+            } else {
+                data.angularOffset = new Quat(data.angularOffset);
+            }
         }
 
         const impl = this._createImplementation(data.type);

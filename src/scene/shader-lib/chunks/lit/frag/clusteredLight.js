@@ -28,10 +28,10 @@ uniform highp sampler2D lightsTextureFloat;
 #ifdef GL2
     uniform int clusterMaxCells;
 #else
+    uniform float clusterMaxCells;
     uniform vec4 lightsTextureInvSize;
 #endif
 
-uniform float clusterPixelsPerCell;
 uniform vec3 clusterCellsCountByBoundsSize;
 uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
@@ -42,7 +42,17 @@ uniform vec2 clusterCompressionLimit0;
 uniform vec2 shadowAtlasParams;
 
 // structure storing light properties of a clustered light
+// it's sorted to have all vectors aligned to 4 floats to limit padding
 struct ClusterLightData {
+
+    // area light sizes / orientation
+    vec3 halfWidth;
+
+    // type of the light (spot or omni)
+    float lightType;
+
+    // area light sizes / orientation
+    vec3 halfHeight;
 
     #ifdef GL2
         // light index
@@ -52,44 +62,40 @@ struct ClusterLightData {
         float lightV;
     #endif
 
-    // type of the light (spot or omni)
-    float type;
+    // world space position
+    vec3 position;
 
     // area light shape
     float shape;
 
-    // area light sizes / orientation
-    vec3 halfWidth;
-    vec3 halfHeight;
+    // world space direction (spot light only)
+    vec3 direction;
 
     // light follow mode
     float falloffMode;
 
+    // color
+    vec3 color;
+
     // 0.0 if the light doesn't cast shadows
     float shadowIntensity;
+
+    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
+    vec3 omniAtlasViewport;
+
+    // range of the light
+    float range;
+
+    // channel mask - one of the channels has 1, the others are 0
+    vec4 cookieChannelMask;
 
     // shadow bias values
     float shadowBias;
     float shadowNormalBias;
 
-    // world space position
-    vec3 position;
-
-    // world space direction (spot light only)
-    vec3 direction;
-
-    // range of the light
-    float range;
-
     // spot light inner and outer angle cosine
     float innerConeAngleCos;
     float outerConeAngleCos;
-
-    // color
-    vec3 color;
-
-    // atlas viewport for omni light shadow and cookie (.xy is offset to the viewport slot, .z is size of the face in the atlas)
-    vec3 omniAtlasViewport;
 
     // 1.0 if the light has a cookie texture
     float cookie;
@@ -99,9 +105,6 @@ struct ClusterLightData {
 
     // intensity of the cookie
     float cookieIntensity;
-
-    // channel mask - one of the channels has 1, the others are 0
-    vec4 cookieChannelMask;
 
     // light mask
     float mask;
@@ -118,7 +121,7 @@ mat4 lightProjectionMatrix;
 #define isClusteredLightCastShadow(light) ( light.shadowIntensity > 0.0 )
 #define isClusteredLightCookie(light) (light.cookie > 0.5 )
 #define isClusteredLightCookieRgb(light) (light.cookieRgb > 0.5 )
-#define isClusteredLightSpot(light) ( light.type > 0.5 )
+#define isClusteredLightSpot(light) ( light.lightType > 0.5 )
 #define isClusteredLightFalloffLinear(light) ( light.falloffMode < 0.5 )
 
 // macros to test light shape
@@ -178,7 +181,7 @@ void decodeClusterLightCore(inout ClusterLightData clusterLightData, float light
 
     // shared data from 8bit texture
     vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
-    clusterLightData.type = lightInfo.x;
+    clusterLightData.lightType = lightInfo.x;
     clusterLightData.shape = lightInfo.y;
     clusterLightData.falloffMode = lightInfo.z;
     clusterLightData.shadowIntensity = lightInfo.w;
@@ -403,9 +406,9 @@ void evaluateLight(ClusterLightData light) {
                     decodeClusterLightCookieData(light);
 
                     if (isClusteredLightSpot(light)) {
-                        dAtten3 = getCookie2DClustered(cookieAtlasTexture, lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
+                        dAtten3 = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
-                        dAtten3 = getCookieCubeClustered(cookieAtlasTexture, dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        dAtten3 = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
 
@@ -589,18 +592,9 @@ void addClusteredLights() {
             // loop over maximum number of light cells
             for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
-                vec4 lightIndices = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0);
-
-                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
-                vec4 indices = lightIndices * 255.0;
-                for (int i = 0; i < 4; i++) {
-                    
-                    if (indices.x <= 0.0)
-                        return;
-
-                    evaluateClusterLight(indices.x); 
-                    indices = indices.yzwx;
-                }
+                // using a single channel texture with data in alpha channel
+                float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+                evaluateClusterLight(lightIndex * 255.0); 
             }
 
         #else
@@ -608,24 +602,18 @@ void addClusteredLights() {
             clusterV = (clusterV + 0.5) * clusterTextureSize.z;
 
             // loop over maximum possible number of supported light cells
-            const float maxLightCells = 256.0 / 4.0;  // 8 bit index, each stores 4 lights
+            const float maxLightCells = 256.0;
             for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-                vec4 lightIndices = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0);
-                vec4 indices = lightIndices * 255.0;
+                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
 
-                // evaluate up to 4 lights. This is written using a loop instead of manually unrolling to keep shader compile time smaller
-                for (int i = 0; i < 4; i++) {
-                    
-                    if (indices.x <= 0.0)
-                        return;
-
-                    evaluateClusterLight(indices.x); 
-                    indices = indices.yzwx;
-                }
+                if (lightIndex <= 0.0)
+                    return;
+                
+                evaluateClusterLight(lightIndex * 255.0); 
 
                 // end of the cell array
-                if (lightCellIndex > clusterPixelsPerCell) {
+                if (lightCellIndex >= clusterMaxCells) {
                     break;
                 }
             }

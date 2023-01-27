@@ -837,21 +837,29 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
+        const pressed = this._selectedPressedElements[inputSource.id];
+        if (eventType === 'selectmove' && pressed) {
+            this._fireEvent('selectmove', new ElementSelectEvent(event, pressed, camera, inputSource));
+        }
+
         if (eventType === 'selectstart') {
             this._selectedPressedElements[inputSource.id] = hoveredNow;
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
-        const pressed = this._selectedPressedElements[inputSource.id];
         if (!inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (hoveredBefore) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
         }
 
         if (eventType === 'selectend' && inputSource.elementInput) {
             delete this._selectedPressedElements[inputSource.id];
 
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (pressed) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
 
             if (pressed && pressed === hoveredBefore) {
                 this._fireEvent('click', new ElementSelectEvent(event, pressed, camera, inputSource));

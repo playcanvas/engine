@@ -6,8 +6,7 @@ import { Color } from '../../core/math/color.js';
 
 import {
     FUNC_ALWAYS,
-    STENCILOP_KEEP,
-    BINDGROUP_MESH
+    STENCILOP_KEEP
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -18,13 +17,13 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
-    SHADOWUPDATE_NONE,
-    SHADOWUPDATE_THISFRAME, LAYERID_DEPTH
+    LAYERID_DEPTH
 } from '../constants.js';
 
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
+import { SceneGrab } from '../graphics/scene-grab.js';
 
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 
@@ -53,7 +52,6 @@ class ForwardRenderer extends Renderer {
 
         this._forwardDrawCalls = 0;
         this._materialSwitches = 0;
-        this._shadowMapTime = 0;
         this._depthMapTime = 0;
         this._forwardTime = 0;
         this._sortTime = 0;
@@ -417,36 +415,21 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderShadows(lights, camera) {
+    renderShadowsLocal(lights, camera) {
 
         const isClustered = this.scene.clusteredLightingEnabled;
 
-        // #if _PROFILER
-        const shadowMapStartTime = now();
-        // #endif
-
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
+            Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
 
-            if (isClustered && light._type !== LIGHTTYPE_DIRECTIONAL) {
-
-                // skip clustered shadows with no assigned atlas slot
-                if (!light.atlasViewportAllocated) {
-                    continue;
-                }
-
-                // if atlas slot is reassigned, make sure shadow is updated
-                if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
-                    light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
-                }
+            // skip clustered shadows with no assigned atlas slot
+            if (isClustered && !light.atlasViewportAllocated) {
+                continue;
             }
 
-            this._shadowRenderer.render(light, camera);
+            this.shadowRenderer.render(light, camera);
         }
-
-        // #if _PROFILER
-        this._shadowMapTime += now() - shadowMapStartTime;
-        // #endif
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
@@ -530,6 +513,9 @@ class ForwardRenderer extends Renderer {
 
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
 
+                    // marker to allow us to see the source node for shader alloc
+                    DebugGraphics.pushGpuMarker(device, drawCall.node.name);
+
                     // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
                     if (!drawCall.isStatic) {
@@ -546,6 +532,8 @@ class ForwardRenderer extends Renderer {
                         drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
                     }
                     drawCall._lightHash = lightHash;
+
+                    DebugGraphics.popGpuMarker(device);
                 }
 
                 Debug.assert(drawCall._shader[pass], "no shader for pass", material);
@@ -559,16 +547,19 @@ class ForwardRenderer extends Renderer {
             }
         }
 
+        // process the batch of shaders created here
+        device.endShaderBatch?.();
+
         return _drawCallList;
     }
 
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
-        const supportsUniformBuffers = device.supportsUniformBuffers;
         const scene = this.scene;
         const passFlag = 1 << pass;
 
         // Render the scene
+        let skipMaterial = false;
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
@@ -592,8 +583,13 @@ class ForwardRenderer extends Renderer {
 
                     const shader = drawCall._shader[pass];
                     if (!shader.failed && !device.setShader(shader)) {
-                        Debug.error(`Error compiling shader for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
+                        Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                     }
+
+                    // skip rendering with the material if shader failed
+                    skipMaterial = shader.failed;
+                    if (skipMaterial)
+                        break;
 
                     // Uniforms I: material
                     material.setParameters(device);
@@ -682,19 +678,7 @@ class ForwardRenderer extends Renderer {
                 this.setMorphing(device, drawCall.morphInstance);
                 this.setSkinning(device, drawCall);
 
-                if (supportsUniformBuffers) {
-
-                    // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
-                    // earlier here. This needs to be refactored for multi-view anyways.
-                    this.modelMatrixId.setValue(drawCall.node.worldTransform.data);
-                    this.normalMatrixId.setValue(drawCall.node.normalMatrix.data);
-
-                    // update mesh bind group / uniform buffer
-                    const meshBindGroup = drawCall.getBindGroup(device, pass);
-                    meshBindGroup.defaultUniformBuffer.update();
-                    meshBindGroup.update();
-                    device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
-                }
+                this.setupMeshUniformBuffers(drawCall, pass);
 
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
@@ -846,9 +830,6 @@ class ForwardRenderer extends Renderer {
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
         if (clusteredLightingEnabled) {
 
-            // update shadow / cookie atlas allocation for the visible lights
-            this.updateLightTextureAtlas(layerComposition);
-
             const renderPass = new RenderPass(this.device, () => {
                 // render cookies for all local visible lights
                 if (this.scene.lighting.cookiesEnabled) {
@@ -866,8 +847,8 @@ class ForwardRenderer extends Renderer {
 
             // render shadows for all local visible lights - these shadow maps are shared by all cameras
             if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
-                this.renderShadows(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                this.renderShadows(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_SPOT]);
+                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_OMNI]);
             }
 
             // update light clusters
@@ -901,12 +882,7 @@ class ForwardRenderer extends Renderer {
 
             // directional shadows get re-rendered for each camera
             if (renderAction.hasDirectionalShadowLights && camera) {
-                const renderPass = new RenderPass(this.device, () => {
-                    this.renderPassDirectionalShadows(renderAction, layerComposition);
-                });
-                renderPass.requiresCubemaps = false;
-                DebugHelper.setName(renderPass, `DirShadowMap`);
-                frameGraph.addRenderPass(renderPass);
+                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction, camera);
             }
 
             // start of block of render actions rendering to the same render target
@@ -964,19 +940,37 @@ class ForwardRenderer extends Renderer {
 
         const renderActions = layerComposition._renderActions;
         const startRenderAction = renderActions[startIndex];
+        const endRenderAction = renderActions[endIndex];
         const startLayer = layerComposition.layerList[startRenderAction.layerIndex];
         const camera = startLayer.cameras[startRenderAction.cameraIndex];
 
+        if (camera) {
+
+            // callback on the camera component before rendering with this camera for the first time
+            if (startRenderAction.firstCameraUse && camera.onPreRender) {
+                renderPass.before = () => {
+                    camera.onPreRender();
+                };
+            }
+
+            // callback on the camera component when we're done rendering with this camera
+            if (endRenderAction.lastCameraUse && camera.onPostRender) {
+                renderPass.after = () => {
+                    camera.onPostRender();
+                };
+            }
+        }
+
         // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
-        const isWebgl1DepthGrabPass = isGrabPass && !this.device.webgl2 && camera.renderSceneDepthMap;
-        const isRealPass = !isGrabPass || isWebgl1DepthGrabPass;
+        const grabPassRequired = isGrabPass && SceneGrab.requiresRenderPass(this.device, camera);
+        const isRealPass = !isGrabPass || grabPassRequired;
 
         if (isRealPass) {
 
             renderPass.init(renderTarget);
             renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
-            if (isWebgl1DepthGrabPass) {
+            if (grabPassRequired) {
 
                 // webgl1 depth rendering clear values
                 renderPass.setClearColor(webgl1DepthClearColor);
@@ -1007,7 +1001,8 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
-        this.baseUpdate();
+        this.frameUpdate();
+        this.shadowRenderer.frameUpdate();
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
@@ -1030,24 +1025,6 @@ class ForwardRenderer extends Renderer {
 
         // GPU update for all visible objects
         this.gpuUpdate(comp._meshInstances);
-    }
-
-    /**
-     * Render pass for directional shadow maps of the camera.
-     *
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition.
-     * @ignore
-     */
-    renderPassDirectionalShadows(renderAction, layerComposition) {
-
-        Debug.assert(renderAction.directionalLights.length > 0);
-        const layer = layerComposition.layerList[renderAction.layerIndex];
-        const camera = layer.cameras[renderAction.cameraIndex];
-
-        this.renderShadows(renderAction.directionalLights, camera.camera);
     }
 
     renderPassPostprocessing(renderAction, layerComposition) {
@@ -1106,13 +1083,6 @@ class ForwardRenderer extends Renderer {
         const drawTime = now();
         // #endif
 
-        if (camera) {
-            // callback on the camera component before rendering with this camera for the first time during the frame
-            if (renderAction.firstCameraUse && camera.onPreRender) {
-                camera.onPreRender();
-            }
-        }
-
         // Call prerender callback if there's one
         if (!transparent && layer.onPreRenderOpaque) {
             layer.onPreRenderOpaque(cameraPass);
@@ -1168,7 +1138,10 @@ class ForwardRenderer extends Renderer {
             // Set the not very clever global variable which is only useful when there's just one camera
             this.scene._activeCamera = camera.camera;
 
-            this.setCameraUniforms(camera.camera, renderAction.renderTarget, renderAction);
+            const viewCount = this.setCameraUniforms(camera.camera, renderAction.renderTarget);
+            if (device.supportsUniformBuffers) {
+                this.setupViewUniformBuffers(renderAction.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+            }
 
             // enable flip faces if either the camera has _flipFaces enabled or the render target
             // has flipY enabled
@@ -1193,11 +1166,6 @@ class ForwardRenderer extends Renderer {
             device.setStencilTest(false); // don't leak stencil state
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);
-
-            // callback on the camera component when we're done rendering all layers with this camera
-            if (renderAction.lastCameraUse && camera.onPostRender) {
-                camera.onPostRender();
-            }
         }
 
         // Call layer's postrender callback if there's one

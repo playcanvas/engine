@@ -581,7 +581,6 @@ class XrManager extends EventHandler {
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
-
                 this._camera.camera.xr = null;
                 this._camera = null;
             }
@@ -692,6 +691,7 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
+        const lengthOld = this.views.length;
         const lengthNew = pose.views.length;
 
         if (lengthNew > this.views.length) {
@@ -744,6 +744,31 @@ class XrManager extends EventHandler {
             view.projMat.set(viewRaw.projectionMatrix);
             view.viewMat.set(viewRaw.transform.inverse.matrix);
             view.viewInvMat.set(viewRaw.transform.matrix);
+        }
+
+        // update the camera fov properties only when we had 0 views
+        if (lengthOld === 0 && this.views.length > 0) {
+            const viewProjMat = new Mat4();
+            const view = this.views[0];
+
+            viewProjMat.copy(view.projMat);
+            const data = viewProjMat.data;
+
+            const fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
+            const aspectRatio = data[5] / data[0];
+            const farClip = data[14] / (data[10] + 1);
+            const nearClip = data[14] / (data[10] - 1);
+            const horizontalFov = false;
+
+
+            const camera = this._camera.camera;
+            camera.setXrProperties({
+                aspectRatio,
+                farClip,
+                fov,
+                horizontalFov,
+                nearClip
+            });
         }
 
         // position and rotate camera based on calculated vectors

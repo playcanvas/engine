@@ -374,7 +374,7 @@ const standardMaterialProps = [
     ['clearCoatGlossMapUv', 'number'],
     ['clearCoatGlossVertexColor', 'boolean'],
     ['clearCoatGlossVertexColorChannel', 'string'],
-    ['clearCoatGlossiness', 'number'],
+    ['clearCoatGloss', 'number'],
     ['clearCoatMap', 'Texture|null'],
     ['clearCoatMapChannel', 'string'],
     ['clearCoatMapOffset', 'Vec2'],

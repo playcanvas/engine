@@ -8,6 +8,8 @@ class WebgpuRenderState {
         this.reset();
     }
 
+    // TODO: When setDepthTest is implemented, a webgpu only workaround should be removed in drawQuadWithShader function.
+
     reset() {
 
         // blend state

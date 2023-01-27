@@ -7,7 +7,7 @@ class HardwareInstancingExample {
     example(canvas: HTMLCanvasElement): void {
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
         };
 
         pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
@@ -105,7 +105,8 @@ class HardwareInstancingExample {
                     }
 
                     // create static vertex buffer containing the matrices
-                    const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
+                    const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
+                                                             instanceCount, pc.BUFFER_STATIC, matrices);
 
                     // initialize instancing using the vertex buffer on meshInstance of the created box
                     const boxMeshInst = box.render.meshInstances[0];

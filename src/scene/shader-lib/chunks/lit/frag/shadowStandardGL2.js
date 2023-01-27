@@ -1,5 +1,5 @@
 export default /* glsl */`
-float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
+float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowParams) {
     // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 
     float z = dShadowCoord.z;
@@ -58,11 +58,11 @@ float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
     return sum;
 }
 
-float getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
-    return _getShadowPCF5x5(shadowMap, shadowParams);
+float getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowParams) {
+    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams);
 }
 
-float getShadowSpotPCF5x5(sampler2DShadow shadowMap, vec4 shadowParams) {
-    return _getShadowPCF5x5(shadowMap, shadowParams.xyz);
+float getShadowSpotPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams) {
+    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams.xyz);
 }
 `;

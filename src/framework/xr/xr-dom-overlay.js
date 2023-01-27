@@ -7,7 +7,7 @@ import { platform } from '../../core/platform.js';
  * propagation is not desirable, use the `beforexrselect` event on a DOM element and the
  * `preventDefault` function to stop propagation.
  *
- * ```javascript```
+ * ```javascript
  * app.xr.domOverlay.root = element;
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR);
  * ```

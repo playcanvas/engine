@@ -13,55 +13,41 @@
 function OutlineEffect(graphicsDevice, thickness) {
     pc.PostEffect.call(this, graphicsDevice);
 
-    this.shader = new pc.Shader(graphicsDevice, {
-        attributes: {
-            aPosition: pc.SEMANTIC_POSITION
-        },
-        vshader: [
-            "attribute vec2 aPosition;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-            "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
-            "}"
-        ].join("\n"),
-        fshader: [
-            "precision " + graphicsDevice.precision + " float;",
-            "",
-            "#define THICKNESS " + (thickness ? thickness.toFixed(0) : 1),
-            "uniform float uWidth;",
-            "uniform float uHeight;",
-            "uniform vec4 uOutlineCol;",
-            "uniform sampler2D uColorBuffer;",
-            "uniform sampler2D uOutlineTex;",
-            "",
-            "varying vec2 vUv0;",
-            "",
-            "void main(void)",
-            "{",
-            "    vec4 texel1 = texture2D(uColorBuffer, vUv0);",
-            "    float sample0 = texture2D(uOutlineTex, vUv0).a;",
-            "    float outline = 0.0;",
-            "    if (sample0==0.0)",
-            "    {",
-            "        for (int x=-THICKNESS;x<=THICKNESS;x++)",
-            "        {",
-            "            for (int y=-THICKNESS;y<=THICKNESS;y++)",
-            "            {    ",
-            "                float sample=texture2D(uOutlineTex, vUv0+vec2(float(x)/uWidth, float(y)/uHeight)).a;",
-            "                if (sample>0.0)",
-            "                {",
-            "                    outline=1.0;",
-            "                }",
-            "            }",
-            "        } ",
-            "    }",
-            "    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);",
-            "}"
-        ].join("\n")
+    var fshader = [
+        "#define THICKNESS " + (thickness ? thickness.toFixed(0) : 1),
+        "uniform float uWidth;",
+        "uniform float uHeight;",
+        "uniform vec4 uOutlineCol;",
+        "uniform sampler2D uColorBuffer;",
+        "uniform sampler2D uOutlineTex;",
+        "",
+        "varying vec2 vUv0;",
+        "",
+        "void main(void)",
+        "{",
+        "    vec4 texel1 = texture2D(uColorBuffer, vUv0);",
+        "    float sample0 = texture2D(uOutlineTex, vUv0).a;",
+        "    float outline = 0.0;",
+        "    if (sample0==0.0)",
+        "    {",
+        "        for (int x=-THICKNESS;x<=THICKNESS;x++)",
+        "        {",
+        "            for (int y=-THICKNESS;y<=THICKNESS;y++)",
+        "            {    ",
+        "                float tex=texture2D(uOutlineTex, vUv0+vec2(float(x)/uWidth, float(y)/uHeight)).a;",
+        "                if (tex>0.0)",
+        "                {",
+        "                    outline=1.0;",
+        "                }",
+        "            }",
+        "        } ",
+        "    }",
+        "    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);",
+        "}"
+    ].join("\n");
+
+    this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'OutlineShader', {
+        aPosition: pc.SEMANTIC_POSITION
     });
 
     // Uniforms
@@ -89,7 +75,7 @@ Object.assign(OutlineEffect.prototype, {
         scope.resolve("uOutlineCol").setValue(this._colorData);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
         scope.resolve("uOutlineTex").setValue(this.texture);
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+        this.drawQuad(outputTarget, this.shader, rect);
     }
 });
 
