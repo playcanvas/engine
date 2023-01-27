@@ -14,9 +14,10 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * @param {object} options - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the device are attempted to get created. Defaults to [{@link DEVICETYPE_WEBGL}].
- * @param {string} [options.glslangUrl] - An url to glslang scipt, required if
+ * @param {string} [options.glslangUrl] - An url to glslang script, required if
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
+ * @param {string} [options.twgslUrl] - An url to twgsl script, required glslangUrl was specified.
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
@@ -29,7 +30,7 @@ function createGraphicsDevice(canvas, options = {}) {
         // #if _DEBUG
         if (deviceType === DEVICETYPE_WEBGPU && window?.navigator?.gpu) {
             device = new WebgpuGraphicsDevice(canvas, options);
-            return device.initWebGpu(options.glslangUrl);
+            return device.initWebGpu(options.glslangUrl, options.twgslUrl);
         }
         // #endif
 

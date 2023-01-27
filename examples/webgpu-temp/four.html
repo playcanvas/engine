@@ -111,7 +111,8 @@
             const canvas = document.querySelector('#gpuCanvas');
             const gfxOptions = {
                 deviceTypes: [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL],
-                glslangUrl: '../src/lib/glslang/glslang.js'
+                glslangUrl: '../src/lib/glslang/glslang.js',
+                twgslUrl: '../src/lib/twgsl/twgsl.js'
             };
             createGraphicsDevice(canvas, gfxOptions).then((graphicsDevice) => {
 

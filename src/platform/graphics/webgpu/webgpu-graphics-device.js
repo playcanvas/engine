@@ -113,7 +113,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFetch = true;
     }
 
-    async initWebGpu(glslangUrl) {
+    async initWebGpu(glslangUrl, twgslUrl) {
 
         if (!window.navigator.gpu) {
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
@@ -137,10 +137,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             });
         };
 
-        // TODO: add loadScript and requestAdapter to promise list and wait for both.
+        // TODO: add both loadScript calls and requestAdapter to promise list and wait for all.
         await loadScript(glslangUrl);
+        await loadScript(twgslUrl);
 
         this.glslang = await glslang();
+
+        const wasmPath = twgslUrl.replace('.js', '.wasm');
+        this.twgsl = await twgsl(wasmPath);
 
         // type {GPUAdapter}
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
