@@ -582,7 +582,6 @@ class XrManager extends EventHandler {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
                 this._camera.camera.xr = null;
-                this._camera.camera._projMatDirty = true;
                 this._camera = null;
             }
 
