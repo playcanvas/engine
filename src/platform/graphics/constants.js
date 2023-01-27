@@ -1207,6 +1207,27 @@ export const typedArrayToType = {
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 
+// map of engine PIXELFORMAT_*** enums to the pixel byte size
+export const pixelFormatByteSizes = [];
+pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
+pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
+
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
  * same location cannot be used at the same time) organized in a way that ATTR0-ATTR7 do not
