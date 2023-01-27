@@ -593,7 +593,7 @@ void addClusteredLights() {
             for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
                 // using a single channel texture with data in alpha channel
-                float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).a;
+                float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
                 evaluateClusterLight(lightIndex * 255.0); 
             }
 
@@ -605,7 +605,7 @@ void addClusteredLights() {
             const float maxLightCells = 256.0;
             for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).a;
+                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
 
                 if (lightIndex <= 0.0)
                     return;

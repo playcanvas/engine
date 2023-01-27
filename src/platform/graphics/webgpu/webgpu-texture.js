@@ -14,7 +14,7 @@ import {
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
 const gpuTextureFormats = [];
-gpuTextureFormats[PIXELFORMAT_A8] = 'r8unorm';
+gpuTextureFormats[PIXELFORMAT_A8] = '';
 gpuTextureFormats[PIXELFORMAT_L8] = 'r8unorm';
 gpuTextureFormats[PIXELFORMAT_LA8] = 'rg8unorm';
 gpuTextureFormats[PIXELFORMAT_RGB565] = '';
