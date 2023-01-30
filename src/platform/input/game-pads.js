@@ -1,3 +1,26 @@
+import { getGamepads } from '../../core/platform.js';
+import * as constants from './constants.js';
+
+/**
+ * An object defining the order of buttons and axes for a HTML5 Gamepad.
+ *
+ * @typedef {object} ButtonsAxes
+ * @property {string[]} buttons - Order of PAD_FACE_1, PAD_FACE_2, ...
+ * @property {string[]} axes - Order of PAD_L_STICK_X, PAD_L_STICK_Y, ...
+ */
+
+/**
+ * An object containing a HTML5 Gamepad object and a map for remapping buttons and axes.
+ *
+ * @typedef {object} GamepadButtonsAxes
+ * @property {Gamepad} pad - The HTML5 Gamepad object.
+ * @property {ButtonsAxes} map - The map which defines the remapping.
+ */
+
+/**
+ * @readonly
+ * @type {Record<string, ButtonsAxes>}
+ */
 const MAPS = {
     DEFAULT: {
         buttons: [
@@ -59,10 +82,10 @@ const MAPS = {
             'PAD_R_STICK_BUTTON',
 
             // D Pad
-            'PAD_UP',
-            'PAD_DOWN',
-            'PAD_LEFT',
-            'PAD_RIGHT',
+            'PAD_UP', // 12
+            'PAD_DOWN', // 13
+            'PAD_LEFT', // 14
+            'PAD_RIGHT', // 15
 
             'PAD_VENDOR'
         ],
@@ -78,53 +101,49 @@ const MAPS = {
 };
 
 const PRODUCT_CODES = {
-    'Product: 0268': 'PS3'
+    'Product: 0268': 'PS3',
+    'Product: 09cc': 'PS3'
 };
 
 /**
  * Input handler for accessing GamePad input.
  */
 class GamePads {
-    /**
-     * Create a new GamePads instance.
-     */
-    constructor() {
-        this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
+    deadZone = 0.25;
 
-        this.current = [];
-        this.previous = [];
+    /** @type {GamepadButtonsAxes[]} */
+    current = [];
 
-        this.deadZone = 0.25;
-    }
+    /** @type {boolean[][]} */
+    previous = [];
 
     /**
      * Update the current and previous state of the gamepads. This must be called every frame for
      * `wasPressed` to work.
      */
     update() {
+        const { current, previous } = this;
         // move current buttons status into previous array
-        for (let i = 0, l = this.current.length; i < l; i++) {
-            const buttons = this.current[i].pad.buttons;
-            const buttonsLen = buttons.length;
-            for (let j = 0; j < buttonsLen; j++) {
-                if (this.previous[i] === undefined) {
-                    this.previous[i] = [];
-                }
-                this.previous[i][j] = buttons[j].pressed;
+        for (let i = 0, l = current.length; i < l; i++) {
+            const { buttons } = current[i].pad;
+            const { length } = buttons;
+            const prevPressed = previous[i] = previous[i] || [];
+            for (let j = 0; j < length; j++) {
+                prevPressed[j] = buttons[j].pressed;
             }
         }
 
         // update current
-        this.poll(this.current);
+        this.poll(current);
     }
 
     /**
      * Poll for the latest data from the gamepad API.
      *
-     * @param {object[]} [pads] - An optional array used to receive the gamepads mapping. This
-     * array will be returned by this function.
-     * @returns {object[]} An array of gamepads and mappings for the model of gamepad that is
-     * attached.
+     * @param {GamepadButtonsAxes[]} [pads] - An optional array used to receive the gamepads
+     * mapping. This array will be returned by this function.
+     * @returns {GamepadButtonsAxes[]} An array of gamepads and mappings for the model of gamepad
+     * that is attached.
      * @example
      * var gamepads = new pc.GamePads();
      * var pads = gamepads.poll();
@@ -133,28 +152,28 @@ class GamePads {
         if (pads.length > 0) {
             pads.length = 0;
         }
-
-        if (this.gamepadsSupported) {
-            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
-            for (let i = 0, len = padDevices.length; i < len; i++) {
-                if (padDevices[i]) {
-                    pads.push({
-                        map: this.getMap(padDevices[i]),
-                        pad: padDevices[i]
-                    });
-                }
+        const padDevices = getGamepads();
+        for (let i = 0, len = padDevices.length; i < len; i++) {
+            if (padDevices[i]) {
+                pads.push({
+                    map: this.getMap(padDevices[i]),
+                    pad: padDevices[i]
+                });
             }
         }
         return pads;
     }
 
+    /**
+     * @param {Gamepad} pad - The HTML5 Gamepad object.
+     * @returns {ButtonsAxes} Object defining the order of buttons and axes for given HTML5 Gamepad.
+     */
     getMap(pad) {
         for (const code in PRODUCT_CODES) {
-            if (pad.id.indexOf(code) >= 0) {
+            if (pad.id.includes(code)) {
                 return MAPS[PRODUCT_CODES[code]];
             }
         }
-
         return MAPS.DEFAULT;
     }
 
@@ -167,12 +186,14 @@ class GamePads {
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(index, button) {
-        if (!this.current[index]) {
+        const obj = this.current[index];
+        if (!obj) {
             return false;
         }
-
-        const key = this.current[index].map.buttons[button];
-        return this.current[index].pad.buttons[pc[key]].pressed;
+        const key = obj.map.buttons[button];
+        // eslint-disable-next-line
+        const i = constants[key];
+        return obj.pad.buttons[i].pressed;
     }
 
     /**
@@ -184,16 +205,17 @@ class GamePads {
      * @returns {boolean} True if the button was pressed since the last frame.
      */
     wasPressed(index, button) {
-        if (!this.current[index]) {
+        const obj = this.current[index];
+        if (!obj) {
             return false;
         }
-
-        const key = this.current[index].map.buttons[button];
-        const i = pc[key];
-
+        const key = obj.map.buttons[button];
+        // eslint-disable-next-line
+        const i = constants[key];
+        const prevObj = this.previous[index];
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
-        return this.current[index].pad.buttons[i].pressed && !(this.previous[index] && this.previous[index][i]);
+        return obj.pad.buttons[i].pressed && !(prevObj && prevObj[i]);
     }
 
     /**
@@ -205,16 +227,17 @@ class GamePads {
      * @returns {boolean} True if the button was released since the last frame.
      */
     wasReleased(index, button) {
-        if (!this.current[index]) {
+        const obj = this.current[index];
+        if (!obj) {
             return false;
         }
-
-        const key = this.current[index].map.buttons[button];
-        const i = pc[key];
-
+        const key = obj.map.buttons[button];
+        // eslint-disable-next-line
+        const i = constants[key];
+        const prevObj = this.previous[index];
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
-        return !this.current[index].pad.buttons[i].pressed && (this.previous[index] && this.previous[index][i]);
+        return !obj.pad.buttons[i].pressed && (prevObj && prevObj[i]);
     }
 
     /**
@@ -227,15 +250,16 @@ class GamePads {
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(index, axes) {
-        if (!this.current[index]) {
+        const obj = this.current[index];
+        if (!obj) {
             return 0;
         }
-
-        const key = this.current[index].map.axes[axes];
-        let value = this.current[index].pad.axes[pc[key]];
-
+        const key = obj.map.axes[axes];
+        // eslint-disable-next-line
+        const i = constants[key];
+        const value = obj.pad.axes[i];
         if (Math.abs(value) < this.deadZone) {
-            value = 0;
+            return 0;
         }
         return value;
     }

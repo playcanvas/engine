@@ -9,6 +9,16 @@ let gamepads = false;
 let workers = false;
 let passiveEvents = false;
 
+// If the environment doesn't support the Gamepad API, we return the same array (GC friendly).
+// Examples: node or browsers that hide USB devices to prevent fingerprinting of users.
+const dummy = [];
+const getDummy = () => dummy;
+
+/**
+ * @type {typeof navigator.getGamepads}
+ */
+let getGamepads = getDummy;
+
 if (typeof navigator !== 'undefined') {
     const ua = navigator.userAgent;
 
@@ -36,7 +46,9 @@ if (typeof navigator !== 'undefined') {
         touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
     }
 
-    gamepads = 'getGamepads' in navigator;
+    const unboundGetGamepads = navigator.getGamepads || navigator.webkitGetGamepads;
+    gamepads = !!unboundGetGamepads;
+    getGamepads = unboundGetGamepads.bind(navigator);
 
     workers = (typeof Worker !== 'undefined');
 
@@ -160,4 +172,7 @@ const platform = {
     passiveEvents: passiveEvents
 };
 
-export { platform };
+export {
+    platform,
+    getGamepads
+};
