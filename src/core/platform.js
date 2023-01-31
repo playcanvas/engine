@@ -15,6 +15,9 @@ const dummy = [];
 const getDummy = () => dummy;
 
 /**
+ * Always returns an array of HTML5 Gamepads, even if the environment has no
+ * Gamepad support (like node), to prevent special casing everywhere.
+ * 
  * @type {typeof navigator.getGamepads}
  */
 let getGamepads = getDummy;
