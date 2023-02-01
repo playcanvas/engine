@@ -13,3 +13,4 @@ scripts/parsers/vox-parser.js.map
 types
 stats.html
 .npmrc
+examples/.npmrc
