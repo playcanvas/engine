@@ -12,7 +12,7 @@ import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
 let ammoRayStart, ammoRayEnd;
-const ammoGravity = new pc.Vec3();
+const ammoGravity = new Vec3();
 
 /**
  * Object holding the result of a successful raycast hit.
