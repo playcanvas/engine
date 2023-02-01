@@ -867,7 +867,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Check to see whether we need to update gravity on the dynamics world
         const gravity = this.dynamicsWorld.getGravity();
-        if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+        if (this.gravity.distance({ 'x': gravity.x(), 'y': gravity.y(), 'z': gravity.z() }) > 0.001) {
             gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
             this.dynamicsWorld.setGravity(gravity);
         }
