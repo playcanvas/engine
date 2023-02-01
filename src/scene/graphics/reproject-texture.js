@@ -373,7 +373,7 @@ varying vec2 vUv0;
 
 void main(void) {
     gl_Position = vec4(vertex_position, 0.5, 1.0);
-    vUv0 = (vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw;
+    vUv0 = getImageEffectUV((vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw);
 }
 `;
 
@@ -427,6 +427,7 @@ function reprojectTexture(source, target, options = {}) {
     const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
 
     const processFunc = funcNames[distribution] || 'reproject';
+    const prefilterSamples = processFunc.startsWith('prefilterSamples');
     const decodeFunc = ChunkUtils.decodeFunc(source.encoding);
     const encodeFunc = ChunkUtils.encodeFunc(target.encoding);
     const sourceFunc = `sample${getProjectionName(source.projection)}`;
@@ -442,6 +443,8 @@ function reprojectTexture(source, target, options = {}) {
     if (!shader) {
         const defines =
             `#define PROCESS_FUNC ${processFunc}\n` +
+            (prefilterSamples ? `#define USE_SAMPLES_TEX\n` : '') +
+            (source.cubemap ? `#define CUBEMAP_SOURCE\n` : '') +
             `#define DECODE_FUNC ${decodeFunc}\n` +
             `#define ENCODE_FUNC ${encodeFunc}\n` +
             `#define SOURCE_FUNC ${sourceFunc}\n` +
@@ -460,6 +463,7 @@ function reprojectTexture(source, target, options = {}) {
     DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
+    Debug.assert(constantSource);
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
@@ -496,7 +500,7 @@ function reprojectTexture(source, target, options = {}) {
         source.width * source.height * (source.cubemap ? 6 : 1)
     ];
 
-    if (processFunc.startsWith('prefilterSamples')) {
+    if (prefilterSamples) {
         // set or generate the pre-calculated samples data
         const sourceTotalPixels = source.width * source.height * (source.cubemap ? 6 : 1);
         const samplesTex =

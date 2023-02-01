@@ -7,7 +7,7 @@ class MaterialPhysicalExample {
     example(canvas: HTMLCanvasElement): void {
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
         };
 
@@ -44,7 +44,6 @@ class MaterialPhysicalExample {
 
                 app.scene.envAtlas = assets.helipad.resource;
                 app.scene.toneMapping = pc.TONEMAP_ACES;
-                // Set the skybox to the 128x128 cubemap mipmap level
                 app.scene.skyboxMip = 1;
 
                 // Create an entity with a camera component
