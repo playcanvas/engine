@@ -52,6 +52,10 @@ class UniformLine {
         // type
         this.type = words.shift();
 
+        if (line.includes(',')) {
+            Debug.error(`A comma on a uniform line is not supported, split it into multiple uniforms: ${line}`, shader);
+        }
+
         // array of uniforms
         if (line.includes('[')) {
 

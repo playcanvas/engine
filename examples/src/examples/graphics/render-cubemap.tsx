@@ -212,6 +212,9 @@ class RenderCubemapExample {
                 const textureOcta = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 64);
                 const textureOcta2 = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 32);
 
+                // create one envAtlas texture
+                const textureAtlas = createReprojectionTexture(pc.TEXTUREPROJECTION_OCTAHEDRAL, 512);
+
                 // update things each frame
                 let time = 0;
                 app.on("update", function (dt) {
@@ -262,6 +265,13 @@ class RenderCubemapExample {
                     });
                     // @ts-ignore engine-tsd
                     app.drawTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
+
+                    // cube -> envAtlas
+                    pc.EnvLighting.generateAtlas(srcCube, {
+                        target: textureAtlas
+                    });
+                    // @ts-ignore engine-tsd
+                    app.drawTexture(0, -0.7, 0.5, 0.4, textureAtlas);
                 });
             });
         });
