@@ -12,6 +12,7 @@ import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
 let ammoRayStart, ammoRayEnd;
+const ammoGravity = new pc.Vec3();
 
 /**
  * Object holding the result of a successful raycast hit.
@@ -867,7 +868,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Check to see whether we need to update gravity on the dynamics world
         const gravity = this.dynamicsWorld.getGravity();
-        if (this.gravity.distance({ 'x': gravity.x(), 'y': gravity.y(), 'z': gravity.z() }) > 0.001) {
+        ammoGravity.set(gravity.x(), gravity.y(), gravity.z());
+
+        // Check for distance due to Ammo precision.
+        if (ammoGravity.sub(this.gravity).lengthSq() > 0.00000000001) {
             gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
             this.dynamicsWorld.setGravity(gravity);
         }
