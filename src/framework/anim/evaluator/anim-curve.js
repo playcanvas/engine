@@ -1,8 +1,6 @@
 /**
  * Animation curve links an input data set to an output data set and defines the interpolation
  * method to use.
- *
- * @ignore
  */
 class AnimCurve {
     /**
