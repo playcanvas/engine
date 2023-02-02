@@ -59,19 +59,19 @@ gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
  * @ignore
  */
 class WebgpuTexture {
-    // type {GPUTexture}
+    /** @type {GPUTexture} */
     gpuTexture;
 
-    // type {GPUTextureView}
+    /** @type {GPUTextureView} */
     view;
 
-    // type {GPUSampler}
+    /** @type {GPUSampler} */
     sampler;
 
-    // type {GPUTextureDescriptor}
+    /** @type {GPUTextureDescriptor} */
     descr;
 
-    // type {GPUTextureFormat}
+    /** @type {GPUTextureFormat} */
     format;
 
     constructor(texture) {
@@ -147,7 +147,7 @@ class WebgpuTexture {
             return '2d';
         };
 
-        // type {GPUTextureViewDescriptor}
+        /** @type {GPUTextureViewDescriptor} */
         const descr = {
             format: options.format ?? textureDescr.format,
             dimension: options.dimension ?? defaultViewDimension(),
@@ -171,7 +171,7 @@ class WebgpuTexture {
 
             const texture = this.texture;
 
-            // type GPUSamplerDescriptor
+            /** @type GPUSamplerDescriptor */
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
@@ -260,7 +260,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
 
-        // type {GPUImageCopyTexture}
+        /** @type {GPUImageCopyTexture} */
         const dest = {
             texture: this.gpuTexture,
             mipLevel: 0
@@ -275,7 +275,7 @@ class WebgpuTexture {
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
-        // type {GPUImageDataLayout}
+        /** @type {GPUImageDataLayout} */
         const dataLayout = {
             offset: 0,
             bytesPerRow: bytesPerRow,
