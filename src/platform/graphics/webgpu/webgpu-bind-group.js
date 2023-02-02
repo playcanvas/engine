@@ -14,7 +14,7 @@ class WebgpuBindGroup {
         this.destroy();
         const device = bindGroup.device;
 
-        // type {GPUBindGroupDescriptor}
+        /** @type {GPUBindGroupDescriptor} */
         const descr = this.createDescriptor(device, bindGroup);
         DebugHelper.setLabel(descr, bindGroup.name);
 
