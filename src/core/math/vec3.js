@@ -3,6 +3,27 @@
  */
 class Vec3 {
     /**
+     * The first component of the vector.
+     *
+     * @type {number}
+     */
+    x;
+
+    /**
+     * The second component of the vector.
+     *
+     * @type {number}
+     */
+    y;
+
+    /**
+     * The third component of the vector.
+     *
+     * @type {number}
+     */
+    z;
+
+    /**
      * Creates a new Vec3 object.
      *
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 3, the
@@ -14,23 +35,8 @@ class Vec3 {
      */
     constructor(x = 0, y = 0, z = 0) {
         if (x.length === 3) {
-            /**
-             * The first component of the vector.
-             *
-             * @type {number}
-             */
             this.x = x[0];
-             /**
-              * The second component of the vector.
-              *
-              * @type {number}
-              */
             this.y = x[1];
-             /**
-              * The third component of the vector.
-              *
-              * @type {number}
-              */
             this.z = x[2];
         } else {
             this.x = x;

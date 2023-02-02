@@ -15,6 +15,23 @@ const tmpMat4 = new Mat4();
  * Oriented Box.
  */
 class OrientedBox {
+    halfExtents;
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _modelTransform;
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _worldTransform;
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
+    _aabb;
+
     /**
      * Create a new OrientedBox instance.
      *
@@ -29,20 +46,8 @@ class OrientedBox {
 
         this.halfExtents = halfExtents;
 
-        /**
-         * @type {Mat4}
-         * @private
-         */
         this._modelTransform = worldTransform.clone().invert();
-        /**
-         * @type {Mat4}
-         * @private
-         */
         this._worldTransform = worldTransform.clone();
-        /**
-         * @type {BoundingBox}
-         * @private
-         */
         this._aabb = new BoundingBox(new Vec3(), this.halfExtents);
     }
 
