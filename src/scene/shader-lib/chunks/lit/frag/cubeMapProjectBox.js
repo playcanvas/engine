@@ -1,5 +1,6 @@
 export default /* glsl */`
-uniform vec3 envBoxMin, envBoxMax;
+uniform vec3 envBoxMin;
+uniform vec3 envBoxMax;
 
 vec3 cubeMapProject(vec3 nrdir) {
     nrdir = cubeMapRotate(nrdir);

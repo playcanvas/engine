@@ -283,7 +283,8 @@ class ScriptAttributes {
                 let oldCopy = old;
                 // json types might have a 'clone' field in their
                 // schema so make sure it's not that
-                if (old && args.type !== 'json' && old.clone) {
+                // entities should not be cloned as well
+                if (old && args.type !== 'json' && args.type !== 'entity' && old.clone) {
                     // check if an event handler is there
                     // before cloning for performance
                     if (this._callbacks[evt] || this._callbacks[evtName]) {
