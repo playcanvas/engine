@@ -4,7 +4,7 @@
  *
  * @param {globalThis.Touch} touch - The browser Touch object.
  * @returns {object} The coordinates of the touch relative to the touch.target element. In the
- * format {x, y}.
+ * format \{x, y\}.
  */
 function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;

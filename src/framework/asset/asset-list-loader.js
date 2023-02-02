@@ -5,20 +5,22 @@ import { Asset } from './asset.js';
 /**
  * Used to load a group of assets and fires a callback when all assets are loaded.
  *
+ * ```javascript
+ * const assets = [
+ *     new Asset('model', 'container', { url: `http://example.com/asset.glb` }),
+ *     new Asset('styling', 'css', { url: `http://example.com/asset.css` })
+ * ];
+ * const assetListLoader = new AssetListLoader(assets, app.assets);
+ * assetListLoader.load((err, failed) => {
+ *     if (err) {
+ *         console.error(`${failed.length} assets failed to load`);
+ *     } else {
+ *         console.log(`${assets.length} assets loaded`);
+ *    }
+ * });
+ * ```
+ *
  * @augments EventHandler
- * @example
- *  const assets = [
- *      new Asset('model', 'container', { url: `http://example.com/asset.glb` }),
- *      new Asset('styling', 'css', { url: `http://example.com/asset.css` })
- *  ];
- *  const assetListLoader = new AssetListLoader(assets, app.assets);
- *  assetListLoader.load((err, failed) => {
- *      if (err) {
- *          console.error(`${failed.length} assets failed to load`);
- *      } else {
- *          console.log(`${assets.length} assets loaded`);
- *     }
- *  });
  */
 class AssetListLoader extends EventHandler {
     /**
