@@ -121,6 +121,7 @@
     "rollup-plugin-visualizer": "^5.8.3",
     "serve": "^14.1.2",
     "sinon": "^15.0.1",
+    "typedoc": "^0.23.24",
     "typescript": "^4.9.4",
     "xhr2": "^0.2.1"
   },
@@ -148,6 +149,7 @@
     "watch:es6": "npm run build:es6 -- -w",
     "watch:profiler": "npm run build:profiler -- -w",
     "docs": "jsdoc -c conf-api.json",
+    "typedocs": "typedoc --entryPoints ./src/index.js --excludeNotDocumented --out typedocs",
     "lint": "eslint --ext .js,.mjs extras scripts src test rollup.config.mjs",
     "serve": "serve build -l 51000",
     "test": "mocha --recursive --require test/fixtures.mjs",
