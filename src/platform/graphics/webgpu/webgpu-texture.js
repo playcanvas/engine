@@ -59,19 +59,34 @@ gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
  * @ignore
  */
 class WebgpuTexture {
-    /** @type {GPUTexture} */
+    /**
+     * @type {GPUTexture}
+     * @private
+     */
     gpuTexture;
 
-    /** @type {GPUTextureView} */
+    /**
+     * @type {GPUTextureView}
+     * @private
+     */
     view;
 
-    /** @type {GPUSampler} */
+    /**
+     * @type {GPUSampler}
+     * @private
+     */
     sampler;
 
-    /** @type {GPUTextureDescriptor} */
+    /**
+     * @type {GPUTextureDescriptor}
+     * @private
+     */
     descr;
 
-    /** @type {GPUTextureFormat} */
+    /**
+     * @type {GPUTextureFormat}
+     * @private
+     */
     format;
 
     constructor(texture) {
