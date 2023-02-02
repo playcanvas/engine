@@ -6,7 +6,10 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
  * @ignore
  */
 class WebgpuBindGroup {
-    // type {GPUBindGroup}
+    /**
+     * @type {GPUBindGroup}
+     * @private
+     */
     bindGroup;
 
     update(bindGroup) {

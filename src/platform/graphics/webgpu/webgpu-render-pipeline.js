@@ -114,6 +114,12 @@ class WebgpuRenderPipeline {
     }
 
     // TODO: this could be cached using bindGroupKey
+
+    /**
+     * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - An array
+     * of bind group formats.
+     * @returns {any} Returns the pipeline layout.
+     */
     getPipelineLayout(bindGroupFormats) {
 
         bindGroupFormats.forEach((format) => {
@@ -127,7 +133,7 @@ class WebgpuRenderPipeline {
         _layoutId++;
         DebugHelper.setLabel(descr, `PipelineLayoutDescr-${_layoutId}`);
 
-        // type {GPUPipelineLayout}
+        /** @type {GPUPipelineLayout} */
         const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
         DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
         Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, descr);
@@ -144,7 +150,7 @@ class WebgpuRenderPipeline {
 
         if (renderState.blending) {
 
-            // type {GPUBlendState}
+            /** @type {GPUBlendState} */
             blend = {
                 color: {
                     operation: _blendOperation[renderState.blendEquationColor],
