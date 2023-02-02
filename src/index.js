@@ -74,9 +74,7 @@ export { VertexIterator } from './platform/graphics/vertex-iterator.js';
 export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';
 
 // PLATFORM / GRAPHICS / webgpu
-// #if _DEBUG
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
-// #endif
 
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';

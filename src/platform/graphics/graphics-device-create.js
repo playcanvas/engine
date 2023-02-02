@@ -1,9 +1,6 @@
 import { Debug } from '../../core/debug.js';
 
-// #if _DEBUG
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
-// #endif
-
 import { DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU } from './constants.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 
@@ -27,12 +24,10 @@ function createGraphicsDevice(canvas, options = {}) {
     for (let i = 0; i < options.deviceTypes.length; i++) {
         const deviceType = options.deviceTypes[i];
 
-        // #if _DEBUG
         if (deviceType === DEVICETYPE_WEBGPU && window?.navigator?.gpu) {
             device = new WebgpuGraphicsDevice(canvas, options);
             return device.initWebGpu(options.glslangUrl, options.twgslUrl);
         }
-        // #endif
 
         if (deviceType === DEVICETYPE_WEBGL) {
             device = new WebglGraphicsDevice(canvas, options);
