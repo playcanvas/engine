@@ -134,7 +134,7 @@
     "watch:es6": "npm run build:es6 -- -w",
     "watch:profiler": "npm run build:profiler -- -w",
     "docs": "jsdoc -c conf-api.json",
-    "typedocs": "typedoc --entryPoints ./src/index.js --excludeNotDocumented --out typedocs",
+    "typedocs": "typedoc --entryPoints ./src/index.js --excludeNotDocumented --name \"PlayCanvas Engine API\" --out typedocs",
     "lint": "eslint --ext .js,.mjs extras scripts src test rollup.config.mjs",
     "serve": "serve build -l 51000",
     "test": "mocha --recursive --require test/fixtures.mjs",
