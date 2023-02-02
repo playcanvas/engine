@@ -22,7 +22,6 @@ class WebgpuBindGroupFormat {
         /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        /** @type {GPUBindGroupLayoutDescriptor} */
         const { key, descr } = this.createDescriptor(bindGroupFormat);
 
         /**
@@ -145,6 +144,7 @@ class WebgpuBindGroupFormat {
             });
         });
 
+        /** @type {GPUBindGroupLayoutDescriptor} */
         const descr = {
             entries: entries
         };
