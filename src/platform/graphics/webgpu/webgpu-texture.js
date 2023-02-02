@@ -141,6 +141,10 @@ class WebgpuTexture {
     destroy(device) {
     }
 
+    /**
+     * @param {any} device - The Graphics Device.
+     * @returns {any} - Returns the view.
+     */
     getView(device) {
 
         this.uploadImmediate(device, this.texture);
@@ -181,6 +185,10 @@ class WebgpuTexture {
 
     // TODO: handle the case where those properties get changed
 
+    /**
+     * @param {any} device - The Graphics Device.
+     * @returns {any} - Returns the sampler.
+     */
     getSampler(device) {
         if (!this.sampler) {
 
