@@ -17,17 +17,20 @@ class BoundingBox {
      * @type {Vec3}
      */
     center;
+
     /**
      * Half the distance across the box in each axis.
      *
      * @type {Vec3}
      */
     halfExtents;
+
     /**
      * @type {Vec3}
      * @private
      */
     _min = new Vec3();
+
     /**
      * @type {Vec3}
      * @private

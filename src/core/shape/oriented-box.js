@@ -16,16 +16,19 @@ const tmpMat4 = new Mat4();
  */
 class OrientedBox {
     halfExtents;
+
     /**
      * @type {Mat4}
      * @private
      */
     _modelTransform;
+
     /**
      * @type {Mat4}
      * @private
      */
     _worldTransform;
+
     /**
      * @type {BoundingBox}
      * @private

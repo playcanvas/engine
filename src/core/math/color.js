@@ -10,18 +10,21 @@ class Color {
      * @type {number}
      */
     r;
+
     /**
      * The green component of the color.
      *
      * @type {number}
      */
     g;
+
     /**
      * The blue component of the color.
      *
      * @type {number}
      */
     b;
+
     /**
      * The alpha component of the color.
      *

@@ -9,18 +9,25 @@ import { math } from './math.js';
 class CurveEvaluator {
     /** @private */
     _curve;
+
     /** @private */
     _left = -Infinity;
+
     /** @private */
     _right = Infinity;
+
     /** @private */
     _recip = 0;
+
     /** @private */
     _p0 = 0;
+
     /** @private */
     _p1 = 0;
+
     /** @private */
     _m0 = 0;
+
     /** @private */
     _m1 = 0;
 

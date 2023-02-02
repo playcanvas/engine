@@ -14,6 +14,7 @@ class BoundingSphere {
      * @type {Vec3}
      */
     center;
+
     /**
      * The radius of the bounding sphere.
      *

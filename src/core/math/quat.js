@@ -11,18 +11,21 @@ class Quat {
      * @type {number}
      */
     x;
+
     /**
      * The y component of the quaternion.
      *
      * @type {number}
      */
     y;
+
     /**
      * The z component of the quaternion.
      *
      * @type {number}
      */
     z;
+
     /**
      * The w component of the quaternion.
      *

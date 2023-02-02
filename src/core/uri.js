@@ -70,24 +70,28 @@ class URI {
      * @type {string}
      */
     scheme;
+
     /**
      * The authority. (e.g. `www.example.com`).
      *
      * @type {string}
      */
     authority;
+
     /**
      * The path. (e.g. /users/example).
      *
      * @type {string}
      */
     path;
+
     /**
      * The query, the section after a ?. (e.g. search=value).
      *
      * @type {string}
      */
     query;
+
     /**
      * The fragment, the section after a #.
      *

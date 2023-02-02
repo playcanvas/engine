@@ -12,12 +12,14 @@ class SortedLoopArray {
      * @type {object[]}
      */
     items = [];
+
     /**
      * The number of elements in the array.
      *
      * @type {number}
      */
     length = 0;
+
     /**
      * The current index used to loop through the array. This gets modified if we add or remove
      * elements from the array while looping. See the example to see how to loop through this

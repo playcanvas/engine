@@ -8,18 +8,21 @@ class Vec4 {
      * @type {number}
      */
     x;
+
     /**
      * The second component of the vector.
      *
      * @type {number}
      */
     y;
+
     /**
      * The third component of the vector.
      *
      * @type {number}
      */
     z;
+
     /**
      * The fourth component of the vector.
      *

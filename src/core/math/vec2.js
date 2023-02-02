@@ -8,6 +8,7 @@ class Vec2 {
      * @type {number}
      */
     x;
+
     /**
      * The second component of the vector.
      *
