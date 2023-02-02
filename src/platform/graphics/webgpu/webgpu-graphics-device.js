@@ -47,7 +47,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Render pipeline currently set on the device.
      *
-     * // type {GPURenderPipeline}
+     * @type {GPURenderPipeline}
      */
     pipeline;
 
@@ -61,7 +61,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Current command buffer encoder.
      *
-     * type {GPUCommandEncoder}
+     * @type {GPUCommandEncoder}
      */
     commandEncoder;
 

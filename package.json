@@ -104,6 +104,7 @@
     "@rollup/plugin-strip": "^3.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/pluginutils": "^5.0.2",
+    "@webgpu/types": "^0.1.26",
     "c8": "^7.12.0",
     "chai": "^4.3.7",
     "eslint": "^8.33.0",
