@@ -178,7 +178,7 @@ class WebgpuRenderPipeline {
 
         const wgpu = this.device.wgpu;
 
-        // type {GPUDepthStencilState}
+        /** @type {GPUDepthStencilState} */
         const depthStencil = renderTarget.depth ? {
             depthWriteEnabled: true,
             depthCompare: 'less',
@@ -190,7 +190,7 @@ class WebgpuRenderPipeline {
         });
         DebugHelper.setLabel(vertexModule, `Vertex ${webgpuShader.shader.label}`);
 
-        // type {GPURenderPipelineDescriptor}
+        /** @type {GPURenderPipelineDescriptor} */
         const descr = {
             vertex: {
                 module: vertexModule,
@@ -222,7 +222,7 @@ class WebgpuRenderPipeline {
             });
             DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
 
-            // type {GPUFragmentState}
+            /** @type {GPUFragmentState} */
             descr.fragment = {
                 module: fragmentModule,
                 entryPoint: 'main',
