@@ -64,6 +64,10 @@ class WebgpuBindGroupFormat {
         return bindGroupFormat.bufferFormats.length + index * 2;
     }
 
+    /**
+     * @param {any} bindGroupFormat - The format of the bind group.
+     * @returns {any} Returns the bind group descriptor.
+     */
     createDescriptor(bindGroupFormat) {
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
