@@ -7,6 +7,12 @@ import { EventHandler } from './event-handler.js';
  * @augments EventHandler
  */
 class Tags extends EventHandler {
+    /** @private */
+    _index = {};
+
+    /** @private */
+    _list = [];
+
     /**
      * Create an instance of a Tags.
      *
@@ -15,8 +21,6 @@ class Tags extends EventHandler {
     constructor(parent) {
         super();
 
-        this._index = { };
-        this._list = [];
         this._parent = parent;
     }
 

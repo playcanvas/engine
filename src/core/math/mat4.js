@@ -14,20 +14,19 @@ const scale = new Vec3();
  */
 class Mat4 {
     /**
+     * Matrix elements in the form of a flat array.
+     *
+     * @type {Float32Array}
+     */
+    data = new Float32Array(16);
+
+    /**
      * Create a new Mat4 instance. It is initialized to the identity matrix.
      */
     constructor() {
         // Create an identity matrix. Note that a new Float32Array has all elements set
         // to zero by default, so we only need to set the relevant elements to one.
-        const data = new Float32Array(16);
-        data[0] = data[5] = data[10] = data[15] = 1;
-
-        /**
-         * Matrix elements in the form of a flat array.
-         *
-         * @type {Float32Array}
-         */
-        this.data = data;
+        this.data[0] = this.data[5] = this.data[10] = this.data[15] = 1;
     }
 
     // Static function which evaluates perspective projection matrix half size at the near plane

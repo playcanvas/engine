@@ -7,6 +7,35 @@
  */
 class SortedLoopArray {
     /**
+     * The internal array that holds the actual array elements.
+     *
+     * @type {object[]}
+     */
+    items = [];
+
+    /**
+     * The number of elements in the array.
+     *
+     * @type {number}
+     */
+    length = 0;
+
+    /**
+     * The current index used to loop through the array. This gets modified if we add or remove
+     * elements from the array while looping. See the example to see how to loop through this
+     * array.
+     *
+     * @type {number}
+     */
+    loopIndex = -1;
+
+    /** @private */
+    _sortBy;
+
+    /** @private */
+    _sortHandler;
+
+    /**
      * Create a new SortedLoopArray instance.
      *
      * @param {object} args - Arguments.
@@ -23,27 +52,6 @@ class SortedLoopArray {
      * }
      */
     constructor(args) {
-        /**
-         * The internal array that holds the actual array elements.
-         *
-         * @type {object[]}
-         */
-        this.items = [];
-        /**
-         * The number of elements in the array.
-         *
-         * @type {number}
-         */
-        this.length = 0;
-        /**
-         * The current index used to loop through the array. This gets modified if we add or remove
-         * elements from the array while looping. See the example to see how to loop through this
-         * array.
-         *
-         * @type {number}
-         */
-        this.loopIndex = -1;
-
         this._sortBy = args.sortBy;
         this._sortHandler = this._doSort.bind(this);
     }
