@@ -20,7 +20,10 @@ gpuVertexFormats[TYPE_FLOAT32] = 'float32';
  * @ignore
  */
 class WebgpuVertexBufferLayout {
-    // type {Map<string, GPUVertexBufferLayout[]>}
+    /**
+     * @type {Map<string, GPUVertexBufferLayout[]>}
+     * @private
+     */
     cache = new Map();
 
     /**

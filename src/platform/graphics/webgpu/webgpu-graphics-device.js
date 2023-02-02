@@ -148,10 +148,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wasmPath = twgslUrl.replace('.js', '.wasm');
         this.twgsl = await twgsl(wasmPath);
 
-        // type {GPUAdapter}
+        /**
+         * @type {GPUAdapter}
+         * @private
+         */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
-        // type {GPUDevice}
+        /**
+         * @type {GPUDevice}
+         * @private
+         */
         this.wgpu = await this.gpuAdapter.requestDevice();
 
         // initially fill the window. This needs improvement.
@@ -163,8 +169,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
         this.framebufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
 
-        // this is configuration of the main colorframebuffer we obtain using getCurrentTexture
-        // type {GPUCanvasConfiguration}
+        /**
+         * Configuration of the main colorframebuffer we obtain using getCurrentTexture
+         *
+         * @type {GPUCanvasConfiguration}
+         * @private
+         */
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
@@ -496,7 +506,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     copyRenderTarget(source, dest, color, depth) {
 
-        // type {GPUExtent3D}
+        /** @type {GPUExtent3D} */
         const copySize = {
             width: source ? source.width : dest.width,
             height: source ? source.height : dest.height,
@@ -511,14 +521,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (color) {
 
             // read from supplied render target, or from the framebuffer
-            // type {GPUImageCopyTexture}
+            /** @type {GPUImageCopyTexture} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
                 mipLevel: 0
             };
 
             // write to supplied render target, or to the framebuffer
-            // type {GPUImageCopyTexture}
+            /** @type {GPUImageCopyTexture} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
                 mipLevel: 0
@@ -538,14 +548,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
             Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture`, sourceRT);
 
-            // type {GPUImageCopyTexture}
+            /** @type {GPUImageCopyTexture} */
             const copySrc = {
                 texture: sourceRT.impl.depthTexture,
                 mipLevel: 0
             };
 
             // write to supplied render target, or to the framebuffer
-            // type {GPUImageCopyTexture}
+            /** @type {GPUImageCopyTexture} */
             const copyDst = {
                 texture: dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture,
                 mipLevel: 0
