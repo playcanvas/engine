@@ -7,7 +7,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
-import { BODYFLAG_NORESPONSE_OBJECT, BODYGROUP_TRIGGER, BODYMASK_ALL, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
