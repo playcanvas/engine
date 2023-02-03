@@ -60,7 +60,7 @@ class Entity extends GraphNode {
     button;
 
     /**
-     * Gets the {@link CameraComponent}} attached to this entity.
+     * Gets the {@link CameraComponent} attached to this entity.
      *
      * @type {import('./components/camera/component.js').CameraComponent|undefined}
      * @readonly

@@ -65,19 +65,34 @@ gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
  * @ignore
  */
 class WebgpuTexture {
-    // type {GPUTexture}
+    /**
+     * @type {GPUTexture}
+     * @private
+     */
     gpuTexture;
 
-    // type {GPUTextureView}
+    /**
+     * @type {GPUTextureView}
+     * @private
+     */
     view;
 
-    // type {GPUSampler}
+    /**
+     * @type {GPUSampler}
+     * @private
+     */
     sampler;
 
-    // type {GPUTextureDescriptor}
+    /**
+     * @type {GPUTextureDescriptor}
+     * @private
+     */
     descr;
 
-    // type {GPUTextureFormat}
+    /**
+     * @type {GPUTextureFormat}
+     * @private
+     */
     format;
 
     constructor(texture) {
@@ -132,6 +147,10 @@ class WebgpuTexture {
     destroy(device) {
     }
 
+    /**
+     * @param {any} device - The Graphics Device.
+     * @returns {any} - Returns the view.
+     */
     getView(device) {
 
         this.uploadImmediate(device, this.texture);
@@ -153,7 +172,7 @@ class WebgpuTexture {
             return '2d';
         };
 
-        // type {GPUTextureViewDescriptor}
+        /** @type {GPUTextureViewDescriptor} */
         const descr = {
             format: options.format ?? textureDescr.format,
             dimension: options.dimension ?? defaultViewDimension(),
@@ -172,12 +191,16 @@ class WebgpuTexture {
 
     // TODO: handle the case where those properties get changed
 
+    /**
+     * @param {any} device - The Graphics Device.
+     * @returns {any} - Returns the sampler.
+     */
     getSampler(device) {
         if (!this.sampler) {
 
             const texture = this.texture;
 
-            // type GPUSamplerDescriptor
+            /** @type GPUSamplerDescriptor */
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
@@ -266,7 +289,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
 
-        // type {GPUImageCopyTexture}
+        /** @type {GPUImageCopyTexture} */
         const dest = {
             texture: this.gpuTexture,
             mipLevel: 0
@@ -281,7 +304,7 @@ class WebgpuTexture {
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
-        // type {GPUImageDataLayout}
+        /** @type {GPUImageDataLayout} */
         const dataLayout = {
             offset: 0,
             bytesPerRow: bytesPerRow,

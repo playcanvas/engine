@@ -43,7 +43,7 @@ function getReservedScriptNames() {
  * @example
  * var Turning = pc.createScript('turn');
  *
- * // define `speed` attribute that is available in Editor UI
+ * // define 'speed' attribute that is available in Editor UI
  * Turning.attributes.add('speed', {
  *     type: 'number',
  *     default: 180,

@@ -4,6 +4,8 @@
  * directly, but instead query {@link CameraComponent#frustum}.
  */
 class Frustum {
+    planes = [];
+
     /**
      * Create a new Frustum instance.
      *
@@ -11,7 +13,6 @@ class Frustum {
      * var frustum = new pc.Frustum();
      */
     constructor() {
-        this.planes = [];
         for (let i = 0; i < 6; i++)
             this.planes[i] = [];
     }

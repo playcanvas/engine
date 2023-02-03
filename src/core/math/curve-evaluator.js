@@ -7,6 +7,30 @@ import { math } from './math.js';
  * @ignore
  */
 class CurveEvaluator {
+    /** @private */
+    _curve;
+
+    /** @private */
+    _left = -Infinity;
+
+    /** @private */
+    _right = Infinity;
+
+    /** @private */
+    _recip = 0;
+
+    /** @private */
+    _p0 = 0;
+
+    /** @private */
+    _p1 = 0;
+
+    /** @private */
+    _m0 = 0;
+
+    /** @private */
+    _m1 = 0;
+
     /**
      * Create a new CurveEvaluator instance.
      *
@@ -15,13 +39,6 @@ class CurveEvaluator {
      */
     constructor(curve, time = 0) {
         this._curve = curve;
-        this._left = -Infinity;
-        this._right = Infinity;
-        this._recip = 0;
-        this._p0 = 0;
-        this._p1 = 0;
-        this._m0 = 0;
-        this._m1 = 0;
         this._reset(time);
     }
 

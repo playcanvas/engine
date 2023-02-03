@@ -60,7 +60,7 @@ class BindGroup {
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`);
+        Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`, this);
         if (this.uniformBuffers[index] !== uniformBuffer) {
             this.uniformBuffers[index] = uniformBuffer;
             this.dirty = true;
@@ -75,7 +75,7 @@ class BindGroup {
      */
     setTexture(name, texture) {
         const index = this.format.textureFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`);
+        Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`, this);
         if (this.textures[index] !== texture) {
             this.textures[index] = texture;
             this.dirty = true;
@@ -91,7 +91,7 @@ class BindGroup {
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
             const value = textureFormat.scopeId.value;
-            Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`);
+            Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
             this.setTexture(textureFormat.name, value);
         }
 

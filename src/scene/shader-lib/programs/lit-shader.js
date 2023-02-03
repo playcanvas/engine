@@ -188,10 +188,9 @@ class LitShader {
         // shadow coordinate generation
         code += coordsFunctionName + shadowCoordArgs;
 
-        if (this.device.deviceType !== DEVICETYPE_WEBGPU) {
-            // stop shadow at the far distance
-            code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
-        }
+        // stop shadow at the far distance
+        code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
+
         return code;
     }
 
@@ -665,13 +664,8 @@ class LitShader {
 
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
-
-                    // TODO: add support for shadow cascades to WebGPU
-                    if (device.deviceType !== DEVICETYPE_WEBGPU) {
-                        code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
-                        code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
-                    }
-
+                    code += "uniform mat4 light" + i + "_shadowMatrixPalette[4];\n";
+                    code += "uniform float light" + i + "_shadowCascadeDistances[4];\n";
                     code += "uniform float light" + i + "_shadowCascadeCount;\n";
                 }
 

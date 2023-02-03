@@ -13,18 +13,21 @@ export default /* glsl */`
 // When filtering:
 // NUM_SAMPLES - number of samples
 // NUM_SAMPLES_SQRT - sqrt of number of samples
-//
-// SUPPORTS_TEXLOD - whether supports texlod is supported
 
 varying vec2 vUv0;
 
 // source
-uniform sampler2D sourceTex;
-uniform samplerCube sourceCube;
+#ifdef CUBEMAP_SOURCE
+    uniform samplerCube sourceCube;
+#else
+    uniform sampler2D sourceTex;
+#endif
 
-// samples
-uniform sampler2D samplesTex;
-uniform vec2 samplesTexInverseSize;
+#ifdef USE_SAMPLES_TEX
+    // samples
+    uniform sampler2D samplesTex;
+    uniform vec2 samplesTexInverseSize;
+#endif
 
 // params:
 // x - target cubemap face 0..6
@@ -81,48 +84,6 @@ vec3 getDirectionEquirect() {
     return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
-vec4 sampleEquirect(vec2 sph) {
-    vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
-    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
-}
-
-vec4 sampleEquirect(vec3 dir) {
-    return sampleEquirect(toSpherical(dir));
-}
-
-vec4 sampleCubemap(vec3 dir) {
-    return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
-}
-
-vec4 sampleCubemap(vec2 sph) {
-    return sampleCubemap(fromSpherical(sph));
-}
-
-vec4 sampleEquirect(vec2 sph, float mipLevel) {
-    vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
-#ifdef SUPPORTS_TEXLOD
-    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
-#else
-    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
-#endif
-}
-
-vec4 sampleEquirect(vec3 dir, float mipLevel) {
-    return sampleEquirect(toSpherical(dir), mipLevel);
-}
-
-vec4 sampleCubemap(vec3 dir, float mipLevel) {
-#ifdef SUPPORTS_TEXLOD
-    return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
-#else
-    return textureCube(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()));
-#endif
-}
-
-vec4 sampleCubemap(vec2 sph, float mipLevel) {
-    return sampleCubemap(fromSpherical(sph), mipLevel);
-}
-
 // octahedral code, based on http://jcgt.org/published/0003/02/01
 // "Survey of Efficient Representations for Independent Unit Vectors" by Cigolle, Donow, Evangelakos, Mara, McGuire, Meyer
 
@@ -157,29 +118,63 @@ vec2 octEncode(in vec3 v) {
     return result;
 }
 
-vec4 sampleOctahedral(vec3 dir) {
-    vec2 uv = octEncode(dir) * 0.5 + 0.5;
-    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
-}
-
-vec4 sampleOctahedral(vec2 sph) {
-    return sampleOctahedral(fromSpherical(sph));
-}
-
-vec4 sampleOctahedral(vec3 dir, float mipLevel) {
-    vec2 uv = octEncode(dir) * 0.5 + 0.5;
-#ifdef SUPPORTS_TEXLOD
-    return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
-#else
-    return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
-#endif
-}
-
-vec4 sampleOctahedral(vec2 sph, float mipLevel) {
-    return sampleOctahedral(fromSpherical(sph), mipLevel);
-}
-
 /////////////////////////////////////////////////////////////////////
+
+#ifdef CUBEMAP_SOURCE
+    vec4 sampleCubemap(vec3 dir) {
+        return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
+    }
+
+    vec4 sampleCubemap(vec2 sph) {
+    return sampleCubemap(fromSpherical(sph));
+}
+
+    vec4 sampleCubemap(vec3 dir, float mipLevel) {
+        return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+    }
+
+    vec4 sampleCubemap(vec2 sph, float mipLevel) {
+        return sampleCubemap(fromSpherical(sph), mipLevel);
+    }
+#else
+
+    vec4 sampleEquirect(vec2 sph) {
+        vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
+        return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+    }
+
+    vec4 sampleEquirect(vec3 dir) {
+        return sampleEquirect(toSpherical(dir));
+    }
+
+    vec4 sampleEquirect(vec2 sph, float mipLevel) {
+        vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
+        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+    }
+
+    vec4 sampleEquirect(vec3 dir, float mipLevel) {
+        return sampleEquirect(toSpherical(dir), mipLevel);
+    }
+
+    vec4 sampleOctahedral(vec3 dir) {
+        vec2 uv = octEncode(dir) * 0.5 + 0.5;
+        return texture2D(sourceTex, vec2(uv.x, 1.0 - uv.y));
+    }
+
+    vec4 sampleOctahedral(vec2 sph) {
+        return sampleOctahedral(fromSpherical(sph));
+    }
+
+    vec4 sampleOctahedral(vec3 dir, float mipLevel) {
+        vec2 uv = octEncode(dir) * 0.5 + 0.5;
+        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+    }
+
+    vec4 sampleOctahedral(vec2 sph, float mipLevel) {
+        return sampleOctahedral(fromSpherical(sph), mipLevel);
+    }
+
+#endif
 
 vec3 getDirectionCubemap() {
     vec2 st = vUv0 * 2.0 - 1.0;
@@ -242,56 +237,58 @@ vec4 reproject() {
 
 vec4 unpackFloat = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
-void unpackSample(int i, out vec3 L, out float mipLevel) {
-    float u = (float(i * 4) + 0.5) * samplesTexInverseSize.x;
-    float v = (floor(u) + 0.5) * samplesTexInverseSize.y;
+#ifdef USE_SAMPLES_TEX
+    void unpackSample(int i, out vec3 L, out float mipLevel) {
+        float u = (float(i * 4) + 0.5) * samplesTexInverseSize.x;
+        float v = (floor(u) + 0.5) * samplesTexInverseSize.y;
 
-    vec4 raw;
-    raw.x = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
-    raw.y = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
-    raw.z = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
-    raw.w = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat);
+        vec4 raw;
+        raw.x = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+        raw.y = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+        raw.z = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat); u += samplesTexInverseSize.x;
+        raw.w = dot(texture2D(samplesTex, vec2(u, v)), unpackFloat);
 
-    L.xyz = raw.xyz * 2.0 - 1.0;
-    mipLevel = raw.w * 8.0;
-}
-
-// convolve an environment given pre-generated samples
-vec4 prefilterSamples() {
-    // construct vector space given target direction
-    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
-
-    vec3 L;
-    float mipLevel;
-
-    vec3 result = vec3(0.0);
-    float totalWeight = 0.0;
-    for (int i = 0; i < NUM_SAMPLES; ++i) {
-        unpackSample(i, L, mipLevel);
-        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * L.z;
-        totalWeight += L.z;
+        L.xyz = raw.xyz * 2.0 - 1.0;
+        mipLevel = raw.w * 8.0;
     }
 
-    return ENCODE_FUNC(result / totalWeight);
-}
+    // convolve an environment given pre-generated samples
+    vec4 prefilterSamples() {
+        // construct vector space given target direction
+        mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
 
-// unweighted version of prefilterSamples
-vec4 prefilterSamplesUnweighted() {
-    // construct vector space given target direction
-    mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+        vec3 L;
+        float mipLevel;
 
-    vec3 L;
-    float mipLevel;
+        vec3 result = vec3(0.0);
+        float totalWeight = 0.0;
+        for (int i = 0; i < NUM_SAMPLES; ++i) {
+            unpackSample(i, L, mipLevel);
+            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel)) * L.z;
+            totalWeight += L.z;
+        }
 
-    vec3 result = vec3(0.0);
-    float totalWeight = 0.0;
-    for (int i = 0; i < NUM_SAMPLES; ++i) {
-        unpackSample(i, L, mipLevel);
-        result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel));
+        return ENCODE_FUNC(result / totalWeight);
     }
 
-    return ENCODE_FUNC(result / float(NUM_SAMPLES));
-}
+    // unweighted version of prefilterSamples
+    vec4 prefilterSamplesUnweighted() {
+        // construct vector space given target direction
+        mat3 vecSpace = matrixFromVectorSlow(TARGET_FUNC());
+
+        vec3 L;
+        float mipLevel;
+
+        vec3 result = vec3(0.0);
+        float totalWeight = 0.0;
+        for (int i = 0; i < NUM_SAMPLES; ++i) {
+            unpackSample(i, L, mipLevel);
+            result += DECODE_FUNC(SOURCE_FUNC(vecSpace * L, mipLevel));
+        }
+
+        return ENCODE_FUNC(result / float(NUM_SAMPLES));
+    }
+#endif
 
 void main(void) {
     gl_FragColor = PROCESS_FUNC();
