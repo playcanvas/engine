@@ -176,10 +176,11 @@ class Morph extends RefCountedObject {
         }
 
         // build texture for each delta array, all textures are the same size
-        const arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
-        const packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
         for (let i = 0; i < deltaArrays.length; i++) {
             const data = deltaArrays[i];
+
+            const texture = this._createTexture('MorphTarget', this._textureFormat);
+            const packedDeltas = texture.lock();
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
             for (let v = 0; v < usedDataIndices.length; v++) {
@@ -197,9 +198,9 @@ class Morph extends RefCountedObject {
             }
 
             // create texture and assign it to target
+            texture.unlock();
             const target = deltaInfos[i].target;
-            const format = this._textureFormat;
-            target._setTexture(deltaInfos[i].name, this._createTexture('MorphTarget', format, packedDeltas));
+            target._setTexture(deltaInfos[i].name, texture);
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
@@ -266,9 +267,8 @@ class Morph extends RefCountedObject {
     }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
-    _createTexture(name, format, pixelData) {
-
-        const texture = new Texture(this.device, {
+    _createTexture(name, format) {
+        return new Texture(this.device, {
             width: this.morphTextureWidth,
             height: this.morphTextureHeight,
             format: format,
@@ -280,13 +280,6 @@ class Morph extends RefCountedObject {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             name: name
         });
-
-        if (pixelData) {
-            texture.lock().set(pixelData);
-            texture.unlock();
-        }
-
-        return texture;
     }
 }
 

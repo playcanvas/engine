@@ -273,7 +273,7 @@ export { AudioHandler } from './framework/handlers/audio.js';
 export { BinaryHandler } from './framework/handlers/binary.js';
 export { BundleHandler } from './framework/handlers/bundle.js';
 export { ContainerHandler, ContainerResource } from './framework/handlers/container.js';
-export { createStyle, CssHandler } from './framework/handlers/css.js';
+export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
