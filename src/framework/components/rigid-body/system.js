@@ -567,7 +567,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {object} shape - The shape to use for collision.
      * @param {number} shape.axis - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} shape.halfExtends - The half-extents of the box in the x, y and z axes.
+     * @param {Vec3} shape.halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {number} shape.height - The total height of the capsule, cylinder or cone from tip to tip.
      * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
@@ -589,7 +589,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             return this.sphereCast(shape.radius, position, rotation);
         }
 
-        return this.boxCast(shape.halfExtends, position, rotation);
+        return this.boxCast(shape.halfExtents, position, rotation);
     }
 
     /**
@@ -597,16 +597,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
      *
-     * @param {Vec3} halfExtends - The half-extents of the box in the x, y and z axes.
+     * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3} rotation - The world space rotation for the box to have.
      *
      * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
      */
-    boxCast(halfExtends, position, rotation) {
+    boxCast(halfExtents, position, rotation) {
         Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#boxCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
-        ammoVec3.setValue(halfExtends.x, halfExtends.y, halfExtends.z);
+        ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
         return this._shapecast(new Ammo.btSphereShape(ammoVec3), position, rotation);
     }
 
