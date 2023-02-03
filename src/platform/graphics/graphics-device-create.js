@@ -7,7 +7,7 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 /**
  * Creates a graphics device.
  *
- * @param {Element} canvas - The canvas element.
+ * @param {HTMLCanvasElement} canvas - The canvas element.
  * @param {object} options - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the device are attempted to get created. Defaults to [{@link DEVICETYPE_WEBGL}].

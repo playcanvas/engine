@@ -92,7 +92,7 @@ class Application extends AppBase {
     /**
      * Create a new Application instance.
      *
-     * @param {Element} canvas - The canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
      * @param {import('./input/element-input.js').ElementInput} [options.elementInput] - Input
      * handler for {@link ElementComponent}s.

@@ -123,7 +123,7 @@ class AppBase extends EventHandler {
     /**
      * Create a new AppBase instance.
      *
-     * @param {Element} canvas - The canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
      * @example
      * // Engine-only example: create the application manually
      * var options = new AppOptions();
@@ -1439,10 +1439,9 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Updates the {@link import('../platform/graphics/graphics-device.js').GraphicsDevice} canvas
-     * size to match the canvas size on the document page. It is recommended to call this function
-     * when the canvas size changes (e.g on window resize and orientation change events) so that
-     * the canvas resolution is immediately updated.
+     * Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document
+     * page. It is recommended to call this function when the canvas size changes (e.g on window
+     * resize and orientation change events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR

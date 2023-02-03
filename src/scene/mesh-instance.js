@@ -71,8 +71,8 @@ class Command {
  */
 
 /**
- * An instance of a {@link import('./mesh.js').Mesh}. A single mesh can be referenced by many mesh
- * instances that can have different transforms and materials.
+ * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
+ * have different transforms and materials.
  */
 class MeshInstance {
     /**
