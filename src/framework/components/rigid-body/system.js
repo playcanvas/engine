@@ -571,8 +571,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} shape.height - The total height of the capsule, cylinder or cone from tip to tip.
      * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
-     * @param {Vec3} position - The world space position for the shape to be.
-     * @param {Vec3} rotation - The world space rotation for the shape to have.
+     * @param {Vec3} [position] - The world space position for the shape to be.
+     * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {RaycastResult[]} An array of shapecast hit results (0 length if there were no hits).
      */
@@ -596,8 +596,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
-     * @param {Vec3} position - The world space position for the box to be.
-     * @param {Vec3} rotation - The world space rotation for the box to have.
+     * @param {Vec3} [position] - The world space position for the box to be.
+     * @param {Vec3} [rotation] - The world space rotation for the box to have.
      *
      * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
      */
@@ -614,8 +614,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
      * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} position - The world space position for the capsule to be.
-     * @param {Vec3} rotation - The world space rotation for the capsule to have.
+     * @param {Vec3} [position] - The world space position for the capsule to be.
+     * @param {Vec3} [rotation] - The world space rotation for the capsule to have.
      *
      * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
      */
@@ -639,8 +639,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
      * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} position - The world space position for the cone to be.
-     * @param {Vec3} rotation - The world space rotation for the cone to have.
+     * @param {Vec3} [position] - The world space position for the cone to be.
+     * @param {Vec3} [rotation] - The world space rotation for the cone to have.
      *
      * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
      */
@@ -664,8 +664,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
      * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} position - The world space position for the cylinder to be.
-     * @param {Vec3} rotation - The world space rotation for the cylinder to have.
+     * @param {Vec3} [position] - The world space position for the cylinder to be.
+     * @param {Vec3} [rotation] - The world space rotation for the cylinder to have.
      *
      * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
      */
@@ -687,8 +687,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the sphere.
-     * @param {Vec3} position - The world space position for the sphere to be.
-     * @param {Vec3} rotation - The world space rotation for the sphere to have.
+     * @param {Vec3} [position] - The world space position for the sphere to be.
+     * @param {Vec3} [rotation] - The world space rotation for the sphere to have.
      *
      * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      */
@@ -702,8 +702,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
-     * @param {Vec3} position - The world space position for the shape to be.
-     * @param {Vec3} rotation - The world space rotation for the shape to have.
+     * @param {Vec3} [position] - The world space position for the shape to be.
+     * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      * @private
