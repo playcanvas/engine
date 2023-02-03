@@ -1069,7 +1069,7 @@ class Mat4 {
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
      *
-     * // Query the z-axis component
+     * // Query the translation component
      * var t = new pc.Vec3();
      * m.getTranslation(t);
      */
@@ -1086,7 +1086,7 @@ class Mat4 {
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
      *
-     * // Query the z-axis component
+     * // Query the x-axis component
      * var x = new pc.Vec3();
      * m.getX(x);
      */
@@ -1103,7 +1103,7 @@ class Mat4 {
      * // Create a 4x4 matrix
      * var m = new pc.Mat4();
      *
-     * // Query the z-axis component
+     * // Query the y-axis component
      * var y = new pc.Vec3();
      * m.getY(y);
      */
