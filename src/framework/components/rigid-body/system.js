@@ -708,24 +708,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      * @private
      */
-    _shapecast(shape, position, rotation) {
+    _shapecast(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
         Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapecast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
 
-        // Set proper position
-        if (position) {
-            ammoVec3.setValue(position.x, position.y, position.z);
-        } else {
-            ammoVec3.setValue(0, 0, 0);
-        }
-
-        // Set proper rotation.
-        if (rotation) {
-            ammoQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);
-        } else {
-            ammoQuat.setEulerZYX(0, 0, 0);
-        }
+        // Set proper position and rotation
+        ammoVec3.setValue(position.x, position.y, position.z);
+        ammoQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);
 
         // Assign position and rotation to transform.
         ammoTransform.setIdentity();
