@@ -7,11 +7,15 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
-import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, BODYGROUP_TRIGGER, BODYMASK_ALL, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
-let ammoRayStart, ammoRayEnd;
+// Ammo.js variable for performance saving.
+let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform;
+
+// RigidBody for shape casts. Permanent to save performance.
+let shapecastBody;
 
 /**
  * Object holding the result of a successful raycast hit.
@@ -347,6 +351,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             // Lazily create temp vars
             ammoRayStart = new Ammo.btVector3();
             ammoRayEnd = new Ammo.btVector3();
+            ammoVec3 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
+            ammoTransform = new Ammo.btTransform();
+
             RigidBodyComponent.onLibraryLoaded();
 
             this.contactPointPool = new ObjectPool(ContactPoint, 1);
@@ -548,6 +556,252 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         Ammo.destroy(rayCallback);
+
+        return results;
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the shape hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {Object} shape - The shape to use for collision.
+     * @param {number} shape.axis - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} shape.halfExtends - The half-extents of the box in the x, y and z axes.
+     * @param {number} shape.height - The total height of the capsule, cylinder or cone from tip to tip.
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
+     * @param {Vec3} position - The world space position for the shape to be.
+     * @param {Vec3} rotation - The world space rotation for the shape to have.
+     * 
+     * @returns {RaycastResult[]} An array of shapecast hit results (0 length if there were no hits).
+     */
+    shapeCast(shape, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        if (shape.type === 'capsule') {
+            return this.capsuleCast(shape.radius, shape.height, shape.axis, position, rotation);
+        } else if (shape.type === 'cone') {
+            return this.coneCast(shape.radius, shape.height, shape.axis, position, rotation);
+        } else if (shape.type === 'cylinder') {
+            return this.cylinderCast(shape.radius, shape.height, shape.axis, position, rotation);
+        } else if (shape.type === 'sphere') {
+            return this.sphereCast(shape.radius, position, rotation);
+        } else {
+            return this.boxCast(shape.halfExtends, position, rotation);
+        }
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the box hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {Vec3} halfExtends - The half-extents of the box in the x, y and z axes.
+     * @param {Vec3} position - The world space position for the box to be.
+     * @param {Vec3} rotation - The world space rotation for the box to have.
+     * 
+     * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
+     */
+    boxCast(halfExtends, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#boxCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        ammoVec3.setValue(halfExtends.x, halfExtends.y, halfExtends.z);
+        return this._shapecast(new Ammo.btSphereShape(ammoVec3), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the capsule hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {number} radius - The radius of the capsule.
+     * @param {number} height - The total height of the capsule from tip to tip.
+     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the capsule to be.
+     * @param {Vec3} rotation - The world space rotation for the capsule to have.
+     * 
+     * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
+     */
+    capsuleCast(radius, height, axis, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#capsuleCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        if (axis === 0) {
+            axis = 'btCapsuleShapeX';
+        } else if (axis === 2) {
+            axis = 'btCapsuleShapeZ';
+        } else {
+            axis = 'btCapsuleShape';
+        }
+
+        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the cone hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {number} radius - The radius of the cone.
+     * @param {number} height - The total height of the cone from tip to tip.
+     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the cone to be.
+     * @param {Vec3} rotation - The world space rotation for the cone to have.
+     * 
+     * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
+     */
+    coneCast(radius, height, axis, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#coneCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        if (axis === 0) {
+            axis = 'btConeShapeX';
+        } else if (axis === 2) {
+            axis = 'btConeShapeZ';
+        } else {
+            axis = 'btConeShape';
+        }
+
+        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the cylinder hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {number} radius - The radius of the cylinder.
+     * @param {number} height - The total height of the cylinder from tip to tip.
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the cylinder to be.
+     * @param {Vec3} rotation - The world space rotation for the cylinder to have.
+     * 
+     * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
+     */
+    cylinderCast(radius, height, axis, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#cylinderCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        if (axis === 0) {
+            axis = 'btCylinderShapeX';
+        } else if (axis === 2) {
+            axis = 'btCylinderShapeZ';
+        } else {
+            axis = 'btCylinderShape';
+        }
+
+        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the sphere hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {number} radius - The radius of the sphere.
+     * @param {Vec3} position - The world space position for the sphere to be.
+     * @param {Vec3} rotation - The world space rotation for the sphere to have.
+     * 
+     * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
+     */
+    sphereCast(radius, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#sphereCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
+        return this._shapecast(new Ammo.btSphereShape(radius), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the shape hits.
+     * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
+     * detected, the returned array will be of length 0.
+     * 
+     * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
+     * @param {Vec3} position - The world space position for the shape to be.
+     * @param {Vec3} rotation - The world space rotation for the shape to have.
+     * 
+     * @returns {RaycastResult[]}
+     * @private
+     */
+    _shapecast(shape, position, rotation) {
+        const results = [];
+
+        // Set proper position
+        if (position) {
+            ammoVec3.setValue(position.x, position.y, position.z);
+        } else {
+            ammoVec3.setValue(0, 0, 0);
+        }
+
+        // Set proper rotation.
+        if (rotation) {
+            ammoQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);
+        } else {
+            ammoQuat.setEulerZYX(0, 0, 0);
+        }
+
+        // Assign position and rotation to transform.
+        ammoTransform.setIdentity();
+        ammoTransform.setOrigin(ammoVec3);
+        ammoTransform.setRotation(ammoQuat);
+
+        // We only initialize the shapecast body here so we don't have an extra body unless the user uses this function
+        if (!shapecastBody) {
+            shapecastBody = this.createBody(0, shape, ammoTransform);
+        }
+
+        // Add the body to the world.
+        this.addBody(shapecastBody, BODYGROUP_TRIGGER, BODYMASK_ALL);
+
+        // Make sure the body has proper shape, transform and is active.
+        shapecastBody.setCollisionShape(shape);
+        shapecastBody.setWorldTransform(ammoTransform);
+        shapecastBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
+
+        // Callback for the contactTest results.
+        let resultCallback = new Ammo.ConcreteContactResultCallback();
+
+        /**
+         * Add a contact collision result.
+         * 
+         * @param {number} cp Pointer for Contact Point
+         * @param {number} colObj0Wrap Pointer for first collision object's wrapper.
+         * @param {number} partId0 
+         * @param {number} index0
+         * @param {number} colObj1Wrap Pointer for second collision object's wrapper
+         * @param {number} partId1 
+         * @param {number} index1
+         */
+        resultCallback.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
+            // Retrieve collided entity.
+            const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
+
+            // Make sure there is an existing entity.
+            if (body1.entity) {
+                // Retrieve manifold point.
+                const manifold = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
+
+                // Make sure there is a collision
+                if (manifold.getDistance() < 0) {
+                    const point = manifold.get_m_positionWorldOnB();
+                    const normal = manifold.get_m_normalWorldOnB();
+
+                    // Push the result.
+                    results.push(new RaycastResult(
+                        body1.entity,
+                        new Vec3(point.x(), point.y(), point.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                    ));
+                }
+            }
+        };
+
+        // Check for contacts.
+        this.dynamicsWorld.contactTest(shapecastBody, resultCallback);
+
+        // Remove body from world and disable it.
+        this.removeBody(shapecastBody);
+        shapecastBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+
+        // Destroy unused variables for performance.
+        Ammo.destroy(resultCallback);
 
         return results;
     }
