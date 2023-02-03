@@ -3,6 +3,7 @@ import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
