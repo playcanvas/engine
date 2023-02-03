@@ -577,17 +577,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {import('../../entity.js').Entity[]} An array of shapecast hit results (0 length if there were no hits).
      */
     shapeCast(shape, position, rotation) {
-        if (shape.type === 'capsule') {
-            return this.capsuleCast(shape.radius, shape.height, shape.axis, position, rotation);
-        } else if (shape.type === 'cone') {
-            return this.coneCast(shape.radius, shape.height, shape.axis, position, rotation);
-        } else if (shape.type === 'cylinder') {
-            return this.cylinderCast(shape.radius, shape.height, shape.axis, position, rotation);
-        } else if (shape.type === 'sphere') {
-            return this.sphereCast(shape.radius, position, rotation);
+        switch (shape.type) {
+            case 'capsule':
+                return this.capsuleCast(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'cone':
+                return this.coneCast(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'cylinder':
+                return this.cylinderCast(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'sphere':
+                return this.sphereCast(shape.radius, position, rotation);
+            default:
+                return this.boxCast(shape.halfExtents, position, rotation);
         }
-
-        return this.boxCast(shape.halfExtents, position, rotation);
     }
 
     /**
