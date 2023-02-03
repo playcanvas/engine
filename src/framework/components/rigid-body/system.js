@@ -577,8 +577,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of shapecast hit results (0 length if there were no hits).
      */
     shapeCast(shape, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#shapeCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         if (shape.type === 'capsule') {
             return this.capsuleCast(shape.radius, shape.height, shape.axis, position, rotation);
         } else if (shape.type === 'cone') {
@@ -604,8 +602,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
      */
     boxCast(halfExtents, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#boxCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
         return this._shapecast(new Ammo.btSphereShape(ammoVec3), position, rotation);
     }
@@ -624,8 +620,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
      */
     capsuleCast(radius, height, axis, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#capsuleCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         if (axis === 0) {
             axis = 'btCapsuleShapeX';
         } else if (axis === 2) {
@@ -651,8 +645,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
      */
     coneCast(radius, height, axis, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#coneCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         if (axis === 0) {
             axis = 'btConeShapeX';
         } else if (axis === 2) {
@@ -678,8 +670,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
      */
     cylinderCast(radius, height, axis, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#cylinderCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         if (axis === 0) {
             axis = 'btCylinderShapeX';
         } else if (axis === 2) {
@@ -703,8 +693,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      */
     sphereCast(radius, position, rotation) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#sphereCast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
-
         return this._shapecast(new Ammo.btSphereShape(radius), position, rotation);
     }
 
@@ -721,6 +709,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @private
      */
     _shapecast(shape, position, rotation) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapecast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+
         const results = [];
 
         // Set proper position
