@@ -620,15 +620,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
      */
     capsuleCast(radius, height, axis, position, rotation) {
+        let fn = 'btCapsuleShape';
+
         if (axis === 0) {
-            axis = 'btCapsuleShapeX';
+            fn = 'btCapsuleShapeX';
         } else if (axis === 2) {
-            axis = 'btCapsuleShapeZ';
-        } else {
-            axis = 'btCapsuleShape';
+            fn = 'btCapsuleShapeZ';
         }
 
-        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -645,15 +645,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
      */
     coneCast(radius, height, axis, position, rotation) {
+        let fn = 'btConeShape';
+
         if (axis === 0) {
-            axis = 'btConeShapeX';
+            fn = 'btConeShapeX';
         } else if (axis === 2) {
-            axis = 'btConeShapeZ';
-        } else {
-            axis = 'btConeShape';
+            fn = 'btConeShapeZ';
         }
 
-        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -670,15 +670,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
      */
     cylinderCast(radius, height, axis, position, rotation) {
+        let fn = 'btCylinderShape';
+
         if (axis === 0) {
-            axis = 'btCylinderShapeX';
+            fn = 'btCylinderShapeX';
         } else if (axis === 2) {
-            axis = 'btCylinderShapeZ';
-        } else {
-            axis = 'btCylinderShape';
+            fn = 'btCylinderShapeZ';
         }
 
-        return this._shapecast(new Ammo[axis](radius, height), position, rotation);
+        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
