@@ -787,9 +787,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Remove body from world and disable it.
         this.removeBody(shapecastBody);
         shapecastBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+        shapecastBody.setCollisionShape(null);
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
+        Ammo.destroy(shape);
 
         return results;
     }
