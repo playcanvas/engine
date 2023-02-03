@@ -1,7 +1,5 @@
 /**
  * Wraps a set of data used in animation.
- *
- * @ignore
  */
 class AnimData {
     /**

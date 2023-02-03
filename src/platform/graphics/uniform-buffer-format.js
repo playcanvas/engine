@@ -5,7 +5,8 @@ import {
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3,
-    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY
+    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_MAT4ARRAY
 } from './constants.js';
 
 // map of UNIFORMTYPE_*** to number of 32bit elements
@@ -77,6 +78,8 @@ class UniformFormat {
                 case UNIFORMTYPE_VEC2: this.updateType = UNIFORMTYPE_VEC2ARRAY; break;
                 case UNIFORMTYPE_VEC3: this.updateType = UNIFORMTYPE_VEC3ARRAY; break;
                 case UNIFORMTYPE_VEC4: this.updateType = UNIFORMTYPE_VEC4ARRAY; break;
+                case UNIFORMTYPE_MAT4: this.updateType = UNIFORMTYPE_MAT4ARRAY; break;
+
                 default:
                     Debug.error(`Uniform array of type ${uniformTypeToName[type]} is not supported when processing uniform '${name}'.`);
                     Debug.call(() => {

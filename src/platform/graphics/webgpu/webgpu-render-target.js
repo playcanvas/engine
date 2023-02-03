@@ -25,10 +25,16 @@ class WebgpuRenderTarget {
     /** @type {boolean} */
     hasStencil;
 
-    // type {GPUTexture}
+    /**
+     * @type {GPUTexture}
+     * @private
+     */
     multisampledColorBuffer;
 
-    // type {GPUTexture}
+    /**
+     * @type {GPUTexture}
+     * @private
+     */
     depthTexture = null;
 
     /**
@@ -38,15 +44,20 @@ class WebgpuRenderTarget {
      */
     depthTextureInternal = false;
 
-    // Texture assigned each frame, and not owned by this render target. This is used on the framebuffer
-    // to assign per frame texture obtained from the context.
-    // type {GPUTexture}
+    /**
+     * Texture assigned each frame, and not owned by this render target. This is used on the
+     * framebuffer to assign per frame texture obtained from the context.
+     *
+     * @type {GPUTexture}
+     * @private
+     */
     assignedColorTexture = null;
 
     /**
      * Render pass descriptor used when starting a render pass for this render target.
      *
-     * // type {GPURenderPassDescriptor}
+     * @type {GPURenderPassDescriptor}
+     * @private
      */
     renderPassDescriptor = {};
 
@@ -147,7 +158,7 @@ class WebgpuRenderTarget {
                 // TODO: support rendering to 32bit depth without a stencil as well
                 this.setDepthFormat('depth24plus-stencil8');
 
-                // type {GPUTextureDescriptor}
+                /** @type {GPUTextureDescriptor} */
                 const depthTextureDesc = {
                     size: [width, height, 1],
                     dimension: '2d',
@@ -186,7 +197,7 @@ class WebgpuRenderTarget {
         // - for normal render target, constructor takes the color buffer as an option
         // - for the main framebuffer, the device supplies the buffer each frame
         // And so we only need to create multi-sampled color buffer if needed here.
-        // type {GPURenderPassColorAttachment}
+        /** @type {GPURenderPassColorAttachment} */
         const colorAttachment = {};
         this.renderPassDescriptor.colorAttachments = [];
 
@@ -208,7 +219,7 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
-            // type {GPUTextureDescriptor}
+            /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',

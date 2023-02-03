@@ -17,8 +17,13 @@ const getCompressionFormats = (device) => {
 
 // download basis code and compile the wasm module for use in workers
 const prepareWorkerModules = (config, callback) => {
-    const getWorkerBlob = () => {
-        const code = '(' + BasisWorker.toString() + ')()\n\n';
+    const getWorkerBlob = (basisCode) => {
+        const code = [
+            '/* basis */',
+            basisCode,
+            "",
+            '(' + BasisWorker.toString() + ')()\n\n'
+        ].join('\n');
         return new Blob([code], { type: 'application/javascript' });
     };
 
@@ -35,8 +40,7 @@ const prepareWorkerModules = (config, callback) => {
 
     const sendResponse = (basisCode, module) => {
         callback(null, {
-            workerUrl: URL.createObjectURL(getWorkerBlob()),
-            basisUrl: URL.createObjectURL(basisCode),
+            workerUrl: URL.createObjectURL(getWorkerBlob(basisCode)),
             module: module,
             rgbPriority: config.rgbPriority,
             rgbaPriority: config.rgbaPriority
@@ -44,7 +48,8 @@ const prepareWorkerModules = (config, callback) => {
     };
 
     const options = {
-        responseType: 'blob',
+        cache: true,
+        responseType: 'text',
         retry: config.maxRetries > 0,
         maxRetries: config.maxRetries
     };

@@ -3,6 +3,20 @@
  */
 class Vec2 {
     /**
+     * The first component of the vector.
+     *
+     * @type {number}
+     */
+    x;
+
+    /**
+     * The second component of the vector.
+     *
+     * @type {number}
+     */
+    y;
+
+    /**
      * Create a new Vec2 instance.
      *
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 2, the
@@ -13,17 +27,7 @@ class Vec2 {
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
-            /**
-             * The first component of the vector.
-             *
-             * @type {number}
-             */
             this.x = x[0];
-             /**
-              * The second component of the vector.
-              *
-              * @type {number}
-              */
             this.y = x[1];
         } else {
             this.x = x;

@@ -1,10 +1,10 @@
 /**
- * Similar to {@link getTargetCoords} for the MouseEvents. This function takes a browser Touch
- * object and returns the coordinates of the touch relative to the target element.
+ * This function takes a browser Touch object and returns the coordinates of the touch relative to
+ * the target element.
  *
  * @param {globalThis.Touch} touch - The browser Touch object.
  * @returns {object} The coordinates of the touch relative to the touch.target element. In the
- * format {x, y}.
+ * format \{x, y\}.
  */
 function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;

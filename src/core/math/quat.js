@@ -6,6 +6,34 @@ import { Vec3 } from './vec3.js';
  */
 class Quat {
     /**
+     * The x component of the quaternion.
+     *
+     * @type {number}
+     */
+    x;
+
+    /**
+     * The y component of the quaternion.
+     *
+     * @type {number}
+     */
+    y;
+
+    /**
+     * The z component of the quaternion.
+     *
+     * @type {number}
+     */
+    z;
+
+    /**
+     * The w component of the quaternion.
+     *
+     * @type {number}
+     */
+    w;
+
+    /**
      * Create a new Quat instance.
      *
      * @param {number|number[]} [x] - The quaternion's x component. Defaults to 0. If x is an array
@@ -16,29 +44,9 @@ class Quat {
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
-            /**
-             * The x component of the quaternion.
-             *
-             * @type {number}
-             */
             this.x = x[0];
-            /**
-             * The y component of the quaternion.
-             *
-             * @type {number}
-             */
             this.y = x[1];
-            /**
-             * The z component of the quaternion.
-             *
-             * @type {number}
-             */
             this.z = x[2];
-            /**
-             * The w component of the quaternion.
-             *
-             * @type {number}
-             */
             this.w = x[3];
         } else {
             this.x = x;

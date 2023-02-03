@@ -31,7 +31,7 @@ class Shader {
     /**
      * Creates a new Shader instance.
      *
-     * Consider {@link pc.createShaderFromCode} as a simpler and more powerful way to create
+     * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
      * a shader.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device

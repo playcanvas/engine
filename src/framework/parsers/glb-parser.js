@@ -1454,18 +1454,20 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
     const createMorphTargetCurves = (curve, node, entityPath) => {
-        if (!outputMap[curve.output]) {
+        const out = outputMap[curve.output];
+        if (!out) {
             Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
             return;
         }
-        const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
-        const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
+        const outData = out.data;
+        const morphTargetCount = outData.length / inputMap[curve.input].data.length;
+        const keyframeCount = outData.length / morphTargetCount;
 
         for (let j = 0; j < morphTargetCount; j++) {
             const morphTargetOutput = new Float32Array(keyframeCount);
             // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
             for (let k = 0; k < keyframeCount; k++) {
-                morphTargetOutput[k] = outputMap[curve.output].data[k * morphTargetCount + j];
+                morphTargetOutput[k] = outData[k * morphTargetCount + j];
             }
             const output = new AnimData(1, morphTargetOutput);
             // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)

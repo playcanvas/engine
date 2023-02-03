@@ -259,6 +259,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
     gravity = new Vec3(0, -9.81, 0);
 
     /**
+     * @type {Float32Array}
+     * @private
+     */
+    _gravityFloat32 = new Float32Array(3);
+
+    /**
      * @type {RigidBodyComponent[]}
      * @private
      */
@@ -865,9 +871,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this._stats.physicsStart = now();
         // #endif
 
+        // downcast gravity to float32 so we can accurately compare with existing
+        // gravity set in ammo.
+        this._gravityFloat32[0] = this.gravity.x;
+        this._gravityFloat32[1] = this.gravity.y;
+        this._gravityFloat32[2] = this.gravity.z;
+
         // Check to see whether we need to update gravity on the dynamics world
         const gravity = this.dynamicsWorld.getGravity();
-        if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+        if (gravity.x() !== this._gravityFloat32[0] ||
+            gravity.y() !== this._gravityFloat32[1] ||
+            gravity.z() !== this._gravityFloat32[2]) {
             gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
             this.dynamicsWorld.setGravity(gravity);
         }

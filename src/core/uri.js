@@ -65,42 +65,51 @@ const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
  */
 class URI {
     /**
+     * The scheme. (e.g. http).
+     *
+     * @type {string}
+     */
+    scheme;
+
+    /**
+     * The authority. (e.g. `www.example.com`).
+     *
+     * @type {string}
+     */
+    authority;
+
+    /**
+     * The path. (e.g. /users/example).
+     *
+     * @type {string}
+     */
+    path;
+
+    /**
+     * The query, the section after a ?. (e.g. search=value).
+     *
+     * @type {string}
+     */
+    query;
+
+    /**
+     * The fragment, the section after a #.
+     *
+     * @type {string}
+     */
+    fragment;
+
+    /**
      * Create a new URI instance.
      *
      * @param {string} uri - URI string.
      */
     constructor(uri) {
         const result = uri.match(re);
-
-        /**
-         * The scheme. (e.g. http).
-         *
-         * @type {string}
-         */
         this.scheme = result[2];
-        /**
-         * The authority. (e.g. `www.example.com`).
-         *
-         * @type {string}
-         */
         this.authority = result[4];
-        /**
-         * The path. (e.g. /users/example).
-         *
-         * @type {string}
-         */
         this.path = result[5];
-        /**
-         * The query, the section after a ?. (e.g. search=value).
-         *
-         * @type {string}
-         */
         this.query = result[7];
-        /**
-         * The fragment, the section after a #.
-         *
-         * @type {string}
-         */
         this.fragment = result[9];
     }
 

@@ -8,6 +8,37 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * type that specifies an interpolation scheme for the keys.
  */
 class Curve {
+    keys = [];
+
+    /**
+     * The curve interpolation scheme. Can be:
+     *
+     * - {@link CURVE_LINEAR}
+     * - {@link CURVE_SMOOTHSTEP}
+     * - {@link CURVE_SPLINE}
+     * - {@link CURVE_STEP}
+     *
+     * Defaults to {@link CURVE_SMOOTHSTEP}.
+     *
+     * @type {number}
+     */
+    type = CURVE_SMOOTHSTEP;
+
+    /**
+     * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and 1
+     * where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1 results in
+     * a very smooth curve. Use 0.5 for a Catmull-rom spline.
+     *
+     * @type {number}
+     */
+    tension = 0.5;
+
+    /**
+     * @type {CurveEvaluator}
+     * @private
+     */
+    _eval = new CurveEvaluator(this);
+
     /**
      * Creates a new Curve instance.
      *
@@ -22,37 +53,6 @@ class Curve {
      * ]);
      */
     constructor(data) {
-        this.keys = [];
-
-        /**
-         * The curve interpolation scheme. Can be:
-         *
-         * - {@link CURVE_LINEAR}
-         * - {@link CURVE_SMOOTHSTEP}
-         * - {@link CURVE_SPLINE}
-         * - {@link CURVE_STEP}
-         *
-         * Defaults to {@link CURVE_SMOOTHSTEP}.
-         *
-         * @type {number}
-         */
-        this.type = CURVE_SMOOTHSTEP;
-
-        /**
-         * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and
-         * 1 where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1
-         * results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
-         *
-         * @type {number}
-         */
-        this.tension = 0.5;
-
-        /**
-         * @type {CurveEvaluator}
-         * @private
-         */
-        this._eval = new CurveEvaluator(this);
-
         if (data) {
             for (let i = 0; i < data.length - 1; i += 2) {
                 this.keys.push([data[i], data[i + 1]]);

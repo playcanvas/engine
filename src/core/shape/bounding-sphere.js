@@ -9,6 +9,20 @@ const tmpVecB = new Vec3();
  */
 class BoundingSphere {
     /**
+     * Center of sphere.
+     *
+     * @type {Vec3}
+     */
+    center;
+
+    /**
+     * The radius of the bounding sphere.
+     *
+     * @type {number}
+     */
+    radius;
+
+    /**
      * Creates a new BoundingSphere instance.
      *
      * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The
@@ -21,17 +35,7 @@ class BoundingSphere {
     constructor(center = new Vec3(), radius = 0.5) {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
 
-        /**
-         * Center of sphere.
-         *
-         * @type {Vec3}
-         */
         this.center = center;
-        /**
-         * The radius of the bounding sphere.
-         *
-         * @type {number}
-         */
         this.radius = radius;
     }
 
