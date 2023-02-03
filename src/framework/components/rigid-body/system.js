@@ -564,8 +564,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the shape hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
-     * @param {Object} shape - The shape to use for collision.
+     *
+     * @param {object} shape - The shape to use for collision.
      * @param {number} shape.axis - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} shape.halfExtends - The half-extents of the box in the x, y and z axes.
      * @param {number} shape.height - The total height of the capsule, cylinder or cone from tip to tip.
@@ -573,7 +573,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3} rotation - The world space rotation for the shape to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of shapecast hit results (0 length if there were no hits).
      */
     shapeCast(shape, position, rotation) {
@@ -587,20 +587,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
             return this.cylinderCast(shape.radius, shape.height, shape.axis, position, rotation);
         } else if (shape.type === 'sphere') {
             return this.sphereCast(shape.radius, position, rotation);
-        } else {
-            return this.boxCast(shape.halfExtends, position, rotation);
         }
+
+        return this.boxCast(shape.halfExtends, position, rotation);
     }
 
     /**
      * Perform a collision check on the world and return all entities the box hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {Vec3} halfExtends - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3} rotation - The world space rotation for the box to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
      */
     boxCast(halfExtends, position, rotation) {
@@ -614,13 +614,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the capsule hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
      * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3} rotation - The world space rotation for the capsule to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
      */
     capsuleCast(radius, height, axis, position, rotation) {
@@ -641,13 +641,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the cone hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
      * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3} rotation - The world space rotation for the cone to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
      */
     coneCast(radius, height, axis, position, rotation) {
@@ -668,13 +668,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the cylinder hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
      * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3} rotation - The world space rotation for the cylinder to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
      */
     cylinderCast(radius, height, axis, position, rotation) {
@@ -695,11 +695,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the sphere hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {number} radius - The radius of the sphere.
      * @param {Vec3} position - The world space position for the sphere to be.
      * @param {Vec3} rotation - The world space rotation for the sphere to have.
-     * 
+     *
      * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      */
     sphereCast(radius, position, rotation) {
@@ -712,12 +712,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Perform a collision check on the world and return all entities the shape hits.
      * It returns an array of {@link RaycastResult}, one for each hit. If no hits are
      * detected, the returned array will be of length 0.
-     * 
+     *
      * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3} rotation - The world space rotation for the shape to have.
-     * 
-     * @returns {RaycastResult[]}
+     *
+     * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
      * @private
      */
     _shapecast(shape, position, rotation) {
@@ -756,20 +756,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
         shapecastBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
 
         // Callback for the contactTest results.
-        let resultCallback = new Ammo.ConcreteContactResultCallback();
-
-        /**
-         * Add a contact collision result.
-         * 
-         * @param {number} cp Pointer for Contact Point
-         * @param {number} colObj0Wrap Pointer for first collision object's wrapper.
-         * @param {number} partId0 
-         * @param {number} index0
-         * @param {number} colObj1Wrap Pointer for second collision object's wrapper
-         * @param {number} partId1 
-         * @param {number} index1
-         */
-        resultCallback.addSingleResult = function(cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
+        const resultCallback = new Ammo.ConcreteContactResultCallback();
+        resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
             // Retrieve collided entity.
             const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
 
@@ -787,7 +775,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     results.push(new RaycastResult(
                         body1.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z())
                     ));
                 }
             }
