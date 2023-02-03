@@ -574,7 +574,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {RaycastResult[]} An array of shapecast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of shapecast hit results (0 length if there were no hits).
      */
     shapeCast(shape, position, rotation) {
         if (shape.type === 'capsule') {
@@ -599,7 +599,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the box to be.
      * @param {Vec3} [rotation] - The world space rotation for the box to have.
      *
-     * @returns {RaycastResult[]} An array of boxcast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of boxcast hit results (0 length if there were no hits).
      */
     boxCast(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
@@ -617,7 +617,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the capsule to be.
      * @param {Vec3} [rotation] - The world space rotation for the capsule to have.
      *
-     * @returns {RaycastResult[]} An array of capsulecast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of capsulecast hit results (0 length if there were no hits).
      */
     capsuleCast(radius, height, axis, position, rotation) {
         let fn = 'btCapsuleShape';
@@ -642,7 +642,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cone to be.
      * @param {Vec3} [rotation] - The world space rotation for the cone to have.
      *
-     * @returns {RaycastResult[]} An array of conecast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of conecast hit results (0 length if there were no hits).
      */
     coneCast(radius, height, axis, position, rotation) {
         let fn = 'btConeShape';
@@ -667,7 +667,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cylinder to be.
      * @param {Vec3} [rotation] - The world space rotation for the cylinder to have.
      *
-     * @returns {RaycastResult[]} An array of cylindercast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of cylindercast hit results (0 length if there were no hits).
      */
     cylinderCast(radius, height, axis, position, rotation) {
         let fn = 'btCylinderShape';
@@ -690,7 +690,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the sphere to be.
      * @param {Vec3} [rotation] - The world space rotation for the sphere to have.
      *
-     * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of spherecast hit results (0 length if there were no hits).
      */
     sphereCast(radius, position, rotation) {
         return this._shapecast(new Ammo.btSphereShape(radius), position, rotation);
@@ -705,7 +705,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {RaycastResult[]} An array of spherecast hit results (0 length if there were no hits).
+     * @returns {Entity[]} An array of spherecast hit results (0 length if there were no hits).
      * @private
      */
     _shapecast(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
@@ -745,15 +745,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // Make sure there is a collision
                 if (manifold.getDistance() < 0) {
-                    const point = manifold.get_m_positionWorldOnB();
-                    const normal = manifold.get_m_normalWorldOnB();
-
-                    // Push the result.
-                    results.push(new RaycastResult(
-                        body1.entity,
-                        new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z())
-                    ));
+                    // Push the entity.
+                    results.push(body1.entity);
                 }
             }
         };
