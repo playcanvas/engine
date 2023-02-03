@@ -727,9 +727,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
             shapecastBody = this.createBody(0, shape, ammoTransform);
         }
 
-        // Add the body to the world.
-        this.addBody(shapecastBody, BODYGROUP_TRIGGER, BODYMASK_ALL);
-
         // Make sure the body has proper shape, transform and is active.
         shapecastBody.setCollisionShape(shape);
         shapecastBody.setWorldTransform(ammoTransform);
@@ -764,8 +761,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Check for contacts.
         this.dynamicsWorld.contactTest(shapecastBody, resultCallback);
 
-        // Remove body from world and disable it.
-        this.removeBody(shapecastBody);
+        // Disable body and remove shape.
         shapecastBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
         shapecastBody.setCollisionShape(null);
 
