@@ -201,7 +201,7 @@ class Material {
     /**
      * The shader used by this material to render mesh instances (default is null).
      *
-     * @property {import('../../platform/graphics/shader.js').Shader|null}
+     * @type {import('../../platform/graphics/shader.js').Shader|null}
      */
     set shader(shader) {
         this._shader = shader;
