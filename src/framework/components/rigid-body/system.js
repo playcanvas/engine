@@ -3,6 +3,7 @@ import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -608,7 +609,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} [position] - The world space position for the shape to be.
-     * @param {Vec3} [rotation] - The world space rotation for the shape to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      */
@@ -634,7 +635,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} [position] - The world space position for the box to be.
-     * @param {Vec3} [rotation] - The world space rotation for the box to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      */
@@ -652,7 +653,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} height - The total height of the capsule from tip to tip.
      * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [position] - The world space position for the capsule to be.
-     * @param {Vec3} [rotation] - The world space rotation for the capsule to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
      * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
      */
@@ -677,7 +678,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} height - The total height of the cone from tip to tip.
      * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [position] - The world space position for the cone to be.
-     * @param {Vec3} [rotation] - The world space rotation for the cone to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
      * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
      */
@@ -702,7 +703,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} height - The total height of the cylinder from tip to tip.
      * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [position] - The world space position for the cylinder to be.
-     * @param {Vec3} [rotation] - The world space rotation for the cylinder to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      */
@@ -725,7 +726,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the sphere.
      * @param {Vec3} [position] - The world space position for the sphere to be.
-     * @param {Vec3} [rotation] - The world space rotation for the sphere to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      */
@@ -740,7 +741,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} [position] - The world space position for the shape to be.
-     * @param {Vec3} [rotation] - The world space rotation for the shape to have.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
@@ -750,9 +751,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         const results = [];
 
-        // Set proper position and rotation
+        // Set proper position
         ammoVec3.setValue(position.x, position.y, position.z);
-        ammoQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);
+        
+        // Set proper rotation
+        if (rotation instanceof Quat) {
+            ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
+        } else {
+            ammoQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);
+        }
 
         // Assign position and rotation to transform.
         ammoTransform.setIdentity();
