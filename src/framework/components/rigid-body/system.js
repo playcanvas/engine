@@ -789,7 +789,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     results.push(new HitResult(
                         body1.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z())
                     ));
                 }
             }
