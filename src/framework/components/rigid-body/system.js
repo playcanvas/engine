@@ -604,7 +604,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     boxCast(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapecast(new Ammo.btSphereShape(ammoVec3), position, rotation);
+        return this._shapecast(new Ammo.btBoxShape(ammoVec3), position, rotation);
     }
 
     /**
