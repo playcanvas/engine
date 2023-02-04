@@ -4,6 +4,7 @@ import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
+import { Mat4 } from '../../../core/math/mat4';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -17,6 +18,8 @@ let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform;
 
 // RigidBody for shape tests. Permanent to save performance.
 let shapeTestBody;
+const shapecastRotation = new Quat();
+const shapecastRotationMatrix = new Mat4();
 
 /**
  * Object holding the result of a successful raycast hit.
@@ -595,6 +598,56 @@ class RigidBodyComponentSystem extends ComponentSystem {
         Ammo.destroy(rayCallback);
 
         return results;
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the box hits.
+     * It returns an array of {@link HitResult}. If no hits are
+     * detected, the returned array will be of length 0.
+     *
+     * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes. Cast distance will be added to Z-Axis.
+     * @param {Vec3} start - The world space point where the box starts.
+     * @param {Vec3} end - The world space point where the box ends.
+     *
+     * @returns {HitResult[]} An array of boxCast hit results (0 length if there were no hits).
+     */
+    boxCast(halfExtents, start, end) {
+        // Sweeping
+        halfExtents.z += start.distance(end) / 2;
+
+        // Find rotation
+        shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
+        shapecastRotation.setFromMat4(shapecastRotationMatrix);
+
+        // Transform start vector to make it beween initial start and end.
+        start.add(end).divScalar(2);
+
+        return this._shapeTest(new Ammo.btBoxShape(halfExtents), start, shapecastRotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the sphere hits.
+     * It returns an array of {@link HitResult}. If no hits are
+     * detected, the returned array will be of length 0.
+     *
+     * @param {number} radius - The radius for the sphere.
+     * @param {Vec3} start - The world space point for the center of the sphere at the beginning of the cast.
+     * @param {Vec3} end - The world space point for the center of the sphere at the end of the cast.
+     *
+     * @returns {HitResult[]} An array of sphereCast hit results (0 length if there were no hits).
+     */
+    sphereCast(radius, start, end) {
+        // Sweeping
+        const height = start.distance(end);
+
+        // Find rotation
+        shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
+        shapecastRotation.setFromMat4(shapecastRotationMatrix);
+
+        // Transform start vector to make it beween initial start and end.
+        start.add(end).divScalar(2);
+
+        return this._shapeTest(new Ammo.btCapsuleShapeZ(radius, height), start, shapecastRotation);
     }
 
     /**
