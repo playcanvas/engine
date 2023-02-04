@@ -239,7 +239,7 @@ class HitResult {
      * Create a new HitResult instance.
      *
      * @param {import('../../entity.js').Entity} entity - The entity that was hit.
-     * @param {Vec3} point - The point on the entity where the hit occurred, in world space.
+     * @param {Vec3} point - The point on the entity where the hit occurred, in world space. When returned by a shapecast it is the first point found to collide, it does not have to be the closest.
      * @param {Vec3} normal - The normal vector of the hit on the entity, in world space.
      * @hideconstructor
      */
