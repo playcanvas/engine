@@ -231,6 +231,42 @@ class ContactResult {
     }
 }
 
+/**
+ * Object holding the result of a hit on an Entity.
+ */
+class HitResult {
+    /**
+     * Create a new HitResult instance.
+     *
+     * @param {import('../../entity.js').Entity} entity - The entity that was hit.
+     * @param {Vec3} point - The point on the entity where the hit occurred, in world space.
+     * @param {Vec3} normal - The normal vector of the hit on the entity, in world space.
+     * @hideconstructor
+     */
+    constructor(entity, point, normal) {
+        /**
+         * The entity that was hit.
+         *
+         * @type {import('../../entity.js').Entity}
+         */
+        this.entity = entity;
+
+        /**
+         * The point on the entity where the hit occurred, in world space. When returned by a shapecast it is the first point found to collide, it does not have to be the closest.
+         *
+         * @type {Vec3}
+         */
+        this.point = point;
+
+        /**
+         * The normal vector of the hit on the entity, in world space.
+         *
+         * @type {Vec3}
+         */
+        this.normal = normal;
+    }
+}
+
 const _schema = ['enabled'];
 
 /**
@@ -562,7 +598,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the shape hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {object} shape - The shape to use for collision.
@@ -574,7 +610,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this shapecast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapecast hit results (0 length if there were no hits).
      */
     shapeCast(shape, position, rotation) {
         switch (shape.type) {
@@ -593,14 +629,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the box hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} [position] - The world space position for the box to be.
      * @param {Vec3} [rotation] - The world space rotation for the box to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this boxcast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of boxcast hit results (0 length if there were no hits).
      */
     boxCast(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
@@ -609,7 +645,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the capsule hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the capsule.
@@ -618,7 +654,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the capsule to be.
      * @param {Vec3} [rotation] - The world space rotation for the capsule to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this capsulecast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of capsulecast hit results (0 length if there were no hits).
      */
     capsuleCast(radius, height, axis, position, rotation) {
         let fn = 'btCapsuleShape';
@@ -634,7 +670,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the cone hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the cone.
@@ -643,7 +679,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cone to be.
      * @param {Vec3} [rotation] - The world space rotation for the cone to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this conecast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of conecast hit results (0 length if there were no hits).
      */
     coneCast(radius, height, axis, position, rotation) {
         let fn = 'btConeShape';
@@ -659,7 +695,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the cylinder hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the cylinder.
@@ -668,7 +704,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cylinder to be.
      * @param {Vec3} [rotation] - The world space rotation for the cylinder to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this cylindercast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of cylindercast hit results (0 length if there were no hits).
      */
     cylinderCast(radius, height, axis, position, rotation) {
         let fn = 'btCylinderShape';
@@ -684,14 +720,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the sphere hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the sphere.
      * @param {Vec3} [position] - The world space position for the sphere to be.
      * @param {Vec3} [rotation] - The world space rotation for the sphere to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this spherecast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of spherecast hit results (0 length if there were no hits).
      */
     sphereCast(radius, position, rotation) {
         return this._shapecast(new Ammo.btSphereShape(radius), position, rotation);
@@ -699,14 +735,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Perform a collision check on the world and return all entities the shape hits.
-     * It returns an array of {@link import('../../entity.js').Entity}. If no hits are
+     * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
      * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {import('../../entity.js').Entity[]} An array of entities hit by this shapecast (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapecast hit results (0 length if there were no hits).
      * @private
      */
     _shapecast(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
@@ -746,8 +782,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 // Make sure there is a collision
                 if (manifold.getDistance() < 0) {
-                    // Push the entity.
-                    results.push(body1.entity);
+                    const point = manifold.get_m_positionWorldOnB();
+                    const normal = manifold.get_m_normalWorldOnB();
+
+                    // Push the result.
+                    results.push(new HitResult(
+                        body1.entity,
+                        new Vec3(point.x(), point.y(), point.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                    ));
                 }
             }
         };
