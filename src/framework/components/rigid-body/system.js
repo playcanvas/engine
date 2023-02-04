@@ -4,7 +4,7 @@ import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
-import { Mat4 } from '../../../core/math/mat4';
+import { Mat4 } from '../../../core/math/mat4.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
