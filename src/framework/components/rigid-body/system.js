@@ -753,7 +753,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Set proper position
         ammoVec3.setValue(position.x, position.y, position.z);
-        
+
         // Set proper rotation
         if (rotation instanceof Quat) {
             ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
