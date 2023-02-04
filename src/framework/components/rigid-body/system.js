@@ -14,8 +14,8 @@ import { RigidBodyComponentData } from './data.js';
 // Ammo.js variable for performance saving.
 let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform;
 
-// RigidBody for shape casts. Permanent to save performance.
-let shapecastBody;
+// RigidBody for shape tests. Permanent to save performance.
+let shapeTestBody;
 
 /**
  * Object holding the result of a successful raycast hit.
@@ -610,20 +610,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {HitResult[]} An array of shapecast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      */
-    shapeCast(shape, position, rotation) {
+    shapeTest(shape, position, rotation) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuleCast(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.capsuleTest(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cone':
-                return this.coneCast(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.coneTest(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cylinder':
-                return this.cylinderCast(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.cylinderTest(shape.radius, shape.height, shape.axis, position, rotation);
             case 'sphere':
-                return this.sphereCast(shape.radius, position, rotation);
+                return this.sphereTest(shape.radius, position, rotation);
             default:
-                return this.boxCast(shape.halfExtents, position, rotation);
+                return this.boxTest(shape.halfExtents, position, rotation);
         }
     }
 
@@ -636,11 +636,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the box to be.
      * @param {Vec3} [rotation] - The world space rotation for the box to have.
      *
-     * @returns {HitResult[]} An array of boxcast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      */
-    boxCast(halfExtents, position, rotation) {
+    boxTest(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapecast(new Ammo.btBoxShape(ammoVec3), position, rotation);
+        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), position, rotation);
     }
 
     /**
@@ -654,9 +654,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the capsule to be.
      * @param {Vec3} [rotation] - The world space rotation for the capsule to have.
      *
-     * @returns {HitResult[]} An array of capsulecast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
      */
-    capsuleCast(radius, height, axis, position, rotation) {
+    capsuleTest(radius, height, axis, position, rotation) {
         let fn = 'btCapsuleShape';
 
         if (axis === 0) {
@@ -665,7 +665,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCapsuleShapeZ';
         }
 
-        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -679,9 +679,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cone to be.
      * @param {Vec3} [rotation] - The world space rotation for the cone to have.
      *
-     * @returns {HitResult[]} An array of conecast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
      */
-    coneCast(radius, height, axis, position, rotation) {
+    coneTest(radius, height, axis, position, rotation) {
         let fn = 'btConeShape';
 
         if (axis === 0) {
@@ -690,7 +690,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btConeShapeZ';
         }
 
-        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -704,9 +704,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the cylinder to be.
      * @param {Vec3} [rotation] - The world space rotation for the cylinder to have.
      *
-     * @returns {HitResult[]} An array of cylindercast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      */
-    cylinderCast(radius, height, axis, position, rotation) {
+    cylinderTest(radius, height, axis, position, rotation) {
         let fn = 'btCylinderShape';
 
         if (axis === 0) {
@@ -715,7 +715,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCylinderShapeZ';
         }
 
-        return this._shapecast(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -727,10 +727,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the sphere to be.
      * @param {Vec3} [rotation] - The world space rotation for the sphere to have.
      *
-     * @returns {HitResult[]} An array of spherecast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      */
-    sphereCast(radius, position, rotation) {
-        return this._shapecast(new Ammo.btSphereShape(radius), position, rotation);
+    sphereTest(radius, position, rotation) {
+        return this._shapeTest(new Ammo.btSphereShape(radius), position, rotation);
     }
 
     /**
@@ -742,10 +742,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} [position] - The world space position for the shape to be.
      * @param {Vec3} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {HitResult[]} An array of shapecast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
      */
-    _shapecast(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
+    _shapeTest(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
         Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapecast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
@@ -759,15 +759,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoTransform.setOrigin(ammoVec3);
         ammoTransform.setRotation(ammoQuat);
 
-        // We only initialize the shapecast body here so we don't have an extra body unless the user uses this function
-        if (!shapecastBody) {
-            shapecastBody = this.createBody(0, shape, ammoTransform);
+        // We only initialize the shapeTast body here so we don't have an extra body unless the user uses this function
+        if (!shapeTestBody) {
+            shapeTestBody = this.createBody(0, shape, ammoTransform);
         }
 
         // Make sure the body has proper shape, transform and is active.
-        shapecastBody.setCollisionShape(shape);
-        shapecastBody.setWorldTransform(ammoTransform);
-        shapecastBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
+        shapeTestBody.setCollisionShape(shape);
+        shapeTestBody.setWorldTransform(ammoTransform);
+        shapeTestBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
 
         // Callback for the contactTest results.
         const resultCallback = new Ammo.ConcreteContactResultCallback();
@@ -796,11 +796,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
         };
 
         // Check for contacts.
-        this.dynamicsWorld.contactTest(shapecastBody, resultCallback);
+        this.dynamicsWorld.contactTest(shapeTestBody, resultCallback);
 
         // Disable body and remove shape.
-        shapecastBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
-        shapecastBody.setCollisionShape(null);
+        shapeTestBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+        shapeTestBody.setCollisionShape(null);
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
