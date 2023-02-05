@@ -602,31 +602,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Perform a collision check on the world and return all entities the box hits.
-     * It returns an array of {@link HitResult}. If no hits are
-     * detected, the returned array will be of length 0.
-     *
-     * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes. Cast distance will be added to Z-Axis.
-     * @param {Vec3} start - The world space point where the box starts.
-     * @param {Vec3} end - The world space point where the box ends.
-     *
-     * @returns {HitResult[]} An array of boxCast hit results (0 length if there were no hits).
-     */
-    boxCastAll(halfExtents, start, end) {
-        // Sweeping
-        ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z + start.distance(end) / 2);
-
-        // Find rotation
-        shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
-        shapecastRotation.setFromMat4(shapecastRotationMatrix);
-
-        // Transform start vector to make it beween initial start and end.
-        shapecastPosition.lerp(start, end, 0.5);
-
-        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), shapecastPosition, shapecastRotation);
-    }
-
-    /**
      * Perform a collision check on the world and return all entities the sphere hits.
      * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
