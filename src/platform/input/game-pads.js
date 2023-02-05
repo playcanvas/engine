@@ -554,45 +554,45 @@ class GamePads extends EventHandler {
     /**
      * Returns true if the button on the pad requested is pressed.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} orderIndex - The order index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
      * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button is pressed.
      */
-    isPressed(index, button) {
-        return this.current[index] && this.current[index].isPressed(button);
+    isPressed(orderIndex, button) {
+        return this.current[orderIndex] && this.current[orderIndex].isPressed(button);
     }
 
     /**
      * Returns true if the button was pressed since the last frame.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} orderIndex - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
      * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button was pressed since the last frame.
      */
-    wasPressed(index, button) {
-        return this.current[index] && this.current[index].wasPressed(button);
+    wasPressed(orderIndex, button) {
+        return this.current[orderIndex] && this.current[orderIndex].wasPressed(button);
     }
 
     /**
      * Returns true if the button was released since the last frame.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} orderIndex - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
      * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button was released since the last frame.
      */
-    wasReleased(index, button) {
-        return this.current[index] && this.current[index].wasReleased(button);
+    wasReleased(orderIndex, button) {
+        return this.current[orderIndex] && this.current[orderIndex].wasReleased(button);
     }
 
     /**
      * Get the value of one of the analogue axes of the pad.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} orderIndex - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
      * @param {number} axis - The axis to get the value of, use constants {@link PAD_L_STICK_X}, etc.
      * @returns {number} The value of the axis between -1 and 1.
      */
-    getAxis(index, axis) {
-        return this.current[index] ? this.current[index].getAxis(axis) : 0;
+    getAxis(orderIndex, axis) {
+        return this.current[orderIndex] ? this.current[orderIndex].getAxis(axis) : 0;
     }
 
     /**
