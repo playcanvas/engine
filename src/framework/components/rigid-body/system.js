@@ -18,6 +18,7 @@ let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform;
 
 // RigidBody for shape tests. Permanent to save performance.
 let shapeTestBody;
+const shapecastPosition = new Vec3();
 const shapecastRotation = new Quat();
 const shapecastRotationMatrix = new Mat4();
 
@@ -620,9 +621,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         shapecastRotation.setFromMat4(shapecastRotationMatrix);
 
         // Transform start vector to make it beween initial start and end.
-        start.add(end).divScalar(2);
+        shapecastPosition.lerp(start, end, 0.5);
 
-        return this._shapeTest(new Ammo.btBoxShape(halfExtents), start, shapecastRotation);
+        return this._shapeTest(new Ammo.btBoxShape(halfExtents), shapecast, shapecastRotation);
     }
 
     /**
@@ -645,9 +646,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         shapecastRotation.setFromMat4(shapecastRotationMatrix);
 
         // Transform start vector to make it beween initial start and end.
-        start.add(end).divScalar(2);
+        shapecastPosition.lerp(start, end, 0.5);
 
-        return this._shapeTest(new Ammo.btCapsuleShapeZ(radius, height), start, shapecastRotation);
+        return this._shapeTest(new Ammo.btCapsuleShapeZ(radius, height), shapecastPosition, shapecastRotation);
     }
 
     /**
