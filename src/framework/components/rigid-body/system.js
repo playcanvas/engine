@@ -612,7 +612,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of boxCast hit results (0 length if there were no hits).
      */
-    boxCast(halfExtents, start, end) {
+    boxCastAll(halfExtents, start, end) {
         // Sweeping
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z + start.distance(end) / 2);
 
@@ -637,7 +637,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of sphereCast hit results (0 length if there were no hits).
      */
-    sphereCast(radius, start, end) {
+    sphereCastAll(radius, start, end) {
         // Sweeping
         const height = start.distance(end) + radius;
 
