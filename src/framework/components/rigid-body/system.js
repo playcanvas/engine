@@ -614,7 +614,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     boxCast(halfExtents, start, end) {
         // Sweeping
-        halfExtents.z += start.distance(end) / 2;
+        ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z + start.distance(end) / 2);
 
         // Find rotation
         shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
@@ -623,7 +623,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Transform start vector to make it beween initial start and end.
         shapecastPosition.lerp(start, end, 0.5);
 
-        return this._shapeTest(new Ammo.btBoxShape(halfExtents), shapecast, shapecastRotation);
+        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), shapecast, shapecastRotation);
     }
 
     /**
