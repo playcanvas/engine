@@ -909,6 +909,11 @@ class RigidBodyComponent extends Component {
         // Update motion state if body is active
         // or entity's transform was manually modified
         if (body.isActive() || entity._wasDirty) {
+            if (entity._wasDirty) {
+                // Warn the user about setting transform instead of using teleport function
+                Debug.warn('Cannot set rigid body transform from entity. Use entity.rigidbody#teleport instead.');
+            }
+
             // Update the motion state. Note that the test for the presence of the motion
             // state is technically redundant since the engine creates one for all bodies.
             const motionState = body.getMotionState();
