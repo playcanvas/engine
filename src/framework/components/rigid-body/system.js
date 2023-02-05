@@ -639,7 +639,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     sphereCastAll(radius, start, end) {
         // Sweeping
-        const height = start.distance(end) + radius;
+        const height = start.distance(end) + radius * 2;
 
         // Find rotation
         shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
