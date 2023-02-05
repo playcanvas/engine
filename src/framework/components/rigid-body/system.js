@@ -623,7 +623,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Transform start vector to make it beween initial start and end.
         shapecastPosition.lerp(start, end, 0.5);
 
-        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), shapecast, shapecastRotation);
+        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), shapecastPosition, shapecastRotation);
     }
 
     /**
