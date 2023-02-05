@@ -932,14 +932,13 @@ class RigidBodyComponent extends Component {
                     entityRot.transformVector(lo, _vec3);
                     entity.setPosition(p.x() - _vec3.x, p.y() - _vec3.y, p.z() - _vec3.z);
                     entity.setRotation(entityRot);
-
                 } else {
                     entity.setPosition(p.x(), p.y(), p.z());
                     entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
-            }
 
-            entity._wasDirty = false;
+                entity._wasDirty = false;
+            }
         }
     }
 
