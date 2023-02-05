@@ -86,218 +86,101 @@ const PRODUCT_CODES = {
 let deadZone = 0.25;
 
 /**
- * Input handler for accessing GamePad input.
- *
- * @augments EventHandler
+ * A GamePadButton stores information about a button from the Gamepad API.
  */
-class GamePads extends EventHandler {
+class GamePadButton {
     /**
-     * Create a new GamePads instance.
+     * Create a new GamePadButton instance.
+     *
+     * @param {GamepadButton} button - The original Gamepad API gamepad button.
+     * @hideconstructor
      */
-    constructor() {
-        super();
-
+    constructor(button) {
         /**
-         * Whether gamepads are supported by this device.
+         * Whether this button was pressed on last frame.
          *
          * @type {boolean}
+         * @ignore
          */
-        this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
+        this._wasPressed = button.pressed;
 
         /**
-         * The list of current gamepads.
+         * Whether this button was touched on last frame.
          *
-         * @type {GamePad[]}
+         * @type {boolean}
+         * @ignore
          */
-        this.current = [];
+        this._wasTouched = typeof button.touched === 'boolean' ? button.touched : button.value > 0;
 
         /**
-         * The list of previous button states.
+         * The original Gamepad API gamepad button.
          *
-         * @type {boolean[][]}
+         * @type {GamepadButton}
+         * @ignore
          */
-        this.previous = [];
-
-        window.addEventListener('gamepadconnected', event => {
-            const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
-
-            while(this.current.findIndex(gp => gp.index === pad.index) !== -1) {
-                this.current.splice(this.current.findIndex(gp => gp.index === pad.index), 1);
-            }
-
-            this.current.push(pad);
-            this.fire('gamepadconnected', pad);
-        });
-
-        window.addEventListener('gamepaddisconnected', event => {
-            const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
-
-            if (padIndex !== -1) {
-                this.fire('gamepaddisconnected', this.current[padIndex]);
-                this.current.splice(padIndex, 1);
-            }
-        });
+        this._button = button;
     }
 
     /**
-     * Fired when a gamepad is connected.
+     * Update the existing GamePadButton Instance.
      *
-     * @event GamePads#gamepadconnected
-     * @param {GamePad} gamepad - The gamepad that was just connected.
-     * @example
-     * var onPadConnected = function (pad) {
-     *     // Make the gamepad pulse.
-     * };
-     * app.keyboard.on("gamepadconnected", onPadConnected, this);
-     */
-
-    /**
-     * Fired when a gamepad is disconnected.
-     *
-     * @event GamePads#gamepaddisconnected
-     * @param {GamePad} gamepad - The gamepad that was just disconnected.
-     * @example
-     * var onPadDisconnected = function (pad) {
-     *     // Pause the game.
-     * };
-     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
-     */
-
-    /**
-     * @type {number} Threshold for axes to return values. Must be between 0 and 1.
+     * @param {GamepadButton} button - The original Gamepad API gamepad button.
      * @ignore
      */
-    get deadZone() {
-        return deadZone;
-    }
-
-    set deadZone(value) {
-        deadZone = value;
+    _update(button) {
+        this._button = button;
     }
 
     /**
-     * Update the current and previous state of the gamepads. This must be called every frame for
-     * `wasPressed` to work.
+     * @type {number} - The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
      */
-    update() {
-        for (let i = 0, l = this.current.length; i < l; i++) {
-            for (let j = 0, m = this.current[i].buttons.length; j < m; j++) {
-                if (this.previous[i] === undefined) {
-                    this.previous[i] = [];
-                }
-
-                this.current[i].buttons[j]._wasPressed = this.current[i].buttons[j].isPressed();
-                this.current[i].buttons[j]._wasTouched = this.current[i].buttons[j].isTouched();
-                this.previous[i][j] = this.current[i].buttons[j]._wasPressed;
-            }
-        }
-
-        this.previous.length = this.current.length;
-        this.poll();
+    get value() {
+        return this._button.value;
     }
 
     /**
-     * Poll for the latest data from the gamepad API.
+     * Return true if the button is currently down.
      *
-     * @param {GamePad[]} [pads] - An optional array used to receive the gamepads mapping. This
-     * array will be returned by this function.
-     * @returns {GamePad[]} An array of gamepads and mappings for the model of gamepad that is
-     * attached.
-     * @example
-     * var gamepads = new pc.GamePads();
-     * var pads = gamepads.poll();
+     * @returns {boolean} Return true if the button is currently down.
      */
-    poll(pads = []) {
-        if (pads.length > 0) {
-            pads.length = 0;
-        }
-
-        if (this.gamepadsSupported) {
-            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
-
-            for (let i = 0, len = padDevices.length; i < len; i++) {
-                if (padDevices[i]) {
-                    let pad = this.findByIndex(padDevices[i].index);
-                    pads.push(pad._update(padDevices[i], this.getMap(padDevices[i])));
-                }
-            }
-        }
-
-        return pads;
-    }
-
-    getMap(pad) {
-        for (const code in PRODUCT_CODES) {
-            if (pad.id.indexOf(code) >= 0) {
-                return MAPS[PRODUCT_CODES[code]];
-            }
-        }
-
-        return MAPS.DEFAULT;
+    isPressed() {
+        return this._button.pressed;
     }
 
     /**
-     * Returns true if the button on the pad requested is pressed.
+     * Return true if the button was pressed since the last update.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
-     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
-     * @returns {boolean} True if the button is pressed.
+     * @returns {boolean} Return true if the button was pressed, false if not.
      */
-    isPressed(index, button) {
-        return this.current[index] && this.current[index].isPressed(button);
+    wasPressed() {
+        return this._wasPressed === false && this.isPressed();
     }
 
     /**
-     * Returns true if the button was pressed since the last frame.
+     * Return true if the button was released since the last update.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
-     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
-     * @returns {boolean} True if the button was pressed since the last frame.
+     * @returns {boolean} Return true if the button was released, false if not.
      */
-    wasPressed(index, button) {
-        return this.current[index] && this.current[index].wasPressed(button);
+    wasReleased() {
+        return this._wasPressed === true && !this.isPressed();
     }
 
     /**
-     * Returns true if the button was released since the last frame.
+     * Return true if the button is currently touched.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
-     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
-     * @returns {boolean} True if the button was released since the last frame.
+     * @returns {boolean} Return true if the button is currently touched.
      */
-    wasReleased(index, button) {
-        return this.current[index] && this.current[index].wasReleased(button);
+    isTouched() {
+        return typeof this._button.touched === 'boolean' ? this._button.touched : this._button.value > 0;
     }
 
     /**
-     * Get the value of one of the analogue axes of the pad.
+     * Return true if the button was touched since the last update.
      *
-     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
-     * @param {number} axis - The axis to get the value of, use constants {@link PAD_L_STICK_X}, etc.
-     * @returns {number} The value of the axis between -1 and 1.
+     * @returns {boolean} Return true if the button was touched, false if not.
      */
-    getAxis(index, axis) {
-        return this.current[index] ? this.current[index].getAxis(axis) : 0;
-    }
-
-    /**
-     * Find a connected {@link GamePad} from its identifier.
-     *
-     * @param {string} id - The identifier to search for.
-     * @returns {GamePad|null} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
-     */
-    findById(id) {
-        return this.current.find(gp => gp && gp.id === id) || null;
-    }
-
-    /**
-     * Find a connected {@link GamePad} from its device index.
-     *
-     * @param {number} index - The device index to search for.
-     * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
-     */
-    findByIndex(index) {
-        return this.current.find(gp => gp && gp.index === index) || null;
+    wasTouched() {
+        return this._wasTouched === false && this.isTouched();
     }
 }
 
@@ -381,7 +264,6 @@ class GamePad {
 
     /**
      * @type {number[]} - The values from analog axes present on the GamePad. Values are between -1 and 1.
-     * @readonly
      */
     get axes() {
         return this.pad.axes;
@@ -409,31 +291,33 @@ class GamePad {
                         'duration': duration,
                         'startDelay': options.startDelay || 0,
                         'strongMagnitude': typeof options.strongMagnitude === 'number' ? options.strongMagnitude : intensity,
-                        'weakMagnitude':  typeof options.weakMagnitude === 'number' ? options.weakMagnitude : intensity
-                    });
-                } else {
-                    return actuator.playEffect('vibration', {
-                        'duration': duration,
-                        'startDelay': 0,
-                        'strongMagnitude': intensity,
-                        'weakMagnitude': intensity
+                        'weakMagnitude': typeof options.weakMagnitude === 'number' ? options.weakMagnitude : intensity
                     });
                 }
+
+                return actuator.playEffect('vibration', {
+                    'duration': duration,
+                    'startDelay': 0,
+                    'strongMagnitude': intensity,
+                    'weakMagnitude': intensity
+                });
             } else if (actuator.pulse) {
                 if (options && options.startDelay) {
                     // Custom delay
-                    return new Promise(function(resolve, reject) {
-                        setTimeout(function() {
+                    return new Promise(function (resolve, reject) {
+                        setTimeout(function () {
                             actuator.pulse(intensity, duration).then(resolve).catch(reject);
                         }, options.startDelay);
                     });
-                } else {
-                    return actuator.pulse(intensity, duration);
                 }
+
+                return actuator.pulse(intensity, duration);
             }
         }
 
-        return new Promise(resolve => resolve(false));
+        return new Promise((resolve) => {
+            resolve(false);
+        });
     }
 
     /**
@@ -517,102 +401,218 @@ class GamePad {
 }
 
 /**
- * A GamePadButton stores information about a button from the Gamepad API.
+ * Input handler for accessing GamePad input.
+ *
+ * @augments EventHandler
  */
-class GamePadButton {
+class GamePads extends EventHandler {
     /**
-     * Create a new GamePadButton instance.
-     *
-     * @param {GamepadButton} button - The original Gamepad API gamepad button.
-     * @hideconstructor
+     * Create a new GamePads instance.
      */
-    constructor(button) {
-        /**
-         * Whether this button was pressed on last frame.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this._wasPressed = button.pressed;
+    constructor() {
+        super();
 
         /**
-         * Whether this button was touched on last frame.
+         * Whether gamepads are supported by this device.
          *
          * @type {boolean}
-         * @ignore
          */
-        this._wasTouched = typeof button.touched === 'boolean' ? button.touched : button.value > 0;
+        this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
         /**
-         * The original Gamepad API gamepad button.
+         * The list of current gamepads.
          *
-         * @type {GamepadButton}
-         * @ignore
+         * @type {GamePad[]}
          */
-        this._button = button;
+        this.current = [];
+
+        /**
+         * The list of previous button states.
+         *
+         * @type {boolean[][]}
+         */
+        this.previous = [];
+
+        window.addEventListener('gamepadconnected', (event) => {
+            const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
+
+            while (this.current.findIndex(gp => gp.index === pad.index) !== -1) {
+                this.current.splice(this.current.findIndex(gp => gp.index === pad.index), 1);
+            }
+
+            this.current.push(pad);
+            this.fire('gamepadconnected', pad);
+        });
+
+        window.addEventListener('gamepaddisconnected', (event) => {
+            const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
+
+            if (padIndex !== -1) {
+                this.fire('gamepaddisconnected', this.current[padIndex]);
+                this.current.splice(padIndex, 1);
+            }
+        });
     }
 
     /**
-     * Update the existing GamePadButton Instance.
+     * Fired when a gamepad is connected.
      *
-     * @param {GamepadButton} button - The original Gamepad API gamepad button.
+     * @event GamePads#gamepadconnected
+     * @param {GamePad} gamepad - The gamepad that was just connected.
+     * @example
+     * var onPadConnected = function (pad) {
+     *     // Make the gamepad pulse.
+     * };
+     * app.keyboard.on("gamepadconnected", onPadConnected, this);
+     */
+
+    /**
+     * Fired when a gamepad is disconnected.
+     *
+     * @event GamePads#gamepaddisconnected
+     * @param {GamePad} gamepad - The gamepad that was just disconnected.
+     * @example
+     * var onPadDisconnected = function (pad) {
+     *     // Pause the game.
+     * };
+     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
+     */
+
+    set deadZone(value) {
+        deadZone = value;
+    }
+
+    /**
+     * @type {number} Threshold for axes to return values. Must be between 0 and 1.
      * @ignore
      */
-    _update(button) {
-        this._button = button;
+    get deadZone() {
+        return deadZone;
     }
 
     /**
-     * @type {number} - The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
-     * @readonly
+     * Update the current and previous state of the gamepads. This must be called every frame for
+     * `wasPressed` to work.
      */
-    get value() {
-        return this._button.value;
+    update() {
+        for (let i = 0, l = this.current.length; i < l; i++) {
+            for (let j = 0, m = this.current[i].buttons.length; j < m; j++) {
+                if (this.previous[i] === undefined) {
+                    this.previous[i] = [];
+                }
+
+                this.current[i].buttons[j]._wasPressed = this.current[i].buttons[j].isPressed();
+                this.current[i].buttons[j]._wasTouched = this.current[i].buttons[j].isTouched();
+                this.previous[i][j] = this.current[i].buttons[j]._wasPressed;
+            }
+        }
+
+        this.previous.length = this.current.length;
+        this.poll();
     }
 
     /**
-     * Return true if the button is currently down.
+     * Poll for the latest data from the gamepad API.
      *
-     * @returns {boolean} Return true if the button is currently down.
+     * @param {GamePad[]} [pads] - An optional array used to receive the gamepads mapping. This
+     * array will be returned by this function.
+     * @returns {GamePad[]} An array of gamepads and mappings for the model of gamepad that is
+     * attached.
+     * @example
+     * var gamepads = new pc.GamePads();
+     * var pads = gamepads.poll();
      */
-    isPressed() {
-        return this._button.pressed;
+    poll(pads = []) {
+        if (pads.length > 0) {
+            pads.length = 0;
+        }
+
+        if (this.gamepadsSupported) {
+            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
+
+            for (let i = 0, len = padDevices.length; i < len; i++) {
+                if (padDevices[i]) {
+                    const pad = this.findByIndex(padDevices[i].index);
+                    pads.push(pad._update(padDevices[i], this.getMap(padDevices[i])));
+                }
+            }
+        }
+
+        return pads;
+    }
+
+    getMap(pad) {
+        for (const code in PRODUCT_CODES) {
+            if (pad.id.indexOf(code) >= 0) {
+                return MAPS[PRODUCT_CODES[code]];
+            }
+        }
+
+        return MAPS.DEFAULT;
     }
 
     /**
-     * Return true if the button was pressed since the last update.
+     * Returns true if the button on the pad requested is pressed.
      *
-     * @returns {boolean} Return true if the button was pressed, false if not.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
+     * @returns {boolean} True if the button is pressed.
      */
-    wasPressed() {
-        return this._wasPressed === false && this.isPressed();
+    isPressed(index, button) {
+        return this.current[index] && this.current[index].isPressed(button);
     }
 
     /**
-     * Return true if the button was released since the last update.
+     * Returns true if the button was pressed since the last frame.
      *
-     * @returns {boolean} Return true if the button was released, false if not.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
+     * @returns {boolean} True if the button was pressed since the last frame.
      */
-    wasReleased() {
-        return this._wasPressed === true && !this.isPressed();
+    wasPressed(index, button) {
+        return this.current[index] && this.current[index].wasPressed(button);
     }
 
     /**
-     * Return true if the button is currently touched.
+     * Returns true if the button was released since the last frame.
      *
-     * @returns {boolean} Return true if the button is currently touched.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
+     * @returns {boolean} True if the button was released since the last frame.
      */
-    isTouched() {
-        return typeof this._button.touched === 'boolean' ? this._button.touched : this._button.value > 0;
+    wasReleased(index, button) {
+        return this.current[index] && this.current[index].wasReleased(button);
     }
 
     /**
-     * Return true if the button was touched since the last update.
+     * Get the value of one of the analogue axes of the pad.
      *
-     * @returns {boolean} Return true if the button was touched, false if not.
+     * @param {number} index - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc.
+     * @param {number} axis - The axis to get the value of, use constants {@link PAD_L_STICK_X}, etc.
+     * @returns {number} The value of the axis between -1 and 1.
      */
-    wasTouched() {
-        return this._wasTouched === false && this.isTouched();
+    getAxis(index, axis) {
+        return this.current[index] ? this.current[index].getAxis(axis) : 0;
+    }
+
+    /**
+     * Find a connected {@link GamePad} from its identifier.
+     *
+     * @param {string} id - The identifier to search for.
+     * @returns {GamePad|null} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
+     */
+    findById(id) {
+        return this.current.find(gp => gp && gp.id === id) || null;
+    }
+
+    /**
+     * Find a connected {@link GamePad} from its device index.
+     *
+     * @param {number} index - The device index to search for.
+     * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
+     */
+    findByIndex(index) {
+        return this.current.find(gp => gp && gp.index === index) || null;
     }
 }
 
