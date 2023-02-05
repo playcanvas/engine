@@ -902,11 +902,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
             kinematic[i]._updateKinematic();
         }
 
+        // Update all dynamic bodies based on their current entity transform
+        const dynamic = this._dynamic;
+        for (i = 0, len = dynamic.length; i < len; i++) {
+            if (dynamic[i].entity._wasDirty)
+                dynamic[i].syncEntityToBody();
+        }
+
         // Step the physics simulation
         this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
-        const dynamic = this._dynamic;
         for (i = 0, len = dynamic.length; i < len; i++) {
             dynamic[i]._updateDynamic();
         }
