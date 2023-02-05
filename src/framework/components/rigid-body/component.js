@@ -894,6 +894,8 @@ class RigidBodyComponent extends Component {
             }
             body.activate();
         }
+
+        this.entity._wasDirty = false;
     }
 
     /**
