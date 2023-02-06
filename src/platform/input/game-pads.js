@@ -241,7 +241,9 @@ class GamePad {
          * @type {GamePadButton[]}
          * @readonly
          */
-        this.buttons = gamepad.buttons.map(b => b ? new GamePadButton(b) : null);
+        this.buttons = gamepad.buttons.map((b) => {
+            return b ? new GamePadButton(b) : null;
+        });
 
         /**
          * The gamepad mapping detected by the browser. Value is either "standard" or "xr-standard".
@@ -281,8 +283,6 @@ class GamePad {
      * @ignore
      */
     _update(gamepad, map) {
-        this.id = gamepad.id;
-        this.index = gamepad.index;
         this.mapping = gamepad.mapping === 'xr-standard' ? 'xr-standard' : 'standard';
         this.map = map;
         this.hand = gamepad.hand || '';
