@@ -486,6 +486,8 @@ class GamePads extends EventHandler {
                 this.current.splice(padIndex, 1);
             }
         });
+
+        this.poll();
     }
 
     /**
@@ -567,7 +569,14 @@ class GamePads extends EventHandler {
             for (let i = 0, len = padDevices.length; i < len; i++) {
                 if (padDevices[i]) {
                     const pad = this.findByIndex(padDevices[i].index);
-                    pads.push(pad._update(padDevices[i], this.getMap(padDevices[i])));
+
+                    if (pad) {
+                        pads.push(pad._update(padDevices[i], this.getMap(padDevices[i])));
+                    } else {
+                        const nPad = new GamePad(padDevices[i], this.getMap(padDevices[i]));
+                        this.current.push(nPad);
+                        pads.push(nPad);
+                    }
                 }
             }
         }
