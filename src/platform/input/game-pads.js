@@ -1,4 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED } from './constants.js';
 
 const MAPS = {
     DEFAULT: {
@@ -441,14 +442,14 @@ class GamePads extends EventHandler {
             }
 
             this.current.push(pad);
-            this.fire('gamepadconnected', pad);
+            this.fire(EVENT_GAMEPADCONNECTED, pad);
         });
 
         window.addEventListener('gamepaddisconnected', (event) => {
             const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
 
             if (padIndex !== -1) {
-                this.fire('gamepaddisconnected', this.current[padIndex]);
+                this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
                 this.current.splice(padIndex, 1);
             }
         });
