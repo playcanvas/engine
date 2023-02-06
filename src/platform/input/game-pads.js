@@ -77,6 +77,30 @@ const MAPS = {
             'PAD_R_STICK_X',
             'PAD_R_STICK_Y'
         ]
+    },
+
+    DEFAULT_XR: {
+        buttons: [
+            // Back buttons
+            'XRPAD_TRIGGER',
+            'XRPAD_SQUEEZE',
+
+            // Axes buttons
+            'XRPAD_TOUCHPAD_BUTTON',
+            'XRPAD_STICK_BUTTON',
+
+            // Face buttons
+            'XRPAD_A',
+            'XRPAD_B'
+        ],
+
+        axes: [
+            // Analogue Sticks
+            'XRPAD_TOUCHPAD_X',
+            'XRPAD_TOUCHPAD_Y',
+            'XRPAD_STICK_X',
+            'XRPAD_STICK_Y'
+        ]
     }
 };
 
@@ -217,7 +241,7 @@ class GamePad {
          * @type {GamePadButton[]}
          * @readonly
          */
-        this.buttons = gamepad.buttons.map(b => new GamePadButton(b));
+        this.buttons = gamepad.buttons.map(b => b ? new GamePadButton(b) : null);
 
         /**
          * The gamepad mapping detected by the browser. Value is either "standard" or "xr-standard".
@@ -232,6 +256,13 @@ class GamePad {
          * @type {object}
          */
         this.map = map;
+
+        /**
+         * The hand this gamepad is usually handled on. Only relevant for XR pads. Value is either "left", "right" or "".
+         *
+         * @type {string}
+         */
+        this.hand = gamepad.hand || '';
 
         /**
          * The original Gamepad API gamepad.
@@ -254,10 +285,12 @@ class GamePad {
         this.index = gamepad.index;
         this.mapping = gamepad.mapping === 'xr-standard' ? 'xr-standard' : 'standard';
         this.map = map;
+        this.hand = gamepad.hand || '';
         this.pad = gamepad;
 
         for (let i = 0, l = this.buttons.length; i < l; i++) {
-            this.buttons[i]._update(gamepad.buttons[i]);
+            if (this.buttons[i])
+                this.buttons[i]._update(gamepad.buttons[i]);
         }
 
         return this;
@@ -548,6 +581,9 @@ class GamePads extends EventHandler {
                 return MAPS[PRODUCT_CODES[code]];
             }
         }
+
+        if (pad.mapping === 'xr-standard')
+            return MAPS.DEFAULT_XR;
 
         return MAPS.DEFAULT;
     }
