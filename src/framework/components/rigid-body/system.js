@@ -9,7 +9,7 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
-import { BODYFLAG_NORESPONSE_OBJECT, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION } from './constants.js';
+import { BODYFLAG_NORESPONSE_OBJECT, BODYSTATE_ACTIVE_TAG } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
@@ -834,8 +834,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Check for contacts.
         this.dynamicsWorld.contactTest(shapeTestBody, resultCallback);
 
-        // Disable body and remove shape.
-        shapeTestBody.forceActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+        // Remove body shape.
         shapeTestBody.setCollisionShape(null);
 
         // Destroy unused variables for performance.
