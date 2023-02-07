@@ -543,13 +543,6 @@ class GamePads extends EventHandler {
          */
         this.current = [];
 
-        /**
-         * The list of previous button states.
-         *
-         * @type {boolean[][]}
-         */
-        this.previous = [];
-
         window.addEventListener('gamepadconnected', (event) => {
             const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
 
@@ -610,23 +603,27 @@ class GamePads extends EventHandler {
     }
 
     /**
+     * @type {number[][]} The list of previous button states.
+     * @ignore
+     */
+    get previous() {
+        return this.current.map((c) => {
+            return c.buttons.map(b => b ? b._wasPressed : false);
+        });
+    }
+
+    /**
      * Update the current and previous state of the gamepads. This must be called every frame for
      * `wasPressed` to work.
      */
     update() {
         for (let i = 0, l = this.current.length; i < l; i++) {
             for (let j = 0, m = this.current[i].buttons.length; j < m; j++) {
-                if (this.previous[i] === undefined) {
-                    this.previous[i] = [];
-                }
-
                 this.current[i].buttons[j]._wasPressed = this.current[i].buttons[j].isPressed();
                 this.current[i].buttons[j]._wasTouched = this.current[i].buttons[j].isTouched();
-                this.previous[i][j] = this.current[i].buttons[j]._wasPressed;
             }
         }
 
-        this.previous.length = this.current.length;
         this.poll();
     }
 
