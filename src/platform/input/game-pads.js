@@ -391,9 +391,7 @@ class GamePad {
             }
         }
 
-        return new Promise((resolve) => {
-            resolve(false);
-        });
+        return Promise.resolve(false);
     }
 
     /**
