@@ -608,13 +608,15 @@ class GamePads extends EventHandler {
      */
     get previous() {
         return this.current.map((c) => {
-            return c.buttons.map(b => b ? b._wasPressed : false);
+            return c.buttons.map((b) => {
+                return b ? b._wasPressed : false;
+            });
         });
     }
 
     /**
-     * Update the current and previous state of the gamepads. This must be called every frame for
-     * `wasPressed` to work.
+     * Update the previous state of the gamepads. This must be called every frame for
+     * `wasPressed` as `wasTouched` to work.
      */
     update() {
         for (let i = 0, l = this.current.length; i < l; i++) {
