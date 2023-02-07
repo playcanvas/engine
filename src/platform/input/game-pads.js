@@ -283,6 +283,14 @@ class GamePad {
         });
 
         /**
+         * Previous value for the analog axes present on the gamepad. Values are between -1 and 1.
+         *
+         * @type {number[]}
+         * @ignore
+         */
+        this._previousAxes = [ ...gamepad.axes ];
+
+        /**
          * The gamepad mapping detected by the browser. Value is either "standard" or "xr-standard".
          *
          * @type {string}
@@ -321,6 +329,11 @@ class GamePad {
     _update(gamepad) {
         this.mapping = gamepad.mapping === 'xr-standard' ? 'xr-standard' : 'standard';
         this.hand = gamepad.hand || 'none';
+
+        // Store previous values for axes for dual buttons.
+        this._previousAxes.length = 0;
+        this._previousAxes.push(...this.pad.axes);
+
         this.pad = gamepad;
 
         for (let i = 0, l = this.buttons.length; i < l; i++) {
@@ -342,7 +355,35 @@ class GamePad {
      * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
      */
     get buttons() {
-        return this.map.buttons.map(b => this._buttons[MAPS.INDEXES.buttons[b]] || null);
+        return this.map.buttons.map((b) => {
+            const button = this._buttons[MAPS.INDEXES.buttons[b]];
+
+            if (button) {
+                return button;
+            }
+
+            const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(b) !== -1);
+            if (dualIndex !== -1) {
+                const index = this.map.dualButtons[dualIndex].indexOf(b);
+                const max = index === 0 ? 0 : 1;
+                const min = index === 0 ? -1 : 0;
+
+                const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
+                const axisButton = new GamePadButton({
+                    'pressed': value === 1,
+                    'touched': value > 0,
+                    'value': value
+                });
+
+                const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
+                axisButton._wasPressed = previousValue === 1;
+                axisButton._wasTouched = previousValue > 0;
+
+                return axisButton;
+            }
+
+            return null;
+        });
     }
 
     /**
