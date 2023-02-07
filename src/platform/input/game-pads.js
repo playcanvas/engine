@@ -288,7 +288,7 @@ class GamePad {
          * @type {number[]}
          * @ignore
          */
-        this._previousAxes = [ ...gamepad.axes ];
+        this._previousAxes = [...gamepad.axes];
 
         /**
          * The gamepad mapping detected by the browser. Value is either "standard" or "xr-standard".
