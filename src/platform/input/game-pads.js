@@ -348,42 +348,44 @@ class GamePad {
      * @type {number[]} - The values from analog axes present on the GamePad. Values are between -1 and 1.
      */
     get axes() {
-        return this.map.axes.map(a => this.pad.axes[MAPS.INDEXES.axes[a]] || 0);
+        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS.INDEXES.axes[a]] || 0) : [];
     }
 
     /**
      * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
      */
     get buttons() {
-        return this.map.buttons.map((b) => {
+        return this.map.buttons ? this.map.buttons.map((b) => {
             const button = this._buttons[MAPS.INDEXES.buttons[b]];
 
             if (button) {
                 return button;
             }
 
-            const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(b) !== -1);
-            if (dualIndex !== -1) {
-                const index = this.map.dualButtons[dualIndex].indexOf(b);
-                const max = index === 0 ? 0 : 1;
-                const min = index === 0 ? -1 : 0;
+            if (this.map.dualButtons) {
+                const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(b) !== -1);
+                if (dualIndex !== -1) {
+                    const index = this.map.dualButtons[dualIndex].indexOf(b);
+                    const max = index === 0 ? 0 : 1;
+                    const min = index === 0 ? -1 : 0;
 
-                const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
-                const axisButton = new GamePadButton({
-                    'pressed': value === 1,
-                    'touched': value > 0,
-                    'value': value
-                });
+                    const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
+                    const axisButton = new GamePadButton({
+                        'pressed': value === 1,
+                        'touched': value > 0,
+                        'value': value
+                    });
 
-                const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
-                axisButton._wasPressed = previousValue === 1;
-                axisButton._wasTouched = previousValue > 0;
+                    const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
+                    axisButton._wasPressed = previousValue === 1;
+                    axisButton._wasTouched = previousValue > 0;
 
-                return axisButton;
+                    return axisButton;
+                }
             }
 
             return null;
-        });
+        }) : [];
     }
 
     /**
