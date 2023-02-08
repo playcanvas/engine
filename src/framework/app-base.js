@@ -1979,6 +1979,11 @@ class AppBase extends EventHandler {
             this.elementInput = null;
         }
 
+        if (this.gamepads) {
+            this.gamepads.destroy();
+            this.gamepads = null;
+        }
+
         if (this.controller) {
             this.controller = null;
         }
