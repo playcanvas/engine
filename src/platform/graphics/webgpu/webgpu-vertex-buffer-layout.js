@@ -1,10 +1,7 @@
-import { Debug } from "../../../core/debug.js";
-
 import {
     semanticToLocation,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, vertexTypesNames
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../constants.js';
-import { DebugGraphics } from "../debug-graphics.js";
 
 // map of TYPE_*** to GPUVertexFormat
 const gpuVertexFormats = [];
