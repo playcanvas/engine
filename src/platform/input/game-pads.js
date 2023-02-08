@@ -195,55 +195,57 @@ class GamePadButton {
     }
 
     /**
-     * @type {number} - The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
+     * The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
+     *
+     * @type {number}
      */
     get value() {
         return this._button.value;
     }
 
     /**
-     * Return true if the button is currently down.
+     * Whether the button is currently down.
      *
-     * @returns {boolean} Return true if the button is currently down.
+     * @type {boolean}
      */
-    isPressed() {
+    get pressed() {
         return this._button.pressed;
     }
 
     /**
-     * Return true if the button was pressed since the last update.
+     * Whether the button was pressed, false if not.
      *
-     * @returns {boolean} Return true if the button was pressed, false if not.
+     * @type {boolean}
      */
-    wasPressed() {
-        return this._previouslyPressed === false && this.isPressed();
+    get wasPressed() {
+        return this._previouslyPressed === false && this.pressed;
     }
 
     /**
-     * Return true if the button was released since the last update.
+     * Whether the button was released since the last update.
      *
-     * @returns {boolean} Return true if the button was released, false if not.
+     * @type {boolean}
      */
-    wasReleased() {
-        return this._previouslyPressed === true && !this.isPressed();
+    get wasReleased() {
+        return this._previouslyPressed === true && !this.pressed;
     }
 
     /**
-     * Return true if the button is currently touched.
+     * Whether the button is currently touched.
      *
-     * @returns {boolean} Return true if the button is currently touched.
+     * @type {boolean}
      */
-    isTouched() {
+    get touched() {
         return typeof this._button.touched === 'boolean' ? this._button.touched : this._button.value > 0;
     }
 
     /**
-     * Return true if the button was touched since the last update.
+     * Whether the button was touched since the last update.
      *
-     * @returns {boolean} Return true if the button was touched, false if not.
+     * @type {boolean}
      */
-    wasTouched() {
-        return this._previouslyTouched === false && this.isTouched();
+    get wasTouched() {
+        return this._previouslyTouched === false && this.touched;
     }
 }
 
@@ -467,7 +469,7 @@ class GamePad {
      */
     isPressed(button) {
         const b = this.getButton(button);
-        return b ? b.isPressed() : false;
+        return b ? b.pressed : false;
     }
 
     /**
@@ -478,7 +480,7 @@ class GamePad {
      */
     wasPressed(button) {
         const b = this.getButton(button);
-        return b ? b.wasPressed() : false;
+        return b ? b.wasPressed : false;
     }
 
     /**
@@ -489,7 +491,7 @@ class GamePad {
      */
     wasReleased(button) {
         const b = this.getButton(button);
-        return b ? b.wasReleased() : false;
+        return b ? b.wasReleased : false;
     }
 
     /**
@@ -500,7 +502,7 @@ class GamePad {
      */
     isTouched(button) {
         const b = this.getButton(button);
-        return b ? b.isTouched() : false;
+        return b ? b.touched : false;
     }
 
     /**
@@ -511,7 +513,7 @@ class GamePad {
      */
     wasTouched(button) {
         const b = this.getButton(button);
-        return b ? b.wasTouched() : false;
+        return b ? b.wasTouched : false;
     }
 
     /**
@@ -647,8 +649,8 @@ class GamePads extends EventHandler {
 
             for (let j = 0, m = _buttons.length; j < m; j++) {
                 const button = _buttons[j];
-                button._previouslyPressed = button.isPressed();
-                button._previouslyTouched = button.isTouched();
+                button._previouslyPressed = button.pressed;
+                button._previouslyTouched = button.touched;
             }
 
             // Store previous values for axes for dual buttons.
