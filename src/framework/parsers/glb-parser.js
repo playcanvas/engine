@@ -1383,7 +1383,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 };
 
 // create the anim structure
-const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes) {
+const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes, gltfNodes) {
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
@@ -1453,20 +1453,20 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return path;
     };
 
-    const retrieveWeightName = (nodeName, weightIndex) => {
-        if (!meshes) return weightIndex;
-        for (let i = 0; i < meshes.length; i++) {
-            const mesh = meshes[i];
-            if (mesh.name === nodeName && mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
+    const retrieveWeightName = (gltfNode, weightIndex) => {
+        if (meshes && meshes[gltfNode.mesh]) {
+            const mesh = meshes[gltfNode.mesh];
+            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
                 return `name.${mesh.extras.targetNames[weightIndex]}`;
             }
         }
+
         return weightIndex;
     };
 
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
-    const createMorphTargetCurves = (curve, node, entityPath) => {
+    const createMorphTargetCurves = (curve, gltfNode, entityPath) => {
         const out = outputMap[curve.output];
         if (!out) {
             Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
@@ -1489,7 +1489,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 paths: [{
                     entityPath: entityPath,
                     component: 'graph',
-                    propertyPath: [`weight.${retrieveWeightName(node.name, j)}`]
+                    propertyPath: [`weight.${retrieveWeightName(gltfNode, j)}`]
                 }],
                 // each morph target curve input can use the same sampler.input from the channel they were all in
                 input: curve.input,
@@ -1510,10 +1510,11 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const curve = curveMap[channel.sampler];
 
         const node = nodes[target.node];
+        const gltfNode = gltfNodes[target.node];
         const entityPath = constructNodePath(node);
 
         if (target.path.startsWith('weights')) {
-            createMorphTargetCurves(curve, node, entityPath);
+            createMorphTargetCurves(curve, gltfNode, entityPath);
             // as all individual morph targets in this morph curve have their own curve now, this morph curve should be flagged
             // so it's not included in the final output
             curveMap[channel.sampler].morphCurve = true;
@@ -1746,6 +1747,10 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
         return [];
     }
 
+    if (options.skipMeshes) {
+        return [];
+    }
+
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
 
@@ -1799,7 +1804,7 @@ const createAnimations = function (gltf, nodes, bufferViews, options) {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes);
+        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes, gltf.nodes);
         if (postprocess) {
             postprocess(gltfAnimation, animation);
         }

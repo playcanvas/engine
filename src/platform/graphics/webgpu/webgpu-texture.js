@@ -53,12 +53,6 @@ gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
 gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
 gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
 
-// map of ADDRESS_*** to GPUAddressMode
-const gpuAddressModes = [];
-gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
-gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
-gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
-
 /**
  * A WebGPU implementation of the Texture.
  *

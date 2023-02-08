@@ -245,6 +245,18 @@ export function makeArray(arr) {
     return Array.prototype.slice.call(arr);
 }
 
+export function createStyle(cssString) {
+    const result = document.createElement('style');
+    result.type = 'text/css';
+    if (result.styleSheet) {
+        result.styleSheet.cssText = cssString;
+    } else {
+        result.appendChild(document.createTextNode(cssString));
+    }
+
+    return result;
+}
+
 // MATH
 
 math.INV_LOG2 = Math.LOG2E;
