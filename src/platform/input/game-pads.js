@@ -601,7 +601,7 @@ class GamePads extends EventHandler {
         });
 
         window.addEventListener('gamepaddisconnected', (event) => {
-            let padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
+            const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
 
             if (padIndex !== -1) {
                 this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
