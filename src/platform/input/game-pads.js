@@ -190,8 +190,18 @@ class GamePadButton {
      * @param {GamepadButton} button - The original Gamepad API gamepad button.
      * @ignore
      */
-    _update(button) {
+    update(button) {
         this._button = button;
+    }
+
+    /**
+     * Update the previous values for this button.
+     *
+     * @ignore
+     */
+    updatePrevious() {
+        this._previouslyPressed = this.pressed;
+        this._previouslyTouched = this.touched;
     }
 
     /**
@@ -329,12 +339,15 @@ class GamePad {
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
      * @ignore
      */
-    _update(gamepad) {
+    update(gamepad) {
         this.pad = gamepad;
+        const buttons = this._buttons;
 
-        for (let i = 0, l = this._buttons.length; i < l; i++) {
-            if (this._buttons[i])
-                this._buttons[i]._update(gamepad.buttons[i]);
+        for (let i = 0, l = buttons.length; i < l; i++) {
+            const button = this._buttons[i];
+
+            if (button)
+                button.update(gamepad.buttons[i]);
         }
 
         return this;
@@ -345,14 +358,12 @@ class GamePad {
      *
      * @ignore
      */
-    _updatePrevious() {
+    updatePrevious() {
         const buttons = this._buttons;
         const previousAxes = this._previousAxes;
 
-        for (let j = 0, m = buttons.length; j < m; j++) {
-            const button = buttons[j];
-            button._previouslyPressed = button.pressed;
-            button._previouslyTouched = button.touched;
+        for (let i = 0, m = buttons.length; i < m; i++) {
+            buttons[i].updatePrevious();
         }
 
         // Store previous values for axes for dual buttons.
@@ -664,7 +675,7 @@ class GamePads extends EventHandler {
      */
     update() {
         for (let i = 0, l = this.current.length; i < l; i++) {
-            this.current[i]._updatePrevious();
+            this.current[i].updatePrevious();
         }
 
         this.poll();
@@ -694,7 +705,7 @@ class GamePads extends EventHandler {
                     const pad = this.findByIndex(padDevices[i].index);
 
                     if (pad) {
-                        pads.push(pad._update(padDevices[i]));
+                        pads.push(pad.update(padDevices[i]));
                     } else {
                         const nPad = new GamePad(padDevices[i], this.getMap(padDevices[i]));
                         this.current.push(nPad);
