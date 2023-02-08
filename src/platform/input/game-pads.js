@@ -456,10 +456,11 @@ class GamePad {
             return button;
         }
 
-        if (this.map.dualButtons) {
-            const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
+        const dualButtons = this.map.dualButtons;
+        if (dualButtons) {
+            const dualIndex = dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
             if (dualIndex !== -1) {
-                const index = this.map.dualButtons[dualIndex].indexOf(indexName);
+                const index = dualButtons[dualIndex].indexOf(indexName);
                 const max = index === 0 ? 0 : 1;
                 const min = index === 0 ? -1 : 0;
 
@@ -488,7 +489,8 @@ class GamePad {
      * @returns {GamePadButton} The button for the searched index. Can be null.
      */
     getButton(index) {
-        return this.map.buttons && this.map.buttons[index] ? this._getButton(this.map.buttons[index]) : null;
+        const buttons = this.map.buttons;
+        return buttons && buttons[index] ? this._getButton(buttons[index]) : null;
     }
 
     /**
@@ -660,14 +662,15 @@ class GamePads extends EventHandler {
      */
     _ongamepadconnected(event) {
         const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
+        const current = this.current;
 
-        let padIndex = this.current.findIndex(gp => gp.index === pad.index);
+        let padIndex = current.findIndex(gp => gp.index === pad.index);
         while (padIndex !== -1) {
-            this.current.splice(padIndex, 1);
-            padIndex = this.current.findIndex(gp => gp.index === pad.index);
+            current.splice(padIndex, 1);
+            padIndex = current.findIndex(gp => gp.index === pad.index);
         }
 
-        this.current.push(pad);
+        current.push(pad);
         this.fire(EVENT_GAMEPADCONNECTED, pad);
     }
 
@@ -678,11 +681,12 @@ class GamePads extends EventHandler {
      * @ignore
      */
     _ongamepaddisconnected(event) {
-        const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
+        const current = this.current;
+        const padIndex = current.findIndex(gp => gp.index === event.gamepad.index);
 
         if (padIndex !== -1) {
-            this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
-            this.current.splice(padIndex, 1);
+            this.fire(EVENT_GAMEPADDISCONNECTED, current[padIndex]);
+            current.splice(padIndex, 1);
         }
     }
 
@@ -691,8 +695,9 @@ class GamePads extends EventHandler {
      * `wasPressed` as `wasTouched` to work.
      */
     update() {
-        for (let i = 0, l = this.current.length; i < l; i++) {
-            this.current[i].updatePrevious();
+        const current = this.current;
+        for (let i = 0, l = current.length; i < l; i++) {
+            current[i].updatePrevious();
         }
 
         this.poll();
@@ -766,7 +771,8 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(orderIndex, button) {
-        return this.current[orderIndex] && this.current[orderIndex].isPressed(button);
+        const pad = this.current[orderIndex];
+        return pad && pad.isPressed(button);
     }
 
     /**
@@ -777,7 +783,8 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button was pressed since the last frame.
      */
     wasPressed(orderIndex, button) {
-        return this.current[orderIndex] && this.current[orderIndex].wasPressed(button);
+        const pad = this.current[orderIndex];
+        return pad && pad.wasPressed(button);
     }
 
     /**
@@ -788,7 +795,8 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button was released since the last frame.
      */
     wasReleased(orderIndex, button) {
-        return this.current[orderIndex] && this.current[orderIndex].wasReleased(button);
+        const pad = this.current[orderIndex];
+        return pad && pad.wasReleased(button);
     }
 
     /**
@@ -799,7 +807,8 @@ class GamePads extends EventHandler {
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(orderIndex, axis) {
-        return this.current[orderIndex] ? this.current[orderIndex].getAxis(axis) : 0;
+        const pad = this.current[orderIndex];
+        return pad ? pad.getAxis(axis) : 0;
     }
 
     /**
