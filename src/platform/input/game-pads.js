@@ -349,7 +349,7 @@ class GamePad {
      * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
      */
     get buttons() {
-        return this.map.buttons ? this.map.buttons.map((b) => this._getButton(b)) : [];
+        return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : [];
     }
 
     /**
@@ -418,33 +418,31 @@ class GamePad {
      * @ignore
      */
     _getButton(indexName) {
-        if (indexName) {
-            const button = this._buttons[MAPS_INDEXES.buttons[indexName]];
+        const button = this._buttons[MAPS_INDEXES.buttons[indexName]];
 
-            if (button) {
-                return button;
-            }
+        if (button) {
+            return button;
+        }
 
-            if (this.map.dualButtons) {
-                const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
-                if (dualIndex !== -1) {
-                    const index = this.map.dualButtons[dualIndex].indexOf(indexName);
-                    const max = index === 0 ? 0 : 1;
-                    const min = index === 0 ? -1 : 0;
+        if (this.map.dualButtons) {
+            const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
+            if (dualIndex !== -1) {
+                const index = this.map.dualButtons[dualIndex].indexOf(indexName);
+                const max = index === 0 ? 0 : 1;
+                const min = index === 0 ? -1 : 0;
 
-                    const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
-                    const axisButton = new GamePadButton({
-                        'pressed': value === 1,
-                        'touched': value > 0,
-                        'value': value
-                    });
+                const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
+                const axisButton = new GamePadButton({
+                    'pressed': value === 1,
+                    'touched': value > 0,
+                    'value': value
+                });
 
-                    const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
-                    axisButton._wasPressed = previousValue === 1;
-                    axisButton._wasTouched = previousValue > 0;
+                const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
+                axisButton._wasPressed = previousValue === 1;
+                axisButton._wasTouched = previousValue > 0;
 
-                    return axisButton;
-                }
+                return axisButton;
             }
         }
 
@@ -458,7 +456,7 @@ class GamePad {
      * @returns {GamePadButton} The button for the searched index. Can be null.
      */
     getButton(index) {
-        return this.map.buttons ? this._getButton(this.map.buttons[index]) : null;
+        return this.map.buttons && this.map.buttons[index] ? this._getButton(this.map.buttons[index]) : null;
     }
 
     /**
