@@ -556,7 +556,8 @@ class GamePad {
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(axis) {
-        return this.axes[axis] && Math.abs(this.axes[axis]) > deadZone ? this.axes[axis] : 0;
+        const a = this.axes[axis]
+        return a && Math.abs(a) > deadZone ? a : 0;
     }
 }
 
@@ -589,8 +590,10 @@ class GamePads extends EventHandler {
         window.addEventListener('gamepadconnected', (event) => {
             const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
 
-            while (this.current.findIndex(gp => gp.index === pad.index) !== -1) {
-                this.current.splice(this.current.findIndex(gp => gp.index === pad.index), 1);
+            let padIndex = this.current.findIndex(gp => gp.index === pad.index);
+            while (padIndex !== -1) {
+                this.current.splice(padIndex, 1);
+                padIndex = this.current.findIndex(gp => gp.index === pad.index);
             }
 
             this.current.push(pad);
@@ -598,11 +601,15 @@ class GamePads extends EventHandler {
         });
 
         window.addEventListener('gamepaddisconnected', (event) => {
-            const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
+            let padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
 
             if (padIndex !== -1) {
                 this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
-                this.current.splice(padIndex, 1);
+
+                while (padIndex !== -1) {
+                    this.current.splice(padIndex, 1);
+                    padIndex = this.current.findIndex(gp => gp.index === pad.index);
+                }
             }
         });
 
