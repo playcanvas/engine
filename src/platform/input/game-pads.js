@@ -28,14 +28,14 @@ const MAPS_INDEXES = {
         XRPAD_B
     },
     axes: {
-        'PAD_L_STICK_X': PAD_L_STICK_X,
-        'PAD_L_STICK_Y': PAD_L_STICK_Y,
-        'PAD_R_STICK_X': PAD_R_STICK_X,
-        'PAD_R_STICK_Y': PAD_R_STICK_Y,
-        'XRPAD_TOUCHPAD_X': XRPAD_TOUCHPAD_X,
-        'XRPAD_TOUCHPAD_Y': XRPAD_TOUCHPAD_Y,
-        'XRPAD_STICK_X': XRPAD_STICK_X,
-        'XRPAD_STICK_Y': XRPAD_STICK_Y
+        PAD_L_STICK_X,
+        PAD_L_STICK_Y,
+        PAD_R_STICK_X,
+        PAD_R_STICK_Y,
+        XRPAD_TOUCHPAD_X,
+        XRPAD_TOUCHPAD_Y,
+        XRPAD_STICK_X,
+        XRPAD_STICK_Y
     }
 };
 
