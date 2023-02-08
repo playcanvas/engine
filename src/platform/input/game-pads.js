@@ -650,7 +650,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * @type {number[][]} The list of previous button states.
+     * @type {boolean[][]} The list of previous button states.
      * @ignore
      */
     get previous() {
