@@ -596,27 +596,11 @@ class GamePads extends EventHandler {
          */
         this.current = [];
 
-        window.addEventListener('gamepadconnected', (event) => {
-            const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
+        this._ongamepadconnectedHandler = this._ongamepadconnected.bind(this);
+        this._ongamepaddisconnectedHandler = this._ongamepaddisconnected.bind(this);
 
-            let padIndex = this.current.findIndex(gp => gp.index === pad.index);
-            while (padIndex !== -1) {
-                this.current.splice(padIndex, 1);
-                padIndex = this.current.findIndex(gp => gp.index === pad.index);
-            }
-
-            this.current.push(pad);
-            this.fire(EVENT_GAMEPADCONNECTED, pad);
-        });
-
-        window.addEventListener('gamepaddisconnected', (event) => {
-            const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
-
-            if (padIndex !== -1) {
-                this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
-                this.current.splice(padIndex, 1);
-            }
-        });
+        window.addEventListener('gamepadconnected', this._ongamepadconnectedHandler, false);
+        window.addEventListener('gamepaddisconnected', this._ongamepadconnectedHandler, false);
 
         this.poll();
     }
@@ -670,6 +654,40 @@ class GamePads extends EventHandler {
     }
 
     /**
+     * Callback function when a gamepad is connecting.
+     *
+     * @param {GamepadEvent} event - The event containing the connecting gamepad.
+     * @ignore
+     */
+    _ongamepadconnected(event) {
+        const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
+
+        let padIndex = this.current.findIndex(gp => gp.index === pad.index);
+        while (padIndex !== -1) {
+            this.current.splice(padIndex, 1);
+            padIndex = this.current.findIndex(gp => gp.index === pad.index);
+        }
+
+        this.current.push(pad);
+        this.fire(EVENT_GAMEPADCONNECTED, pad);
+    }
+
+    /**
+     * Callback function when a gamepad is connection.
+     *
+     * @param {GamepadEvent} event - The event containing the disconnecting gamepad.
+     * @ignore
+     */
+    _ongamepaddisconnected(event) {
+        const padIndex = this.current.findIndex(gp => gp.index === event.gamepad.index);
+
+        if (padIndex !== -1) {
+            this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
+            this.current.splice(padIndex, 1);
+        }
+    }
+
+    /**
      * Update the previous state of the gamepads. This must be called every frame for
      * `wasPressed` as `wasTouched` to work.
      */
@@ -716,6 +734,16 @@ class GamePads extends EventHandler {
         }
 
         return pads;
+    }
+
+    /**
+     * Destroy the event listeners.
+     *
+     * @ignore
+     */
+    destroy() {
+        window.removeEventListener('gamepadconnected', this._ongamepadconnectedHandler, false);
+        window.removeEventListener('gamepaddisconnected', this._ongamepaddisconnectedHandler, false);
     }
 
     getMap(pad) {
