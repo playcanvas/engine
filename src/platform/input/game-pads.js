@@ -1,44 +1,45 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 
-const MAPS = {
-    INDEXES: {
-        buttons: {
-            'PAD_FACE_1': PAD_FACE_1,
-            'PAD_FACE_2': PAD_FACE_2,
-            'PAD_FACE_3': PAD_FACE_3,
-            'PAD_FACE_4': PAD_FACE_4,
-            'PAD_L_SHOULDER_1': PAD_L_SHOULDER_1,
-            'PAD_R_SHOULDER_1': PAD_R_SHOULDER_1,
-            'PAD_L_SHOULDER_2': PAD_L_SHOULDER_2,
-            'PAD_R_SHOULDER_2': PAD_R_SHOULDER_2,
-            'PAD_SELECT': PAD_SELECT,
-            'PAD_START': PAD_START,
-            'PAD_L_STICK_BUTTON': PAD_L_STICK_BUTTON,
-            'PAD_R_STICK_BUTTON': PAD_R_STICK_BUTTON,
-            'PAD_UP': PAD_UP,
-            'PAD_DOWN': PAD_DOWN,
-            'PAD_LEFT': PAD_LEFT,
-            'PAD_RIGHT': PAD_RIGHT,
-            'PAD_VENDOR': PAD_VENDOR,
-            'XRPAD_TRIGGER': XRPAD_TRIGGER,
-            'XRPAD_SQUEEZE': XRPAD_SQUEEZE,
-            'XRPAD_TOUCHPAD_BUTTON': XRPAD_TOUCHPAD_BUTTON,
-            'XRPAD_STICK_BUTTON': XRPAD_STICK_BUTTON,
-            'XRPAD_A': XRPAD_A,
-            'XRPAD_B': XRPAD_B
-        },
-        axes: {
-            'PAD_L_STICK_X': PAD_L_STICK_X,
-            'PAD_L_STICK_Y': PAD_L_STICK_Y,
-            'PAD_R_STICK_X': PAD_R_STICK_X,
-            'PAD_R_STICK_Y': PAD_R_STICK_Y,
-            'XRPAD_TOUCHPAD_X': XRPAD_TOUCHPAD_X,
-            'XRPAD_TOUCHPAD_Y': XRPAD_TOUCHPAD_Y,
-            'XRPAD_STICK_X': XRPAD_STICK_X,
-            'XRPAD_STICK_Y': XRPAD_STICK_Y
-        }
+const MAPS_INDEXES: {
+    buttons: {
+        'PAD_FACE_1': PAD_FACE_1,
+        'PAD_FACE_2': PAD_FACE_2,
+        'PAD_FACE_3': PAD_FACE_3,
+        'PAD_FACE_4': PAD_FACE_4,
+        'PAD_L_SHOULDER_1': PAD_L_SHOULDER_1,
+        'PAD_R_SHOULDER_1': PAD_R_SHOULDER_1,
+        'PAD_L_SHOULDER_2': PAD_L_SHOULDER_2,
+        'PAD_R_SHOULDER_2': PAD_R_SHOULDER_2,
+        'PAD_SELECT': PAD_SELECT,
+        'PAD_START': PAD_START,
+        'PAD_L_STICK_BUTTON': PAD_L_STICK_BUTTON,
+        'PAD_R_STICK_BUTTON': PAD_R_STICK_BUTTON,
+        'PAD_UP': PAD_UP,
+        'PAD_DOWN': PAD_DOWN,
+        'PAD_LEFT': PAD_LEFT,
+        'PAD_RIGHT': PAD_RIGHT,
+        'PAD_VENDOR': PAD_VENDOR,
+        'XRPAD_TRIGGER': XRPAD_TRIGGER,
+        'XRPAD_SQUEEZE': XRPAD_SQUEEZE,
+        'XRPAD_TOUCHPAD_BUTTON': XRPAD_TOUCHPAD_BUTTON,
+        'XRPAD_STICK_BUTTON': XRPAD_STICK_BUTTON,
+        'XRPAD_A': XRPAD_A,
+        'XRPAD_B': XRPAD_B
     },
+    axes: {
+        'PAD_L_STICK_X': PAD_L_STICK_X,
+        'PAD_L_STICK_Y': PAD_L_STICK_Y,
+        'PAD_R_STICK_X': PAD_R_STICK_X,
+        'PAD_R_STICK_Y': PAD_R_STICK_Y,
+        'XRPAD_TOUCHPAD_X': XRPAD_TOUCHPAD_X,
+        'XRPAD_TOUCHPAD_Y': XRPAD_TOUCHPAD_Y,
+        'XRPAD_STICK_X': XRPAD_STICK_X,
+        'XRPAD_STICK_Y': XRPAD_STICK_Y
+    }
+};
+
+const MAPS = {
     DEFAULT: {
         buttons: [
             // Face buttons
@@ -348,7 +349,7 @@ class GamePad {
      * @type {number[]} - The values from analog axes present on the GamePad. Values are between -1 and 1.
      */
     get axes() {
-        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS.INDEXES.axes[a]] || 0) : [];
+        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS_INDEXES.axes[a]] || 0) : [];
     }
 
     /**
@@ -356,7 +357,7 @@ class GamePad {
      */
     get buttons() {
         return this.map.buttons ? this.map.buttons.map((b) => {
-            const button = this._buttons[MAPS.INDEXES.buttons[b]];
+            const button = this._buttons[MAPS_INDEXES.buttons[b]];
 
             if (button) {
                 return button;
