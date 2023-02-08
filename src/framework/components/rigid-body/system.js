@@ -642,18 +642,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      */
-    shapeTest(shape, position, rotation) {
+    shapeTestAll(shape, position, rotation) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuleTest(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.capsuleTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cone':
-                return this.coneTest(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.coneTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cylinder':
-                return this.cylinderTest(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.cylinderTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'sphere':
-                return this.sphereTest(shape.radius, position, rotation);
+                return this.sphereTestAll(shape.radius, position, rotation);
             default:
-                return this.boxTest(shape.halfExtents, position, rotation);
+                return this.boxTestAll(shape.halfExtents, position, rotation);
         }
     }
 
@@ -668,9 +668,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      */
-    boxTest(halfExtents, position, rotation) {
+    boxTestAll(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapeTest(new Ammo.btBoxShape(ammoVec3), position, rotation);
+        return this._shapeTestAll(new Ammo.btBoxShape(ammoVec3), position, rotation);
     }
 
     /**
@@ -686,7 +686,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
      */
-    capsuleTest(radius, height, axis, position, rotation) {
+    capsuleTestAll(radius, height, axis, position, rotation) {
         let fn = 'btCapsuleShape';
 
         if (axis === 0) {
@@ -695,7 +695,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCapsuleShapeZ';
         }
 
-        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -711,7 +711,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
      */
-    coneTest(radius, height, axis, position, rotation) {
+    coneTestAll(radius, height, axis, position, rotation) {
         let fn = 'btConeShape';
 
         if (axis === 0) {
@@ -720,7 +720,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btConeShapeZ';
         }
 
-        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -736,7 +736,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      */
-    cylinderTest(radius, height, axis, position, rotation) {
+    cylinderTestAll(radius, height, axis, position, rotation) {
         let fn = 'btCylinderShape';
 
         if (axis === 0) {
@@ -745,7 +745,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCylinderShapeZ';
         }
 
-        return this._shapeTest(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -759,8 +759,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      */
-    sphereTest(radius, position, rotation) {
-        return this._shapeTest(new Ammo.btSphereShape(radius), position, rotation);
+    sphereTestAll(radius, position, rotation) {
+        return this._shapeTestAll(new Ammo.btSphereShape(radius), position, rotation);
     }
 
     /**
