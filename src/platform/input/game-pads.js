@@ -556,7 +556,7 @@ class GamePad {
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(axis) {
-        const a = this.axes[axis]
+        const a = this.axes[axis];
         return a && Math.abs(a) > deadZone ? a : 0;
     }
 }
@@ -605,11 +605,7 @@ class GamePads extends EventHandler {
 
             if (padIndex !== -1) {
                 this.fire(EVENT_GAMEPADDISCONNECTED, this.current[padIndex]);
-
-                while (padIndex !== -1) {
-                    this.current.splice(padIndex, 1);
-                    padIndex = this.current.findIndex(gp => gp.index === pad.index);
-                }
+                this.current.splice(padIndex, 1);
             }
         });
 
