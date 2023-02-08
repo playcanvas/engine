@@ -213,7 +213,7 @@ class GamePadButton {
     }
 
     /**
-     * Whether the button was pressed, false if not.
+     * Whether the button was pressed.
      *
      * @type {boolean}
      */
@@ -338,6 +338,26 @@ class GamePad {
         }
 
         return this;
+    }
+
+    /**
+     * Update the previous values for buttons and axes.
+     *
+     * @ignore
+     */
+    _updatePrevious() {
+        const buttons = this._buttons;
+        const previousAxes = this._previousAxes;
+
+        for (let j = 0, m = buttons.length; j < m; j++) {
+            const button = buttons[j];
+            button._previouslyPressed = button.pressed;
+            button._previouslyTouched = button.touched;
+        }
+
+        // Store previous values for axes for dual buttons.
+        previousAxes.length = 0;
+        previousAxes.push(...this.pad.axes);
     }
 
     /**
@@ -644,18 +664,7 @@ class GamePads extends EventHandler {
      */
     update() {
         for (let i = 0, l = this.current.length; i < l; i++) {
-            const gamePad = this.current[i];
-            const { _buttons, _previousAxes } = gamePad;
-
-            for (let j = 0, m = _buttons.length; j < m; j++) {
-                const button = _buttons[j];
-                button._previouslyPressed = button.pressed;
-                button._previouslyTouched = button.touched;
-            }
-
-            // Store previous values for axes for dual buttons.
-            _previousAxes.length = 0;
-            _previousAxes.push(...gamePad.pad.axes);
+            this.current[i]._updatePrevious();
         }
 
         this.poll();
