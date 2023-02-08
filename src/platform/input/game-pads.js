@@ -328,16 +328,13 @@ class GamePad {
      * @ignore
      */
     _update(gamepad) {
-        this.mapping = gamepad.mapping === 'xr-standard' ? 'xr-standard' : 'standard';
-        this.hand = gamepad.hand || 'none';
-
         // Store previous values for axes for dual buttons.
         this._previousAxes.length = 0;
         this._previousAxes.push(...this.pad.axes);
 
         this.pad = gamepad;
 
-        for (let i = 0, l = this.buttons.length; i < l; i++) {
+        for (let i = 0, l = this._buttons.length; i < l; i++) {
             if (this._buttons[i])
                 this._buttons[i]._update(gamepad.buttons[i]);
         }
