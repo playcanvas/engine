@@ -145,6 +145,8 @@ class ContainerResource {
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
  * allowing the clone operation.
+ * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
+ * useful if you only need access to textures or animations and similar.
  *
  * For example, to receive a texture preprocess callback:
  *

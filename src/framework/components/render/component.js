@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -232,6 +233,7 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
 
+        Debug.assert(Array.isArray(value), `MeshInstances set to a Render component must be an array.`);
         this.destroyMeshInstances();
 
         this._meshInstances = value;

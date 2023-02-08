@@ -1734,6 +1734,10 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
         return [];
     }
 
+    if (options.skipMeshes) {
+        return [];
+    }
+
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
 
