@@ -341,10 +341,10 @@ class GamePad {
      */
     update(gamepad) {
         this.pad = gamepad;
-        const buttons = this._buttons;
 
+        const buttons = this._buttons;
         for (let i = 0, l = buttons.length; i < l; i++) {
-            const button = this._buttons[i];
+            const button = buttons[i];
 
             if (button)
                 button.update(gamepad.buttons[i]);
@@ -360,13 +360,12 @@ class GamePad {
      */
     updatePrevious() {
         const buttons = this._buttons;
-        const previousAxes = this._previousAxes;
-
         for (let i = 0, m = buttons.length; i < m; i++) {
             buttons[i].updatePrevious();
         }
 
         // Store previous values for axes for dual buttons.
+        const previousAxes = this._previousAxes;
         previousAxes.length = 0;
         previousAxes.push(...this.pad.axes);
     }
@@ -807,7 +806,7 @@ class GamePads extends EventHandler {
      * Find a connected {@link GamePad} from its identifier.
      *
      * @param {string} id - The identifier to search for.
-     * @returns {GamePad|null} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
+     * @returns {GamePad} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
      */
     findById(id) {
         return this.current.find(gp => gp && gp.id === id) || null;
@@ -817,7 +816,7 @@ class GamePads extends EventHandler {
      * Find a connected {@link GamePad} from its device index.
      *
      * @param {number} index - The device index to search for.
-     * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
+     * @returns {GamePad} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
      */
     findByIndex(index) {
         return this.current.find(gp => gp && gp.index === index) || null;
