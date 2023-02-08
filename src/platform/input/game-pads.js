@@ -445,13 +445,57 @@ class GamePad {
     }
 
     /**
+     * Retrieve a button from its index.
+     *
+     * @param {number} index - The index to return the button for.
+     * @returns {GamePadButton} The button for the searched index. Can be null.
+     */
+    getButton(index) {
+        const map = MAPS_INDEXES.buttons[index];
+
+        if (typeof map === 'number') {
+            const button = this._buttons[map];
+
+            if (button) {
+                return button;
+            }
+
+            if (this.map.dualButtons) {
+                const dualIndex = this.map.dualButtons.findIndex(a => a.indexOf(map) !== -1);
+
+                if (dualIndex !== -1) {
+                    const index = this.map.dualButtons[dualIndex].indexOf(map);
+                    const max = index === 0 ? 0 : 1;
+                    const min = index === 0 ? -1 : 0;
+
+                    const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
+                    const axisButton = new GamePadButton({
+                        'pressed': value === 1,
+                        'touched': value > 0,
+                        'value': value
+                    });
+
+                    const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
+                    axisButton._wasPressed = previousValue === 1;
+                    axisButton._wasTouched = previousValue > 0;
+
+                    return axisButton;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Returns true if the button is pressed.
      *
      * @param {number} button - The button to test, use constants {@link PAD_FACE_1}, etc.
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(button) {
-        return this.buttons[button] ? this.buttons[button].isPressed() : false;
+        const b = this.getButton(button);
+        return b ? b.isPressed() : false;
     }
 
     /**
@@ -461,7 +505,8 @@ class GamePad {
      * @returns {boolean} Return true if the button was pressed, false if not.
      */
     wasPressed(button) {
-        return this.buttons[button] ? this.buttons[button].wasPressed() : false;
+        const b = this.getButton(button);
+        return b ? b.wasPressed() : false;
     }
 
     /**
@@ -471,7 +516,8 @@ class GamePad {
      * @returns {boolean} Return true if the button was released, false if not.
      */
     wasReleased(button) {
-        return this.buttons[button] ? this.buttons[button].wasReleased() : false;
+        const b = this.getButton(button);
+        return b ? b.wasReleased() : false;
     }
 
     /**
@@ -481,7 +527,8 @@ class GamePad {
      * @returns {boolean} True if the button is touched.
      */
     isTouched(button) {
-        return this.buttons[button] ? this.buttons[button].isTouched() : false;
+        const b = this.getButton(button);
+        return b ? b.isTouched() : false;
     }
 
     /**
@@ -491,7 +538,8 @@ class GamePad {
      * @returns {boolean} Return true if the button was touched, false if not.
      */
     wasTouched(button) {
-        return this.buttons[button] ? this.buttons[button].wasTouched() : false;
+        const b = this.getButton(button);
+        return b ? b.wasTouched() : false;
     }
 
     /**
@@ -501,7 +549,8 @@ class GamePad {
      * @returns {number} The value of the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
      */
     getValue(button) {
-        return this.buttons[button] ? this.buttons[button].value : 0;
+        const b = this.getButton(button);
+        return b ? b.value : 0;
     }
 
     /**
