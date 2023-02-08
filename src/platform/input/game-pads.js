@@ -621,12 +621,14 @@ class GamePads extends EventHandler {
      */
     update() {
         for (let i = 0, l = this.current.length; i < l; i++) {
-            for (let j = 0, m = this.current[i].buttons.length; j < m; j++) {
-                this.current[i].buttons[j]._wasPressed = this.current[i].buttons[j].isPressed();
-                this.current[i].buttons[j]._wasTouched = this.current[i].buttons[j].isTouched();
+            const gamePad = this.current[i];
+            const { buttons } = gamePad;
+            for (let j = 0, m = buttons.length; j < m; j++) {
+                const button = buttons[j];
+                button._wasPressed = button.isPressed();
+                button._wasTouched = button.isTouched();
             }
         }
-
         this.poll();
     }
 
