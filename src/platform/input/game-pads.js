@@ -165,7 +165,7 @@ class GamePadButton {
          * @type {boolean}
          * @ignore
          */
-        this._wasPressed = button.pressed;
+        this._previouslyPressed = button.pressed;
 
         /**
          * Whether this button was touched on last frame.
@@ -173,7 +173,7 @@ class GamePadButton {
          * @type {boolean}
          * @ignore
          */
-        this._wasTouched = typeof button.touched === 'boolean' ? button.touched : button.value > 0;
+        this._previouslyTouched = typeof button.touched === 'boolean' ? button.touched : button.value > 0;
 
         /**
          * The original Gamepad API gamepad button.
@@ -216,7 +216,7 @@ class GamePadButton {
      * @returns {boolean} Return true if the button was pressed, false if not.
      */
     wasPressed() {
-        return this._wasPressed === false && this.isPressed();
+        return this._previouslyPressed === false && this.isPressed();
     }
 
     /**
@@ -225,7 +225,7 @@ class GamePadButton {
      * @returns {boolean} Return true if the button was released, false if not.
      */
     wasReleased() {
-        return this._wasPressed === true && !this.isPressed();
+        return this._previouslyPressed === true && !this.isPressed();
     }
 
     /**
@@ -243,7 +243,7 @@ class GamePadButton {
      * @returns {boolean} Return true if the button was touched, false if not.
      */
     wasTouched() {
-        return this._wasTouched === false && this.isTouched();
+        return this._previouslyTouched === false && this.isTouched();
     }
 }
 
@@ -439,8 +439,8 @@ class GamePad {
                 });
 
                 const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
-                axisButton._wasPressed = previousValue === 1;
-                axisButton._wasTouched = previousValue > 0;
+                axisButton._previouslyPressed = previousValue === 1;
+                axisButton._previouslyTouched = previousValue > 0;
 
                 return axisButton;
             }
@@ -631,7 +631,7 @@ class GamePads extends EventHandler {
     get previous() {
         return this.current.map((c) => {
             return c.buttons.map((b) => {
-                return b ? b._wasPressed : false;
+                return b ? b._previouslyPressed : false;
             });
         });
     }
@@ -647,8 +647,8 @@ class GamePads extends EventHandler {
 
             for (let j = 0, m = _buttons.length; j < m; j++) {
                 const button = _buttons[j];
-                button._wasPressed = button.isPressed();
-                button._wasTouched = button.isTouched();
+                button._previouslyPressed = button.isPressed();
+                button._previouslyTouched = button.isTouched();
             }
 
             // Store previous values for axes for dual buttons.
