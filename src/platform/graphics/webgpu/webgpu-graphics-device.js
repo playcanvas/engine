@@ -465,6 +465,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     setStencilTest(enable) {
     }
 
+    setStencilFunc(func, ref, mask) {
+    }
+
+    setStencilOperation(fail, zfail, zpass, writeMask) {
+    }
+
     setViewport(x, y, w, h) {
         // TODO: only execute when it changes. Also, the viewport of encoder  matches the rendering attachments,
         // so we can skip this if fullscreen
