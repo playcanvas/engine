@@ -696,8 +696,7 @@ class XrManager extends EventHandler {
 
         if (lengthNew > this.views.length) {
             // add new views into list
-            const viewAddCount = (lengthNew - this.views.length);
-            for (let i = 0; i <= viewAddCount; i++) {
+            while (lengthNew > this.views.length) {
                 let view = this.viewsPool.pop();
                 if (!view) {
                     view = {
@@ -718,7 +717,7 @@ class XrManager extends EventHandler {
             }
         } else if (lengthNew <= this.views.length) {
             // remove views from list into pool
-            for (let i = 0; i < (this.views.length - lengthNew); i++) {
+            while (lengthNew < this.views.length) {
                 this.viewsPool.push(this.views.pop());
             }
         }
