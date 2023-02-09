@@ -58,7 +58,7 @@ class BatchGroup {
     /**
      * Create a new BatchGroup instance.
      *
-     * @param {number} id - Unique id. Can be assigned to model and element components.
+     * @param {number} id - Unique id. Can be assigned to model, render and element components.
      * @param {string} name - The name of the group.
      * @param {boolean} dynamic - Whether objects within this batch group should support
      * transforming at runtime.
