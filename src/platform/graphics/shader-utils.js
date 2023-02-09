@@ -1,6 +1,5 @@
 import { Debug } from "../../core/debug.js";
 import {
-    DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
@@ -59,7 +58,7 @@ class ShaderUtils {
         Debug.assert(options);
 
         const getDefines = (gpu, gl2, gl1, isVertex) => {
-            return device.deviceType === DEVICETYPE_WEBGPU ? gpu :
+            return device.isWebGPU ? gpu :
                 (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
         };
 
@@ -125,7 +124,7 @@ class ShaderUtils {
     }
 
     static versionCode(device) {
-        if (device.deviceType === DEVICETYPE_WEBGPU) {
+        if (device.isWebGPU) {
             return '#version 450\n';
         }
         return device.webgl2 ? "#version 300 es\n" : "";
@@ -150,7 +149,7 @@ class ShaderUtils {
 
         const precision = forcePrecision ? forcePrecision : device.precision;
 
-        if (device.deviceType === DEVICETYPE_WEBGL) {
+        if (!device.isWebGPU) {
 
             code = `precision ${precision} float;\n`;
 
