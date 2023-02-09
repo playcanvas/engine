@@ -147,7 +147,6 @@ const PRODUCT_CODES = {
 };
 
 let deadZone = 0.25;
-const getGamepads = navigator ? navigator.getGamepads || navigator.webkitGetGamepads : undefined;
 
 /**
  * A GamePadButton stores information about a button from the Gamepad API.
@@ -589,7 +588,7 @@ class GamePads extends EventHandler {
          *
          * @type {boolean}
          */
-        this.gamepadsSupported = !!getGamepads;
+        this.gamepadsSupported = navigator ? !!navigator.getGamepads || !!navigator.webkitGetGamepads : false;
 
         /**
          * The list of current gamepads.
@@ -721,7 +720,7 @@ class GamePads extends EventHandler {
         }
 
         if (this.gamepadsSupported) {
-            const padDevices = getGamepads();
+            const padDevices = navigator.getGamepads() || navigator.webkitGetGamepads();
 
             for (let i = 0, len = padDevices.length; i < len; i++) {
                 if (padDevices[i]) {
