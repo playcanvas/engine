@@ -78,7 +78,7 @@ class WebgpuRenderPipeline {
         if (!pipeline) {
 
             const primitiveTopology = _primitiveTopology[primitive.type];
-            Debug.assert(primitiveTopology, `Unsupported primitive topology ${primitive}`);
+            Debug.assert(primitiveTopology, `Unsupported primitive topology`, primitive);
 
             // pipeline layout
             const pipelineLayout = this.getPipelineLayout(bindGroupFormats);
