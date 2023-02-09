@@ -16,6 +16,7 @@ import {
 } from '../../../platform/graphics/constants.js';
 import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
+import { DeviceCache } from '../../../platform/graphics/device-cache.js';
 
 import {
     LAYER_HUD, LAYER_WORLD,
@@ -34,6 +35,8 @@ import { Asset } from '../../asset/asset.js';
 // #if _DEBUG
 const _debugLogging = false;
 // #endif
+
+const _vertexFormatDeviceCache = new DeviceCache();
 
 class ImageRenderable {
     constructor(entity, mesh, material) {
@@ -398,50 +401,38 @@ class ImageElement {
         const element = this._element;
         const w = element.calculatedWidth;
         const h = element.calculatedHeight;
-
         const r = this._rect;
-
-        // Note that when creating a typed array, it's initialized to zeros.
-        // Allocate memory for 4 vertices, 8 floats per vertex, 4 bytes per float.
-        const vertexData = new ArrayBuffer(4 * 8 * 4);
-        const vertexDataF32 = new Float32Array(vertexData);
-
-        // Vertex layout is: PX, PY, PZ, NX, NY, NZ, U, V
-        // Since the memory is zeroed, we will only set non-zero elements
-
-        // POS: w, 0, 0
-        vertexDataF32[0] = w;         // PX
-        vertexDataF32[5] = 1;         // NZ
-        vertexDataF32[6] = r.x + r.z; // U
-        vertexDataF32[7] = 1.0 - r.y; // V
-
-        // POS: w, h, 0
-        vertexDataF32[8] = w;          // PX
-        vertexDataF32[9] = h;          // PY
-        vertexDataF32[13] = 1;         // NZ
-        vertexDataF32[14] = r.x + r.z; // U
-        vertexDataF32[15] = 1.0 - (r.y + r.w); // V
-
-        // POS: 0, 0, 0
-        vertexDataF32[21] = 1;          // NZ
-        vertexDataF32[22] = r.x;        // U
-        vertexDataF32[23] = 1.0 - r.y;  // V
-
-        // POS: 0, h, 0
-        vertexDataF32[25] = h;         // PY
-        vertexDataF32[29] = 1;         // NZ
-        vertexDataF32[30] = r.x;       // U
-        vertexDataF32[31] = 1.0 - (r.y + r.w); // V
-
-        const vertexDesc = [
-            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 }
-        ];
-
         const device = this._system.app.graphicsDevice;
-        const vertexFormat = new VertexFormat(device, vertexDesc);
-        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData);
+
+        // content of the vertex buffer for 4 vertices, rendered as a tristrip
+        const vertexData = new Float32Array([
+            w, 0, 0,                        // position
+            0, 0, 1,                        // normal
+            r.x + r.z, 1.0 - r.y,           // uv
+
+            w, h, 0,                        // position
+            0, 0, 1,                        // normal
+            r.x + r.z, 1.0 - (r.y + r.w),   // uv
+
+            0, 0, 0,                        // position
+            0, 0, 1,                        // normal
+            r.x, 1.0 - r.y,                 // uv
+
+            0, h, 0,                        // position
+            0, 0, 1,                        // normal
+            r.x, 1.0 - (r.y + r.w)          // uv
+        ]);
+
+        // per device cached vertex format, to share it by all vertex buffers
+        const vertexFormat = _vertexFormatDeviceCache.get(device, () => {
+            return new VertexFormat(device, [
+                { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 }
+            ]);
+        });
+
+        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData.buffer);
 
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;
