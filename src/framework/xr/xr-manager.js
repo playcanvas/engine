@@ -696,7 +696,8 @@ class XrManager extends EventHandler {
 
         if (lengthNew > this.views.length) {
             // add new views into list
-            for (let i = 0; i <= (lengthNew - this.views.length); i++) {
+            const viewAddCount = (lengthNew - this.views.length);
+            for (let i = 0; i <= viewAddCount; i++) {
                 let view = this.viewsPool.pop();
                 if (!view) {
                     view = {
