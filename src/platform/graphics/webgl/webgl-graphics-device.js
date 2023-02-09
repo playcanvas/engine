@@ -1742,7 +1742,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             key = "";
             for (let i = 0; i < vertexBuffers.length; i++) {
                 const vertexBuffer = vertexBuffers[i];
-                key += vertexBuffer.id + vertexBuffer.format.renderingingHash;
+                key += vertexBuffer.id + vertexBuffer.format.renderingHash;
             }
 
             // try to get VAO from cache

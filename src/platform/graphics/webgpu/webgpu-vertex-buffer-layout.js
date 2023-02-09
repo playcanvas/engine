@@ -42,7 +42,7 @@ class WebgpuVertexBufferLayout {
     }
 
     getKey(vertexFormat0, vertexFormat1 = null) {
-        return vertexFormat0.renderingingHashString + (vertexFormat1 ? vertexFormat1.renderingingHashString : '');
+        return vertexFormat0.renderingHashString + (vertexFormat1 ? vertexFormat1.renderingHashString : '');
     }
 
     /**
