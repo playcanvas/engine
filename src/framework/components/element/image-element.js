@@ -9,7 +9,7 @@ import { Vec4 } from '../../../core/math/vec4.js';
 import {
     BUFFER_STATIC,
     FUNC_EQUAL,
-    PRIMITIVE_TRIFAN,
+    PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
     STENCILOP_DECREMENT,
     TYPE_FLOAT32
@@ -409,23 +409,23 @@ class ImageElement {
         // Vertex layout is: PX, PY, PZ, NX, NY, NZ, U, V
         // Since the memory is zeroed, we will only set non-zero elements
 
-        // POS: 0, 0, 0
-        vertexDataF32[5] = 1;          // NZ
-        vertexDataF32[6] = r.x;        // U
-        vertexDataF32[7] = 1.0 - r.y;  // V
-
         // POS: w, 0, 0
-        vertexDataF32[8] = w;          // PX
-        vertexDataF32[13] = 1;         // NZ
-        vertexDataF32[14] = r.x + r.z; // U
-        vertexDataF32[15] = 1.0 - r.y; // V
+        vertexDataF32[0] = w;         // PX
+        vertexDataF32[5] = 1;         // NZ
+        vertexDataF32[6] = r.x + r.z; // U
+        vertexDataF32[7] = 1.0 - r.y; // V
 
         // POS: w, h, 0
-        vertexDataF32[16] = w;         // PX
-        vertexDataF32[17] = h;         // PY
-        vertexDataF32[21] = 1;         // NZ
-        vertexDataF32[22] = r.x + r.z; // U
-        vertexDataF32[23] = 1.0 - (r.y + r.w); // V
+        vertexDataF32[8] = w;          // PX
+        vertexDataF32[9] = h;          // PY
+        vertexDataF32[13] = 1;         // NZ
+        vertexDataF32[14] = r.x + r.z; // U
+        vertexDataF32[15] = 1.0 - (r.y + r.w); // V
+
+        // POS: 0, 0, 0
+        vertexDataF32[21] = 1;          // NZ
+        vertexDataF32[22] = r.x;        // U
+        vertexDataF32[23] = 1.0 - r.y;  // V
 
         // POS: 0, h, 0
         vertexDataF32[25] = h;         // PY
@@ -445,7 +445,7 @@ class ImageElement {
 
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;
-        mesh.primitive[0].type = PRIMITIVE_TRIFAN;
+        mesh.primitive[0].type = PRIMITIVE_TRISTRIP;
         mesh.primitive[0].base = 0;
         mesh.primitive[0].count = 4;
         mesh.primitive[0].indexed = false;
@@ -548,15 +548,14 @@ class ImageElement {
             const vp = element.pivot.y;
 
             // Update vertex positions, accounting for the pivot offset
-            vertexDataF32[0] = 0 - hp * w;
+            vertexDataF32[0] = w - hp * w;
             vertexDataF32[1] = 0 - vp * h;
             vertexDataF32[8] = w - hp * w;
-            vertexDataF32[9] = 0 - vp * h;
-            vertexDataF32[16] = w - hp * w;
-            vertexDataF32[17] = h - vp * h;
+            vertexDataF32[9] = h - vp * h;
+            vertexDataF32[16] = 0 - hp * w;
+            vertexDataF32[17] = 0 - vp * h;
             vertexDataF32[24] = 0 - hp * w;
             vertexDataF32[25] = h - vp * h;
-
 
             let atlasTextureWidth = 1;
             let atlasTextureHeight = 1;
@@ -572,12 +571,12 @@ class ImageElement {
             }
 
             // Update vertex texture coordinates
-            vertexDataF32[6] = rect.x / atlasTextureWidth;
+            vertexDataF32[6] = (rect.x + rect.z) / atlasTextureWidth;
             vertexDataF32[7] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[14] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[15] = 1.0 - rect.y / atlasTextureHeight;
-            vertexDataF32[22] = (rect.x + rect.z) / atlasTextureWidth;
-            vertexDataF32[23] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[15] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
+            vertexDataF32[22] = rect.x / atlasTextureWidth;
+            vertexDataF32[23] = 1.0 - rect.y / atlasTextureHeight;
             vertexDataF32[30] = rect.x / atlasTextureWidth;
             vertexDataF32[31] = 1.0 - (rect.y + rect.w) / atlasTextureHeight;
 
