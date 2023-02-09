@@ -720,7 +720,7 @@ class GamePads extends EventHandler {
         }
 
         if (this.gamepadsSupported) {
-            const padDevices = navigator.getGamepads ? navigator.getGamepads() || navigator.webkitGetGamepads();
+            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
 
             for (let i = 0, len = padDevices.length; i < len; i++) {
                 if (padDevices[i]) {
