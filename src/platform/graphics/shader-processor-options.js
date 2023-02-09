@@ -84,7 +84,7 @@ class ShaderProcessorOptions {
         // constructors, and here we should simply concatenate those.
         return JSON.stringify(this.uniformFormats) +
         JSON.stringify(this.bindGroupFormats) +
-        this.vertexFormat?.renderingingHashString;
+        this.vertexFormat?.renderingHashString;
     }
 }
 
