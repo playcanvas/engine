@@ -52,7 +52,7 @@ class StencilParameters {
      * @type {number}
      */
     writeMask;
-   
+
     /**
      * Create a new StencilParameters instance.
      *
