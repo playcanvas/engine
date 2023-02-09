@@ -19,7 +19,7 @@ class BatchGroup {
     };
 
     /**
-     * Unique id. Can be assigned to model and element components.
+     * Unique id. Can be assigned to model, render and element components.
      *
      * @type {number}
      */
