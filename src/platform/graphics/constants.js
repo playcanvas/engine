@@ -1159,11 +1159,18 @@ export const uniformTypeToName = [
 ];
 
 /**
- * A WebGL device type.
+ * A WebGL 1 device type.
  *
  * @type {string}
  */
-export const DEVICETYPE_WEBGL = 'webgl';
+export const DEVICETYPE_WEBGL1 = 'webgl1';
+
+/**
+ * A WebGL 2 device type.
+ *
+ * @type {string}
+ */
+export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 /**
  * A WebGPU device type.
