@@ -428,10 +428,10 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         return processShader(this._shader, processingOptions);
     }
 
