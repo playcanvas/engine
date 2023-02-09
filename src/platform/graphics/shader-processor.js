@@ -368,17 +368,21 @@ class ShaderProcessor {
             const words = ShaderProcessor.splitToWords(line);
             let type = words[0];
             let name = words[1];
-            let copyCode;
 
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
                 const location = semanticToLocation[semantic];
+
+                Debug.assert(!usedLocations.hasOwnProperty(location),
+                             `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                usedLocations[location] = semantic;
 
                 // if vertex format for this attribute is not of a float type, we need to adjust the attribute format, for example we convert
                 //      attribute vec4 vertex_position;
                 // to
                 //      attribute ivec4 _private_vertex_position;
                 //      vec4 vertex_position = vec4(_private_vertex_position);
+                let copyCode;
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
@@ -401,10 +405,6 @@ class ShaderProcessor {
                         }
                     }
                 }
-
-                Debug.assert(!usedLocations.hasOwnProperty(location),
-                             `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
-                usedLocations[location] = semantic;
 
                 // generates: 'layout(location = 0) in vec4 position;'
                 block += `layout(location = ${location}) in ${type} ${name};\n`;
