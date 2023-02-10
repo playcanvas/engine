@@ -143,8 +143,10 @@ class JsonStandardMaterialParser {
             const _old = RENAMED_PROPERTIES[i][0];
             const _new = RENAMED_PROPERTIES[i][1];
 
-            if (data[_old] !== undefined && !(data[_new] !== undefined)) {
-                data[_new] = data[_old];
+            if (data[_old] !== undefined) {
+                if (data[_new] === undefined) {
+                    data[_new] = data[_old];
+                }
                 delete data[_old];
             }
         }
