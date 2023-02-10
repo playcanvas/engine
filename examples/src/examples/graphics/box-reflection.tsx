@@ -156,7 +156,7 @@ class BoxReflectionExample {
                 sphereMaterial.update();
 
                 let videoTexture : pc.Texture;
-                if (app.graphicsDevice.deviceType === pc.DEVICETYPE_WEBGL) {
+                if (!app.graphicsDevice.isWebGPU) {
                     // set up video playback into a texture
                     videoTexture = new pc.Texture(app.graphicsDevice, {
                         format: pc.PIXELFORMAT_RGB565,

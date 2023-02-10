@@ -1,46 +1,63 @@
-import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
 import { SHADOW_PCF3 } from '../constants.js';
 
 /**
- * Lighting parameters, allow configuration of the global lighting parameters.
- * For details see [Clustered Lighting](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/)
- *
- * @property {number} debugLayer Layer ID of a layer to contain the debug rendering
- * of clustered lighting. Defaults to undefined, which disables the debug rendering.
- * Debug rendering is only included in the debug version of the engine.
- *
- * @property {Array<number>|null} atlasSplit Atlas textures split description, which applies
- * to both the shadow and cookie texture atlas. Defaults to null, which enables to automatic
- * split mode. For details see [Configuring Atlas Split](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas)
- *
- * @hideconstructor
+ * Lighting parameters, allow configuration of the global lighting parameters. For details see
+ * [Clustered Lighting](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/).
  */
 class LightingParams {
+    /** @private */
+    _areaLightsEnabled = false;
+
+    /** @private */
+    _cells = new Vec3(10, 3, 10);
+
+    /** @private */
+    _maxLightsPerCell = 255;
+
+    /** @private */
+    _shadowsEnabled = true;
+
+    /** @private */
+    _shadowType = SHADOW_PCF3;
+
+    /** @private */
+    _shadowAtlasResolution = 2048;
+
+    /** @private */
+    _cookiesEnabled = false;
+
+    /** @private */
+    _cookieAtlasResolution = 2048;
+
+    /**
+     * Layer ID of a layer to contain the debug rendering of clustered lighting. Defaults to
+     * undefined, which disables the debug rendering. Debug rendering is only included in the debug
+     * version of the engine.
+     *
+     * @type {number}
+     */
+    debugLayer;
+
+    /**
+     * Atlas textures split description, which applies to both the shadow and cookie texture atlas.
+     * Defaults to null, which enables to automatic split mode. For details see [Configuring Atlas
+     * Split](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas).
+     *
+     * @type {number[]|null}
+     */
+    atlasSplit = null;
+
+    /**
+     * Creates a new LightingParams object.
+     *
+     * @ignore
+     */
     constructor(supportsAreaLights, maxTextureSize, dirtyLightsFnc) {
-        this._maxTextureSize = maxTextureSize;
         this._supportsAreaLights = supportsAreaLights;
+        this._maxTextureSize = maxTextureSize;
         this._dirtyLightsFnc = dirtyLightsFnc;
-
-        this._areaLightsEnabled = false;
-
-        this._cells = new Vec3(10, 3, 10);
-        this._maxLightsPerCell = 255;
-
-        this._shadowsEnabled = true;
-        this._shadowType = SHADOW_PCF3;
-        this._shadowAtlasResolution = 2048;
-
-        this._cookiesEnabled = false;
-        this._cookieAtlasResolution = 2048;
-
-        // atlas split strategy
-        // null: per frame split atlas into equally sized squares for each shadowmap needed
-        // array: first number specifies top subdivision of the atlas, following numbers split next level (2 levels only)
-        this.atlasSplit = null;
-
-        // Layer ID of a layer for which the debug clustering is rendered
-        this.debugLayer = undefined;
     }
 
     applySettings(render) {

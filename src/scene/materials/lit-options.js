@@ -6,142 +6,320 @@ import {
 /**
  * The lit options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
- *
- * @property {object} chunks Object containing custom shader chunks that will replace default ones.
- * @property {string} customFragmentShader Replaced the whole fragment shader with this string.
- * @property {number} fog The type of fog being applied in the shader. See {@link Scene#fog} for the list of
- * possible values.
- * @property {number} gamma The type of gamma correction being applied in the shader. See
- * {@link Scene#gammaCorrection} for the list of possible values.
- * @property {number} toneMap The type of tone mapping being applied in the shader. See {@link Scene#toneMapping}
- * for the list of possible values.
- * @property {boolean} conserveEnergy The value of {@link StandardMaterial#conserveEnergy}.
- * @property {number} occludeSpecular The value of {@link StandardMaterial#occludeSpecular}.
- * @property {boolean} occludeDirect The value of {@link StandardMaterial#occludeDirect}.
- * @property {number} shadingModel The value of {@link StandardMaterial#shadingModel}.
- * @property {number} fresnelModel The value of {@link StandardMaterial#fresnelModel}.
- * @property {number} cubeMapProjection The value of {@link StandardMaterial#cubeMapProjection}.
- * @property {boolean} useMetalness The value of {@link StandardMaterial#useMetalness}.
- * @property {number} blendType The value of {@link Material#blendType}.
- * @property {boolean} twoSidedLighting The value of {@link Material#twoSidedLighting}.
- * @property {number} occludeSpecularFloat Defines if {@link StandardMaterial#occludeSpecularIntensity} constant
- * should affect specular occlusion.
- * @property {boolean} alphaTest Enable alpha testing. See {@link Material#alphaTest}.
- * @property {boolean} alphaToCoverage Enable alpha to coverage. See {@link Material#alphaToCoverage}.
- * @property {boolean} opacityFadesSpecular Enable specular fade. See {@link Material#opacityFadesSpecular}.
- * @property {float} ambientSH If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap
- * ambient on certain platform (mostly Android) for performance reasons.
- * @property {boolean} useSpecular If any specular or reflections are needed at all.
- * @property {boolean} fixSeams If cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
- * @property {string} forceFragmentPrecision Override fragment shader numeric precision. Can be "lowp", "mediump",
- * "highp" or null to use default.
- * @property {boolean} fastTbn Use slightly cheaper normal mapping code (skip tangent space normalization). Can look
- * buggy sometimes.
- * @property {boolean} useRefraction If refraction is used.
- * @property {number} skyboxIntensity If reflected skybox intensity should be modulated.
- * @property {boolean} useCubeMapRotation If cube map rotation is enabled.
- * @property {boolean} useInstancing If hardware instancing compatible shader should be generated. Transform is read
- * from per-instance {@link VertexBuffer} instead of shader's uniforms.
- * @property {boolean} useMorphPosition If morphing code should be generated to morph positions.
- * @property {boolean} useMorphNormal If morphing code should be generated to morph normals.
- * @property {string} reflectionSource One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
- * @property {boolean} ambientSource One of "ambientSH", "envAtlas", "constant".
  */
 class LitOptions {
-    constructor() {
-        this.hasTangents = false;
-        this.chunks = [];
+    hasTangents = false;
 
-        this._pass = 0;
-        this.alphaTest = false;
-        this.forceFragmentPrecision = false;
-        this.blendType = BLEND_NONE;
-        this.separateAmbient = false;
-        this.screenSpace = false;
-        this.skin = false;
-        this.useInstancing = false;
-        this.useMorphPosition = false;
-        this.useMorphNormal = false;
-        this.useMorphTextureBased = false;
+    /**
+     * Object containing custom shader chunks that will replace default ones.
+     *
+     * @type {Object<string, string>}
+     */
+    chunks = {};
 
-        this.nineSlicedMode = false;
+    _pass = 0;
 
-        this.clusteredLightingEnabled = true;
+    /**
+     * Enable alpha testing. See {@link Material#alphaTest}.
+     *
+     * @type {boolean}
+     */
+    alphaTest = false;
 
-        this.clusteredLightingCookiesEnabled = false;
-        this.clusteredLightingShadowsEnabled = false;
-        this.clusteredLightingShadowType = 0;
-        this.clusteredLightingAreaLightsEnabled = false;
+    /**
+     * Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use
+     * default.
+     *
+     * @type {string}
+     */
+    forceFragmentPrecision = null;
 
-        this.vertexColors = false;
-        this.lightMapEnabled = false;
-        this.useLightMapVertexColors = false;
-        this.dirLightMapEnabled = false;
-        this.heightMapEnabled = false;
-        this.normalMapEnabled = false;
-        this.clearCoatNormalMapEnabled = false;
-        this.aoMapEnabled = false;
-        this.useAoVertexColors = false;
-        this.diffuseMapEnabled = false;
+    /**
+     * The value of {@link Material#blendType}.
+     *
+     * @type {number}
+     */
+    blendType = BLEND_NONE;
 
-        this.useAmbientTint = false;
-        this.customFragmentShader = null;
-        this.pixelSnap = false;
+    separateAmbient = false;
 
-        this.useClearCoatNormalMap = false;
-        this.useDiffuseMap = false;
-        this.useAoMap = false;
+    screenSpace = false;
 
-        this.detailModes = 0;
-        this.shadingModel = 0;
-        this.ambientSH = false;
-        this.fastTbn = false;
-        this.twoSidedLighting = false;
-        this.occludeSpecular = false;
-        this.occludeSpecularFloat = false;
+    skin = false;
 
-        this.useMsdf = false;
-        this.msdfTextAttribute = 0;
+    /**
+     * If hardware instancing compatible shader should be generated. Transform is read from
+     * per-instance {@link VertexBuffer} instead of shader's uniforms.
+     *
+     * @type {boolean}
+     */
+    useInstancing = false;
 
-        this.alphaToCoverage = false;
-        this.opacityFadesSpecular = false;
+    /**
+     * If morphing code should be generated to morph positions.
+     *
+     * @type {boolean}
+     */
+    useMorphPosition = false;
 
-        this.cubeMapProjection = false;
+    /**
+     * If morphing code should be generated to morph normals.
+     *
+     * @type {boolean}
+     */
+    useMorphNormal = false;
 
-        this.occludeDirect = false;
-        this.conserveEnergy = false;
-        this.useSpecular = false;
-        this.useSpecularityFactor = false;
-        this.useSpecularColor = false;
-        this.enableGGXSpecular = false;
-        this.fresnelModel = 0;
-        this.useRefraction = false;
-        this.useClearCoat = false;
-        this.useSheen = false;
-        this.useIridescence = false;
-        this.useMetalness = false;
-        this.useDynamicRefraction = false;
+    useMorphTextureBased = false;
 
-        this.fog = FOG_NONE;
-        this.gamma = GAMMA_NONE;
-        this.toneMap = -1;
-        this.fixSeams = false;
+    nineSlicedMode = false;
 
-        this.reflectionSource = null;
-        this.reflectionEncoding = null;
-        this.ambientSource = 'constant';
-        this.ambientEncoding = null;
+    clusteredLightingEnabled = true;
 
-        // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        this.skyboxIntensity = 1.0;
-        this.useCubeMapRotation = false;
+    clusteredLightingCookiesEnabled = false;
 
-        this.lightMapWithoutAmbient = false;
+    clusteredLightingShadowsEnabled = false;
 
-        this.lights = [];
-        this.noShadow = false;
-        this.lightMaskDynamic = 0x0;
-    }
+    clusteredLightingShadowType = 0;
+
+    clusteredLightingAreaLightsEnabled = false;
+
+    vertexColors = false;
+
+    lightMapEnabled = false;
+
+    useLightMapVertexColors = false;
+
+    dirLightMapEnabled = false;
+
+    heightMapEnabled = false;
+
+    normalMapEnabled = false;
+
+    clearCoatNormalMapEnabled = false;
+
+    aoMapEnabled = false;
+
+    useAoVertexColors = false;
+
+    diffuseMapEnabled = false;
+
+    useAmbientTint = false;
+
+    /**
+     * Replaced the whole fragment shader with this string.
+     *
+     * @type {string}
+     */
+    customFragmentShader = null;
+
+    pixelSnap = false;
+
+    useClearCoatNormalMap = false;
+
+    useDiffuseMap = false;
+
+    useAoMap = false;
+
+    detailModes = 0;
+
+    /**
+     * The value of {@link StandardMaterial#shadingModel}.
+     *
+     * @type {number}
+     */
+    shadingModel = 0;
+
+    /**
+     * If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on
+     * certain platforms (mostly Android) for performance reasons.
+     *
+     * @type {boolean}
+     */
+    ambientSH = false;
+
+    /**
+     * Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy
+     * sometimes.
+     *
+     * @type {boolean}
+     */
+    fastTbn = false;
+
+    /**
+     * The value of {@link Material#twoSidedLighting}.
+     *
+     * @type {boolean}
+     */
+    twoSidedLighting = false;
+
+    /**
+     * The value of {@link StandardMaterial#occludeSpecular}.
+     *
+     * @type {boolean}
+     */
+    occludeSpecular = false;
+
+    /**
+     * Defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular
+     * occlusion.
+     *
+     * @type {boolean}
+     */
+    occludeSpecularFloat = false;
+
+    useMsdf = false;
+
+    msdfTextAttribute = 0;
+
+    /**
+     * Enable alpha to coverage. See {@link Material#alphaToCoverage}.
+     *
+     * @type {boolean}
+     */
+    alphaToCoverage = false;
+
+    /**
+     * Enable specular fade. See {@link Material#opacityFadesSpecular}.
+     *
+     * @type {boolean}
+     */
+    opacityFadesSpecular = false;
+
+    /**
+     * The value of {@link StandardMaterial#cubeMapProjection}.
+     *
+     * @type {number}
+     */
+    cubeMapProjection = 0;
+
+    /**
+     * The value of {@link StandardMaterial#occludeDirect}.
+     *
+     * @type {boolean}
+     */
+    occludeDirect = false;
+
+    /**
+     * The value of {@link StandardMaterial#conserveEnergy}.
+     *
+     * @type {boolean}
+     */
+    conserveEnergy = false;
+
+    /**
+     * If any specular or reflections are needed at all.
+     *
+     * @type {boolean}
+     */
+    useSpecular = false;
+
+    useSpecularityFactor = false;
+
+    useSpecularColor = false;
+
+    enableGGXSpecular = false;
+
+    /**
+     * The value of {@link StandardMaterial#fresnelModel}.
+     *
+     * @type {number}
+     */
+    fresnelModel = 0;
+
+    /**
+     * If refraction is used.
+     *
+     * @type {boolean}
+     */
+    useRefraction = false;
+
+    useClearCoat = false;
+
+    useSheen = false;
+
+    useIridescence = false;
+
+    /**
+     * The value of {@link StandardMaterial#useMetalness}.
+     *
+     * @type {boolean}
+     */
+    useMetalness = false;
+
+    useDynamicRefraction = false;
+
+    /**
+     * The type of fog being applied in the shader. See {@link Scene#fog} for the list of possible
+     * values.
+     *
+     * @type {string}
+     */
+    fog = FOG_NONE;
+
+    /**
+     * The type of gamma correction being applied in the shader. See {@link Scene#gammaCorrection}
+     * for the list of possible values.
+     *
+     * @type {number}
+     */
+    gamma = GAMMA_NONE;
+
+    /**
+     * The type of tone mapping being applied in the shader. See {@link Scene#toneMapping} for the
+     * list of possible values.
+     *
+     * @type {number}
+     */
+    toneMap = -1;
+
+    /**
+     * If cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+     *
+     * @type {boolean}
+     */
+    fixSeams = false;
+
+    /**
+     * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
+     *
+     * @type {string}
+     */
+    reflectionSource = null;
+
+    reflectionEncoding = null;
+
+    /**
+     * One of "ambientSH", "envAtlas", "constant".
+     *
+     * @type {string}
+     */
+    ambientSource = 'constant';
+
+    ambientEncoding = null;
+
+    // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now
+    // assume no non-skybox cubemap rotation
+    /**
+     * Skybox intensity factor.
+     *
+     * @type {number}
+     */
+    skyboxIntensity = 1.0;
+
+    /**
+     * If cube map rotation is enabled.
+     *
+     * @type {boolean}
+     */
+    useCubeMapRotation = false;
+
+    lightMapWithoutAmbient = false;
+
+    lights = [];
+
+    noShadow = false;
+
+    lightMaskDynamic = 0x0;
 
     set pass(p) {
         Debug.warn(`pc.LitOptions#pass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
