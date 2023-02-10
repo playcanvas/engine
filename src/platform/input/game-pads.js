@@ -648,7 +648,7 @@ class GamePads extends EventHandler {
      */
     get previous() {
         return this.current.map((c) => {
-            return c.buttons.map((b) => {
+            return c._buttons.map((b) => {
                 return b ? b._previouslyPressed : false;
             });
         });
