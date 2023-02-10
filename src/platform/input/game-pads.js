@@ -387,7 +387,7 @@ class GamePad {
     /**
      * Make the gamepad vibrate.
      *
-     * @param {number} intensity - Intensity for the vibrations, must be between 0 and 1.
+     * @param {number} intensity - Intensity for the vibration in the range 0 to 1.
      * @param {number} duration - Duration for the vibration in milliseconds.
      * @param {object} [options] - Options for special vibration patern.
      * @param {string} [options.type] - Type of patern. Available types are "dual-rumble" and "vibration". Defaults to "vibration".
