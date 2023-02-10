@@ -71,7 +71,7 @@ const MAPS = {
         ],
 
         axes: [
-            // Analogue Sticks
+            // Analog Sticks
             'PAD_L_STICK_X',
             'PAD_L_STICK_Y',
             'PAD_R_STICK_X',
@@ -109,7 +109,7 @@ const MAPS = {
         ],
 
         axes: [
-            // Analogue Sticks
+            // Analog Sticks
             'PAD_L_STICK_X',
             'PAD_L_STICK_Y',
             'PAD_R_STICK_X',
@@ -133,7 +133,7 @@ const MAPS = {
         ],
 
         axes: [
-            // Analogue Sticks
+            // Analog Sticks
             'XRPAD_TOUCHPAD_X',
             'XRPAD_TOUCHPAD_Y',
             'XRPAD_STICK_X',
@@ -391,7 +391,7 @@ class GamePad {
      * @param {number} duration - Duration for the vibration in milliseconds.
      * @param {object} [options] - Options for special vibration pattern.
      * @param {string} [options.type] - Type of pattern. Available types are "dual-rumble" and "vibration". Defaults to "vibration".
-* @param {number} [options.startDelay] - Delay before the pattern starts, in milliseconds. Defaults to 0.
+     * @param {number} [options.startDelay] - Delay before the pattern starts, in milliseconds. Defaults to 0.
      * @param {number} [options.strongMagnitude] - Intensity for strong actuators in the range 0 to 1. Defaults to intensity.
      * @param {number} [options.weakMagnitude] - Intensity for weak actuators in the range 0 to 1. Defaults to intensity.
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
@@ -560,7 +560,7 @@ class GamePad {
     }
 
     /**
-     * Get the value of one of the analogue axes of the pad.
+     * Get the value of one of the analog axes of the pad.
      *
      * @param {number} axis - The axis to get the value of, use constants {@link PAD_L_STICK_X}, etc.
      * @returns {number} The value of the axis between -1 and 1.
@@ -692,7 +692,7 @@ class GamePads extends EventHandler {
 
     /**
      * Update the previous state of the gamepads. This must be called every frame for
-     * `wasPressed` as `wasTouched` to work.
+     * `wasPressed` and `wasTouched` to work.
      */
     update() {
         const current = this.current;
@@ -800,7 +800,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * Get the value of one of the analogue axes of the pad.
+     * Get the value of one of the analog axes of the pad.
      *
      * @param {number} orderIndex - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
      * @param {number} axis - The axis to get the value of, use constants {@link PAD_L_STICK_X}, etc.
