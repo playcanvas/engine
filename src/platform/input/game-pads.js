@@ -228,7 +228,7 @@ class GamePadButton {
      * @type {boolean}
      */
     get wasPressed() {
-        return this._previouslyPressed === false && this.pressed;
+        return !this._previouslyPressed && this.pressed;
     }
 
     /**
@@ -237,7 +237,7 @@ class GamePadButton {
      * @type {boolean}
      */
     get wasReleased() {
-        return this._previouslyPressed === true && !this.pressed;
+        return this._previouslyPressed && !this.pressed;
     }
 
     /**
@@ -255,7 +255,7 @@ class GamePadButton {
      * @type {boolean}
      */
     get wasTouched() {
-        return this._previouslyTouched === false && this.touched;
+        return !this._previouslyTouched && this.touched;
     }
 }
 
