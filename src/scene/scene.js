@@ -795,9 +795,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Get the lightmap pixel format.
+     * The lightmap pixel format.
      *
-     * @type {number} The pixel format.
+     * @type {number}
      */
     get lightmapPixelFormat() {
         return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;
