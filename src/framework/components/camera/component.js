@@ -738,6 +738,11 @@ class CameraComponent extends Component {
         }
     }
 
+    /**
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - Old layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - New layer composition.
+     * @private
+     */
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
         oldComp.off('add', this.onLayerAdded, this);
@@ -746,12 +751,20 @@ class CameraComponent extends Component {
         newComp.on('remove', this.onLayerRemoved, this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to add the camera to.
+     * @private
+     */
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addCamera(this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to remove the camera from.
+     * @private
+     */
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
