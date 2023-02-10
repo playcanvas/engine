@@ -391,7 +391,7 @@ class GamePad {
      * @param {number} duration - Duration for the vibration in milliseconds.
      * @param {object} [options] - Options for special vibration patern.
      * @param {string} [options.type] - Type of patern. Available types are "dual-rumble" and "vibration". Defaults to "vibration".
-     * @param {number} [options.startDelay] - Delay before the patern starts, in miliseconds. Defaults to 0.
+* @param {number} [options.startDelay] - Delay before the pattern starts, in milliseconds. Defaults to 0.
      * @param {number} [options.strongMagnitude] - Intensity for strong actuators, must be between 0 and 1. Defaults to intensity.
      * @param {number} [options.weakMagnitude] - Intensity for weak actuators, must be between 0 and 1. Defaults to intensity.
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
