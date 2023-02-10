@@ -742,7 +742,7 @@ class MeshInstance {
      */
     updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
         this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
-                                                            viewUniformFormat, viewBindGroupFormat);
+                                                            viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 
     ensureMaterial(device) {

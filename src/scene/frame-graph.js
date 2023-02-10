@@ -1,7 +1,6 @@
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { Tracing } from '../core/tracing.js';
-import { DEVICETYPE_WEBGPU } from '../platform/graphics/constants.js';
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
@@ -133,7 +132,7 @@ class FrameGraph {
             this.renderPasses.forEach((renderPass, index) => {
 
                 let rt = renderPass.renderTarget;
-                if (rt === null && device.deviceType === DEVICETYPE_WEBGPU) {
+                if (rt === null && device.isWebGPU) {
                     rt = device.frameBuffer;
                 }
                 const hasColor = rt?.colorBuffer ?? rt?.impl.assignedColorTexture;

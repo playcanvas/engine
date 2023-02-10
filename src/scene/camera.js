@@ -625,7 +625,7 @@ class Camera {
      * @param {number} [properties.nearClip] - Near clip.
      */
     setXrProperties(properties) {
-        Object.assign(properties, this._xrProperties);
+        Object.assign(this._xrProperties, properties);
         this._projMatDirty = true;
     }
 }

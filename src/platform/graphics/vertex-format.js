@@ -5,7 +5,7 @@ import { math } from '../../core/math/math.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
 
 /**
@@ -140,7 +140,7 @@ class VertexFormat {
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
 
             // WebGPU has limited element size support (for example uint16x3 is not supported)
-            Debug.assert(graphicsDevice.deviceType !== DEVICETYPE_WEBGPU || [2, 4, 8, 12, 16].includes(elementSize),
+            Debug.assert(!graphicsDevice.isWebGPU || [2, 4, 8, 12, 16].includes(elementSize),
                          `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
@@ -227,7 +227,7 @@ class VertexFormat {
      */
     update() {
         // Note that this is used only by vertex attribute morphing on the WebGL.
-        Debug.assert(this.device.deviceType === DEVICETYPE_WEBGL, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
+        Debug.assert(!this.device.isWebGPU, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
         this._evaluateHash();
     }
 
@@ -265,8 +265,8 @@ class VertexFormat {
         this.batchingHash = hashCode(stringElementsBatch.join());
 
         // rendering hash
-        this.renderingingHashString = stringElementsRender.join('_');
-        this.renderingingHash = hashCode(this.renderingingHashString);
+        this.renderingHashString = stringElementsRender.join('_');
+        this.renderingHash = hashCode(this.renderingHashString);
     }
 }
 

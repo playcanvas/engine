@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { CULLFACE_NONE, DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
@@ -66,7 +66,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     renderPass.depthStencilOps.clearDepth = false;
 
     // TODO: this is temporary, till the webgpu supports setDepthTest
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
+    if (device.isWebGPU) {
         renderPass.depthStencilOps.clearDepth = true;
     }
 
@@ -99,7 +99,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
  * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
 function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend = false) {
-    Debug.assert(device.deviceType !== DEVICETYPE_WEBGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
+    Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
     shader = shader || device.getCopyShader();
     device.constantTexSource.setValue(texture);
     drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
