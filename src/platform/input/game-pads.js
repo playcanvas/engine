@@ -552,7 +552,7 @@ class GamePad {
      * Returns the value of a button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
      *
      * @param {number} button - The button to retrieve, use constants {@link PAD_FACE_1}, etc.
-     * @returns {number} The value of the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
+     * @returns {number} The value of the button between 0 and 1.
      */
     getValue(button) {
         const b = this.getButton(button);
