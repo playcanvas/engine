@@ -41,7 +41,7 @@ const BitPacking = {
      * @param {number} storage - Number to test.
      * @param {number} shift - Number of bits to shift the mask.
      * @param {number} [mask] - Mask to limit the number of storage bits. Defaults to 1.
-     * @returns {number} Retuns true if all bits in the mask are set in the storage.
+     * @returns {boolean} Returns true if all bits in the mask are set in the storage.
      */
     all: function (storage, shift, mask = 1) {
         const shifted = mask << shift;
