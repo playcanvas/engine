@@ -147,7 +147,6 @@ const PRODUCT_CODES = {
 };
 
 let deadZone = 0.25;
-const previous = [];
 
 /**
  * A GamePadButton stores information about a button from the Gamepad API.
@@ -597,6 +596,13 @@ class GamePads extends EventHandler {
          * @type {GamePad[]}
          */
         this.current = [];
+        /**
+         * The list of previous buttons states
+         *
+         * @type {boolean[][]}
+         * @ignore
+         */
+        this._previous = [];
 
         this._ongamepadconnectedHandler = this._ongamepadconnected.bind(this);
         this._ongamepaddisconnectedHandler = this._ongamepaddisconnected.bind(this);
@@ -644,7 +650,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * @type {boolean[][]} The list of previous button states.
+     * @type {boolean[][]} The list of previous buttons states.
      * @ignore
      */
     get previous() {
@@ -653,18 +659,18 @@ class GamePads extends EventHandler {
         for (let i = 0, l = current.length; i < l; i++) {
             const buttons = current[i]._buttons;
 
-            if (!previous[i]) {
-                previous[i] = [];
+            if (!this._previous[i]) {
+                this._previous[i] = [];
             }
 
             for (let j = 0, m = buttons.length; j < m; j++) {
                 const button = buttons[i];
-                previous[i][j] = button ? button._previouslyPressed : false;
+                this._previous[i][j] = button ? button._previouslyPressed : false;
             }
         }
 
-        previous.length = this.current.length;
-        return previous;
+        this._previous.length = this.current.length;
+        return this._previous;
     }
 
     /**
