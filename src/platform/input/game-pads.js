@@ -1,15 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 
-/**
- * An object defining the order of buttons and axes for a HTML5 Gamepad.
- *
- * @typedef {object} GamePadMap
- * @property {string[]} [buttons] - Order of PAD_FACE_1, PAD_FACE_2, ...
- * @property {string[]} [axes] - Order of PAD_L_STICK_X, PAD_L_STICK_Y, ...
- * @property {string[][]} [dualButtons] - Map two buttons as an axis.
- */
-
 const MAPS_INDEXES = {
     buttons: {
         PAD_FACE_1,
@@ -279,7 +270,7 @@ class GamePad {
      * Create a new GamePad Instance.
      *
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
-     * @param {GamePadMap} map - The buttons and axes map.
+     * @param {object} map - The buttons and axes map.
      * @hideconstructor
      */
     constructor(gamepad, map) {
@@ -325,7 +316,7 @@ class GamePad {
         /**
          * The buttons and axes map.
          *
-         * @type {GamePadMap}
+         * @type {object}
          */
         this.map = map;
 
@@ -793,7 +784,7 @@ class GamePads extends EventHandler {
      * Retrieve the order for buttons and axes for given HTML5 Gamepad.
      *
      * @param {Gamepad} pad - The HTML5 Gamepad object.
-     * @returns {GamePadMap} Object defining the order of buttons and axes for given HTML5 Gamepad.
+     * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
      */
     getMap(pad) {
         for (const code in PRODUCT_CODES) {
