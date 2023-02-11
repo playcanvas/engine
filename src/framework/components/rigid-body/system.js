@@ -23,11 +23,11 @@ const shapecastRotation = new Quat();
 const shapecastRotationMatrix = new Mat4();
 
 /**
- * Object holding the result of a successful raycast hit.
+ * Object holding the result of a successful hit.
  */
-class RaycastResult {
+class HitResult {
     /**
-     * Create a new RaycastResult instance.
+     * Create a new HitResult instance.
      *
      * @param {import('../../entity.js').Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
@@ -233,42 +233,6 @@ class ContactResult {
          * @type {ContactPoint[]}
          */
         this.contacts = contacts;
-    }
-}
-
-/**
- * Object holding the result of a hit on an Entity.
- */
-class HitResult {
-    /**
-     * Create a new HitResult instance.
-     *
-     * @param {import('../../entity.js').Entity} entity - The entity that was hit.
-     * @param {Vec3} point - The point on the entity where the hit occurred, in world space. When returned by a shapecast it is the first point found to collide, it does not have to be the closest.
-     * @param {Vec3} normal - The normal vector of the hit on the entity, in world space.
-     * @hideconstructor
-     */
-    constructor(entity, point, normal) {
-        /**
-         * The entity that was hit.
-         *
-         * @type {import('../../entity.js').Entity}
-         */
-        this.entity = entity;
-
-        /**
-         * The point on the entity where the hit occurred, in world space. When returned by a shapecast it is the first point found to collide, it does not have to be the closest.
-         *
-         * @type {Vec3}
-         */
-        this.point = point;
-
-        /**
-         * The normal vector of the hit on the entity, in world space.
-         *
-         * @type {Vec3}
-         */
-        this.normal = normal;
     }
 }
 
@@ -514,11 +478,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Raycast the world and return the first entity the ray hits. Fire a ray into the world from
      * start to end, if the ray hits an entity with a collision component, it returns a
-     * {@link RaycastResult}, otherwise returns null.
+     * {@link HitResult}, otherwise returns null.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
+     * @returns {HitResult} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end) {
         let result = null;
@@ -535,7 +499,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
 
-                result = new RaycastResult(
+                result = new HitResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
                     new Vec3(normal.x(), normal.y(), normal.z())
@@ -558,12 +522,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Raycast the world and return all entities the ray hits. It returns an array of
-     * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
+     * {@link HitResult}, one for each hit. If no hits are detected, the returned array will be
      * of length 0.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
@@ -586,7 +550,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 if (body) {
                     const point = points.at(i);
                     const normal = normals.at(i);
-                    const result = new RaycastResult(
+                    const result = new HitResult(
                         body.entity,
                         new Vec3(point.x(), point.y(), point.z()),
                         new Vec3(normal.x(), normal.y(), normal.z())
@@ -1233,4 +1197,4 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
 Component._buildAccessors(RigidBodyComponent.prototype, _schema);
 
-export { ContactPoint, ContactResult, RaycastResult, RigidBodyComponentSystem, SingleContactResult };
+export { ContactPoint, ContactResult, HitResult, RigidBodyComponentSystem, SingleContactResult };
