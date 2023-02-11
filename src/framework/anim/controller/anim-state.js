@@ -18,25 +18,29 @@ import {
  * @ignore
  */
 class AnimState {
+    /** @private */
+    _animations = {};
+
+    /** @private */
+    _animationList = [];
+
     /**
      * Create a new AnimState instance.
      *
      * @param {AnimController} controller - The controller this AnimState is associated with.
      * @param {string} name - The name of the state. Used to find this state when the controller
      * transitions between states and links animations.
-     * @param {number} speed - The speed animations in the state should play at. Individual
+     * @param {number} [speed] - The speed animations in the state should play at. Individual
      * {@link AnimNodes} can override this value.
-     * @param {boolean} loop - Determines whether animations in this state should loop.
-     * @param {object|null} blendTree - If supplied, the AnimState will recursively build a
+     * @param {boolean} [loop] - Determines whether animations in this state should loop.
+     * @param {object|null} [blendTree] - If supplied, the AnimState will recursively build a
      * {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
      */
-    constructor(controller, name, speed, loop, blendTree) {
+    constructor(controller, name, speed = 1, loop = true, blendTree) {
         this._controller = controller;
         this._name = name;
-        this._animations = {};
-        this._animationList = [];
-        this._speed = speed || 1.0;
-        this._loop = loop === undefined ? true : loop;
+        this._speed = speed;
+        this._loop = loop;
         const findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
             this._blendTree = this._createTree(
