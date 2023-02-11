@@ -288,7 +288,7 @@ class GamePad {
         /**
          * The buttons present on the GamePad. Some buttons may be null. Order is provided by API, use GamePad#buttons instead.
          *
-         * @type {(GamePadButton|null)[]}
+         * @type {GamePadButton[]}
          * @ignore
          */
         this._buttons = gamepad.buttons.map((b) => {
@@ -387,7 +387,7 @@ class GamePad {
     }
 
     /**
-     * @type {(GamePadButton|null)[]} - The buttons present on the GamePad. Some buttons may be null.
+     * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
      */
     get buttons() {
         return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : [];
