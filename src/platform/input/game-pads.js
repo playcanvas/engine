@@ -392,14 +392,18 @@ class GamePad {
     }
 
     /**
-     * @type {number[]} - The values from analog axes present on the GamePad. Values are between -1 and 1.
+     * The values from analog axes present on the GamePad. Values are between -1 and 1.
+     *
+     * @type {number[]}
      */
     get axes() {
         return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS_INDEXES.axes[a]] || 0) : [];
     }
 
     /**
-     * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
+     * The buttons present on the GamePad. Some buttons may be null.
+     *
+     * @type {GamePadButton[]}
      */
     get buttons() {
         return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : [];
@@ -654,7 +658,9 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * @type {number} Threshold for axes to return values. Must be between 0 and 1.
+     * Threshold for axes to return values. Must be between 0 and 1.
+     *
+     * @type {number}
      * @ignore
      */
     get deadZone() {
@@ -662,7 +668,9 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * @type {boolean[][]} The list of previous buttons states.
+     * The list of previous buttons states.
+     *
+     * @type {boolean[][]}
      * @ignore
      */
     get previous() {
