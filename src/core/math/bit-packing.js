@@ -54,7 +54,7 @@ const BitPacking = {
      * @param {number} storage - Number to test.
      * @param {number} shift - Number of bits to shift the mask.
      * @param {number} [mask] - Mask to limit the number of storage bits. Defaults to 1.
-     * @returns {number} Retuns true if any bits in the mask are set in the storage.
+     * @returns {boolean} Returns true if any bits in the mask are set in the storage.
      */
     any: function (storage, shift, mask = 1) {
         return (storage & (mask << shift)) !== 0;
