@@ -22,9 +22,9 @@ class Channel {
      * end or not.
      */
     constructor(manager, sound, options = {}) {
-        this.volume = (options.volume === undefined) ? 1 : options.volume;
-        this.loop = (options.loop === undefined) ? false : options.loop;
-        this.pitch = (options.pitch === undefined ? 1 : options.pitch);
+        this.volume = options.volume ?? 1;
+        this.loop = options.loop ?? false;
+        this.pitch = options.pitch ?? 1;
 
         this.sound = sound;
 
