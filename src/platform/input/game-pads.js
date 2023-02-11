@@ -289,7 +289,7 @@ class GamePad {
         /**
          * The buttons present on the GamePad. Some buttons may be null. Order is provided by API, use GamePad#buttons instead.
          *
-         * @type {GamePadButton[]}
+         * @type {(GamePadButton|null)[]}
          * @ignore
          */
         this._buttons = gamepad.buttons.map((b) => {
@@ -332,6 +332,15 @@ class GamePad {
          * @ignore
          */
         this.pad = gamepad;
+    }
+
+    /**
+     * Whether the gamepad is connected
+     *
+     * @type {boolean}
+     */
+    get connected() {
+        return this.pad.connected;
     }
 
     /**
@@ -379,7 +388,7 @@ class GamePad {
     }
 
     /**
-     * @type {GamePadButton[]} - The buttons present on the GamePad. Some buttons may be null.
+     * @type {(GamePadButton|null)[]} - The buttons present on the GamePad. Some buttons may be null.
      */
     get buttons() {
         return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : [];
@@ -435,19 +444,10 @@ class GamePad {
     }
 
     /**
-     * Return true if the gamepad is connected.
-     *
-     * @returns {boolean} Return true if the gamepad is connected.
-     */
-    isConnected() {
-        return this.pad.connected;
-    }
-
-    /**
      * Retrieve a button from its index name.
      *
      * @param {string} indexName - The index name to return the button for.
-     * @returns {GamePadButton} The button for the searched index. Can be null.
+     * @returns {GamePadButton|null} The button for the searched index. Can be null.
      * @ignore
      */
     _getButton(indexName) {
@@ -487,7 +487,7 @@ class GamePad {
      * Retrieve a button from its index.
      *
      * @param {number} index - The index to return the button for.
-     * @returns {GamePadButton} The button for the searched index. Can be null.
+     * @returns {GamePadButton|null} The button for the searched index. Can be null.
      */
     getButton(index) {
         const buttons = this.map.buttons;
@@ -828,7 +828,7 @@ class GamePads extends EventHandler {
      * Find a connected {@link GamePad} from its identifier.
      *
      * @param {string} id - The identifier to search for.
-     * @returns {GamePad} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
+     * @returns {GamePad|null} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
      */
     findById(id) {
         return this.current.find(gp => gp && gp.id === id) || null;
@@ -838,7 +838,7 @@ class GamePads extends EventHandler {
      * Find a connected {@link GamePad} from its device index.
      *
      * @param {number} index - The device index to search for.
-     * @returns {GamePad} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
+     * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
      */
     findByIndex(index) {
         return this.current.find(gp => gp && gp.index === index) || null;
