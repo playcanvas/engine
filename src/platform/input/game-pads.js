@@ -162,35 +162,38 @@ let deadZone = 0.25;
  */
 class GamePadButton {
     /**
+     * Whether this button was pressed on last frame.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _previouslyPressed;
+
+    /**
+     * Whether this button was touched on last frame.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _previouslyTouched;
+
+    /**
+     * The original Gamepad API gamepad button.
+     *
+     * @type {GamepadButton}
+     * @ignore
+     */
+    _button;
+
+    /**
      * Create a new GamePadButton instance.
      *
      * @param {GamepadButton} button - The original Gamepad API gamepad button.
      * @hideconstructor
      */
     constructor(button) {
-        /**
-         * Whether this button was pressed on last frame.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this._previouslyPressed = button.pressed;
-
-        /**
-         * Whether this button was touched on last frame.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this._previouslyTouched = typeof button.touched === 'boolean' ? button.touched : button.value > 0;
-
-        /**
-         * The original Gamepad API gamepad button.
-         *
-         * @type {GamepadButton}
-         * @ignore
-         */
         this._button = button;
+        this.updatePrevious();
     }
 
     /**
