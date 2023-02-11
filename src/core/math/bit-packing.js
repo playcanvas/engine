@@ -1,5 +1,5 @@
 /**
-* BitPacking API - functionality for operating on values stored as bits in a number.
+ * BitPacking API - functionality for operating on values stored as bits in a number.
  *
  * @namespace
  * @ignore
