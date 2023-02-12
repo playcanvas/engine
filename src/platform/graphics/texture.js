@@ -172,6 +172,9 @@ class Texture {
         this._width = options.width ?? 4;
         this._height = options.height ?? 4;
 
+        this._format = options.format ?? PIXELFORMAT_RGBA8;
+        this._compressed = isCompressedPixelFormat(this._format);
+
         if (graphicsDevice.webgl2) {
             this._volume = options.volume ?? false;
             this._depth = options.depth ?? 1;
@@ -179,9 +182,6 @@ class Texture {
             this._volume = false;
             this._depth = 1;
         }
-
-        this._format = options.format ?? PIXELFORMAT_RGBA8;
-        this._compressed = isCompressedPixelFormat(this._format);
 
         this._cubemap = options.cubemap ?? false;
         this.fixCubemapSeams = options.fixCubemapSeams ?? false;
