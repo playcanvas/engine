@@ -159,7 +159,7 @@ class VertexFormat {
                 stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
-                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
+                normalize: elementDesc.normalize ?? false,
                 size: elementSize
             };
             this._elements.push(element);
