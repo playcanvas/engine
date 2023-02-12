@@ -118,7 +118,15 @@ class Texture {
      * Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
      * (WebGL2 only). Defaults to false.
-     * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}.
+     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     *
+     * - {@link TEXTURETYPE_DEFAULT}
+     * - {@link TEXTURETYPE_RGBM}
+     * - {@link TEXTURETYPE_RGBE}
+     * - {@link TEXTURETYPE_RGBP}
+     * - {@link TEXTURETYPE_SWIZZLEGGGR}
+     *
+     * Defaults to {@link TEXTURETYPE_DEFAULT}.
      * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires
      * special seam fixing shader code to look right. Defaults to false.
      * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the
