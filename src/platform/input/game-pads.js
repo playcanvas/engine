@@ -848,6 +848,44 @@ class GamePads extends EventHandler {
     }
 
     /**
+     * Make the gamepad vibrate.
+     *
+     * @param {number} orderIndex - The index of the pad to check, use constants {@link PAD_1}, {@link PAD_2}, etc. For gamepad index call the function from the pad.
+     * @param {number} intensity - Intensity for the vibration in the range 0 to 1.
+     * @param {number} duration - Duration for the vibration in milliseconds.
+     * @param {object} [options] - Options for special vibration pattern.
+     * @param {string} [options.type] - Type of pattern. Available types are "dual-rumble" and "vibration". Defaults to "vibration".
+     * @param {number} [options.startDelay] - Delay before the pattern starts, in milliseconds. Defaults to 0.
+     * @param {number} [options.strongMagnitude] - Intensity for strong actuators in the range 0 to 1. Defaults to intensity.
+     * @param {number} [options.weakMagnitude] - Intensity for weak actuators in the range 0 to 1. Defaults to intensity.
+     * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
+     */
+    pulse(orderIndex, intensity, duration, options) {
+        const pad = this.current[orderIndex];
+        return pad ? pad.pulse(intensity, duration, options) : Promise.resolve(false);
+    }
+
+    /**
+     * Make all gamepads vibrate.
+     *
+     * @param {number} intensity - Intensity for the vibration in the range 0 to 1.
+     * @param {number} duration - Duration for the vibration in milliseconds.
+     * @param {object} [options] - Options for special vibration pattern.
+     * @param {string} [options.type] - Type of pattern. Available types are "dual-rumble" and "vibration". Defaults to "vibration".
+     * @param {number} [options.startDelay] - Delay before the pattern starts, in milliseconds. Defaults to 0.
+     * @param {number} [options.strongMagnitude] - Intensity for strong actuators in the range 0 to 1. Defaults to intensity.
+     * @param {number} [options.weakMagnitude] - Intensity for weak actuators in the range 0 to 1. Defaults to intensity.
+     * @returns {Promise<boolean[]>} Return a Promise resulting in an array of booleans defining if the pulse was successfully completed for every gamepads.
+     */
+    pulseAll(intensity, duration, options) {
+        return new Promise((resolve, reject) => {
+            Promise.all(
+                this.current.map(pad => pad.pulse(intensity, duration, options))
+            ).then(resolve).catch(reject);
+        });
+    }
+
+    /**
      * Find a connected {@link GamePad} from its identifier.
      *
      * @param {string} id - The identifier to search for.
