@@ -413,40 +413,62 @@ class GamePad {
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
      */
     pulse(intensity, duration, options) {
-        const actuator = this.pad.vibrationActuator;
+        return new Promise((resolve) => {
+            const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || [];
 
-        if (actuator) {
-            if (actuator.playEffect) {
-                if (options) {
-                    return actuator.playEffect(options.type ?? actuator.type, {
-                        'duration': duration,
-                        'startDelay': options.startDelay || 0,
-                        'strongMagnitude': options.strongMagnitude ?? intensity,
-                        'weakMagnitude': options.weakMagnitude ?? intensity
-                    });
-                }
+            if (actuators.length) {
+                Promise.all(
+                    actuators.map((actuator) => {
+                        if (!actuator) {
+                            return true;
+                        }
 
-                return actuator.playEffect(actuator.type, {
-                    duration,
-                    startDelay: 0,
-                    strongMagnitude: intensity,
-                    weakMagnitude: intensity
+                        if (actuator.playEffect) {
+                            if (options) {
+                                return actuator.playEffect(options.type ?? actuator.type, {
+                                    duration,
+                                    startDelay: options.startDelay || 0,
+                                    strongMagnitude: options.strongMagnitude ?? intensity,
+                                    weakMagnitude: options.weakMagnitude ?? intensity
+                                });
+                            }
+
+                            return actuator.playEffect(actuator.type, {
+                                duration,
+                                startDelay: 0,
+                                strongMagnitude: intensity,
+                                weakMagnitude: intensity
+                            });
+                        } else if (actuator.pulse) {
+                            if (options && options.startDelay) {
+                                // Custom delay
+                                return new Promise(function (resolve, reject) {
+                                    setTimeout(function () {
+                                        actuator.pulse(intensity, duration).then(resolve).catch(reject);
+                                    }, options.startDelay);
+                                });
+                            }
+
+                            return actuator.pulse(intensity, duration);
+                        }
+
+                        return false;
+                    })
+                ).then((results) => {
+                    for (let i = 0, l = results.length; i < l; i++) {
+                        const result = results[i];
+
+                        if (result === false || typeof result === 'string' && result !== 'complete') {
+                            return resolve(false);
+                        }
+                    }
+
+                    resolve(!!results.length);
                 });
-            } else if (actuator.pulse) {
-                if (options && options.startDelay) {
-                    // Custom delay
-                    return new Promise(function (resolve, reject) {
-                        setTimeout(function () {
-                            actuator.pulse(intensity, duration).then(resolve).catch(reject);
-                        }, options.startDelay);
-                    });
-                }
-
-                return actuator.pulse(intensity, duration);
             }
-        }
 
-        return Promise.resolve(false);
+            resolve(false);
+        });
     }
 
     /**
