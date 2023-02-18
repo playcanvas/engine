@@ -878,11 +878,9 @@ class GamePads extends EventHandler {
      * @returns {Promise<boolean[]>} Return a Promise resulting in an array of booleans defining if the pulse was successfully completed for every gamepads.
      */
     pulseAll(intensity, duration, options) {
-        return new Promise((resolve, reject) => {
-            Promise.all(
-                this.current.map(pad => pad.pulse(intensity, duration, options))
-            ).then(resolve).catch(reject);
-        });
+        return Promise.all(
+            this.current.map(pad => pad.pulse(intensity, duration, options))
+        );
     }
 
     /**
