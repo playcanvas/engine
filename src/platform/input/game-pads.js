@@ -426,7 +426,7 @@ class GamePad {
                     });
                 }
 
-                return actuator.playEffect('vibration', {
+                return actuator.playEffect(actuator.type, {
                     'duration': duration,
                     'startDelay': 0,
                     'strongMagnitude': intensity,
