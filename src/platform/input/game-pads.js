@@ -418,7 +418,7 @@ class GamePad {
         if (actuator) {
             if (actuator.playEffect) {
                 if (options) {
-                    return actuator.playEffect(options.type === 'dual-rumble' ? 'dual-rumble' : 'vibration', {
+                    return actuator.playEffect(options.type ?? actuator.type, {
                         'duration': duration,
                         'startDelay': options.startDelay || 0,
                         'strongMagnitude': typeof options.strongMagnitude === 'number' ? options.strongMagnitude : intensity,
