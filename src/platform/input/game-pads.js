@@ -421,8 +421,8 @@ class GamePad {
                     return actuator.playEffect(options.type ?? actuator.type, {
                         'duration': duration,
                         'startDelay': options.startDelay || 0,
-                        'strongMagnitude': typeof options.strongMagnitude === 'number' ? options.strongMagnitude : intensity,
-                        'weakMagnitude': typeof options.weakMagnitude === 'number' ? options.weakMagnitude : intensity
+                        'strongMagnitude': options.strongMagnitude ?? intensity,
+                        'weakMagnitude': options.weakMagnitude ?? intensity
                     });
                 }
 
