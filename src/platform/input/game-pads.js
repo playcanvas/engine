@@ -427,10 +427,10 @@ class GamePad {
                 }
 
                 return actuator.playEffect(actuator.type, {
-                    'duration': duration,
-                    'startDelay': 0,
-                    'strongMagnitude': intensity,
-                    'weakMagnitude': intensity
+                    duration,
+                    startDelay: 0,
+                    strongMagnitude: intensity,
+                    weakMagnitude: intensity
                 });
             } else if (actuator.pulse) {
                 if (options && options.startDelay) {
