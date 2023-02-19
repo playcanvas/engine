@@ -452,15 +452,7 @@ class GamePad {
                 })
             );
 
-            for (let i = 0, l = results.length; i < l; i++) {
-                const result = results[i];
-
-                if (result === false || typeof result === 'string' && result !== 'complete') {
-                    return false;
-                }
-            }
-
-            return !!results.length;
+            return results.some(r => r === true || r === 'complete');
         }
 
         return false;
