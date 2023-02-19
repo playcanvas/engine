@@ -149,7 +149,7 @@ const PRODUCT_CODES = {
 let deadZone = 0.25;
 
 /**
- * @param {number} ms - Number of seconds to sleep for.
+ * @param {number} ms - Number of miliseconds to sleep for.
  * @returns {Promise<void>}
  */
 function sleep(ms) {
