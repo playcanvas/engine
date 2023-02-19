@@ -150,9 +150,46 @@ const PRODUCT_CODES = {
     'Product: 0268': 'PS3'
 };
 
-let deadZone = 0.25;
-
 const custom_maps = {};
+
+/**
+ * Retrieve the order for buttons and axes for given HTML5 Gamepad.
+ *
+ * @param {Gamepad} pad - The HTML5 Gamepad object.
+ * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
+ */
+function getMap(pad) {
+    const custom = custom_maps[pad.id];
+    if (custom) {
+        return custom;
+    }
+
+    for (const code in PRODUCT_CODES) {
+        if (pad.id.indexOf(code) >= 0) {
+            const product = PRODUCT_CODES[code];
+
+            if (!pad.mapping) {
+                const raw = MAPS['RAW_' + product];
+
+                if (raw) {
+                    return raw;
+                }
+            }
+
+            return MAPS[product];
+        }
+    }
+
+    if (pad.mapping === 'xr-standard') {
+        return MAPS.DEFAULT_XR;
+    }
+
+    const map = MAPS.DEFAULT;
+    map.mapping = pad.mapping;
+    return map;
+}
+
+let deadZone = 0.25;
 
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
@@ -448,6 +485,19 @@ class GamePad {
 
         this.map = map;
         this.mapping = 'custom';
+    }
+
+    /**
+     * Reset gamepad mapping to default.
+     */
+    resetMap() {
+        if (custom_maps[this.id]) {
+            delete custom_maps[this.id];
+
+            const map = getMap(this.pad);
+            this.map = map;
+            this.mapping = map.mapping;
+        }
     }
 
     /**
@@ -857,34 +907,7 @@ class GamePads extends EventHandler {
      * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
      */
     getMap(pad) {
-        const custom = custom_maps[pad.id];
-        if (custom) {
-            return custom;
-        }
-
-        for (const code in PRODUCT_CODES) {
-            if (pad.id.indexOf(code) >= 0) {
-                const product = PRODUCT_CODES[code];
-
-                if (!pad.mapping) {
-                    const raw = MAPS['RAW_' + product];
-
-                    if (raw) {
-                        return raw;
-                    }
-                }
-
-                return MAPS[product];
-            }
-        }
-
-        if (pad.mapping === 'xr-standard') {
-            return MAPS.DEFAULT_XR;
-        }
-
-        const map = MAPS.DEFAULT;
-        map.mapping = pad.mapping;
-        return map;
+        return getMap(pad);
     }
 
     /**
