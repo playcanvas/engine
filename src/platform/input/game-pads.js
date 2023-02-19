@@ -153,7 +153,9 @@ let deadZone = 0.25;
  * @returns {Promise<void>}
  */
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    });
 }
 
 /**
@@ -435,7 +437,7 @@ class GamePad {
                     }
 
                     if (actuator.playEffect) {
-                        return await actuator.playEffect(actuator.type, {
+                        return actuator.playEffect(actuator.type, {
                             duration,
                             startDelay,
                             strongMagnitude,
@@ -443,7 +445,7 @@ class GamePad {
                         });
                     } else if (actuator.pulse) {
                         await sleep(startDelay);
-                        return await actuator.pulse(intensity, duration);
+                        return actuator.pulse(intensity, duration);
                     }
 
                     return false;
