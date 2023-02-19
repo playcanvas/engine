@@ -39,6 +39,11 @@ const MAPS_INDEXES = {
     }
 };
 
+/**
+ * Configured mappings
+ *
+ * @type {Object<string, { buttons: string[], axes: string[], dualButtons?: string[][], mapping?: "standard"|"xr-standard"|"" }>}
+ */
 const MAPS = {
     DEFAULT: {
         buttons: [
@@ -76,6 +81,49 @@ const MAPS = {
             'PAD_L_STICK_Y',
             'PAD_R_STICK_X',
             'PAD_R_STICK_Y'
+        ]
+    },
+
+    DEFAULT_DUAL: {
+        buttons: [
+            // Face buttons
+            'PAD_FACE_1',
+            'PAD_FACE_2',
+            'PAD_FACE_3',
+            'PAD_FACE_4',
+
+            // Shoulder buttons
+            'PAD_L_SHOULDER_1',
+            'PAD_R_SHOULDER_1',
+            'PAD_L_SHOULDER_2',
+            'PAD_R_SHOULDER_2',
+
+            // Other buttons
+            'PAD_SELECT',
+            'PAD_START',
+            'PAD_L_STICK_BUTTON',
+            'PAD_R_STICK_BUTTON',
+
+             // Vendor specific button
+            'PAD_VENDOR'
+        ],
+
+        axes: [
+            // Analog Sticks
+            'PAD_L_STICK_X',
+            'PAD_L_STICK_Y',
+            'PAD_R_STICK_X',
+            'PAD_R_STICK_Y'
+        ],
+
+        dualButtons: [
+            [],
+            [],
+            [],
+            [],
+            // D Pad
+            ['PAD_DOWN', 'PAD_UP'],
+            ['PAD_LEFT', 'PAD_RIGHT']
         ]
     },
 
@@ -184,7 +232,8 @@ function getMap(pad) {
         return MAPS.DEFAULT_XR;
     }
 
-    const map = MAPS.DEFAULT;
+    const defaultmap = MAPS.DEFAULT;
+    const map = pad.buttons.length < defaultmap.buttons.length ? MAPS.DEFAULT_DUAL : defaultmap;
     map.mapping = pad.mapping;
     return map;
 }
