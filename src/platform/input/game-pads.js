@@ -448,7 +448,7 @@ class GamePad {
 
         this.map = map;
         this.mapping = 'custom';
-    };
+    }
 
     /**
      * The values from analog axes present on the GamePad. Values are between -1 and 1.
