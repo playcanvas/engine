@@ -39,11 +39,6 @@ const MAPS_INDEXES = {
     }
 };
 
-/**
- * Configured mappings
- *
- * @type {Object<string, { buttons: string[], axes: string[], dualButtons?: string[][], mapping?: "standard"|"xr-standard"|"" }>}
- */
 const MAPS = {
     DEFAULT: {
         buttons: [
