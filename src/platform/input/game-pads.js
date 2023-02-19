@@ -114,7 +114,9 @@ const MAPS = {
             'PAD_L_STICK_Y',
             'PAD_R_STICK_X',
             'PAD_R_STICK_Y'
-        ]
+        ],
+
+        mapping: 'standard'
     },
 
     DEFAULT_XR: {
@@ -138,7 +140,9 @@ const MAPS = {
             'XRPAD_TOUCHPAD_Y',
             'XRPAD_STICK_X',
             'XRPAD_STICK_Y'
-        ]
+        ],
+
+        mapping: 'xr-standard'
     }
 };
 
@@ -147,6 +151,8 @@ const PRODUCT_CODES = {
 };
 
 let deadZone = 0.25;
+
+const custom_maps = {};
 
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
@@ -317,11 +323,11 @@ class GamePad {
         this._previousAxes = [...gamepad.axes];
 
         /**
-         * The gamepad mapping detected by the browser. Value is either "standard" or "xr-standard".
+         * The gamepad mapping detected by the browser. Value is either "standard", "xr-standard", "" or "custom". When empty string, you may need to update the mapping yourself. "custom" means you updated the mapping.
          *
          * @type {string}
          */
-        this.mapping = gamepad.mapping === 'xr-standard' ? 'xr-standard' : 'standard';
+        this.mapping = map.mapping;
 
         /**
          * The buttons and axes map.
@@ -391,6 +397,58 @@ class GamePad {
         previousAxes.length = 0;
         previousAxes.push(...this.pad.axes);
     }
+
+    /**
+     * Update the map for this gamepad.
+     *
+     * @param {object} map - The new mapping for this gamepad.
+     * @param {string[]} map.buttons - Buttons mapping for this gamepad.
+     * @param {string[]} map.axes - Axes mapping for this gamepad.
+     * @param {string[][]} [map.dualButtons] - Axes to consider as buttons for this gamepad.
+     * @param {"custom"} [map.mapping] - New mapping format. Will be forced into "custom".
+     * @example
+     * this.pad.updateMap({
+     *     buttons: [[
+     *         'PAD_FACE_1',
+     *         'PAD_FACE_2',
+     *         'PAD_FACE_3',
+     *         'PAD_FACE_4',
+     *         'PAD_L_SHOULDER_1',
+     *         'PAD_R_SHOULDER_1',
+     *         'PAD_L_SHOULDER_2',
+     *         'PAD_R_SHOULDER_2',
+     *         'PAD_SELECT',
+     *         'PAD_START',
+     *         'PAD_L_STICK_BUTTON',
+     *         'PAD_R_STICK_BUTTON',
+     *         'PAD_VENDOR'
+     *     ],
+     *     axes: [
+     *         'PAD_L_STICK_X',
+     *         'PAD_L_STICK_Y',
+     *         'PAD_R_STICK_X',
+     *         'PAD_R_STICK_Y'
+     *     ],
+     *     dualButtons: [
+     *         [],
+     *         [],
+     *         [],
+     *         [],
+     *         // Take D-PAD from axes values
+     *         [ 'PAD_DOWN', 'PAD_UP' ],
+     *         [ 'PAD_LEFT', 'PAD_RIGHT' ],
+     *     ]
+     * });
+     */
+    updateMap(map) {
+        map.mapping = 'custom';
+
+        // Save the map in case of disconnection.
+        custom_maps[this.id] = map;
+
+        this.map = map;
+        this.mapping = 'custom';
+    };
 
     /**
      * The values from analog axes present on the GamePad. Values are between -1 and 1.
@@ -635,7 +693,11 @@ class GamePads extends EventHandler {
      * @param {GamePad} gamepad - The gamepad that was just connected.
      * @example
      * var onPadConnected = function (pad) {
-     *     // Make the gamepad pulse.
+     *     if (!pad.mapping) {
+     *         // Map the gamepad as the system could not find the proper map.
+     *     } else {
+     *         // Make the gamepad pulse.
+     *     }
      * };
      * app.keyboard.on("gamepadconnected", onPadConnected, this);
      */
@@ -795,16 +857,34 @@ class GamePads extends EventHandler {
      * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
      */
     getMap(pad) {
+        const custom = custom_maps[pad.id];
+        if (custom) {
+            return custom;
+        }
+
         for (const code in PRODUCT_CODES) {
             if (pad.id.indexOf(code) >= 0) {
-                return MAPS[PRODUCT_CODES[code]];
+                const product = PRODUCT_CODES[code];
+
+                if (!pad.mapping) {
+                    const raw = MAPS['RAW_' + product];
+
+                    if (raw) {
+                        return raw;
+                    }
+                }
+
+                return MAPS[product];
             }
         }
 
-        if (pad.mapping === 'xr-standard')
+        if (pad.mapping === 'xr-standard') {
             return MAPS.DEFAULT_XR;
+        }
 
-        return MAPS.DEFAULT;
+        const map = MAPS.DEFAULT;
+        map.mapping = pad.mapping;
+        return map;
     }
 
     /**
