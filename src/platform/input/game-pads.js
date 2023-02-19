@@ -149,6 +149,14 @@ const PRODUCT_CODES = {
 let deadZone = 0.25;
 
 /**
+ * @param {number} ms - Number of seconds to sleep for.
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * A GamePadButton stores information about a button from the Gamepad API.
  */
 class GamePadButton {
@@ -412,63 +420,48 @@ class GamePad {
      * @param {number} [options.weakMagnitude] - Intensity for weak actuators in the range 0 to 1. Defaults to intensity.
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
      */
-    pulse(intensity, duration, options) {
-        return new Promise((resolve) => {
-            const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || [];
+    async pulse(intensity, duration, options) {
+        const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || [];
 
-            if (actuators.length) {
-                Promise.all(
-                    actuators.map((actuator) => {
-                        if (!actuator) {
-                            return true;
-                        }
+        if (actuators.length) {
+            const startDelay = options?.startDelay ?? 0;
+            const strongMagnitude = options?.strongMagnitude ?? intensity;
+            const weakMagnitude = options?.weakMagnitude ?? intensity;
 
-                        if (actuator.playEffect) {
-                            if (options) {
-                                return actuator.playEffect(options.type ?? actuator.type, {
-                                    duration,
-                                    startDelay: options.startDelay || 0,
-                                    strongMagnitude: options.strongMagnitude ?? intensity,
-                                    weakMagnitude: options.weakMagnitude ?? intensity
-                                });
-                            }
-
-                            return actuator.playEffect(actuator.type, {
-                                duration,
-                                startDelay: 0,
-                                strongMagnitude: intensity,
-                                weakMagnitude: intensity
-                            });
-                        } else if (actuator.pulse) {
-                            if (options && options.startDelay) {
-                                // Custom delay
-                                return new Promise(function (resolve, reject) {
-                                    setTimeout(function () {
-                                        actuator.pulse(intensity, duration).then(resolve).catch(reject);
-                                    }, options.startDelay);
-                                });
-                            }
-
-                            return actuator.pulse(intensity, duration);
-                        }
-
-                        return false;
-                    })
-                ).then((results) => {
-                    for (let i = 0, l = results.length; i < l; i++) {
-                        const result = results[i];
-
-                        if (result === false || typeof result === 'string' && result !== 'complete') {
-                            return resolve(false);
-                        }
+            const results = await Promise.all(
+                actuators.map(async (actuator) => {
+                    if (!actuator) {
+                        return true;
                     }
 
-                    resolve(!!results.length);
-                });
+                    if (actuator.playEffect) {
+                        return await actuator.playEffect(actuator.type, {
+                            duration,
+                            startDelay,
+                            strongMagnitude,
+                            weakMagnitude
+                        });
+                    } else if (actuator.pulse) {
+                        await sleep(startDelay);
+                        return await actuator.pulse(intensity, duration);
+                    }
+
+                    return false;
+                })
+            );
+
+            for (let i = 0, l = results.length; i < l; i++) {
+                const result = results[i];
+
+                if (result === false || typeof result === 'string' && result !== 'complete') {
+                    return false;
+                }
             }
 
-            resolve(false);
-        });
+            return !!results.length;
+        }
+
+        return false;
     }
 
     /**
