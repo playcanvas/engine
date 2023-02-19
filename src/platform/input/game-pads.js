@@ -193,7 +193,11 @@ class GamePads {
         const key = obj.map.buttons[button];
         // eslint-disable-next-line
         const i = constants[key];
-        return obj.pad.buttons[i].pressed;
+        const padButton = obj.pad.buttons[i];
+        if (!padButton) {
+            return false;
+        }
+        return padButton.pressed;
     }
 
     /**
@@ -213,9 +217,13 @@ class GamePads {
         // eslint-disable-next-line
         const i = constants[key];
         const prevObj = this.previous[index];
+        const padButton = obj.pad.buttons[i];
+        if (!padButton) {
+            return false;
+        }
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
-        return obj.pad.buttons[i].pressed && !(prevObj && prevObj[i]);
+        return padButton.pressed && !(prevObj && prevObj[i]);
     }
 
     /**
@@ -235,9 +243,13 @@ class GamePads {
         // eslint-disable-next-line
         const i = constants[key];
         const prevObj = this.previous[index];
+        const padButton = obj.pad.buttons[i];
+        if (!padButton) {
+            return false;
+        }
         // Previous pad buttons may not have been populated yet
         // If this is the first time frame a pad has been detected
-        return !obj.pad.buttons[i].pressed && (prevObj && prevObj[i]);
+        return !padButton.pressed && (prevObj && prevObj[i]);
     }
 
     /**
