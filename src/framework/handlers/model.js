@@ -1,5 +1,4 @@
 import { path } from '../../core/path.js';
-import { Debug } from '../../core/debug.js';
 
 import { http, Http } from '../../platform/net/http.js';
 
@@ -83,7 +82,7 @@ class ModelHandler {
                 // parse the model
                 for (let i = 0; i < this._parsers.length; i++) {
                     const p = this._parsers[i];
-        
+
                     if (p.decider(url.original, response)) {
                         p.parser.parse(response, (err, parseResult) => {
                             if (err) {
