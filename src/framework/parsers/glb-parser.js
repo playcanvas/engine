@@ -235,7 +235,7 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
             }
         }
     } else {
-        if (gltfAccessor.bufferView) {
+        if (gltfAccessor.hasOwnProperty("bufferView")) {
             const bufferView = bufferViews[gltfAccessor.bufferView];
             if (flatten && bufferView.hasOwnProperty('byteStride')) {
                 // flatten stridden data
@@ -610,7 +610,6 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
                 normalize: accessor.normalized
             };
         }
-        console.log(sourceDesc)
 
         // generate normals if they're missing (this should probably be a user option)
         if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
