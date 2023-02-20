@@ -191,7 +191,6 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
         return null;
     }
 
-    const bufferView = bufferViews[gltfAccessor.bufferView];
     let result;
 
     if (gltfAccessor.sparse) {
@@ -235,26 +234,33 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
                 result[targetIndex * numComponents + j] = values[i * numComponents + j];
             }
         }
-    } else if (flatten && bufferView.hasOwnProperty('byteStride')) {
-        // flatten stridden data
-        const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
-        const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
-        const tmpArray = new Uint8Array(storage);
-
-        let dstOffset = 0;
-        for (let i = 0; i < gltfAccessor.count; ++i) {
-            // no need to add bufferView.byteOffset because accessor takes this into account
-            let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
-            for (let b = 0; b < bytesPerElement; ++b) {
-                tmpArray[dstOffset++] = bufferView[srcOffset++];
-            }
-        }
-
-        result = new dataType(storage);
     } else {
-        result = new dataType(bufferView.buffer,
-                              bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
-                              gltfAccessor.count * numComponents);
+        if (gltfAccessor.hasOwnProperty("bufferView")) {
+            const bufferView = bufferViews[gltfAccessor.bufferView];
+            if (flatten && bufferView.hasOwnProperty('byteStride')) {
+                // flatten stridden data
+                const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
+                const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
+                const tmpArray = new Uint8Array(storage);
+
+                let dstOffset = 0;
+                for (let i = 0; i < gltfAccessor.count; ++i) {
+                    // no need to add bufferView.byteOffset because accessor takes this into account
+                    let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
+                    for (let b = 0; b < bytesPerElement; ++b) {
+                        tmpArray[dstOffset++] = bufferView[srcOffset++];
+                    }
+                }
+
+                result = new dataType(storage);
+            } else {
+                result = new dataType(bufferView.buffer,
+                                      bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
+                                      gltfAccessor.count * numComponents);
+            }
+        } else {
+            result = new dataType(gltfAccessor.count * numComponents);
+        }
     }
 
     return result;
@@ -592,7 +598,7 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
             const bufferView = bufferViews[accessor.bufferView];
             const semantic = gltfToEngineSemanticMap[attrib];
             const size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
-            const stride = bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
+            const stride = bufferView && bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
                 buffer: accessorData.buffer,
                 size: size,
