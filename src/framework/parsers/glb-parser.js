@@ -2319,8 +2319,8 @@ const parseGltf = function (gltfChunk, callback) {
     }
 
     // check required extensions
-    const extensionsRequired = gltf?.extensionsRequired || [];
-    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
+    const extensionsUsed = gltf?.extensionsUsed || [];
+    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
         WasmModule.getInstance('DracoDecoderModule', (instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);
