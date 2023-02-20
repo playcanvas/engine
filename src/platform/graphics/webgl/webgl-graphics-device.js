@@ -1399,7 +1399,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
+        Debug.call(() => {
+            if (this.insideRenderPass) {
+                Debug.errorOnce('RenderPass cannot be started while inside another render pass.');
+            }
+        });
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);
