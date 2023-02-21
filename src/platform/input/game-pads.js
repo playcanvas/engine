@@ -869,7 +869,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * Callback function when a gamepad is connection.
+     * Callback function when a gamepad is disconnecting.
      *
      * @param {GamepadEvent} event - The event containing the disconnecting gamepad.
      * @ignore
