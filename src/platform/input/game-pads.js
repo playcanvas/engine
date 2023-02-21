@@ -1,5 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
+import { math } from '../../core/math/math';
 
 const MAPS_INDEXES = {
     buttons: {
@@ -208,7 +209,7 @@ function getMap(pad) {
     }
 
     for (const code in PRODUCT_CODES) {
-        if (pad.id.indexOf(code) >= 0) {
+        if (pad.id.indexOf(code) !== -1) {
             const product = PRODUCT_CODES[code];
 
             if (!pad.mapping) {
@@ -455,8 +456,9 @@ class GamePad {
         for (let i = 0, l = buttons.length; i < l; i++) {
             const button = buttons[i];
 
-            if (button)
+            if (button) {
                 button.update(gamepad.buttons[i]);
+            }
         }
 
         return this;
@@ -626,21 +628,22 @@ class GamePad {
         const dualButtons = this.map.dualButtons;
         if (dualButtons) {
             const dualIndex = dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
+
             if (dualIndex !== -1) {
                 const index = dualButtons[dualIndex].indexOf(indexName);
                 const max = index === 0 ? 0 : 1;
                 const min = index === 0 ? -1 : 0;
 
-                const value = Math.abs(Math.max(min, Math.max(this.axes[dualIndex], max)));
+                const value = Math.abs(math.clamp(this.axes[dualIndex], min, max));
                 const axisButton = new GamePadButton({
-                    'pressed': value === 1,
-                    'touched': value > 0,
-                    'value': value
+                    pressed: value === 1,
+                    touched: !!value,
+                    value
                 });
 
-                const previousValue = Math.abs(Math.max(min, Math.max(this._previousAxes[dualIndex], max)));
+                const previousValue = Math.abs(math.clamp(this._previousAxes[dualIndex], min, max));
                 axisButton._previouslyPressed = previousValue === 1;
-                axisButton._previouslyTouched = previousValue > 0;
+                axisButton._previouslyTouched = !!previousValue;
 
                 return axisButton;
             }
@@ -668,7 +671,7 @@ class GamePad {
      */
     isPressed(button) {
         const b = this.getButton(button);
-        return b ? b.pressed : false;
+        return b && b.pressed;
     }
 
     /**
@@ -679,7 +682,7 @@ class GamePad {
      */
     wasPressed(button) {
         const b = this.getButton(button);
-        return b ? b.wasPressed : false;
+        return b && b.wasPressed;
     }
 
     /**
@@ -690,7 +693,7 @@ class GamePad {
      */
     wasReleased(button) {
         const b = this.getButton(button);
-        return b ? b.wasReleased : false;
+        return b && b.wasReleased;
     }
 
     /**
@@ -701,7 +704,7 @@ class GamePad {
      */
     isTouched(button) {
         const b = this.getButton(button);
-        return b ? b.touched : false;
+        return b && b.touched;
     }
 
     /**
@@ -712,7 +715,7 @@ class GamePad {
      */
     wasTouched(button) {
         const b = this.getButton(button);
-        return b ? b.wasTouched : false;
+        return b && b.wasTouched;
     }
 
     /**
@@ -840,7 +843,7 @@ class GamePads extends EventHandler {
 
             for (let j = 0, m = buttons.length; j < m; j++) {
                 const button = buttons[i];
-                this._previous[i][j] = button ? button._previouslyPressed : false;
+                this._previous[i][j] = button && button._previouslyPressed;
             }
         }
 
