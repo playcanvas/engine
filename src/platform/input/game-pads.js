@@ -251,6 +251,26 @@ function sleep(ms) {
  */
 class GamePadButton {
     /**
+     * The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
+     *
+     * @type {number}
+     */
+    value;
+
+    /**
+     * Whether the button is currently down.
+     *
+     * @type {boolean}
+     */
+    pressed;
+
+    /**
+     * Whether the button is currently touched.
+     *
+     * @type {boolean}
+     */
+    touched;
+    /**
      * Whether this button was pressed on last frame.
      *
      * @type {boolean}
@@ -277,12 +297,32 @@ class GamePadButton {
     /**
      * Create a new GamePadButton instance.
      *
-     * @param {GamepadButton} button - The original Gamepad API gamepad button.
+     * @param {number|GamepadButton} current - The original Gamepad API gamepad button.
+     * @param {number|GamepadButton} [previous] - The previous Gamepad API gamepad button.
      * @hideconstructor
      */
-    constructor(button) {
-        this._button = button;
-        this.updatePrevious();
+    constructor(current, previous) {
+        if (typeof current === 'number') {
+            this.value = current;
+            this.pressed = current === 1;
+            this.touched = current > 0;
+        } else {
+            this.value = current.value;
+            this.pressed = current.pressed;
+            this.touched = current.touched ?? current.value > 0;
+        }
+
+        if (previous) {
+            if (typeof previous === 'number') {
+                this._previouslyPressed = previous === 1;
+                this._previouslyTouched = previous > 0;
+            } else {
+                this._previouslyPressed = previous.pressed;
+                this._previouslyTouched = previous.touched ?? previous.value > 0;
+            }
+        } else {
+            this.updatePrevious();
+        }
     }
 
     /**
@@ -292,7 +332,11 @@ class GamePadButton {
      * @ignore
      */
     update(button) {
-        this._button = button;
+        this.updatePrevious();
+
+        this.value = button.value;
+        this.pressed = button.pressed;
+        this.touched = button.touched ?? button.value > 0;
     }
 
     /**
@@ -303,24 +347,6 @@ class GamePadButton {
     updatePrevious() {
         this._previouslyPressed = this.pressed;
         this._previouslyTouched = this.touched;
-    }
-
-    /**
-     * The value for the button between 0 and 1, with 0 representing a button that is not pressed, and 1 representing a button that is fully pressed.
-     *
-     * @type {number}
-     */
-    get value() {
-        return this._button.value;
-    }
-
-    /**
-     * Whether the button is currently down.
-     *
-     * @type {boolean}
-     */
-    get pressed() {
-        return this._button.pressed;
     }
 
     /**
@@ -339,15 +365,6 @@ class GamePadButton {
      */
     get wasReleased() {
         return this._previouslyPressed && !this.pressed;
-    }
-
-    /**
-     * Whether the button is currently touched.
-     *
-     * @type {boolean}
-     */
-    get touched() {
-        return this._button.touched ?? this._button.value > 0;
     }
 
     /**
@@ -395,6 +412,14 @@ class GamePad {
         this._buttons = gamepad.buttons.map((b) => {
             return b ? new GamePadButton(b) : null;
         });
+
+        /**
+         * The axes values from the GamePad. Order is provided by API, use GamePad#axes instead.
+         *
+         * @type {number[]}
+         * @ignore
+         */
+        this._axes = [...gamepad.axes];
 
         /**
          * Previous value for the analog axes present on the gamepad. Values are between -1 and 1.
@@ -452,6 +477,17 @@ class GamePad {
     update(gamepad) {
         this.pad = gamepad;
 
+        // Store previous values for axes for dual buttons.
+        const previousAxes = this._previousAxes;
+        previousAxes.length = 0;
+        previousAxes.push(...this._axes);
+
+        // Update axes
+        const axes = this._axes;
+        axes.length = 0;
+        this._axes.push(...gamepad.axes);
+
+        // Update buttons
         const buttons = this._buttons;
         for (let i = 0, l = buttons.length; i < l; i++) {
             const button = buttons[i];
@@ -462,23 +498,6 @@ class GamePad {
         }
 
         return this;
-    }
-
-    /**
-     * Update the previous values for buttons and axes.
-     *
-     * @ignore
-     */
-    updatePrevious() {
-        const buttons = this._buttons;
-        for (let i = 0, m = buttons.length; i < m; i++) {
-            buttons[i].updatePrevious();
-        }
-
-        // Store previous values for axes for dual buttons.
-        const previousAxes = this._previousAxes;
-        previousAxes.length = 0;
-        previousAxes.push(...this.pad.axes);
     }
 
     /**
@@ -634,18 +653,10 @@ class GamePad {
                 const max = index === 0 ? 0 : 1;
                 const min = index === 0 ? -1 : 0;
 
-                const value = Math.abs(math.clamp(this.axes[dualIndex], min, max));
-                const axisButton = new GamePadButton({
-                    pressed: value === 1,
-                    touched: !!value,
-                    value
-                });
-
-                const previousValue = Math.abs(math.clamp(this._previousAxes[dualIndex], min, max));
-                axisButton._previouslyPressed = previousValue === 1;
-                axisButton._previouslyTouched = !!previousValue;
-
-                return axisButton;
+                return new GamePadButton(
+                    Math.abs(math.clamp(this._axes[dualIndex] ?? 0, min, max)),
+                    Math.abs(math.clamp(this._previousAxes[dualIndex] ?? 0, min, max))
+                );
             }
         }
 
@@ -892,11 +903,6 @@ class GamePads extends EventHandler {
      * `wasPressed` and `wasTouched` to work.
      */
     update() {
-        const current = this.current;
-        for (let i = 0, l = current.length; i < l; i++) {
-            current[i].updatePrevious();
-        }
-
         this.poll();
     }
 
