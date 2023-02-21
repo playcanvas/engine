@@ -213,7 +213,7 @@ class BlendState {
     /**
      * A default blend state, that is not blending and writes to all color channels.
      *
-     * @type {Color}
+     * @type {BlendState}
      * @readonly
      */
     static DEFAULT = Object.freeze(new BlendState());
