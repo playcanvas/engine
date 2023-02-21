@@ -532,10 +532,10 @@ class GamePad {
      *         'PAD_R_STICK_Y'
      *     ],
      *     synthesizedButtons: {
-     *         'PAD_UP': { axis: 0, min: 0, max: 1 },
-     *         'PAD_DOWN': { axis: 0, min: -1, max: 0 },
-     *         'PAD_LEFT': { axis: 0, min: -1, max: 0 },
-     *         'PAD_RIGHT': { axis: 0, min: 0, max: 1 }
+     *         PAD_UP: { axis: 0, min: 0, max: 1 },
+     *         PAD_DOWN: { axis: 0, min: -1, max: 0 },
+     *         PAD_LEFT: { axis: 0, min: -1, max: 0 },
+     *         PAD_RIGHT: { axis: 0, min: 0, max: 1 }
      *     }
      * });
      */
