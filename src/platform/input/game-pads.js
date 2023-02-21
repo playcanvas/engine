@@ -9,9 +9,13 @@ import { math } from '../../core/math/math.js';
  * @returns {Gamepad[]} Retrieved gamepads from the device.
  * @ignore
  */
-const fetchGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || function () {
+let fetchGamepads = function () {
     return [];
-}).bind(typeof navigator !== 'undefined' ? navigator : undefined);
+};
+
+if (typeof navigator !== 'undefined') {
+    fetchGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || fetchGamepads).bind(navigator);
+}
 
 const MAPS_INDEXES = {
     buttons: {
