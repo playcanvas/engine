@@ -312,6 +312,7 @@ class GamePadButton {
             this.value = current.value;
             this.pressed = current.pressed;
             this.touched = current.touched ?? current.value > 0;
+            this._button = current;
         }
 
         if (previous) {
