@@ -775,7 +775,7 @@ class GamePads extends EventHandler {
         this._ongamepaddisconnectedHandler = this._ongamepaddisconnected.bind(this);
 
         window.addEventListener('gamepadconnected', this._ongamepadconnectedHandler, false);
-        window.addEventListener('gamepaddisconnected', this._ongamepadconnectedHandler, false);
+        window.addEventListener('gamepaddisconnected', this._ongamepaddisconnectedHandler, false);
 
         this.poll();
     }
