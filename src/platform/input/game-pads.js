@@ -271,6 +271,7 @@ class GamePadButton {
      */
 
     touched;
+
     /**
      * Whether this button was pressed on last frame.
      *
