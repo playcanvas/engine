@@ -112,15 +112,12 @@ const MAPS = {
             'PAD_R_STICK_Y'
         ],
 
-        dualButtons: [
-            [],
-            [],
-            [],
-            [],
-            // D Pad
-            ['PAD_DOWN', 'PAD_UP'],
-            ['PAD_LEFT', 'PAD_RIGHT']
-        ]
+        synthesizedButtons: {
+            'PAD_UP': { axis: 0, min: 0, max: 1 },
+            'PAD_DOWN': { axis: 0, min: -1, max: 0 },
+            'PAD_LEFT': { axis: 0, min: -1, max: 0 },
+            'PAD_RIGHT': { axis: 0, min: 0, max: 1 }
+        }
     },
 
     PS3: {
@@ -509,7 +506,7 @@ class GamePad {
      * @param {object} map - The new mapping for this gamepad.
      * @param {string[]} map.buttons - Buttons mapping for this gamepad.
      * @param {string[]} map.axes - Axes mapping for this gamepad.
-     * @param {string[][]} [map.dualButtons] - Axes to consider as buttons for this gamepad.
+     * @param {object} [map.synthesizedButtons] - Information about buttons to pull from axes for this gamepad. Requires definition of axis index, min value and max value.
      * @param {"custom"} [map.mapping] - New mapping format. Will be forced into "custom".
      * @example
      * this.pad.updateMap({
@@ -534,15 +531,12 @@ class GamePad {
      *         'PAD_R_STICK_X',
      *         'PAD_R_STICK_Y'
      *     ],
-     *     dualButtons: [
-     *         [],
-     *         [],
-     *         [],
-     *         [],
-     *         // Take D-PAD from axes values
-     *         [ 'PAD_DOWN', 'PAD_UP' ],
-     *         [ 'PAD_LEFT', 'PAD_RIGHT' ],
-     *     ]
+     *     synthesizedButtons: {
+     *         'PAD_UP': { axis: 0, min: 0, max: 1 },
+     *         'PAD_DOWN': { axis: 0, min: -1, max: 0 },
+     *         'PAD_LEFT': { axis: 0, min: -1, max: 0 },
+     *         'PAD_RIGHT': { axis: 0, min: 0, max: 1 }
+     *     }
      * });
      */
     updateMap(map) {
@@ -641,27 +635,22 @@ class GamePad {
      * @ignore
      */
     _getButton(indexName) {
+        const synthesizedButton = this.map.synthesizedButtons[indexName];
+        if (synthesizedButton) {
+            const { axis, max, min } = synthesizedButton;
+
+            return new GamePadButton(
+                Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)),
+                Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max))
+            );
+        }
+
         const button = this._buttons[MAPS_INDEXES.buttons[indexName]];
 
         if (button) {
             return button;
         }
 
-        const dualButtons = this.map.dualButtons;
-        if (dualButtons) {
-            const dualIndex = dualButtons.findIndex(a => a.indexOf(indexName) !== -1);
-
-            if (dualIndex !== -1) {
-                const index = dualButtons[dualIndex].indexOf(indexName);
-                const max = index === 0 ? 0 : 1;
-                const min = index === 0 ? -1 : 0;
-
-                return new GamePadButton(
-                    Math.abs(math.clamp(this._axes[dualIndex] ?? 0, min, max)),
-                    Math.abs(math.clamp(this._previousAxes[dualIndex] ?? 0, min, max))
-                );
-            }
-        }
 
         return null;
     }
