@@ -347,7 +347,7 @@ class GamePadButton {
      * @type {boolean}
      */
     get touched() {
-        return typeof this._button.touched === 'boolean' ? this._button.touched : this._button.value > 0;
+        return this._button.touched ?? this._button.value > 0;
     }
 
     /**
