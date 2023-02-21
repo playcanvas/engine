@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';

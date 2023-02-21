@@ -590,7 +590,7 @@ GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
     this.setBlendState(_tempBlendState);
 };
 
-GraphicsDevice.prototype.setBlendFunctionSeparate = function(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
     Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
