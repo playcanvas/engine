@@ -269,6 +269,7 @@ class GamePadButton {
      *
      * @type {boolean}
      */
+
     touched;
     /**
      * Whether this button was pressed on last frame.
