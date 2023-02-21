@@ -2,6 +2,17 @@ import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 import { math } from '../../core/math/math.js';
 
+/**
+ * Fetch Gamepads from API.
+ *
+ * @type {Function}
+ * @returns {Gamepad[]} Retrieved gamepads from the device.
+ * @ignore
+ */
+const fetchGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || function () {
+    return [];
+}).bind(typeof navigator !== 'undefined' ? navigator : undefined);
+
 const MAPS_INDEXES = {
     buttons: {
         PAD_FACE_1,
@@ -761,7 +772,7 @@ class GamePads extends EventHandler {
          *
          * @type {boolean}
          */
-        this.gamepadsSupported = navigator ? !!navigator.getGamepads || !!navigator.webkitGetGamepads : false;
+        this.gamepadsSupported = typeof navigator !== 'undefined' ? !!navigator.getGamepads || !!navigator.webkitGetGamepads : false;
 
         /**
          * The list of current gamepads.
@@ -769,6 +780,7 @@ class GamePads extends EventHandler {
          * @type {GamePad[]}
          */
         this.current = [];
+
         /**
          * The list of previous buttons states
          *
@@ -893,6 +905,8 @@ class GamePads extends EventHandler {
     /**
      * Update the previous state of the gamepads. This must be called every frame for
      * `wasPressed` and `wasTouched` to work.
+     *
+     * @ignore
      */
     update() {
         this.poll();
@@ -915,7 +929,7 @@ class GamePads extends EventHandler {
         }
 
         if (this.gamepadsSupported) {
-            const padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
+            const padDevices = fetchGamepads();
 
             for (let i = 0, len = padDevices.length; i < len; i++) {
                 if (padDevices[i]) {
