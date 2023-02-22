@@ -1,5 +1,5 @@
 export default /* glsl */`
-void addAmbient() {
+void addAmbient(Frontend frontend) {
     dDiffuseLight += light_globalAmbient;
 }
 `;

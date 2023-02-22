@@ -8,14 +8,14 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction() {
+void addRefraction(Frontend frontend) {
     // use same reflection code with refraction vector
     vec3 tmpDir = dReflDirW;
     vec4 tmpRefl = dReflection;
     dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
     dReflection = vec4(0);
-    addReflection();
-    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, dTransmission);
+    addReflection(frontend);
+    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * frontend.dAlbedo, dTransmission);
     dReflection = tmpRefl;
     dReflDirW = tmpDir;
 }

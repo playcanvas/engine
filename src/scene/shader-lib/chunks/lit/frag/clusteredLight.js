@@ -315,7 +315,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
-void evaluateLight(ClusterLightData light) {
+void evaluateLight(ClusterLightData light, Frontend frontend) {
 
     dAtten3 = vec3(1.0);
 
@@ -525,7 +525,7 @@ void evaluateLight(ClusterLightData light) {
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
                 #if defined(LIT_CONSERVE_ENERGY)
-                    punctualDiffuse = mix(punctualDiffuse, vec3(0), dSpecularity);
+                    punctualDiffuse = mix(punctualDiffuse, vec3(0), frontend.dSpecularity);
                 #endif
                 #endif
                 #endif
@@ -540,9 +540,9 @@ void evaluateLight(ClusterLightData light) {
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), dSpecularity);
+                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend.dSpecularity);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * dSpecularity;
+                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * frontend.dSpecularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
@@ -562,7 +562,7 @@ void evaluateLight(ClusterLightData light) {
     }
 }
 
-void evaluateClusterLight(float lightIndex) {
+void evaluateClusterLight(float lightIndex, Frontend frontend) {
 
     // decode core light data from textures
     ClusterLightData clusterLightData;
@@ -570,10 +570,10 @@ void evaluateClusterLight(float lightIndex) {
 
     // evaluate light if it uses accepted light mask
     if (acceptLightMask(clusterLightData))
-        evaluateLight(clusterLightData);
+        evaluateLight(clusterLightData, frontend);
 }
 
-void addClusteredLights() {
+void addClusteredLights(Frontend frontend) {
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 
@@ -598,7 +598,7 @@ void addClusteredLights() {
                 if (lightIndex <= 0.0)
                         return;
 
-                evaluateClusterLight(lightIndex * 255.0); 
+                evaluateClusterLight(lightIndex * 255.0, frontend); 
             }
 
         #else
@@ -614,7 +614,7 @@ void addClusteredLights() {
                 if (lightIndex <= 0.0)
                     return;
                 
-                evaluateClusterLight(lightIndex * 255.0); 
+                evaluateClusterLight(lightIndex * 255.0, frontend); 
 
                 // end of the cell array
                 if (lightCellIndex >= clusterMaxCells) {

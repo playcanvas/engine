@@ -138,14 +138,14 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
     return tSpecularity * t2.x + ( vec3( 1.0 ) - tSpecularity) * t2.y;
 }
 
-void calcLTCLightValues()
+void calcLTCLightValues(Frontend frontend)
 {
     dLTCUV = getLTCLightUV(dGlossiness, dNormalW);
-    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, dSpecularity); 
+    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, frontend.dSpecularity); 
 
 #ifdef LIT_CLEARCOAT
     ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(ccSpecularity));
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(frontend.ccSpecularity));
 #endif
 }
 

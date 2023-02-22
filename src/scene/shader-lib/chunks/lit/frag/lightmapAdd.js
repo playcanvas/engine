@@ -1,5 +1,5 @@
 export default /* glsl */`
-void addLightMap() {
-    dDiffuseLight += dLightmap;
+void addLightMap(Frontend frontend) {
+    dDiffuseLight += frontend.dLightmap;
 }
 `;
