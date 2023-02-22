@@ -4,7 +4,6 @@ import { Debug } from '../../../core/debug.js';
 
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Quat } from '../../../core/math/quat.js';
-import { Mat4 } from '../../../core/math/mat4.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -14,13 +13,10 @@ import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
 // Ammo.js variable for performance saving.
-let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform;
+let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2;
 
 // RigidBody for shape tests. Permanent to save performance.
 let shapeTestBody;
-const shapecastPosition = new Vec3();
-const shapecastRotation = new Quat();
-const shapecastRotationMatrix = new Mat4();
 
 /**
  * Object holding the result of a successful hit.
@@ -359,6 +355,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             ammoVec3 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
             ammoTransform = new Ammo.btTransform();
+            ammoTransform2 = new Ammo.btTransform();
 
             RigidBodyComponent.onLibraryLoaded();
 
@@ -566,28 +563,218 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Perform a collision check on the world and return all entities the sphere hits.
-     * It returns an array of {@link HitResult}. If no hits are
-     * detected, the returned array will be of length 0.
+     * Perform a shape casting on the world and return the first entity the shape hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {object} shape - The shape to use for sweep test.
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
+     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     */
+    shapeCastFirst(shape, startPosition, endPosition, startRotation, endRotation) {
+        switch (shape.type) {
+            case 'capsule':
+                return this.capsuleCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+            case 'cone':
+                return this.coneCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+            case 'cylinder':
+                return this.cylinderCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+            case 'sphere':
+                return this.sphereCastFirst(shape.radius, startPosition, endPosition);
+            default:
+                return this.boxCastFirst(shape.halfExtents, startPosition, endPosition, startRotation, endRotation);
+        }
+    }
+
+    /**
+     * Perform a shape casting on the world and return the first entity the box hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     */
+    boxCastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation) {
+        ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
+        return this._shapeCastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation);
+    }
+
+    /**
+     * Perform a shape casting on the world and return the first entity the capsule hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {number} radius - The radius of the capsule.
+     * @param {number} height - The total height of the capsule from tip to tip.
+     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     */
+    capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+        let fn = 'btCapsuleShape';
+
+        if (axis === 0) {
+            fn = 'btCapsuleShapeX';
+        } else if (axis === 2) {
+            fn = 'btCapsuleShapeZ';
+        }
+
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+    }
+
+    /**
+     * Perform a shape casting on the world and return the first entity the cone hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {number} radius - The radius of the cone.
+     * @param {number} height - The total height of the cone from tip to tip.
+     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     */
+    coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+        let fn = 'btConeShape';
+
+        if (axis === 0) {
+            fn = 'btConeShapeX';
+        } else if (axis === 2) {
+            fn = 'btConeShapeZ';
+        }
+
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+    }
+
+    /**
+     * Perform a shape casting on the world and return the first entity the cylinder hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {number} radius - The radius of the cylinder.
+     * @param {number} height - The total height of the cylinder from tip to tip.
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     */
+    cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+        let fn = 'btCylinderShape';
+
+        if (axis === 0) {
+            fn = 'btCylinderShapeX';
+        } else if (axis === 2) {
+            fn = 'btCylinderShapeZ';
+        }
+
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+    }
+
+    /**
+     * Perform a shape casting on the world and return the first entity the sphere hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {number} radius - The radius for the sphere.
-     * @param {Vec3} start - The world space point for the center of the sphere at the beginning of the cast.
-     * @param {Vec3} end - The world space point for the center of the sphere at the end of the cast.
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
      *
-     * @returns {HitResult[]} An array of sphereCast hit results (0 length if there were no hits).
+     * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    sphereCastAll(radius, start, end) {
-        // Sweeping
-        const height = start.distance(end) + radius * 2;
+    sphereCastFirst(radius, startPosition, endPosition) {
+        return this._shapeCastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition);
+    }
 
-        // Find rotation
-        shapecastRotationMatrix.setLookAt(start, end, Vec3.UP);
-        shapecastRotation.setFromMat4(shapecastRotationMatrix);
+    /**
+     * Perform a shape casting on the world and return the first entity the shape hits.
+     * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
+     *
+     * @param {object} shape - The Ammo.btCollisionShape to use for shape casting check.
+     * @param {Vec3} startPosition - The world space starting position for the shape to be.
+     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {boolean} [destroyShape] - Whether to destroy the shape after the cast. Defaults to true.
+     *
+     * @returns {HitResult} The first hit result (null if there were no hits).
+     * @private
+     */
+    _shapeCastFirst(shape, startPosition, endPosition, startRotation = Vec3.ZERO, endRotation = undefined, destroyShape = true) {
+        Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#_shapeCastFirst: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
 
-        // Transform start vector to make it beween initial start and end.
-        shapecastPosition.lerp(start, end, 0.5);
+        let result = null;
 
-        return this._shapeTest(new Ammo.btCapsuleShapeZ(radius, height), shapecastPosition, shapecastRotation);
+        ammoVec3.setValue(startPosition.x, startPosition.y, startPosition.z);
+        if (startRotation instanceof Quat) {
+            ammoQuat.setValue(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
+        } else {
+            ammoQuat.setEulerZYX(startRotation.z, startRotation.y, startRotation.x);
+        }
+
+        // Assign position and rotation to origin transform.
+        ammoTransform.setIdentity();
+        ammoTransform.setOrigin(ammoVec3);
+        ammoTransform.setRotation(ammoQuat);
+
+        ammoVec3.setValue(endPosition.x, endPosition.y, endPosition.z);
+        if (endRotation) {
+            if (endRotation instanceof Quat) {
+                ammoQuat.setValue(endRotation.x, endRotation.y, endRotation.z, endRotation.w);
+            } else {
+                ammoQuat.setEulerZYX(endRotation.z, endRotation.y, endRotation.x);
+            }
+        }
+
+        // Assign position and rotation to destination transform.
+        ammoTransform2.setIdentity();
+        ammoTransform2.setOrigin(ammoVec3);
+        ammoTransform2.setRotation(ammoQuat);
+
+        // Callback for the contactTest results.
+        const resultCallback = new Ammo.ClosestConvexResultCallback();
+
+        // Check for contacts.
+        this.app.systems.rigidbody.dynamicsWorld.convexSweepTest(shape, ammoTransform, ammoTransform2, resultCallback);
+
+        if (resultCallback.hasHit()) {
+            const body = Ammo.castObject(resultCallback.get_m_hitCollisionObject(), Ammo.btRigidBody);
+            if (body) {
+                const point = resultCallback.get_m_hitPointWorld();
+                const normal = resultCallback.get_m_hitNormalWorld();
+
+                result = new HitResult(
+                    body.entity,
+                    new Vec3(point.x(), point.y(), point.z()),
+                    new Vec3(normal.x(), normal.y(), normal.z())
+                );
+            }
+        }
+
+        // Destroy unused variables for performance.
+        Ammo.destroy(resultCallback);
+        if (destroyShape) {
+            Ammo.destroy(shape);
+        }
+
+        return result;
     }
 
     /**
@@ -596,12 +783,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {object} shape - The shape to use for collision.
-     * @param {number} shape.axis - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} shape.halfExtents - The half-extents of the box in the x, y and z axes.
-     * @param {number} shape.height - The total height of the capsule, cylinder or cone from tip to tip.
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
+     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
      * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
-     * @param {number} shape.radius - The radius of the sphere, capsule, cylinder or cone.
-     * @param {Vec3} [position] - The world space position for the shape to be.
+     * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
+     * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
@@ -627,7 +814,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
-     * @param {Vec3} [position] - The world space position for the box to be.
+     * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
@@ -645,7 +832,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
      * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} [position] - The world space position for the capsule to be.
+     * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
      * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
@@ -670,7 +857,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
      * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} [position] - The world space position for the cone to be.
+     * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
      * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
@@ -695,7 +882,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
      * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} [position] - The world space position for the cylinder to be.
+     * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
@@ -718,7 +905,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {number} radius - The radius of the sphere.
-     * @param {Vec3} [position] - The world space position for the sphere to be.
+     * @param {Vec3} position - The world space position for the sphere to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
@@ -732,15 +919,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
-     * @param {Ammo.btCollisionShape} shape - The Ammo.btCollisionShape to use for collision check.
-     * @param {Vec3} [position] - The world space position for the shape to be.
+     * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
+     * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     * @param {boolean} destroyShape - Whether to destroy the shape once done.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
      */
-    _shapeTest(shape, position = Vec3.ZERO, rotation = Vec3.ZERO) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapecast: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+    _shapeTestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapeTestAll: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -803,7 +991,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
-        Ammo.destroy(shape);
+        if (destroyShape) {
+            Ammo.destroy(shape);
+        }
 
         return results;
     }
