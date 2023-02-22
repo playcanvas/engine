@@ -232,7 +232,13 @@ const standard = {
         }
     },
 
-    /** @type { Function } */
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {StandardMaterialOptions} options - The create options.
+     * @returns {object} Returns the created shader definition.
+     * @ignore
+     */
     createShaderDefinition: function (device, options) {
         const litShader = new LitShader(device, options.litOptions);
 
