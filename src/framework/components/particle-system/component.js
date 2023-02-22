@@ -196,7 +196,7 @@ let depthLayer;
  *
  * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer
  * is used. Vertex buffer must contain local position at first 3 floats of each vertex.
- * @property {number} blend Controls how particles are blended when being written to the currently
+ * @property {number} blendType Controls how particles are blended when being written to the currently
  * active render target. Can be:
  *
  * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
