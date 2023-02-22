@@ -8,7 +8,6 @@ import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
-import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';

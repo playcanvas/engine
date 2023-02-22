@@ -3,8 +3,7 @@ import {
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
     PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXHINT_SHADOWMAP,
-    DEVICETYPE_WEBGPU
+    TEXHINT_SHADOWMAP
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -136,7 +135,7 @@ class ShadowMap {
         }
 
         // TODO: this is temporary, and will be handle on generic level for all render targets for WebGPU
-        if (device.deviceType === DEVICETYPE_WEBGPU) {
+        if (device.isWebGPU) {
             target.flipY = true;
         }
 

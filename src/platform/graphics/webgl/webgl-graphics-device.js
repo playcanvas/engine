@@ -4,7 +4,6 @@ import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 
 import {
-    DEVICETYPE_WEBGL,
     ADDRESS_CLAMP_TO_EDGE,
     BLENDEQUATION_ADD,
     BLENDMODE_ZERO, BLENDMODE_ONE,
@@ -361,7 +360,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     constructor(canvas, options = {}) {
         super(canvas);
-        this.deviceType = DEVICETYPE_WEBGL;
 
         this.defaultFramebuffer = null;
 
@@ -1399,7 +1397,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
+        Debug.call(() => {
+            if (this.insideRenderPass) {
+                Debug.errorOnce('RenderPass cannot be started while inside another render pass.');
+            }
+        });
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);
@@ -1744,7 +1746,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             key = "";
             for (let i = 0; i < vertexBuffers.length; i++) {
                 const vertexBuffer = vertexBuffers[i];
-                key += vertexBuffer.id + vertexBuffer.format.renderingingHash;
+                key += vertexBuffer.id + vertexBuffer.format.renderingHash;
             }
 
             // try to get VAO from cache
@@ -2064,27 +2066,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const defaultOptions = this.defaultClearOptions;
         options = options || defaultOptions;
 
-        const flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
+        const flags = options.flags ?? defaultOptions.flags;
         if (flags !== 0) {
             const gl = this.gl;
 
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
-                const color = (options.color === undefined) ? defaultOptions.color : options.color;
+                const color = options.color ?? defaultOptions.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
                 this.setColorWrite(true, true, true, true);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
-                const depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
+                const depth = options.depth ?? defaultOptions.depth;
                 this.setClearDepth(depth);
                 this.setDepthWrite(true);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
-                const stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
+                const stencil = options.stencil ?? defaultOptions.stencil;
                 this.setClearStencil(stencil);
             }
 

@@ -6,8 +6,7 @@ import {
     SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3,
     SEMANTIC_TEXCOORD4,
-    PIXELFORMAT_RGBA8,
-    DEVICETYPE_WEBGPU
+    PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -56,10 +55,17 @@ const builtinVaryings = {
     vUv1: "vec2",
     vUv2: "vec2",
     vUv3: "vec2",
-    vUv4: "vec2",
+    vUv4: "vec2"
 };
 
 class LitShader {
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {import('../../../scene/materials/lit-options.js').LitOptions} options - The
+     * lit options.
+     * @ignore
+     */
     constructor(device, options) {
         this.device = device;
         this.options = options;
@@ -198,7 +204,7 @@ class LitShader {
         const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
-                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
+                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 }
                 return "       getShadowCoordPersp" + shadowCoordArgs;
@@ -206,7 +212,7 @@ class LitShader {
             return this._directionalShadowMapProjection(light, shadowCoordArgs, shadowParamArg, lightIndex, "getShadowCoordOrtho");
         }
         if (light._type === LIGHTTYPE_SPOT) {
-            if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
+            if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
                 return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
             }
             return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
@@ -486,7 +492,7 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && !device.webgl2 && device.deviceType !== DEVICETYPE_WEBGPU) {
+        if (device.extStandardDerivatives && !device.webgl2 && !device.isWebGPU) {
             code += 'uniform vec2 polygonOffset;\n';
         }
 
@@ -509,7 +515,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || device.deviceType !== DEVICETYPE_WEBGPU || lightType === LIGHTTYPE_OMNI)) {
+        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI)) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n";
@@ -525,7 +531,7 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && device.deviceType !== DEVICETYPE_WEBGPU;
+        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
 
         if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
@@ -837,7 +843,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF3]) {
                 code += chunks.shadowStandardPS;
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU)) {
+            if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.isWebGPU)) {
                 code += chunks.shadowStandardGL2PS;
             }
             if (useVsm) {
@@ -853,7 +859,7 @@ class LitShader {
                 }
             }
 
-            if (!(device.webgl2 || device.extStandardDerivatives || device.deviceType === DEVICETYPE_WEBGPU)) {
+            if (!(device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
                 code += chunks.biasConstPS;
             }
 

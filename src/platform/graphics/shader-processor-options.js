@@ -12,6 +12,9 @@ class ShaderProcessorOptions {
     /** @type {import('./bind-group-format.js').BindGroupFormat[]} */
     bindGroupFormats = [];
 
+    /** @type {import('./vertex-format.js').VertexFormat[]} */
+    vertexFormat;
+
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
@@ -19,12 +22,16 @@ class ShaderProcessorOptions {
      * of the uniform buffer.
      * @param {import('./bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - Format of
      * the bind group.
+     * @param {import('./vertex-format.js').VertexFormat} [vertexFormat] - Format of the vertex
+     * buffer.
      */
-    constructor(viewUniformFormat, viewBindGroupFormat) {
+    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
         this.bindGroupFormats[BINDGROUP_VIEW] = viewBindGroupFormat;
+
+        this.vertexFormat = vertexFormat;
     }
 
     /**
@@ -63,6 +70,10 @@ class ShaderProcessorOptions {
         return false;
     }
 
+    getVertexElement(semantic) {
+        return this.vertexFormat?.elements.find(element => element.name === semantic);
+    }
+
     /**
      * Generate unique key represending the processing options.
      *
@@ -71,7 +82,9 @@ class ShaderProcessorOptions {
     generateKey() {
         // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
         // constructors, and here we should simply concatenate those.
-        return JSON.stringify(this);
+        return JSON.stringify(this.uniformFormats) +
+        JSON.stringify(this.bindGroupFormats) +
+        this.vertexFormat?.renderingHashString;
     }
 }
 
