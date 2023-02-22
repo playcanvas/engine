@@ -417,7 +417,7 @@ class GamePad {
          * @ignore
          */
         this._buttons = gamepad.buttons.map((b) => {
-            return b ? new GamePadButton(b) : null;
+            return new GamePadButton(b);
         });
 
         /**
