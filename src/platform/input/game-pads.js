@@ -680,8 +680,7 @@ class GamePad {
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(button) {
-        const b = this.getButton(button);
-        return b && b.pressed;
+        return this.getButton(button)?.pressed || false;
     }
 
     /**
@@ -691,8 +690,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was pressed, false if not.
      */
     wasPressed(button) {
-        const b = this.getButton(button);
-        return b && b.wasPressed;
+        return this.getButton(button)?.wasPressed || false;
     }
 
     /**
@@ -702,8 +700,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was released, false if not.
      */
     wasReleased(button) {
-        const b = this.getButton(button);
-        return b && b.wasReleased;
+        return this.getButton(button)?.wasReleased || false;
     }
 
     /**
@@ -713,8 +710,7 @@ class GamePad {
      * @returns {boolean} True if the button is touched.
      */
     isTouched(button) {
-        const b = this.getButton(button);
-        return b && b.touched;
+        return this.getButton(button)?.touched || false;
     }
 
     /**
@@ -724,8 +720,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was touched, false if not.
      */
     wasTouched(button) {
-        const b = this.getButton(button);
-        return b && b.wasTouched;
+        return this.getButton(button)?.wasTouched || false;
     }
 
     /**
@@ -735,8 +730,7 @@ class GamePad {
      * @returns {number} The value of the button between 0 and 1.
      */
     getValue(button) {
-        const b = this.getButton(button);
-        return b ? b.value : 0;
+        return this.getButton(button)?.value || 0;
     }
 
     /**
@@ -853,8 +847,7 @@ class GamePads extends EventHandler {
             }
 
             for (let j = 0, m = buttons.length; j < m; j++) {
-                const button = buttons[i];
-                this._previous[i][j] = button && button._previouslyPressed;
+                this._previous[i][j] = buttons[i]?._previouslyPressed || false;
             }
         }
 
@@ -973,8 +966,7 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(orderIndex, button) {
-        const pad = this.current[orderIndex];
-        return pad && pad.isPressed(button);
+        return this.current[orderIndex]?.isPressed(button) || false;
     }
 
     /**
@@ -985,8 +977,7 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button was pressed since the last frame.
      */
     wasPressed(orderIndex, button) {
-        const pad = this.current[orderIndex];
-        return pad && pad.wasPressed(button);
+        return this.current[orderIndex]?.wasPressed(button) || false;
     }
 
     /**
@@ -997,8 +988,7 @@ class GamePads extends EventHandler {
      * @returns {boolean} True if the button was released since the last frame.
      */
     wasReleased(orderIndex, button) {
-        const pad = this.current[orderIndex];
-        return pad && pad.wasReleased(button);
+        return this.current[orderIndex]?.wasReleased(button) || false;
     }
 
     /**
@@ -1009,8 +999,7 @@ class GamePads extends EventHandler {
      * @returns {number} The value of the axis between -1 and 1.
      */
     getAxis(orderIndex, axis) {
-        const pad = this.current[orderIndex];
-        return pad ? pad.getAxis(axis) : 0;
+        return this.current[orderIndex]?.getAxis(axis) || 0;
     }
 
     /**
