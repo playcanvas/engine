@@ -594,6 +594,10 @@ void addClusteredLights() {
 
                 // using a single channel texture with data in alpha channel
                 float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+
+                if (lightIndex <= 0.0)
+                        return;
+
                 evaluateClusterLight(lightIndex * 255.0); 
             }
 
