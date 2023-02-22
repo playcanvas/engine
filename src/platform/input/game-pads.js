@@ -413,7 +413,7 @@ class GamePad {
         /**
          * The buttons present on the GamePad. Some buttons may be null. Order is provided by API, use GamePad#buttons instead.
          *
-         * @type {GamePadButton[]}
+         * @type {(GamePadButton|null)[]}
          * @ignore
          */
         this._buttons = gamepad.buttons.map((b) => {
