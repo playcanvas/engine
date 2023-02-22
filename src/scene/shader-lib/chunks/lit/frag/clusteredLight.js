@@ -1,6 +1,6 @@
 export default /* glsl */`
-uniform sampler2D clusterWorldTexture;
-uniform sampler2D lightsTexture8;
+uniform highp sampler2D clusterWorldTexture;
+uniform highp sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
 // complex ifdef expression are not supported, handle it here
