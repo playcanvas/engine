@@ -16,7 +16,7 @@ import { RigidBodyComponentData } from './data.js';
 let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2;
 
 // RigidBody for shape tests. Permanent to save performance.
-let shapetestBody;
+let shapeTestBody;
 
 /**
  * Object holding the result of a successful hit.
@@ -579,18 +579,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    shapecastFirst(shape, startPosition, endPosition, startRotation, endRotation) {
+    shapeCastFirst(shape, startPosition, endPosition, startRotation, endRotation) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsulecastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.capsuleCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
             case 'cone':
-                return this.conecastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.coneCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
             case 'cylinder':
-                return this.cylindercastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.cylinderCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
             case 'sphere':
-                return this.spherecastFirst(shape.radius, startPosition, endPosition);
+                return this.sphereCastFirst(shape.radius, startPosition, endPosition);
             default:
-                return this.boxcastFirst(shape.halfExtents, startPosition, endPosition, startRotation, endRotation);
+                return this.boxCastFirst(shape.halfExtents, startPosition, endPosition, startRotation, endRotation);
         }
     }
 
@@ -606,9 +606,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    boxcastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation) {
+    boxCastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapecastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -625,7 +625,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    capsulecastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+    capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
         let fn = 'btCapsuleShape';
 
         if (axis === 0) {
@@ -634,7 +634,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCapsuleShapeZ';
         }
 
-        return this._shapecastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -651,7 +651,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    conecastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+    coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
         let fn = 'btConeShape';
 
         if (axis === 0) {
@@ -660,7 +660,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btConeShapeZ';
         }
 
-        return this._shapecastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -677,7 +677,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    cylindercastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
+    cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
         let fn = 'btCylinderShape';
 
         if (axis === 0) {
@@ -686,7 +686,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCylinderShapeZ';
         }
 
-        return this._shapecastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -699,8 +699,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    spherecastFirst(radius, startPosition, endPosition) {
-        return this._shapecastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition);
+    sphereCastFirst(radius, startPosition, endPosition) {
+        return this._shapeCastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition);
     }
 
     /**
@@ -717,8 +717,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      * @private
      */
-    _shapecastFirst(shape, startPosition, endPosition, startRotation = Vec3.ZERO, endRotation = undefined, destroyShape = true) {
-        Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#_shapecastFirst: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
+    _shapeCastFirst(shape, startPosition, endPosition, startRotation = Vec3.ZERO, endRotation = undefined, destroyShape = true) {
+        Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#_shapeCastFirst: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
 
         let result = null;
 
@@ -791,20 +791,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      *
-     * @returns {HitResult[]} An array of shapetest hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      */
-    shapetestAll(shape, position, rotation) {
+    shapeTestAll(shape, position, rotation) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuletestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.capsuleTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cone':
-                return this.conetestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.coneTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'cylinder':
-                return this.cylindertestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.cylinderTestAll(shape.radius, shape.height, shape.axis, position, rotation);
             case 'sphere':
-                return this.spheretestAll(shape.radius, position, rotation);
+                return this.sphereTestAll(shape.radius, position, rotation);
             default:
-                return this.boxtestAll(shape.halfExtents, position, rotation);
+                return this.boxTestAll(shape.halfExtents, position, rotation);
         }
     }
 
@@ -819,9 +819,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      */
-    boxtestAll(halfExtents, position, rotation) {
+    boxTestAll(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapetestAll(new Ammo.btBoxShape(ammoVec3), position, rotation);
+        return this._shapeTestAll(new Ammo.btBoxShape(ammoVec3), position, rotation);
     }
 
     /**
@@ -837,7 +837,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
      */
-    capsuletestAll(radius, height, axis, position, rotation) {
+    capsuleTestAll(radius, height, axis, position, rotation) {
         let fn = 'btCapsuleShape';
 
         if (axis === 0) {
@@ -846,7 +846,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCapsuleShapeZ';
         }
 
-        return this._shapetestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -862,7 +862,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
      */
-    conetestAll(radius, height, axis, position, rotation) {
+    coneTestAll(radius, height, axis, position, rotation) {
         let fn = 'btConeShape';
 
         if (axis === 0) {
@@ -871,7 +871,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btConeShapeZ';
         }
 
-        return this._shapetestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -887,7 +887,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      */
-    cylindertestAll(radius, height, axis, position, rotation) {
+    cylinderTestAll(radius, height, axis, position, rotation) {
         let fn = 'btCylinderShape';
 
         if (axis === 0) {
@@ -896,7 +896,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             fn = 'btCylinderShapeZ';
         }
 
-        return this._shapetestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
     }
 
     /**
@@ -910,8 +910,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      */
-    spheretestAll(radius, position, rotation) {
-        return this._shapetestAll(new Ammo.btSphereShape(radius), position, rotation);
+    sphereTestAll(radius, position, rotation) {
+        return this._shapeTestAll(new Ammo.btSphereShape(radius), position, rotation);
     }
 
     /**
@@ -924,11 +924,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      * @param {boolean} destroyShape - Whether to destroy the shape once done.
      *
-     * @returns {HitResult[]} An array of shapetest hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
      */
-    _shapetestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapetestAll: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+    _shapeTestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapeTestAll: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -948,14 +948,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoTransform.setRotation(ammoQuat);
 
         // We only initialize the shapeTast body here so we don't have an extra body unless the user uses this function
-        if (!shapetestBody) {
-            shapetestBody = this.createBody(0, shape, ammoTransform);
+        if (!shapeTestBody) {
+            shapeTestBody = this.createBody(0, shape, ammoTransform);
         }
 
         // Make sure the body has proper shape, transform and is active.
-        shapetestBody.setCollisionShape(shape);
-        shapetestBody.setWorldTransform(ammoTransform);
-        shapetestBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
+        shapeTestBody.setCollisionShape(shape);
+        shapeTestBody.setWorldTransform(ammoTransform);
+        shapeTestBody.forceActivationState(BODYSTATE_ACTIVE_TAG);
 
         // Callback for the contactTest results.
         const resultCallback = new Ammo.ConcreteContactResultCallback();
@@ -984,10 +984,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
         };
 
         // Check for contacts.
-        this.dynamicsWorld.contactTest(shapetestBody, resultCallback);
+        this.dynamicsWorld.contactTest(shapeTestBody, resultCallback);
 
         // Remove body shape.
-        shapetestBody.setCollisionShape(null);
+        shapeTestBody.setCollisionShape(null);
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
