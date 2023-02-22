@@ -5,7 +5,7 @@ import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO } from '../../platform
 const opMask = 0b111;
 const factorMask = 0b1111;
 
-// shits values to where individual parts are stored
+// shifts values to where individual parts are stored
 const colorOpShift = 0;             // 00 - 02 (3bits)
 const colorSrcFactorShift = 3;      // 03 - 06 (4bits)
 const colorDstFactorShift = 7;      // 07 - 10 (4bits)
