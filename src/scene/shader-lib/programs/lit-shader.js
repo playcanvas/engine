@@ -55,6 +55,7 @@ class LitShader {
      * graphics device.
      * @param {import('../../../scene/materials/lit-options.js').LitOptions} options - The
      * lit options.
+     * @ignore
      */
     constructor(device, options) {
         this.device = device;
