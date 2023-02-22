@@ -302,14 +302,6 @@ class GamePadButton {
     _previouslyTouched;
 
     /**
-     * The original Gamepad API gamepad button.
-     *
-     * @type {GamepadButton}
-     * @ignore
-     */
-    _button;
-
-    /**
      * Create a new GamePadButton instance.
      *
      * @param {number|GamepadButton} current - The original Gamepad API gamepad button.
@@ -325,7 +317,6 @@ class GamePadButton {
             this.value = current.value;
             this.pressed = current.pressed;
             this.touched = current.touched ?? current.value > 0;
-            this._button = current;
         }
 
         if (previous) {
