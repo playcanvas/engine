@@ -2,7 +2,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 import { math } from '../../core/math/math.js';
 
-const gamepadsEmpty = [];
+const dummyArray = Object.freeze([]);
+
 /**
  * Fetch Gamepads from API.
  *
@@ -11,7 +12,7 @@ const gamepadsEmpty = [];
  * @ignore
  */
 let fetchGamepads = function () {
-    return gamepadsEmpty;
+    return dummyArray;
 };
 
 if (typeof navigator !== 'undefined') {
@@ -268,38 +269,42 @@ class GamePadButton {
      *
      * @type {number}
      */
-    value;
+    value = 0;
 
     /**
      * Whether the button is currently down.
      *
      * @type {boolean}
      */
-    pressed;
+    pressed = false;
 
     /**
      * Whether the button is currently touched.
      *
      * @type {boolean}
      */
-
-    touched;
-
-    /**
-     * Whether this button was pressed on last frame.
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    _previouslyPressed;
+    touched = false;
 
     /**
-     * Whether this button was touched on last frame.
+     * Whether the button was pressed.
      *
      * @type {boolean}
-     * @ignore
      */
-    _previouslyTouched;
+    wasPressed = false;
+
+    /**
+     * Whether the button was released since the last update.
+     *
+     * @type {boolean}
+     */
+    wasReleased = false;
+
+    /**
+     * Whether the button was touched since the last update.
+     *
+     * @type {boolean}
+     */
+    wasTouched = false;
 
     /**
      * Create a new GamePadButton instance.
@@ -321,14 +326,14 @@ class GamePadButton {
 
         if (previous) {
             if (typeof previous === 'number') {
-                this._previouslyPressed = previous === 1;
-                this._previouslyTouched = previous > 0;
+                this.wasPressed = previous !== 1 && this.pressed;
+                this.wasReleased = previous === 1 && !this.pressed;
+                this.wasTouched = previous === 0 && this.touched;
             } else {
-                this._previouslyPressed = previous.pressed;
-                this._previouslyTouched = previous.touched ?? previous.value > 0;
+                this.wasPressed = !previous.pressed && this.pressed;
+                this.wasReleased = previous.pressed && !this.pressed;
+                this.wasTouched = !(previous.touched ?? previous.value > 0) && this.touched;
             }
-        } else {
-            this.updatePrevious();
         }
     }
 
@@ -339,50 +344,20 @@ class GamePadButton {
      * @ignore
      */
     update(button) {
-        this.updatePrevious();
+        const { value, pressed } = button;
+        const touched = button.touched ?? value > 0;
 
-        this.value = button.value;
-        this.pressed = button.pressed;
-        this.touched = button.touched ?? button.value > 0;
-    }
+        this.wasPressed = !this.pressed && pressed;
+        this.wasReleased = this.pressed && !pressed;
+        this.wasTouched = !this.touched && touched;
 
-    /**
-     * Update the previous values for this button.
-     *
-     * @ignore
-     */
-    updatePrevious() {
-        this._previouslyPressed = this.pressed;
-        this._previouslyTouched = this.touched;
-    }
-
-    /**
-     * Whether the button was pressed.
-     *
-     * @type {boolean}
-     */
-    get wasPressed() {
-        return !this._previouslyPressed && this.pressed;
-    }
-
-    /**
-     * Whether the button was released since the last update.
-     *
-     * @type {boolean}
-     */
-    get wasReleased() {
-        return this._previouslyPressed && !this.pressed;
-    }
-
-    /**
-     * Whether the button was touched since the last update.
-     *
-     * @type {boolean}
-     */
-    get wasTouched() {
-        return !this._previouslyTouched && this.touched;
+        this.value = value;
+        this.pressed = pressed;
+        this.touched = touched;
     }
 }
+
+const dummyButton = Object.freeze(new GamePadButton(0));
 
 /**
  * A GamePad stores information about a gamepad from the Gamepad API.
@@ -575,7 +550,7 @@ class GamePad {
      * @type {number[]}
      */
     get axes() {
-        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS_INDEXES.axes[a]] || 0) : [];
+        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS_INDEXES.axes[a]] || 0) : dummyArray;
     }
 
     /**
@@ -584,7 +559,7 @@ class GamePad {
      * @type {GamePadButton[]}
      */
     get buttons() {
-        return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : [];
+        return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : dummyArray;
     }
 
     /**
@@ -599,7 +574,7 @@ class GamePad {
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
      */
     async pulse(intensity, duration, options) {
-        const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || [];
+        const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || dummyArray;
 
         if (actuators.length) {
             const startDelay = options?.startDelay ?? 0;
@@ -638,7 +613,7 @@ class GamePad {
      * Retrieve a button from its index name.
      *
      * @param {string} indexName - The index name to return the button for.
-     * @returns {GamePadButton|null} The button for the searched index. Can be null.
+     * @returns {GamePadButton} The button for the searched index. May be a placeholder if none found.
      * @ignore
      */
     _getButton(indexName) {
@@ -658,19 +633,18 @@ class GamePad {
             return button;
         }
 
-
-        return null;
+        return dummyButton;
     }
 
     /**
      * Retrieve a button from its index.
      *
      * @param {number} index - The index to return the button for.
-     * @returns {GamePadButton|null} The button for the searched index. Can be null.
+     * @returns {GamePadButton} The button for the searched index. May be a placeholder if none found.
      */
     getButton(index) {
         const buttons = this.map.buttons;
-        return buttons && buttons[index] ? this._getButton(buttons[index]) : null;
+        return buttons && buttons[index] ? this._getButton(buttons[index]) : dummyButton;
     }
 
     /**
@@ -680,7 +654,7 @@ class GamePad {
      * @returns {boolean} True if the button is pressed.
      */
     isPressed(button) {
-        return this.getButton(button)?.pressed || false;
+        return this.getButton(button).pressed;
     }
 
     /**
@@ -690,7 +664,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was pressed, false if not.
      */
     wasPressed(button) {
-        return this.getButton(button)?.wasPressed || false;
+        return this.getButton(button).wasPressed;
     }
 
     /**
@@ -700,7 +674,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was released, false if not.
      */
     wasReleased(button) {
-        return this.getButton(button)?.wasReleased || false;
+        return this.getButton(button).wasReleased;
     }
 
     /**
@@ -710,7 +684,7 @@ class GamePad {
      * @returns {boolean} True if the button is touched.
      */
     isTouched(button) {
-        return this.getButton(button)?.touched || false;
+        return this.getButton(button).touched;
     }
 
     /**
@@ -720,7 +694,7 @@ class GamePad {
      * @returns {boolean} Return true if the button was touched, false if not.
      */
     wasTouched(button) {
-        return this.getButton(button)?.wasTouched || false;
+        return this.getButton(button).wasTouched;
     }
 
     /**
@@ -730,7 +704,7 @@ class GamePad {
      * @returns {number} The value of the button between 0 and 1.
      */
     getValue(button) {
-        return this.getButton(button)?.value || 0;
+        return this.getButton(button).value;
     }
 
     /**
@@ -847,7 +821,8 @@ class GamePads extends EventHandler {
             }
 
             for (let j = 0, m = buttons.length; j < m; j++) {
-                this._previous[i][j] = buttons[i]?._previouslyPressed || false;
+                const button = buttons[i];
+                this.previous[i][j] = button ? !button.wasPressed && button.pressed || button.wasReleased : false;
             }
         }
 
