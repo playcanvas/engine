@@ -196,6 +196,16 @@ class BlendState {
         return this;
     }
 
+    /**
+     * Returns an identical copy of the specified blend state.
+     *
+     * @returns {this} The result of the cloning.
+     */
+    clone() {
+        const clone = new this.constructor();
+        return clone.copy(this);
+    }
+
     get key() {
         return this.target0;
     }
