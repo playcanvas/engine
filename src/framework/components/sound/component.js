@@ -420,7 +420,7 @@ class SoundComponent extends Component {
      * @param {string} name - The name of the {@link SoundSlot} to look for.
      * @param {string} property - The name of the property to look for.
      * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
-     * @ignore
+     * @private
      */
     _getSlotProperty(name, property) {
         if (!this.enabled || !this.entity.enabled) {
