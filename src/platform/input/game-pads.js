@@ -364,6 +364,17 @@ const dummyButton = Object.freeze(new GamePadButton(0));
  */
 class GamePad {
     /**
+     * The compiled mapping to reduce lookup delay when retrieving buttons
+     *
+     * @type {object}
+     * @private
+     */
+    _compiledMapping = {
+        buttons: [],
+        axes: []
+    };
+
+    /**
      * Create a new GamePad Instance.
      *
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
@@ -386,14 +397,12 @@ class GamePad {
         this.index = gamepad.index;
 
         /**
-         * The buttons present on the GamePad. Some buttons may be null. Order is provided by API, use GamePad#buttons instead.
+         * The buttons present on the GamePad. Order is provided by API, use GamePad#buttons instead.
          *
          * @type {GamePadButton[]}
          * @ignore
          */
-        this._buttons = gamepad.buttons.map((b) => {
-            return new GamePadButton(b);
-        });
+        this._buttons = gamepad.buttons.map(b => new GamePadButton(b));
 
         /**
          * The axes values from the GamePad. Order is provided by API, use GamePad#axes instead.
@@ -439,6 +448,8 @@ class GamePad {
          * @ignore
          */
         this.pad = gamepad;
+
+        this._compileMapping();
     }
 
     /**
@@ -451,6 +462,63 @@ class GamePad {
     }
 
     /**
+     * Compile the buttons mapping to reduce lookup delay.
+     *
+     * @private
+     */
+    _compileMapping() {
+        const { axes, buttons } = this._compiledMapping;
+        const axesIndexes = MAPS_INDEXES.axes;
+        const buttonsIndexes = MAPS_INDEXES.buttons;
+
+        // Clear existing
+        axes.length = 0;
+        buttons.length = 0;
+
+        // Add axes
+        const axesMap = this.map.axes;
+        if (axesMap) {
+            this.map.axes.forEach((axis, i) => {
+                axes[axesIndexes[axis]] = () => this.pad.axes[i] || 0;
+            });
+        }
+
+        // Fill empty indexes for axes
+        for (let i = 0, l = axes.length; i < l; i++) {
+            if (!axes[i]) {
+                axes[i] = () => 0;
+            }
+        }
+
+        // Add basic buttons
+        const buttonsMap = this.map.buttons;
+        if (buttonsMap) {
+            buttonsMap.forEach((button, i) => {
+                buttons[buttonsIndexes[button]] = () => this._buttons[i] || dummyButton;
+            });
+        }
+
+        // Add synthesized buttons
+        const synthesizedButtonsMap = this.map.synthesizedButtons;
+        if (synthesizedButtonsMap) {
+            Object.entries(synthesizedButtonsMap).forEach((button) => {
+                const { axis, max, min } = button[1];
+                buttons[buttonsIndexes[button[0]]] = () => new GamePadButton(
+                    Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)),
+                    Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max))
+                );
+            });
+        }
+
+        // Fill empty indexes for buttons
+        for (let i = 0, l = buttons.length; i < l; i++) {
+            if (!buttons[i]) {
+                buttons[i] = () => dummyButton;
+            }
+        }
+    }
+
+    /**
      * Update the existing GamePad Instance.
      *
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
@@ -459,24 +527,21 @@ class GamePad {
     update(gamepad) {
         this.pad = gamepad;
 
-        // Store previous values for axes for dual buttons.
         const previousAxes = this._previousAxes;
+        const axes = this._axes;
+
+        // Store previous values for axes for dual buttons.
         previousAxes.length = 0;
-        previousAxes.push(...this._axes);
+        previousAxes.push(...axes);
 
         // Update axes
-        const axes = this._axes;
         axes.length = 0;
-        this._axes.push(...gamepad.axes);
+        axes.push(...gamepad.axes);
 
         // Update buttons
         const buttons = this._buttons;
         for (let i = 0, l = buttons.length; i < l; i++) {
-            const button = buttons[i];
-
-            if (button) {
-                button.update(gamepad.buttons[i]);
-            }
+            buttons[i].update(gamepad.buttons[i]);
         }
 
         return this;
@@ -529,6 +594,8 @@ class GamePad {
 
         this.map = map;
         this.mapping = 'custom';
+
+        this._compileMapping();
     }
 
     /**
@@ -541,6 +608,8 @@ class GamePad {
             const map = getMap(this.pad);
             this.map = map;
             this.mapping = map.mapping;
+
+            this._compileMapping();
         }
     }
 
@@ -550,16 +619,16 @@ class GamePad {
      * @type {number[]}
      */
     get axes() {
-        return this.map.axes ? this.map.axes.map(a => this.pad.axes[MAPS_INDEXES.axes[a]] || 0) : dummyArray;
+        return this._compiledMapping.axes.map(a => a());
     }
 
     /**
-     * The buttons present on the GamePad. Some buttons may be null.
+     * The buttons present on the GamePad.
      *
      * @type {GamePadButton[]}
      */
     get buttons() {
-        return this.map.buttons ? this.map.buttons.map(b => this._getButton(b)) : dummyArray;
+        return this._compiledMapping.buttons.map(b => b());
     }
 
     /**
@@ -610,41 +679,14 @@ class GamePad {
     }
 
     /**
-     * Retrieve a button from its index name.
-     *
-     * @param {string} indexName - The index name to return the button for.
-     * @returns {GamePadButton} The button for the searched index. May be a placeholder if none found.
-     * @ignore
-     */
-    _getButton(indexName) {
-        const synthesizedButton = this.map.synthesizedButtons[indexName];
-        if (synthesizedButton) {
-            const { axis, max, min } = synthesizedButton;
-
-            return new GamePadButton(
-                Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)),
-                Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max))
-            );
-        }
-
-        const button = this._buttons[MAPS_INDEXES.buttons[indexName]];
-
-        if (button) {
-            return button;
-        }
-
-        return dummyButton;
-    }
-
-    /**
      * Retrieve a button from its index.
      *
      * @param {number} index - The index to return the button for.
      * @returns {GamePadButton} The button for the searched index. May be a placeholder if none found.
      */
     getButton(index) {
-        const buttons = this.map.buttons;
-        return buttons && buttons[index] ? this._getButton(buttons[index]) : dummyButton;
+        const button = this._compiledMapping.buttons[index];
+        return button ? button() : dummyButton;
     }
 
     /**
