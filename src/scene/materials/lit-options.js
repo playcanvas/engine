@@ -71,7 +71,7 @@ class LitOptions {
 
     useMorphTextureBased = false;
 
-    nineSlicedMode = false;
+    nineSlicedMode = 0;
 
     clusteredLightingEnabled = true;
 
