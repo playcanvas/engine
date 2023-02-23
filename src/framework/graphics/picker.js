@@ -15,6 +15,7 @@ import { LayerComposition } from '../../scene/composition/layer-composition.js';
 import { getApplication } from '../globals.js';
 import { Entity } from '../entity.js';
 import { Debug } from '../../core/debug.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const tempSet = new Set();
 
@@ -208,7 +209,7 @@ class Picker {
                 self.pickColor[1] = ((index >> 8) & 0xff) / 255;
                 self.pickColor[2] = (index & 0xff) / 255;
                 pickColorId.setValue(self.pickColor);
-                device.setBlending(false);
+                device.setBlendState(BlendState.DEFAULT);
 
                 // keep the index -> meshInstance index mapping
                 self.mapping[index] = meshInstance;

@@ -8,6 +8,7 @@ import {
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import {
@@ -386,7 +387,8 @@ class SceneGrab {
             },
 
             onDrawCall: function () {
-                device.setColorWrite(true, true, true, true);
+                // writing depth to color render target, force no blending and writing to all channels
+                device.setBlendState(BlendState.DEFAULT);
             },
 
             onPostRenderOpaque: function (cameraPass) {

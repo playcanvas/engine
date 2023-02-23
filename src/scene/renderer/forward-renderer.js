@@ -24,6 +24,7 @@ import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { SceneGrab } from '../graphics/scene-grab.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 
@@ -601,17 +602,7 @@ class ForwardRenderer extends Renderer {
 
                     this.alphaTestId.setValue(material.alphaTest);
 
-                    device.setBlending(material.blend);
-                    if (material.blend) {
-                        if (material.separateAlphaBlend) {
-                            device.setBlendFunctionSeparate(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
-                            device.setBlendEquationSeparate(material.blendEquation, material.blendAlphaEquation);
-                        } else {
-                            device.setBlendFunction(material.blendSrc, material.blendDst);
-                            device.setBlendEquation(material.blendEquation);
-                        }
-                    }
-                    device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
+                    device.setBlendState(material.blendState);
                     device.setDepthWrite(material.depthWrite);
 
                     // this fixes the case where the user wishes to turn off depth testing but wants to write depth
@@ -1162,7 +1153,7 @@ class ForwardRenderer extends Renderer {
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
             // it requires (the properties are part of render pipeline on WebGPU anyways)
-            device.setColorWrite(true, true, true, true);
+            device.setBlendState(BlendState.DEFAULT);
             device.setStencilTest(false); // don't leak stencil state
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);

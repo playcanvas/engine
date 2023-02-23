@@ -23,6 +23,7 @@ import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -112,6 +113,11 @@ class ShadowRenderer {
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
         this.viewBindGroupFormat = null;
+
+        // blend states
+        this.blendStateWrite = new BlendState();
+        this.blendStateNoWrite = new BlendState();
+        this.blendStateNoWrite.setColorWrite(false, false, false, false);
     }
 
     // creates shadow camera for a light and sets up its constant properties
@@ -190,7 +196,6 @@ class ShadowRenderer {
         }
 
         // Set standard shadowmap states
-        device.setBlending(false);
         device.setDepthWrite(true);
         device.setDepthTest(true);
         device.setDepthFunc(FUNC_LESSEQUAL);
@@ -198,11 +203,8 @@ class ShadowRenderer {
         const useShadowSampler = isClustered ?
             light._isPcf && device.webgl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
             light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
-        if (useShadowSampler) {
-            device.setColorWrite(false, false, false, false);
-        } else {
-            device.setColorWrite(true, true, true, true);
-        }
+
+        device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
     }
 
     restoreRenderState(device) {
@@ -482,6 +484,9 @@ class ShadowRenderer {
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, `VSM ${light._node.name}`);
+
+        // render state
+        device.setBlendState(BlendState.DEFAULT);
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;

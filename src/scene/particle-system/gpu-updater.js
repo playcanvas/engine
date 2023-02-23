@@ -5,6 +5,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
 import { EMITTERSHAPE_BOX } from '../constants.js';
@@ -89,8 +91,7 @@ class ParticleGPUUpdater {
 
         const emitter = this._emitter;
 
-        device.setBlending(false);
-        device.setColorWrite(true, true, true, true);
+        device.setBlendState(BlendState.DEFAULT);
         device.setCullMode(CULLFACE_NONE);
         device.setDepthTest(false);
         device.setDepthWrite(false);

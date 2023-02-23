@@ -14,7 +14,8 @@ import {
     shaderChunks,
     IndexBuffer,
     VertexBuffer,
-    VertexFormat
+    VertexFormat,
+    BlendState
 } from 'playcanvas';
 
 // render 2d textured quads
@@ -120,6 +121,9 @@ class Render2d {
 
         this.screenTextureSizeId = device.scope.resolve('screenAndTextureSize');
         this.screenTextureSize = new Float32Array(4);
+
+        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                         BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
     }
 
     quad(texture, x, y, w, h, u, v, uw, uh, enabled) {
@@ -174,12 +178,8 @@ class Render2d {
         device.setDepthTest(false);
         device.setDepthWrite(false);
         device.setCullMode(CULLFACE_NONE);
-        device.setBlending(true);
-        device.setBlendFunctionSeparate(BLENDMODE_SRC_ALPHA,
-                                        BLENDMODE_ONE_MINUS_SRC_ALPHA,
-                                        BLENDMODE_ONE,
-                                        BLENDMODE_ONE);
-        device.setBlendEquationSeparate(BLENDEQUATION_ADD, BLENDEQUATION_ADD);
+        device.setBlendState(this.blendState);
+
         device.setVertexBuffer(buffer, 0);
         device.setIndexBuffer(this.indexBuffer);
         device.setShader(this.shader);
