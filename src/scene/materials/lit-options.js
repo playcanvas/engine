@@ -155,9 +155,9 @@ class LitOptions {
     /**
      * The value of {@link StandardMaterial#occludeSpecular}.
      *
-     * @type {boolean}
+     * @type {number}
      */
-    occludeSpecular = false;
+    occludeSpecular = 0;
 
     /**
      * Defines if {@link StandardMaterial#occludeSpecularIntensity} constant should affect specular
