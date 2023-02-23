@@ -415,23 +415,35 @@ class SoundComponent extends Component {
     }
 
     /**
+     * Return a property from the slot with the specified name.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @param {string} property - The name of the property to look for.
+     * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
+     * @ignore
+     */
+    _getSlotProperty(name, property) {
+        if (!this.enabled || !this.entity.enabled) {
+            return undefined;
+        }
+
+        const slot = this._slots[name];
+        if (!slot) {
+            Debug.warn(`Trying to get ${property} from sound slot with name ${name} which does not exist`);
+            return undefined;
+        }
+
+        return slot[property];
+    }
+
+    /**
      * Returns true if the slot with the specified name is currently playing.
      *
      * @param {string} name - The name of the {@link SoundSlot} to look for.
      * @returns {boolean} True if the slot with the specified name exists and is currently playing.
      */
     isPlaying(name) {
-        if (!this.enabled || !this.entity.enabled) {
-            return false;
-        }
-
-        const slot = this._slots[name];
-        if (!slot) {
-            Debug.warn(`Trying to get information from sound slot with name ${name} which does not exist`);
-            return false;
-        }
-
-        return slot.isPlaying;
+        return this._getSlotProperty(name, 'isPlaying') || false;
     }
 
     /**
@@ -441,17 +453,7 @@ class SoundComponent extends Component {
      * @returns {boolean} True if the slot with the specified name exists and its asset is loaded.
      */
     isLoaded(name) {
-        if (!this.enabled || !this.entity.enabled) {
-            return false;
-        }
-
-        const slot = this._slots[name];
-        if (!slot) {
-            Debug.warn(`Trying to get information from sound slot with name ${name} which does not exist`);
-            return false;
-        }
-
-        return slot.isLoaded;
+        return this._getSlotProperty(name, 'isLoaded') || false;
     }
 
     /**
@@ -461,17 +463,7 @@ class SoundComponent extends Component {
      * @returns {boolean} True if the slot with the specified name exists and is currently paused.
      */
     isPaused(name) {
-        if (!this.enabled || !this.entity.enabled) {
-            return false;
-        }
-
-        const slot = this._slots[name];
-        if (!slot) {
-            Debug.warn(`Trying to get information from sound slot with name ${name} which does not exist`);
-            return false;
-        }
-
-        return slot.isPaused;
+        return this._getSlotProperty(name, 'isPaused') || false;
     }
 
     /**
@@ -481,17 +473,7 @@ class SoundComponent extends Component {
      * @returns {boolean} True if the slot with the specified name exists and is currently stopped.
      */
     isStopped(name) {
-        if (!this.enabled || !this.entity.enabled) {
-            return false;
-        }
-
-        const slot = this._slots[name];
-        if (!slot) {
-            Debug.warn(`Trying to get information from sound slot with name ${name} which does not exist`);
-            return false;
-        }
-
-        return slot.isStopped;
+        return this._getSlotProperty(name, 'isStopped') || false;
     }
 
     /**
