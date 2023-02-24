@@ -6,7 +6,7 @@ import { platform } from '../../core/platform.js';
 const dummyArray = Object.freeze([]);
 
 /**
- * Fetch Gamepads from API.
+ * Get Gamepads from API.
  *
  * @type {Function}
  * @returns {Gamepad[]} Retrieved gamepads from the device.
@@ -17,7 +17,7 @@ let getGamepads = function () {
 };
 
 if (typeof navigator !== 'undefined') {
-    getGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || fetchGamepads).bind(navigator);
+    getGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || getGamepads).bind(navigator);
 }
 
 const MAPS_INDEXES = {
