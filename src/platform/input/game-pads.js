@@ -1,6 +1,7 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { EVENT_GAMEPADCONNECTED, EVENT_GAMEPADDISCONNECTED, PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 import { math } from '../../core/math/math.js';
+import { platform } from '../../core/platform.js';
 
 const dummyArray = Object.freeze([]);
 
@@ -11,12 +12,12 @@ const dummyArray = Object.freeze([]);
  * @returns {Gamepad[]} Retrieved gamepads from the device.
  * @ignore
  */
-let fetchGamepads = function () {
+let getGamepads = function () {
     return dummyArray;
 };
 
 if (typeof navigator !== 'undefined') {
-    fetchGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || fetchGamepads).bind(navigator);
+    getGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || fetchGamepads).bind(navigator);
 }
 
 const MAPS_INDEXES = {
@@ -778,7 +779,7 @@ class GamePads extends EventHandler {
          *
          * @type {boolean}
          */
-        this.gamepadsSupported = typeof navigator !== 'undefined' ? !!navigator.getGamepads || !!navigator.webkitGetGamepads : false;
+        this.gamepadsSupported = platform.gamepads;
 
         /**
          * The list of current gamepads.
@@ -934,20 +935,18 @@ class GamePads extends EventHandler {
             pads.length = 0;
         }
 
-        if (this.gamepadsSupported) {
-            const padDevices = fetchGamepads();
+        const padDevices = getGamepads();
 
-            for (let i = 0, len = padDevices.length; i < len; i++) {
-                if (padDevices[i]) {
-                    const pad = this.findByIndex(padDevices[i].index);
+        for (let i = 0, len = padDevices.length; i < len; i++) {
+            if (padDevices[i]) {
+                const pad = this.findByIndex(padDevices[i].index);
 
-                    if (pad) {
-                        pads.push(pad.update(padDevices[i]));
-                    } else {
-                        const nPad = new GamePad(padDevices[i], this.getMap(padDevices[i]));
-                        this.current.push(nPad);
-                        pads.push(nPad);
-                    }
+                if (pad) {
+                    pads.push(pad.update(padDevices[i]));
+                } else {
+                    const nPad = new GamePad(padDevices[i], this.getMap(padDevices[i]));
+                    this.current.push(nPad);
+                    pads.push(nPad);
                 }
             }
         }
