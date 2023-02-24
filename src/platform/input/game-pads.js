@@ -216,6 +216,7 @@ const custom_maps = {};
  *
  * @param {Gamepad} pad - The HTML5 Gamepad object.
  * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
+ * @ignore
  */
 function getMap(pad) {
     const custom = custom_maps[pad.id];
@@ -254,6 +255,7 @@ let deadZone = 0.25;
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
  * @returns {Promise<void>}
+ * @ignore
  */
 function sleep(ms) {
     return new Promise((resolve) => {
