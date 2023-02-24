@@ -20,6 +20,7 @@ import {
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
     BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_SRC_ALPHA_SATURATE,
     BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_DST_ALPHA, BLENDMODE_ONE_MINUS_DST_ALPHA,
+    BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM,
     CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
@@ -53,6 +54,7 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { BlendState } from '../platform/graphics/blend-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
@@ -346,6 +348,11 @@ export const PIXELFORMAT_R4_G4_B4_A4 = PIXELFORMAT_RGBA4;
 export const PIXELFORMAT_R8_G8_B8 = PIXELFORMAT_RGB8;
 export const PIXELFORMAT_R8_G8_B8_A8 = PIXELFORMAT_RGBA8;
 
+export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
+export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
+export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
+export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
+
 export function UnsupportedBrowserError(message) {
     this.name = 'UnsupportedBrowserError';
     this.message = (message || '');
@@ -570,6 +577,63 @@ GraphicsDevice.prototype.setProgramLibrary = function (lib) {
 GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
     Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
     getProgramLibrary(this).removeFromCache(shader);
+};
+
+const _tempBlendState = new BlendState();
+
+GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+    _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrc, blendDst);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+    _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrcAlpha, blendDstAlpha);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+    _tempBlendState.setAlphaBlend(blendEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, blendAlphaEquation) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+    _tempBlendState.setAlphaBlend(blendAlphaEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setColorWrite = function (redWrite, greenWrite, blueWrite, alphaWrite) {
+    Debug.deprecated(`pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.getBlending = function () {
+    return this.blendState.blend;
+};
+
+GraphicsDevice.prototype.setBlending = function (blending) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    _tempBlendState.copy(this.blendState);
+    _tempBlendState.blend = blending;
+    this.setBlendState(_tempBlendState);
 };
 
 // SCENE
@@ -830,6 +894,47 @@ Material.prototype.setShader = function (shader) {
     Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
     this.shader = shader;
 };
+
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blend', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blend is deprecated, use pc.Material.blendState.`);
+        this.blendState.blend = value;
+    },
+    get: function () {
+        return this.blendState.blend;
+    }
+});
+
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blendSrc', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blendSrc is deprecated, use pc.Material.blendState.`);
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, value, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, value, currentBlendState.alphaDstFactor);
+        this.blendState = _tempBlendState;
+    },
+    get: function () {
+        return this.blendState.colorSrcFactor;
+    }
+});
+
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blendDst', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blendDst is deprecated, use pc.Material.blendState.`);
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, currentBlendState.colorSrcFactor, value);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, currentBlendState.alphaSrcFactor, value);
+        this.blendState = _tempBlendState;
+    },
+    get: function () {
+        return this.blendState.colorDstFactor;
+    }
+});
 
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {

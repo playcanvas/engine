@@ -1104,6 +1104,12 @@ class AppBase extends EventHandler {
      * app.start();
      */
     start() {
+
+        Debug.call(() => {
+            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            this._alreadyStarted = true;
+        });
+
         this.frame = 0;
 
         this.fire("start", {
@@ -1977,6 +1983,11 @@ class AppBase extends EventHandler {
         if (this.elementInput) {
             this.elementInput.detach();
             this.elementInput = null;
+        }
+
+        if (this.gamepads) {
+            this.gamepads.destroy();
+            this.gamepads = null;
         }
 
         if (this.controller) {
