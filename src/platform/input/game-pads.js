@@ -454,7 +454,7 @@ class GamePad {
     }
 
     /**
-     * Whether the gamepad is connected
+     * Whether the gamepad is connected.
      *
      * @type {boolean}
      */
