@@ -44,6 +44,7 @@ import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -873,6 +874,8 @@ class Lightmapper {
         if (filterLightmap) {
             this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
         }
+
+        device.setBlendState(BlendState.DEFAULT);
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];

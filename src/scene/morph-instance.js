@@ -6,6 +6,7 @@ import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 import { createShaderFromCode } from './shader-lib/utils.js';
+import { BlendState } from '../platform/graphics/blend-state.js';
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = `
@@ -16,6 +17,8 @@ const textureMorphVertexShader = `
         uv0 = vertex_position.xy * 0.5 + 0.5;
     }
     `;
+
+const blendStateAdditive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
 
 /**
  * An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages
@@ -264,15 +267,11 @@ class MorphInstance {
             this.morphFactor.setValue(this._shaderMorphWeights);
 
             // alpha blending - first pass gets none, following passes are additive
-            device.setBlending(blending);
-            if (blending) {
-                device.setBlendFunction(BLENDMODE_ONE, BLENDMODE_ONE);
-                device.setBlendEquation(BLENDEQUATION_ADD);
-            }
+            device.setBlendState(blending ? blendStateAdditive : BlendState.DEFAULT);
 
             // render quad with shader for required number of textures
             const shader = this._getShader(usedCount);
-            drawQuadWithShader(device, renderTarget, shader, undefined, undefined, blending);
+            drawQuadWithShader(device, renderTarget, shader);
         };
 
         // set up parameters for active blend targets

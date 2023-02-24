@@ -98,32 +98,18 @@ export const BLENDMODE_DST_ALPHA = 9;
 export const BLENDMODE_ONE_MINUS_DST_ALPHA = 10;
 
 /**
- * Multiplies all colors by a constant color.
+ * Multiplies all fragment components by a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_CONSTANT_COLOR = 11;
+export const BLENDMODE_CONSTANT = 11;
 
 /**
- * Multiplies all colors by 1 minus a constant color.
+ * Multiplies all fragment components by 1 minus a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = 12;
-
-/**
- * Multiplies all colors by a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_CONSTANT_ALPHA = 13;
-
-/**
- * Multiplies all colors by 1 minus a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = 14;
+export const BLENDMODE_ONE_MINUS_CONSTANT = 12;
 
 /**
  * Add the results of the source and destination fragment multiplies.
