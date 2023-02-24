@@ -124,6 +124,13 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
+     * Custom function that is called to render the pass.
+     *
+     * @type {Function}
+     */
+    execute;
+
+    /**
      * Custom function that is called before the pass has started.
      *
      * @type {Function}
@@ -142,8 +149,7 @@ class RenderPass {
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
-     * @param {Function} execute - Custom function that is called when the pass needs to be
-     * rendered.
+     * @param {Function} [execute] - Custom function that is called to render the pass.
      */
     constructor(graphicsDevice, execute) {
         this.device = graphicsDevice;
@@ -227,7 +233,7 @@ class RenderPass {
             device.startPass(this);
         }
 
-        this.execute();
+        this.execute?.();
 
         if (realPass) {
             device.endPass(this);
