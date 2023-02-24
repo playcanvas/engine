@@ -833,16 +833,16 @@ class GamePads extends EventHandler {
      * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
      */
 
-    set deadZone(value) {
-        deadZone = value;
-    }
-
     /**
      * Threshold for axes to return values. Must be between 0 and 1.
      *
      * @type {number}
      * @ignore
      */
+    set deadZone(value) {
+        deadZone = value;
+    }
+
     get deadZone() {
         return deadZone;
     }
@@ -877,7 +877,7 @@ class GamePads extends EventHandler {
      * Callback function when a gamepad is connecting.
      *
      * @param {GamepadEvent} event - The event containing the connecting gamepad.
-     * @ignore
+     * @private
      */
     _ongamepadconnected(event) {
         const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
@@ -897,7 +897,7 @@ class GamePads extends EventHandler {
      * Callback function when a gamepad is disconnecting.
      *
      * @param {GamepadEvent} event - The event containing the disconnecting gamepad.
-     * @ignore
+     * @private
      */
     _ongamepaddisconnected(event) {
         const current = this.current;
