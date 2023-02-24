@@ -235,6 +235,27 @@ class ContactResult {
 const _schema = ['enabled'];
 
 /**
+ * Creates a new shape.
+ *
+ * @param {string} name - Name of the shape. Must start with capital letter.
+ * @param {number} [axis] - The local space axis with which the shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+ * @param {...any} [args] - Arguments to pass to creation.
+ * @returns {object} Created Ammo.btCollisionShape.
+ * @ignore
+ */
+function createShape(name, axis, ...args) {
+    let fn = `bt${name}Shape`;
+
+    if (axis === 0) {
+        fn += 'X';
+    } else if (axis === 2) {
+        fn += 'Z';
+    }
+
+    return new Ammo[fn](...args);
+}
+
+/**
  * The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also
  * controls global values for the world such as gravity. Note: The RigidBodyComponentSystem is only
  * valid if 3D Physics is enabled in your application. You can enable this in the application
@@ -626,15 +647,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        let fn = 'btCapsuleShape';
-
-        if (axis === 0) {
-            fn = 'btCapsuleShapeX';
-        } else if (axis === 2) {
-            fn = 'btCapsuleShapeZ';
-        }
-
-        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(createShape('Capsule', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -652,15 +665,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        let fn = 'btConeShape';
-
-        if (axis === 0) {
-            fn = 'btConeShapeX';
-        } else if (axis === 2) {
-            fn = 'btConeShapeZ';
-        }
-
-        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(createShape('Cone', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -678,15 +683,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        let fn = 'btCylinderShape';
-
-        if (axis === 0) {
-            fn = 'btCylinderShapeX';
-        } else if (axis === 2) {
-            fn = 'btCylinderShapeZ';
-        }
-
-        return this._shapeCastFirst(new Ammo[fn](radius, height), startPosition, endPosition, startRotation, endRotation);
+        return this._shapeCastFirst(createShape('Cylinder', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
     }
 
     /**
@@ -838,15 +835,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
      */
     capsuleTestAll(radius, height, axis, position, rotation) {
-        let fn = 'btCapsuleShape';
-
-        if (axis === 0) {
-            fn = 'btCapsuleShapeX';
-        } else if (axis === 2) {
-            fn = 'btCapsuleShapeZ';
-        }
-
-        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(createShape('Capsule', axis, radius, height), position, rotation);
     }
 
     /**
@@ -863,15 +852,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
      */
     coneTestAll(radius, height, axis, position, rotation) {
-        let fn = 'btConeShape';
-
-        if (axis === 0) {
-            fn = 'btConeShapeX';
-        } else if (axis === 2) {
-            fn = 'btConeShapeZ';
-        }
-
-        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(createShape('Cone', axis, radius, height), position, rotation);
     }
 
     /**
@@ -888,15 +869,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      */
     cylinderTestAll(radius, height, axis, position, rotation) {
-        let fn = 'btCylinderShape';
-
-        if (axis === 0) {
-            fn = 'btCylinderShapeX';
-        } else if (axis === 2) {
-            fn = 'btCylinderShapeZ';
-        }
-
-        return this._shapeTestAll(new Ammo[fn](radius, height), position, rotation);
+        return this._shapeTestAll(createShape('Cylinder', axis, radius, height), position, rotation);
     }
 
     /**
