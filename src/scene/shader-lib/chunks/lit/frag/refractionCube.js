@@ -12,10 +12,10 @@ void addRefraction(Frontend frontend) {
     // use same reflection code with refraction vector
     vec3 tmpDir = dReflDirW;
     vec4 tmpRefl = dReflection;
-    dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
+    dReflDirW = refract2(-dViewDirW, frontend.worldNormal, material_refractionIndex);
     dReflection = vec4(0);
     addReflection(frontend);
-    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * frontend.dAlbedo, dTransmission);
+    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * frontend.albedo, frontend.transmission);
     dReflection = tmpRefl;
     dReflDirW = tmpDir;
 }

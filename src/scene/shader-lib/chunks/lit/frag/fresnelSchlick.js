@@ -1,14 +1,14 @@
 export default /* glsl */`
 // Schlick's approximation
-vec3 getFresnel(float cosTheta, vec3 f0) {
+vec3 getFresnel(float cosTheta, Frontend frontend) {
     float fresnel = pow(1.0 - max(cosTheta, 0.0), 5.0);
-    float glossSq = dGlossiness * dGlossiness;
-    vec3 ret = f0 + (max(vec3(glossSq), f0) - f0) * fresnel;
-    #ifdef LIT_IRIDESCENCE
-        return mix(ret, dIridescenceFresnel, vec3(dIridescence));
-    #else
-        return ret;
-    #endif    
+    float glossSq = frontend.glossiness * frontend.glossiness;
+    vec3 ret = frontend.specularity + (max(vec3(glossSq), frontend.specularity) - frontend.specularity) * fresnel;
+#ifdef LIT_IRIDESCENCE
+    return mix(ret, frontend.iridescenceFresnel, vec3(frontend.iridescence));
+#else
+    return ret;
+#endif    
 }
 
 float getFresnelCC(float cosTheta) {

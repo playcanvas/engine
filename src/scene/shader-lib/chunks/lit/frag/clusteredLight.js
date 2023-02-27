@@ -361,11 +361,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                dAttenD = getRectLightDiffuse() * 16.0;
+                dAttenD = getRectLightDiffuse(frontend) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                dAttenD = getDiskLightDiffuse() * 16.0;
+                dAttenD = getDiskLightDiffuse(frontend) * 16.0;
             } else { // sphere
-                dAttenD = getSphereLightDiffuse() * 16.0;
+                dAttenD = getSphereLightDiffuse(frontend) * 16.0;
             }
 
         } else
@@ -373,7 +373,7 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
         #endif
 
         {
-            dAtten *= getLightDiffuse();
+            dAtten *= getLightDiffuse(frontend);
         }
 
         // spot light falloff
@@ -484,11 +484,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 float areaLightSpecular;
 
                 if (isClusteredLightRect(light)) {
-                    areaLightSpecular = getRectLightSpecular();
+                    areaLightSpecular = getRectLightSpecular(frontend);
                 } else if (isClusteredLightDisk(light)) {
-                    areaLightSpecular = getDiskLightSpecular();
+                    areaLightSpecular = getDiskLightSpecular(frontend);
                 } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular();
+                    areaLightSpecular = getSphereLightSpecular(frontend);
                 }
 
                 dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
@@ -525,7 +525,7 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
                 #if defined(LIT_CONSERVE_ENERGY)
-                    punctualDiffuse = mix(punctualDiffuse, vec3(0), frontend.dSpecularity);
+                    punctualDiffuse = mix(punctualDiffuse, vec3(0), frontend.specularity);
                 #endif
                 #endif
                 #endif
@@ -540,9 +540,9 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend.dSpecularity);
+                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * frontend.dSpecularity;
+                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * frontend.specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT

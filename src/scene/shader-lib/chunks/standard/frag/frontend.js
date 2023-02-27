@@ -1,37 +1,37 @@
 export default /* glsl */`
 struct Frontend {
-    vec2 dUvOffset;
+    vec2 uvOffset;
 
-    float dAlpha;
+    float alpha;
 
-    vec3 dNormalW;
-    
-    vec3 dAlbedo;
+    vec3 worldNormal;
 
-    float dTransmission;
-    float dThickness;
+    vec3 albedo;
 
-    vec3 dIridescenceFresnel;
-    float dIridescence;
-    float dIridescenceThickness;
+    float transmission;
+    float thickness;
 
-    vec3 dSpecularity;
-    float dGlossiness;
-    float dMetalness;
-    float dSpecularityFactor;
+    vec3 iridescenceFresnel;
+    float iridescence;
+    float iridescenceThickness;
 
-    float dAo;
+    vec3 specularity;
+    float glossiness;
+    float metalness;
+    float specularityFactor;
 
-    vec3 dEmission;
+    float ao;
 
-    float ccSpecularity;
-    float ccGlossiness;
-    vec3 ccNormalW;
+    vec3 emission;
 
-    float sGlossiness;
-    vec3 sSpecularity;
+    float clearcoatSpecularity;
+    float clearcoatGlossiness;
+    vec3 clearcoatWorldNormal;
 
-    vec3 dLightmap;
-    vec3 dLightmapDir;
+    float sheenGlossiness;
+    vec3 sheenSpecularity;
+
+    vec3 lightmap;
+    vec3 lightmapDir;
 };
 `;

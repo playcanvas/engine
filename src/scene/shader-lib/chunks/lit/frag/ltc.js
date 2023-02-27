@@ -140,12 +140,12 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
 
 void calcLTCLightValues(Frontend frontend)
 {
-    dLTCUV = getLTCLightUV(dGlossiness, dNormalW);
-    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, frontend.dSpecularity); 
+    dLTCUV = getLTCLightUV(frontend.glossiness, frontend.worldNormal);
+    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, frontend.specularity); 
 
 #ifdef LIT_CLEARCOAT
-    ccLTCUV = getLTCLightUV(ccGlossiness, ccNormalW);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(frontend.ccSpecularity));
+    ccLTCUV = getLTCLightUV(frontend.clearcoatGlossiness, frontend.clearcoatWorldNormal);
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(frontend.clearcoatSpecularity));
 #endif
 }
 
@@ -371,18 +371,18 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     return formFactor*scale;
 }
 
-float getRectLightDiffuse() {
-    return LTC_EvaluateRect( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
+float getRectLightDiffuse(Frontend frontend) {
+    return LTC_EvaluateRect( frontend.worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getDiskLightDiffuse() {
-    return LTC_EvaluateDisk( dNormalW, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
+float getDiskLightDiffuse(Frontend frontend) {
+    return LTC_EvaluateDisk( frontend.worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getSphereLightDiffuse() {
+float getSphereLightDiffuse(Frontend frontend) {
     // NB: this could be improved further with distance based wrap lighting
     float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
-    return getLightDiffuse()*falloff;
+    return getLightDiffuse(frontend) * falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)
@@ -406,13 +406,13 @@ float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
     return LTC_EvaluateRect( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getRectLightSpecular() {
-    return calcRectLightSpecular(dNormalW, dLTCUV);
+float getRectLightSpecular(Frontend frontend) {
+    return calcRectLightSpecular(frontend.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getRectLightSpecularCC() {
-    return calcRectLightSpecular(ccNormalW, ccLTCUV);
+float getRectLightSpecularCC(Frontend frontend) {
+    return calcRectLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 
@@ -421,23 +421,23 @@ float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
     return LTC_EvaluateDisk( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getDiskLightSpecular() {
-    return calcDiskLightSpecular(dNormalW, dLTCUV);
+float getDiskLightSpecular(Frontend frontend) {
+    return calcDiskLightSpecular(frontend.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getDiskLightSpecularCC() {
-    return calcDiskLightSpecular(ccNormalW, ccLTCUV);
+float getDiskLightSpecularCC(Frontend frontend) {
+    return calcDiskLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 
-float getSphereLightSpecular() {
-    return calcDiskLightSpecular(dNormalW, dLTCUV);
+float getSphereLightSpecular(Frontend frontend) {
+    return calcDiskLightSpecular(frontend.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getSphereLightSpecularCC() {
-    return calcDiskLightSpecular(ccNormalW, ccLTCUV);
+float getSphereLightSpecularCC(Frontend frontend) {
+    return calcDiskLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 `;

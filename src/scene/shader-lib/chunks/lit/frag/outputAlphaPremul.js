@@ -1,4 +1,4 @@
 export default /* glsl */`
-gl_FragColor.rgb *= dAlpha;
-gl_FragColor.a = dAlpha;
+gl_FragColor.rgb *= frontend.alpha;
+gl_FragColor.a = frontend.alpha;
 `;

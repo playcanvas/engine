@@ -10,6 +10,6 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
 }
 
 void addReflection(Frontend frontend) {   
-    dReflection += vec4(calcReflection(dReflDirW, frontend.dGlossiness), material_reflectivity);
+    dReflection += vec4(calcReflection(dReflDirW, frontend.glossiness), material_reflectivity);
 }
 `;

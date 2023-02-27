@@ -1,5 +1,5 @@
 export default /* glsl */`
-float getLightDiffuse() {
-    return max(dot(dNormalW, -dLightDirNormW), 0.0);
+float getLightDiffuse(Frontend frontend) {
+    return max(dot(frontend.worldNormal, -dLightDirNormW), 0.0);
 }
 `;

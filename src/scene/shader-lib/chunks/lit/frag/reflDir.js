@@ -1,5 +1,5 @@
 export default /* glsl */`
-void getReflDir() {
-    dReflDirW = normalize(-reflect(dViewDirW, dNormalW));
+void getReflDir(Frontend frontend) {
+    dReflDirW = normalize(-reflect(dViewDirW, frontend.worldNormal));
 }
 `;

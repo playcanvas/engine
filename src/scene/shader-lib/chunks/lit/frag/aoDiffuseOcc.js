@@ -1,5 +1,5 @@
 export default /* glsl */`
 void occludeDiffuse(Frontend frontend) {
-    dDiffuseLight *= frontend.dAo;
+    dDiffuseLight *= frontend.ao;
 }
 `;

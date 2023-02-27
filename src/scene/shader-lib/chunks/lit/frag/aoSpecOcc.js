@@ -3,9 +3,9 @@ uniform float material_occludeSpecularIntensity;
 
 void occludeSpecular(Frontend frontend) {
     // approximated specular occlusion from AO
-    float specPow = exp2(frontend.dGlossiness * 11.0);
+    float specPow = exp2(frontend.glossiness * 11.0);
     // http://research.tri-ace.com/Data/cedec2011_RealtimePBR_Implementation_e.pptx
-    float specOcc = saturate(pow(dot(dNormalW, dViewDirW) + dAo, 0.01*specPow) - 1.0 + frontend.dAo);
+    float specOcc = saturate(pow(dot(frontend.worldNormal, dViewDirW) + dAo, 0.01*specPow) - 1.0 + frontend.ao);
     specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);
 
     dSpecularLight *= specOcc;

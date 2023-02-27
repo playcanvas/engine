@@ -33,12 +33,12 @@ float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 h) {
 }
 
 float getLightSpecular(vec3 h, Frontend frontend) {
-    return calcLightSpecular(frontend.dGlossiness, dNormalW, h);
+    return calcLightSpecular(frontend.glossiness, frontend.worldNormal, h);
 }
 
 #ifdef LIT_CLEARCOAT
 float getLightSpecularCC(vec3 h, Frontend frontend) {
-    return calcLightSpecular(frontend.ccGlossiness, ccNormalW, h);
+    return calcLightSpecular(frontend.clearcoatGlossiness, frontend.clearcoatWorldNormal, h);
 }
 #endif
 `;
