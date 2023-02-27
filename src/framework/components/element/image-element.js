@@ -1044,19 +1044,20 @@ class ImageElement {
             }
 
             this._materialAsset = null;
-            if (_id) {
+            if (this._materialAsset) {
                 const asset = assets.get(_id);
                 if (!asset) {
                     this.material = null;
-                    assets.on('add:' + _id, this._onMaterialAdded, this);
+                    this._materialAsset = _id;
+                    assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
+                    this._materialAsset = _id;
                     this._bindMaterialAsset(asset);
                 }
             } else {
                 this.material = null;
+                this._materialAsset = _id;
             }
-
-            this._materialAsset = _id;
         }
     }
 
