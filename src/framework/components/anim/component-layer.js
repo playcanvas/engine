@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+import { AnimTransition } from '../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
