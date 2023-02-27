@@ -83,6 +83,7 @@ class CollisionSystemImpl {
                 }
 
                 this.destroyShape(data);
+                data.shape = null;
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
