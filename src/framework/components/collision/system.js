@@ -82,7 +82,7 @@ class CollisionSystemImpl {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
-                Ammo.destroy(data.shape);
+                this.destroyShape(data.shape);
                 data.shape = null;
             }
 
