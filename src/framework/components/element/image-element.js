@@ -1044,7 +1044,7 @@ class ImageElement {
             }
 
             this._materialAsset = null;
-            if (this._materialAsset) {
+            if (_id) {
                 const asset = assets.get(_id);
                 if (!asset) {
                     this.material = null;
