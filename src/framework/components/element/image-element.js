@@ -993,6 +993,15 @@ class ImageElement {
         }
 
         this._material = value;
+
+        // Remove material asset if changed
+        if (this._materialAsset) {
+            const asset = this._system.app.assets.get(this._materialAsset);
+            if (!asset || asset.resource !== value) {
+                this.materialAsset = null;
+            }
+        }
+
         if (value) {
             this._renderable.setMaterial(value);
 
