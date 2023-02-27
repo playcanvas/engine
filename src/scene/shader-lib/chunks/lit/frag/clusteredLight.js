@@ -540,21 +540,21 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend.dSpecularity);
+                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend.dSpecularity);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * frontend.dSpecularity;
+                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * frontend.dSpecularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecularCC(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3;
+                        ccSpecularLight += getLightSpecularCC(halfDir, frontend) * dAtten * light.color * dAtten3;
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, frontend) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif

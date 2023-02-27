@@ -6,13 +6,13 @@ float calcLightSpecular(float tGlossiness, vec3 tReflDirW, vec3 h) {
     return pow(max(dot(tReflDirW, -dLightDirNormW), 0.0), specPow + 0.0001);
 }
 
-float getLightSpecular(vec3 h) {
-    return calcLightSpecular(dGlossiness, dReflDirW, h);
+float getLightSpecular(vec3 h, Frontend frontend) {
+    return calcLightSpecular(frontend.dGlossiness, dReflDirW, h);
 }
 
 #ifdef LIT_CLEARCOAT
-float getLightSpecularCC(vec3 h) {
-    return calcLightSpecular(ccGlossiness, ccReflDirW,h );
+float getLightSpecularCC(vec3 h, Frontend frontend) {
+    return calcLightSpecular(frontend.ccGlossiness, ccReflDirW,h );
 }
 #endif
 `;

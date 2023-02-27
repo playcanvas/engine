@@ -51,13 +51,6 @@ const builtinVaryings = {
 };
 
 class LitShader {
-    /**
-     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {import('../../../scene/materials/lit-options.js').LitOptions} options - The
-     * lit options.
-     * @ignore
-     */
     constructor(device, options) {
         this.device = device;
         this.options = options;
@@ -760,14 +753,14 @@ class LitShader {
             }
 
             if (options.useIridescence) {
-                code.append(chunks.iridescenceDiffractionPS);
+                func.append(chunks.iridescenceDiffractionPS);
             }
         }
 
         const useAo = options.aoMapEnabled || options.useAoVertexColors;
 
         if (useAo) {
-            code.append(chunks.aoDiffuseOccPS);
+            func.append(chunks.aoDiffuseOccPS);
             switch (options.occludeSpecular) {
                 case SPECOCC_AO:
                     func.append(options.occludeSpecularFloat ? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS);
@@ -1009,7 +1002,7 @@ class LitShader {
             }
 
             if (options.useClearCoat) {
-                backend.append("    ccReflDirW = normalize(-reflect(dViewDirW, ccNormalW));");
+                backend.append("    ccReflDirW = normalize(-reflect(dViewDirW, frontend.ccNormalW));");
             }
         }
 
@@ -1019,14 +1012,14 @@ class LitShader {
             }
 
             if (options.useIridescence) {
-                backend.append("    getIridescence(saturate(dot(dViewDirW, dNormalW)), frontend);");
+                backend.append("    getIridescence(saturate(dot(dViewDirW, frontend.dNormalW)), frontend);");
             }
         }
 
         if (addAmbient) {
             backend.append("    addAmbient(frontend);");
             if (options.conserveEnergy && options.useSpecular) {
-                backend.append(`   dDiffuseLight = dDiffuseLight * (1.0 - dSpecularity`);
+                backend.append(`   dDiffuseLight = dDiffuseLight * (1.0 - frontend.dSpecularity);`);
             }
 
             // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
@@ -1055,7 +1048,7 @@ class LitShader {
                 if (options.useClearCoat) {
                     backend.append("    addReflectionCC(frontend);");
                     if (options.fresnelModel > 0) {
-                        backend.append("    ccFresnel = getFresnelCC(dot(dViewDirW, ccNormalW));");
+                        backend.append("    ccFresnel = getFresnelCC(dot(dViewDirW, frontend.ccNormalW));");
                         backend.append("    ccReflection.rgb *= ccFresnel;");
                     }  else {
                         backend.append("    ccFresnel = 0.0;");
@@ -1073,18 +1066,18 @@ class LitShader {
                 backend.append("    addReflection(frontend);");
 
                 if (options.fresnelModel > 0) {
-                    backend.append("    dReflection.rgb *= getFresnel(dot(dViewDirW, dNormalW), dSpecularity);");
+                    backend.append("    dReflection.rgb *= getFresnel(dot(dViewDirW, frontend.dNormalW),frontend.dSpecularity);");
                 } else {
-                    backend.append("    dReflection.rgb *= dSpecularity;");
+                    backend.append("    dReflection.rgb *= frontend.dSpecularity;");
                 }
                 if (options.useSpecularityFactor) {
-                    backend.append("    dReflection.rgb *= dSpecularityFactor;");
+                    backend.append("    dReflection.rgb *= frontend.dSpecularityFactor;");
                 }
             }
 
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
-                backend.append("    dSpecularLight *= dSpecularity;");
+                backend.append("    dSpecularLight *= frontend.dSpecularity;");
                 // code += "    float roughness = max((1.0 - dGlossiness) * (1.0 - dGlossiness), 0.001);\n";
 
                 // evaluate material based area lights data, shared by all area lights
@@ -1237,7 +1230,7 @@ class LitShader {
 
                     // punctual light
                     if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
-                        backend.append("    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dSpecularity);");
+                        backend.append("    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - frontend.dSpecularity);");
                     } else {
                         backend.append("    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
@@ -1266,18 +1259,18 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += getLightSpecularCC(dHalfDirW) * dAtten * light" + i + "_color" +
+                        backend.append("    ccSpecularLight += getLightSpecularCC(dHalfDirW, frontend) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
                     }
                     if (options.useSheen) {
-                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW) * dAtten * light" + i + "_color" +
+                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, frontend) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3;" : ";"));
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW) * dAtten * light" + i + "_color" +
+                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, frontend) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
-                            (calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), dSpecularity);" : "* dSpecularity;"));
+                            (calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), frontend.dSpecularity);" : "* frontend.dSpecularity;"));
                     }
                 }
 
@@ -1297,10 +1290,10 @@ class LitShader {
             if (hasAreaLights) {
                 // specular has to be accumulated differently if we want area lights to look correct
                 if (options.useClearCoat) {
-                    backend.append("    ccSpecularity = 1.0;");
+                    backend.append("    frontend.ccSpecularity = 1.0;");
                 }
                 if (options.useSpecular) {
-                    backend.append("    dSpecularity = vec3(1);");
+                    backend.append("    frontend.dSpecularity = vec3(1);");
                 }
             }
 
@@ -1319,13 +1312,13 @@ class LitShader {
         }
 
         if (options.useSpecularityFactor) {
-            backend.append("    dSpecularLight *= dSpecularityFactor;");
+            backend.append("    dSpecularLight *= frontend.dSpecularityFactor;");
         }
 
         if (options.opacityFadesSpecular === false) {
             if (options.blendType === BLEND_NORMAL || options.blendType === BLEND_PREMULTIPLIED) {
                 backend.append("float specLum = dot((dSpecularLight + dReflection.rgb * dReflection.a), vec3( 0.2126, 0.7152, 0.0722 ));");
-                backend.append("#ifdef LIT_CLEARCOAT\n specLum += dot(ccSpecularLight * ccSpecularity + ccReflection.rgb * ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif");
+                backend.append("#ifdef LIT_CLEARCOAT\n specLum += dot(ccSpecularLight * frontend.ccSpecularity + ccReflection.rgb * frontend.ccSpecularity, vec3( 0.2126, 0.7152, 0.0722 ));\n#endif");
                 backend.append("dAlpha = clamp(dAlpha + gammaCorrectInput(specLum), 0.0, 1.0);");
             }
             backend.append("dAlpha *= material_alphaFade;");

@@ -50,6 +50,7 @@ import fogExp2PS from './lit/frag/fogExp2.js';
 import fogLinearPS from './lit/frag/fogLinear.js';
 import fogNonePS from './lit/frag/fogNone.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
+import frontendPS from './standard/frag/frontend.js';
 import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
@@ -255,6 +256,7 @@ const shaderChunks = {
     fogLinearPS,
     fogNonePS,
     fresnelSchlickPS,
+    frontendPS,
     fullscreenQuadPS,
     fullscreenQuadVS,
     gamma1_0PS,

@@ -10,7 +10,7 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction() {
+void addRefraction(Frontend frontend) {
 
     // Extract scale from the model transform
     vec3 modelScale;
@@ -19,7 +19,7 @@ void addRefraction() {
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-dViewDirW, dNormalW, material_refractionIndex)) * dThickness * modelScale;
+    vec3 refractionVector = normalize(refract(-dViewDirW, dNormalW, material_refractionIndex)) * frontend.dThickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -52,7 +52,7 @@ void addRefraction() {
     }
 
     // Apply fresnel effect on refraction
-    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, dNormalW), dSpecularity);
-    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, dTransmission);
+    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, frontend.dNormalW), frontend.dSpecularity);
+    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, frontend.dTransmission);
 }
 `;
