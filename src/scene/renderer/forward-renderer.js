@@ -498,7 +498,7 @@ class ForwardRenderer extends Renderer {
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
 
                     // marker to allow us to see the source node for shader alloc
-                    DebugGraphics.pushGpuMarker(device, drawCall.node.name);
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
                     // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
@@ -575,6 +575,8 @@ class ForwardRenderer extends Renderer {
                     if (skipMaterial)
                         break;
 
+                    DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+
                     // Uniforms I: material
                     material.setParameters(device);
 
@@ -605,7 +607,11 @@ class ForwardRenderer extends Renderer {
                     } else {
                         device.setDepthBias(false);
                     }
+
+                    DebugGraphics.popGpuMarker(device);
                 }
+
+                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
                 this.setCullMode(camera._cullFaces, flipFaces, drawCall);
 
@@ -694,6 +700,8 @@ class ForwardRenderer extends Renderer {
                 if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
                     material.setParameters(device, drawCall.parameters);
                 }
+
+                DebugGraphics.popGpuMarker(device);
             }
         }
     }
