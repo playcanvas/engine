@@ -83,7 +83,6 @@ class CollisionSystemImpl {
                 }
 
                 this.destroyShape(data);
-                data.shape = null;
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -161,6 +160,7 @@ class CollisionSystemImpl {
         }
 
         Ammo.destroy(data.shape);
+        data.shape = null;
     }
 
     beforeRemove(entity, component) {
@@ -175,7 +175,6 @@ class CollisionSystemImpl {
             component._compoundParent = null;
 
             this.destroyShape(component.data);
-            component.data.shape = null;
         }
     }
 
