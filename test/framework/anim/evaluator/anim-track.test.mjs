@@ -1,4 +1,5 @@
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
+import { EmptyAnimTrack } from '../../../../src/framework/anim/evaluator/empty-anim-track.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
@@ -34,6 +35,24 @@ describe('AnimTrack', function () {
             expect(snapshot._results[0]).to.deep.equal([1, 2, 3]);
             animTrack.eval(1.5, snapshot);
             expect(snapshot._results[0]).to.deep.equal([1.5, 3, 4.5]);
+        });
+
+    });
+
+});
+
+describe('EmptyAnimTrack', function () {
+    const emptyAnimTrack = new EmptyAnimTrack();
+
+    describe('#constructor', function () {
+
+        it('instantiates correctly', function () {
+            expect(emptyAnimTrack).to.be.ok;
+            expect(emptyAnimTrack.name).to.equal('empty');
+            expect(emptyAnimTrack.duration).to.equal(Number.MAX_VALUE);
+            expect(emptyAnimTrack.inputs.length).to.equal(0);
+            expect(emptyAnimTrack.outputs.length).to.equal(0);
+            expect(emptyAnimTrack.curves.length).to.equal(0);
         });
 
     });

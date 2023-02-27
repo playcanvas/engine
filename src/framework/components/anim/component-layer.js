@@ -2,7 +2,6 @@ import { Debug } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { AnimTransition } from '../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
@@ -313,7 +312,7 @@ class AnimComponentLayer {
      * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, speed, loop) {
-        if (animTrack.constructor !== AnimTrack) {
+        if (!(animTrack instanceof AnimTrack)) {
             Debug.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             return;
         }
