@@ -980,14 +980,7 @@ class ImageElement {
         return this._rect;
     }
 
-    /**
-     * Set a material.
-     *
-     * @param {*} value - New material to assign.
-     * @param {boolean} temporary - Whether assignation is temporary
-     * @private
-     */
-    _setMaterial(value, temporary = false) {
+    set material(value) {
         if (this._material === value) return;
 
         if (!value) {
@@ -1002,7 +995,7 @@ class ImageElement {
         this._material = value;
 
         // Remove material asset if changed
-        if (!temporary && this._materialAsset) {
+        if (this._materialAsset) {
             const asset = this._system.app.assets.get(this._materialAsset);
             if (!asset || asset.resource !== value) {
                 this.materialAsset = null;
@@ -1025,10 +1018,6 @@ class ImageElement {
                 this._renderable.setParameter('material_opacity', this._color.a);
             }
         }
-    }
-
-    set material(value) {
-        this._setMaterial(value);
     }
 
     get material() {
@@ -1054,18 +1043,20 @@ class ImageElement {
                 }
             }
 
-            this._materialAsset = _id;
-            if (this._materialAsset) {
-                const asset = assets.get(this._materialAsset);
+            this._materialAsset = null;
+            if (_id) {
+                const asset = assets.get(_id);
                 if (!asset) {
-                    this._setMaterial(null, true);
-                    assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    this.material = null;
+                    assets.on('add:' + _id, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
                 }
             } else {
                 this.material = null;
             }
+
+            this._materialAsset = _id;
         }
     }
 
