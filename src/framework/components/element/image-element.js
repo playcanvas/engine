@@ -980,27 +980,29 @@ class ImageElement {
         return this._rect;
     }
 
-    /** @ignore */
-    get defaultMaterial() {
-        const screenSpace = this._element._isScreenSpace();
-        if (this.mask) {
-            return screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
-        }
-
-        return screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
-    }
-
-    set material(value) {
+    /**
+     * Set a material.
+     *
+     * @param {*} value - New material to assign.
+     * @param {boolean} temporary - Whether assignation is temporary
+     * @private
+     */
+    _setMaterial(value, temporary = false) {
         if (this._material === value) return;
 
         if (!value) {
-            value = this.defaultMaterial;
+            const screenSpace = this._element._isScreenSpace();
+            if (this.mask) {
+                value = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+            } else {
+                value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+            }
         }
 
         this._material = value;
 
         // Remove material asset if changed
-        if (this._materialAsset) {
+        if (!temporary && this._materialAsset) {
             const asset = this._system.app.assets.get(this._materialAsset);
             if (!asset || asset.resource !== value) {
                 this.materialAsset = null;
@@ -1023,6 +1025,10 @@ class ImageElement {
                 this._renderable.setParameter('material_opacity', this._color.a);
             }
         }
+    }
+
+    set material(value) {
+        this._setMaterial(value);
     }
 
     get material() {
@@ -1052,7 +1058,7 @@ class ImageElement {
             if (this._materialAsset) {
                 const asset = assets.get(this._materialAsset);
                 if (!asset) {
-                    this._material = this.defaultMaterial;
+                    this._setMaterial(null, true);
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
