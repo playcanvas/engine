@@ -980,16 +980,21 @@ class ImageElement {
         return this._rect;
     }
 
+    /** @ignore */
+    get defaultMaterial() {
+        const screenSpace = this._element._isScreenSpace();
+        if (this.mask) {
+            return screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+        }
+
+        return screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+    }
+
     set material(value) {
         if (this._material === value) return;
 
         if (!value) {
-            const screenSpace = this._element._isScreenSpace();
-            if (this.mask) {
-                value = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
-            } else {
-                value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
-            }
+            value = this.defaultMaterial;
         }
 
         this._material = value;
@@ -1047,6 +1052,7 @@ class ImageElement {
             if (this._materialAsset) {
                 const asset = assets.get(this._materialAsset);
                 if (!asset) {
+                    this._material = this.defaultMaterial;
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
