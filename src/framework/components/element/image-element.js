@@ -1056,7 +1056,6 @@ class ImageElement {
                 }
             } else {
                 this.material = null;
-                this._materialAsset = _id;
             }
         }
     }
