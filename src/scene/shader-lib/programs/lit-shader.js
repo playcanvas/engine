@@ -1241,7 +1241,7 @@ class LitShader {
                     } else {
                         backend.append("    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
-                } 
+                }
 
                 if (options.useSpecular) {
                     backend.append("    dHalfDirW = normalize(-dLightDirNormW + dViewDirW);");
