@@ -1047,7 +1047,6 @@ class ImageElement {
             if (this._materialAsset) {
                 const asset = assets.get(this._materialAsset);
                 if (!asset) {
-                    this.material = null;
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
