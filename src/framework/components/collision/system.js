@@ -82,8 +82,7 @@ class CollisionSystemImpl {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
-                this.destroyShape(data.shape);
-                data.shape = null;
+                this.destroyShape(data);
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
