@@ -12,7 +12,7 @@ void addLightMap(Frontend frontend) {
         dDiffuseLight += frontend.lightmap * nlight * 2.0;
 
         vec3 halfDirW = normalize(-frontend.lightmapDir + dViewDirW);
-        vec3 specularLight = frontend.lightmap * getLightSpecular(halfDirW);
+        vec3 specularLight = frontend.lightmap * getLightSpecular(halfDirW, frontend);
 
         #ifdef LIT_SPECULAR_FRESNEL
         specularLight *= getFresnel(dot(dViewDirW, halfDirW), frontend);

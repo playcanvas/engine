@@ -1245,10 +1245,10 @@ class LitShader {
 
                     // area light
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        backend.append("    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC(frontend) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular() * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        backend.append("    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular(frontend) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
 
                 } else {

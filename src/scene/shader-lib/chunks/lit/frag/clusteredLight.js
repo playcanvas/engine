@@ -499,11 +499,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecularCC();
+                        areaLightSpecularCC = getRectLightSpecularCC(frontend);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecularCC();
+                        areaLightSpecularCC = getDiskLightSpecularCC(frontend);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecularCC();
+                        areaLightSpecularCC = getSphereLightSpecularCC(frontend);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
