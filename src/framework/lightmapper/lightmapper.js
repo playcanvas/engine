@@ -845,10 +845,12 @@ class Lightmapper {
     renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
 
         const light = bakeLight.light;
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            if (!light.shadowMap && !this.scene.clusteredLightingEnabled) {
+            if (!light.shadowMap && !isClustered) {
                 light.shadowMap = this.shadowMapCache.get(this.device, light);
             }
 
@@ -857,7 +859,7 @@ class Lightmapper {
                 this.renderer.shadowRenderer.render(light, this.camera);
             } else {
                 this.renderer._shadowRendererLocal.cull(light, casters);
-                this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
+                this.renderer._shadowRendererLocal.render(lightArray[light.type], isClustered, this.camera);
             }
         }
 
