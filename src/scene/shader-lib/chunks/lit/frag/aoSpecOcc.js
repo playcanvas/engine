@@ -10,6 +10,7 @@ void occludeSpecular() {
 
     dSpecularLight *= specOcc;
     dReflection *= specOcc;
+    
 #ifdef LIT_SHEEN
     sSpecularLight *= specOcc;
     sReflection *= specOcc;
