@@ -1894,7 +1894,12 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @ignore
      */
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
+
+        // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
+        // map to be fetched (without filtering) and rendered
+        if (filterable === false && !this.graphicsDevice.isWebGPU)
+            return;
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1903,7 +1908,7 @@ class AppBase extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this.scene.immediate.getTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 
