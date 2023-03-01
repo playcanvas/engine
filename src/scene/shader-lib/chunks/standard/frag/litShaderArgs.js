@@ -1,8 +1,8 @@
 export default /* glsl */`
-struct Frontend {
+struct LitShaderArguments {
     vec2 uvOffset;
 
-    float alpha;
+    float opacity;
 
     vec3 worldNormal;
 
@@ -16,7 +16,7 @@ struct Frontend {
     float iridescenceThickness;
 
     vec3 specularity;
-    float glossiness;
+    float gloss;
     float metalness;
     float specularityFactor;
 
@@ -25,10 +25,10 @@ struct Frontend {
     vec3 emission;
 
     float clearcoatSpecularity;
-    float clearcoatGlossiness;
+    float clearcoatGloss;
     vec3 clearcoatWorldNormal;
 
-    float sheenGlossiness;
+    float sheenGloss;
     vec3 sheenSpecularity;
 
     vec3 lightmap;

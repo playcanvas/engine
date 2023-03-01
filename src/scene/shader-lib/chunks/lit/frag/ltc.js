@@ -138,14 +138,14 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
     return tSpecularity * t2.x + ( vec3( 1.0 ) - tSpecularity) * t2.y;
 }
 
-void calcLTCLightValues(Frontend frontend)
+void calcLTCLightValues(LitShaderArguments litShaderArgs)
 {
-    dLTCUV = getLTCLightUV(frontend.glossiness, frontend.worldNormal);
-    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, frontend.specularity); 
+    dLTCUV = getLTCLightUV(litShaderArgs.gloss, litShaderArgs.worldNormal);
+    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, litShaderArgs.specularity); 
 
 #ifdef LIT_CLEARCOAT
-    ccLTCUV = getLTCLightUV(frontend.clearcoatGlossiness, frontend.clearcoatWorldNormal);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(frontend.clearcoatSpecularity));
+    ccLTCUV = getLTCLightUV(litShaderArgs.clearcoatGloss, litShaderArgs.clearcoatWorldNormal);
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(litShaderArgs.clearcoatSpecularity));
 #endif
 }
 
@@ -371,18 +371,18 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     return formFactor*scale;
 }
 
-float getRectLightDiffuse(Frontend frontend) {
-    return LTC_EvaluateRect( frontend.worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
+float getRectLightDiffuse(vec3 worldNormal) {
+    return LTC_EvaluateRect( worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getDiskLightDiffuse(Frontend frontend) {
-    return LTC_EvaluateDisk( frontend.worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
+float getDiskLightDiffuse(vec3 worldNormal) {
+    return LTC_EvaluateDisk( worldNormal, dViewDirW, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getSphereLightDiffuse(Frontend frontend) {
+float getSphereLightDiffuse(vec3 worldNormal) {
     // NB: this could be improved further with distance based wrap lighting
     float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
-    return getLightDiffuse(frontend) * falloff;
+    return getLightDiffuse(worldNormal) * falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)
@@ -406,13 +406,13 @@ float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
     return LTC_EvaluateRect( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getRectLightSpecular(Frontend frontend) {
-    return calcRectLightSpecular(frontend.worldNormal, dLTCUV);
+float getRectLightSpecular(LitShaderArguments litShaderArgs) {
+    return calcRectLightSpecular(litShaderArgs.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getRectLightSpecularCC(Frontend frontend) {
-    return calcRectLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
+float getRectLightSpecularCC(LitShaderArguments litShaderArgs) {
+    return calcRectLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 
@@ -421,23 +421,23 @@ float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
     return LTC_EvaluateDisk( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getDiskLightSpecular(Frontend frontend) {
-    return calcDiskLightSpecular(frontend.worldNormal, dLTCUV);
+float getDiskLightSpecular(LitShaderArguments litShaderArgs) {
+    return calcDiskLightSpecular(litShaderArgs.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getDiskLightSpecularCC(Frontend frontend) {
-    return calcDiskLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
+float getDiskLightSpecularCC(LitShaderArguments litShaderArgs) {
+    return calcDiskLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 
-float getSphereLightSpecular(Frontend frontend) {
-    return calcDiskLightSpecular(frontend.worldNormal, dLTCUV);
+float getSphereLightSpecular(LitShaderArguments litShaderArgs) {
+    return calcDiskLightSpecular(litShaderArgs.worldNormal, dLTCUV);
 }
 
 #ifdef LIT_CLEARCOAT
-float getSphereLightSpecularCC(Frontend frontend) {
-    return calcDiskLightSpecular(frontend.clearcoatWorldNormal, ccLTCUV);
+float getSphereLightSpecularCC(LitShaderArguments litShaderArgs) {
+    return calcDiskLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
 }
 #endif
 `;

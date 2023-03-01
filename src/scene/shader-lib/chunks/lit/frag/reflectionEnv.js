@@ -53,7 +53,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return processEnvironment(mix(linear0, linear1, level - ilevel));
 }
 
-void addReflection(Frontend frontend) {   
-    dReflection += vec4(calcReflection(dReflDirW, frontend.glossiness), material_reflectivity);
+void addReflection(float gloss) {   
+    dReflection += vec4(calcReflection(dReflDirW, gloss), material_reflectivity);
 }
 `;

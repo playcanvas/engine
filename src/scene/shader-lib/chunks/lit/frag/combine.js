@@ -1,10 +1,10 @@
 export default /* glsl */`
-vec3 combineColor(Frontend frontend) {
+vec3 combineColor(LitShaderArguments litShaderArgs) {
     vec3 ret = vec3(0);
 #ifdef LIT_OLD_AMBIENT
-    ret += (dDiffuseLight - light_globalAmbient) * frontend.albedo + material_ambient * light_globalAmbient;
+    ret += (dDiffuseLight - light_globalAmbient) * litShaderArgs.albedo + material_ambient * light_globalAmbient;
 #else
-    ret += frontend.albedo * dDiffuseLight;
+    ret += litShaderArgs.albedo * dDiffuseLight;
 #endif
 #ifdef LIT_SPECULAR
     ret += dSpecularLight;
@@ -14,12 +14,12 @@ vec3 combineColor(Frontend frontend) {
 #endif
 
 #ifdef LIT_SHEEN
-    float sheenScaling = 1.0 - max(max(frontend.sheenSpecularity.r, frontend.sheenSpecularity.g), frontend.sheenSpecularity.b) * 0.157;
-    ret = ret * sheenScaling + (sSpecularLight + sReflection.rgb) * frontend.sheenSpecularity;
+    float sheenScaling = 1.0 - max(max(litShaderArgs.sheenSpecularity.r, litShaderArgs.sheenSpecularity.g), litShaderArgs.sheenSpecularity.b) * 0.157;
+    ret = ret * sheenScaling + (sSpecularLight + sReflection.rgb) * litShaderArgs.sheenSpecularity;
 #endif
 #ifdef LIT_CLEARCOAT
-    float clearCoatScaling = 1.0 - ccFresnel * frontend.clearcoatSpecularity;
-    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * frontend.clearcoatSpecularity;
+    float clearCoatScaling = 1.0 - ccFresnel * litShaderArgs.clearcoatSpecularity;
+    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * litShaderArgs.clearcoatSpecularity;
 #endif
 
     return ret;

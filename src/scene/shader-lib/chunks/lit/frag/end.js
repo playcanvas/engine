@@ -1,7 +1,7 @@
 export default /* glsl */`
-    gl_FragColor.rgb = combineColor(frontend);
+    gl_FragColor.rgb = combineColor(litShaderArgs);
 
-    gl_FragColor.rgb += frontend.emission;
+    gl_FragColor.rgb += litShaderArgs.emission;
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
 
     #ifndef HDR

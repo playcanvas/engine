@@ -50,7 +50,6 @@ import fogExp2PS from './lit/frag/fogExp2.js';
 import fogLinearPS from './lit/frag/fogLinear.js';
 import fogNonePS from './lit/frag/fogNone.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
-import frontendPS from './standard/frag/frontend.js';
 import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
@@ -73,6 +72,7 @@ import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
+import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
@@ -256,7 +256,6 @@ const shaderChunks = {
     fogLinearPS,
     fogNonePS,
     fresnelSchlickPS,
-    frontendPS,
     fullscreenQuadPS,
     fullscreenQuadVS,
     gamma1_0PS,
@@ -279,6 +278,7 @@ const shaderChunks = {
     lightSpecularBlinnPS,
     lightSpecularPhongPS,
     lightSheenPS,
+    litShaderArgsPS,
     ltcPS,
     metalnessPS,
     metalnessModulatePS,

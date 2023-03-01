@@ -315,7 +315,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
-void evaluateLight(ClusterLightData light, Frontend frontend) {
+void evaluateLight(ClusterLightData light, LitShaderArguments litShaderArgs) {
 
     dAtten3 = vec3(1.0);
 
@@ -361,11 +361,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                dAttenD = getRectLightDiffuse(frontend) * 16.0;
+                dAttenD = getRectLightDiffuse(litShaderArgs.worldNormal) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                dAttenD = getDiskLightDiffuse(frontend) * 16.0;
+                dAttenD = getDiskLightDiffuse(litShaderArgs.worldNormal) * 16.0;
             } else { // sphere
-                dAttenD = getSphereLightDiffuse(frontend) * 16.0;
+                dAttenD = getSphereLightDiffuse(litShaderArgs.worldNormal) * 16.0;
             }
 
         } else
@@ -373,7 +373,7 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
         #endif
 
         {
-            dAtten *= getLightDiffuse(frontend);
+            dAtten *= getLightDiffuse(litShaderArgs.worldNormal); 
         }
 
         // spot light falloff
@@ -484,11 +484,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 float areaLightSpecular;
 
                 if (isClusteredLightRect(light)) {
-                    areaLightSpecular = getRectLightSpecular(frontend);
+                    areaLightSpecular = getRectLightSpecular(litShaderArgs);
                 } else if (isClusteredLightDisk(light)) {
-                    areaLightSpecular = getDiskLightSpecular(frontend);
+                    areaLightSpecular = getDiskLightSpecular(litShaderArgs);
                 } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular(frontend);
+                    areaLightSpecular = getSphereLightSpecular(litShaderArgs);
                 }
 
                 dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
@@ -499,11 +499,11 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecularCC(frontend);
+                        areaLightSpecularCC = getRectLightSpecularCC(litShaderArgs);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecularCC(frontend);
+                        areaLightSpecularCC = getDiskLightSpecularCC(litShaderArgs);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecularCC(frontend);
+                        areaLightSpecularCC = getSphereLightSpecularCC(litShaderArgs);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
@@ -525,7 +525,7 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
                 #if defined(LIT_CONSERVE_ENERGY)
-                    punctualDiffuse = mix(punctualDiffuse, vec3(0), frontend.specularity);
+                    punctualDiffuse = mix(punctualDiffuse, vec3(0), litShaderArgs.specularity);
                 #endif
                 #endif
                 #endif
@@ -540,21 +540,21 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), frontend);
+                    dSpecularLight += getLightSpecular(halfDir, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), litShaderArgs);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, frontend) * dAtten * light.color * dAtten3 * frontend.specularity;
+                    dSpecularLight += getLightSpecular(halfDir, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light.color * dAtten3 * litShaderArgs.specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecularCC(halfDir, frontend) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoatWorldNormal, litShaderArgs.clearcoatGloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecularCC(halfDir, frontend) * dAtten * light.color * dAtten3;
+                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoatWorldNormal, litShaderArgs.clearcoatGloss) * dAtten * light.color * dAtten3; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, frontend) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, litShaderArgs.worldNormal, litShaderArgs.sheenGloss) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif
@@ -562,7 +562,7 @@ void evaluateLight(ClusterLightData light, Frontend frontend) {
     }
 }
 
-void evaluateClusterLight(float lightIndex, Frontend frontend) {
+void evaluateClusterLight(float lightIndex, LitShaderArguments litShaderArgs) {
 
     // decode core light data from textures
     ClusterLightData clusterLightData;
@@ -570,10 +570,10 @@ void evaluateClusterLight(float lightIndex, Frontend frontend) {
 
     // evaluate light if it uses accepted light mask
     if (acceptLightMask(clusterLightData))
-        evaluateLight(clusterLightData, frontend);
+        evaluateLight(clusterLightData, litShaderArgs);
 }
 
-void addClusteredLights(Frontend frontend) {
+void addClusteredLights(LitShaderArguments litShaderArgs) {
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 
@@ -598,7 +598,7 @@ void addClusteredLights(Frontend frontend) {
                 if (lightIndex <= 0.0)
                         return;
 
-                evaluateClusterLight(lightIndex * 255.0, frontend); 
+                evaluateClusterLight(lightIndex * 255.0, litShaderArgs); 
             }
 
         #else
@@ -614,7 +614,7 @@ void addClusteredLights(Frontend frontend) {
                 if (lightIndex <= 0.0)
                     return;
                 
-                evaluateClusterLight(lightIndex * 255.0, frontend); 
+                evaluateClusterLight(lightIndex * 255.0, litShaderArgs); 
 
                 // end of the cell array
                 if (lightCellIndex >= clusterMaxCells) {

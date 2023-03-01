@@ -1,7 +1,7 @@
 export default /* glsl */`
 #ifdef LIT_CLEARCOAT
-void addReflectionCC(Frontend frontend) {
-    ccReflection += calcReflection(ccReflDirW, frontend.clearcoatGlossiness);
+void addReflectionCC(float gloss) {
+    ccReflection += calcReflection(ccReflDirW, gloss);
 }
 #endif
 `;
