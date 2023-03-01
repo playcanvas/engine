@@ -513,25 +513,6 @@ const standard = {
         code.append(`LitShaderArguments evaluateFrontend() { LitShaderArguments _litShaderArgs; \n${func.code}\n return _litShaderArgs;\n }\n`);
         func.code = `LitShaderArguments litShaderArgs = evaluateFrontend();`;
 
-        code.append("#define dUvOffset FLORB");
-        code.append("#define dAlpha FLORB");
-        code.append("#define dNormalW FLORB");
-        code.append("#define dAlbedo FLORB");
-        code.append("#define dTransmission FLORB");
-        code.append("#define dThickness FLORB");
-        code.append("#define dIridescenceFresnel FLORB");
-        code.append("#define dIridescence FLORB");
-        code.append("#define dIridescenceThickness FLORB");
-        code.append("#define dSpecularity FLORB");
-        code.append("#define dGlossiness FLORB");
-        code.append("#define dAo FLORB");
-        code.append("#define dEmission FLORB");
-        code.append("#define ccGlossiness FLORB");
-        code.append("#define ccSpecularity FLORB");
-        code.append("#define ccNormalW FLORB");
-        code.append("#define dLightmap FLORB");
-        code.append("#define dLightmapDir FLORB"); 
-
         for (const texture in textureMapping) {
             decl.append(`uniform sampler2D ${textureMapping[texture]};`);
         }
