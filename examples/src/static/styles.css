@@ -401,14 +401,16 @@ body {
     background-color: #364346;
 }
 
-#controls-wrapper {
-    position: absolute;
-    width: 100%;
-    height: calc(100% - 48px);
-}
+@media only screen and (max-width: 600px) {
+    #controls-wrapper {
+        position: absolute;
+        width: 100%;
+        height: calc(100% - 48px);
+    }
 
-#controls-wrapper.has-controls {
-    height: calc(100% - 100px);
+    #controls-wrapper.has-controls {
+        height: calc(100% - 100px);
+    }
 }
 
 #deviceTypeSelectInput {

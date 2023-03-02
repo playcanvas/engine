@@ -20,7 +20,8 @@ const controlsObserver = new Observer();
 const Controls = (props: any) => {
     const controlsFunction = (examples as any).paths[props.path].example.prototype.controls;
     const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls((window as any).observerData).props.children : null;
-    if (!controls) return null;
+    // on desktop dont show the control panel when no controls are present
+    if (!controls && window.top.innerWidth > 600) return null;
     return <ControlPanel controls={controls} files={props.files} />;
 };
 interface ControlLoaderProps {
@@ -168,7 +169,10 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     shouldComponentUpdate(nextProps: Readonly<ExampleProps>): boolean {
-        return this.props.match.params.category !== nextProps.match.params.category || this.props.match.params.example !== nextProps.match.params.example || this.props.files !== nextProps.files;
+        const updateMobileOnFileChange = () => {
+            return window.top.innerWidth < 601 && this.props.files !== nextProps.files;
+        };
+        return this.props.match.params.category !== nextProps.match.params.category || this.props.match.params.example !== nextProps.match.params.example || updateMobileOnFileChange();
     }
 
     componentDidUpdate() {
