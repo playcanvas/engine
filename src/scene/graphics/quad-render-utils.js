@@ -21,28 +21,28 @@ const _tempRect = new Vec4();
  * pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle of the
  * quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
+function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     // a valid target or a null target (framebuffer) are supported
     Debug.assert(target !== undefined);
+
+    const useBlend = arguments[5];
+    Debug.call(() => {
+        if (useBlend !== undefined) {
+            Debug.warnOnce('pc.drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+        }
+    });
 
     DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
     const oldDepthTest = device.getDepthTest();
     const oldDepthWrite = device.getDepthWrite();
     const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
 
     device.setDepthTest(false);
     device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
-    if (!useBlend) device.setBlending(false);
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
@@ -76,7 +76,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
     device.setDepthTest(oldDepthTest);
     device.setDepthWrite(oldDepthWrite);
     device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
     DebugGraphics.popGpuMarker(device);
 }
@@ -96,13 +95,20 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
  * texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle to use for
  * the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend = false) {
+function drawTexture(device, texture, target, shader, rect, scissorRect) {
     Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
+
+    const useBlend = arguments[6];
+    Debug.call(() => {
+        if (useBlend !== undefined) {
+            Debug.warnOnce('pc.drawTexture no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+        }
+    });
+
     shader = shader || device.getCopyShader();
     device.constantTexSource.setValue(texture);
-    drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
+    drawQuadWithShader(device, target, shader, rect, scissorRect);
 }
 
 export { drawQuadWithShader, drawTexture };

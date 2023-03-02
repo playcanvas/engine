@@ -17,6 +17,7 @@ import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -461,6 +462,10 @@ function reprojectTexture(source, target, options = {}) {
     }
 
     DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
+
+    // render state
+    // TODO: set up other render state here to expected state
+    device.setBlendState(BlendState.DEFAULT);
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     Debug.assert(constantSource);

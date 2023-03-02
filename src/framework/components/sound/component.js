@@ -415,6 +415,68 @@ class SoundComponent extends Component {
     }
 
     /**
+     * Return a property from the slot with the specified name.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @param {string} property - The name of the property to look for.
+     * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
+     * @private
+     */
+    _getSlotProperty(name, property) {
+        if (!this.enabled || !this.entity.enabled) {
+            return undefined;
+        }
+
+        const slot = this._slots[name];
+        if (!slot) {
+            Debug.warn(`Trying to get ${property} from sound slot with name ${name} which does not exist`);
+            return undefined;
+        }
+
+        return slot[property];
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently playing.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently playing.
+     */
+    isPlaying(name) {
+        return this._getSlotProperty(name, 'isPlaying') || false;
+    }
+
+    /**
+     * Returns true if the asset of the slot with the specified name is loaded..
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and its asset is loaded.
+     */
+    isLoaded(name) {
+        return this._getSlotProperty(name, 'isLoaded') || false;
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently paused.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently paused.
+     */
+    isPaused(name) {
+        return this._getSlotProperty(name, 'isPaused') || false;
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently stopped.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently stopped.
+     */
+    isStopped(name) {
+        return this._getSlotProperty(name, 'isStopped') || false;
+    }
+
+    /**
      * Begins playing the sound slot with the specified name. The slot will restart playing if it
      * is already playing unless the overlap field is true in which case a new sound will be
      * created and played.

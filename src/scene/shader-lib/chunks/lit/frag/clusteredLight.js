@@ -1,6 +1,6 @@
 export default /* glsl */`
-uniform sampler2D clusterWorldTexture;
-uniform sampler2D lightsTexture8;
+uniform highp sampler2D clusterWorldTexture;
+uniform highp sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
 // complex ifdef expression are not supported, handle it here
@@ -594,6 +594,10 @@ void addClusteredLights() {
 
                 // using a single channel texture with data in alpha channel
                 float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+
+                if (lightIndex <= 0.0)
+                        return;
+
                 evaluateClusterLight(lightIndex * 255.0); 
             }
 

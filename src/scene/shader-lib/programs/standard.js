@@ -232,7 +232,13 @@ const standard = {
         }
     },
 
-    /** @type { Function } */
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {StandardMaterialOptions} options - The create options.
+     * @returns {object} Returns the created shader definition.
+     * @ignore
+     */
     createShaderDefinition: function (device, options) {
         const litShader = new LitShader(device, options.litOptions);
 
@@ -450,8 +456,8 @@ const standard = {
             }
 
             // lightmap
-            if (options.litOptions.lightMapEnabled || options.lightMapVertexColors) {
-                const lightmapDir = (options.litOptions.dirLightMapEnabled && options.litOptions.useSpecular);
+            if (options.lightMap || options.lightVertexColor) {
+                const lightmapDir = (options.dirLightMap && options.litOptions.useSpecular);
                 const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
                 decl.append("vec3 dLightmap;");
                 if (lightmapDir) {

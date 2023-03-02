@@ -10,7 +10,6 @@ import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
 import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
-import { WebgpuRenderState } from './webgpu-render-state.js';
 import { WebgpuRenderTarget } from './webgpu-render-target.js';
 import { WebgpuShader } from './webgpu-shader.js';
 import { WebgpuTexture } from './webgpu-texture.js';
@@ -26,13 +25,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {RenderTarget}
      */
     frameBuffer;
-
-    /**
-     * Internal representation of the current render state, as requested by the renderer.
-     * In the future this can be completely replaced by a more optimal solution, where
-     * render states are bundled together (DX11 style) and set using a single call.
-     */
-    renderState = new WebgpuRenderState();
 
     /**
      * Object responsible for caching and creation of render pipelines.
@@ -72,12 +64,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this.activeDeviceType = DEVICETYPE_WEBGPU;
 
-        // TODO: refactor as needed
-        this.writeRed = true;
-        this.writeGreen = true;
-        this.writeBlue = true;
-        this.writeAlpha = true;
-
         this.initDeviceCaps();
     }
 
@@ -112,6 +98,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
+        this.extBlendMinmax = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         this.supportsTextureFetch = true;
     }
@@ -287,7 +274,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.renderState);
+                                                     this.bindGroupFormats, this.blendState);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -319,16 +306,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
-    setBlending(blending) {
-        this.renderState.setBlending(blending);
+    setBlendState(blendState) {
+        this.blendState.copy(blendState);
     }
 
-    setBlendFunction(blendSrc, blendDst) {
-        this.renderState.setBlendFunction(blendSrc, blendDst);
-    }
-
-    setBlendEquation(blendEquation) {
-        this.renderState.setBlendEquation(blendEquation);
+    setBlendColor(r, g, b, a) {
+        // TODO: this should use passEncoder.setBlendConstant(color)
     }
 
     setDepthFunc(func) {
@@ -349,9 +332,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setAlphaToCoverage(state) {
-    }
-
-    setColorWrite(writeRed, writeGreen, writeBlue, writeAlpha) {
     }
 
     setDepthWrite(writeDepth) {

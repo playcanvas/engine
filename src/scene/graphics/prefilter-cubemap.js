@@ -9,6 +9,7 @@ import { drawQuadWithShader } from './quad-render-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
 function areaElement(x, y) {
@@ -95,6 +96,7 @@ function shFromCubemap(device, source, dontFlipX) {
                     depth: false
                 });
                 constantTexSource.setValue(tex);
+                device.setBlendState(BlendState.DEFAULT);
                 drawQuadWithShader(device, targ, shader);
 
                 const gl = device.gl;

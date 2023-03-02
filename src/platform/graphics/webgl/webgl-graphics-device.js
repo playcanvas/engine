@@ -5,8 +5,6 @@ import { Color } from '../../../core/math/color.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    BLENDEQUATION_ADD,
-    BLENDMODE_ZERO, BLENDMODE_ONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
@@ -37,6 +35,7 @@ import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
+import { BlendState } from '../blend-state.js';
 
 const invalidateAttachments = [];
 
@@ -91,14 +90,10 @@ function quadWithShader(device, target, shader) {
     const oldDepthTest = device.getDepthTest();
     const oldDepthWrite = device.getDepthWrite();
     const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
     device.setDepthTest(false);
     device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
+    device.setBlendState(BlendState.DEFAULT);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -113,7 +108,6 @@ function quadWithShader(device, target, shader) {
     device.setDepthTest(oldDepthTest);
     device.setDepthWrite(oldDepthWrite);
     device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
     device.updateEnd();
 
@@ -474,7 +468,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
         ];
 
-        this.glBlendFunction = [
+        this.glBlendFunctionColor = [
             gl.ZERO,
             gl.ONE,
             gl.SRC_COLOR,
@@ -487,7 +481,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_COLOR,
-            gl.ONE_MINUS_CONSTANT_COLOR,
+            gl.ONE_MINUS_CONSTANT_COLOR
+        ];
+
+        this.glBlendFunctionAlpha = [
+            gl.ZERO,
+            gl.ONE,
+            gl.SRC_COLOR,
+            gl.ONE_MINUS_SRC_COLOR,
+            gl.DST_COLOR,
+            gl.ONE_MINUS_DST_COLOR,
+            gl.SRC_ALPHA,
+            gl.SRC_ALPHA_SATURATE,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.DST_ALPHA,
+            gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_ALPHA,
             gl.ONE_MINUS_CONSTANT_ALPHA
         ];
@@ -1038,28 +1046,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         // Initialize render state to a known start state
-        this.blending = false;
-        gl.disable(gl.BLEND);
 
-        this.blendSrc = BLENDMODE_ONE;
-        this.blendDst = BLENDMODE_ZERO;
-        this.blendSrcAlpha = BLENDMODE_ONE;
-        this.blendDstAlpha = BLENDMODE_ZERO;
-        this.separateAlphaBlend = false;
-        this.blendEquation = BLENDEQUATION_ADD;
-        this.blendAlphaEquation = BLENDEQUATION_ADD;
-        this.separateAlphaEquation = false;
+        // default blend state
+        gl.disable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ZERO);
         gl.blendEquation(gl.FUNC_ADD);
+        gl.colorMask(true, true, true, true);
 
         this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
-
-        this.writeRed = true;
-        this.writeGreen = true;
-        this.writeBlue = true;
-        this.writeAlpha = true;
-        gl.colorMask(true, true, true, true);
 
         this.cullMode = CULLFACE_BACK;
         gl.enable(gl.CULL_FACE);
@@ -1400,7 +1395,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
+        Debug.call(() => {
+            if (this.insideRenderPass) {
+                Debug.errorOnce('RenderPass cannot be started while inside another render pass.');
+            }
+        });
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);
@@ -2073,7 +2072,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (flags & CLEARFLAG_COLOR) {
                 const color = options.color ?? defaultOptions.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
-                this.setColorWrite(true, true, true, true);
+                this.setBlendState(BlendState.DEFAULT);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
@@ -2235,31 +2234,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Enables or disables writes to the color buffer. Once this state is set, it persists until it
-     * is changed. By default, color writes are enabled for all color channels.
-     *
-     * @param {boolean} writeRed - True to enable writing of the red channel and false otherwise.
-     * @param {boolean} writeGreen - True to enable writing of the green channel and false otherwise.
-     * @param {boolean} writeBlue - True to enable writing of the blue channel and false otherwise.
-     * @param {boolean} writeAlpha - True to enable writing of the alpha channel and false otherwise.
-     * @example
-     * // Just write alpha into the frame buffer
-     * device.setColorWrite(false, false, false, true);
-     */
-    setColorWrite(writeRed, writeGreen, writeBlue, writeAlpha) {
-        if ((this.writeRed !== writeRed) ||
-            (this.writeGreen !== writeGreen) ||
-            (this.writeBlue !== writeBlue) ||
-            (this.writeAlpha !== writeAlpha)) {
-            this.gl.colorMask(writeRed, writeGreen, writeBlue, writeAlpha);
-            this.writeRed = writeRed;
-            this.writeGreen = writeGreen;
-            this.writeBlue = writeBlue;
-            this.writeAlpha = writeAlpha;
-        }
-    }
-
-    /**
      * Enables or disables alpha to coverage (WebGL2 only).
      *
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
@@ -2353,32 +2327,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setDepthBiasValues(constBias, slopeBias) {
         this.gl.polygonOffset(slopeBias, constBias);
-    }
-
-    /**
-     * Queries whether blending is enabled.
-     *
-     * @returns {boolean} True if blending is enabled and false otherwise.
-     */
-    getBlending() {
-        return this.blending;
-    }
-
-    /**
-     * Enables or disables blending.
-     *
-     * @param {boolean} blending - True to enable blending and false to disable it.
-     */
-    setBlending(blending) {
-        if (this.blending !== blending) {
-            const gl = this.gl;
-            if (blending) {
-                gl.enable(gl.BLEND);
-            } else {
-                gl.disable(gl.BLEND);
-            }
-            this.blending = blending;
-        }
     }
 
     /**
@@ -2594,115 +2542,44 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     * - {@link BLENDMODE_CONSTANT_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_COLOR}
-     * - {@link BLENDMODE_CONSTANT_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     */
-    setBlendFunction(blendSrc, blendDst) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
-            this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.separateAlphaBlend = false;
-        }
-    }
+    setBlendState(blendState) {
+        const currentBlendState = this.blendState;
+        if (!currentBlendState.equals(blendState)) {
+            const gl = this.gl;
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
-     * @param {number} blendDstAlpha - The separate destination blend function for the alpha channel.
-     */
-    setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
-            this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
-                                      this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.blendSrcAlpha = blendSrcAlpha;
-            this.blendDstAlpha = blendDstAlpha;
-            this.separateAlphaBlend = true;
-        }
-    }
+            // state values to set
+            const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     */
-    setBlendEquation(blendEquation) {
-        if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
-            this.gl.blendEquation(this.glBlendEquation[blendEquation]);
-            this.blendEquation = blendEquation;
-            this.separateAlphaEquation = false;
-        }
-    }
+            // enable blend
+            if (currentBlendState.blend !== blend) {
+                if (blend) {
+                    gl.enable(gl.BLEND);
+                } else {
+                    gl.disable(gl.BLEND);
+                }
+            }
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel.
-     * Accepts same values as `blendEquation`.
-     */
-    setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
-        if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
-            this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
-            this.blendEquation = blendEquation;
-            this.blendAlphaEquation = blendAlphaEquation;
-            this.separateAlphaEquation = true;
+            // blend ops
+            if (currentBlendState.colorOp !== colorOp || currentBlendState.alphaOp !== alphaOp) {
+                const glBlendEquation = this.glBlendEquation;
+                gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+            }
+
+            // blend factors
+            if (currentBlendState.colorSrcFactor !== colorSrcFactor || currentBlendState.colorDstFactor !== colorDstFactor ||
+                currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
+
+                gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                                     this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+            }
+
+            // color write
+            if (currentBlendState.allWrite !== blendState.allWrite) {
+                this.gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+            }
+
+            // update internal state
+            currentBlendState.copy(blendState);
         }
     }
 

@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
+import { BlendState } from './blend-state.js';
 
 import {
     BUFFER_STATIC,
@@ -141,6 +142,13 @@ class GraphicsDevice extends EventHandler {
      */
     quadVertexBuffer;
 
+    /**
+     * An object representing current blend state
+     *
+     * @ignore
+     */
+    blendState = new BlendState();
+
     constructor(canvas) {
         super();
 
@@ -266,9 +274,21 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeRenderState() {
+
+        this.blendState = new BlendState();
+
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+    }
+
+    /**
+     * Sets the specified blend state.
+     *
+     * @param {BlendState} blendState - New blend state.
+     */
+    setBlendState(blendState) {
+        Debug.assert(false);
     }
 
     /**
