@@ -3,10 +3,15 @@ import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } fro
 
 import { WebgpuUtils } from './webgpu-utils.js';
 
-const samplerTypes = { };
+const samplerTypes = [];
 samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
 samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
 samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
+
+const sampleTypes = [];
+sampleTypes[SAMPLETYPE_FLOAT] = 'float';
+sampleTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'unfilterable-float';
+sampleTypes[SAMPLETYPE_DEPTH] = 'depth';
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
@@ -112,7 +117,10 @@ class WebgpuBindGroupFormat {
             const viewDimension = textureFormat.textureDimension;
             const multisampled = false;
 
-            key += `#${index}T:${visibility}-${sampleType}-${viewDimension}-${multisampled}`;
+            const gpuSampleType = sampleTypes[sampleType];
+            Debug.assert(gpuSampleType);
+
+            key += `#${index}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
 
             entries.push({
                 binding: index++,
@@ -120,7 +128,7 @@ class WebgpuBindGroupFormat {
                 texture: {
                     // Indicates the type required for texture views bound to this binding.
                     // "float", "unfilterable-float", "depth", "sint", "uint",
-                    sampleType: sampleType,
+                    sampleType: gpuSampleType,
 
                     // Indicates the required dimension for texture views bound to this binding.
                     // "1d", "2d", "2d-array", "cube", "cube-array", "3d"
@@ -132,10 +140,10 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const type = samplerTypes[sampleType];
-            Debug.assert(type);
+            const gpuSamplerType = samplerTypes[sampleType];
+            Debug.assert(gpuSamplerType);
 
-            key += `#${index}S:${visibility}-${type}`;
+            key += `#${index}S:${visibility}-${gpuSamplerType}`;
 
             entries.push({
                 binding: index++,
@@ -143,7 +151,7 @@ class WebgpuBindGroupFormat {
                 sampler: {
                     // Indicates the required type of a sampler bound to this bindings
                     // 'filtering', 'non-filtering', 'comparison'
-                    type: type
+                    type: gpuSamplerType
                 }
             });
         });
