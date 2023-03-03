@@ -433,9 +433,9 @@ class MeshInstance {
             const uniformBuffer = new UniformBuffer(device, ubFormat);
 
             // mesh bind group
-            const bingGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bingGroupFormat);
-            bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
             DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
 
             this._bindGroups[pass] = bindGroup;
