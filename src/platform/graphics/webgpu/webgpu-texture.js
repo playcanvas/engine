@@ -189,7 +189,7 @@ class WebgpuTexture {
     }
 
     // TODO: handle the case where those properties get changed
-    // TODO: share a globl map of samplers. Possibly even use shared samplers for bind group,
+    // TODO: share a global map of samplers. Possibly even use shared samplers for bind group,
     // or maybe even have some attached in view bind group and use globally
 
     /**
