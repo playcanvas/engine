@@ -221,7 +221,7 @@ class BlendState {
     }
 
     /**
-     * A default blend state that is not blending and writes to all color channels.
+     * A default blend state that has blending disabled and writes to all color channels.
      *
      * @type {BlendState}
      * @readonly
