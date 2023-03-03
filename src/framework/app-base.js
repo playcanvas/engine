@@ -1892,6 +1892,9 @@ class AppBase extends EventHandler {
      * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
+     * Passing false uses unfiltered sampling, allowing a depth texture to be sampled on WebGPU.
+     * Defaults to true.
      * @ignore
      */
     drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
