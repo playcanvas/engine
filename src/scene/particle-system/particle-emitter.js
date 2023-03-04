@@ -697,7 +697,6 @@ class ParticleEmitter {
         this.material.name = this.node.name;
         this.material.cull = CULLFACE_NONE;
         this.material.alphaWrite = false;
-        this.material.blend = true;
         this.material.blendType = this.blendType;
 
         this.material.depthWrite = this.depthWrite;
