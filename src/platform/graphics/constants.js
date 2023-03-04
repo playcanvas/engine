@@ -1010,9 +1010,9 @@ export const TEXTUREDIMENSION_CUBE = 'cube';
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
 export const TEXTUREDIMENSION_3D = '3d';
 
-export const SAMPLETYPE_FLOAT = 'float';
-export const SAMPLETYPE_UNFILTERABLE_FLOAT = 'unfilterable-float';
-export const SAMPLETYPE_DEPTH = 'depth';
+export const SAMPLETYPE_FLOAT = 0;
+export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+export const SAMPLETYPE_DEPTH = 2;
 
 /**
  * Texture data is not stored a specific projection format.

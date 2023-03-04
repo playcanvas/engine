@@ -1,14 +1,20 @@
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 import { ShadowMap } from './shadow-map.js';
 import {
-    LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
+
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * @ignore
  */
 class ShadowRendererLocal {
+    // temporary list to collect lights to render shadows for
+    shadowLights = [];
+
     constructor(renderer, shadowRenderer) {
         this.renderer = renderer;
         this.shadowRenderer = shadowRenderer;
@@ -70,6 +76,111 @@ class ShadowRendererLocal {
             this.renderer.updateCameraFrustum(shadowCam);
             this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
         }
+    }
+
+    // render local shadows without render passes, used by the lightmapper
+    render(lights, isClustered, camera) {
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+            Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
+
+            // skip clustered shadows with no assigned atlas slot
+            if (isClustered && !light.atlasViewportAllocated) {
+                continue;
+            }
+
+            this.shadowRenderer.render(light, camera);
+        }
+    }
+
+    prepareLights(shadowLights, lights) {
+
+        let shadowCamera;
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+
+            if (this.shadowRenderer.needsShadowRendering(light) && light.atlasViewportAllocated) {
+
+                shadowLights.push(light);
+
+                for (let face = 0; face < light.numShadowFaces; face++) {
+                    shadowCamera = this.shadowRenderer.prepareFace(light, null, face);
+                }
+            }
+        }
+
+        return shadowCamera;
+    }
+
+    /**
+     * Prepare render pass for rendering of shadows for local clustered lights. This is done inside
+     * a single render pass, as all shadows are part of a single render target atlas.
+     */
+    prepareClusteredRenderPass(renderPass, lightsSpot, lightsOmni) {
+
+        // prepare render targets / shadow cameras for rendering
+        const shadowLights = this.shadowLights;
+        const shadowCamSpot = this.prepareLights(shadowLights, lightsSpot);
+        const shadowCamOmni = this.prepareLights(shadowLights, lightsOmni);
+        const shadowCamera = shadowCamSpot ?? shadowCamOmni;
+
+        // if any shadows need to be rendered
+        const count = shadowLights.length;
+        if (count) {
+
+            // setup render pass using any of the cameras, they all have the same pass related properties
+            this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, false);
+
+            // render shadows inside the pass
+            renderPass.execute = () => {
+
+                for (let i = 0; i < count; i++) {
+                    const light = shadowLights[i];
+                    for (let face = 0; face < light.numShadowFaces; face++) {
+                        this.shadowRenderer.renderFace(light, null, face, true);
+                    }
+                }
+
+                shadowLights.length = 0;
+            };
+        }
+    }
+
+    buildNonClusteredRenderPass(frameGraph, lights) {
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+
+            if (this.shadowRenderer.needsShadowRendering(light)) {
+
+                let shadowCamera;
+                const faceCount = light.numShadowFaces;
+                for (let face = 0; face < faceCount; face++) {
+                    shadowCamera = this.shadowRenderer.prepareFace(light, null, face);
+                }
+
+                const renderPass = new RenderPass(this.device, () => {
+
+                    // inside the render pass, render all faces
+                    for (let face = 0; face < faceCount; face++) {
+                        this.shadowRenderer.renderFace(light, null, face, false);
+                    }
+                });
+
+                this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, true);
+                DebugHelper.setName(renderPass, `LocalShadow-${light._node.name}`);
+
+                frameGraph.addRenderPass(renderPass);
+            }
+        }
+    }
+
+    /**
+     * Prepare render passes for rendering of shadows for local non-clustered lights. Each shadow
+     * is a separate render pass as it renders to a separate render target.
+     */
+    buildNonClusteredRenderPasses(frameGraph, lightsSpot, lightsOmni) {
+        this.buildNonClusteredRenderPass(frameGraph, lightsSpot);
+        this.buildNonClusteredRenderPass(frameGraph, lightsOmni);
     }
 }
 

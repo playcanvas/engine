@@ -124,6 +124,19 @@ class Debug {
     }
 
     /**
+     * Error in validation of GPU commands, logged no more than once.
+     *
+     * @param {...*} args - The values to be written to the log. Uniqueness of the first parameter
+     * is used to determine if the message was already logged out.
+     */
+    static gpuError(...args) {
+        if (!Debug._loggedMessages.has(args[0])) {
+            Debug._loggedMessages.add(args[0]);
+            console.error(`GPU VALIDATION ERROR: `, ...args);
+        }
+    }
+
+    /**
      * Trace message, which is logged to the console if the tracing for the channel is enabled
      *
      * @param {string} channel - The trace channel
