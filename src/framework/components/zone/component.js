@@ -182,7 +182,7 @@ class ZoneComponent extends Component {
      * @private
      */
     _destroyCollisionShape() {
-        if (typeof Ammo !== undefined) {
+        if (typeof Ammo !== 'undefined') {
             if (this._collisionShape) {
                 Ammo.destroy(this._collisionShape);
                 this._collisionShape = null;
@@ -196,7 +196,7 @@ class ZoneComponent extends Component {
      * @private
      */
     _recreateCollisionShape() {
-        if (typeof Ammo !== undefined && this.useColliders) {
+        if (typeof Ammo !== 'undefined' && this.useColliders) {
             this._destroyCollisionShape();
 
             const halfExtents = this.halfExtents;
@@ -382,7 +382,6 @@ class ZoneComponent extends Component {
      */
     _onBeforeRemove() {
         this.onDisable();
-        this.fire('remove');
     }
 }
 
