@@ -1,4 +1,4 @@
-import { Vec3 } from '../../../core/math/vec3';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 class ZoneComponentData {
     constructor() {
