@@ -416,23 +416,6 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderShadowsLocal(lights, camera) {
-
-        const isClustered = this.scene.clusteredLightingEnabled;
-
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
-
-            // skip clustered shadows with no assigned atlas slot
-            if (isClustered && !light.atlasViewportAllocated) {
-                continue;
-            }
-
-            this.shadowRenderer.render(light, camera);
-        }
-    }
-
     // execute first pass over draw calls, in order to update materials / shaders
     // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
     // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
@@ -515,7 +498,7 @@ class ForwardRenderer extends Renderer {
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
 
                     // marker to allow us to see the source node for shader alloc
-                    DebugGraphics.pushGpuMarker(device, drawCall.node.name);
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
                     // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
@@ -592,6 +575,8 @@ class ForwardRenderer extends Renderer {
                     if (skipMaterial)
                         break;
 
+                    DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+
                     // Uniforms I: material
                     material.setParameters(device);
 
@@ -622,7 +607,11 @@ class ForwardRenderer extends Renderer {
                     } else {
                         device.setDepthBias(false);
                     }
+
+                    DebugGraphics.popGpuMarker(device);
                 }
+
+                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
                 this.setCullMode(camera._cullFaces, flipFaces, drawCall);
 
@@ -711,6 +700,8 @@ class ForwardRenderer extends Renderer {
                 if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
                     material.setParameters(device, drawCall.parameters);
                 }
+
+                DebugGraphics.popGpuMarker(device);
             }
         }
     }
@@ -814,42 +805,53 @@ class ForwardRenderer extends Renderer {
      */
     buildFrameGraph(frameGraph, layerComposition) {
 
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
         frameGraph.reset();
 
         this.update(layerComposition);
 
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        // clustered lighting render passes
         if (clusteredLightingEnabled) {
 
-            const renderPass = new RenderPass(this.device, () => {
-                // render cookies for all local visible lights
-                if (this.scene.lighting.cookiesEnabled) {
-                    this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                    this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+            // cookies
+            {
+                const renderPass = new RenderPass(this.device, () => {
+                    // render cookies for all local visible lights
+                    if (this.scene.lighting.cookiesEnabled) {
+                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
+                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+                    }
+                });
+                renderPass.requiresCubemaps = false;
+                DebugHelper.setName(renderPass, 'ClusteredCookies');
+                frameGraph.addRenderPass(renderPass);
+            }
+
+            // local shadows - these are shared by all cameras (not entirely correctly)
+            {
+                const renderPass = new RenderPass(this.device);
+                DebugHelper.setName(renderPass, 'ClusteredLocalShadows');
+                renderPass.requiresCubemaps = false;
+                frameGraph.addRenderPass(renderPass);
+
+                // render shadows only when needed
+                if (this.scene.lighting.shadowsEnabled) {
+                    const splitLights = layerComposition._splitLights;
+                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
                 }
-            });
-            renderPass.requiresCubemaps = false;
-            DebugHelper.setName(renderPass, 'ClusteredCookies');
-            frameGraph.addRenderPass(renderPass);
+
+                // update clusters all the time
+                renderPass.after = () => {
+                    this.updateClusters(layerComposition);
+                };
+            }
+
+        } else {
+
+            // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
+            const splitLights = layerComposition._splitLights;
+            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
         }
-
-        // local shadows
-        const renderPass = new RenderPass(this.device, () => {
-
-            // render shadows for all local visible lights - these shadow maps are shared by all cameras
-            if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
-                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_OMNI]);
-            }
-
-            // update light clusters
-            if (clusteredLightingEnabled) {
-                this.updateClusters(layerComposition);
-            }
-        });
-        renderPass.requiresCubemaps = false;
-        DebugHelper.setName(renderPass, 'LocalShadowMaps');
-        frameGraph.addRenderPass(renderPass);
 
         // main passes
         let startIndex = 0;

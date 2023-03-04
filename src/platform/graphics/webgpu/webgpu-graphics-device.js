@@ -457,12 +457,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.vx = x;
             this.vy = y;
             this.vw = w;
             this.vh = h;
 
-            this.passEncoder.setViewport(x, this.renderTarget.height - y - h, w, h, 0, 1);
+            this.passEncoder.setViewport(x, y, w, h, 0, 1);
         }
     }
 
@@ -472,12 +476,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.sx = x;
             this.sy = y;
             this.sw = w;
             this.sh = h;
 
-            this.passEncoder.setScissorRect(x, this.renderTarget.height - y - h, w, h);
+            this.passEncoder.setScissorRect(x, y, w, h);
         }
     }
 

@@ -260,6 +260,7 @@ const stripFunctions = [
     'Debug.warnOnce',
     'Debug.error',
     'Debug.errorOnce',
+    'Debug.gpuError',
     'Debug.log',
     'Debug.logOnce',
     'Debug.trace',
