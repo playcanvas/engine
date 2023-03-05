@@ -298,7 +298,7 @@ class ZoneComponent extends Component {
                     this.fire('entityEnter', entity);
                     this.entities.push(entity);
                 }
-            } else if (this.useColliders && entity.collision && entity.collision.enabled) {
+            } else if (this.useColliders && entity.collision && entity.collision.enabled && entity.collision.zoneCheck) {
                 if (!pendingCollider) {
                     pendingCollider = [];
                 }
