@@ -55,6 +55,7 @@ const _quat = new Quat();
  * an asset id. Defaults to null. If not set then the asset property will be checked instead.
  * @property {import('../../../scene/model.js').Model} model The model that is added to the scene
  * graph for the mesh collision volume.
+ * @property {boolean} zoneCheck Whether this collider should be used to detect if entity is within zone. Defaults to false.
  * @augments Component
  */
 class CollisionComponent extends Component {
