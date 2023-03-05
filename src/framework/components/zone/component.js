@@ -12,6 +12,10 @@ const _matrix = new Mat4();
  * performance reasons. And many other possible options. Zones are building blocks and meant to be
  * used in many different ways.
  *
+ * @property {"box"|"sphere"} shape The shape of this zone. Can be a `box` or a `sphere`.
+ * @property {Vec3} halfExtents The half-extents of the box-shaped zone in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
+ * @property {number} radius The radius of the sphere-shaped zone. Defaults to 0.5.
+ * @property {boolean} useColliders Whether the zone should look for colliders collision if entity is outside of it. Defaults to false.
  * @augments Component
  */
 class ZoneComponent extends Component {
@@ -37,37 +41,6 @@ class ZoneComponent extends Component {
      * @ignore
      */
     _halfExtentsLast = new Vec3();
-
-    /**
-     * The shape of this zone. Can be a `box` or a `sphere`.
-     *
-     * @type {"box"|"sphere"}
-     * @private
-     */
-    _shape;
-
-    /**
-     * The half extents for the box shape.
-     *
-     * @type {Vec3}
-     */
-    halfExtents = new Vec3(0.5, 0.5, 0.5);
-
-    /**
-     * The radius for the sphere shape.
-     *
-     * @type {number}
-     * @private
-     */
-    _radius = 0.5;
-
-    /**
-     * Whether the zone should look for colliders collision if entity is outside of it.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _useColliders = true;
 
     /**
      * Create a new RigidBodyComponent instance.
@@ -149,54 +122,6 @@ class ZoneComponent extends Component {
      *     // entity left the zone
      * });
      */
-
-    /**
-     * The shape of this zone. Can be a `box` or a `sphere`.
-     *
-     * @type {"box"|"sphere"}
-     */
-    set shape(value) {
-        const oldValue = this._shape;
-        this._shape = value === 'sphere' ? 'sphere' : 'box';
-        this.fire('set', 'shape', oldValue, this._shape);
-    }
-
-    get shape() {
-        return this._shape;
-    }
-
-    /**
-     * The radius for the sphere shape.
-     *
-     * @type {number}
-     */
-    set radius(value) {
-        const oldValue = this._radius;
-        this._radius = value;
-        this.fire('set', 'radius', oldValue, this._radius);
-    }
-
-    get radius() {
-        return this._radius;
-    }
-
-    /**
-     * Whether the zone should look for colliders collision if entity is outside of it.
-     *
-     * @type {boolean}
-     */
-    set useColliders(value) {
-        if (!!value === this._useColliders) {
-            return;
-        }
-
-        this._useColliders = !!value;
-        this.fire('set', 'useColliders', !this._useColliders, this._useColliders);
-    }
-
-    get useColliders() {
-        return this._useColliders;
-    }
 
     /**
      * Toggle life cycle listeners for this component.
