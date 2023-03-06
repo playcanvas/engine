@@ -158,10 +158,12 @@ class ShadowRenderer {
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
 
-            if (!meshInstance.cull || meshInstance._isVisible(camera)) {
-                meshInstance.visibleThisFrame = true;
-                visible[count] = meshInstance;
-                count++;
+            if (meshInstance.castShadow) {
+                if (!meshInstance.cull || meshInstance._isVisible(camera)) {
+                    meshInstance.visibleThisFrame = true;
+                    visible[count] = meshInstance;
+                    count++;
+                }
             }
         }
 
