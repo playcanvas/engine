@@ -5,7 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
@@ -58,6 +58,9 @@ function equalLightLists(lightList1, lightList2) {
     }
     return true;
 }
+
+const _triFanIndices = [0, 1, 3, 2, 3, 1];
+const _triStripIndices = [0, 1, 3, 0, 3, 2];
 
 const mat3 = new Mat3();
 
@@ -625,9 +628,17 @@ class BatchManager {
                 const numVerts = mesh.vertexBuffer.numVertices;
                 batchNumVerts += numVerts;
 
-                // index counts (handles special case of TRI-FAN-type non-indexed primitive used by UI)
-                batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
-                    (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
+                // index count
+                if (mesh.primitive[0].indexed) {
+                    batchNumIndices += mesh.primitive[0].count;
+                } else {
+                    // special case of fan / strip non-indexed primitive used by UI
+                    const primitiveType = mesh.primitive[0].type;
+                    if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
+                        if (mesh.primitive[0].count === 4)
+                            batchNumIndices += 6;
+                    }
+                }
 
                 // if first mesh
                 if (!streams) {
@@ -798,14 +809,20 @@ class BatchManager {
                     // source index buffer data mapped to its format
                     const srcFormat = mesh.indexBuffer[0].getFormat();
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
-                } else if (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
-                    // Special case for UI image elements
-                    indexBase = 0;
-                    numIndices = 6;
-                    indexData = [0, 1, 3, 2, 3, 1];
-                } else {
-                    numIndices = 0;
-                    continue;
+
+                } else { // non-indexed
+
+                    const primitiveType = mesh.primitive[0].type;
+                    if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
+                        if (mesh.primitive[0].count === 4) {
+                            indexBase = 0;
+                            numIndices = 6;
+                            indexData = primitiveType === PRIMITIVE_TRIFAN ? _triFanIndices : _triStripIndices;
+                        } else {
+                            numIndices = 0;
+                            continue;
+                        }
+                    }
                 }
 
                 for (let j = 0; j < numIndices; j++) {
