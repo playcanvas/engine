@@ -1,9 +1,9 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { DebugHelper } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 import { ShadowMap } from './shadow-map.js';
 import {
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
+    LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
 
 import { RenderPass } from '../../platform/graphics/render-pass.js';

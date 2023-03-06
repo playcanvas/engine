@@ -358,6 +358,7 @@ class Renderer {
 
     /**
      * Clears the active render target. If the viewport is already set up, only its area is cleared.
+     *
      * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
      * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
      * from the camra if not supplied.
