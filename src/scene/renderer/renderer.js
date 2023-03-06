@@ -505,6 +505,8 @@ class Renderer {
         // Alpha test
         if (material.opacityMap) {
             this.opacityMapId.setValue(material.opacityMap);
+        }
+        if (material.opacityMap || material.alphaTest > 0) {
             this.alphaTestId.setValue(material.alphaTest);
         }
     }
