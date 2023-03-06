@@ -1098,7 +1098,7 @@ class ForwardRenderer extends Renderer {
             // if this is not a first render action to the render target, or if the render target was not
             // fully cleared on pass start, we need to execute clears here
             if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
-                this.clear(renderAction, camera.camera);
+                this.clear(camera.camera, renderAction.clearColor, renderAction.clearDepth, renderAction.clearStencil);
             }
 
             // #if _PROFILER

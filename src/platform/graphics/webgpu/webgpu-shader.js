@@ -1,4 +1,5 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
 
 import { ShaderProcessor } from '../shader-processor.js';
 
@@ -11,16 +12,26 @@ class WebgpuShader {
     /**
      * Transpiled vertex shader code.
      *
-     * @type {Uint32Array}
+     * @type {Uint32Array | string}
      */
     _vertexCode;
 
     /**
      * Transpiled fragment shader code.
      *
-     * @type {Uint32Array}
+     * @type {Uint32Array | string}
      */
     _fragmentCode;
+
+    /**
+     * Name of the vertex entry point function.
+     */
+    vertexEntryPoint = 'main';
+
+    /**
+     * Name of the fragment entry point function.
+     */
+    fragmentEntryPoint = 'main';
 
     /**
      * @param {import('../shader.js').Shader} shader - The shader.
@@ -32,8 +43,19 @@ class WebgpuShader {
         const definition = shader.definition;
         Debug.assert(definition);
 
-        if (definition.processingOptions) {
-            this.process();
+        if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
+
+            this._vertexCode = definition.vshader;
+            this._fragmentCode = definition.fshader;
+            this.vertexEntryPoint = 'vertexMain';
+            this.fragmentEntryPoint = 'fragmentMain';
+            shader.ready = true;
+
+        } else {
+
+            if (definition.processingOptions) {
+                this.process();
+            }
         }
     }
 
@@ -45,6 +67,41 @@ class WebgpuShader {
     destroy(shader) {
         this._vertexCode = null;
         this._fragmentCode = null;
+    }
+
+    createShaderModule(code, shaderType) {
+        const wgpu = this.shader.device.wgpu;
+
+        Debug.call(() => {
+            wgpu.pushErrorScope('validation');
+        });
+
+        const shaderModule = wgpu.createShaderModule({
+            code: code
+        });
+        DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
+
+        Debug.call(() => {
+            wgpu.popErrorScope().then((error) => {
+                if (error) {
+                    Debug.gpuError(error.message, {
+                        shaderType,
+                        source: code,
+                        shader: this.shader
+                    });
+                }
+            });
+        });
+
+        return shaderModule;
+    }
+
+    getVertexShaderModule() {
+        return this.createShaderModule(this._vertexCode, 'Vertex');
+    }
+
+    getFragmentShaderModule() {
+        return this.createShaderModule(this._fragmentCode, 'Fragment');
     }
 
     process() {
