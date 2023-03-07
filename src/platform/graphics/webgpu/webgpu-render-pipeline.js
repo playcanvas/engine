@@ -178,20 +178,15 @@ class WebgpuRenderPipeline {
         /** @type {GPUDepthStencilState} */
         const depthStencil = renderTarget.depth ? {
             depthWriteEnabled: true,
-            depthCompare: 'less',
+            depthCompare: webgpuShader.hackAlwaysWrite ? 'always' : 'less',
             format: renderTarget.impl.depthFormat
         } : undefined;
-
-        const vertexModule = wgpu.createShaderModule({
-            code: webgpuShader.vertexCode
-        });
-        DebugHelper.setLabel(vertexModule, `Vertex ${webgpuShader.shader.label}`);
 
         /** @type {GPURenderPipelineDescriptor} */
         const descr = {
             vertex: {
-                module: vertexModule,
-                entryPoint: 'main',
+                module: webgpuShader.getVertexShaderModule(),
+                entryPoint: webgpuShader.vertexEntryPoint,
                 buffers: vertexBufferLayout
             },
             primitive: {
@@ -214,11 +209,6 @@ class WebgpuRenderPipeline {
         const colorFormat = renderTarget.impl.colorFormat;
         if (colorFormat) {
 
-            const fragmentModule = wgpu.createShaderModule({
-                code: webgpuShader.fragmentCode
-            });
-            DebugHelper.setLabel(fragmentModule, `Fragment ${webgpuShader.shader.label}`);
-
             let writeMask = 0;
             if (blendState.redWrite) writeMask |= GPUColorWrite.RED;
             if (blendState.greenWrite) writeMask |= GPUColorWrite.GREEN;
@@ -227,8 +217,8 @@ class WebgpuRenderPipeline {
 
             /** @type {GPUFragmentState} */
             descr.fragment = {
-                module: fragmentModule,
-                entryPoint: 'main',
+                module: webgpuShader.getFragmentShaderModule(),
+                entryPoint: webgpuShader.fragmentEntryPoint,
                 targets: [{
                     format: renderTarget.impl.colorFormat,
                     writeMask: writeMask,

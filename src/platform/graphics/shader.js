@@ -38,14 +38,17 @@ class Shader {
      * used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
-     * @param {Object<string, string>} definition.attributes - Object detailing the mapping of
+     * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader.
+     * vertex buffer data as inputs to the shader. When not specified, rendering without
+     * verex buffer is assumed.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
      * useTransformFeedback is specified.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
+     * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
+     * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {

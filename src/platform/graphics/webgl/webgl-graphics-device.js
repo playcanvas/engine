@@ -444,13 +444,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             });
         }
 
-        this.defaultClearOptions = {
-            color: [0, 0, 0, 1],
-            depth: 1,
-            stencil: 0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
-
         this.glAddress = [
             gl.REPEAT,
             gl.CLAMP_TO_EDGE,
