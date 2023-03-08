@@ -484,11 +484,11 @@ void evaluateLight(ClusterLightData light, LitShaderArguments litShaderArgs) {
                 float areaLightSpecular;
 
                 if (isClusteredLightRect(light)) {
-                    areaLightSpecular = getRectLightSpecular(litShaderArgs);
+                    areaLightSpecular = getRectLightSpecular(litShaderArgs.worldNormal);
                 } else if (isClusteredLightDisk(light)) {
-                    areaLightSpecular = getDiskLightSpecular(litShaderArgs);
+                    areaLightSpecular = getDiskLightSpecular(litShaderArgs.worldNormal);
                 } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular(litShaderArgs);
+                    areaLightSpecular = getSphereLightSpecular(litShaderArgs.worldNormal);
                 }
 
                 dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
@@ -499,11 +499,11 @@ void evaluateLight(ClusterLightData light, LitShaderArguments litShaderArgs) {
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecularCC(litShaderArgs);
+                        areaLightSpecularCC = getRectLightSpecular(litShaderArgs.clearcoatWorldNormal);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecularCC(litShaderArgs);
+                        areaLightSpecularCC = getDiskLightSpecular(litShaderArgs.clearcoatWorldNormal);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecularCC(litShaderArgs);
+                        areaLightSpecularCC = getSphereLightSpecular(litShaderArgs.clearcoatWorldNormal);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;

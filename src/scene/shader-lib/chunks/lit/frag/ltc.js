@@ -406,38 +406,20 @@ float calcRectLightSpecular(vec3 tNormalW, vec2 uv) {
     return LTC_EvaluateRect( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getRectLightSpecular(LitShaderArguments litShaderArgs) {
-    return calcRectLightSpecular(litShaderArgs.worldNormal, dLTCUV);
+float getRectLightSpecular(vec3 worldNormal) {
+    return calcRectLightSpecular(worldNormal, dLTCUV);
 }
-
-#ifdef LIT_CLEARCOAT
-float getRectLightSpecularCC(LitShaderArguments litShaderArgs) {
-    return calcRectLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
-}
-#endif
 
 float calcDiskLightSpecular(vec3 tNormalW, vec2 uv) {
     mat3 mInv = getLTCLightInvMat(uv);
     return LTC_EvaluateDisk( tNormalW, dViewDirW, vPositionW, mInv, dLTCCoords );
 }
 
-float getDiskLightSpecular(LitShaderArguments litShaderArgs) {
-    return calcDiskLightSpecular(litShaderArgs.worldNormal, dLTCUV);
+float getDiskLightSpecular(vec3 worldNormal) {
+    return calcDiskLightSpecular(worldNormal, dLTCUV);
 }
 
-#ifdef LIT_CLEARCOAT
-float getDiskLightSpecularCC(LitShaderArguments litShaderArgs) {
-    return calcDiskLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
+float getSphereLightSpecular(vec3 worldNormal) {
+    return calcDiskLightSpecular(worldNormal, dLTCUV);
 }
-#endif
-
-float getSphereLightSpecular(LitShaderArguments litShaderArgs) {
-    return calcDiskLightSpecular(litShaderArgs.worldNormal, dLTCUV);
-}
-
-#ifdef LIT_CLEARCOAT
-float getSphereLightSpecularCC(LitShaderArguments litShaderArgs) {
-    return calcDiskLightSpecular(litShaderArgs.clearcoatWorldNormal, ccLTCUV);
-}
-#endif
 `;
