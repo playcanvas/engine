@@ -318,7 +318,6 @@ const standard = {
                 decl.append("vec2 dUvOffset;");
                 code.append(this._addMap("height", "parallaxPS", options, litShader.chunks, textureMapping));
                 func.append("getParallax();");
-                func.append("_litShaderArgs.uvOffset = dUvOffset;");
             }
 
             // opacity
