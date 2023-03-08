@@ -106,23 +106,8 @@ class Morph extends RefCountedObject {
         }
     }
 
-    _initTextureBased() {
-        // collect all source delta arrays to find sparse set of vertices
-        const deltaArrays = [], deltaInfos = [];
-        for (let i = 0; i < this._targets.length; i++) {
-            const target = this._targets[i];
-            if (target.options.deltaPositions) {
-                deltaArrays.push(target.options.deltaPositions);
-                deltaInfos.push({ target: target, name: 'texturePositions' });
-            }
-            if (target.options.deltaNormals) {
-                deltaArrays.push(target.options.deltaNormals);
-                deltaInfos.push({ target: target, name: 'textureNormals' });
-            }
-        }
+    _findSparseSet(deltaArrays, ids, usedDataIndices) {
 
-        // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
-        const ids = [], usedDataIndices = [];
         let freeIndex = 1;  // reserve slot 0 for zero delta
         const dataCount = deltaArrays[0].length;
         for (let v = 0; v < dataCount; v += 3) {
@@ -148,6 +133,28 @@ class Morph extends RefCountedObject {
                 ids.push(0 + _floatRounding);
             }
         }
+
+        return freeIndex;
+    }
+
+    _initTextureBased() {
+        // collect all source delta arrays to find sparse set of vertices
+        const deltaArrays = [], deltaInfos = [];
+        for (let i = 0; i < this._targets.length; i++) {
+            const target = this._targets[i];
+            if (target.options.deltaPositions) {
+                deltaArrays.push(target.options.deltaPositions);
+                deltaInfos.push({ target: target, name: 'texturePositions' });
+            }
+            if (target.options.deltaNormals) {
+                deltaArrays.push(target.options.deltaNormals);
+                deltaInfos.push({ target: target, name: 'textureNormals' });
+            }
+        }
+
+        // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
+        const ids = [], usedDataIndices = [];
+        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
         // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
         // TODO: on webgl2 we could store this in uint32 format and remove this limit
@@ -175,29 +182,41 @@ class Morph extends RefCountedObject {
             numComponents = 4;  // RGBA16 is used, RGB16 does not work
         }
 
+        // create textures
+        const textures = [];
+        for (let i = 0; i < deltaArrays.length; i++) {
+            textures.push(this._createTexture('MorphTarget', this._textureFormat));
+        }
+
         // build texture for each delta array, all textures are the same size
         for (let i = 0; i < deltaArrays.length; i++) {
             const data = deltaArrays[i];
-
-            const texture = this._createTexture('MorphTarget', this._textureFormat);
-            const packedDeltas = texture.lock();
+            const texture = textures[i];
+            const textureData = texture.lock();
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
-            for (let v = 0; v < usedDataIndices.length; v++) {
-                const index = usedDataIndices[v];
+            if (halfFloat) {
 
-                if (halfFloat) {
-                    packedDeltas[v * numComponents + numComponents] = float2Half(data[index * 3]);
-                    packedDeltas[v * numComponents + numComponents + 1] = float2Half(data[index * 3 + 1]);
-                    packedDeltas[v * numComponents + numComponents + 2] = float2Half(data[index * 3 + 2]);
-                } else {
-                    packedDeltas[v * numComponents + numComponents] = data[index * 3];
-                    packedDeltas[v * numComponents + numComponents + 1] = data[index * 3 + 1];
-                    packedDeltas[v * numComponents + numComponents + 2] = data[index * 3 + 2];
+                for (let v = 0; v < usedDataIndices.length; v++) {
+                    const index = usedDataIndices[v] * 3;
+                    const dstIndex = v * numComponents + numComponents;
+                    textureData[dstIndex] = float2Half(data[index]);
+                    textureData[dstIndex + 1] = float2Half(data[index + 1]);
+                    textureData[dstIndex + 2] = float2Half(data[index + 2]);
+                }
+
+            } else {
+
+                for (let v = 0; v < usedDataIndices.length; v++) {
+                    const index = usedDataIndices[v] * 3;
+                    const dstIndex = v * numComponents + numComponents;
+                    textureData[dstIndex] = data[index];
+                    textureData[dstIndex + 1] = data[index + 1];
+                    textureData[dstIndex + 2] = data[index + 2];
                 }
             }
 
-            // create texture and assign it to target
+            // assign texture to target
             texture.unlock();
             const target = deltaInfos[i].target;
             target._setTexture(deltaInfos[i].name, texture);
