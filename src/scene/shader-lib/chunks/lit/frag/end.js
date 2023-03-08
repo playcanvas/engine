@@ -1,5 +1,5 @@
 export default /* glsl */`
-    gl_FragColor.rgb = combineColor(litShaderArgs);
+    gl_FragColor.rgb = combineColor(litShaderArgs.albedo, litShaderArgs.sheenSpecularity, litShaderArgs.clearcoatSpecularity);
 
     gl_FragColor.rgb += litShaderArgs.emission;
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
