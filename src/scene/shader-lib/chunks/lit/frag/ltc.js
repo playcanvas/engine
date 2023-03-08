@@ -138,14 +138,14 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
     return tSpecularity * t2.x + ( vec3( 1.0 ) - tSpecularity) * t2.y;
 }
 
-void calcLTCLightValues(LitShaderArguments litShaderArgs)
+void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 specularity, float clearcoatGloss, vec3 clearcoatWorldNormal, float clearcoatSpecularity)
 {
-    dLTCUV = getLTCLightUV(litShaderArgs.gloss, litShaderArgs.worldNormal);
-    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, litShaderArgs.specularity); 
+    dLTCUV = getLTCLightUV(gloss, worldNormal);
+    dLTCSpecFres = getLTCLightSpecFres(dLTCUV, specularity); 
 
 #ifdef LIT_CLEARCOAT
-    ccLTCUV = getLTCLightUV(litShaderArgs.clearcoatGloss, litShaderArgs.clearcoatWorldNormal);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(litShaderArgs.clearcoatSpecularity));
+    ccLTCUV = getLTCLightUV(clearcoatGloss, clearcoatWorldNormal);
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(clearcoatSpecularity));
 #endif
 }
 

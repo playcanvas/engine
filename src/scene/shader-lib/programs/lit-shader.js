@@ -1082,7 +1082,7 @@ class LitShader {
 
                 // evaluate material based area lights data, shared by all area lights
                 if (options.useSpecular) {
-                    backend.append("    calcLTCLightValues(litShaderArgs);");
+                    backend.append("    calcLTCLightValues(litShaderArgs.gloss, litShaderArgs.worldNormal, litShaderArgs.specularity, litShaderArgs.clearcoatGloss, litShaderArgs.clearcoatWorldNormal, litShaderArgs.clearcoatSpecularity);");
                 }
             }
 
@@ -1245,10 +1245,10 @@ class LitShader {
 
                     // area light
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecularCC(litShaderArgs) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        backend.append("    ccSpecularLight += ccLTCSpecFres * get" + shapeString + "LightSpecular(litShaderArgs.clearcoatWorldNormal) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular(litShaderArgs) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        backend.append("    dSpecularLight += dLTCSpecFres * get" + shapeString + "LightSpecular(litShaderArgs.worldNormal) * dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
                     }
 
                 } else {
