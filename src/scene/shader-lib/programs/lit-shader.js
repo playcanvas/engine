@@ -1307,7 +1307,7 @@ class LitShader {
                 backend.append("    occludeDiffuse(litShaderArgs.ao);");
             }
             if (options.occludeSpecular === SPECOCC_AO || options.occludeSpecular === SPECOCC_GLOSSDEPENDENT) {
-                backend.append("    occludeSpecular(litShaderArgs.ao);");
+                backend.append("    occludeSpecular(litShaderArgs.gloss, litShaderArgs.ao, litShaderArgs.worldNormal);");
             }
         }
 

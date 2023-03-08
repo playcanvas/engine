@@ -1,9 +1,9 @@
 export default /* glsl */`
-void occludeSpecular(LitShaderArguments litShaderArgs) {
+void occludeSpecular(float gloss, float ao, vec3 worldNormal) {
     // approximated specular occlusion from AO
-    float specPow = exp2(litShaderArgs.gloss * 11.0);
+    float specPow = exp2(gloss * 11.0);
     // http://research.tri-ace.com/Data/cedec2011_RealtimePBR_Implementation_e.pptx
-    float specOcc = saturate(pow(dot(litShaderArgs.worldNormal, dViewDirW) + dAo, 0.01*specPow) - 1.0 + litShaderArgs.ao);
+    float specOcc = saturate(pow(dot(worldNormal, dViewDirW) + ao, 0.01*specPow) - 1.0 + ao);
 
     dSpecularLight *= specOcc;
     dReflection *= specOcc;

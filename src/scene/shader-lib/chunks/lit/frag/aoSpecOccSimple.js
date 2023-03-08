@@ -1,8 +1,8 @@
 export default /* glsl */`
 uniform float material_occludeSpecularIntensity;
 
-void occludeSpecular(LitShaderArguments litShaderArgs) {
-    float specOcc = mix(1.0, dAo, material_occludeSpecularIntensity);
+void occludeSpecular(float gloss, float ao, vec3 worldNormal) {
+    float specOcc = mix(1.0, ao, material_occludeSpecularIntensity);
     dSpecularLight *= specOcc;
     dReflection *= specOcc;
 

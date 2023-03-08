@@ -1,5 +1,5 @@
 export default /* glsl */`
-void occludeSpecular(float ao) {
+void occludeSpecular(float gloss, float ao, vec3 worldNormal) {
     dSpecularLight *= ao;
     dReflection *= ao;
 
