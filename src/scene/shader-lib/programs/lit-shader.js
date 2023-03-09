@@ -1012,7 +1012,7 @@ class LitShader {
             }
 
             if (options.useIridescence) {
-                backend.append("    getIridescence(saturate(dot(dViewDirW, litShaderArgs.worldNormal)), litShaderArgs);");
+                backend.append("    getIridescence(saturate(dot(dViewDirW, litShaderArgs.worldNormal)), litShaderArgs.specularity, litShaderArgs.iridescence);");
             }
         }
 

@@ -5,7 +5,7 @@ vec3 getFresnel(float cosTheta, float gloss, vec3 specularity, IridescenceArgs i
     float glossSq = gloss * gloss;
     vec3 ret = specularity + (max(vec3(glossSq), specularity) - specularity) * fresnel;
 #ifdef LIT_IRIDESCENCE
-    return mix(ret, iridescence.fresnel, vec3(iridescence.intensity));
+    return mix(ret, iridescence.fresnel, iridescence.intensity);
 #else
     return ret;
 #endif    
