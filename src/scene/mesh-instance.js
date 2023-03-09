@@ -377,7 +377,8 @@ class MeshInstance {
 
                 // update local space bounding box by morph targets
                 if (this.mesh && this.mesh.morph) {
-                    localAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
+                    const morphAabb = this.mesh.morph.aabb;
+                    localAabb._expand(morphAabb.getMin(), morphAabb.getMax());
                 }
 
                 toWorldSpace = true;
