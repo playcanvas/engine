@@ -1284,7 +1284,7 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                backend.append("    addClusteredLights(litShaderArgs);");
+                backend.append("    addClusteredLights(litShaderArgs.worldNormal, litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.clearcoat, litShaderArgs.sheen, litShaderArgs.iridescence);");
             }
 
             if (hasAreaLights) {
