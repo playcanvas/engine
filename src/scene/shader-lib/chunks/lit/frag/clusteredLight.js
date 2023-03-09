@@ -499,11 +499,11 @@ void evaluateLight(ClusterLightData light, LitShaderArguments litShaderArgs) {
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecular(litShaderArgs.clearcoatWorldNormal);
+                        areaLightSpecularCC = getRectLightSpecular(litShaderArgs.clearcoat.worldNormal);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecular(litShaderArgs.clearcoatWorldNormal);
+                        areaLightSpecularCC = getDiskLightSpecular(litShaderArgs.clearcoat.worldNormal);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecular(litShaderArgs.clearcoatWorldNormal);
+                        areaLightSpecularCC = getSphereLightSpecular(litShaderArgs.clearcoat.worldNormal);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
@@ -540,21 +540,21 @@ void evaluateLight(ClusterLightData light, LitShaderArguments litShaderArgs) {
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), litShaderArgs);
+                    dSpecularLight += getLightSpecular(halfDir, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);
                 #else
                     dSpecularLight += getLightSpecular(halfDir, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light.color * dAtten3 * litShaderArgs.specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoatWorldNormal, litShaderArgs.clearcoatGloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoat.worldNormal, litShaderArgs.clearcoat.gloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoatWorldNormal, litShaderArgs.clearcoatGloss) * dAtten * light.color * dAtten3; 
+                        ccSpecularLight += getLightSpecular(halfDir, litShaderArgs.clearcoat.worldNormal, litShaderArgs.clearcoat.gloss) * dAtten * light.color * dAtten3; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, litShaderArgs.worldNormal, litShaderArgs.sheenGloss) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, litShaderArgs.worldNormal, litShaderArgs.sheen.gloss) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif

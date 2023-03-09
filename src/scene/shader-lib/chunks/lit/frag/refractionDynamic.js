@@ -10,7 +10,7 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction(LitShaderArguments litShaderArgs) {
+void addRefraction(vec3 worldNormal, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, IridescenceArgs iridescence) {
 
     // Extract scale from the model transform
     vec3 modelScale;
@@ -19,7 +19,7 @@ void addRefraction(LitShaderArguments litShaderArgs) {
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-dViewDirW, litShaderArgs.worldNormal, material_refractionIndex)) * litShaderArgs.thickness * modelScale;
+    vec3 refractionVector = normalize(refract(-dViewDirW, worldNormal, material_refractionIndex)) * thickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -32,7 +32,7 @@ void addRefraction(LitShaderArguments litShaderArgs) {
 
     #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip
-        float iorToRoughness = (1.0 - litShaderArgs.gloss) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
+        float iorToRoughness = (1.0 - gloss) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
         float refractionLod = log2(uScreenSize.x) * iorToRoughness;
         vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
     #else
@@ -52,7 +52,7 @@ void addRefraction(LitShaderArguments litShaderArgs) {
     }
 
     // Apply fresnel effect on refraction
-    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, litShaderArgs.worldNormal), litShaderArgs);
-    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, litShaderArgs.transmission);
+    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, worldNormal), gloss, specularity, iridescence);
+    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
 }
 `;

@@ -15,7 +15,7 @@ void addLightMap(LitShaderArguments litShaderArgs) {
         vec3 specularLight = litShaderArgs.lightmap * getLightSpecular(halfDirW, litShaderArgs.worldNormal, litShaderArgs.gloss);
 
         #ifdef LIT_SPECULAR_FRESNEL
-        specularLight *= getFresnel(dot(dViewDirW, halfDirW), litShaderArgs);
+        specularLight *= getFresnel(dot(dViewDirW, halfDirW), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);
         #endif
 
         dSpecularLight += specularLight;

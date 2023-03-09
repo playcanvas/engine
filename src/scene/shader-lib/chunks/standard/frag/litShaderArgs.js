@@ -1,7 +1,26 @@
 export default /* glsl */`
-struct LitShaderArguments {
-    vec2 uvOffset;
 
+struct IridescenceArgs
+{
+    vec3 fresnel;
+    float intensity;
+    float thickness;
+};
+
+struct ClearcoatArgs
+{
+    float specularity;
+    float gloss;
+    vec3 worldNormal;
+};
+
+struct SheenArgs
+{
+    float gloss;
+    vec3 specularity;
+};
+
+struct LitShaderArguments {
     float opacity;
 
     vec3 worldNormal;
@@ -10,10 +29,6 @@ struct LitShaderArguments {
 
     float transmission;
     float thickness;
-
-    vec3 iridescenceFresnel;
-    float iridescence;
-    float iridescenceThickness;
 
     vec3 specularity;
     float gloss;
@@ -24,14 +39,11 @@ struct LitShaderArguments {
 
     vec3 emission;
 
-    float clearcoatSpecularity;
-    float clearcoatGloss;
-    vec3 clearcoatWorldNormal;
-
-    float sheenGloss;
-    vec3 sheenSpecularity;
-
     vec3 lightmap;
     vec3 lightmapDir;
+
+    IridescenceArgs iridescence;
+    ClearcoatArgs clearcoat;
+    SheenArgs sheen;
 };
 `;

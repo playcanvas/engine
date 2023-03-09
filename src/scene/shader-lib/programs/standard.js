@@ -391,13 +391,13 @@ const standard = {
                 decl.append("float dIridescence;");
                 code.append(this._addMap("iridescence", "iridescencePS", options, litShader.chunks, textureMapping));
                 func.append("getIridescence();");
-                func.append("_litShaderArgs.iridescenceFresnel = dIridescenceFresnel;");
-                func.append("_litShaderArgs.iridescence = dIridescence;");
+                func.append("_litShaderArgs.iridescence.fresnel = dIridescenceFresnel;");
+                func.append("_litShaderArgs.iridescence.intensity = dIridescence;");
 
                 decl.append("float dIridescenceThickness;");
                 code.append(this._addMap("iridescenceThickness", "iridescenceThicknessPS", options, litShader.chunks, textureMapping));
                 func.append("getIridescenceThickness();");
-                func.append("_litShaderArgs.iridescenceThickness = dIridescenceThickness;");
+                func.append("_litShaderArgs.iridescence.thickness = dIridescenceThickness;");
             }
 
             // specularity & glossiness
@@ -408,12 +408,12 @@ const standard = {
                     decl.append("vec3 sSpecularity;");
                     code.append(this._addMap("sheen", "sheenPS", options, litShader.chunks, textureMapping, options.sheenEncoding));
                     func.append("getSheen();");
-                    func.append("_litShaderArgs.sheenSpecularity = sSpecularity;");
+                    func.append("_litShaderArgs.sheen.specularity = sSpecularity;");
 
                     decl.append("float sGlossiness;");
                     code.append(this._addMap("sheenGloss", "sheenGlossPS", options, litShader.chunks, textureMapping));
                     func.append("getSheenGlossiness();");
-                    func.append("_litShaderArgs.sheenGloss = sGlossiness;");
+                    func.append("_litShaderArgs.sheen.gloss = sGlossiness;");
                 }
                 if (options.litOptions.useMetalness) {
                     decl.append("float dMetalness;");
@@ -470,9 +470,9 @@ const standard = {
                 func.append("getClearCoatGlossiness();");
                 func.append("getClearCoatNormal();");
 
-                func.append("_litShaderArgs.clearcoatSpecularity = ccSpecularity;");
-                func.append("_litShaderArgs.clearcoatGloss = ccGlossiness;");
-                func.append("_litShaderArgs.clearcoatWorldNormal = ccNormalW;");
+                func.append("_litShaderArgs.clearcoat.specularity = ccSpecularity;");
+                func.append("_litShaderArgs.clearcoat.gloss = ccGlossiness;");
+                func.append("_litShaderArgs.clearcoat.worldNormal = ccNormalW;");
             }
 
             // lightmap

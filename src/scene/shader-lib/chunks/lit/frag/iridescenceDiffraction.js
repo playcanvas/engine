@@ -99,6 +99,6 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0, float iride
 }
 
 void getIridescence(float cosTheta, inout LitShaderArgs litShaderArgs) {
-    litShaderArgs.iridescenceFresnel = calcIridescence(1.0, cosTheta, litShaderArgs.specularity, litShaderArgs.iridescenceThickness);
+    litShaderArgs.iridescence.intensity = calcIridescence(1.0, cosTheta, litShaderArgs.specularity, litShaderArgs.iridescence.thickness);
 }
 `;
