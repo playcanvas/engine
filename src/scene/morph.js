@@ -20,6 +20,9 @@ const _floatRounding = 0.2;
  * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
  */
 class Morph extends RefCountedObject {
+    /** @type {BoundingBox} */
+    _aabb;
+
     /**
      * Create a new Morph instance.
      *
@@ -62,7 +65,29 @@ class Morph extends RefCountedObject {
 
         this._init();
         this._updateMorphFlags();
-        this._calculateAabb();
+    }
+
+    get aabb() {
+
+        // lazy evaluation, which allows us to skip this completely if customAABB is used
+        if (!this._aabb) {
+            // calculate min and max expansion size
+            // Note: This represents average case, where most morph targets expand the mesh within the same area. It does not
+            // represent the stacked worst case scenario where all morphs could be enabled at the same time, as this can result
+            // in a very large aabb. In cases like this, the users should specify customAabb for Model/Render component.
+            const min = new Vec3();
+            const max = new Vec3();
+            for (let i = 0; i < this._targets.length; i++) {
+                const targetAabb = this._targets[i].aabb;
+                min.min(targetAabb.getMin());
+                max.max(targetAabb.getMax());
+            }
+
+            this._aabb = new BoundingBox();
+            this._aabb.setMinMax(min, max);
+        }
+
+        return this._aabb;
     }
 
     get morphPositions() {
@@ -265,24 +290,6 @@ class Morph extends RefCountedObject {
                 this._morphNormals = true;
             }
         }
-    }
-
-    _calculateAabb() {
-
-        // calculate min and max expansion size
-        // Note: This represents average case, where most morph targets expand the mesh within the same area. It does not
-        // represent the stacked worst case scenario where all morphs could be enabled at the same time, as this can result
-        // in a very large aabb. In cases like this, the users should specify customAabb for Model/Render component.
-        const min = new Vec3();
-        const max = new Vec3();
-        for (let i = 0; i < this._targets.length; i++) {
-            const targetAabb = this._targets[i].aabb;
-            min.min(targetAabb.getMin());
-            max.max(targetAabb.getMax());
-        }
-
-        this.aabb = new BoundingBox();
-        this.aabb.setMinMax(min, max);
     }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
