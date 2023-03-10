@@ -444,13 +444,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             });
         }
 
-        this.defaultClearOptions = {
-            color: [0, 0, 0, 1],
-            depth: 1,
-            stencil: 0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
-
         this.glAddress = [
             gl.REPEAT,
             gl.CLAMP_TO_EDGE,
@@ -879,6 +872,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return precision;
     }
 
+    getExtension() {
+        for (let i = 0; i < arguments.length; i++) {
+            if (this.supportedExtensions.indexOf(arguments[i]) !== -1) {
+                return this.gl.getExtension(arguments[i]);
+            }
+        }
+        return null;
+    }
+
+    get extDisjointTimerQuery() {
+        // lazy evaluation as this is not typically used
+        if (!this._extDisjointTimerQuery) {
+            if (this.webgl2) {
+                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than EXT_disjoint_timer_query_webgl2
+                this._extDisjointTimerQuery = this.getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            }
+        }
+        return this._extDisjointTimerQuery;
+    }
+
     /**
      * Initialize the extensions provided by the WebGL context.
      *
@@ -887,15 +900,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeExtensions() {
         const gl = this.gl;
         const supportedExtensions = gl.getSupportedExtensions();
-
-        const getExtension = function () {
-            for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
-                    return gl.getExtension(arguments[i]);
-                }
-            }
-            return null;
-        };
+        this.supportedExtensions = supportedExtensions;
 
         if (this.webgl2) {
             this.extBlendMinmax = true;
@@ -907,15 +912,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
-            this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-            // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
-            // EXT_disjoint_timer_query_webgl2
-            this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
         } else {
-            this.extBlendMinmax = getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = getExtension('EXT_draw_buffers');
-            this.extInstancing = getExtension("ANGLE_instanced_arrays");
+            this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
+            this.extDrawBuffers = this.getExtension('EXT_draw_buffers');
+            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
                 const ext = this.extInstancing;
@@ -924,12 +926,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
             }
 
-            this.extStandardDerivatives = getExtension("OES_standard_derivatives");
-            this.extTextureFloat = getExtension("OES_texture_float");
-            this.extTextureHalfFloat = getExtension("OES_texture_half_float");
-            this.extTextureLod = getExtension('EXT_shader_texture_lod');
-            this.extUintElement = getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = getExtension("OES_vertex_array_object");
+            this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
+            this.extTextureFloat = this.getExtension("OES_texture_float");
+            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
+            this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
+            this.extUintElement = this.getExtension("OES_element_index_uint");
+            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
             if (this.extVertexArrayObject) {
                 // Install the WebGL 2 VAO API for WebGL 1.0
                 const ext = this.extVertexArrayObject;
@@ -939,25 +941,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
             }
             this.extColorBufferFloat = null;
-            this.extDisjointTimerQuery = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
         }
 
-        this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
-        this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
-        this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
-        this.extFloatBlend = getExtension("EXT_float_blend");
-        this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
-        this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
-        this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
-        this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
-        this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
-        this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
-        this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
-        this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+        this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
+        this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
+        this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+        this.extFloatBlend = this.getExtension("EXT_float_blend");
+        this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+        this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
+        this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
+        this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
+        this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
+        this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
+        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
         // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
+        this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");
     }
 
     /**

@@ -842,7 +842,7 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
+    renderShadowMap(shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
         const isClustered = this.scene.clusteredLightingEnabled;
@@ -856,11 +856,12 @@ class Lightmapper {
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
-                this.renderer.shadowRenderer.render(light, this.camera);
             } else {
                 this.renderer._shadowRendererLocal.cull(light, casters);
-                this.renderer._shadowRendererLocal.render(lightArray[light.type], isClustered, this.camera);
             }
+
+            const insideRenderPass = false;
+            this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
         }
 
         return true;
@@ -1019,7 +1020,7 @@ class Lightmapper {
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
                         const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
@@ -1083,7 +1084,7 @@ class Lightmapper {
 
                         // prepare clustered lighting
                         if (clusteredLightingEnabled) {
-                            this.worldClusters.activate(this.renderer.lightTextureAtlas);
+                            this.worldClusters.activate();
                         }
 
                         this.renderer._forwardTime = 0;
