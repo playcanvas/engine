@@ -6,6 +6,8 @@ import { BlendState } from './blend-state.js';
 
 import {
     BUFFER_STATIC,
+    CLEARFLAG_COLOR,
+    CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
 import { ScopeSpace } from './scope-space.js';
@@ -141,6 +143,13 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     blendState = new BlendState();
+
+    defaultClearOptions = {
+        color: [0, 0, 0, 1],
+        depth: 1,
+        stencil: 0,
+        flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
+    };
 
     constructor(canvas) {
         super();

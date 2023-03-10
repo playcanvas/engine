@@ -1043,6 +1043,20 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
 export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
 
 /**
+ * Shader source code uses GLSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_GLSL = 'glsl';
+
+/**
+ * Shader source code uses WGSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_WGSL = 'wgsl';
+
+/**
  * Signed byte vertex element type.
  *
  * @type {number}
