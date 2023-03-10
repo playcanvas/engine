@@ -158,10 +158,12 @@ class ShadowRenderer {
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
 
-            if (!meshInstance.cull || meshInstance._isVisible(camera)) {
-                meshInstance.visibleThisFrame = true;
-                visible[count] = meshInstance;
-                count++;
+            if (meshInstance.castShadow) {
+                if (!meshInstance.cull || meshInstance._isVisible(camera)) {
+                    meshInstance.visibleThisFrame = true;
+                    visible[count] = meshInstance;
+                    count++;
+                }
             }
         }
 
@@ -344,17 +346,19 @@ class ShadowRenderer {
         const rt = shadowCamera.renderTarget;
         renderPass.init(rt);
 
-        // only clear the render pass target if all faces (cascades) are getting rendered
-        if (clearRenderTarget) {
-            // color
-            const clearColor = shadowCamera.clearColorBuffer;
-            renderPass.colorOps.clear = clearColor;
-            if (clearColor)
-                renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
+        renderPass.depthStencilOps.clearDepthValue = 1;
+        renderPass.depthStencilOps.clearDepth = clearRenderTarget;
 
-            // depth
-            renderPass.depthStencilOps.storeDepth = !clearColor;
-            renderPass.setClearDepth(1.0);
+        // if rendering to depth buffer
+        if (rt.depthBuffer) {
+
+            renderPass.depthStencilOps.storeDepth = true;
+
+        } else { // rendering to color buffer
+
+            renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
+            renderPass.colorOps.clear = clearRenderTarget;
+            renderPass.depthStencilOps.storeDepth = false;
         }
 
         // not sampling dynamically generated cubemaps
@@ -372,7 +376,7 @@ class ShadowRenderer {
         const shadowCam = lightRenderData.shadowCamera;
 
         // camera clear setting
-        // Note: when clustered lighting is the only light type, this code can be moved to createShadowCamera function
+        // Note: when clustered lighting is the only lighting type, this code can be moved to createShadowCamera function
         ShadowRenderer.setShadowCameraSettings(shadowCam, this.device, shadowType, type, isClustered);
 
         // assign render target for the face
@@ -382,7 +386,7 @@ class ShadowRenderer {
         return shadowCam;
     }
 
-    renderFace(light, camera, face, clear) {
+    renderFace(light, camera, face, clear, insideRenderPass = true) {
 
         const device = this.device;
 
@@ -392,25 +396,32 @@ class ShadowRenderer {
 
         DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name} FACE ${face}`);
 
-        this.setupRenderState(device, light);
-
         const lightRenderData = this.getLightRenderData(light, camera, face);
         const shadowCam = lightRenderData.shadowCamera;
 
         this.dispatchUniforms(light, shadowCam, lightRenderData, face);
 
         const rt = shadowCam.renderTarget;
-        this.renderer.setCameraUniforms(shadowCam, rt);
+        const renderer = this.renderer;
+        renderer.setCameraUniforms(shadowCam, rt);
         if (device.supportsUniformBuffers) {
-            this.renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
+            renderer.setupViewUniformBuffers(lightRenderData.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, 1);
         }
 
-        // if this is called from a render pass, no clearing takes place
-        if (clear) {
-            this.renderer.clearView(shadowCam, rt, true, false);
+        if (insideRenderPass) {
+            renderer.setupViewport(shadowCam, rt);
+
+            // clear here is used to clear a viewport inside render target.
+            if (clear) {
+                renderer.clear(shadowCam);
+            }
         } else {
-            this.renderer.setupViewport(shadowCam, rt);
+
+            // this is only used by lightmapper, till it's converted to render passes
+            renderer.clearView(shadowCam, rt, true, false);
         }
+
+        this.setupRenderState(device, light);
 
         // render mesh instances
         this.submitCasters(lightRenderData.visibleCasters, light);
@@ -420,11 +431,11 @@ class ShadowRenderer {
         DebugGraphics.popGpuMarker(device);
 
         // #if _PROFILER
-        this.renderer._shadowMapTime += now() - shadowMapStartTime;
+        renderer._shadowMapTime += now() - shadowMapStartTime;
         // #endif
     }
 
-    render(light, camera) {
+    render(light, camera, insideRenderPass = true) {
 
         if (this.needsShadowRendering(light)) {
             const faceCount = light.numShadowFaces;
@@ -432,7 +443,7 @@ class ShadowRenderer {
             // render faces
             for (let face = 0; face < faceCount; face++) {
                 this.prepareFace(light, camera, face);
-                this.renderFace(light, camera, face, true);
+                this.renderFace(light, camera, face, true, insideRenderPass);
             }
 
             // apply vsm

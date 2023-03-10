@@ -42,7 +42,7 @@ class WebgpuVertexBufferLayout {
     }
 
     getKey(vertexFormat0, vertexFormat1 = null) {
-        return vertexFormat0.renderingHashString + (vertexFormat1 ? vertexFormat1.renderingHashString : '');
+        return `VB[${vertexFormat0?.renderingHashString}, ${vertexFormat1?.renderingHashString}]`;
     }
 
     /**
@@ -81,10 +81,11 @@ class WebgpuVertexBufferLayout {
             }
         };
 
-        addFormat(vertexFormat0);
-        if (vertexFormat1) {
+        if (vertexFormat0)
+            addFormat(vertexFormat0);
+
+        if (vertexFormat1)
             addFormat(vertexFormat1);
-        }
 
         return layout;
     }

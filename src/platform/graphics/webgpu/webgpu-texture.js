@@ -125,8 +125,23 @@ class WebgpuTexture {
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
+        Debug.call(() => {
+            device.wgpu.pushErrorScope('validation');
+        });
+
         this.gpuTexture = wgpu.createTexture(this.descr);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
+
+        Debug.call(() => {
+            device.wgpu.popErrorScope().then((error) => {
+                if (error) {
+                    Debug.gpuError(error.message, {
+                        descr: this.descr,
+                        texture
+                    });
+                }
+            });
+        });
 
         // default texture view descriptor
         let viewDescr;

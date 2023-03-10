@@ -943,7 +943,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     targets.push(new MorphTarget(options));
                 });
 
-                mesh.morph = new Morph(targets, device);
+                mesh.morph = new Morph(targets, device, {
+                    preferHighPrecision: assetOptions.morphPreferHighPrecision
+                });
             }
         }
 
