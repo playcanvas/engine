@@ -53,8 +53,6 @@ class AreaLightsExample {
             const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
             assetListLoader.load(() => {
 
-                app.start();
-
                 // helper function to create a primitive with shape type, position, scale, color
                 function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color, assetManifest: any) {
 

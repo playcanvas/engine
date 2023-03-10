@@ -83,9 +83,6 @@ class MeshDeformationExample {
                     }
                 });
 
-                // start the application when all is set up
-                app.start();
-
                 // temporary work array of positions to avoid per frame allocations
                 const tempPositions: any = [];
 

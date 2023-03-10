@@ -49,6 +49,15 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
  * @ignore
  */
 class ShadowRendererDirectional {
+    /** @type {import('./renderer.js').Renderer} */
+    renderer;
+
+    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    shadowRenderer;
+
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    device;
+
     constructor(renderer, shadowRenderer) {
         this.renderer = renderer;
         this.shadowRenderer = shadowRenderer;

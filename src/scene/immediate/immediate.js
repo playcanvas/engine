@@ -41,7 +41,6 @@ class Immediate {
     createMaterial(depthTest) {
         const material = new BasicMaterial();
         material.vertexColors = true;
-        material.blend = true;
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();
