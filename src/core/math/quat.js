@@ -114,12 +114,11 @@ class Quat {
     equals(rhs, epsilon) {
         if (epsilon === undefined) {
             return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
-        } else {
-            return (Math.abs(this.x - rhs.x) < epsilon) &&
-                   (Math.abs(this.y - rhs.y) < epsilon) &&
-                   (Math.abs(this.z - rhs.z) < epsilon) &&
-                   (Math.abs(this.w - rhs.w) < epsilon);
         }
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon) &&
+            (Math.abs(this.w - rhs.w) < epsilon);
     }
 
     /**
@@ -554,12 +553,11 @@ class Quat {
      * Prood of correctness: https://www.xarg.org/proof/quaternion-from-two-vectors/
      */
     setBetweenVectors(from, to) {
-        let dotProduct = 1 + from.dot(to);
+        const dotProduct = 1 + from.dot(to);
 
         if (dotProduct < Number.EPSILON) {
             // the vectors point in opposite directions
             // so we need to rotate 180 degrees around an arbitrary orthogonal axis
-
             if (Math.abs(from.x) > Math.abs(from.y)) {
                 this.x = -from.z;
                 this.y = 0;
