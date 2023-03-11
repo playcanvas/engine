@@ -550,7 +550,7 @@ class Quat {
      * @param {import('./vec3').Vec3} to - The direction to rotate to. It should be normalized.
      * @returns {Quat} Self for chaining.
      *
-     * Prood of correctness: https://www.xarg.org/proof/quaternion-from-two-vectors/
+     * Proof of correctness: https://www.xarg.org/proof/quaternion-from-two-vectors/
      */
     setBetweenVectors(from, to) {
         const dotProduct = 1 + from.dot(to);
