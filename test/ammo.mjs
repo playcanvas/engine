@@ -70,8 +70,6 @@ function assertVec3(vec, x, y, z) {
 
 // Stub Ammo
 
-// Note: do not use arrow functions in the Ammo root object, since the engine will
-// not be able to use "new" keyword with them for instantiation
 const AmmoTypes = { };
 
 const Ammo = {
