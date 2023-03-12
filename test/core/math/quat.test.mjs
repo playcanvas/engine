@@ -563,7 +563,7 @@ describe('Quat', function () {
 
     describe('#setFromDirections()', function () {
 
-        it('set the identity quaternion between equal directions', function () {
+        it('set the identity quaternion from equal directions', function () {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(1, 0, 0);
 
@@ -578,7 +578,7 @@ describe('Quat', function () {
             expect(q2.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('set the quaternion between different directions', function () {
+        it('set a quaternion from different directions', function () {
             const epsilon = 0.00001;
 
             const v1 = new Vec3(1, 0, 0);
