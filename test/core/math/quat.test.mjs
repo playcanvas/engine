@@ -561,20 +561,20 @@ describe('Quat', function () {
 
     });
 
-    describe('#setBetweenVectors()', function () {
+    describe('#setFromDirections()', function () {
 
         it('set the identity quaternion between equal directions', function () {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(1, 0, 0);
 
-            const q1 = new Quat().setBetweenVectors(v1, v2);
+            const q1 = new Quat().setFromDirections(v1, v2);
             expect(q1.equals(Quat.IDENTITY)).to.be.true;
 
 
             const v3 = new Vec3(0, 0, 0);
             const v4 = new Vec3(0, 0, 0);
 
-            const q2 = new Quat().setBetweenVectors(v3, v4);
+            const q2 = new Quat().setFromDirections(v3, v4);
             expect(q2.equals(Quat.IDENTITY)).to.be.true;
         });
 
@@ -584,7 +584,7 @@ describe('Quat', function () {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(0, 1, 0);
 
-            const q1 = new Quat().setBetweenVectors(v1, v2);
+            const q1 = new Quat().setFromDirections(v1, v2);
             const q2 = new Quat().setFromEulerAngles(0, 0, 90);
 
             expect(q1.equals(q2, epsilon)).to.be.true;
@@ -592,7 +592,7 @@ describe('Quat', function () {
             const v3 = new Vec3(1, 0, 0);
             const v4 = new Vec3(1, 1, 0).normalize();
 
-            const q3 = new Quat().setBetweenVectors(v3, v4);
+            const q3 = new Quat().setFromDirections(v3, v4);
             const q4 = new Quat().setFromEulerAngles(0, 0, 45);
 
             expect(q3.equals(q4, epsilon)).to.be.true;
@@ -606,7 +606,7 @@ describe('Quat', function () {
             const q = new Quat();
             const v1 = new Vec3();
             const v2 = new Vec3();
-            expect(q.setBetweenVectors(v1, v2)).to.equal(q);
+            expect(q.setFromDirections(v1, v2)).to.equal(q);
         });
 
     });

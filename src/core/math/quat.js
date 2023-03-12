@@ -552,7 +552,7 @@ class Quat {
      *
      * Proof of correctness: https://www.xarg.org/proof/quaternion-from-two-vectors/
      */
-    setBetweenVectors(from, to) {
+    setFromDirections(from, to) {
         const dotProduct = 1 + from.dot(to);
 
         if (dotProduct < Number.EPSILON) {
