@@ -578,7 +578,7 @@ describe('Quat', function () {
             expect(q2.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('set the quaternion between different direction', function () {
+        it('set the quaternion between different directions', function () {
             const epsilon = 0.00001;
 
             const v1 = new Vec3(1, 0, 0);
