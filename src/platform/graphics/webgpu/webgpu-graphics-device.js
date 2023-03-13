@@ -147,7 +147,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         /**
          * @type {GPUDevice}
-         * @ignore
+         * @private
          */
         this.wgpu = await this.gpuAdapter.requestDevice();
 
