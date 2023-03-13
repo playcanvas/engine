@@ -6,7 +6,7 @@ class ParticlesSnowExample {
     static NAME = 'Particles: Snow';
 
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});

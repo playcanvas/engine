@@ -5,7 +5,7 @@ class OffsetCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Offset Collision';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE, data: any): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

@@ -4,7 +4,7 @@ class VrMovementExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Movement';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {

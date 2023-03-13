@@ -4,7 +4,7 @@ class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
 
         pc.WasmModule.setConfig('DracoDecoderModule', {
             glueUrl: '/static/lib/draco/draco.wasm.js',

@@ -1179,6 +1179,18 @@ export const DEVICETYPE_WEBGL2 = 'webgl2';
  */
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
+/**
+ * Enum for the device types.
+ *
+ * @readonly
+ * @enum {string}
+ */
+export const DEVICETYPE = {
+    WEBGL1: DEVICETYPE_WEBGL1,
+    WEBGL2: DEVICETYPE_WEBGL2,
+    WEBGPU: DEVICETYPE_WEBGPU
+};
+
 // (bit-flags) shader stages for resource visibility on the GPU
 export const SHADERSTAGE_VERTEX = 1;
 export const SHADERSTAGE_FRAGMENT = 2;

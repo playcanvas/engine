@@ -17,7 +17,7 @@ class AssetViewerExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE, data: any): void {
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
