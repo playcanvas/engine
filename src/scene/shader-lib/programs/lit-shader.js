@@ -1438,6 +1438,4 @@ class LitShader {
     }
 }
 
-export {
-    LitShader
-};
+export { LitShader };

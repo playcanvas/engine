@@ -7,6 +7,7 @@ import ClusteredAreaLightsExample from "./clustered-area-lights";
 import ClusteredLightingExample from "./clustered-lighting";
 import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
 import ClusteredSpotShadowsExample from "./clustered-spot-shadows";
+import CustomMaterialExample from "./custom-material";
 import GrabPassExample from "./grab-pass";
 import GroundFogExample from "./ground-fog";
 import HardwareInstancingExample from "./hardware-instancing";
@@ -64,6 +65,7 @@ export {
     ClusteredLightingExample,
     ClusteredOmniShadowsExample,
     ClusteredSpotShadowsExample,
+    CustomMaterialExample,
     GrabPassExample,
     GroundFogExample,
     HardwareInstancingExample,
