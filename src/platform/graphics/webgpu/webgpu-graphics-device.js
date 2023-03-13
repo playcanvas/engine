@@ -33,8 +33,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
+     *
+     * @type { WebgpuClearRenderer }
      */
-    clearRenderer = new WebgpuClearRenderer();
+    clearRenderer;
 
     /**
      * Render pipeline currently set on the device.
@@ -180,6 +182,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.createFramebuffer();
 
+        this.clearRenderer = new WebgpuClearRenderer(this);
+
         this.postInit();
 
         return this;
@@ -264,15 +268,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
-            const vbSlot = this.submitVertexBuffer(vb0, 0);
             const vb1 = this.vertexBuffers[1];
-            if (vb1) {
-                this.submitVertexBuffer(vb1, vbSlot);
+            if (vb0) {
+                const vbSlot = this.submitVertexBuffer(vb0, 0);
+                if (vb1) {
+                    this.submitVertexBuffer(vb1, vbSlot);
+                }
             }
             this.vertexBuffers.length = 0;
 
             // render pipeline
-            const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
+            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
                                                      this.bindGroupFormats, this.blendState);
             Debug.assert(pipeline);
 
@@ -286,9 +292,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, 0, 0, 0);
             } else {
-                passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
+                passEncoder.draw(primitive.count, numInstances, 0, 0);
             }
         }
     }
@@ -424,7 +430,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     clear(options) {
         if (options.flags) {
-            this.clearRenderer.clear(this, this.renderTarget, options);
+            this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
     }
 
@@ -457,12 +463,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.vx = x;
             this.vy = y;
             this.vw = w;
             this.vh = h;
 
-            this.passEncoder.setViewport(x, this.renderTarget.height - y - h, w, h, 0, 1);
+            this.passEncoder.setViewport(x, y, w, h, 0, 1);
         }
     }
 
@@ -472,12 +482,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.sx = x;
             this.sy = y;
             this.sw = w;
             this.sh = h;
 
-            this.passEncoder.setScissorRect(x, this.renderTarget.height - y - h, w, h);
+            this.passEncoder.setScissorRect(x, y, w, h);
         }
     }
 

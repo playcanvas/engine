@@ -234,7 +234,7 @@ class Renderer {
         let h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
 
-        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        // use viewport rectangle by default. Use scissor rectangle when required.
         if (camera._scissorRectClear) {
             const scissorRect = camera.scissorRect;
             x = Math.floor(scissorRect.x * pixelWidth);
@@ -245,34 +245,6 @@ class Renderer {
         device.setScissor(x, y, w, h);
 
         DebugGraphics.popGpuMarker(device);
-    }
-
-    /**
-     * Clear the current render target, using currently set up viewport.
-     *
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - Render action
-     * containing the clear flags.
-     * @param {import('../camera.js').Camera} camera - Camera containing the clear values.
-     */
-    clear(renderAction, camera) {
-
-        const flags = (renderAction.clearColor ? CLEARFLAG_COLOR : 0) |
-                      (renderAction.clearDepth ? CLEARFLAG_DEPTH : 0) |
-                      (renderAction.clearStencil ? CLEARFLAG_STENCIL : 0);
-
-        if (flags) {
-            const device = this.device;
-            DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEWPORT');
-
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
-
-            DebugGraphics.popGpuMarker(device);
-        }
     }
 
     setCameraUniforms(camera, target) {
@@ -384,6 +356,38 @@ class Renderer {
         return viewCount;
     }
 
+    /**
+     * Clears the active render target. If the viewport is already set up, only its area is cleared.
+     *
+     * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
+     * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
+     * from the camra if not supplied.
+     * @param {boolean} [clearDepth] - True if the depth buffer should be cleared. Uses the value
+     * from the camra if not supplied.
+     * @param {boolean} [clearStencil] - True if the stencil buffer should be cleared. Uses the
+     * value from the camra if not supplied.
+     */
+    clear(camera, clearColor, clearDepth, clearStencil) {
+
+        const flags = ((clearColor ?? camera._clearColorBuffer) ? CLEARFLAG_COLOR : 0) |
+                      ((clearDepth ?? camera._clearDepthBuffer) ? CLEARFLAG_DEPTH : 0) |
+                      ((clearStencil ?? camera._clearStencilBuffer) ? CLEARFLAG_STENCIL : 0);
+
+        if (flags) {
+            const device = this.device;
+            DebugGraphics.pushGpuMarker(device, 'CLEAR');
+
+            device.clear({
+                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
+                depth: camera._clearDepth,
+                stencil: camera._clearStencil,
+                flags: flags
+            });
+
+            DebugGraphics.popGpuMarker(device);
+        }
+    }
+
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
     // TODO: this function is only used from outside of forward renderer, and should be deprecated
     // when the functionality moves to the render passes. Note that Editor uses it as well.
@@ -411,9 +415,9 @@ class Renderer {
         this.setupViewport(camera, target);
 
         if (clear) {
+
             // use camera clear options if any
             const options = camera._clearOptions;
-
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -505,6 +509,8 @@ class Renderer {
         // Alpha test
         if (material.opacityMap) {
             this.opacityMapId.setValue(material.opacityMap);
+        }
+        if (material.opacityMap || material.alphaTest > 0) {
             this.alphaTestId.setValue(material.alphaTest);
         }
     }
@@ -664,7 +670,8 @@ class Renderer {
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ], [
-                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
             ]);
         }
     }

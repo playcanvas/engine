@@ -9,7 +9,7 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH
 } from '../constants.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -72,10 +72,15 @@ class WebgpuTexture {
     view;
 
     /**
-     * @type {GPUSampler}
+     * An array of samplers, addressed by SAMPLETYPE_*** constant, allowing texture to be sampled
+     * using different samplers. Most textures are sampled as interpolated floats, but some can
+     * additionally be sampled using non-interpolated floats (raw data) or compare sampling
+     * (shadow maps).
+     *
+     * @type {GPUSampler[]}
      * @private
      */
-    sampler;
+    samplers = [];
 
     /**
      * @type {GPUTextureDescriptor}
@@ -120,8 +125,23 @@ class WebgpuTexture {
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
+        Debug.call(() => {
+            device.wgpu.pushErrorScope('validation');
+        });
+
         this.gpuTexture = wgpu.createTexture(this.descr);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
+
+        Debug.call(() => {
+            device.wgpu.popErrorScope().then((error) => {
+                if (error) {
+                    Debug.gpuError(error.message, {
+                        descr: this.descr,
+                        texture
+                    });
+                }
+            });
+        });
 
         // default texture view descriptor
         let viewDescr;
@@ -184,15 +204,21 @@ class WebgpuTexture {
     }
 
     // TODO: handle the case where those properties get changed
+    // TODO: share a global map of samplers. Possibly even use shared samplers for bind group,
+    // or maybe even have some attached in view bind group and use globally
 
     /**
      * @param {any} device - The Graphics Device.
+     * @param {number} [sampleType] - A sample type for the sampler, SAMPLETYPE_*** constant. If not
+     * specified, the sampler type is based on the texture format / texture sampling type.
      * @returns {any} - Returns the sampler.
      */
-    getSampler(device) {
-        if (!this.sampler) {
+    getSampler(device, sampleType) {
+        let sampler = this.samplers[sampleType];
+        if (!sampler) {
 
             const texture = this.texture;
+            let label;
 
             /** @type GPUSamplerDescriptor */
             const descr = {
@@ -201,30 +227,51 @@ class WebgpuTexture {
                 addressModeW: gpuAddressModes[texture.addressW]
             };
 
-            // TODO: this is temporary and needs to be made generic
-            if (this.texture.format === PIXELFORMAT_RGBA32F ||
-                this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
-                this.texture.format === PIXELFORMAT_RGBA16F) {
-                descr.magFilter = 'nearest';
-                descr.minFilter = 'nearest';
-                descr.mipmapFilter = 'nearest';
-            } else if (texture.compareOnRead) { // depth compare sampler
-                // TODO: depth texture can be exposed for sampling, not only compare sampling (for example debug
-                // rendering of depth). Find some good way to expose this, perhaps based on what sampling shader needs.
+            // default for compare sampling of texture
+            if (!sampleType && texture.compareOnRead) {
+                sampleType = SAMPLETYPE_DEPTH;
+            }
+
+            if (sampleType === SAMPLETYPE_DEPTH) {
+
+                // depth compare sampling
                 descr.compare = 'less';
                 descr.magFilter = 'linear';
                 descr.minFilter = 'linear';
+                label = 'Compare';
+
+            } else if (sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT) {
+
+                // webgpu cannot currently filter float / half float textures
+                descr.magFilter = 'nearest';
+                descr.minFilter = 'nearest';
+                descr.mipmapFilter = 'nearest';
+                label = 'Unfilterable';
+
             } else {
-                descr.magFilter = 'linear';
-                descr.minFilter = 'linear';
-                descr.mipmapFilter = 'linear';
+
+                // TODO: this is temporary and needs to be made generic
+                if (this.texture.format === PIXELFORMAT_RGBA32F ||
+                    this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
+                    this.texture.format === PIXELFORMAT_RGBA16F) {
+                    descr.magFilter = 'nearest';
+                    descr.minFilter = 'nearest';
+                    descr.mipmapFilter = 'nearest';
+                    label = 'Nearest';
+                } else {
+                    descr.magFilter = 'linear';
+                    descr.minFilter = 'linear';
+                    descr.mipmapFilter = 'linear';
+                    label = 'Linear';
+                }
             }
 
-            this.sampler = device.wgpu.createSampler(descr);
-            DebugHelper.setLabel(this.sampler, `LinearSampler`);
+            sampler = device.wgpu.createSampler(descr);
+            DebugHelper.setLabel(sampler, label);
+            this.samplers[sampleType] = sampler;
         }
 
-        return this.sampler;
+        return sampler;
     }
 
     loseContext() {
