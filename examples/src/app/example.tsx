@@ -6,9 +6,11 @@ import examples from './helpers/example-data.mjs';
 // @ts-ignore: library file import
 import { withRouter } from 'react-router-dom';
 import ControlPanel from './control-panel';
-import { Application, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1 } from '../../../build/playcanvas';
 import { Observer } from '@playcanvas/observer';
 
+const DEVICETYPE_WEBGL1 = 'webgl1';
+const DEVICETYPE_WEBGL2 = 'webgl2';
+const DEVICETYPE_WEBGPU = 'webgpu';
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
@@ -56,7 +58,7 @@ class ControlLoader extends Component <ControlLoaderProps, ControlLoaderState> {
             function appCreationPoll() {
                 if ((window as any).pc.app) {
                     clearInterval(pollHandler);
-                    const app: Application = (window as any).pc.app;
+                    const app: { graphicsDevice: { activeDeviceType: string } } = (window as any).pc.app;
                     const activeDevice = app.graphicsDevice.activeDeviceType;
                     controlsObserver.emit('updateActiveDevice', activeDevice);
                 }
