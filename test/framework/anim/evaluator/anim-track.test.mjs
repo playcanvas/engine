@@ -1,5 +1,4 @@
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { EmptyAnimTrack } from '../../../../src/framework/anim/evaluator/empty-anim-track.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
@@ -42,7 +41,7 @@ describe('AnimTrack', function () {
 });
 
 describe('EmptyAnimTrack', function () {
-    const emptyAnimTrack = new EmptyAnimTrack();
+    const emptyAnimTrack = AnimTrack.EMPTY;
 
     describe('#constructor', function () {
 

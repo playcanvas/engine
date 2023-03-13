@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { EmptyAnimTrack } from '../evaluator/empty-anim-track.js';
+import { AnimTrack } from '../evaluator/anim-track.js';
 
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
@@ -102,7 +102,7 @@ class AnimState {
     }
 
     _updateHasAnimations() {
-        this._hasAnimations = this._animationList.length > 0 && this._animationList.filter(animation => !animation.animTrack || animation.animTrack instanceof EmptyAnimTrack).length === 0;
+        this._hasAnimations = this._animationList.length > 0 && this._animationList.filter(animation => !animation.animTrack || animation.animTrack === AnimTrack.EMPTY).length === 0;
     }
 
     get name() {

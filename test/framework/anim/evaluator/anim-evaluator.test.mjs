@@ -4,7 +4,6 @@ import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js'
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { EmptyAnimTrack } from '../../../../src/framework/anim/evaluator/empty-anim-track.js';
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { Application } from '../../../../src/framework/application.js';
 import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
@@ -131,7 +130,7 @@ describe('AnimEvaluator', function () {
         });
 
         // construct the animation track
-        const emptyTrack = new EmptyAnimTrack();
+        const emptyTrack = AnimTrack.EMPTY;
         // construct an animation clip
         const emptyClip = new AnimClip(emptyTrack, 0, 1.0, true, true, {
             fire: () => {

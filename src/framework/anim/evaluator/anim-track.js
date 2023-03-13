@@ -110,4 +110,9 @@ class AnimTrack {
     }
 }
 
+/**
+ * This AnimTrack can be used as a placeholder track when creating a state graph before having all associated animation data available.
+ */
+AnimTrack.EMPTY = new AnimTrack('empty', Number.MAX_VALUE, [], [], []);
+
 export { AnimTrack };

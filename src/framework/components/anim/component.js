@@ -13,7 +13,7 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
-import { EmptyAnimTrack } from '../../anim/evaluator/empty-anim-track.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
@@ -404,7 +404,7 @@ class AnimComponent extends Component {
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
                 const animationAsset = this._animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
-                    this.findAnimationLayer(layer.name).assignAnimation(stateName, new EmptyAnimTrack());
+                    this.findAnimationLayer(layer.name).assignAnimation(stateName, AnimTrack.EMPTY);
                     continue;
                 }
                 const assetId = animationAsset.asset;
