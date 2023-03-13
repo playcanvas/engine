@@ -182,7 +182,13 @@
                 } else if (arg === 'pcx') {
                     return pcx;
                 } else if (arg === 'deviceType') {
-                    return window.top.preferredGraphicsDevice || 'webgpu';
+                    if ({{{webgpuEnabled}}}) {
+                        return window.top.preferredGraphicsDevice || 'webgpu';
+                    } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
+                        return window.top.preferredGraphicsDevice;
+                    } else {
+                        return 'webgl2';
+                    }
                 }
             });
             window.exampleFunction.apply(this, args);

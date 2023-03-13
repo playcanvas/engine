@@ -4,6 +4,7 @@ import * as pc from '../../../../';
 class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Area Lights';
+    static WEBGPU_ENABLED = true;
 
 
     example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {

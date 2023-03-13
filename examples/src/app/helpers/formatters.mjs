@@ -72,6 +72,13 @@ const getEngineTypeFromClass = (text) => {
     return null;
 };
 
+const getWebgpuEnabledFromClass = (text) => {
+    if (text.indexOf(`_defineProperty(Example, "WEBGPU_ENABLED", true);`) !== -1) {
+        return true;
+    }
+    return false;
+};
+
 const classIncludesMiniStats = (text) => {
     return text.includes('_defineProperty(Example, "MINISTATS", true);');
 };
@@ -90,6 +97,7 @@ export default {
     getInnerFunctionText: getInnerFunctionText,
     getExampleClassFromTextFile: getExampleClassFromTextFile,
     getEngineTypeFromClass: getEngineTypeFromClass,
+    getWebgpuEnabledFromClass: getWebgpuEnabledFromClass,
     retrieveStaticObject: retrieveStaticObject,
     classIncludesMiniStats: classIncludesMiniStats
 };

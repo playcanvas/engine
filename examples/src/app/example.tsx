@@ -118,11 +118,11 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     set preferredGraphicsDevice(value: string) {
-        (window as any).prefferedGraphicsDevice = value;
+        (window as any).preferredGraphicsDevice = value;
     }
 
     get preferredGraphicsDevice() {
-        return (window as any).prefferedGraphicsDevice;
+        return (window as any).preferredGraphicsDevice;
     }
 
     setDisabledOptions = (preferredDevice = 'webgpu', activeDevice: string) => {
