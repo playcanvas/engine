@@ -1010,9 +1010,9 @@ export const TEXTUREDIMENSION_CUBE = 'cube';
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
 export const TEXTUREDIMENSION_3D = '3d';
 
-export const SAMPLETYPE_FLOAT = 'float';
-export const SAMPLETYPE_UNFILTERABLE_FLOAT = 'unfilterable-float';
-export const SAMPLETYPE_DEPTH = 'depth';
+export const SAMPLETYPE_FLOAT = 0;
+export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+export const SAMPLETYPE_DEPTH = 2;
 
 /**
  * Texture data is not stored a specific projection format.
@@ -1041,6 +1041,20 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
  * @type {string}
  */
 export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
+
+/**
+ * Shader source code uses GLSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_GLSL = 'glsl';
+
+/**
+ * Shader source code uses WGSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_WGSL = 'wgsl';
 
 /**
  * Signed byte vertex element type.

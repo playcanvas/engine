@@ -56,10 +56,12 @@ class BindGroupFormat {
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {BindBufferFormat[]} bufferFormats -
-     * @param {BindTextureFormat[]} textureFormats -
+     * @param {BindBufferFormat[]} [bufferFormats] - An array of bind buffer formats (uniform
+     * buffers). Defaults to an empty array.
+     * @param {BindTextureFormat[]} [textureFormats] - An array of bind texture formats (textures).
+     * Defaults to an empty array.
      */
-    constructor(graphicsDevice, bufferFormats, textureFormats) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = []) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 

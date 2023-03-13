@@ -943,7 +943,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     targets.push(new MorphTarget(options));
                 });
 
-                mesh.morph = new Morph(targets, device);
+                mesh.morph = new Morph(targets, device, {
+                    preferHighPrecision: assetOptions.morphPreferHighPrecision
+                });
             }
         }
 
@@ -1446,17 +1448,6 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return path;
     };
 
-    const retrieveWeightName = (gltfNode, weightIndex) => {
-        if (meshes && meshes[gltfNode.mesh]) {
-            const mesh = meshes[gltfNode.mesh];
-            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
-                return `name.${mesh.extras.targetNames[weightIndex]}`;
-            }
-        }
-
-        return weightIndex;
-    };
-
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
     const createMorphTargetCurves = (curve, gltfNode, entityPath) => {
@@ -1465,24 +1456,41 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
             Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
             return;
         }
+
+        // names of morph targets
+        let targetNames;
+        if (meshes && meshes[gltfNode.mesh]) {
+            const mesh = meshes[gltfNode.mesh];
+            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames')) {
+                targetNames = mesh.extras.targetNames;
+            }
+        }
+
         const outData = out.data;
         const morphTargetCount = outData.length / inputMap[curve.input].data.length;
         const keyframeCount = outData.length / morphTargetCount;
 
+        // single array buffer for all keys, 4 bytes per entry
+        const singleBufferSize = keyframeCount * 4;
+        const buffer = new ArrayBuffer(singleBufferSize * morphTargetCount);
+
         for (let j = 0; j < morphTargetCount; j++) {
-            const morphTargetOutput = new Float32Array(keyframeCount);
+            const morphTargetOutput = new Float32Array(buffer, singleBufferSize * j, keyframeCount);
+
             // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
             for (let k = 0; k < keyframeCount; k++) {
                 morphTargetOutput[k] = outData[k * morphTargetCount + j];
             }
             const output = new AnimData(1, morphTargetOutput);
+            const weightName = targetNames?.[j] ? `name.${targetNames[j]}` : j;
+
             // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
             outputMap[-outputCounter] = output;
             const morphCurve = {
                 paths: [{
                     entityPath: entityPath,
                     component: 'graph',
-                    propertyPath: [`weight.${retrieveWeightName(gltfNode, j)}`]
+                    propertyPath: [`weight.${weightName}`]
                 }],
                 // each morph target curve input can use the same sampler.input from the channel they were all in
                 input: curve.input,
@@ -1518,7 +1526,6 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 propertyPath: [transformSchema[target.path]]
             });
         }
-
     }
 
     const inputs = [];
