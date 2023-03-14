@@ -4,7 +4,7 @@ class ModelOutlineExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Outline';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'outline': new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })

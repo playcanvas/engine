@@ -4,7 +4,7 @@ class GlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // The example demonstrates loading of glb file, which contains meshes,
         // lights and cameras, and switches between the cameras every 2 seconds.

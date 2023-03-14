@@ -18,7 +18,7 @@ class LocomotionExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 

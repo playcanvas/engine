@@ -4,7 +4,7 @@ class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const gfxOptions = {
             deviceTypes: [deviceType],

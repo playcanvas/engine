@@ -10,7 +10,7 @@ class TextureBasisExample {
     // The normalmap has been converted with the following arguments:
     //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // initialize basis
         pc.basisInitialize({

@@ -75,7 +75,7 @@ class GrabPassExample {
         `
     };
 
-    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
