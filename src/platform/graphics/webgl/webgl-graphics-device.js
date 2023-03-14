@@ -2726,7 +2726,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.canvas.width !== width || this.canvas.height !== height) {
             this.canvas.width = width;
             this.canvas.height = height;
-            this.fire(this.EVENT_RESIZE, width, height);
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
         }
     }
 

@@ -149,7 +149,7 @@ class GraphicsDevice extends EventHandler {
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
 
-    EVENT_RESIZE = 'resizecanvas';
+    static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas) {
         super();
@@ -422,7 +422,7 @@ class GraphicsDevice extends EventHandler {
         this._height = height;
         this.canvas.width = width;
         this.canvas.height = height;
-        this.fire(this.EVENT_RESIZE, width, height);
+        this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
     }
 
     updateClientRect() {
