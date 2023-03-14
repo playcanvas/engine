@@ -2714,6 +2714,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._vaoMap.clear();
     }
 
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
+    }
+
     /**
      * Width of the back buffer in pixels.
      *

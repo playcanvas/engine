@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
@@ -20,23 +21,15 @@ class WebgpuBindGroup {
         /** @type {GPUBindGroupDescriptor} */
         const descr = this.createDescriptor(device, bindGroup);
 
-        Debug.call(() => {
-            device.wgpu.pushErrorScope('validation');
-        });
+        WebgpuDebug.validate(device);
 
         this.bindGroup = device.wgpu.createBindGroup(descr);
 
-        Debug.call(() => {
-            device.wgpu.popErrorScope().then((error) => {
-                if (error) {
-                    Debug.gpuError(error.message, {
-                        debugFormat: this.debugFormat,
-                        descr: descr,
-                        format: bindGroup.format,
-                        bindGroup: bindGroup
-                    });
-                }
-            });
+        WebgpuDebug.end(device, {
+            debugFormat: this.debugFormat,
+            descr: descr,
+            format: bindGroup.format,
+            bindGroup: bindGroup
         });
     }
 

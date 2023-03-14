@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK
@@ -17,6 +18,7 @@ import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -173,7 +175,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             format: preferredCanvasFormat,
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
 
             // formats that views created from textures returned by getCurrentTexture may use
             viewFormats: []
@@ -190,12 +192,62 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createFramebuffer() {
+        this.frameBufferDimensions = new Vec2();
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: true,
             samples: 4
         });
+    }
+
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
+    }
+
+    frameStart() {
+
+        WebgpuDebug.memory(this);
+        WebgpuDebug.validate(this);
+
+        // current frame color output buffer
+        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        DebugHelper.setLabel(outColorBuffer, `${this.frameBuffer.name}`);
+
+        // reallocate framebuffer if dimensions change, to match the output texture
+        if (this.frameBufferDimensions.x !== outColorBuffer.width || this.frameBufferDimensions.y !== outColorBuffer.height) {
+
+            this.frameBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
+
+            this.frameBuffer.destroy();
+            this.frameBuffer = null;
+
+            this.createFramebuffer();
+        }
+
+        const rt = this.frameBuffer;
+        const wrt = rt.impl;
+
+        // assign the format, allowing following init call to use it to allocate matching multisampled buffer
+        wrt.colorFormat = outColorBuffer.format;
+
+        this.initRenderTarget(rt);
+
+        // assign current frame's render texture
+        if (outColorBuffer) {
+            wrt.assignColorTexture(outColorBuffer);
+        }
+
+        WebgpuDebug.end(this);
+        WebgpuDebug.end(this);
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -364,23 +416,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.renderTarget = rt;
         const wrt = rt.impl;
 
-        // current frame color buffer
-        let outColorBuffer;
-        if (rt === this.frameBuffer) {
-            outColorBuffer = this.gpuContext.getCurrentTexture();
-            DebugHelper.setLabel(outColorBuffer, rt.name);
+        WebgpuDebug.internal(this);
+        WebgpuDebug.validate(this);
 
-            // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-            wrt.colorFormat = outColorBuffer.format;
-        }
-
-        this.initRenderTarget(rt);
-
-        // assign current frame's render texture if rendering to the main frame buffer
-        // TODO: this should probably be done at the start of the frame, so that it can be used
-        // as a destination of the copy operation
-        if (outColorBuffer) {
-            wrt.assignColorTexture(outColorBuffer);
+        // framebuffer is initialized at the start of the frame
+        if (rt !== this.frameBuffer) {
+            this.initRenderTarget(rt);
         }
 
         // set up clear / store / load settings
@@ -421,6 +462,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.wgpu.queue.submit([this.commandEncoder.finish()]);
         this.commandEncoder = null;
+
+        WebgpuDebug.end(this, { renderPass });
+        WebgpuDebug.end(this, { renderPass });
 
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
