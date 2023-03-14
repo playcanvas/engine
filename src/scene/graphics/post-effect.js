@@ -1,4 +1,5 @@
 import { Vec4 } from '../../core/math/vec4.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 
 const _viewport = new Vec4();
@@ -80,6 +81,7 @@ class PostEffect {
             viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
         }
 
+        this.device.setBlendState(BlendState.DEFAULT);
         drawQuadWithShader(this.device, target, shader, viewport);
     }
 }

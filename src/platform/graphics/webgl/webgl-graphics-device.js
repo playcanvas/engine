@@ -5,8 +5,6 @@ import { Color } from '../../../core/math/color.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    BLENDEQUATION_ADD,
-    BLENDMODE_ZERO, BLENDMODE_ONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_BACK, CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
@@ -35,6 +33,7 @@ import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
+import { BlendState } from '../blend-state.js';
 
 const invalidateAttachments = [];
 
@@ -89,14 +88,10 @@ function quadWithShader(device, target, shader) {
     const oldDepthTest = device.getDepthTest();
     const oldDepthWrite = device.getDepthWrite();
     const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
     device.setDepthTest(false);
     device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
+    device.setBlendState(BlendState.DEFAULT);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -111,7 +106,6 @@ function quadWithShader(device, target, shader) {
     device.setDepthTest(oldDepthTest);
     device.setDepthWrite(oldDepthWrite);
     device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
     device.updateEnd();
 
@@ -450,13 +444,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             });
         }
 
-        this.defaultClearOptions = {
-            color: [0, 0, 0, 1],
-            depth: 1,
-            stencil: 0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
-
         this.glAddress = [
             gl.REPEAT,
             gl.CLAMP_TO_EDGE,
@@ -471,7 +458,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
         ];
 
-        this.glBlendFunction = [
+        this.glBlendFunctionColor = [
             gl.ZERO,
             gl.ONE,
             gl.SRC_COLOR,
@@ -484,7 +471,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_COLOR,
-            gl.ONE_MINUS_CONSTANT_COLOR,
+            gl.ONE_MINUS_CONSTANT_COLOR
+        ];
+
+        this.glBlendFunctionAlpha = [
+            gl.ZERO,
+            gl.ONE,
+            gl.SRC_COLOR,
+            gl.ONE_MINUS_SRC_COLOR,
+            gl.DST_COLOR,
+            gl.ONE_MINUS_DST_COLOR,
+            gl.SRC_ALPHA,
+            gl.SRC_ALPHA_SATURATE,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.DST_ALPHA,
+            gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_ALPHA,
             gl.ONE_MINUS_CONSTANT_ALPHA
         ];
@@ -871,6 +872,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return precision;
     }
 
+    getExtension() {
+        for (let i = 0; i < arguments.length; i++) {
+            if (this.supportedExtensions.indexOf(arguments[i]) !== -1) {
+                return this.gl.getExtension(arguments[i]);
+            }
+        }
+        return null;
+    }
+
+    get extDisjointTimerQuery() {
+        // lazy evaluation as this is not typically used
+        if (!this._extDisjointTimerQuery) {
+            if (this.webgl2) {
+                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than EXT_disjoint_timer_query_webgl2
+                this._extDisjointTimerQuery = this.getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            }
+        }
+        return this._extDisjointTimerQuery;
+    }
+
     /**
      * Initialize the extensions provided by the WebGL context.
      *
@@ -879,15 +900,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeExtensions() {
         const gl = this.gl;
         const supportedExtensions = gl.getSupportedExtensions();
-
-        const getExtension = function () {
-            for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
-                    return gl.getExtension(arguments[i]);
-                }
-            }
-            return null;
-        };
+        this.supportedExtensions = supportedExtensions;
 
         if (this.webgl2) {
             this.extBlendMinmax = true;
@@ -899,15 +912,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
-            this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-            // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
-            // EXT_disjoint_timer_query_webgl2
-            this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
         } else {
-            this.extBlendMinmax = getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = getExtension('EXT_draw_buffers');
-            this.extInstancing = getExtension("ANGLE_instanced_arrays");
+            this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
+            this.extDrawBuffers = this.getExtension('EXT_draw_buffers');
+            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
                 const ext = this.extInstancing;
@@ -916,12 +926,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
             }
 
-            this.extStandardDerivatives = getExtension("OES_standard_derivatives");
-            this.extTextureFloat = getExtension("OES_texture_float");
-            this.extTextureHalfFloat = getExtension("OES_texture_half_float");
-            this.extTextureLod = getExtension('EXT_shader_texture_lod');
-            this.extUintElement = getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = getExtension("OES_vertex_array_object");
+            this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
+            this.extTextureFloat = this.getExtension("OES_texture_float");
+            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
+            this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
+            this.extUintElement = this.getExtension("OES_element_index_uint");
+            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
             if (this.extVertexArrayObject) {
                 // Install the WebGL 2 VAO API for WebGL 1.0
                 const ext = this.extVertexArrayObject;
@@ -931,25 +941,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
             }
             this.extColorBufferFloat = null;
-            this.extDisjointTimerQuery = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
         }
 
-        this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
-        this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
-        this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
-        this.extFloatBlend = getExtension("EXT_float_blend");
-        this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
-        this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
-        this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
-        this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
-        this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
-        this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
-        this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
-        this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+        this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
+        this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
+        this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+        this.extFloatBlend = this.getExtension("EXT_float_blend");
+        this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+        this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
+        this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
+        this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
+        this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
+        this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
+        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
         // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
+        this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");
     }
 
     /**
@@ -1035,28 +1044,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         // Initialize render state to a known start state
-        this.blending = false;
-        gl.disable(gl.BLEND);
 
-        this.blendSrc = BLENDMODE_ONE;
-        this.blendDst = BLENDMODE_ZERO;
-        this.blendSrcAlpha = BLENDMODE_ONE;
-        this.blendDstAlpha = BLENDMODE_ZERO;
-        this.separateAlphaBlend = false;
-        this.blendEquation = BLENDEQUATION_ADD;
-        this.blendAlphaEquation = BLENDEQUATION_ADD;
-        this.separateAlphaEquation = false;
+        // default blend state
+        gl.disable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ZERO);
         gl.blendEquation(gl.FUNC_ADD);
+        gl.colorMask(true, true, true, true);
 
         this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
-
-        this.writeRed = true;
-        this.writeGreen = true;
-        this.writeBlue = true;
-        this.writeAlpha = true;
-        gl.colorMask(true, true, true, true);
 
         this.cullMode = CULLFACE_BACK;
         gl.enable(gl.CULL_FACE);
@@ -1397,7 +1393,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(clearOptions);
         }
 
-        Debug.assert(!this.insideRenderPass, 'RenderPass cannot be started while inside another render pass.');
+        Debug.call(() => {
+            if (this.insideRenderPass) {
+                Debug.errorOnce('RenderPass cannot be started while inside another render pass.');
+            }
+        });
         this.insideRenderPass = true;
 
         DebugGraphics.popGpuMarker(this);
@@ -2070,7 +2070,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (flags & CLEARFLAG_COLOR) {
                 const color = options.color ?? defaultOptions.color;
                 this.setClearColor(color[0], color[1], color[2], color[3]);
-                this.setColorWrite(true, true, true, true);
+                this.setBlendState(BlendState.DEFAULT);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
@@ -2232,31 +2232,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Enables or disables writes to the color buffer. Once this state is set, it persists until it
-     * is changed. By default, color writes are enabled for all color channels.
-     *
-     * @param {boolean} writeRed - True to enable writing of the red channel and false otherwise.
-     * @param {boolean} writeGreen - True to enable writing of the green channel and false otherwise.
-     * @param {boolean} writeBlue - True to enable writing of the blue channel and false otherwise.
-     * @param {boolean} writeAlpha - True to enable writing of the alpha channel and false otherwise.
-     * @example
-     * // Just write alpha into the frame buffer
-     * device.setColorWrite(false, false, false, true);
-     */
-    setColorWrite(writeRed, writeGreen, writeBlue, writeAlpha) {
-        if ((this.writeRed !== writeRed) ||
-            (this.writeGreen !== writeGreen) ||
-            (this.writeBlue !== writeBlue) ||
-            (this.writeAlpha !== writeAlpha)) {
-            this.gl.colorMask(writeRed, writeGreen, writeBlue, writeAlpha);
-            this.writeRed = writeRed;
-            this.writeGreen = writeGreen;
-            this.writeBlue = writeBlue;
-            this.writeAlpha = writeAlpha;
-        }
-    }
-
-    /**
      * Enables or disables alpha to coverage (WebGL2 only).
      *
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
@@ -2350,32 +2325,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setDepthBiasValues(constBias, slopeBias) {
         this.gl.polygonOffset(slopeBias, constBias);
-    }
-
-    /**
-     * Queries whether blending is enabled.
-     *
-     * @returns {boolean} True if blending is enabled and false otherwise.
-     */
-    getBlending() {
-        return this.blending;
-    }
-
-    /**
-     * Enables or disables blending.
-     *
-     * @param {boolean} blending - True to enable blending and false to disable it.
-     */
-    setBlending(blending) {
-        if (this.blending !== blending) {
-            const gl = this.gl;
-            if (blending) {
-                gl.enable(gl.BLEND);
-            } else {
-                gl.disable(gl.BLEND);
-            }
-            this.blending = blending;
-        }
     }
 
     /**
@@ -2591,115 +2540,44 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     * - {@link BLENDMODE_CONSTANT_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_COLOR}
-     * - {@link BLENDMODE_CONSTANT_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     */
-    setBlendFunction(blendSrc, blendDst) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
-            this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.separateAlphaBlend = false;
-        }
-    }
+    setBlendState(blendState) {
+        const currentBlendState = this.blendState;
+        if (!currentBlendState.equals(blendState)) {
+            const gl = this.gl;
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
-     * @param {number} blendDstAlpha - The separate destination blend function for the alpha channel.
-     */
-    setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
-            this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
-                                      this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.blendSrcAlpha = blendSrcAlpha;
-            this.blendDstAlpha = blendDstAlpha;
-            this.separateAlphaBlend = true;
-        }
-    }
+            // state values to set
+            const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     */
-    setBlendEquation(blendEquation) {
-        if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
-            this.gl.blendEquation(this.glBlendEquation[blendEquation]);
-            this.blendEquation = blendEquation;
-            this.separateAlphaEquation = false;
-        }
-    }
+            // enable blend
+            if (currentBlendState.blend !== blend) {
+                if (blend) {
+                    gl.enable(gl.BLEND);
+                } else {
+                    gl.disable(gl.BLEND);
+                }
+            }
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel.
-     * Accepts same values as `blendEquation`.
-     */
-    setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
-        if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
-            this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
-            this.blendEquation = blendEquation;
-            this.blendAlphaEquation = blendAlphaEquation;
-            this.separateAlphaEquation = true;
+            // blend ops
+            if (currentBlendState.colorOp !== colorOp || currentBlendState.alphaOp !== alphaOp) {
+                const glBlendEquation = this.glBlendEquation;
+                gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+            }
+
+            // blend factors
+            if (currentBlendState.colorSrcFactor !== colorSrcFactor || currentBlendState.colorDstFactor !== colorDstFactor ||
+                currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
+
+                gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                                     this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+            }
+
+            // color write
+            if (currentBlendState.allWrite !== blendState.allWrite) {
+                this.gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+            }
+
+            // update internal state
+            currentBlendState.copy(blendState);
         }
     }
 
@@ -2834,6 +2712,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
 
         this._vaoMap.clear();
+    }
+
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
     }
 
     /**

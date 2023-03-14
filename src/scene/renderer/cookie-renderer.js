@@ -9,6 +9,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { LIGHTTYPE_OMNI } from '../constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const textureBlitVertexShader = `
     attribute vec2 vertex_position;
@@ -125,6 +126,9 @@ class CookieRenderer {
 
             // source texture
             this.blitTextureId.setValue(light.cookie);
+
+            // render state
+            device.setBlendState(BlendState.DEFAULT);
 
             // render it to a viewport of the target
             for (let face = 0; face < faceCount; face++) {

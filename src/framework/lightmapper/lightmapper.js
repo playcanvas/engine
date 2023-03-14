@@ -44,6 +44,7 @@ import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -841,23 +842,26 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
+    renderShadowMap(shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            if (!light.shadowMap && !this.scene.clusteredLightingEnabled) {
+            if (!light.shadowMap && !isClustered) {
                 light.shadowMap = this.shadowMapCache.get(this.device, light);
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
-                this.renderer.shadowRenderer.render(light, this.camera);
             } else {
                 this.renderer._shadowRendererLocal.cull(light, casters);
-                this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
             }
+
+            const insideRenderPass = false;
+            this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
         }
 
         return true;
@@ -873,6 +877,8 @@ class Lightmapper {
         if (filterLightmap) {
             this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
         }
+
+        device.setBlendState(BlendState.DEFAULT);
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -1014,7 +1020,7 @@ class Lightmapper {
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
                         const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
@@ -1078,7 +1084,7 @@ class Lightmapper {
 
                         // prepare clustered lighting
                         if (clusteredLightingEnabled) {
-                            this.worldClusters.activate(this.renderer.lightTextureAtlas);
+                            this.worldClusters.activate();
                         }
 
                         this.renderer._forwardTime = 0;

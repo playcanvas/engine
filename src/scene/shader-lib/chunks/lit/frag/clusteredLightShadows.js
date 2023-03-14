@@ -5,7 +5,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)
 
-    float getShadowOmniClusteredPCF1(sampler2DShadow shadowMap, vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
+    float getShadowOmniClusteredPCF1(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
 
         float shadowTextureResolution = shadowParams.x;
         vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
@@ -18,28 +18,28 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
-    float getShadowOmniClusteredPCF3(sampler2DShadow shadowMap, vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
+    float getShadowOmniClusteredPCF3(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
 
         float shadowTextureResolution = shadowParams.x;
         vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
 
         float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
         dShadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF3x3(shadowMap, shadowParams.xyz);
+        return getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowParams.xyz);
     }
 
     #endif
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF5)
 
-    float getShadowOmniClusteredPCF5(sampler2DShadow shadowMap, vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
+    float getShadowOmniClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams, vec3 omniAtlasViewport, float shadowEdgePixels, vec3 dir) {
 
         float shadowTextureResolution = shadowParams.x;
         vec2 uv = getCubemapAtlasCoordinates(omniAtlasViewport, shadowEdgePixels, shadowTextureResolution, dir);
 
         float shadowZ = length(dir) * shadowParams.w + shadowParams.z;
         dShadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF5x5(shadowMap, shadowParams.xyz);
+        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams.xyz);
     }
 
     #endif
@@ -101,7 +101,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)
 
-    float getShadowSpotClusteredPCF1(sampler2DShadow shadowMap, vec4 shadowParams) {
+    float getShadowSpotClusteredPCF1(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams) {
         return textureShadow(shadowMap, dShadowCoord);
     }
 
@@ -109,16 +109,16 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
-    float getShadowSpotClusteredPCF3(sampler2DShadow shadowMap, vec4 shadowParams) {
-        return getShadowSpotPCF3x3(shadowMap, shadowParams);
+    float getShadowSpotClusteredPCF3(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams) {
+        return getShadowSpotPCF3x3(SHADOWMAP_PASS(shadowMap), shadowParams);
     }
 
     #endif
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF5)
 
-    float getShadowSpotClusteredPCF5(sampler2DShadow shadowMap, vec4 shadowParams) {
-        return getShadowPCF5x5(shadowMap, shadowParams.xyz);
+    float getShadowSpotClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams) {
+        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams.xyz);
     }
     #endif
 

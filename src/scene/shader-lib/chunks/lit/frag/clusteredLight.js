@@ -1,6 +1,6 @@
 export default /* glsl */`
-uniform sampler2D clusterWorldTexture;
-uniform sampler2D lightsTexture8;
+uniform highp sampler2D clusterWorldTexture;
+uniform highp sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
 // complex ifdef expression are not supported, handle it here
@@ -428,11 +428,11 @@ void evaluateLight(ClusterLightData light) {
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #endif
                         dAtten *= mix(1.0, shadow, light.shadowIntensity);
 
@@ -442,11 +442,11 @@ void evaluateLight(ClusterLightData light) {
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
                         dAtten *= mix(1.0, shadow, light.shadowIntensity);
                     }
@@ -594,6 +594,10 @@ void addClusteredLights() {
 
                 // using a single channel texture with data in alpha channel
                 float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+
+                if (lightIndex <= 0.0)
+                        return;
+
                 evaluateClusterLight(lightIndex * 255.0); 
             }
 

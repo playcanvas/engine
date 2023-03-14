@@ -191,7 +191,6 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
         return null;
     }
 
-    const bufferView = bufferViews[gltfAccessor.bufferView];
     let result;
 
     if (gltfAccessor.sparse) {
@@ -235,26 +234,33 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
                 result[targetIndex * numComponents + j] = values[i * numComponents + j];
             }
         }
-    } else if (flatten && bufferView.hasOwnProperty('byteStride')) {
-        // flatten stridden data
-        const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
-        const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
-        const tmpArray = new Uint8Array(storage);
-
-        let dstOffset = 0;
-        for (let i = 0; i < gltfAccessor.count; ++i) {
-            // no need to add bufferView.byteOffset because accessor takes this into account
-            let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
-            for (let b = 0; b < bytesPerElement; ++b) {
-                tmpArray[dstOffset++] = bufferView[srcOffset++];
-            }
-        }
-
-        result = new dataType(storage);
     } else {
-        result = new dataType(bufferView.buffer,
-                              bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
-                              gltfAccessor.count * numComponents);
+        if (gltfAccessor.hasOwnProperty("bufferView")) {
+            const bufferView = bufferViews[gltfAccessor.bufferView];
+            if (flatten && bufferView.hasOwnProperty('byteStride')) {
+                // flatten stridden data
+                const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
+                const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
+                const tmpArray = new Uint8Array(storage);
+
+                let dstOffset = 0;
+                for (let i = 0; i < gltfAccessor.count; ++i) {
+                    // no need to add bufferView.byteOffset because accessor takes this into account
+                    let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
+                    for (let b = 0; b < bytesPerElement; ++b) {
+                        tmpArray[dstOffset++] = bufferView[srcOffset++];
+                    }
+                }
+
+                result = new dataType(storage);
+            } else {
+                result = new dataType(bufferView.buffer,
+                                      bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
+                                      gltfAccessor.count * numComponents);
+            }
+        } else {
+            result = new dataType(gltfAccessor.count * numComponents);
+        }
     }
 
     return result;
@@ -592,7 +598,7 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
             const bufferView = bufferViews[accessor.bufferView];
             const semantic = gltfToEngineSemanticMap[attrib];
             const size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
-            const stride = bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
+            const stride = bufferView && bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
                 buffer: accessorData.buffer,
                 size: size,
@@ -937,7 +943,9 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     targets.push(new MorphTarget(options));
                 });
 
-                mesh.morph = new Morph(targets, device);
+                mesh.morph = new Morph(targets, device, {
+                    preferHighPrecision: assetOptions.morphPreferHighPrecision
+                });
             }
         }
 
@@ -1440,17 +1448,6 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return path;
     };
 
-    const retrieveWeightName = (gltfNode, weightIndex) => {
-        if (meshes && meshes[gltfNode.mesh]) {
-            const mesh = meshes[gltfNode.mesh];
-            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
-                return `name.${mesh.extras.targetNames[weightIndex]}`;
-            }
-        }
-
-        return weightIndex;
-    };
-
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
     const createMorphTargetCurves = (curve, gltfNode, entityPath) => {
@@ -1459,24 +1456,41 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
             Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
             return;
         }
+
+        // names of morph targets
+        let targetNames;
+        if (meshes && meshes[gltfNode.mesh]) {
+            const mesh = meshes[gltfNode.mesh];
+            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames')) {
+                targetNames = mesh.extras.targetNames;
+            }
+        }
+
         const outData = out.data;
         const morphTargetCount = outData.length / inputMap[curve.input].data.length;
         const keyframeCount = outData.length / morphTargetCount;
 
+        // single array buffer for all keys, 4 bytes per entry
+        const singleBufferSize = keyframeCount * 4;
+        const buffer = new ArrayBuffer(singleBufferSize * morphTargetCount);
+
         for (let j = 0; j < morphTargetCount; j++) {
-            const morphTargetOutput = new Float32Array(keyframeCount);
+            const morphTargetOutput = new Float32Array(buffer, singleBufferSize * j, keyframeCount);
+
             // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
             for (let k = 0; k < keyframeCount; k++) {
                 morphTargetOutput[k] = outData[k * morphTargetCount + j];
             }
             const output = new AnimData(1, morphTargetOutput);
+            const weightName = targetNames?.[j] ? `name.${targetNames[j]}` : j;
+
             // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
             outputMap[-outputCounter] = output;
             const morphCurve = {
                 paths: [{
                     entityPath: entityPath,
                     component: 'graph',
-                    propertyPath: [`weight.${retrieveWeightName(gltfNode, j)}`]
+                    propertyPath: [`weight.${weightName}`]
                 }],
                 // each morph target curve input can use the same sampler.input from the channel they were all in
                 input: curve.input,
@@ -1512,7 +1526,6 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 propertyPath: [transformSchema[target.path]]
             });
         }
-
     }
 
     const inputs = [];
@@ -2313,8 +2326,8 @@ const parseGltf = function (gltfChunk, callback) {
     }
 
     // check required extensions
-    const extensionsRequired = gltf?.extensionsRequired || [];
-    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
+    const extensionsUsed = gltf?.extensionsUsed || [];
+    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
         WasmModule.getInstance('DracoDecoderModule', (instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);

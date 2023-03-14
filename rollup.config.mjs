@@ -269,6 +269,10 @@ const stripFunctions = [
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
     'DebugGraphics.popGpuMarker',
+    'WebgpuDebug.validate',
+    'WebgpuDebug.memory',
+    'WebgpuDebug.internal',
+    'WebgpuDebug.end',
     'WorldClustersDebug.render'
 ];
 

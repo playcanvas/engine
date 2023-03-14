@@ -1104,6 +1104,12 @@ class AppBase extends EventHandler {
      * app.start();
      */
     start() {
+
+        Debug.call(() => {
+            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            this._alreadyStarted = true;
+        });
+
         this.frame = 0;
 
         this.fire("start", {
@@ -1182,10 +1188,16 @@ class AppBase extends EventHandler {
         // #endif
     }
 
+    frameStart() {
+        this.graphicsDevice.frameStart();
+    }
+
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
      * need to be called explicitly.
+     *
+     * @ignore
      */
     render() {
         // #if _PROFILER
@@ -1886,9 +1898,17 @@ class AppBase extends EventHandler {
      * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
+     * Passing false uses unfiltered sampling, allowing a depth texture to be sampled on WebGPU.
+     * Defaults to true.
      * @ignore
      */
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
+
+        // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
+        // map to be fetched (without filtering) and rendered
+        if (filterable === false && !this.graphicsDevice.isWebGPU)
+            return;
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1897,7 +1917,7 @@ class AppBase extends EventHandler {
         if (!material) {
             material = new Material();
             material.setParameter("colorMap", texture);
-            material.shader = this.scene.immediate.getTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 
@@ -1977,6 +1997,11 @@ class AppBase extends EventHandler {
         if (this.elementInput) {
             this.elementInput.detach();
             this.elementInput = null;
+        }
+
+        if (this.gamepads) {
+            this.gamepads.destroy();
+            this.gamepads = null;
         }
 
         if (this.controller) {
@@ -2185,6 +2210,7 @@ const makeTick = function (_app) {
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
                 application.updateCanvasSize();
+                application.frameStart();
                 application.render();
                 application.renderNextFrame = false;
 
