@@ -13,7 +13,7 @@ class UsdzExportExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE, pcx: any, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, pcx: any, data: any): void {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});

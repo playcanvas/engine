@@ -4,7 +4,7 @@ class VrBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Basic';
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {

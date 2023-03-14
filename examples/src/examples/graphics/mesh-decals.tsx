@@ -4,7 +4,7 @@ class MeshDecalsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Decals';
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
 
         const assets = {
             'spark': new pc.Asset('spark', 'texture', { url: '/static/assets/textures/spark.png' })

@@ -4,7 +4,7 @@ class HelloWorldExample {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
 
         const app = new pc.Application(canvas, {});
 

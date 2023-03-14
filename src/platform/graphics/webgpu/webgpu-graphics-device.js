@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK, DEVICETYPE
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -64,7 +64,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
         this.isWebGPU = true;
-        this.activeDeviceType = DEVICETYPE.WEBGPU;
+        this.activeDeviceType = DEVICETYPE_WEBGPU;
 
         this.initDeviceCaps();
     }

@@ -14,7 +14,7 @@ const findClosingBracketMatchIndex = (str, pos) => {
 
 const getTypeScriptFunctionFromText = (text) => {
     const transformedCode = text;
-    const functionSignatureStartString = 'example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE';
+    const functionSignatureStartString = 'example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2';
     const indexOfFunctionSignatureStart = transformedCode.indexOf(functionSignatureStartString);
     const functionSignatureEndString = '): void ';
     const indexOfFunctionSignatureEnd = indexOfFunctionSignatureStart + transformedCode.substring(indexOfFunctionSignatureStart).indexOf(functionSignatureEndString) + functionSignatureEndString.length;

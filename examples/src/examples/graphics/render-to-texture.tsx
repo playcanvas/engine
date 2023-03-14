@@ -4,7 +4,7 @@ class RenderToTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render to Texture';
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
 
         // Overview:
         // There are 3 layers used:

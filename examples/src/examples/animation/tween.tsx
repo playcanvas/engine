@@ -12,7 +12,7 @@ class TweenExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();

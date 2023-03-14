@@ -40,9 +40,9 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
-     * The type of graphics device that the system could initialize. Can be one of pc.DEVICETYPE.WEBGL1, pc.DEVICETYPE.WEBGL2 or pc.DEVICETYPE.WEBGPU.
+     * The type of graphics device that the system could initialize. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
      *
-     * @type {import('./constants.js').DEVICETYPE}
+     * @type {pc.DEVICETYPE_WEBGL1 | pc.DEVICETYPE_WEBGL2 | pc.DEVICETYPE_WEBGPU}
      */
     activeDeviceType;
 

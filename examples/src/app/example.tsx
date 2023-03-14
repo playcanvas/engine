@@ -8,16 +8,13 @@ import { withRouter } from 'react-router-dom';
 import ControlPanel from './control-panel';
 import { Observer } from '@playcanvas/observer';
 
-const DEVICETYPE = {
-    WEBGL1: 'webgl1',
-    WEBGL2: 'webgl2',
-    WEBGPU: 'webgpu'
-};
-
+const DEVICETYPE_WEBGL1 = 'webgl1';
+const DEVICETYPE_WEBGL2 = 'webgl2';
+const DEVICETYPE_WEBGPU = 'webgpu';
 const deviceTypeNames = {
-    [DEVICETYPE.WEBGL1]: 'WebGL 1',
-    [DEVICETYPE.WEBGL2]: 'WebGL 2',
-    [DEVICETYPE.WEBGPU]: 'WebGPU'
+    [DEVICETYPE_WEBGL1]: 'WebGL 1',
+    [DEVICETYPE_WEBGL2]: 'WebGL 2',
+    [DEVICETYPE_WEBGPU]: 'WebGPU'
 };
 
 const controlsObserver = new Observer();
@@ -130,21 +127,21 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     setDisabledOptions = (preferredDevice = 'webgpu', activeDevice: string) => {
         const selectInput = this.deviceTypeSelectInput;
-        if ((preferredDevice === DEVICETYPE.WEBGL2 || preferredDevice === DEVICETYPE.WEBGPU) && activeDevice === DEVICETYPE.WEBGL1) {
-            selectInput.fallbackOrder = [DEVICETYPE.WEBGPU, DEVICETYPE.WEBGL2, DEVICETYPE.WEBGL1];
+        if ((preferredDevice === DEVICETYPE_WEBGL2 || preferredDevice === DEVICETYPE_WEBGPU) && activeDevice === DEVICETYPE_WEBGL1) {
+            selectInput.fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
             selectInput.disabledOptions = {
-                [DEVICETYPE.WEBGPU]: 'WebGPU (not supported)',
-                [DEVICETYPE.WEBGL2]: 'WebGL 2 (not supported)'
+                [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)',
+                [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
-        } else if (preferredDevice === DEVICETYPE.WEBGL1 && activeDevice === DEVICETYPE.WEBGL2) {
-            selectInput.fallbackOrder = [DEVICETYPE.WEBGL1, DEVICETYPE.WEBGL2, DEVICETYPE.WEBGPU];
+        } else if (preferredDevice === DEVICETYPE_WEBGL1 && activeDevice === DEVICETYPE_WEBGL2) {
+            selectInput.fallbackOrder = [DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU];
             selectInput.disabledOptions = {
-                [DEVICETYPE.WEBGL1]: 'WebGL 1 (not supported)'
+                [DEVICETYPE_WEBGL1]: 'WebGL 1 (not supported)'
             };
-        } else if (preferredDevice === DEVICETYPE.WEBGPU && activeDevice !== DEVICETYPE.WEBGPU) {
-            selectInput.fallbackOrder = [DEVICETYPE.WEBGPU, DEVICETYPE.WEBGL2, DEVICETYPE.WEBGL1];
+        } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
+            selectInput.fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
             selectInput.disabledOptions = {
-                [DEVICETYPE.WEBGPU]: 'WebGPU (not supported)'
+                [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
             };
         } else {
             selectInput.disabledOptions = null;
@@ -195,9 +192,9 @@ class Example extends Component <ExampleProps, ExampleState> {
                 <SelectInput
                     id='deviceTypeSelectInput'
                     options={[
-                        { t: deviceTypeNames[DEVICETYPE.WEBGL1], v: DEVICETYPE.WEBGL1 },
-                        { t: deviceTypeNames[DEVICETYPE.WEBGL2], v: DEVICETYPE.WEBGL2 },
-                        { t: deviceTypeNames[DEVICETYPE.WEBGPU], v: DEVICETYPE.WEBGPU }
+                        { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
+                        { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
+                        { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU }
                     ]}
                     onSelect={this.onSetPreferredGraphicsDevice}
                     prefix='Active Device: '

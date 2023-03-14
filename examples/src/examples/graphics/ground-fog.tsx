@@ -101,7 +101,7 @@ class GroundFogExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: pc.DEVICETYPE, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: typeof pc.DEVICETYPE_WEBGPU | typeof pc.DEVICETYPE_WEBGL1 | typeof pc.DEVICETYPE_WEBGL2, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
