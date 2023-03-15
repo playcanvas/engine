@@ -1,7 +1,7 @@
 export default /* glsl */`
 #ifdef LIT_CLEARCOAT
-void addReflectionCC(float gloss) {
-    ccReflection += calcReflection(ccReflDirW, gloss);
+void addReflectionCC(vec3 reflDir, float gloss) {
+    ccReflection += calcReflection(reflDir, gloss);
 }
 #endif
 `;

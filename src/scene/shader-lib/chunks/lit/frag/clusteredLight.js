@@ -540,21 +540,21 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, worldNormal, gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), gloss, specularity, iridescence);
+                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, worldNormal, gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), gloss, specularity, iridescence);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, worldNormal, gloss) * dAtten * light.color * dAtten3 * specularity;
+                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, worldNormal, gloss) * dAtten * light.color * dAtten3 * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3; 
+                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, sheen.gloss) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, dReflDirW, worldNormal, sheen.gloss) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif

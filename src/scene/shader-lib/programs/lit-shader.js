@@ -1046,7 +1046,7 @@ class LitShader {
         if (this.lighting || this.reflections) {
             if (this.reflections) {
                 if (options.useClearCoat) {
-                    backend.append("    addReflectionCC(litShaderArgs.clearcoat.gloss);");
+                    backend.append("    addReflectionCC(ccReflDirW, litShaderArgs.clearcoat.gloss);");
                     if (options.fresnelModel > 0) {
                         backend.append("    ccFresnel = getFresnelCC(dot(dViewDirW, litShaderArgs.clearcoat.worldNormal));");
                         backend.append("    ccReflection.rgb *= ccFresnel;");
@@ -1063,7 +1063,7 @@ class LitShader {
                 }
 
                 // Fresnel has to be applied to reflections
-                backend.append("    addReflection(litShaderArgs.gloss);");
+                backend.append("    addReflection(dReflDirW, litShaderArgs.gloss);");
 
                 if (options.fresnelModel > 0) {
                     backend.append("    dReflection.rgb *= getFresnel(dot(dViewDirW, litShaderArgs.worldNormal), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);");
@@ -1259,16 +1259,16 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += getLightSpecular(dHalfDirW, litShaderArgs.clearcoat.worldNormal, litShaderArgs.clearcoat.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, litShaderArgs.clearcoat.gloss) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
                     }
                     if (options.useSheen) {
-                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3;" : ";"));
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, litShaderArgs.gloss) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);" : "* litShaderArgs.specularity;"));
                     }

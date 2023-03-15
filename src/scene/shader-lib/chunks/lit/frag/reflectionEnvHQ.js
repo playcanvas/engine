@@ -22,7 +22,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return processEnvironment(mix(sharp, mix(roughA, roughB, flevel), min(level, 1.0)));
 }
 
-void addReflection(float gloss) {   
-    dReflection += vec4(calcReflection(dReflDirW, gloss), material_reflectivity);
+void addReflection(vec3 reflDir, float gloss) {   
+    dReflection += vec4(calcReflection(reflDir, gloss), material_reflectivity);
 }
 `;

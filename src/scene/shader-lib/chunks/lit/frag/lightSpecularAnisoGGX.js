@@ -32,7 +32,7 @@ float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 h) {
     return D * G;
 }
 
-float getLightSpecular(vec3 h, vec3 worldNormal, float gloss) {
+float getLightSpecular(vec3 h, vec3 reflDir, vec3 worldNormal, float gloss) {
     return calcLightSpecular(glossiness, worldNormal, h);
 }
 `;
