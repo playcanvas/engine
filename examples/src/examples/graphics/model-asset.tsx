@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class ModelAssetExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Asset';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

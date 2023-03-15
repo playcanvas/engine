@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class BoxReflectionExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Box Reflection';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>

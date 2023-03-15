@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MeshDeformationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Deformation';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

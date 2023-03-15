@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class ShadowCascadesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shadow Cascades';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>

@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MaterialClearCoatExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Clear Coat';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

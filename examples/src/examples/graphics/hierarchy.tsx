@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class HierarchyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

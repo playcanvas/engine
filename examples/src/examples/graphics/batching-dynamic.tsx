@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class ShapesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shapes';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

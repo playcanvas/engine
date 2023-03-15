@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class ShaderToonExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Toon';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
 // Attributes per vertex: position, normal and texture coordinates

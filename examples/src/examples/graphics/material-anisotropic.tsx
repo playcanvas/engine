@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class LightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Anisotropic';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

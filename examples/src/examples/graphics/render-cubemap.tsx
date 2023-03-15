@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class RenderCubemapExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render Cubemap';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

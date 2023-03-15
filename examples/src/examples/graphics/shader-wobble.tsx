@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Wobble';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
 attribute vec3 aPosition;

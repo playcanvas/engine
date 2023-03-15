@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MeshMorphManyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Morph Many';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

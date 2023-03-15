@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class GrabPassExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Grab Pass';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
             attribute vec3 vertex_position;

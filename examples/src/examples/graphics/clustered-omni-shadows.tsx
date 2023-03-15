@@ -7,7 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
-
+    
     controls(data: Observer) {
         return <>
             <Panel headerText='Settings'>
