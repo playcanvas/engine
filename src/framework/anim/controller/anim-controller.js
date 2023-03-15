@@ -579,7 +579,7 @@ class AnimController {
                 }
             }
         }
-        this._animEvaluator.update(dt);
+        this._animEvaluator.update(dt, this.activeState.hasAnimations);
     }
 
     findParameter(name) {
