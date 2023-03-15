@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { Container, Spinner, SelectInput, Panel } from '@playcanvas/pcui/react';
 import { SelectInput as SelectInputClass } from '@playcanvas/pcui';
+import { Observer } from '@playcanvas/observer';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../../build/playcanvas';
 import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
-// @ts-ignore: library file import
-import { withRouter } from 'react-router-dom';
 import ControlPanel from './control-panel';
-import { Observer } from '@playcanvas/observer';
 import { MIN_DESKTOP_WIDTH } from './constants';
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../dist/build/playcanvas';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
