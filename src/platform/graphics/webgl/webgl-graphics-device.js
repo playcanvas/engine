@@ -20,7 +20,8 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation,
-    PRIMITIVE_TRISTRIP
+    PRIMITIVE_TRISTRIP,
+    PIXELFORMAT_111110F
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -2804,7 +2805,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @returns {number} The HDR pixel format or null if there are none.
      * @ignore
      */
-    getHdrFormat(preferLargest, renderable, updatable, filterable) {
+    getHdrFormat(preferLargest, renderable, updatable, filterable, use11Bits) {
         // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
         // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
         // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
@@ -2817,7 +2818,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             (!filterable || this.extTextureFloatLinear);
 
         if (f16Valid && f32Valid) {
-            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+            // magnopus patched - added hdr11bit support
+            return preferLargest ? PIXELFORMAT_RGBA32F : use11Bits ? PIXELFORMAT_111110F : PIXELFORMAT_RGBA16F;
         } else if (f16Valid) {
             return PIXELFORMAT_RGBA16F;
         } else if (f32Valid) {
