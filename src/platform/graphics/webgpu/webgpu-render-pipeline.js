@@ -182,6 +182,7 @@ class WebgpuRenderPipeline {
         return blend;
     }
 
+    /** @private */
     getDepthStencil(depthState, renderTarget) {
 
         /** @type {GPUDepthStencilState} */

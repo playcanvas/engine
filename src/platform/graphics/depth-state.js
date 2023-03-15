@@ -32,7 +32,7 @@ class DepthState {
      * @param {number} func - Controls how the depth of the fragment is compared against the
      * current depth contained in the depth buffer. See {@link pc.DepthState.func} for details.
      * Defaults to {@link FUNC_LESSEQUAL}.
-     * @param {bool} write - If true, shader write a depth value to the depth buffer of the
+     * @param {boolean} write - If true, shader write a depth value to the depth buffer of the
      * currently active render target. If false, no depth value is written. Defaults to true.
      */
     constructor(func = FUNC_LESSEQUAL, write = true) {
