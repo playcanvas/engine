@@ -577,9 +577,7 @@ class Quat {
             this.w = dotProduct;
         }
 
-        this.normalize();
-
-        return this;
+        return this.normalize();
     }
 
     /**
