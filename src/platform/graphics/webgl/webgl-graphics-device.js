@@ -403,7 +403,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             if (gl) {
                 this.webgl2 = (names[i] === DEVICETYPE_WEBGL2);
-                this.activeDeviceType = (names[i] === DEVICETYPE_WEBGL2) ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
+                this.deviceType = (names[i] === DEVICETYPE_WEBGL2) ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
                 break;
             }
         }

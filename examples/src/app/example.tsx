@@ -7,10 +7,9 @@ import examples from './helpers/example-data.mjs';
 import { withRouter } from 'react-router-dom';
 import ControlPanel from './control-panel';
 import { Observer } from '@playcanvas/observer';
+import { MIN_DESKTOP_WIDTH } from './constants';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../dist/build/playcanvas';
 
-const DEVICETYPE_WEBGL1 = 'webgl1';
-const DEVICETYPE_WEBGL2 = 'webgl2';
-const DEVICETYPE_WEBGPU = 'webgpu';
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
@@ -23,7 +22,7 @@ const Controls = (props: any) => {
     const controlsFunction = (examples as any).paths[props.path].example.prototype.controls;
     const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls((window as any).observerData).props.children : null;
     // on desktop dont show the control panel when no controls are present
-    if (!controls && window.top.innerWidth > 600) return null;
+    if (!controls && window.top.innerWidth >= MIN_DESKTOP_WIDTH) return null;
     return <ControlPanel controls={controls} files={props.files} />;
 };
 interface ControlLoaderProps {
@@ -58,8 +57,8 @@ class ControlLoader extends Component <ControlLoaderProps, ControlLoaderState> {
             function appCreationPoll() {
                 if ((window as any).pc.app) {
                     clearInterval(pollHandler);
-                    const app: { graphicsDevice: { activeDeviceType: string } } = (window as any).pc.app;
-                    const activeDevice = app.graphicsDevice.activeDeviceType;
+                    const app: { graphicsDevice: { deviceType: string } } = (window as any).pc.app;
+                    const activeDevice = app.graphicsDevice.deviceType;
                     controlsObserver.emit('updateActiveDevice', activeDevice);
                 }
             }
@@ -172,7 +171,7 @@ class Example extends Component <ExampleProps, ExampleState> {
 
     shouldComponentUpdate(nextProps: Readonly<ExampleProps>): boolean {
         const updateMobileOnFileChange = () => {
-            return window.top.innerWidth < 601 && this.props.files !== nextProps.files;
+            return window.top.innerWidth < MIN_DESKTOP_WIDTH && this.props.files !== nextProps.files;
         };
         return this.props.match.params.category !== nextProps.match.params.category || this.props.match.params.example !== nextProps.match.params.example || updateMobileOnFileChange();
     }
@@ -188,7 +187,7 @@ class Example extends Component <ExampleProps, ExampleState> {
         return <Container id="canvas-container">
             <Spinner size={50}/>
             <iframe id="exampleIframe" key={iframePath} src={iframePath}></iframe>
-            <Panel id='controlPanel' class={[window.top.innerWidth < 601 ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < 601 ? 'CODE & CONTROLS' : 'CONTROLS'} collapsible={true} collapsed={window.top.innerWidth < 601}>
+            <Panel id='controlPanel' class={[window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'CODE & CONTROLS' : 'CONTROLS'} collapsible={true} collapsed={window.top.innerWidth < MIN_DESKTOP_WIDTH}>
                 <SelectInput
                     id='deviceTypeSelectInput'
                     options={[

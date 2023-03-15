@@ -64,7 +64,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
         this.isWebGPU = true;
-        this.activeDeviceType = DEVICETYPE_WEBGPU;
+        this.deviceType = DEVICETYPE_WEBGPU;
 
         this.initDeviceCaps();
     }

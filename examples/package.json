@@ -55,6 +55,7 @@
     "@rollup/plugin-replace": "^4.0.0",
     "@types/react": "^17.0.13",
     "@types/react-dom": "^17.0.8",
+    "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "concurrently": "^7.2.1",

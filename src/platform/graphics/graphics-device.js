@@ -40,11 +40,11 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
-     * The type of graphics device that the system could initialize. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
      *
      * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
      */
-    activeDeviceType;
+    deviceType;
 
     /**
      * The scope namespace for shader attributes and variables.
