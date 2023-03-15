@@ -25,6 +25,7 @@ class Tracing {
      * @param {string} channel - Name of the trace channel. Can be:
      *
      * - {@link TRACEID_RENDER_FRAME}
+     * - {@link TRACEID_RENDER_FRAME_TIME}
      * - {@link TRACEID_RENDER_PASS}
      * - {@link TRACEID_RENDER_PASS_DETAIL}
      * - {@link TRACEID_RENDER_ACTION}
@@ -35,6 +36,8 @@ class Tracing {
      * - {@link TRACEID_VRAM_TEXTURE}
      * - {@link TRACEID_VRAM_VB}
      * - {@link TRACEID_VRAM_IB}
+     * - {@link TRACEID_RENDERPIPELINE_ALLOC}
+     * - {@link TRACEID_PIPELINELAYOUT_ALLOC}
      *
      * @param {boolean} enabled - New enabled state for the channel.
      */

@@ -16,7 +16,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';
@@ -75,7 +75,7 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
-        this.shadowMapCache = renderer._shadowRenderer.shadowMapCache;
+        this.shadowMapCache = renderer.shadowMapCache;
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -852,12 +852,12 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
+                this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
+                this.renderer.shadowRenderer.render(light, this.camera);
             } else {
-                this.renderer._shadowRenderer.cullLocal(light, casters);
+                this.renderer._shadowRendererLocal.cull(light, casters);
+                this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
             }
-
-            this.renderer.renderShadows(lightArray[light.type], this.camera);
         }
 
         return true;

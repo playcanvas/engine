@@ -4,7 +4,7 @@ import { version, revision } from '../core/core.js';
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { TRACEID_RENDER_FRAME } from '../core/constants.js';
+import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { Color } from '../core/math/color.js';
@@ -17,6 +17,7 @@ import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
 import {
@@ -40,7 +41,7 @@ import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { SceneGrab } from './graphics/scene-grab.js';
+import { SceneGrab } from '../scene/graphics/scene-grab.js';
 import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
 import { I18n } from './i18n/i18n.js';
@@ -122,7 +123,7 @@ class AppBase extends EventHandler {
     /**
      * Create a new AppBase instance.
      *
-     * @param {Element} canvas - The canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
      * @example
      * // Engine-only example: create the application manually
      * var options = new AppOptions();
@@ -371,7 +372,7 @@ class AppBase extends EventHandler {
             id: LAYERID_WORLD
         });
 
-        this.sceneGrab = new SceneGrab(this);
+        this.sceneGrab = new SceneGrab(this.graphicsDevice, this.scene);
         this.defaultLayerDepth = this.sceneGrab.layer;
 
         this.defaultLayerSkybox = new Layer({
@@ -1103,6 +1104,12 @@ class AppBase extends EventHandler {
      * app.start();
      */
     start() {
+
+        Debug.call(() => {
+            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            this._alreadyStarted = true;
+        });
+
         this.frame = 0;
 
         this.fire("start", {
@@ -1214,8 +1221,9 @@ class AppBase extends EventHandler {
 
     // render a layer composition
     renderComposition(layerComposition) {
+        DebugGraphics.clearGpuMarkers();
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
-        this.frameGraph.render();
+        this.frameGraph.render(this.graphicsDevice);
     }
 
     /**
@@ -1437,10 +1445,9 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Updates the {@link import('../platform/graphics/graphics-device.js').GraphicsDevice} canvas
-     * size to match the canvas size on the document page. It is recommended to call this function
-     * when the canvas size changes (e.g on window resize and orientation change events) so that
-     * the canvas resolution is immediately updated.
+     * Updates the {@link GraphicsDevice} canvas size to match the canvas size on the document
+     * page. It is recommended to call this function when the canvas size changes (e.g on window
+     * resize and orientation change events) so that the canvas resolution is immediately updated.
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
@@ -2170,16 +2177,24 @@ const makeTick = function (_app) {
         }
 
         if (shouldRenderFrame) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
             application.update(dt);
 
             application.fire("framerender");
 
-            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
             if (application.autoRender || application.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
                 application.updateCanvasSize();
                 application.render();
                 application.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
             // set event data

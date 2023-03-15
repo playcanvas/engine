@@ -136,6 +136,12 @@ class GraphNode extends EventHandler {
         this._dirtyLocal = false;
 
         /**
+         * @type {boolean}
+         * @private
+         */
+        this._wasDirty = false;
+
+        /**
          * @type {number}
          * @private
          */
@@ -479,7 +485,7 @@ class GraphNode extends EventHandler {
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
-     * // Finds all nodes that have a model component and have `door` in their lower-cased name
+     * // Finds all nodes that have a model component and have 'door' in their lower-cased name
      * var doors = house.find(function (node) {
      *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
@@ -542,7 +548,7 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
      * node is found.
      * @example
-     * // Find the first node that is called `head` and has a model component
+     * // Find the first node that is called 'head' and has a model component
      * var head = player.findOne(function (node) {
      *     return node.model && node.name === 'head';
      * });
@@ -1027,6 +1033,8 @@ class GraphNode extends EventHandler {
     _dirtifyLocal() {
         if (!this._dirtyLocal) {
             this._dirtyLocal = true;
+            this._wasDirty = true;
+
             if (!this._dirtyWorld)
                 this._dirtifyWorld();
         }

@@ -124,7 +124,7 @@ const string = {
     ASCII_LETTERS: ASCII_LETTERS,
 
     /**
-     * Return a string with {n} replaced with the n-th argument.
+     * Return a string with \{n\} replaced with the n-th argument.
      *
      * @param {string} s - The string to format.
      * @param {object} [arguments] - All other arguments are substituted into the string.

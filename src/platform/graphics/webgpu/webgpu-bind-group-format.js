@@ -22,7 +22,6 @@ class WebgpuBindGroupFormat {
         /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        // type {GPUBindGroupLayoutDescriptor}
         const { key, descr } = this.createDescriptor(bindGroupFormat);
 
         /**
@@ -32,7 +31,15 @@ class WebgpuBindGroupFormat {
          */
         this.key = key;
 
-        // type {GPUBindGroupLayout}
+        // keep descr in debug mode
+        Debug.call(() => {
+            this.descr = descr;
+        });
+
+        /**
+         * @type {GPUBindGroupLayout}
+         * @private
+         */
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
@@ -57,6 +64,10 @@ class WebgpuBindGroupFormat {
         return bindGroupFormat.bufferFormats.length + index * 2;
     }
 
+    /**
+     * @param {any} bindGroupFormat - The format of the bind group.
+     * @returns {any} Returns the bind group descriptor.
+     */
     createDescriptor(bindGroupFormat) {
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
@@ -137,6 +148,7 @@ class WebgpuBindGroupFormat {
             });
         });
 
+        /** @type {GPUBindGroupLayoutDescriptor} */
         const descr = {
             entries: entries
         };

@@ -1,6 +1,7 @@
 import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { Preprocessor } from '../../core/preprocessor.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 let id = 0;
 
@@ -29,6 +30,9 @@ class Shader {
 
     /**
      * Creates a new Shader instance.
+     *
+     * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
+     * a shader.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this shader.
@@ -85,7 +89,7 @@ class Shader {
 
         this.impl = graphicsDevice.createShaderImpl(this);
 
-        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: Id ${this.id} ${this.name}`, {
+        Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: ${this.label}, stack: ${DebugGraphics.toString()}`, {
             instance: this
         });
     }
@@ -98,6 +102,10 @@ class Shader {
     init() {
         this.ready = false;
         this.failed = false;
+    }
+
+    get label() {
+        return `Shader Id ${this.id} ${this.name}`;
     }
 
     /**

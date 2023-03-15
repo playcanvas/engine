@@ -2,17 +2,39 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /**
  * Holds information about batched mesh instances. Created in {@link BatchManager#create}.
- *
- * @property {import('../mesh-instance.js').MeshInstance[]} origMeshInstances An array of original
- * mesh instances, from which this batch was generated.
- * @property {import('../mesh-instance.js').MeshInstance} meshInstance A single combined mesh
- * instance, the result of batching.
- * @property {boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances
- * at runtime).
- * @property {number} [batchGroupId] Link this batch to a specific batch group. This is done
- * automatically with default batches.
  */
 class Batch {
+    /** @private */
+    _aabb = new BoundingBox();
+
+    /**
+     * An array of original mesh instances, from which this batch was generated.
+     *
+     * @type {import('../mesh-instance.js').MeshInstance[]}
+     */
+    origMeshInstances;
+
+    /**
+     * A single combined mesh instance, the result of batching.
+     *
+     * @type {import('../mesh-instance.js').MeshInstance}
+     */
+    meshInstance = null;
+
+    /**
+     * Whether this batch is dynamic (supports transforming mesh instances at runtime).
+     *
+     * @type {boolean}
+     */
+    dynamic;
+
+    /**
+     * Link this batch to a specific batch group. This is done automatically with default batches.
+     *
+     * @type {number}
+     */
+    batchGroupId;
+
     /**
      * Create a new Batch instance.
      *
@@ -25,8 +47,6 @@ class Batch {
      */
     constructor(meshInstances, dynamic, batchGroupId) {
         this.origMeshInstances = meshInstances;
-        this._aabb = new BoundingBox();
-        this.meshInstance = null;
         this.dynamic = dynamic;
         this.batchGroupId = batchGroupId;
     }
@@ -36,6 +56,7 @@ class Batch {
         if (this.meshInstance) {
             this.removeFromLayers(scene, layers);
             this.meshInstance.destroy();
+            this.meshInstance = null;
         }
     }
 

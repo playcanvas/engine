@@ -1,14 +1,12 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
-
 
     controls(data: Observer) {
         return <>
@@ -35,12 +33,6 @@ class ClusteredOmniShadowsExample {
 
     example(canvas: HTMLCanvasElement, data: any): void {
 
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(document.body),
-            touch: new pc.TouchDevice(document.body)
-        });
-
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
@@ -52,196 +44,227 @@ class ClusteredOmniShadowsExample {
             "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
 
-            // set up some general scene rendering properties
-            app.scene.toneMapping = pc.TONEMAP_ACES;
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
+            createOptions.mouse = new pc.Mouse(document.body);
+            createOptions.touch = new pc.TouchDevice(document.body);
 
-            data.set('settings', {
-                shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
-                shadowType: pc.SHADOW_PCF3,      // shadow filter type
-                shadowsEnabled: true,
-                cookiesEnabled: true
-            });
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.LightComponentSystem,
+                // @ts-ignore
+                pc.ScriptComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.ScriptHandler,
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.CubemapHandler
+            ];
+
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // enabled clustered lighting. This is a temporary API and will change in the future
-            app.scene.clusteredLightingEnabled = true;
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
 
-            // adjust default clustered lighting parameters to handle many lights
-            const lighting = app.scene.lighting;
+                app.start();
 
-            // 1) subdivide space with lights into this many cells
-            lighting.cells = new pc.Vec3(16, 12, 16);
+                // set up some general scene rendering properties
+                app.scene.toneMapping = pc.TONEMAP_ACES;
 
-            // 2) and allow this many lights per cell
-            lighting.maxLightsPerCell = 12;
-
-            // enable clustered shadows (it's enabled by default as well)
-            lighting.shadowsEnabled = true;
-
-            // enable clustered cookies
-            lighting.cookiesEnabled = true;
-
-            // resolution of the shadow and cookie atlas
-            lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
-            lighting.cookieAtlasResolution = 2048;
-
-            // helper function to create a 3d primitive including its material
-            function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
-
-                // create a material
-                const material = new pc.StandardMaterial();
-                material.diffuse = new pc.Color(0.7, 0.7, 0.7);
-
-                // normal map
-                material.normalMap = assets.normal.resource;
-                material.normalMapTiling.set(5, 5);
-                material.bumpiness = 0.7;
-
-                // enable specular
-                material.shininess = 40;
-                material.metalness = 0.3;
-                material.useMetalness = true;
-
-                material.update();
-
-                // create the primitive using the material
-                const primitive = new pc.Entity();
-                primitive.addComponent('render', {
-                    type: primitiveType,
-                    material: material
+                data.set('settings', {
+                    shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
+                    shadowType: pc.SHADOW_PCF3,      // shadow filter type
+                    shadowsEnabled: true,
+                    cookiesEnabled: true
                 });
 
-                // set position and scale and add it to scene
-                primitive.setLocalPosition(position);
-                primitive.setLocalScale(scale);
-                app.root.addChild(primitive);
+                // enabled clustered lighting. This is a temporary API and will change in the future
+                app.scene.clusteredLightingEnabled = true;
 
-                return primitive;
-            }
+                // adjust default clustered lighting parameters to handle many lights
+                const lighting = app.scene.lighting;
 
-            // create the ground plane from the boxes
-            createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800));
-            createPrimitive("box", new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800));
+                // 1) subdivide space with lights into this many cells
+                lighting.cells = new pc.Vec3(16, 12, 16);
 
-            // walls
-            createPrimitive("box", new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800));
-            createPrimitive("box", new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800));
-            createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0));
-            createPrimitive("box", new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0));
+                // 2) and allow this many lights per cell
+                lighting.maxLightsPerCell = 12;
 
-            const numTowers = 7;
-            for (let i = 0; i < numTowers; i++) {
-                let scale = 25;
-                const fraction = i / numTowers * Math.PI * 2;
-                const radius = (i % 2) ? 340 : 210;
-                for (let y = 0; y <= 7; y++) {
-                    const prim = createPrimitive("box", new pc.Vec3(radius * Math.sin(fraction), 2 + y * 25, radius * Math.cos(fraction)), new pc.Vec3(scale, scale, scale));
-                    prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+                // enable clustered shadows (it's enabled by default as well)
+                lighting.shadowsEnabled = true;
+
+                // enable clustered cookies
+                lighting.cookiesEnabled = true;
+
+                // resolution of the shadow and cookie atlas
+                lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
+                lighting.cookieAtlasResolution = 2048;
+
+                // helper function to create a 3d primitive including its material
+                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
+
+                    // create a material
+                    const material = new pc.StandardMaterial();
+                    material.diffuse = new pc.Color(0.7, 0.7, 0.7);
+
+                    // normal map
+                    material.normalMap = assets.normal.resource;
+                    material.normalMapTiling.set(5, 5);
+                    material.bumpiness = 0.7;
+
+                    // enable specular
+                    material.shininess = 40;
+                    material.metalness = 0.3;
+                    material.useMetalness = true;
+
+                    material.update();
+
+                    // create the primitive using the material
+                    const primitive = new pc.Entity();
+                    primitive.addComponent('render', {
+                        type: primitiveType,
+                        material: material
+                    });
+
+                    // set position and scale and add it to scene
+                    primitive.setLocalPosition(position);
+                    primitive.setLocalScale(scale);
+                    app.root.addChild(primitive);
+
+                    return primitive;
                 }
-                scale -= 1.5;
-            }
 
-            // construct the cubemap asset for the omni light cookie texture
-            // Note: the textures array could contain 6 texture asset names to load instead as well
-            const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
-                textures: [
-                    assets.xmas_posx.id, assets.xmas_negx.id,
-                    assets.xmas_posy.id, assets.xmas_negy.id,
-                    assets.xmas_posz.id, assets.xmas_negz.id
-                ]
-            });
-            cubemapAsset.loadFaces = true;
-            app.assets.add(cubemapAsset);
+                // create the ground plane from the boxes
+                createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800));
+                createPrimitive("box", new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800));
 
-            const omniLights: Array<pc.Entity> = [];
-            const numLights = 10;
-            for (let i = 0; i < numLights; i++) {
-                const lightOmni = new pc.Entity("Omni");
-                lightOmni.addComponent("light", {
-                    type: "omni",
-                    color: pc.Color.WHITE,
-                    intensity: 10 / numLights,
-                    range: 350,
-                    castShadows: true,
-                    shadowBias: 0.2,
-                    normalOffsetBias: 0.2,
+                // walls
+                createPrimitive("box", new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800));
+                createPrimitive("box", new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800));
+                createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0));
+                createPrimitive("box", new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0));
 
-                    // cookie texture
-                    cookieAsset: cubemapAsset,
-                    cookieChannel: "rgb"
+                const numTowers = 7;
+                for (let i = 0; i < numTowers; i++) {
+                    let scale = 25;
+                    const fraction = i / numTowers * Math.PI * 2;
+                    const radius = (i % 2) ? 340 : 210;
+                    for (let y = 0; y <= 7; y++) {
+                        const prim = createPrimitive("box", new pc.Vec3(radius * Math.sin(fraction), 2 + y * 25, radius * Math.cos(fraction)), new pc.Vec3(scale, scale, scale));
+                        prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+                    }
+                    scale -= 1.5;
+                }
+
+                // construct the cubemap asset for the omni light cookie texture
+                // Note: the textures array could contain 6 texture asset names to load instead as well
+                const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+                    textures: [
+                        assets.xmas_posx.id, assets.xmas_negx.id,
+                        assets.xmas_posy.id, assets.xmas_negy.id,
+                        assets.xmas_posz.id, assets.xmas_negz.id
+                    ]
+                });
+                cubemapAsset.loadFaces = true;
+                app.assets.add(cubemapAsset);
+
+                const omniLights: Array<pc.Entity> = [];
+                const numLights = 10;
+                for (let i = 0; i < numLights; i++) {
+                    const lightOmni = new pc.Entity("Omni");
+                    lightOmni.addComponent("light", {
+                        type: "omni",
+                        color: pc.Color.WHITE,
+                        intensity: 10 / numLights,
+                        range: 350,
+                        castShadows: true,
+                        shadowBias: 0.2,
+                        normalOffsetBias: 0.2,
+
+                        // cookie texture
+                        cookieAsset: cubemapAsset,
+                        cookieChannel: "rgb"
+                    });
+
+                    // attach a render component with a small sphere to it
+                    const material = new pc.StandardMaterial();
+                    material.emissive = pc.Color.WHITE;
+                    material.update();
+
+                    lightOmni.addComponent('render', {
+                        type: "sphere",
+                        material: material,
+                        castShadows: false
+                    });
+                    lightOmni.setPosition(0, 120, 0);
+                    lightOmni.setLocalScale(5, 5, 5);
+                    app.root.addChild(lightOmni);
+
+                    omniLights.push(lightOmni);
+                }
+
+                // create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    fov: 80,
+                    clearColor: new pc.Color(0.1, 0.1, 0.1),
+                    farClip: 1500
                 });
 
-                // attach a render component with a small sphere to it
-                const material = new pc.StandardMaterial();
-                material.emissive = pc.Color.WHITE;
-                material.update();
+                // and position it in the world
+                camera.setLocalPosition(300, 120, 25);
 
-                lightOmni.addComponent('render', {
-                    type: "sphere",
-                    material: material,
-                    castShadows: false
+                // add orbit camera script with a mouse and a touch support
+                camera.addComponent("script");
+                camera.script.create("orbitCamera", {
+                    attributes: {
+                        inertiaFactor: 0.2,
+                        focusEntity: app.root,
+                        distanceMax: 1200,
+                        frameOnStart: false
+                    }
                 });
-                lightOmni.setPosition(0, 120, 0);
-                lightOmni.setLocalScale(5, 5, 5);
-                app.root.addChild(lightOmni);
+                camera.script.create("orbitCameraInputMouse");
+                camera.script.create("orbitCameraInputTouch");
+                app.root.addChild(camera);
 
-                omniLights.push(lightOmni);
-            }
+                // handle HUD changes - update properties on the scene
+                data.on('*:set', (path: string, value: any) => {
+                    const pathArray = path.split('.');
+                    // @ts-ignore
+                    lighting[pathArray[1]] = value;
+                });
 
-            // create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                fov: 80,
-                clearColor: new pc.Color(0.1, 0.1, 0.1),
-                farClip: 1500
-            });
+                // Set an update function on the app's update event
+                let time = 0;
+                app.on("update", function (dt: number) {
+                    time += dt * 0.3;
+                    const radius = 250;
+                    for (let i = 0; i < omniLights.length; i++) {
+                        const fraction = i / omniLights.length * Math.PI * 2;
+                        omniLights[i].setPosition(radius * Math.sin(time + fraction), 190 + Math.sin(time + fraction) * 150, radius * Math.cos(time + fraction));
+                    }
 
-            // and position it in the world
-            camera.setLocalPosition(300, 120, 25);
+                    // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
+                    // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
 
-            // add orbit camera script with a mouse and a touch support
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
-                attributes: {
-                    inertiaFactor: 0.2,
-                    focusEntity: app.root,
-                    distanceMax: 1200,
-                    frameOnStart: false
-                }
-            });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
-            app.root.addChild(camera);
-
-            // handle HUD changes - update properties on the scene
-            data.on('*:set', (path: string, value: any) => {
-                const pathArray = path.split('.');
-                // @ts-ignore
-                lighting[pathArray[1]] = value;
-            });
-
-            // Set an update function on the app's update event
-            let time = 0;
-            app.on("update", function (dt: number) {
-                time += dt * 0.3;
-                const radius = 250;
-                for (let i = 0; i < omniLights.length; i++) {
-                    const fraction = i / omniLights.length * Math.PI * 2;
-                    omniLights[i].setPosition(radius * Math.sin(time + fraction), 190 + Math.sin(time + fraction) * 150, radius * Math.cos(time + fraction));
-                }
-
-                // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-                // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
-
-                // display cookie texture (debug feature)
-                // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
+                    // display cookie texture (debug feature)
+                    // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
+                });
             });
         });
     }

@@ -9,10 +9,9 @@ import { AudioListenerComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * Component System for adding and removing {@link AudioComponent} objects to Entities.
+ * Component System for adding and removing {@link AudioListenerComponent} objects to Entities.
  *
  * @augments ComponentSystem
- * @ignore
  */
 class AudioListenerComponentSystem extends ComponentSystem {
     /**

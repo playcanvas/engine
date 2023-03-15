@@ -82,7 +82,7 @@ class BasicMaterial extends Material {
         }
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // Note: this is deprecated function Editor and possibly other projects use: they define
         // updateShader callback on their BasicMaterial, so we handle it here.
@@ -106,7 +106,7 @@ class BasicMaterial extends Material {
             pass: pass
         };
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('basic', basic);

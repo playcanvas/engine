@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
@@ -99,7 +98,7 @@ const SideBar = () => {
                                     {
                                         Object.keys(categories[category].examples).sort((a: string, b: string) => (a > b ? 1 : -1)).map((example: string) => {
                                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
-                                            const className = `nav-item ${isSelected ? 'selected' : ''}`;
+                                            const className = `nav-item ${isSelected ? 'selected' : null}`;
                                             return <Link key={example} to={`/${category}/${example}`} onClick={() => {
                                                 const sideBar = document.getElementById('sideBar');
                                                 // @ts-ignore

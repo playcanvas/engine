@@ -12,6 +12,32 @@ const tmpVecE = new Vec3();
  */
 class BoundingBox {
     /**
+     * Center of box.
+     *
+     * @type {Vec3}
+     */
+    center;
+
+    /**
+     * Half the distance across the box in each axis.
+     *
+     * @type {Vec3}
+     */
+    halfExtents;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _min = new Vec3();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _max = new Vec3();
+
+    /**
      * Create a new BoundingBox instance. The bounding box is axis-aligned.
      *
      * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
@@ -22,29 +48,8 @@ class BoundingBox {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'center\' parameter');
         Debug.assert(!Object.isFrozen(halfExtents), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'halfExtents\' parameter');
 
-        /**
-         * Center of box.
-         *
-         * @type {Vec3}
-         */
         this.center = center;
-        /**
-         * Half the distance across the box in each axis.
-         *
-         * @type {Vec3}
-         */
         this.halfExtents = halfExtents;
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this._min = new Vec3();
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this._max = new Vec3();
     }
 
     /**

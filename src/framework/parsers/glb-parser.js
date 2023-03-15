@@ -18,7 +18,7 @@ import {
     PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP, PRIMITIVE_LINES, PRIMITIVE_POINTS, PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, CHUNKAPI_1_57
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -191,7 +191,6 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
         return null;
     }
 
-    const bufferView = bufferViews[gltfAccessor.bufferView];
     let result;
 
     if (gltfAccessor.sparse) {
@@ -208,7 +207,7 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
         // data values data
         const valuesAccessor = {
             count: sparse.count,
-            type: gltfAccessor.scalar,
+            type: gltfAccessor.type,
             componentType: gltfAccessor.componentType
         };
         const values = getAccessorData(Object.assign(valuesAccessor, sparse.values), bufferViews, true);
@@ -235,26 +234,33 @@ const getAccessorData = function (gltfAccessor, bufferViews, flatten = false) {
                 result[targetIndex * numComponents + j] = values[i * numComponents + j];
             }
         }
-    } else if (flatten && bufferView.hasOwnProperty('byteStride')) {
-        // flatten stridden data
-        const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
-        const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
-        const tmpArray = new Uint8Array(storage);
-
-        let dstOffset = 0;
-        for (let i = 0; i < gltfAccessor.count; ++i) {
-            // no need to add bufferView.byteOffset because accessor takes this into account
-            let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
-            for (let b = 0; b < bytesPerElement; ++b) {
-                tmpArray[dstOffset++] = bufferView[srcOffset++];
-            }
-        }
-
-        result = new dataType(storage);
     } else {
-        result = new dataType(bufferView.buffer,
-                              bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
-                              gltfAccessor.count * numComponents);
+        if (gltfAccessor.hasOwnProperty("bufferView")) {
+            const bufferView = bufferViews[gltfAccessor.bufferView];
+            if (flatten && bufferView.hasOwnProperty('byteStride')) {
+                // flatten stridden data
+                const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
+                const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
+                const tmpArray = new Uint8Array(storage);
+
+                let dstOffset = 0;
+                for (let i = 0; i < gltfAccessor.count; ++i) {
+                    // no need to add bufferView.byteOffset because accessor takes this into account
+                    let srcOffset = (gltfAccessor.byteOffset || 0) + i * bufferView.byteStride;
+                    for (let b = 0; b < bytesPerElement; ++b) {
+                        tmpArray[dstOffset++] = bufferView[srcOffset++];
+                    }
+                }
+
+                result = new dataType(storage);
+            } else {
+                result = new dataType(bufferView.buffer,
+                                      bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
+                                      gltfAccessor.count * numComponents);
+            }
+        } else {
+            result = new dataType(gltfAccessor.count * numComponents);
+        }
     }
 
     return result;
@@ -605,7 +611,7 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
             const bufferView = bufferViews[accessor.bufferView];
             const semantic = gltfToEngineSemanticMap[attrib];
             const size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
-            const stride = bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
+            const stride = bufferView && bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
                 buffer: accessorData.buffer,
                 size: size,
@@ -680,7 +686,7 @@ const createVertexBufferDraco = function (device, outputGeometry, extDraco, deco
             storageType: storageType,
 
             // there are glb files around where 8bit colors are missing normalized flag
-            normalized: (semantic === SEMANTIC_COLOR && storageType === TYPE_UINT8) ? true : attribute.normalized()
+            normalized: (semantic === SEMANTIC_COLOR && (storageType === TYPE_UINT8 || storageType === TYPE_UINT16)) ? true : attribute.normalized()
         };
     };
 
@@ -1020,9 +1026,9 @@ const extensionPbrSpecGlossiness = function (data, material, textures) {
         material.specular.set(1, 1, 1);
     }
     if (data.hasOwnProperty('glossinessFactor')) {
-        material.shininess = 100 * data.glossinessFactor;
+        material.gloss = data.glossinessFactor;
     } else {
-        material.shininess = 100;
+        material.gloss = 1.0;
     }
     if (data.hasOwnProperty('specularGlossinessTexture')) {
         const specularGlossinessTexture = data.specularGlossinessTexture;
@@ -1049,9 +1055,9 @@ const extensionClearCoat = function (data, material, textures) {
         extractTextureTransform(clearcoatTexture, material, ['clearCoat']);
     }
     if (data.hasOwnProperty('clearcoatRoughnessFactor')) {
-        material.clearCoatGlossiness = data.clearcoatRoughnessFactor;
+        material.clearCoatGloss = data.clearcoatRoughnessFactor;
     } else {
-        material.clearCoatGlossiness = 0;
+        material.clearCoatGloss = 0;
     }
     if (data.hasOwnProperty('clearcoatRoughnessTexture')) {
         const clearcoatRoughnessTexture = data.clearcoatRoughnessTexture;
@@ -1071,32 +1077,7 @@ const extensionClearCoat = function (data, material, textures) {
         }
     }
 
-    const clearCoatGlossChunk = /* glsl */`
-        #ifdef MAPFLOAT
-        uniform float material_clearCoatGlossiness;
-        #endif
-        
-        void getClearCoatGlossiness() {
-            ccGlossiness = 1.0;
-        
-        #ifdef MAPFLOAT
-            ccGlossiness *= material_clearCoatGlossiness;
-        #endif
-        
-        #ifdef MAPTEXTURE
-            ccGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
-        #endif
-        
-        #ifdef MAPVERTEX
-            ccGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-        
-            ccGlossiness = 1.0 - ccGlossiness;
-        
-            ccGlossiness += 0.0000001;
-        }
-        `;
-    material.chunks.clearCoatGlossPS = clearCoatGlossChunk;
+    material.clearCoatGlossInvert = true;
 };
 
 const extensionUnlit = function (data, material, textures) {
@@ -1184,46 +1165,17 @@ const extensionSheen = function (data, material, textures) {
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
     if (data.hasOwnProperty('sheenRoughnessFactor')) {
-        material.sheenGlossiness = data.sheenRoughnessFactor;
+        material.sheenGloss = data.sheenRoughnessFactor;
     } else {
-        material.sheenGlossiness = 0.0;
+        material.sheenGloss = 0.0;
     }
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
-        material.sheenGlossinessMap = textures[data.sheenRoughnessTexture.index];
-        material.sheenGlossinessMapChannel = 'a';
-        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGlossiness']);
+        material.sheenGlossMap = textures[data.sheenRoughnessTexture.index];
+        material.sheenGlossMapChannel = 'a';
+        extractTextureTransform(data.sheenRoughnessTexture, material, ['sheenGloss']);
     }
 
-    const sheenGlossChunk = `
-    #ifdef MAPFLOAT
-    uniform float material_sheenGlossiness;
-    #endif
-
-    #ifdef MAPTEXTURE
-    uniform sampler2D texture_sheenGlossinessMap;
-    #endif
-
-    void getSheenGlossiness() {
-        float sheenGlossiness = 1.0;
-
-        #ifdef MAPFLOAT
-        sheenGlossiness *= material_sheenGlossiness;
-        #endif
-
-        #ifdef MAPTEXTURE
-        sheenGlossiness *= texture2DBias(texture_sheenGlossinessMap, $UV, textureBias).$CH;
-        #endif
-
-        #ifdef MAPVERTEX
-        sheenGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-
-        sheenGlossiness = 1.0 - sheenGlossiness;
-        sheenGlossiness += 0.0000001;
-        sGlossiness = sheenGlossiness;
-    }
-    `;
-    material.chunks.sheenGlossPS = sheenGlossChunk;
+    material.sheenGlossInvert = true;
 };
 
 const extensionVolume = function (data, material, textures) {
@@ -1234,6 +1186,7 @@ const extensionVolume = function (data, material, textures) {
     }
     if (data.hasOwnProperty('thicknessTexture')) {
         material.thicknessMap = textures[data.thicknessTexture.index];
+        material.thicknessMapChannel = 'g';
         extractTextureTransform(data.thicknessTexture, material, ['thickness']);
     }
     if (data.hasOwnProperty('attenuationDistance')) {
@@ -1279,34 +1232,6 @@ const extensionIridescence = function (data, material, textures) {
 };
 
 const createMaterial = function (gltfMaterial, textures, flipV) {
-    // TODO: integrate these shader chunks into the native engine
-    const glossChunk = `
-        #ifdef MAPFLOAT
-        uniform float material_shininess;
-        #endif
-        
-        void getGlossiness() {
-            dGlossiness = 1.0;
-        
-        #ifdef MAPFLOAT
-            dGlossiness *= material_shininess;
-        #endif
-        
-        #ifdef MAPTEXTURE
-            dGlossiness *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
-        #endif
-        
-        #ifdef MAPVERTEX
-            dGlossiness *= saturate(vVertexColor.$VC);
-        #endif
-        
-            dGlossiness = 1.0 - dGlossiness;
-        
-            dGlossiness += 0.0000001;
-        }
-        `;
-
-
     const material = new StandardMaterial();
 
     // glTF doesn't define how to occlude specular
@@ -1317,8 +1242,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
     material.specularTint = true;
     material.specularVertexColor = true;
-
-    material.chunks.APIVersion = CHUNKAPI_1_57;
 
     if (gltfMaterial.hasOwnProperty('name')) {
         material.name = gltfMaterial.name;
@@ -1356,10 +1279,11 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
             material.metalness = 1;
         }
         if (pbrData.hasOwnProperty('roughnessFactor')) {
-            material.shininess = 100 * pbrData.roughnessFactor;
+            material.gloss = pbrData.roughnessFactor;
         } else {
-            material.shininess = 100;
+            material.gloss = 1;
         }
+        material.glossInvert = true;
         if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
             const metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
@@ -1368,8 +1292,6 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 
             extractTextureTransform(metallicRoughnessTexture, material, ['gloss', 'metalness']);
         }
-
-        material.chunks.glossPS = glossChunk;
     }
 
     if (gltfMaterial.hasOwnProperty('normalTexture')) {
@@ -1428,6 +1350,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
     } else {
         material.blendType = BLEND_NONE;
     }
+
     if (gltfMaterial.hasOwnProperty('doubleSided')) {
         material.twoSidedLighting = gltfMaterial.doubleSided;
         material.cull = gltfMaterial.doubleSided ? CULLFACE_NONE : CULLFACE_BACK;
@@ -1466,7 +1389,7 @@ const createMaterial = function (gltfMaterial, textures, flipV) {
 };
 
 // create the anim structure
-const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes) {
+const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes, gltfNodes) {
 
     // create animation data block for the accessor
     const createAnimData = function (gltfAccessor) {
@@ -1536,32 +1459,34 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         return path;
     };
 
-    const retrieveWeightName = (nodeName, weightIndex) => {
-        if (!meshes) return weightIndex;
-        for (let i = 0; i < meshes.length; i++) {
-            const mesh = meshes[i];
-            if (mesh.name === nodeName && mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
+    const retrieveWeightName = (gltfNode, weightIndex) => {
+        if (meshes && meshes[gltfNode.mesh]) {
+            const mesh = meshes[gltfNode.mesh];
+            if (mesh.hasOwnProperty('extras') && mesh.extras.hasOwnProperty('targetNames') && mesh.extras.targetNames[weightIndex]) {
                 return `name.${mesh.extras.targetNames[weightIndex]}`;
             }
         }
+
         return weightIndex;
     };
 
     // All morph targets are included in a single channel of the animation, with all targets output data interleaved with each other.
     // This function splits each morph target out into it a curve with its own output data, allowing us to animate each morph target independently by name.
-    const createMorphTargetCurves = (curve, node, entityPath) => {
-        if (!outputMap[curve.output]) {
+    const createMorphTargetCurves = (curve, gltfNode, entityPath) => {
+        const out = outputMap[curve.output];
+        if (!out) {
             Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
             return;
         }
-        const morphTargetCount = outputMap[curve.output].data.length / inputMap[curve.input].data.length;
-        const keyframeCount = outputMap[curve.output].data.length / morphTargetCount;
+        const outData = out.data;
+        const morphTargetCount = outData.length / inputMap[curve.input].data.length;
+        const keyframeCount = outData.length / morphTargetCount;
 
         for (let j = 0; j < morphTargetCount; j++) {
             const morphTargetOutput = new Float32Array(keyframeCount);
             // the output data for all morph targets in a single curve is interleaved. We need to retrieve the keyframe output data for a single morph target
             for (let k = 0; k < keyframeCount; k++) {
-                morphTargetOutput[k] = outputMap[curve.output].data[k * morphTargetCount + j];
+                morphTargetOutput[k] = outData[k * morphTargetCount + j];
             }
             const output = new AnimData(1, morphTargetOutput);
             // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
@@ -1570,7 +1495,7 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
                 paths: [{
                     entityPath: entityPath,
                     component: 'graph',
-                    propertyPath: [`weight.${retrieveWeightName(node.name, j)}`]
+                    propertyPath: [`weight.${retrieveWeightName(gltfNode, j)}`]
                 }],
                 // each morph target curve input can use the same sampler.input from the channel they were all in
                 input: curve.input,
@@ -1591,10 +1516,11 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         const curve = curveMap[channel.sampler];
 
         const node = nodes[target.node];
+        const gltfNode = gltfNodes[target.node];
         const entityPath = constructNodePath(node);
 
         if (target.path.startsWith('weights')) {
-            createMorphTargetCurves(curve, node, entityPath);
+            createMorphTargetCurves(curve, gltfNode, entityPath);
             // as all individual morph targets in this morph curve have their own curve now, this morph curve should be flagged
             // so it's not included in the final output
             curveMap[channel.sampler].morphCurve = true;
@@ -1827,6 +1753,10 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
         return [];
     }
 
+    if (options.skipMeshes) {
+        return [];
+    }
+
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
 
@@ -1880,7 +1810,7 @@ const createAnimations = function (gltf, nodes, bufferViews, options) {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes);
+        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes, gltf.nodes);
         if (postprocess) {
             postprocess(gltfAnimation, animation);
         }
@@ -2402,8 +2332,8 @@ const parseGltf = function (gltfChunk, callback) {
     }
 
     // check required extensions
-    const extensionsRequired = gltf?.extensionsRequired || [];
-    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsRequired.indexOf('KHR_draco_mesh_compression') !== -1) {
+    const extensionsUsed = gltf?.extensionsUsed || [];
+    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
         WasmModule.getInstance('DracoDecoderModule', (instance) => {
             dracoDecoderInstance = instance;
             callback(null, gltf);

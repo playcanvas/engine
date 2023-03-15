@@ -57,10 +57,10 @@ const _lightPropsDefault = [];
  * @property {number} luminance The physically based luminance. Only used if scene.physicalUnits is true. Defaults to 0.
  * @property {number} shape The light source shape. Can be:
  *
- * - {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
- * - {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
- * - {@link pc.LIGHTSHAPE_DISK}: Disk shape.
- * - {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
+ * - {@link LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * - {@link LIGHTSHAPE_RECT}: Rectangle shape.
+ * - {@link LIGHTSHAPE_DISK}: Disk shape.
+ * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
@@ -225,10 +225,6 @@ class LightComponent extends Component {
             this.onEnable();
     }
 
-    updateShadow() {
-        this.light.updateShadow();
-    }
-
     onCookieAssetSet() {
         let forceLoad = false;
 
@@ -320,6 +316,19 @@ class LightComponent extends Component {
 
         // remove cookie asset events
         this.cookieAsset = null;
+    }
+
+    /**
+     * Returns an array of SHADOWUPDATE_ settings per shadow cascade, or undefined if not used.
+     *
+     * @type {number[] | null}
+     */
+    set shadowUpdateOverrides(values) {
+        this.light.shadowUpdateOverrides = values;
+    }
+
+    get shadowUpdateOverrides() {
+        return this.light.shadowUpdateOverrides;
     }
 }
 

@@ -3,12 +3,13 @@ attribute vec4 particle_vertexData;   // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;  // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;  // XYZ = particle local pos, W = velocity.y
 attribute float particle_vertexData4; // particle id
+
+// type depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 #ifndef USE_MESH
-#define VDATA5TYPE vec2
+attribute vec2 particle_vertexData5;
 #else
-#define VDATA5TYPE vec4
+attribute vec4 particle_vertexData5;
 #endif
-attribute VDATA5TYPE particle_vertexData5; // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -25,7 +26,10 @@ uniform float numParticles;
 uniform float lifetime;
 uniform float stretch;
 uniform float seed;
-uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
+uniform vec3 wrapBounds;
+uniform vec3 emitterScale;
+uniform vec3 faceTangent;
+uniform vec3 faceBinorm;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform highp sampler2D internalTex0;
 uniform highp sampler2D internalTex1;

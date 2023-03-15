@@ -9,15 +9,14 @@ import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADOWUPDATE_NONE
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 
 import {
-    DEVICETYPE_WEBGPU,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
@@ -30,9 +29,12 @@ import { BindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
-import { ShadowRenderer } from './shadow-renderer.js';
+import { ShadowMapCache } from './shadow-map-cache.js';
+import { ShadowRendererLocal } from './shadow-renderer-local.js';
+import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
+import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -85,11 +87,15 @@ class Renderer {
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
 
         // shadows
-        this._shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+        this.shadowMapCache = new ShadowMapCache();
+        this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+        this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
+        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // cookies
         this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
 
+        // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
         this.viewBindGroupFormat = null;
 
@@ -97,6 +103,7 @@ class Renderer {
         this._skinTime = 0;
         this._morphTime = 0;
         this._cullTime = 0;
+        this._shadowMapTime = 0;
         this._lightClustersTime = 0;
         this._layerCompositionUpdateTime = 0;
 
@@ -146,8 +153,12 @@ class Renderer {
     }
 
     destroy() {
-        this._shadowRenderer.destroy();
-        this._shadowRenderer = null;
+        this.shadowRenderer = null;
+        this._shadowRendererLocal = null;
+        this._shadowRendererDirectional = null;
+
+        this.shadowMapCache.destroy();
+        this.shadowMapCache = null;
 
         this._cookieRenderer.destroy();
         this._cookieRenderer = null;
@@ -264,7 +275,7 @@ class Renderer {
         }
     }
 
-    setCameraUniforms(camera, target, renderAction) {
+    setCameraUniforms(camera, target) {
 
         // flipping proj matrix
         const flipY = target?.flipY;
@@ -314,7 +325,7 @@ class Renderer {
             }
 
             // update depth range of projection matrices (-1..1 to 0..1)
-            if (this.device.deviceType === DEVICETYPE_WEBGPU) {
+            if (this.device.isWebGPU) {
                 projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
                 projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
             }
@@ -370,17 +381,15 @@ class Renderer {
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
-        if (this.device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(renderAction, viewCount);
-        }
+        return viewCount;
     }
 
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
     // TODO: this function is only used from outside of forward renderer, and should be deprecated
-    // when the functionality moves to the render passes.
+    // when the functionality moves to the render passes. Note that Editor uses it as well.
     setCamera(camera, target, clear, renderAction = null) {
 
-        this.setCameraUniforms(camera, target, renderAction);
+        this.setCameraUniforms(camera, target);
         this.clearView(camera, target, clear, false);
     }
 
@@ -661,28 +670,44 @@ class Renderer {
         }
     }
 
-    setupViewUniformBuffers(renderAction, viewCount) {
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
 
-        Debug.assert(renderAction, "RenderAction cannot be null");
-        if (renderAction) {
+        Debug.assert(Array.isArray(viewBindGroups), "viewBindGroups must be an array");
 
-            const device = this.device;
-            Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+        const device = this.device;
+        Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
-            while (renderAction.viewBindGroups.length < viewCount) {
-                const ub = new UniformBuffer(device, this.viewUniformFormat);
-                const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
-                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
-                renderAction.viewBindGroups.push(bg);
-            }
+        while (viewBindGroups.length < viewCount) {
+            const ub = new UniformBuffer(device, viewUniformFormat);
+            const bg = new BindGroup(device, viewBindGroupFormat, ub);
+            DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
+            viewBindGroups.push(bg);
+        }
 
-            // update view bind group / uniforms
-            const viewBindGroup = renderAction.viewBindGroups[0];
-            viewBindGroup.defaultUniformBuffer.update();
-            viewBindGroup.update();
+        // update view bind group / uniforms
+        const viewBindGroup = viewBindGroups[0];
+        viewBindGroup.defaultUniformBuffer.update();
+        viewBindGroup.update();
 
-            // TODO; this needs to be moved to drawInstance functions to handle XR
-            device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+        // TODO; this needs to be moved to drawInstance functions to handle XR
+        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+    }
+
+    setupMeshUniformBuffers(meshInstance, pass) {
+
+        const device = this.device;
+        if (device.supportsUniformBuffers) {
+
+            // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
+            // earlier here. This needs to be refactored for multi-view anyways.
+            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
+
+            // update mesh bind group / uniform buffer
+            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            meshBindGroup.defaultUniformBuffer.update();
+            meshBindGroup.update();
+            device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
         }
     }
 
@@ -840,13 +865,23 @@ class Renderer {
      */
     cullShadowmaps(comp) {
 
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         // shadow casters culling for local (point and spot) lights
         for (let i = 0; i < comp._lights.length; i++) {
             const light = comp._lights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+
+                if (isClustered) {
+                    // if atlas slot is reassigned, make sure to update the shadow map, including the culling
+                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                    }
+                }
+
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     const casters = comp._lightCompositionData[i].shadowCastersList;
-                    this._shadowRenderer.cullLocal(light, casters);
+                    this._shadowRendererLocal.cull(light, casters);
                 }
             }
         }
@@ -861,7 +896,7 @@ class Renderer {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
                 const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
-                this._shadowRenderer.cullDirectional(light, casters, renderAction.camera.camera);
+                this._shadowRendererDirectional.cull(light, casters, renderAction.camera.camera);
             }
         }
     }
@@ -933,6 +968,12 @@ class Renderer {
                     }
                 }
             }
+        }
+
+        // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
+        // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
+        if (this.scene.clusteredLightingEnabled) {
+            this.updateLightTextureAtlas(comp);
         }
 
         // cull shadow casters for all lights
@@ -1148,7 +1189,7 @@ class Renderer {
         return updated;
     }
 
-    baseUpdate() {
+    frameUpdate() {
 
         this.clustersDebugRendered = false;
 

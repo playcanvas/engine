@@ -10,13 +10,14 @@ import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
+import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 
 const _matTex2D = [];
 
 const standard = {
     // Shared Standard Material option structures
-    optionsContext: {},
-    optionsContextMin: {},
+    optionsContext: new StandardMaterialOptions(),
+    optionsContextMin: new StandardMaterialOptions(),
 
     /** @type { Function } */
     generateKey: function (options) {
@@ -58,15 +59,20 @@ const standard = {
         }
 
         if (options.litOptions) {
-            for (const m in options.litOptions)
-                key += m + options.litOptions[m];
-            if (options.litOptions.lights) {
-                const isClustered = options.litOptions.clusteredLightingEnabled;
-                for (let i = 0; i < options.litOptions.lights.length; i++) {
-                    const light = options.litOptions.lights[i];
-                    if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                        key += light.key;
+
+            for (const m in options.litOptions) {
+
+                // handle lights in a custom way
+                if (m === 'lights') {
+                    const isClustered = options.litOptions.clusteredLightingEnabled;
+                    for (let i = 0; i < options.litOptions.lights.length; i++) {
+                        const light = options.litOptions.lights[i];
+                        if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
+                            key += light.key;
+                        }
                     }
+                } else {
+                    key += m + options.litOptions[m];
                 }
             }
         }
@@ -88,7 +94,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = ShaderPass.isForward(options.litOptions.pass);
+        const isMainPass = ShaderPass.isForward(options.pass);
 
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -116,11 +122,12 @@ const standard = {
         return enabled ? `#define ${name}\n` : `#undef ${name}\n`;
     },
 
-    _addMapDefs: function (float, color, vertex, map) {
+    _addMapDefs: function (float, color, vertex, map, invert) {
         return this._addMapDef("MAPFLOAT", float) +
                this._addMapDef("MAPCOLOR", color) +
                this._addMapDef("MAPVERTEX", vertex) +
-               this._addMapDef("MAPTEXTURE", map);
+               this._addMapDef("MAPTEXTURE", map) +
+               this._addMapDef("MAPINVERT", invert);
     },
 
     /**
@@ -145,6 +152,7 @@ const standard = {
         const tintPropName = propName + "Tint";
         const vertexColorPropName = propName + "VertexColor";
         const detailModePropName = propName + "Mode";
+        const invertName = propName + "Invert";
 
         const tintOption = options[tintPropName];
         const vertexColorOption = options[vertexColorPropName];
@@ -203,8 +211,9 @@ const standard = {
 
         const isFloatTint = !!(tintOption & 1);
         const isVecTint = !!(tintOption & 2);
+        const invertOption = !!(options[invertName]);
 
-        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
+        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption, invertOption) + subCode;
         return subCode.replace(/\$/g, "");
     },
 
@@ -223,7 +232,13 @@ const standard = {
         }
     },
 
-    /** @type { Function } */
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {StandardMaterialOptions} options - The create options.
+     * @returns {object} Returns the created shader definition.
+     * @ignore
+     */
     createShaderDefinition: function (device, options) {
         const litShader = new LitShader(device, options.litOptions);
 
@@ -298,7 +313,7 @@ const standard = {
             decl.append(`uniform float textureBias;`);
         }
 
-        if (ShaderPass.isForward(options.litOptions.pass)) {
+        if (ShaderPass.isForward(options.pass)) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {
@@ -393,7 +408,7 @@ const standard = {
                     func.append("getSheen();");
 
                     decl.append("float sGlossiness;");
-                    code.append(this._addMap("sheenGlossiness", "sheenGlossPS", options, litShader.chunks, textureMapping));
+                    code.append(this._addMap("sheenGloss", "sheenGlossPS", options, litShader.chunks, textureMapping));
                     func.append("getSheenGlossiness();");
                 }
                 if (options.litOptions.useMetalness) {
@@ -447,8 +462,8 @@ const standard = {
             }
 
             // lightmap
-            if (options.litOptions.lightMapEnabled || options.lightMapVertexColors) {
-                const lightmapDir = (options.litOptions.dirLightMapEnabled && options.litOptions.useSpecular);
+            if (options.lightMap || options.lightVertexColor) {
+                const lightmapDir = (options.dirLightMap && options.litOptions.useSpecular);
                 const lightmapChunkPropName = lightmapDir ? 'lightmapDirPS' : 'lightmapSinglePS';
                 decl.append("vec3 dLightmap;");
                 if (lightmapDir) {

@@ -1129,6 +1129,7 @@ export const UNIFORMTYPE_TEXTURE3D = 20;
 export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
+export const UNIFORMTYPE_MAT4ARRAY = 24;
 
 export const uniformTypeToName = [
     'bool',
@@ -1158,11 +1159,18 @@ export const uniformTypeToName = [
 ];
 
 /**
- * A WebGL device type.
+ * A WebGL 1 device type.
  *
  * @type {string}
  */
-export const DEVICETYPE_WEBGL = 'webgl';
+export const DEVICETYPE_WEBGL1 = 'webgl1';
+
+/**
+ * A WebGL 2 device type.
+ *
+ * @type {string}
+ */
+export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 /**
  * A WebGPU device type.
@@ -1177,8 +1185,9 @@ export const SHADERSTAGE_FRAGMENT = 2;
 export const SHADERSTAGE_COMPUTE = 4;
 
 // indices of commonly used bind groups
-export const BINDGROUP_VIEW = 0;
-export const BINDGROUP_MESH = 1;
+// sorted in a way that any trailing bind groups can be unused in any render pass
+export const BINDGROUP_MESH = 0;
+export const BINDGROUP_VIEW = 1;
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
@@ -1189,6 +1198,7 @@ export const bindGroupNames = ['view', 'mesh'];
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
+export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32'];
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {
@@ -1204,6 +1214,27 @@ export const typedArrayToType = {
 // map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
+
+// map of engine PIXELFORMAT_*** enums to the pixel byte size
+export const pixelFormatByteSizes = [];
+pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
+pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
 
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
@@ -1257,3 +1288,4 @@ export const CHUNKAPI_1_55 = '1.55';
 export const CHUNKAPI_1_56 = '1.56';
 export const CHUNKAPI_1_57 = '1.57';
 export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';

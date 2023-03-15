@@ -14,34 +14,31 @@
 
 /**
  * Abstract base class that implements functionality for event handling.
+ *
+ * ```javascript
+ * var obj = new EventHandlerSubclass();
+ *
+ * // subscribe to an event
+ * obj.on('hello', function (str) {
+ *     console.log('event hello is fired', str);
+ * });
+ *
+ * // fire event
+ * obj.fire('hello', 'world');
+ * ```
  */
 class EventHandler {
     /**
-     * Create a new EventHandler instance.
-     *
-     * @example
-     * var obj = new EventHandlerSubclass();
-     *
-     * // subscribe to an event
-     * obj.on('hello', function (str) {
-     *     console.log('event hello is fired', str);
-     * });
-     *
-     * // fire event
-     * obj.fire('hello', 'world');
+     * @type {object}
+     * @private
      */
-    constructor() {
-        /**
-         * @type {object}
-         * @private
-         */
-        this._callbacks = { };
-        /**
-         * @type {object}
-         * @private
-         */
-        this._callbackActive = { };
-    }
+    _callbacks = {};
+
+    /**
+     * @type {object}
+     * @private
+     */
+    _callbackActive = {};
 
     /**
      * Reinitialize the event handler.
@@ -49,8 +46,8 @@ class EventHandler {
      * @private
      */
     initEventHandler() {
-        this._callbacks = { };
-        this._callbackActive = { };
+        this._callbacks = {};
+        this._callbackActive = {};
     }
 
     /**

@@ -49,7 +49,7 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatGlossMapUv).to.equal(0);
         expect(material.clearCoatGlossVertexColor).to.equal(false);
         expect(material.clearCoatGlossVertexColorChannel).to.equal('g');
-        expect(material.clearCoatGlossiness).to.equal(1);
+        expect(material.clearCoatGloss).to.equal(1);
         expect(material.clearCoatMap).to.be.null;
         expect(material.clearCoatMapChannel).to.equal('g');
         expect(material.clearCoatMapOffset).to.be.an.instanceof(Vec2);

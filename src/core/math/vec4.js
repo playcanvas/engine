@@ -3,6 +3,34 @@
  */
 class Vec4 {
     /**
+     * The first component of the vector.
+     *
+     * @type {number}
+     */
+    x;
+
+    /**
+     * The second component of the vector.
+     *
+     * @type {number}
+     */
+    y;
+
+    /**
+     * The third component of the vector.
+     *
+     * @type {number}
+     */
+    z;
+
+    /**
+     * The fourth component of the vector.
+     *
+     * @type {number}
+     */
+    w;
+
+    /**
      * Creates a new Vec4 object.
      *
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
@@ -15,29 +43,9 @@ class Vec4 {
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
-            /**
-             * The first component of the vector.
-             *
-             * @type {number}
-             */
             this.x = x[0];
-            /**
-             * The second component of the vector.
-             *
-             * @type {number}
-             */
             this.y = x[1];
-            /**
-             * The third component of the vector.
-             *
-             * @type {number}
-             */
             this.z = x[2];
-            /**
-             * The fourth component of the vector.
-             *
-             * @type {number}
-             */
             this.w = x[3];
         } else {
             this.x = x;

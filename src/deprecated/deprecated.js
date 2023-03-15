@@ -1,6 +1,6 @@
 import { revision, version } from '../core/core.js';
 import { string } from '../core/string.js';
-import { Timer, now } from '../core/time.js';
+import { now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
 import { math } from '../core/math/math.js';
@@ -35,22 +35,24 @@ import {
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4
 } from '../platform/graphics/constants.js';
 import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
-import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
-import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
+import { PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { ScopeId } from '../platform/graphics/scope-id.js';
 import { Shader } from '../platform/graphics/shader.js';
-import { ShaderInput } from '../platform/graphics/shader-input.js';
+import { WebglShaderInput } from '../platform/graphics/webgl/webgl-shader-input.js';
 import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
+import { ShaderUtils } from '../platform/graphics/shader-utils.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
@@ -71,6 +73,9 @@ import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
+import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
+import { LitOptions } from '../scene/materials/lit-options.js';
+import { Layer } from '../scene/layer.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
 import { Skeleton } from '../scene/animation/skeleton.js';
@@ -109,7 +114,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
-import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 
 // CORE
 
@@ -168,6 +172,28 @@ string.startsWith = function (s, subs) {
     return s.startsWith(subs);
 };
 
+class Timer {
+    constructor() {
+        this._isRunning = false;
+        this._a = 0;
+        this._b = 0;
+    }
+
+    start() {
+        this._isRunning = true;
+        this._a = now();
+    }
+
+    stop() {
+        this._isRunning = false;
+        this._b = now();
+    }
+
+    getMilliseconds() {
+        return this._b - this._a;
+    }
+}
+
 export const time = {
     now: now,
     Timer: Timer
@@ -217,6 +243,18 @@ export function inherits(Self, Super) {
 export function makeArray(arr) {
     Debug.deprecated('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
     return Array.prototype.slice.call(arr);
+}
+
+export function createStyle(cssString) {
+    const result = document.createElement('style');
+    result.type = 'text/css';
+    if (result.styleSheet) {
+        result.styleSheet.cssText = cssString;
+    } else {
+        result.appendChild(document.createTextNode(cssString));
+    }
+
+    return result;
 }
 
 // MATH
@@ -405,7 +443,7 @@ export const gfx = {
     RenderTarget: RenderTarget,
     ScopeId: ScopeId,
     Shader: Shader,
-    ShaderInput: ShaderInput,
+    ShaderInput: WebglShaderInput,
     Texture: Texture,
     UnsupportedBrowserError: UnsupportedBrowserError,
     VertexBuffer: VertexBuffer,
@@ -413,8 +451,27 @@ export const gfx = {
     VertexIterator: VertexIterator
 };
 
+const _viewport = new Vec4();
+
+export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
+
+    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+
+    // convert rect in normalized space to viewport in pixel space
+    let viewport;
+    if (rect) {
+        const w = target ? target.width : device.width;
+        const h = target ? target.height : device.height;
+        viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
+    }
+
+    drawQuadWithShader(device, target, shader, viewport);
+}
+
 export const posteffect = {
-    createFullscreenQuad: createFullscreenQuad,
+    createFullscreenQuad: (device) => {
+        return device.quadVertexBuffer;
+    },
     drawFullscreenQuad: drawFullscreenQuad,
     PostEffect: PostEffect,
     PostEffectQueue: PostEffectQueue
@@ -465,9 +522,12 @@ Object.defineProperties(RenderTarget.prototype, {
     }
 });
 
-VertexFormat.prototype.update = function () {
-    Debug.deprecated('pc.VertexFormat.update is deprecated, and VertexFormat cannot be changed after it has been created.');
-};
+Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
+    get: function () {
+        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
+    }
+});
 
 Object.defineProperties(Texture.prototype, {
     rgbm: {
@@ -580,6 +640,17 @@ Object.defineProperty(Scene.prototype, 'models', {
             this._models = [];
         }
         return this._models;
+    }
+});
+
+Object.defineProperty(Layer.prototype, 'renderTarget', {
+    set: function (rt) {
+        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
+        this._renderTarget = rt;
+        this._dirtyCameras = true;
+    },
+    get: function () {
+        return this._renderTarget;
     }
 });
 
@@ -787,6 +858,31 @@ _defineAlias('metalnessVertexColor', 'metalnessMapVertexColor');
 _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
+
+_defineAlias('sheenGloss', 'sheenGlossiess');
+_defineAlias('clearCoatGloss', 'clearCostGlossiness');
+
+function _defineOption(name, newName) {
+    if (name !== 'chunks' && name !== '_pass') {
+        Object.defineProperty(StandardMaterialOptions.prototype, name, {
+            get: function () {
+                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                return this.litOptions[newName || name];
+            },
+            set: function (value) {
+                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                this.litOptions[newName || name] = value;
+            }
+        });
+    }
+}
+_defineOption('refraction', 'useRefraction');
+
+const tempOptions = new LitOptions();
+const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
+for (const litOption in litOptionProperties) {
+    _defineOption(litOptionProperties[litOption]);
+}
 
 // ANIMATION
 

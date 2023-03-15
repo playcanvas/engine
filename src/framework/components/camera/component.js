@@ -6,28 +6,6 @@ import { Component } from '../component.js';
 import { PostEffectQueue } from './post-effect-queue.js';
 import { Debug } from '../../../core/debug.js';
 
-// note: when this list is modified, the copy() function needs to be adjusted
-const properties = [
-    { name: 'aspectRatio', readonly: false },
-    { name: 'aspectRatioMode', readonly: false },
-    { name: 'calculateProjection', readonly: false },
-    { name: 'calculateTransform', readonly: false },
-    { name: 'clearColor', readonly: false },
-    { name: 'cullFaces', readonly: false },
-    { name: 'farClip', readonly: false },
-    { name: 'flipFaces', readonly: false },
-    { name: 'fov', readonly: false },
-    { name: 'frustumCulling', readonly: false },
-    { name: 'horizontalFov', readonly: false },
-    { name: 'nearClip', readonly: false },
-    { name: 'orthoHeight', readonly: false },
-    { name: 'projection', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'aperture', readonly: false },
-    { name: 'shutter', readonly: false },
-    { name: 'sensitivity', readonly: false }
-];
-
 /**
  * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  *
@@ -57,62 +35,6 @@ const properties = [
  * entity.camera.nearClip = 2;
  * ```
  *
- * @property {number} projection The type of projection used to render the camera. Can be:
- *
- * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
- * resembles a truncated pyramid.
- * - {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
- * frustum is a cuboid.
- *
- * Defaults to {@link PROJECTION_PERSPECTIVE}.
- * @property {number} aspectRatio The aspect ratio (width divided by height) of the camera. If
- * aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically calculated every
- * frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
- * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
- *
- * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
- * target's width divided by height.
- * - {@link ASPECT_MANUAL}: use the aspectRatio value.
- *
- * Defaults to {@link ASPECT_AUTO}.
- * @property {import('../../../core/math/color.js').Color} clearColor The color used to clear the
- * canvas to before the camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
- * @property {number} farClip The distance from the camera after which no rendering will take
- * place. Defaults to 1000.
- * @property {number} fov The field of view of the camera in degrees. Usually this is the Y-axis
- * field of view, see {@link CameraComponent#horizontalFov}. Used for
- * {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
- * @property {boolean} horizontalFov Set which axis to use for the Field of View calculation.
- * Defaults to false.
- * @property {number} nearClip The distance from the camera before which no rendering will take
- * place. Defaults to 0.1.
- * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis).
- * Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
- * @property {import('../../../core/math/vec4.js').Vec4}} scissorRect Clips all pixels which are
- * not in the rectangle. The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
- * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera
- * frustum, i.e. if objects outside of camera should be omitted from rendering. If false, all mesh
- * instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
- * @property {CalculateMatrixCallback} calculateTransform Custom function you can provide to
- * calculate the camera transformation matrix manually. Can be used for complex effects like
- * reflections. Function is called using component's scope. Arguments:
- *
- * - {@link Mat4} transformMatrix: output of the function.
- * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
- *
- * Left and right are only used in stereo rendering.
- * @property {CalculateMatrixCallback} calculateProjection Custom function you can provide to
- * calculate the camera projection matrix manually. Can be used for complex effects like doing
- * oblique projection. Function is called using component's scope. Arguments:
- *
- * - {@link Mat4} transformMatrix: output of the function
- * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
- *
- * Left and right are only used in stereo rendering.
- * @property {boolean} cullFaces If true the camera will take material.cull into account. Otherwise
- * both front and back faces will be rendered. Defaults to true.
- * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful
- * for reflection rendering. Defaults to false.
  * @augments Component
  */
 class CameraComponent extends Component {
@@ -154,6 +76,23 @@ class CameraComponent extends Component {
      */
     _renderSceneColorMap = 0;
 
+    /** @private */
+    _sceneDepthMapRequested = false;
+
+    /** @private */
+    _sceneColorMapRequested = false;
+
+    /** @private */
+    _priority = 0;
+
+    /**
+     * Layer id at which the postprocessing stops for the camera.
+     *
+     * @type {number}
+     * @private
+     */
+    _disablePostEffectsLayer = LAYERID_UI;
+
     /**
      * Create a new CameraComponent instance.
      *
@@ -168,16 +107,95 @@ class CameraComponent extends Component {
         this._camera = new Camera();
         this._camera.node = entity;
 
-        this._priority = 0;
-
-        // layer id at which the postprocessing stops for the camera
-        this._disablePostEffectsLayer = LAYERID_UI;
-
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
+    }
 
-        this._sceneDepthMapRequested = false;
-        this._sceneColorMapRequested = false;
+    /**
+     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
+     *
+     * @type {number}
+     */
+    set aperture(value) {
+        this._camera.aperture = value;
+    }
+
+    get aperture() {
+        return this._camera.aperture;
+    }
+
+    /**
+     * The aspect ratio (width divided by height) of the camera. If aspectRatioMode is
+     * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
+     * can only read it. If it's ASPECT_MANUAL, you can set the value.
+     *
+     * @type {number}
+     */
+    set aspectRatio(value) {
+        this._camera.aspectRatio = value;
+    }
+
+    get aspectRatio() {
+        return this._camera.aspectRatio;
+    }
+
+    /**
+     * The aspect ratio mode of the camera. Can be:
+     *
+     * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
+     * target's width divided by height.
+     * - {@link ASPECT_MANUAL}: use the aspectRatio value.
+     *
+     * Defaults to {@link ASPECT_AUTO}.
+     *
+     * @type {number}
+     */
+    set aspectRatioMode(value) {
+        this._camera.aspectRatioMode = value;
+    }
+
+    get aspectRatioMode() {
+        return this._camera.aspectRatioMode;
+    }
+
+    /**
+     * Custom function you can provide to calculate the camera projection matrix manually. Can be
+     * used for complex effects like doing oblique projection. Function is called using component's
+     * scope. Arguments:
+     *
+     * - {@link Mat4} transformMatrix: output of the function
+     * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+     *
+     * Left and right are only used in stereo rendering.
+     *
+     * @type {CalculateMatrixCallback}
+     */
+    set calculateProjection(value) {
+        this._camera.calculateProjection = value;
+    }
+
+    get calculateProjection() {
+        return this._camera.calculateProjection;
+    }
+
+    /**
+     * Custom function you can provide to calculate the camera transformation matrix manually. Can
+     * be used for complex effects like reflections. Function is called using component's scope.
+     * Arguments:
+     *
+     * - {@link Mat4} transformMatrix: output of the function.
+     * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+     *
+     * Left and right are only used in stereo rendering.
+     *
+     * @type {CalculateMatrixCallback}
+     */
+    set calculateTransform(value) {
+        this._camera.calculateTransform = value;
+    }
+
+    get calculateTransform() {
+        return this._camera.calculateTransform;
     }
 
     /**
@@ -188,6 +206,20 @@ class CameraComponent extends Component {
      */
     get camera() {
         return this._camera;
+    }
+
+    /**
+     * The color used to clear the canvas to before the camera starts to render. Defaults to
+     * [0.75, 0.75, 0.75, 1].
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
+    set clearColor(value) {
+        this._camera.clearColor = value;
+    }
+
+    get clearColor() {
+        return this._camera.clearColor;
     }
 
     /**
@@ -233,6 +265,20 @@ class CameraComponent extends Component {
     }
 
     /**
+     * If true the camera will take material.cull into account. Otherwise both front and back faces
+     * will be rendered. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set cullFaces(value) {
+        this._camera.cullFaces = value;
+    }
+
+    get cullFaces() {
+        return this._camera.cullFaces;
+    }
+
+    /**
      * Layer ID of a layer on which the postprocessing of the camera stops being applied to.
      * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and any
      * following layers for the camera. Set to undefined for post-processing to be applied to all
@@ -249,82 +295,46 @@ class CameraComponent extends Component {
         return this._disablePostEffectsLayer;
     }
 
-    // based on the value, the depth layer's enable counter is incremented or decremented
-    _enableDepthLayer(value) {
-        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
-        if (hasDepthLayer) {
+    /**
+     * The distance from the camera after which no rendering will take place. Defaults to 1000.
+     *
+     * @type {number}
+     */
+    set farClip(value) {
+        this._camera.farClip = value;
+    }
 
-            /** @type {import('../../../scene/layer.js').Layer} */
-            const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
-
-            if (value) {
-                depthLayer?.incrementCounter();
-            } else {
-                depthLayer?.decrementCounter();
-            }
-        } else if (value) {
-            return false;
-        }
-
-        return true;
+    get farClip() {
+        return this._camera.farClip;
     }
 
     /**
-     * Request the scene to generate a texture containing the scene color map. Note that this call
-     * is accummulative, and for each enable request, a disable request need to be called.
+     * If true the camera will invert front and back faces. Can be useful for reflection rendering.
+     * Defaults to false.
      *
-     * @param {boolean} enabled - True to request the generation, false to disable it.
+     * @type {boolean}
      */
-    requestSceneColorMap(enabled) {
-        this._renderSceneColorMap += enabled ? 1 : -1;
-        Debug.assert(this._renderSceneColorMap >= 0);
-        const ok = this._enableDepthLayer(enabled);
-        if (!ok) {
-            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
-        }
+    set flipFaces(value) {
+        this._camera.flipFaces = value;
     }
 
-    set renderSceneColorMap(value) {
-        if (value && !this._sceneColorMapRequested) {
-            this.requestSceneColorMap(true);
-            this._sceneColorMapRequested = true;
-        } else if (this._sceneColorMapRequested) {
-            this.requestSceneColorMap(false);
-            this._sceneColorMapRequested = false;
-        }
-    }
-
-    get renderSceneColorMap() {
-        return this._renderSceneColorMap > 0;
+    get flipFaces() {
+        return this._camera.flipFaces;
     }
 
     /**
-     * Request the scene to generate a texture containing the scene depth map. Note that this call
-     * is accummulative, and for each enable request, a disable request need to be called.
+     * The field of view of the camera in degrees. Usually this is the Y-axis field of view, see
+     * {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras only.
+     * Defaults to 45.
      *
-     * @param {boolean} enabled - True to request the generation, false to disable it.
+     * @type {number}
      */
-    requestSceneDepthMap(enabled) {
-        this._renderSceneDepthMap += enabled ? 1 : -1;
-        Debug.assert(this._renderSceneDepthMap >= 0);
-        const ok = this._enableDepthLayer(enabled);
-        if (!ok) {
-            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
-        }
+    set fov(value) {
+        this._camera.fov = value;
     }
 
-    set renderSceneDepthMap(value) {
-        if (value && !this._sceneDepthMapRequested) {
-            this.requestSceneDepthMap(true);
-            this._sceneDepthMapRequested = true;
-        } else if (this._sceneDepthMapRequested) {
-            this.requestSceneDepthMap(false);
-            this._sceneDepthMapRequested = false;
-        }
-    }
-
-    get renderSceneDepthMap() {
-        return this._renderSceneDepthMap > 0;
+    get fov() {
+        return this._camera.fov;
     }
 
     /**
@@ -334,6 +344,34 @@ class CameraComponent extends Component {
      */
     get frustum() {
         return this._camera.frustum;
+    }
+
+    /**
+     * Controls the culling of mesh instances against the camera frustum, i.e. if objects outside
+     * of camera should be omitted from rendering. If false, all mesh instances in the scene are
+     * rendered by the camera, regardless of visibility. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set frustumCulling(value) {
+        this._camera.frustumCulling = value;
+    }
+
+    get frustumCulling() {
+        return this._camera.frustumCulling;
+    }
+
+    /**
+     * Set which axis to use for the Field of View calculation. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set horizontalFov(value) {
+        this._camera.horizontalFov = value;
+    }
+
+    get horizontalFov() {
+        return this._camera.horizontalFov;
     }
 
     /**
@@ -371,16 +409,43 @@ class CameraComponent extends Component {
     }
 
     /**
+     * The distance from the camera before which no rendering will take place. Defaults to 0.1.
+     *
+     * @type {number}
+     */
+    set nearClip(value) {
+        this._camera.nearClip = value;
+    }
+
+    get nearClip() {
+        return this._camera.nearClip;
+    }
+
+    /**
+     * The half-height of the orthographic view window (in the Y-axis). Used for
+     * {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+     *
+     * @type {number}
+     */
+    set orthoHeight(value) {
+        this._camera.orthoHeight = value;
+    }
+
+    get orthoHeight() {
+        return this._camera.orthoHeight;
+    }
+
+    get postEffects() {
+        return this._postEffects;
+    }
+
+    /**
      * The post effects queue for this camera. Use this to add or remove post effects from the camera.
      *
      * @type {PostEffectQueue}
      */
     get postEffectsEnabled() {
         return this._postEffects.enabled;
-    }
-
-    get postEffects() {
-        return this._postEffects;
     }
 
     /**
@@ -399,51 +464,32 @@ class CameraComponent extends Component {
     }
 
     /**
+     * The type of projection used to render the camera. Can be:
+     *
+     * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
+     * resembles a truncated pyramid.
+     * - {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
+     * frustum is a cuboid.
+     *
+     * Defaults to {@link PROJECTION_PERSPECTIVE}.
+     *
+     * @type {number}
+     */
+    set projection(value) {
+        this._camera.projection = value;
+    }
+
+    get projection() {
+        return this._camera.projection;
+    }
+
+    /**
      * Queries the camera's projection matrix.
      *
      * @type {import('../../../core/math/mat4.js').Mat4}
      */
     get projectionMatrix() {
         return this._camera.projectionMatrix;
-    }
-
-    /**
-     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
-     *
-     * @type {number}
-     */
-    set aperture(newValue) {
-        this._camera.aperture = newValue;
-    }
-
-    get aperture() {
-        return this._camera.aperture;
-    }
-
-    /**
-     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
-     *
-     * @type {number}
-     */
-    set sensitivity(newValue) {
-        this._camera.sensitivity = newValue;
-    }
-
-    get sensitivity() {
-        return this._camera.sensitivity;
-    }
-
-    /**
-     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
-     *
-     * @type {number}
-     */
-    set shutter(newValue) {
-        this._camera.shutter = newValue;
-    }
-
-    get shutter() {
-        return this._camera.shutter;
     }
 
     /**
@@ -459,6 +505,34 @@ class CameraComponent extends Component {
 
     get rect() {
         return this._camera.rect;
+    }
+
+    set renderSceneColorMap(value) {
+        if (value && !this._sceneColorMapRequested) {
+            this.requestSceneColorMap(true);
+            this._sceneColorMapRequested = true;
+        } else if (this._sceneColorMapRequested) {
+            this.requestSceneColorMap(false);
+            this._sceneColorMapRequested = false;
+        }
+    }
+
+    get renderSceneColorMap() {
+        return this._renderSceneColorMap > 0;
+    }
+
+    set renderSceneDepthMap(value) {
+        if (value && !this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(true);
+            this._sceneDepthMapRequested = true;
+        } else if (this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(false);
+            this._sceneDepthMapRequested = false;
+        }
+    }
+
+    get renderSceneDepthMap() {
+        return this._renderSceneDepthMap > 0;
     }
 
     /**
@@ -477,12 +551,109 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Clips all pixels which are not in the rectangle. The order of the values is
+     * [x, y, width, height]. Defaults to [0, 0, 1, 1].
+     *
+     * @type {import('../../../core/math/vec4.js').Vec4}
+     */
+    set scissorRect(value) {
+        this._camera.scissorRect = value;
+    }
+
+    get scissorRect() {
+        return this._camera.scissorRect;
+    }
+
+    /**
+     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
+     *
+     * @type {number}
+     */
+    set sensitivity(value) {
+        this._camera.sensitivity = value;
+    }
+
+    get sensitivity() {
+        return this._camera.sensitivity;
+    }
+
+    /**
+     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
+     *
+     * @type {number}
+     */
+    set shutter(value) {
+        this._camera.shutter = value;
+    }
+
+    get shutter() {
+        return this._camera.shutter;
+    }
+
+    /**
      * Queries the camera's view matrix.
      *
      * @type {import('../../../core/math/mat4.js').Mat4}
      */
     get viewMatrix() {
         return this._camera.viewMatrix;
+    }
+
+    /**
+     * Based on the value, the depth layer's enable counter is incremented or decremented.
+     *
+     * @param {boolean} value - True to increment the counter, false to decrement it.
+     * @returns {boolean} True if the counter was incremented or decremented, false if the depth
+     * layer is not present.
+     * @private
+     */
+    _enableDepthLayer(value) {
+        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
+        if (hasDepthLayer) {
+
+            /** @type {import('../../../scene/layer.js').Layer} */
+            const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
+
+            if (value) {
+                depthLayer?.incrementCounter();
+            } else {
+                depthLayer?.decrementCounter();
+            }
+        } else if (value) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene color map. Note that this call
+     * is accumulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneColorMap(enabled) {
+        this._renderSceneColorMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneColorMap >= 0);
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene depth map. Note that this call
+     * is accumulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneDepthMap(enabled) {
+        this._renderSceneDepthMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneDepthMap >= 0);
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
     }
 
     dirtyLayerCompositionCameras() {
@@ -535,12 +706,17 @@ class CameraComponent extends Component {
         return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
     }
 
-    // called before application renders the scene
+    /**
+     * Called before application renders the scene.
+     *
+     * @ignore
+     */
     onAppPrerender() {
         this._camera._viewMatDirty = true;
         this._camera._viewProjMatDirty = true;
     }
 
+    /** @private */
     addCameraToLayers() {
         const layers = this.layers;
         for (let i = 0; i < layers.length; i++) {
@@ -551,6 +727,7 @@ class CameraComponent extends Component {
         }
     }
 
+    /** @private */
     removeCameraFromLayers() {
         const layers = this.layers;
         for (let i = 0; i < layers.length; i++) {
@@ -561,6 +738,11 @@ class CameraComponent extends Component {
         }
     }
 
+    /**
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - Old layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - New layer composition.
+     * @private
+     */
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
         oldComp.off('add', this.onLayerAdded, this);
@@ -569,12 +751,20 @@ class CameraComponent extends Component {
         newComp.on('remove', this.onLayerRemoved, this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to add the camera to.
+     * @private
+     */
     onLayerAdded(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addCamera(this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to remove the camera from.
+     * @private
+     */
     onLayerRemoved(layer) {
         const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
@@ -735,52 +925,42 @@ class CameraComponent extends Component {
         this._camera.xr.end(callback);
     }
 
-    // function to copy properties from the source CameraComponent.
-    // properties not copied: postEffects
-    // inherited properties not copied (all): system, entity, enabled)
+    /**
+     * Function to copy properties from the source CameraComponent.
+     * Properties not copied: postEffects.
+     * Inherited properties not copied (all): system, entity, enabled.
+     *
+     * @param {CameraComponent} source - The source component.
+     * @ignore
+     */
     copy(source) {
-
-        // copy data driven properties
-        properties.forEach((property) => {
-            if (!property.readonly) {
-                const name = property.name;
-                this[name] = source[name];
-            }
-        });
-
-        // other properties
+        this.aperture = source.aperture;
+        this.aspectRatio = source.aspectRatio;
+        this.aspectRatioMode = source.aspectRatioMode;
+        this.calculateProjection = source.calculateProjection;
+        this.calculateTransform = source.calculateTransform;
+        this.clearColor = source.clearColor;
         this.clearColorBuffer = source.clearColorBuffer;
         this.clearDepthBuffer = source.clearDepthBuffer;
         this.clearStencilBuffer = source.clearStencilBuffer;
+        this.cullFaces = source.cullFaces;
         this.disablePostEffectsLayer = source.disablePostEffectsLayer;
+        this.farClip = source.farClip;
+        this.flipFaces = source.flipFaces;
+        this.fov = source.fov;
+        this.frustumCulling = source.frustumCulling;
+        this.horizontalFov = source.horizontalFov;
         this.layers = source.layers;
+        this.nearClip = source.nearClip;
+        this.orthoHeight = source.orthoHeight;
         this.priority = source.priority;
-        this.renderTarget = source.renderTarget;
+        this.projection = source.projection;
         this.rect = source.rect;
-        this.aperture = source.aperture;
+        this.renderTarget = source.renderTarget;
+        this.scissorRect = source.scissorRect;
         this.sensitivity = source.sensitivity;
         this.shutter = source.shutter;
     }
 }
-
-// for common properties, create getters and setters which use this._camera as a storage for their values
-properties.forEach(function (property) {
-    const name = property.name;
-    const options = {};
-
-    // getter
-    options.get = function () {
-        return this._camera[name];
-    };
-
-    // setter
-    if (!property.readonly) {
-        options.set = function (newValue) {
-            this._camera[name] = newValue;
-        };
-    }
-
-    Object.defineProperty(CameraComponent.prototype, name, options);
-});
 
 export { CameraComponent };

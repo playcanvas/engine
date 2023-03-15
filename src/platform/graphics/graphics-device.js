@@ -4,9 +4,12 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 
 import {
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN
+    BUFFER_STATIC,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
 import { ScopeSpace } from './scope-space.js';
+import { VertexBuffer } from './vertex-buffer.js';
+import { VertexFormat } from './vertex-format.js';
 
 const EVENT_RESIZE = 'resizecanvas';
 
@@ -27,12 +30,11 @@ class GraphicsDevice extends EventHandler {
     canvas;
 
     /**
-     * The graphics device type, DEVICETYPE_WEBGL or DEVICETYPE_WEBGPU.
+     * True if the deviceType is WebGPU
      *
-     * @type {string}
-     * @ignore
+     * @type {boolean}
      */
-    deviceType;
+    isWebGPU = false;
 
     /**
      * The scope namespace for shader attributes and variables.
@@ -124,6 +126,14 @@ class GraphicsDevice extends EventHandler {
       */
     textureHalfFloatRenderable;
 
+    /**
+     * A vertex buffer representing a quad.
+     *
+     * @type {VertexBuffer}
+     * @ignore
+     */
+    quadVertexBuffer;
+
     constructor(canvas) {
         super();
 
@@ -189,6 +199,19 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Function that executes after the device has been created.
+     */
+    postInit() {
+
+        // create quad vertex buffer
+        const vertexFormat = new VertexFormat(this, [
+            { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
+        ]);
+        const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+    }
+
+    /**
      * Fired when the canvas is resized.
      *
      * @event GraphicsDevice#resizecanvas
@@ -203,6 +226,9 @@ class GraphicsDevice extends EventHandler {
         // fire the destroy event.
         // textures and other device resources may destroy themselves in response.
         this.fire('destroy');
+
+        this.quadVertexBuffer?.destroy();
+        this.quadVertexBuffer = null;
     }
 
     onDestroyShader(shader) {
@@ -230,6 +256,12 @@ class GraphicsDevice extends EventHandler {
         this.vertexBuffers = [];
         this.shader = null;
         this.renderTarget = null;
+    }
+
+    initializeRenderState() {
+        // Cached viewport and scissor dimensions
+        this.vx = this.vy = this.vw = this.vh = 0;
+        this.sx = this.sy = this.sw = this.sh = 0;
     }
 
     /**

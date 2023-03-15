@@ -4,8 +4,8 @@ import { hashCode } from '../../core/hash.js';
 import { math } from '../../core/math/math.js';
 
 import {
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
 
 /**
@@ -115,6 +115,7 @@ class VertexFormat {
      * ]);
      */
     constructor(graphicsDevice, description, vertexCount) {
+        this.device = graphicsDevice;
         this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
@@ -142,8 +143,13 @@ class VertexFormat {
         for (let i = 0, len = description.length; i < len; i++) {
             const elementDesc = description[i];
 
-            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
+
+            // WebGPU has limited element size support (for example uint16x3 is not supported)
+            Debug.assert(!graphicsDevice.isWebGPU || [2, 4, 8, 12, 16].includes(elementSize),
+                         `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
+
+            // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             if (vertexCount) {
                 offset = math.roundUp(offset, elementSize);
 
@@ -159,7 +165,7 @@ class VertexFormat {
                 stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
-                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
+                normalize: elementDesc.normalize ?? false,
                 size: elementSize
             };
             this._elements.push(element);
@@ -207,12 +213,15 @@ class VertexFormat {
     /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
-     * @type {VertexFormat}
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to create this vertex format.
+     *
+     * @returns {VertexFormat} The default instancing vertex format.
      */
-    static get defaultInstancingFormat() {
+    static getDefaultInstancingFormat(graphicsDevice) {
 
         if (!VertexFormat._defaultInstancingFormat) {
-            VertexFormat._defaultInstancingFormat = new VertexFormat(null, [
+            VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, [
                 { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
@@ -221,6 +230,17 @@ class VertexFormat {
         }
 
         return VertexFormat._defaultInstancingFormat;
+    }
+
+    /**
+     * Applies any changes made to the VertexFormat's properties.
+     *
+     * @private
+     */
+    update() {
+        // Note that this is used only by vertex attribute morphing on the WebGL.
+        Debug.assert(!this.device.isWebGPU, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
+        this._evaluateHash();
     }
 
     /**
@@ -257,8 +277,8 @@ class VertexFormat {
         this.batchingHash = hashCode(stringElementsBatch.join());
 
         // rendering hash
-        this.renderingingHashString = stringElementsRender.join('_');
-        this.renderingingHash = hashCode(this.renderingingHashString);
+        this.renderingHashString = stringElementsRender.join('_');
+        this.renderingHash = hashCode(this.renderingHashString);
     }
 }
 

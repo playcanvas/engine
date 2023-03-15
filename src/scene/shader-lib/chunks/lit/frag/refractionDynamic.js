@@ -26,9 +26,9 @@ void addRefraction() {
 
     // Project to texture space so we can sample it
     vec4 projectionPoint = matrix_viewProjection * pointOfRefraction;
-    vec2 uv = projectionPoint.xy / projectionPoint.ww;
-    uv += vec2(1.0);
-    uv *= vec2(0.5);
+
+    // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords
+    vec2 uv = getGrabScreenPos(projectionPoint);
 
     #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip

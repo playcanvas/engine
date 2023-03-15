@@ -1,6 +1,5 @@
 import { Debug } from "../../core/debug.js";
 import {
-    DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
@@ -11,6 +10,7 @@ import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
+import sharedFS from './shader-chunks/frag/shared.js';
 
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -58,7 +58,7 @@ class ShaderUtils {
         Debug.assert(options);
 
         const getDefines = (gpu, gl2, gl1, isVertex) => {
-            return device.deviceType === DEVICETYPE_WEBGPU ? gpu :
+            return device.isWebGPU ? gpu :
                 (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
         };
 
@@ -68,15 +68,17 @@ class ShaderUtils {
         const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 
         // fragment code
         const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
-        ShaderUtils.versionCode(device) +
+            ShaderUtils.versionCode(device) +
             ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             (options.fragmentCode || ShaderUtils.dummyFragmentCode());
 
@@ -122,7 +124,7 @@ class ShaderUtils {
     }
 
     static versionCode(device) {
-        if (device.deviceType === DEVICETYPE_WEBGPU) {
+        if (device.isWebGPU) {
             return '#version 450\n';
         }
         return device.webgl2 ? "#version 300 es\n" : "";
@@ -132,27 +134,32 @@ class ShaderUtils {
 
         let code = '';
 
-        if (device.deviceType === DEVICETYPE_WEBGL) {
+        if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
+            forcePrecision = null;
+        }
 
-            if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
-                forcePrecision = null;
+        if (forcePrecision) {
+            if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
+                forcePrecision = 'mediump';
             }
-
-            if (forcePrecision) {
-                if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
-                    forcePrecision = 'mediump';
-                }
-                if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
-                    forcePrecision = 'lowp';
-                }
+            if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
+                forcePrecision = 'lowp';
             }
+        }
 
-            const precision = forcePrecision ? forcePrecision : device.precision;
+        const precision = forcePrecision ? forcePrecision : device.precision;
+
+        if (!device.isWebGPU) {
+
             code = `precision ${precision} float;\n`;
 
             if (device.webgl2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
             }
+
+        } else { // WebGPU
+
+            code = `precision ${precision} float;\nprecision ${precision} int;\n`;
         }
 
         return code;

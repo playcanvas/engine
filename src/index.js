@@ -8,14 +8,13 @@ import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
-import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export * from './core/constants.js';
-export { apps, common, config, data, extend, isDefined, revision, type, version } from './core/core.js';
+export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
@@ -27,7 +26,7 @@ export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
 export { SortedLoopArray } from './core/sorted-loop-array.js';
 export { Tags } from './core/tags.js';
-export { Timer, now } from './core/time.js';
+export { now } from './core/time.js';
 export { URI, createURI } from './core/uri.js';
 export { Tracing } from './core/tracing.js';
 
@@ -58,7 +57,6 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export { drawQuadWithShader, drawTexture } from './platform/graphics/simple-post-effect.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -75,9 +73,7 @@ export { VertexIterator } from './platform/graphics/vertex-iterator.js';
 export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';
 
 // PLATFORM / GRAPHICS / webgpu
-// #if _DEBUG
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
-// #endif
 
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
@@ -102,6 +98,7 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 // SCENE
 export * from './scene/constants.js';
 export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
+export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
@@ -115,6 +112,7 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
+export { LitOptions } from './scene/materials/lit-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance, Command } from './scene/mesh-instance.js';
@@ -123,11 +121,13 @@ export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
 export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
+export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 export { StencilParameters } from './scene/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
@@ -137,7 +137,7 @@ export { Skeleton } from './scene/animation/skeleton.js';
 
 // SCENE / GRAPHICS
 export { EnvLighting } from './scene/graphics/env-lighting.js';
-export { PostEffect, drawFullscreenQuad } from './scene/graphics/post-effect.js';
+export { PostEffect } from './scene/graphics/post-effect.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
@@ -272,7 +272,7 @@ export { AudioHandler } from './framework/handlers/audio.js';
 export { BinaryHandler } from './framework/handlers/binary.js';
 export { BundleHandler } from './framework/handlers/bundle.js';
 export { ContainerHandler, ContainerResource } from './framework/handlers/container.js';
-export { createStyle, CssHandler } from './framework/handlers/css.js';
+export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';

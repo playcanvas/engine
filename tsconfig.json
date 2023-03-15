@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "allowJs": true,
+        "module": "es6",
+        "target": "es6",
+        "moduleResolution": "node",
+        "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
+    },
+    "include": ["src/**/*.js"]
+}

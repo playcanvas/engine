@@ -4,7 +4,9 @@ import {
     uniformTypeToName, bindGroupNames,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
-    UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
+    UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3,
+    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_MAT4ARRAY
 } from './constants.js';
 
 // map of UNIFORMTYPE_*** to number of 32bit elements
@@ -24,12 +26,6 @@ uniformTypeToNumElements[UNIFORMTYPE_BVEC4] = 4;
 uniformTypeToNumElements[UNIFORMTYPE_MAT2] = 8;    // 2 x vec4
 uniformTypeToNumElements[UNIFORMTYPE_MAT3] = 12;   // 3 x vec4
 uniformTypeToNumElements[UNIFORMTYPE_MAT4] = 16;   // 4 x vec4
-
-// Handle additional types:
-//      UNIFORMTYPE_FLOATARRAY = 17;
-//      UNIFORMTYPE_VEC2ARRAY = 21;
-//      UNIFORMTYPE_VEC3ARRAY = 22;
-//      UNIFORMTYPE_VEC4ARRAY = 23;
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
@@ -58,23 +54,59 @@ class UniformFormat {
     scopeId;
 
     /**
-     * Count of elements for arrays, otherwise 1.
+     * Count of elements for arrays, otherwise 0.
      *
      * @type {number}
      */
     count;
 
-    constructor(name, type, count = 1) {
-        this.name = name;
+    constructor(name, type, count = 0) {
+
+        // just a name
+        this.shortName = name;
+
+        // name with [0] if this is an array
+        this.name = count ? `${name}[0]` : name;
+
         this.type = type;
 
-        this.count = count;
-        Debug.assert(count === 1, `Uniform arrays are not currently supported - uniform ${name}`);
+        this.updateType = type;
+        if (count) {
 
-        const elementSize = uniformTypeToNumElements[type];
+            switch (type) {
+                case UNIFORMTYPE_FLOAT: this.updateType = UNIFORMTYPE_FLOATARRAY; break;
+                case UNIFORMTYPE_VEC2: this.updateType = UNIFORMTYPE_VEC2ARRAY; break;
+                case UNIFORMTYPE_VEC3: this.updateType = UNIFORMTYPE_VEC3ARRAY; break;
+                case UNIFORMTYPE_VEC4: this.updateType = UNIFORMTYPE_VEC4ARRAY; break;
+                case UNIFORMTYPE_MAT4: this.updateType = UNIFORMTYPE_MAT4ARRAY; break;
+
+                default:
+                    Debug.error(`Uniform array of type ${uniformTypeToName[type]} is not supported when processing uniform '${name}'.`);
+                    Debug.call(() => {
+                        this.invalid = true;
+                    });
+                    break;
+            }
+        }
+
+        this.count = count;
+        Debug.assert(!isNaN(count), `Unsupported uniform: ${name}[${count}]`);
+        Debug.call(() => {
+            if (isNaN(count))
+                this.invalid = true;
+        });
+
+        let elementSize = uniformTypeToNumElements[type];
         Debug.assert(elementSize, `Unhandled uniform format ${type} used for ${name}`);
 
-        this.byteSize = count * elementSize * 4;
+        // element size for arrays is aligned up to vec4
+        if (count)
+            elementSize = math.roundUp(elementSize, 4);
+
+        this.byteSize = elementSize * 4;
+        if (count)
+            this.byteSize *= count;
+
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
     }
 
@@ -83,7 +115,11 @@ class UniformFormat {
     calculateOffset(offset) {
 
         // Note: vec3 has the same alignment as vec4
-        const alignment = this.byteSize <= 8 ? this.byteSize : 16;
+        let alignment = this.byteSize <= 8 ? this.byteSize : 16;
+
+        // arrays have vec4 alignments
+        if (this.count)
+            alignment = 16;
 
         // align the start offset
         offset = math.roundUp(offset, alignment);
@@ -150,7 +186,7 @@ class UniformBufferFormat {
         this.uniforms.forEach((uniform) => {
             const typeString = uniformTypeToName[uniform.type];
             Debug.assert(typeString.length > 0, `Uniform type ${uniform.type} is not handled.`);
-            code += `    ${typeString} ${uniform.name};\n`;
+            code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
         });
 
         return code + '};\n';

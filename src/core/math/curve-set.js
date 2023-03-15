@@ -6,6 +6,14 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * A curve set is a collection of curves.
  */
 class CurveSet {
+    curves = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _type = CURVE_SMOOTHSTEP;
+
     /**
      * Creates a new CurveSet instance.
      *
@@ -28,14 +36,6 @@ class CurveSet {
      * ]);
      */
     constructor() {
-        this.curves = [];
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._type = CURVE_SMOOTHSTEP;
-
         if (arguments.length > 1) {
             for (let i = 0; i < arguments.length; i++) {
                 this.curves.push(new Curve(arguments[i]));

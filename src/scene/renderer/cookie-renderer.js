@@ -3,7 +3,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { LIGHTTYPE_OMNI } from '../constants.js';

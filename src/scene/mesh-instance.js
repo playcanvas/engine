@@ -71,8 +71,8 @@ class Command {
  */
 
 /**
- * An instance of a {@link import('./mesh.js').Mesh}. A single mesh can be referenced by many mesh
- * instances that can have different transforms and materials.
+ * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
+ * have different transforms and materials.
  */
 class MeshInstance {
     /**
@@ -742,7 +742,7 @@ class MeshInstance {
      */
     updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
         this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
-                                                            viewUniformFormat, viewBindGroupFormat);
+                                                            viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 
     ensureMaterial(device) {

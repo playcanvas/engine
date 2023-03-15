@@ -1,39 +1,48 @@
 import { Debug } from '../../core/debug.js';
 
-// #if _DEBUG
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
-// #endif
-
-import { DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU } from './constants.js';
+import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU } from './constants.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 
 /**
  * Creates a graphics device.
  *
- * @param {Element} canvas - The canvas element.
+ * @param {HTMLCanvasElement} canvas - The canvas element.
  * @param {object} options - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
- * order in which the device are attempted to get created. Defaults to [{@link DEVICETYPE_WEBGL}].
- * @param {string} [options.glslangUrl] - An url to glslang scipt, required if
+ * order in which the devices are attempted to get created. Defaults to an empty array. If the
+ * specified array does not contain [{@link DEVICETYPE_WEBGL2} or {@link DEVICETYPE_WEBGL1}], those
+ * are internally added to its end in this order. Typically, you'd only specify
+ * {@link DEVICETYPE_WEBGPU}, or leave it empty.
+ * @param {string} [options.glslangUrl] - An url to glslang script, required if
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
+ * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
-    options.deviceTypes = options.deviceTypes ?? [DEVICETYPE_WEBGL];
+
+    const deviceTypes = options.deviceTypes ?? [];
+
+    // automatically added fallbacks
+    if (!deviceTypes.includes(DEVICETYPE_WEBGL2)) {
+        deviceTypes.push(DEVICETYPE_WEBGL2);
+    }
+    if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
+        deviceTypes.push(DEVICETYPE_WEBGL1);
+    }
 
     let device;
-    for (let i = 0; i < options.deviceTypes.length; i++) {
-        const deviceType = options.deviceTypes[i];
+    for (let i = 0; i < deviceTypes.length; i++) {
+        const deviceType = deviceTypes[i];
 
-        // #if _DEBUG
         if (deviceType === DEVICETYPE_WEBGPU && window?.navigator?.gpu) {
             device = new WebgpuGraphicsDevice(canvas, options);
-            return device.initWebGpu(options.glslangUrl);
+            return device.initWebGpu(options.glslangUrl, options.twgslUrl);
         }
-        // #endif
 
-        if (deviceType === DEVICETYPE_WEBGL) {
+        if (deviceType !== DEVICETYPE_WEBGPU) {
+            options.preferWebGl2 = deviceType === DEVICETYPE_WEBGL2;
             device = new WebglGraphicsDevice(canvas, options);
             return Promise.resolve(device);
         }

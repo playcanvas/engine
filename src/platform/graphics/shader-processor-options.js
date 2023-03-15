@@ -1,5 +1,10 @@
 import { BINDGROUP_VIEW } from "./constants.js";
 
+/**
+ * Options to drive shader processing to add support for bind groups and uniform buffers.
+ *
+ * @ignore
+ */
 class ShaderProcessorOptions {
     /** @type {import('./uniform-buffer-format.js').UniformBufferFormat[]} */
     uniformFormats = [];
@@ -7,19 +12,26 @@ class ShaderProcessorOptions {
     /** @type {import('./bind-group-format.js').BindGroupFormat[]} */
     bindGroupFormats = [];
 
+    /** @type {import('./vertex-format.js').VertexFormat[]} */
+    vertexFormat;
+
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - Format
+     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - Format
      * of the uniform buffer.
-     * @param {import('./bind-group-format.js').BindGroupFormat} viewBindGroupFormat - Format of
+     * @param {import('./bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - Format of
      * the bind group.
+     * @param {import('./vertex-format.js').VertexFormat} [vertexFormat] - Format of the vertex
+     * buffer.
      */
-    constructor(viewUniformFormat, viewBindGroupFormat) {
+    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
         this.bindGroupFormats[BINDGROUP_VIEW] = viewBindGroupFormat;
+
+        this.vertexFormat = vertexFormat;
     }
 
     /**
@@ -32,7 +44,7 @@ class ShaderProcessorOptions {
 
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
-            if (uniformFormat.get(name)) {
+            if (uniformFormat?.get(name)) {
                 return true;
             }
         }
@@ -50,12 +62,29 @@ class ShaderProcessorOptions {
 
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
-            if (groupFormat.getTexture(name)) {
+            if (groupFormat?.getTexture(name)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    getVertexElement(semantic) {
+        return this.vertexFormat?.elements.find(element => element.name === semantic);
+    }
+
+    /**
+     * Generate unique key represending the processing options.
+     *
+     * @returns {string} - Returns the key.
+     */
+    generateKey() {
+        // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
+        // constructors, and here we should simply concatenate those.
+        return JSON.stringify(this.uniformFormats) +
+        JSON.stringify(this.bindGroupFormats) +
+        this.vertexFormat?.renderingHashString;
     }
 }
 

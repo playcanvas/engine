@@ -5,6 +5,34 @@ import { math } from './math.js';
  */
 class Color {
     /**
+     * The red component of the color.
+     *
+     * @type {number}
+     */
+    r;
+
+    /**
+     * The green component of the color.
+     *
+     * @type {number}
+     */
+    g;
+
+    /**
+     * The blue component of the color.
+     *
+     * @type {number}
+     */
+    b;
+
+    /**
+     * The alpha component of the color.
+     *
+     * @type {number}
+     */
+    a;
+
+    /**
      * Create a new Color object.
      *
      * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
@@ -16,29 +44,9 @@ class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
         if (length === 3 || length === 4) {
-            /**
-             * The red component of the color.
-             *
-             * @type {number}
-             */
             this.r = r[0];
-            /**
-             * The green component of the color.
-             *
-             * @type {number}
-             */
             this.g = r[1];
-            /**
-             * The blue component of the color.
-             *
-             * @type {number}
-             */
             this.b = r[2];
-            /**
-             * The alpha component of the color.
-             *
-             * @type {number}
-             */
             this.a = r[3] !== undefined ? r[3] : 1;
         } else {
             this.r = r;

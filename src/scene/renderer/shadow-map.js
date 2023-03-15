@@ -51,14 +51,15 @@ class ShadowMap {
             return PIXELFORMAT_RGBA16F;
         } else if (shadowType === SHADOW_PCF5) {
             return PIXELFORMAT_DEPTH;
-        } else if (shadowType === SHADOW_PCF3 && device.webgl2) {
+        } else if (shadowType === SHADOW_PCF3 && device.supportsDepthShadow) {
             return PIXELFORMAT_DEPTH;
         }
+
         return PIXELFORMAT_RGBA8;
     }
 
     static getShadowFiltering(device, shadowType) {
-        if (shadowType === SHADOW_PCF3 && !device.webgl2) {
+        if (shadowType === SHADOW_PCF3 && !device.supportsDepthShadow) {
             return FILTER_NEAREST;
         } else if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
@@ -115,7 +116,7 @@ class ShadowMap {
         });
 
         let target = null;
-        if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2)) {
+        if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.supportsDepthShadow)) {
 
             // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
@@ -131,6 +132,11 @@ class ShadowMap {
                 colorBuffer: texture,
                 depth: true
             });
+        }
+
+        // TODO: this is temporary, and will be handle on generic level for all render targets for WebGPU
+        if (device.isWebGPU) {
+            target.flipY = true;
         }
 
         return new ShadowMap(texture, [target]);

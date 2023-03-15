@@ -710,9 +710,9 @@ class Scene extends EventHandler {
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
-        this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
-        this._skyboxLuminance = render.skyboxLuminance === undefined ? 20000 : render.skyboxLuminance;
-        this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
+        this._skyboxIntensity = render.skyboxIntensity ?? 1;
+        this._skyboxLuminance = render.skyboxLuminance ?? 20000;
+        this._skyboxMip = render.skyboxMip ?? 0;
 
         if (render.skyboxRotation) {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
@@ -795,9 +795,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Get the lightmap pixel format.
+     * The lightmap pixel format.
      *
-     * @type {number} The pixel format.
+     * @type {number}
      */
     get lightmapPixelFormat() {
         return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;

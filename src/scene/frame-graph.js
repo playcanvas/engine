@@ -111,11 +111,9 @@ class FrameGraph {
         });
 
         renderTargetMap.clear();
-
-        this.log();
     }
 
-    render() {
+    render(device) {
 
         this.compile();
 
@@ -123,25 +121,34 @@ class FrameGraph {
         for (let i = 0; i < renderPasses.length; i++) {
             renderPasses[i].render();
         }
+
+        this.log(device);
     }
 
-    log() {
+    log(device) {
         // #if _DEBUG
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
             this.renderPasses.forEach((renderPass, index) => {
 
-                const rt = renderPass.renderTarget === undefined ? '' : ` RT: ${(renderPass.renderTarget ? renderPass.renderTarget.name : 'NULL')} ` +
-                    `${renderPass.renderTarget?.colorBuffer ? '[Color]' : ''}` +
-                    `${renderPass.renderTarget?.depth ? '[Depth]' : ''}` +
-                    `${renderPass.renderTarget?.stencil ? '[Stencil]' : ''}` +
+                let rt = renderPass.renderTarget;
+                if (rt === null && device.isWebGPU) {
+                    rt = device.frameBuffer;
+                }
+                const hasColor = rt?.colorBuffer ?? rt?.impl.assignedColorTexture;
+                const hasDepth = rt?.depth;
+                const hasStencil = rt?.stencil;
+                const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+                    `${hasColor ? '[Color]' : ''}` +
+                    `${hasDepth ? '[Depth]' : ''}` +
+                    `${hasStencil ? '[Stencil]' : ''}` +
                     `${(renderPass.samples > 0 ? ' samples: ' + renderPass.samples : '')}`;
 
                 Debug.trace(TRACEID_RENDER_PASS,
                             `${index.toString().padEnd(2, ' ')}: ${renderPass.name.padEnd(20, ' ')}` +
-                            rt.padEnd(30));
+                            rtInfo.padEnd(30));
 
-                if (renderPass.colorOps) {
+                if (renderPass.colorOps && hasColor) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
                                 `${renderPass.colorOps.clear ? 'clear' : 'load'}->` +
                                 `${renderPass.colorOps.store ? 'store' : 'discard'} ` +
@@ -150,13 +157,18 @@ class FrameGraph {
                 }
 
                 if (renderPass.depthStencilOps) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
-                                `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
 
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
-                                `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                    if (hasDepth) {
+                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                                    `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
+                                    `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
+                    }
+
+                    if (hasStencil) {
+                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                                    `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
+                                    `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                    }
                 }
             });
         }

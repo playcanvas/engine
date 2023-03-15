@@ -48,28 +48,38 @@ class WebgpuShader {
     }
 
     process() {
+        const shader = this.shader;
+
         // process the shader source to allow for uniforms
-        const processed = ShaderProcessor.run(this.shader.device, this.shader.definition);
+        const processed = ShaderProcessor.run(shader.device, shader.definition, shader);
 
         // keep reference to processed shaders in debug mode
         Debug.call(() => {
             this.processed = processed;
         });
 
-        this._vertexCode = this.transpile(processed.vshader, 'vertex', this.shader.definition.vshader);
-        this._fragmentCode = this.transpile(processed.fshader, 'fragment', this.shader.definition.fshader);
+        this._vertexCode = this.transpile(processed.vshader, 'vertex', shader.definition.vshader);
+        this._fragmentCode = this.transpile(processed.fshader, 'fragment', shader.definition.fshader);
 
-        this.shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
-        this.shader.meshBindGroupFormat = processed.meshBindGroupFormat;
+        if (!(this._vertexCode && this._fragmentCode)) {
+            shader.failed = true;
+        } else {
+            shader.ready = true;
+        }
+
+        shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
+        shader.meshBindGroupFormat = processed.meshBindGroupFormat;
     }
 
     transpile(src, shaderType, originalSrc) {
         try {
-            return this.shader.device.glslang.compileGLSL(src, shaderType);
+            const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
+            return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}]`, {
                 processed: src,
-                original: originalSrc
+                original: originalSrc,
+                shader: this.shader
             });
         }
     }

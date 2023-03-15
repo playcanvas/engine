@@ -72,7 +72,7 @@ import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
-import ltc from './lit/frag/ltc.js';
+import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
 import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
@@ -280,7 +280,7 @@ const shaderChunks = {
     lightSpecularBlinnPS,
     lightSpecularPhongPS,
     lightSheenPS,
-    ltc,
+    ltcPS,
     metalnessPS,
     metalnessModulatePS,
     msdfPS,

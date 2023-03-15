@@ -9,7 +9,7 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
     BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
@@ -25,8 +25,7 @@ class Morph extends RefCountedObject {
      *
      * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this morph target. If it is not provided, a device is
-     * obtained from the {@link Application}.
+     * The graphics device used to manage this morph target.
      */
     constructor(targets, graphicsDevice) {
         super();
@@ -43,16 +42,16 @@ class Morph extends RefCountedObject {
 
             // pick renderable format - prefer half-float
             if (this.device.extTextureHalfFloat && this.device.textureHalfFloatRenderable) {
-                this._renderTextureFormat = Morph.FORMAT_HALF_FLOAT;
+                this._renderTextureFormat = PIXELFORMAT_RGBA16F;
             } else if (this.device.extTextureFloat && this.device.textureFloatRenderable) {
-                this._renderTextureFormat = Morph.FORMAT_FLOAT;
+                this._renderTextureFormat = PIXELFORMAT_RGBA32F;
             }
 
             // pick texture format - prefer half-float
             if (this.device.extTextureHalfFloat && this.device.textureHalfFloatUpdatable) {
-                this._textureFormat = Morph.FORMAT_HALF_FLOAT;
+                this._textureFormat = PIXELFORMAT_RGBA16F;
             } else  if (this.device.extTextureFloat) {
-                this._textureFormat = Morph.FORMAT_FLOAT;
+                this._textureFormat = PIXELFORMAT_RGB32F;
             }
 
             // if both available, enable texture morphing
@@ -65,10 +64,6 @@ class Morph extends RefCountedObject {
         this._updateMorphFlags();
         this._calculateAabb();
     }
-
-    static FORMAT_FLOAT = 0;
-
-    static FORMAT_HALF_FLOAT = 1;
 
     get morphPositions() {
         return this._morphPositions;
@@ -175,16 +170,17 @@ class Morph extends RefCountedObject {
         let halfFloat = false;
         let numComponents = 3;  // RGB32 is used
         const float2Half = FloatPacking.float2Half;
-        if (this._textureFormat === Morph.FORMAT_HALF_FLOAT) {
+        if (this._textureFormat === PIXELFORMAT_RGBA16F) {
             halfFloat = true;
             numComponents = 4;  // RGBA16 is used, RGB16 does not work
         }
 
         // build texture for each delta array, all textures are the same size
-        const arraySize = this.morphTextureWidth * this.morphTextureHeight * numComponents;
-        const packedDeltas = halfFloat ? new Uint16Array(arraySize) : new Float32Array(arraySize);
         for (let i = 0; i < deltaArrays.length; i++) {
             const data = deltaArrays[i];
+
+            const texture = this._createTexture('MorphTarget', this._textureFormat);
+            const packedDeltas = texture.lock();
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
             for (let v = 0; v < usedDataIndices.length; v++) {
@@ -202,9 +198,9 @@ class Morph extends RefCountedObject {
             }
 
             // create texture and assign it to target
+            texture.unlock();
             const target = deltaInfos[i].target;
-            const format = this._textureFormat === Morph.FORMAT_FLOAT ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
-            target._setTexture(deltaInfos[i].name, this._createTexture('MorphTarget', format, packedDeltas));
+            target._setTexture(deltaInfos[i].name, texture);
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
@@ -271,9 +267,8 @@ class Morph extends RefCountedObject {
     }
 
     // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
-    _createTexture(name, format, pixelData) {
-
-        const texture = new Texture(this.device, {
+    _createTexture(name, format) {
+        return new Texture(this.device, {
             width: this.morphTextureWidth,
             height: this.morphTextureHeight,
             format: format,
@@ -285,13 +280,6 @@ class Morph extends RefCountedObject {
             addressV: ADDRESS_CLAMP_TO_EDGE,
             name: name
         });
-
-        if (pixelData) {
-            texture.lock().set(pixelData);
-            texture.unlock();
-        }
-
-        return texture;
     }
 }
 
