@@ -102,7 +102,7 @@ class AnimState {
     }
 
     _updateHasAnimations() {
-        this._hasAnimations = this._animationList.length > 0 && this._animationList.filter(animation => !animation.animTrack || animation.animTrack === AnimTrack.EMPTY).length === 0;
+        this._hasAnimations = this._animationList.length > 0 && this._animationList.every(animation => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
     }
 
     get name() {
