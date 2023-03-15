@@ -645,7 +645,7 @@ GraphicsDevice.prototype.setDepthWrite = function (write) {
     this.setDepthState(_tempDepthState);
 };
 
-GraphicsDevice.prototype.setDepthFunc = function(func) {
+GraphicsDevice.prototype.setDepthFunc = function (func) {
     Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
     _tempDepthState.copy(this.depthState);
     _tempDepthState.func = func;

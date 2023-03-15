@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { FUNC_LESSEQUAL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
+import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
