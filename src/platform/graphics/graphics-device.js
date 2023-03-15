@@ -480,6 +480,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     *
+     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     */
+    get deviceType() {
+        return this._deviceType;
+    }
+
+    /**
      * Queries the maximum number of bones that can be referenced by a shader. The shader
      * generators (programlib) use this number to specify the matrix array size of the uniform
      * 'matrix_pose[0]'. The value is calculated based on the number of available uniform vectors

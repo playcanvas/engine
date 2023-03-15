@@ -18,7 +18,9 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation,
-    PRIMITIVE_TRISTRIP
+    PRIMITIVE_TRISTRIP,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL1
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -400,7 +402,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl = canvas.getContext(names[i], options);
 
             if (gl) {
-                this.webgl2 = (names[i] === 'webgl2');
+                this.webgl2 = (names[i] === DEVICETYPE_WEBGL2);
+                this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
                 break;
             }
         }

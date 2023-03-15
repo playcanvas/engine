@@ -4,7 +4,7 @@ class MultiViewExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Multi View';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -22,7 +22,13 @@ class MultiViewExample {
                 'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
             };
 
-            pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+            const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;

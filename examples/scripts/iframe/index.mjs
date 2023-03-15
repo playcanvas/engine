@@ -53,6 +53,7 @@ function buildExample(category, filename) {
     fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}/${filename.replace(".tsx", "")}.html`, loadHtmlTemplate({
         exampleClass: exampleClass,
         enginePath: process.env.ENGINE_PATH || enginePath,
+        webgpuEnabled: formatters.getWebgpuEnabledFromClass(exampleClass),
         miniStats: !formatters.classIncludesMiniStats(exampleClass)
     }));
 }

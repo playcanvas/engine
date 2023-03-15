@@ -4,6 +4,7 @@ import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextI
 import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
+import { MIN_DESKTOP_WIDTH } from './constants.js';
 
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
@@ -40,7 +41,7 @@ const SideBar = () => {
             topNavItem.scrollIntoView();
         });
 
-        if (!filteredCategories && document.body.offsetWidth < 601) {
+        if (!filteredCategories && document.body.offsetWidth < MIN_DESKTOP_WIDTH) {
             // @ts-ignore
             sideBar.ui.collapsed = true;
         }
@@ -57,7 +58,7 @@ const SideBar = () => {
     const categories = filteredCategories || defaultCategories;
     return (
         <>
-            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} collapsed={true} id='sideBar' class='small-thumbnails'>
+            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < MIN_DESKTOP_WIDTH} collapsed={true} id='sideBar' class='small-thumbnails'>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {
                     const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
                     if (!reg) {

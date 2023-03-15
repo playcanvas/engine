@@ -53,7 +53,7 @@ void main(void)
     };
 
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
