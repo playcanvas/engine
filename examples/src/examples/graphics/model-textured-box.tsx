@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class ModelTexturedBoxExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Textured Box';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

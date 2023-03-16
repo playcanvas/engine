@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class RenderAssetExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render Asset';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

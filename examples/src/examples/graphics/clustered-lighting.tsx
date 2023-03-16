@@ -4,6 +4,7 @@ class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Lighting';
     static ENGINE = 'PERFORMANCE';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MaterialTranslucentSpecularExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Translucent Specular';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

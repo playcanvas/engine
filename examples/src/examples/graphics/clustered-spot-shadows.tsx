@@ -8,7 +8,7 @@ class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';
-
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>

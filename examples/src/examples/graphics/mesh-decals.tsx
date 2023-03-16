@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MeshDecalsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Decals';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

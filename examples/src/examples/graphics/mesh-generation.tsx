@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MeshGenerationExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Generation';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

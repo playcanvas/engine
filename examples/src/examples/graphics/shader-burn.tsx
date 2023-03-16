@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class ShaderBurnExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Burn';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
 attribute vec3 aPosition;

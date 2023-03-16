@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class MaterialPhysicalExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Physical';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

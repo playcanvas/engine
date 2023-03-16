@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class HardwareInstancingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hardware Instancing';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
