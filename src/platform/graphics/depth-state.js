@@ -122,7 +122,7 @@ class DepthState {
     }
 
     /**
-     * A default depth state that has depth testing enabled and writes to depth buffer.
+     * A default depth state that has the depth testing function set to {@link FUNC_LESSEQUAL} and depth writes enabled.
      *
      * @type {DepthState}
      * @readonly
