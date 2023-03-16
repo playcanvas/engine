@@ -123,7 +123,7 @@ class Quat {
      * @example
      * var a = new pc.Quat();
      * var b = new pc.Quat();
-     * console.log("The two quaternions are " + (a.equals(b, 1e-9) ? "equal" : "different"));
+     * console.log("The two quaternions are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
      */
     equalsApprox(rhs, epsilon = 1e-6) {
         return (Math.abs(this.x - rhs.x) < epsilon) &&
