@@ -51,16 +51,9 @@ class ControlLoader extends Component <ControlLoaderProps, ControlLoaderState> {
                 exampleLoaded: true
             });
 
-
-            const pollHandler = setInterval(appCreationPoll, 50);
-            function appCreationPoll() {
-                if ((window as any).pc.app) {
-                    clearInterval(pollHandler);
-                    const app: { graphicsDevice: { deviceType: string } } = (window as any).pc.app;
-                    const activeDevice = app.graphicsDevice.deviceType;
-                    controlsObserver.emit('updateActiveDevice', activeDevice);
-                }
-            }
+            const app: { graphicsDevice: { deviceType: string } } = (window as any).pc.app;
+            const activeDevice = app.graphicsDevice.deviceType;
+            controlsObserver.emit('updateActiveDevice', activeDevice);
         });
     }
 
@@ -152,6 +145,7 @@ class Example extends Component <ExampleProps, ExampleState> {
             this.deviceTypeSelectInput.value = value;
         }
         this.setDisabledOptions(this.preferredGraphicsDevice, value);
+        document.getElementById('showMiniStatsButton').ui.enabled = value !== DEVICETYPE_WEBGPU;
     };
 
     onSetPreferredGraphicsDevice = (value: string) => {
