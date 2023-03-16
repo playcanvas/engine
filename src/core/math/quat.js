@@ -118,7 +118,7 @@ class Quat {
      * Reports whether two quaternions are equal using an absolute error tolerance.
      *
      * @param {Quat} rhs - The quaternion to be compared against.
-     * @param {number} [epsilon] - The maximum difference between each component of the two quaternions.
+     * @param {number} [epsilon=1e-6] - The maximum difference between each component of the two quaternions. Defaults to 1e-6.
      * @returns {boolean} True if the quaternions are equal and false otherwise.
      * @example
      * var a = new pc.Quat();
