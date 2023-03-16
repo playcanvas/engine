@@ -32,8 +32,8 @@ class DepthState {
      * @param {number} func - Controls how the depth of the fragment is compared against the
      * current depth contained in the depth buffer. See {@link DepthState#func} for details.
      * Defaults to {@link FUNC_LESSEQUAL}.
-     * @param {boolean} write - If true, shader write a depth value to the depth buffer of the
-     * currently active render target. If false, no depth value is written. Defaults to true.
+     * @param {boolean} write - If true, depth values are written to the depth buffer of the
+     * currently active render target. Defaults to true.
      */
     constructor(func = FUNC_LESSEQUAL, write = true) {
         this.func = func;
@@ -92,6 +92,12 @@ class DepthState {
         return BitPacking.get(this.data, funcShift, funcMask);
     }
 
+    /**
+     * Copies the contents of a source depth state to this depth state.
+     *
+     * @param {DepthState} rhs - A depth state to copy from.
+     * @returns {DepthState} Self for chaining.
+     */
     copy(rhs) {
         this.data = rhs.data;
         return this;

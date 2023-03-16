@@ -191,6 +191,12 @@ class BlendState {
         return BitPacking.get(this.target0, allWriteShift, allWriteMasks);
     }
 
+    /**
+     * Copies the contents of a source blend state to this blend state.
+     *
+     * @param {BlendState} rhs - A blend state to copy from.
+     * @returns {BlendState} Self for chaining.
+     */
     copy(rhs) {
         this.target0 = rhs.target0;
         return this;
