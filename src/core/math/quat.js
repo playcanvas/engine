@@ -104,7 +104,6 @@ class Quat {
      * Reports whether two quaternions are equal.
      *
      * @param {Quat} rhs - The quaternion to be compared against.
-     * @param {number} [epsilon] - The maximum difference between each component of the two quaternions.
      * @returns {boolean} True if the quaternions are equal and false otherwise.
      * @example
      * var a = new pc.Quat();
@@ -112,9 +111,21 @@ class Quat {
      * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs, epsilon) {
-        if (epsilon === undefined) {
-            return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
-        }
+        return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
+    }
+
+    /**
+     * Reports whether two quaternions are equal using an absolute error tolerance.
+     *
+     * @param {Quat} rhs - The quaternion to be compared against.
+     * @param {number} [epsilon] - The maximum difference between each component of the two quaternions.
+     * @returns {boolean} True if the quaternions are equal and false otherwise.
+     * @example
+     * var a = new pc.Quat();
+     * var b = new pc.Quat();
+     * console.log("The two quaternions are " + (a.equals(b, 1e-9) ? "equal" : "different"));
+     */
+    equalsApprox(rhs, epsilon = 1e-6) {
         return (Math.abs(this.x - rhs.x) < epsilon) &&
             (Math.abs(this.y - rhs.y) < epsilon) &&
             (Math.abs(this.z - rhs.z) < epsilon) &&
@@ -546,8 +557,8 @@ class Quat {
     /**
      * Set the quaternion that represents the shortest rotation from one direction to another.
      *
-     * @param {import('./vec3').Vec3} from - The direction to rotate from. It should be normalized.
-     * @param {import('./vec3').Vec3} to - The direction to rotate to. It should be normalized.
+     * @param {Vec3} from - The direction to rotate from. It should be normalized.
+     * @param {Vec3} to - The direction to rotate to. It should be normalized.
      * @returns {Quat} Self for chaining.
      *
      * Proof of correctness: https://www.xarg.org/proof/quaternion-from-two-vectors/

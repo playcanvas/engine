@@ -99,13 +99,13 @@ describe('Quat', function () {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat(0.10000000000000001, 0.2, 0.3, 0.4);
             const epsilon = 0.000001;
-            expect(q1.equals(q2, epsilon)).to.be.true;
+            expect(q1.equalsApprox(q2, epsilon)).to.be.true;
 
             const q3 = new Quat(0.1 + epsilon - Number.EPSILON, 0.2, 0.3, 0.4);
-            expect(q1.equals(q3, epsilon)).to.be.true;
+            expect(q1.equalsApprox(q3, epsilon)).to.be.true;
 
             const q4 = new Quat(0.1 + epsilon + Number.EPSILON, 0.2, 0.3, 0.4);
-            expect(q1.equals(q4, epsilon)).to.be.false;
+            expect(q1.equalsApprox(q4, epsilon)).to.be.false;
         });
 
     });
@@ -587,7 +587,7 @@ describe('Quat', function () {
             const q1 = new Quat().setFromDirections(v1, v2);
             const q2 = new Quat().setFromEulerAngles(0, 0, 90);
 
-            expect(q1.equals(q2, epsilon)).to.be.true;
+            expect(q1.equalsApprox(q2, epsilon)).to.be.true;
 
             const v3 = new Vec3(1, 0, 0);
             const v4 = new Vec3(1, 1, 0).normalize();
@@ -595,10 +595,10 @@ describe('Quat', function () {
             const q3 = new Quat().setFromDirections(v3, v4);
             const q4 = new Quat().setFromEulerAngles(0, 0, 45);
 
-            expect(q3.equals(q4, epsilon)).to.be.true;
+            expect(q3.equalsApprox(q4, epsilon)).to.be.true;
 
             const q5 = new Quat().setFromEulerAngles(0, 0, 44);
-            expect(q3.equals(q5, epsilon)).to.be.false;
+            expect(q3.equalsApprox(q5, epsilon)).to.be.false;
 
         });
 
