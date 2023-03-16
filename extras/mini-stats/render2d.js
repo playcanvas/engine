@@ -15,7 +15,8 @@ import {
     IndexBuffer,
     VertexBuffer,
     VertexFormat,
-    BlendState
+    BlendState,
+    DepthState
 } from 'playcanvas';
 
 // render 2d textured quads
@@ -175,10 +176,9 @@ class Render2d {
         buffer.setData(this.data.buffer);
 
         device.updateBegin();
-        device.setDepthTest(false);
-        device.setDepthWrite(false);
         device.setCullMode(CULLFACE_NONE);
         device.setBlendState(this.blendState);
+        device.setDepthState(DepthState.NODEPTH);
 
         device.setVertexBuffer(buffer, 0);
         device.setIndexBuffer(this.indexBuffer);

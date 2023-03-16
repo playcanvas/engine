@@ -76,6 +76,26 @@ class Command {
  */
 class MeshInstance {
     /**
+     * Enable rendering for this mesh instance. Use visible property to enable/disable
+     * rendering without overhead of removing from scene. But note that the mesh instance is
+     * still in the hierarchy and still in the draw call list.
+     *
+     * @type {boolean}
+     */
+    visible = true;
+
+    /**
+     * Enable shadow casting for this mesh instance. Use this property to enable/disable
+     * shadow casting without overhead of removing from scene. Note that this property does not
+     * add the mesh instance to appropriate list of shadow casters on a {@link pc.Layer}, but
+     * allows mesh to be skipped from shadow casting while it is in the list already. Defaults to
+     * false.
+     *
+     * @type {boolean}
+     */
+    castShadow = false;
+
+    /**
      * @type {import('./materials/material.js').Material}
      * @private
      */
@@ -156,25 +176,16 @@ class MeshInstance {
         this._lightHash = 0;
 
         // Render options
-        /**
-         * Enable rendering for this mesh instance. Use visible property to enable/disable
-         * rendering without overhead of removing from scene. But note that the mesh instance is
-         * still in the hierarchy and still in the draw call list.
-         *
-         * @type {boolean}
-         */
-        this.visible = true;
         this.layer = LAYER_WORLD; // legacy
         /** @private */
         this._renderStyle = RENDERSTYLE_SOLID;
-        this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
         this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
-         * ({@link CameraComponent#frustumCulling}).
+         * ({@link CameraComponent#frustumCulling}). Defaults to true.
          *
          * @type {boolean}
          */
@@ -366,7 +377,8 @@ class MeshInstance {
 
                 // update local space bounding box by morph targets
                 if (this.mesh && this.mesh.morph) {
-                    localAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
+                    const morphAabb = this.mesh.morph.aabb;
+                    localAabb._expand(morphAabb.getMin(), morphAabb.getMax());
                 }
 
                 toWorldSpace = true;
@@ -433,9 +445,9 @@ class MeshInstance {
             const uniformBuffer = new UniformBuffer(device, ubFormat);
 
             // mesh bind group
-            const bingGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bingGroupFormat);
-            bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
             DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
 
             this._bindGroups[pass] = bindGroup;

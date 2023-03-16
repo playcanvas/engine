@@ -4,7 +4,7 @@ class HelloWorldExample {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const app = new pc.Application(canvas, {});
 

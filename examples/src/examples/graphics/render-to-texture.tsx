@@ -4,7 +4,7 @@ class RenderToTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render to Texture';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // Overview:
         // There are 3 layers used:
@@ -20,7 +20,13 @@ class RenderToTextureExample {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

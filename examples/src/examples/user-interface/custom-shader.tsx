@@ -65,13 +65,19 @@ void main(void)
 }`
     };
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
             "playcanvas": new pc.Asset("playcanvas", "texture", { url: "/static/assets/textures/playcanvas.png" })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

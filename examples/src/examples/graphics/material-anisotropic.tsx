@@ -3,15 +3,22 @@ import * as pc from '../../../../';
 class LightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Anisotropic';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

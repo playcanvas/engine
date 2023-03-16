@@ -145,6 +145,9 @@ class ContainerResource {
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
  * allowing the clone operation.
+ * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
+ * be prefered. This is faster to create and allows higher precision, but takes more memory and
+ * might be slower to render. Defaults to false.
  * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
  * useful if you only need access to textures or animations and similar.
  *

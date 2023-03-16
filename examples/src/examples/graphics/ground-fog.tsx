@@ -101,7 +101,7 @@ class GroundFogExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -110,7 +110,13 @@ class GroundFogExample {
             'texture': new pc.Asset('color', 'texture', { url: '/static/assets/textures/clouds.jpg' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

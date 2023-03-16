@@ -31,7 +31,7 @@ const allWriteShift = redWriteShift;
  */
 class BlendState {
     /**
-     * Number bits of which represent the blend state for render target 0.
+     * Bitfield representing the blend state for render target 0.
      *
      * @private
      */
@@ -67,26 +67,26 @@ class BlendState {
      * Note that MIN and MAX operations on WebGL platform require either EXT_blend_minmax or WebGL2
      * to work (check device.extBlendMinmax).
      *
-     * @param {boolean} blend - Enables or disables blending. Defaults to false.
-     * @param {number} colorOp - Configures color blending operation. Defaults to
+     * @param {boolean} [blend] - Enables or disables blending. Defaults to false.
+     * @param {number} [colorOp] - Configures color blending operation. Defaults to
      * {@link BLENDEQUATION_ADD}.
-     * @param {number} colorSrcFactor - Configures source color blending factor. Defaults to
+     * @param {number} [colorSrcFactor] - Configures source color blending factor. Defaults to
      * {@link BLENDMODE_ONE}.
-     * @param {number} colorDstFactor - Configures destination color blending factor. Defaults to
+     * @param {number} [colorDstFactor] - Configures destination color blending factor. Defaults to
      * {@link BLENDMODE_ZERO}.
-     * @param {number} alphaOp - Configures alpha blending operation. Defaults to
+     * @param {number} [alphaOp] - Configures alpha blending operation. Defaults to
      * {@link BLENDEQUATION_ADD}.
-     * @param {number} alphaSrcFactor - Configures source alpha blending factor. Defaults to
+     * @param {number} [alphaSrcFactor] - Configures source alpha blending factor. Defaults to
      * {@link BLENDMODE_ONE}.
-     * @param {number} alphaDstFactor - Configures destination alpha blending factor. Defaults to
+     * @param {number} [alphaDstFactor] - Configures destination alpha blending factor. Defaults to
      * {@link BLENDMODE_ZERO}.
-     * @param {boolean} redWrite - True to enable writing of the red channel and false otherwise.
+     * @param {boolean} [redWrite] - True to enable writing of the red channel and false otherwise.
      * Defaults to true.
-     * @param {boolean} greenWrite - True to enable writing of the green channel and false
+     * @param {boolean} [greenWrite] - True to enable writing of the green channel and false
      * otherwise. Defaults to true.
-     * @param {boolean} blueWrite - True to enable writing of the blue channel and false otherwise.
+     * @param {boolean} [blueWrite] - True to enable writing of the blue channel and false otherwise.
      * Defaults to true.
-     * @param {boolean} alphaWrite - True to enable writing of the alpha channel and false
+     * @param {boolean} [alphaWrite] - True to enable writing of the alpha channel and false
      * otherwise. Defaults to true.
      */
     constructor(blend = false, colorOp = BLENDEQUATION_ADD, colorSrcFactor = BLENDMODE_ONE, colorDstFactor = BLENDMODE_ZERO,
@@ -191,6 +191,12 @@ class BlendState {
         return BitPacking.get(this.target0, allWriteShift, allWriteMasks);
     }
 
+    /**
+     * Copies the contents of a source blend state to this blend state.
+     *
+     * @param {BlendState} rhs - A blend state to copy from.
+     * @returns {BlendState} Self for chaining.
+     */
     copy(rhs) {
         this.target0 = rhs.target0;
         return this;
@@ -221,12 +227,20 @@ class BlendState {
     }
 
     /**
-     * A default blend state, that is not blending and writes to all color channels.
+     * A default blend state that has blending disabled and writes to all color channels.
      *
      * @type {BlendState}
      * @readonly
      */
     static DEFAULT = Object.freeze(new BlendState());
+
+    /**
+     * A blend state that does not write to color channels.
+     *
+     * @type {BlendState}
+     * @readonly
+     */
+    static NOWRITE = Object.freeze(new BlendState(undefined, undefined, undefined, undefined, undefined, undefined, undefined, false, false, false, false));
 }
 
 export { BlendState };
