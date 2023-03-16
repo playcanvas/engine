@@ -2497,7 +2497,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // handle case where depth testing is off, but depth write is on => enable always test to depth write
-            // Note on WebGL API behaviour:  When depth testing is disabled, writes to the depth buffer are also disabled.
+            // Note on WebGL API behavior: When depth testing is disabled, writes to the depth buffer are also disabled.
             let { func, test } = depthState;
             if (!test && write) {
                 test = true;
