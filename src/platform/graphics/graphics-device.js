@@ -144,7 +144,7 @@ class GraphicsDevice extends EventHandler {
     blendState = new BlendState();
 
     /**
-     * An object representing current depth state
+     * The current depth state.
      *
      * @ignore
      */
