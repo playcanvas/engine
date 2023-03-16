@@ -115,6 +115,24 @@ class Quat {
     }
 
     /**
+     * Reports whether two quaternions are equal using an absolute error tolerance.
+     *
+     * @param {Quat} rhs - The quaternion to be compared against.
+     * @param {number} [epsilon=1e-6] - The maximum difference between each component of the two quaternions. Defaults to 1e-6.
+     * @returns {boolean} True if the quaternions are equal and false otherwise.
+     * @example
+     * var a = new pc.Quat();
+     * var b = new pc.Quat();
+     * console.log("The two quaternions are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
+     */
+    equalsApprox(rhs, epsilon = 1e-6) {
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon) &&
+            (Math.abs(this.w - rhs.w) < epsilon);
+    }
+
+    /**
      * Gets the rotation axis and angle for a given quaternion. If a quaternion is created with
      * `setFromAxisAngle`, this method will return the same values as provided in the original
      * parameter list OR functionally equivalent values.
@@ -534,6 +552,43 @@ class Quat {
         }
 
         return this;
+    }
+
+    /**
+     * Set the quaternion that represents the shortest rotation from one direction to another.
+     *
+     * @param {Vec3} from - The direction to rotate from. It should be normalized.
+     * @param {Vec3} to - The direction to rotate to. It should be normalized.
+     * @returns {Quat} Self for chaining.
+     *
+     * {@link https://www.xarg.org/proof/quaternion-from-two-vectors/ Proof of correctness}
+     */
+    setFromDirections(from, to) {
+        const dotProduct = 1 + from.dot(to);
+
+        if (dotProduct < Number.EPSILON) {
+            // the vectors point in opposite directions
+            // so we need to rotate 180 degrees around an arbitrary orthogonal axis
+            if (Math.abs(from.x) > Math.abs(from.y)) {
+                this.x = -from.z;
+                this.y = 0;
+                this.z = from.x;
+                this.w = 0;
+            } else {
+                this.x = 0;
+                this.y = -from.z;
+                this.z = from.y;
+                this.w = 0;
+            }
+        } else {
+            // cross product between the two vectors
+            this.x = from.y * to.z - from.z * to.y;
+            this.y = from.z * to.x - from.x * to.z;
+            this.z = from.x * to.y - from.y * to.x;
+            this.w = dotProduct;
+        }
+
+        return this.normalize();
     }
 
     /**
