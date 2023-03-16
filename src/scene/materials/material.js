@@ -322,7 +322,7 @@ class Material {
     }
 
     /**
-     * Sets the depth state. Note that this can be also done by using {@link pc.Material.depthTest},
+     * Sets the depth state. Note that this can also be done by using {@link Material#depthTest},
      * {@link pc.Material.depthFunc} and {@link pc.Material.depthWrite}.
      *
      * @type { DepthState }
