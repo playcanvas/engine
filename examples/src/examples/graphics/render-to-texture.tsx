@@ -161,7 +161,7 @@ class RenderToTextureExample {
                 createPrimitive("box", new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELLOW, [worldLayer.id]);
 
                 // particle system
-                //createParticleSystem(new pc.Vec3(2, 3, 0));
+                createParticleSystem(new pc.Vec3(2, 3, 0));
 
                 // Create main camera, which renders entities in world, excluded and skybox layers
                 const camera = new pc.Entity("Camera");
