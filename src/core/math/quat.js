@@ -110,7 +110,7 @@ class Quat {
      * var b = new pc.Quat();
      * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
      */
-    equals(rhs, epsilon) {
+    equals(rhs) {
         return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
     }
 
