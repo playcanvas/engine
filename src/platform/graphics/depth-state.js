@@ -41,7 +41,7 @@ class DepthState {
     }
 
     /**
-     * If true, shader fragment is only written to the current render target if it passes the depth
+     * If true, a shader fragment is only written to the current render target if it passes the depth
      * test. If false, it is written regardless of what is in the depth buffer. Note that when depth
      * testing is disabled, writes to the depth buffer are also disabled. Defaults to true.
      *
