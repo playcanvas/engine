@@ -332,7 +332,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState);
+                                                     this.bindGroupFormats, this.blendState, this.depthState);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -368,6 +368,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.blendState.copy(blendState);
     }
 
+    setDepthState(depthState) {
+        this.depthState.copy(depthState);
+    }
+
     setBlendColor(r, g, b, a) {
         // TODO: this should use passEncoder.setBlendConstant(color)
     }
@@ -376,10 +380,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthTest(depthTest) {
-    }
-
-    getDepthTest() {
-        return true;
     }
 
     setCullMode(cullMode) {
@@ -393,10 +393,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthWrite(writeDepth) {
-    }
-
-    getDepthWrite() {
-        return true;
     }
 
     initializeContextCaches() {

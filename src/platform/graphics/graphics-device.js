@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
-import { BlendState } from './blend-state.js';
 
 import {
     BUFFER_STATIC,
@@ -10,6 +9,8 @@ import {
     CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
+import { BlendState } from './blend-state.js';
+import { DepthState } from './depth-state.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
@@ -141,6 +142,13 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     blendState = new BlendState();
+
+    /**
+     * The current depth state.
+     *
+     * @ignore
+     */
+    depthState = new DepthState();
 
     defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -278,6 +286,7 @@ class GraphicsDevice extends EventHandler {
     initializeRenderState() {
 
         this.blendState = new BlendState();
+        this.depthState = new DepthState();
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -290,6 +299,15 @@ class GraphicsDevice extends EventHandler {
      * @param {BlendState} blendState - New blend state.
      */
     setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the specified depth state.
+     *
+     * @param {DepthState} depthState - New depth state.
+     */
+    setDepthState(depthState) {
         Debug.assert(false);
     }
 

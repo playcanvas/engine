@@ -3,6 +3,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
 
@@ -36,13 +37,10 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
-    const oldDepthTest = device.getDepthTest();
-    const oldDepthWrite = device.getDepthWrite();
     const oldCullMode = device.getCullMode();
-
-    device.setDepthTest(false);
-    device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
+
+    device.setDepthState(DepthState.NODEPTH);
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
@@ -73,8 +71,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     renderPass.render();
     quad.destroy();
 
-    device.setDepthTest(oldDepthTest);
-    device.setDepthWrite(oldDepthWrite);
     device.setCullMode(oldCullMode);
 
     DebugGraphics.popGpuMarker(device);

@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { FUNC_LESSEQUAL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
+import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
@@ -24,6 +24,7 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -198,15 +199,12 @@ class ShadowRenderer {
         }
 
         // Set standard shadowmap states
-        device.setDepthWrite(true);
-        device.setDepthTest(true);
-        device.setDepthFunc(FUNC_LESSEQUAL);
-
         const useShadowSampler = isClustered ?
             light._isPcf && device.webgl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
             light._isPcf && device.webgl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
+        device.setDepthState(DepthState.DEFAULT);
     }
 
     restoreRenderState(device) {
