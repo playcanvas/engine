@@ -1,10 +1,9 @@
 import * as pc from '../../../../';
 
-
 class KeyboardExample {
     static CATEGORY = 'Input';
     static NAME = 'Keyboard';
-
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

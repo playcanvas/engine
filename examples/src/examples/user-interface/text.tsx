@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class TextExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Text';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

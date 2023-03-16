@@ -178,8 +178,6 @@ class BlendTrees1DExample {
 
                 app.root.addChild(modelEntity);
 
-                app.start();
-
                 data.on('blend:set', (blend: number) => {
                     modelEntity.anim.setFloat('blend', blend);
                 });

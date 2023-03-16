@@ -3,7 +3,7 @@ import * as pc from '../../../../';
 class GamepadExample {
     static CATEGORY = 'Input';
     static NAME = 'Gamepad';
-
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
         // Create the application and start the update loop
