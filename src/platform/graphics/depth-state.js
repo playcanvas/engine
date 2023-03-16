@@ -130,7 +130,7 @@ class DepthState {
     static DEFAULT = Object.freeze(new DepthState());
 
     /**
-     * A depth state that does not use depth buffer and always passes the fragment.
+     * A depth state that always passes the fragment but does not write depth to the depth buffer.
      *
      * @type {DepthState}
      * @readonly
