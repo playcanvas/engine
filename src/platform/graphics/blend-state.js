@@ -31,7 +31,7 @@ const allWriteShift = redWriteShift;
  */
 class BlendState {
     /**
-     * Number, bits of which represent the blend state for render target 0.
+     * Bitfield representing the blend state for render target 0.
      *
      * @private
      */
