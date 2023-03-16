@@ -138,7 +138,7 @@ class DepthState {
     static NODEPTH = Object.freeze(new DepthState(FUNC_ALWAYS, false));
 
     /**
-     * A depth state that does always passes the fragment and writes depth to depth buffer.
+     * A depth state that always passes the fragment and writes depth to the depth buffer.
      *
      * @type {DepthState}
      * @readonly
