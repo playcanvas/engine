@@ -4,7 +4,7 @@ import * as pc from '../../../../';
 class MouseExample {
     static CATEGORY = 'Input';
     static NAME = 'Mouse';
-
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
         const assets = {

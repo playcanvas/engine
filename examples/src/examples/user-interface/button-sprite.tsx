@@ -1,10 +1,9 @@
 import * as pc from '../../../../';
 
-
 class ButtonSpriteExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Button Sprite';
-
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

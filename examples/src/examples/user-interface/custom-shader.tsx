@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class CustomShaderExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Custom Shader';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
 /**

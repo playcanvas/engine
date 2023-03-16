@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class ButtonBasicExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Button Basic';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class VehicleExample {
     static CATEGORY = 'Physics';
     static NAME = 'Vehicle';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
@@ -25,12 +26,12 @@ class VehicleExample {
             };
 
             const gfxOptions = {
-            deviceTypes: [deviceType],
-            glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
-        };
+                deviceTypes: [deviceType],
+                glslangUrl: '/static/lib/glslang/glslang.js',
+                twgslUrl: '/static/lib/twgsl/twgsl.js'
+            };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;

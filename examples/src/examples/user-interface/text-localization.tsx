@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class TextLocalizationExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Text Localization';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

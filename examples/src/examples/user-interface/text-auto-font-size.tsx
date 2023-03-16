@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class TextAutoFontSizeExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Text Auto Font Size';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
