@@ -1040,7 +1040,7 @@ class LitShader {
         }
 
         if (options.lightMapEnabled || options.useLightMapVertexColors) {
-            backend.append("    addLightMap(litShaderArgs);");
+            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);");
         }
 
         if (this.lighting || this.reflections) {
