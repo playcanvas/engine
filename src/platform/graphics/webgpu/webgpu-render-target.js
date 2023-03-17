@@ -243,7 +243,7 @@ class WebgpuRenderTarget {
             colorAttachment.view = colorView;
         }
 
-        // if we have color buffer, or at least a format (main framebuffer that get assigned later)
+        // if we have color a buffer, or at least a format (main framebuffer that gets assigned later)
         if (colorAttachment.view || this.colorFormat) {
             this.renderPassDescriptor.colorAttachments.push(colorAttachment);
         }
