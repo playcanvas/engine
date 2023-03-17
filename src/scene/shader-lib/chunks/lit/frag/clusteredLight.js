@@ -554,7 +554,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, dReflDirW, worldNormal, sheen.gloss) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, sheen.gloss) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif

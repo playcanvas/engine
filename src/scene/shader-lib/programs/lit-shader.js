@@ -1264,7 +1264,7 @@ class LitShader {
                             (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
                     }
                     if (options.useSheen) {
-                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3;" : ";"));
                     }
                     if (options.useSpecular) {
