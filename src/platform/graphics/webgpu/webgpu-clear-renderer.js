@@ -10,6 +10,7 @@ import { Shader } from "../shader.js";
 import { BindGroup } from "../bind-group.js";
 import { UniformBuffer } from "../uniform-buffer.js";
 import { DebugGraphics } from "../debug-graphics.js";
+import { DepthState } from "../depth-state.js";
 
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -88,11 +89,6 @@ class WebgpuClearRenderer {
         this.colorData = new Float32Array(4);
         this.colorId = device.scope.resolve('color');
         this.depthId = device.scope.resolve('depth');
-
-
-        // TODO: WebGPU does not handle depth state, and so we pass this hack to render pipeline creation
-        // to avoid depth test (always write)
-        this.shader.impl.hackAlwaysWrite = true;
     }
 
     clear(device, renderTarget, options, defaultOptions) {
@@ -118,11 +114,11 @@ class WebgpuClearRenderer {
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
                 this.depthId.setValue(depth);
-
-                // TODO: set up depth state to write / not write to depth
+                device.setDepthState(DepthState.WRITEDEPTH);
 
             } else {
                 this.depthId.setValue(1);
+                device.setDepthState(DepthState.NODEPTH);
             }
 
             // setup stencil clear

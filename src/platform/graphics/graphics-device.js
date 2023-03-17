@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
-import { BlendState } from './blend-state.js';
 
 import {
     BUFFER_STATIC,
@@ -10,11 +9,11 @@ import {
     CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
+import { BlendState } from './blend-state.js';
+import { DepthState } from './depth-state.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
-
-const EVENT_RESIZE = 'resizecanvas';
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -144,12 +143,21 @@ class GraphicsDevice extends EventHandler {
      */
     blendState = new BlendState();
 
+    /**
+     * The current depth state.
+     *
+     * @ignore
+     */
+    depthState = new DepthState();
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
         stencil: 0,
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
+
+    static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas) {
         super();
@@ -278,6 +286,7 @@ class GraphicsDevice extends EventHandler {
     initializeRenderState() {
 
         this.blendState = new BlendState();
+        this.depthState = new DepthState();
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -290,6 +299,15 @@ class GraphicsDevice extends EventHandler {
      * @param {BlendState} blendState - New blend state.
      */
     setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the specified depth state.
+     *
+     * @param {DepthState} depthState - New depth state.
+     */
+    setDepthState(depthState) {
         Debug.assert(false);
     }
 
@@ -407,18 +425,6 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     resizeCanvas(width, height) {
-        this._width = width;
-        this._height = height;
-
-        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(EVENT_RESIZE, width, height);
-        }
     }
 
     /**
@@ -434,7 +440,7 @@ class GraphicsDevice extends EventHandler {
         this._height = height;
         this.canvas.width = width;
         this.canvas.height = height;
-        this.fire(EVENT_RESIZE, width, height);
+        this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
     }
 
     updateClientRect() {
@@ -481,12 +487,23 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     set maxPixelRatio(ratio) {
-        this._maxPixelRatio = ratio;
-        this.resizeCanvas(this._width, this._height);
+        if (this._maxPixelRatio !== ratio) {
+            this._maxPixelRatio = ratio;
+            this.resizeCanvas(this._width, this._height);
+        }
     }
 
     get maxPixelRatio() {
         return this._maxPixelRatio;
+    }
+
+    /**
+     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     *
+     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     */
+    get deviceType() {
+        return this._deviceType;
     }
 
     /**
@@ -513,6 +530,15 @@ class GraphicsDevice extends EventHandler {
      */
     setBoneLimit(maxBones) {
         this.boneLimit = maxBones;
+    }
+
+    /**
+     * Function which executes at the start of the frame. This should not be called manually, as
+     * it is handled by the AppBase instance.
+     *
+     * @ignore
+     */
+    frameStart() {
     }
 }
 

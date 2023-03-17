@@ -16,7 +16,7 @@ class ComponentPropertiesExample {
     }
 
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

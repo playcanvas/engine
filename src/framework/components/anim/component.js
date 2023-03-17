@@ -13,6 +13,7 @@ import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
@@ -369,11 +370,18 @@ class AnimComponent extends Component {
         }
         this._layers = [];
 
+        let containsBlendTree = false;
         for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
             this._addLayer.bind(this)({ ...layer });
+            if (layer.states.some(state => state.blendTree)) {
+                containsBlendTree = true;
+            }
         }
-        this.setupAnimationAssets();
+        // blend trees do not support the automatic assignment of animation assets
+        if (!containsBlendTree) {
+            this.setupAnimationAssets();
+        }
     }
 
     setupAnimationAssets() {
@@ -403,7 +411,7 @@ class AnimComponent extends Component {
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
                 const animationAsset = this._animationAssets[layer.name + ':' + stateName];
                 if (!animationAsset || !animationAsset.asset) {
-                    this.removeNodeAnimations(stateName, layer.name);
+                    this.findAnimationLayer(layer.name).assignAnimation(stateName, AnimTrack.EMPTY);
                     continue;
                 }
                 const assetId = animationAsset.asset;
