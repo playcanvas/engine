@@ -147,6 +147,10 @@ class WasmModule {
         }
     }
 
+    static getConfig(moduleName) {
+        return Impl.modules?.[moduleName]?.config;
+    }
+
     /**
      * Get a wasm module instance. The instance will be created if necessary and returned
      * in the second parameter to callback.
