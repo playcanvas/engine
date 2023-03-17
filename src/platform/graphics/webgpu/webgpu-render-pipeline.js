@@ -40,6 +40,17 @@ const _blendFactor = [
     'one-minus-constant'    // BLENDMODE_ONE_MINUS_CONSTANT
 ];
 
+const _depthCompareFunction = [
+    'never',                // FUNC_NEVER
+    'less',                 // FUNC_LESS
+    'equal',                // FUNC_EQUAL
+    'less-equal',           // FUNC_LESSEQUAL
+    'greater',              // FUNC_GREATER
+    'not-equal',            // FUNC_NOTEQUAL
+    'greater-equal',        // FUNC_GREATEREQUAL
+    'always'                // FUNC_ALWAYS
+];
+
 // temp array to avoid allocation
 const _bindGroupLayouts = [];
 
@@ -66,10 +77,10 @@ class WebgpuRenderPipeline {
         this.cache = new Map();
     }
 
-    get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState) {
+    get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState) {
 
         // render pipeline unique key
-        const key = this.getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState);
+        const key = this.getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState);
 
         // cached pipeline
         let pipeline = this.cache.get(key);
@@ -85,7 +96,7 @@ class WebgpuRenderPipeline {
             const vertexBufferLayout = this.vertexBufferLayout.get(vertexFormat0, vertexFormat1);
 
             // pipeline
-            pipeline = this.create(primitiveTopology, shader.impl, renderTarget, pipelineLayout, blendState, vertexBufferLayout);
+            pipeline = this.create(primitiveTopology, shader.impl, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout);
             this.cache.set(key, pipeline);
         }
 
@@ -96,7 +107,7 @@ class WebgpuRenderPipeline {
      * Generate a unique key for the render pipeline. Keep this function as lean as possible,
      * as it executes for each draw call.
      */
-    getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState) {
+    getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState) {
 
         let bindGroupKey = '';
         for (let i = 0; i < bindGroupFormats.length; i++) {
@@ -107,7 +118,7 @@ class WebgpuRenderPipeline {
         const renderTargetKey = renderTarget.impl.key;
 
         return vertexBufferLayoutKey + shader.impl.vertexCode + shader.impl.fragmentCode +
-            renderTargetKey + primitive.type + bindGroupKey + blendState.key;
+            renderTargetKey + primitive.type + bindGroupKey + blendState.key + depthState.key;
     }
 
     // TODO: this could be cached using bindGroupKey
@@ -171,16 +182,33 @@ class WebgpuRenderPipeline {
         return blend;
     }
 
-    create(primitiveTopology, webgpuShader, renderTarget, pipelineLayout, blendState, vertexBufferLayout) {
-
-        const wgpu = this.device.wgpu;
+    /** @private */
+    getDepthStencil(depthState, renderTarget) {
 
         /** @type {GPUDepthStencilState} */
-        const depthStencil = renderTarget.depth ? {
-            depthWriteEnabled: true,
-            depthCompare: webgpuShader.hackAlwaysWrite ? 'always' : 'less',
-            format: renderTarget.impl.depthFormat
-        } : undefined;
+        let depthStencil;
+        const { depth, stencil } = renderTarget;
+        if (depth || stencil) {
+            depthStencil = {
+                format: renderTarget.impl.depthFormat
+            };
+
+            if (depth) {
+                depthStencil.depthWriteEnabled = depthState.write;
+                depthStencil.depthCompare = _depthCompareFunction[depthState.func];
+            } else {
+                // if render target does not have depth buffer
+                depthStencil.depthWriteEnabled = false;
+                depthStencil.depthCompare = 'always';
+            }
+        }
+
+        return depthStencil;
+    }
+
+    create(primitiveTopology, webgpuShader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout) {
+
+        const wgpu = this.device.wgpu;
 
         /** @type {GPURenderPipelineDescriptor} */
         const descr = {
@@ -194,7 +222,7 @@ class WebgpuRenderPipeline {
                 cullMode: "none"
             },
 
-            depthStencil,
+            depthStencil: this.getDepthStencil(depthState, renderTarget),
 
             multisample: {
                 count: renderTarget.samples

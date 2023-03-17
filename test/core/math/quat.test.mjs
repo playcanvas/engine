@@ -95,6 +95,20 @@ describe('Quat', function () {
             expect(q1.equals(q2)).to.be.false;
         });
 
+        it('checks for equality of two different quaternions that are close enough', function () {
+            const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
+            const q2 = new Quat(0.10000000000000001, 0.2, 0.3, 0.4);
+            const epsilon = 0.000001;
+            expect(q1.equalsApprox(q2, epsilon)).to.be.true;
+            expect(q1.equalsApprox(q2)).to.be.true;
+
+            const q3 = new Quat(0.1 + epsilon - Number.EPSILON, 0.2, 0.3, 0.4);
+            expect(q1.equalsApprox(q3, epsilon)).to.be.true;
+
+            const q4 = new Quat(0.1 + epsilon + Number.EPSILON, 0.2, 0.3, 0.4);
+            expect(q1.equalsApprox(q4, epsilon)).to.be.false;
+        });
+
     });
 
     describe('#getAxisAngle()', function () {
@@ -544,6 +558,54 @@ describe('Quat', function () {
             const q = new Quat();
             const m = new Mat4();
             expect(q.setFromMat4(m)).to.equal(q);
+        });
+
+    });
+
+    describe('#setFromDirections()', function () {
+
+        it('set the identity quaternion from equal directions', function () {
+            const v1 = new Vec3(1, 0, 0);
+            const v2 = new Vec3(1, 0, 0);
+
+            const q1 = new Quat().setFromDirections(v1, v2);
+            expect(q1.equals(Quat.IDENTITY)).to.be.true;
+
+
+            const v3 = new Vec3(0, 0, 0);
+            const v4 = new Vec3(0, 0, 0);
+
+            const q2 = new Quat().setFromDirections(v3, v4);
+            expect(q2.equals(Quat.IDENTITY)).to.be.true;
+        });
+
+        it('set a quaternion from different directions', function () {
+            const v1 = new Vec3(1, 0, 0);
+            const v2 = new Vec3(0, 1, 0);
+
+            const q1 = new Quat().setFromDirections(v1, v2);
+            const q2 = new Quat().setFromEulerAngles(0, 0, 90);
+
+            expect(q1.equalsApprox(q2)).to.be.true;
+
+            const v3 = new Vec3(1, 0, 0);
+            const v4 = new Vec3(1, 1, 0).normalize();
+
+            const q3 = new Quat().setFromDirections(v3, v4);
+            const q4 = new Quat().setFromEulerAngles(0, 0, 45);
+
+            expect(q3.equalsApprox(q4)).to.be.true;
+
+            const q5 = new Quat().setFromEulerAngles(0, 0, 44);
+            expect(q3.equalsApprox(q5)).to.be.false;
+
+        });
+
+        it('returns this', function () {
+            const q = new Quat();
+            const v1 = new Vec3();
+            const v2 = new Vec3();
+            expect(q.setFromDirections(v1, v2)).to.equal(q);
         });
 
     });

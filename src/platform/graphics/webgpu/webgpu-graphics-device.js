@@ -2,7 +2,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -66,6 +66,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
         this.isWebGPU = true;
+        this._deviceType = DEVICETYPE_WEBGPU;
 
         this.initDeviceCaps();
     }
@@ -242,9 +243,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        if (outColorBuffer) {
-            wrt.assignColorTexture(outColorBuffer);
-        }
+        wrt.assignColorTexture(outColorBuffer);
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
@@ -331,7 +330,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState);
+                                                     this.bindGroupFormats, this.blendState, this.depthState);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -367,6 +366,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.blendState.copy(blendState);
     }
 
+    setDepthState(depthState) {
+        this.depthState.copy(depthState);
+    }
+
     setBlendColor(r, g, b, a) {
         // TODO: this should use passEncoder.setBlendConstant(color)
     }
@@ -375,10 +378,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthTest(depthTest) {
-    }
-
-    getDepthTest() {
-        return true;
     }
 
     setCullMode(cullMode) {
@@ -392,10 +391,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthWrite(writeDepth) {
-    }
-
-    getDepthWrite() {
-        return true;
     }
 
     initializeContextCaches() {
@@ -414,6 +409,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(rt);
 
         this.renderTarget = rt;
+
+        /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
         WebgpuDebug.internal(this);
