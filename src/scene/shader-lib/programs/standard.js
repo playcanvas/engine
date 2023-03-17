@@ -486,7 +486,9 @@ const standard = {
                 code.append(this._addMap("light", lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
                 func.append("getLightMap();");
                 func.append("_litShaderArgs.lightmap = dLightmap;");
-                func.append("_litShaderArgs.lightmapDir = dLightmapDir;");
+                if (lightmapDir) {
+                    func.append("_litShaderArgs.lightmapDir = dLightmapDir;");
+                }
             }
 
             // only add the legacy chunk if it's referenced
