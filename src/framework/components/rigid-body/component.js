@@ -509,7 +509,7 @@ class RigidBodyComponent extends Component {
             return;
         }
 
-        Debug.assert(Ammo && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent.useGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+        Debug.assert(typeof Ammo !== 'undefined' && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent.useGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
 
         this._useGravity = !this._useGravity;
 
@@ -540,7 +540,7 @@ class RigidBodyComponent extends Component {
      * @type {Vec3}
      */
     set gravity(value) {
-        Debug.assert(Ammo && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#gravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+        Debug.assert(typeof Ammo !== 'undefined' && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#gravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
 
         this._gravity = value;
 
