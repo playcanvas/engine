@@ -3,15 +3,22 @@ import * as pc from '../../../../';
 class MaterialBasicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Basic';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
             'rocks': new pc.Asset("rocks", "texture", { url: "/static/assets/textures/seaside-rocks01-diffuse-alpha.png" })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

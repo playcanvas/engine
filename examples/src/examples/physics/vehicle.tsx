@@ -3,8 +3,9 @@ import * as pc from '../../../../';
 class VehicleExample {
     static CATEGORY = 'Physics';
     static NAME = 'Vehicle';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         pc.WasmModule.setConfig('Ammo', {
             glueUrl: '/static/lib/ammo/ammo.wasm.js',
@@ -24,7 +25,13 @@ class VehicleExample {
                 'script4': new pc.Asset('script4', 'script', { url: '/static/scripts/physics/vehicle.js' })
             };
 
-            pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+            const gfxOptions = {
+                deviceTypes: [deviceType],
+                glslangUrl: '/static/lib/glslang/glslang.js',
+                twgslUrl: '/static/lib/twgsl/twgsl.js'
+            };
+
+            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;

@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { AnimTrack } from '../evaluator/anim-track.js';
 
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
@@ -41,6 +42,7 @@ class AnimState {
         this._name = name;
         this._speed = speed;
         this._loop = loop;
+        this._hasAnimations = false;
         const findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
             this._blendTree = this._createTree(
@@ -96,6 +98,11 @@ class AnimState {
             node.animTrack = animTrack;
             this._animationList.push(node);
         }
+        this._updateHasAnimations();
+    }
+
+    _updateHasAnimations() {
+        this._hasAnimations = this._animationList.length > 0 && this._animationList.every(animation => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
     }
 
     get name() {
@@ -104,10 +111,15 @@ class AnimState {
 
     set animations(value) {
         this._animationList = value;
+        this._updateHasAnimations();
     }
 
     get animations() {
         return this._animationList;
+    }
+
+    get hasAnimations() {
+        return this._hasAnimations;
     }
 
     set speed(value) {

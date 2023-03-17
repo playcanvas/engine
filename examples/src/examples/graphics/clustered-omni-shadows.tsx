@@ -31,7 +31,7 @@ class ClusteredOmniShadowsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -44,7 +44,13 @@ class ClusteredOmniShadowsExample {
             "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

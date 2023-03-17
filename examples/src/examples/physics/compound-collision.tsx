@@ -4,7 +4,7 @@ class CompoundCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
@@ -336,7 +336,7 @@ class CompoundCollisionExample {
             function spawnChair() {
                 const chair: pc.Entity = app.root.findByName('Chair') as pc.Entity;
                 const clone = chair.clone();
-                clone.setLocalPosition(Math.random() * 5 - 2.5, Math.random() * 2 + 1, Math.random() * 5 - 2.5);
+                clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
                 app.root.addChild(clone);
                 numChairs++;
             }
@@ -346,7 +346,7 @@ class CompoundCollisionExample {
             app.on("update", function (dt) {
                 // Add a new chair every 250 ms
                 time += dt;
-                if (time > 0.25 && numChairs < 100) {
+                if (time > 0.25 && numChairs < 20) {
                     spawnChair();
                     time = 0;
                 }
