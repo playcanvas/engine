@@ -606,12 +606,12 @@ class RigidBodyComponent extends Component {
             }
 
             if (this._useGravity && this._gravity) {
-                this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+                body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
 
                 _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
-                this._body.setGravity(_ammoVec1);
+                body.setGravity(_ammoVec1);
             } else if (!this._useGravity) {
-                this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+                body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
             }
 
             body.entity = entity;
