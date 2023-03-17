@@ -32,6 +32,9 @@ uniform highp sampler2D lightsTextureFloat;
     uniform vec4 lightsTextureInvSize;
 #endif
 
+// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
+uniform float clusterSkip;
+
 uniform vec3 clusterCellsCountByBoundsSize;
 uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
@@ -428,11 +431,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                         getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowSpotClusteredPCF1(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(shadowAtlasTexture, shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #endif
                         dAtten *= mix(1.0, shadow, light.shadowIntensity);
 
@@ -442,11 +445,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                         normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
-                            float shadow = getShadowOmniClusteredPCF1(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowOmniClusteredPCF3(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowOmniClusteredPCF5(shadowAtlasTexture, shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
+                            float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
                         dAtten *= mix(1.0, shadow, light.shadowIntensity);
                     }
@@ -574,6 +577,11 @@ void evaluateClusterLight(float lightIndex, vec3 worldNormal, float gloss, vec3 
 }
 
 void addClusteredLights(vec3 worldNormal, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+
+    // skip lights if no lights at all
+    if (clusterSkip > 0.5)
+        return;
+        
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 

@@ -5,7 +5,7 @@ class PortalExample {
     static NAME = 'Portal';
 
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {

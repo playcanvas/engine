@@ -588,16 +588,7 @@ class ForwardRenderer extends Renderer {
                     this.alphaTestId.setValue(material.alphaTest);
 
                     device.setBlendState(material.blendState);
-                    device.setDepthWrite(material.depthWrite);
-
-                    // this fixes the case where the user wishes to turn off depth testing but wants to write depth
-                    if (material.depthWrite && !material.depthTest) {
-                        device.setDepthFunc(FUNC_ALWAYS);
-                        device.setDepthTest(true);
-                    } else {
-                        device.setDepthFunc(material.depthFunc);
-                        device.setDepthTest(material.depthTest);
-                    }
+                    device.setDepthState(material.depthState);
 
                     device.setAlphaToCoverage(material.alphaToCoverage);
 
@@ -1098,7 +1089,7 @@ class ForwardRenderer extends Renderer {
             // if this is not a first render action to the render target, or if the render target was not
             // fully cleared on pass start, we need to execute clears here
             if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
-                this.clear(renderAction, camera.camera);
+                this.clear(camera.camera, renderAction.clearColor, renderAction.clearDepth, renderAction.clearStencil);
             }
 
             // #if _PROFILER

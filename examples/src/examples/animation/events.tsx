@@ -4,7 +4,7 @@ class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

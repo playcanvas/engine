@@ -66,9 +66,9 @@ class QuadRender {
             }
 
             // bind group
-            const bingGroupFormat = this.shader.meshBindGroupFormat;
-            Debug.assert(bingGroupFormat);
-            this.bindGroup = new BindGroup(device, bingGroupFormat, this.uniformBuffer);
+            const bindGroupFormat = this.shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, this.uniformBuffer);
             DebugHelper.setName(this.bindGroup, `QuadRender-MeshBindGroup_${this.bindGroup.id}`);
         }
     }
