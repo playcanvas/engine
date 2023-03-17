@@ -8,7 +8,7 @@ class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';
-
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -62,7 +62,7 @@ class ClusteredSpotShadowsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -72,7 +72,13 @@ class ClusteredSpotShadowsExample {
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

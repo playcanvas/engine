@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Wobble';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
 attribute vec3 aPosition;
@@ -35,13 +37,19 @@ void main(void)
 }`
     };
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

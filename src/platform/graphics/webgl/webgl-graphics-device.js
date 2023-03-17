@@ -9,7 +9,7 @@ import {
     CULLFACE_BACK, CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    FUNC_ALWAYS, FUNC_LESSEQUAL,
+    FUNC_ALWAYS,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
@@ -18,7 +18,9 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation,
-    PRIMITIVE_TRISTRIP
+    PRIMITIVE_TRISTRIP,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL1
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -34,6 +36,7 @@ import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
+import { DepthState } from '../depth-state.js';
 
 const invalidateAttachments = [];
 
@@ -85,13 +88,9 @@ function quadWithShader(device, target, shader) {
     device.setRenderTarget(target);
     device.updateBegin();
 
-    const oldDepthTest = device.getDepthTest();
-    const oldDepthWrite = device.getDepthWrite();
-    const oldCullMode = device.getCullMode();
-    device.setDepthTest(false);
-    device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
     device.setBlendState(BlendState.DEFAULT);
+    device.setDepthState(DepthState.NODEPTH);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -102,10 +101,6 @@ function quadWithShader(device, target, shader) {
         count: 4,
         indexed: false
     });
-
-    device.setDepthTest(oldDepthTest);
-    device.setDepthWrite(oldDepthWrite);
-    device.setCullMode(oldCullMode);
 
     device.updateEnd();
 
@@ -400,7 +395,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl = canvas.getContext(names[i], options);
 
             if (gl) {
-                this.webgl2 = (names[i] === 'webgl2');
+                this.webgl2 = (names[i] === DEVICETYPE_WEBGL2);
+                this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
                 break;
             }
         }
@@ -1058,13 +1054,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
 
-        this.depthTest = true;
+        // default depth state
         gl.enable(gl.DEPTH_TEST);
-
-        this.depthFunc = FUNC_LESSEQUAL;
         gl.depthFunc(gl.LEQUAL);
-
-        this.depthWrite = true;
         gl.depthMask(true);
 
         this.stencil = false;
@@ -2069,21 +2061,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
                 const color = options.color ?? defaultOptions.color;
-                this.setClearColor(color[0], color[1], color[2], color[3]);
+                const r = color[0];
+                const g = color[1];
+                const b = color[2];
+                const a = color[3];
+
+                const c = this.clearColor;
+                if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+                    this.gl.clearColor(r, g, b, a);
+                    this.clearColor.set(r, g, b, a);
+                }
+
                 this.setBlendState(BlendState.DEFAULT);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
                 const depth = options.depth ?? defaultOptions.depth;
-                this.setClearDepth(depth);
-                this.setDepthWrite(true);
+
+                if (depth !== this.clearDepth) {
+                    this.gl.clearDepth(depth);
+                    this.clearDepth = depth;
+                }
+
+                this.setDepthState(DepthState.WRITEDEPTH);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
                 const stencil = options.stencil ?? defaultOptions.stencil;
-                this.setClearStencil(stencil);
+                if (stencil !== this.clearStencil) {
+                    this.gl.clearStencil(stencil);
+                    this.clearStencil = stencil;
+                }
             }
 
             // Clear the frame buffer
@@ -2106,129 +2116,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     readPixels(x, y, w, h, pixels) {
         const gl = this.gl;
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    }
-
-    /**
-     * Set the depth value used when the depth buffer is cleared.
-     *
-     * @param {number} depth - The depth value to clear the depth buffer to in the range 0.0
-     * to 1.0.
-     * @ignore
-     */
-    setClearDepth(depth) {
-        if (depth !== this.clearDepth) {
-            this.gl.clearDepth(depth);
-            this.clearDepth = depth;
-        }
-    }
-
-    /**
-     * Set the clear color used when the frame buffer is cleared.
-     *
-     * @param {number} r - The red component of the color in the range 0.0 to 1.0.
-     * @param {number} g - The green component of the color in the range 0.0 to 1.0.
-     * @param {number} b - The blue component of the color in the range 0.0 to 1.0.
-     * @param {number} a - The alpha component of the color in the range 0.0 to 1.0.
-     * @ignore
-     */
-    setClearColor(r, g, b, a) {
-        const c = this.clearColor;
-        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
-            this.gl.clearColor(r, g, b, a);
-            this.clearColor.set(r, g, b, a);
-        }
-    }
-
-    /**
-     * Set the stencil clear value used when the stencil buffer is cleared.
-     *
-     * @param {number} value - The stencil value to clear the stencil buffer to.
-     */
-    setClearStencil(value) {
-        if (value !== this.clearStencil) {
-            this.gl.clearStencil(value);
-            this.clearStencil = value;
-        }
-    }
-
-    /**
-     * Queries whether depth testing is enabled.
-     *
-     * @returns {boolean} True if depth testing is enabled and false otherwise.
-     * @example
-     * var depthTest = device.getDepthTest();
-     * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
-     */
-    getDepthTest() {
-        return this.depthTest;
-    }
-
-    /**
-     * Enables or disables depth testing of fragments. Once this state is set, it persists until it
-     * is changed. By default, depth testing is enabled.
-     *
-     * @param {boolean} depthTest - True to enable depth testing and false otherwise.
-     * @example
-     * device.setDepthTest(true);
-     */
-    setDepthTest(depthTest) {
-        if (this.depthTest !== depthTest) {
-            const gl = this.gl;
-            if (depthTest) {
-                gl.enable(gl.DEPTH_TEST);
-            } else {
-                gl.disable(gl.DEPTH_TEST);
-            }
-            this.depthTest = depthTest;
-        }
-    }
-
-    /**
-     * Configures the depth test.
-     *
-     * @param {number} func - A function to compare a new depth value with an existing z-buffer
-     * value and decide if to write a pixel. Can be:
-     *
-     * - {@link FUNC_NEVER}: don't draw
-     * - {@link FUNC_LESS}: draw if new depth < depth buffer
-     * - {@link FUNC_EQUAL}: draw if new depth == depth buffer
-     * - {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
-     * - {@link FUNC_GREATER}: draw if new depth > depth buffer
-     * - {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
-     * - {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
-     * - {@link FUNC_ALWAYS}: always draw
-     */
-    setDepthFunc(func) {
-        if (this.depthFunc === func) return;
-        this.gl.depthFunc(this.glComparison[func]);
-        this.depthFunc = func;
-    }
-
-    /**
-     * Queries whether writes to the depth buffer are enabled.
-     *
-     * @returns {boolean} True if depth writing is enabled and false otherwise.
-     * @example
-     * var depthWrite = device.getDepthWrite();
-     * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
-     */
-    getDepthWrite() {
-        return this.depthWrite;
-    }
-
-    /**
-     * Enables or disables writes to the depth buffer. Once this state is set, it persists until it
-     * is changed. By default, depth writes are enabled.
-     *
-     * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
-     * @example
-     * device.setDepthWrite(true);
-     */
-    setDepthWrite(writeDepth) {
-        if (this.depthWrite !== writeDepth) {
-            this.gl.depthMask(writeDepth);
-            this.depthWrite = writeDepth;
-        }
     }
 
     /**
@@ -2598,6 +2485,42 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    setDepthState(depthState) {
+        const currentDepthState = this.depthState;
+        if (!currentDepthState.equals(depthState)) {
+            const gl = this.gl;
+
+            // write
+            const write = depthState.write;
+            if (currentDepthState.write !== write) {
+                gl.depthMask(write);
+            }
+
+            // handle case where depth testing is off, but depth write is on => enable always test to depth write
+            // Note on WebGL API behavior: When depth testing is disabled, writes to the depth buffer are also disabled.
+            let { func, test } = depthState;
+            if (!test && write) {
+                test = true;
+                func = FUNC_ALWAYS;
+            }
+
+            if (currentDepthState.func !== func) {
+                gl.depthFunc(this.glComparison[func]);
+            }
+
+            if (currentDepthState.test !== test) {
+                if (test) {
+                    gl.enable(gl.DEPTH_TEST);
+                } else {
+                    gl.disable(gl.DEPTH_TEST);
+                }
+            }
+
+            // update internal state
+            currentDepthState.copy(depthState);
+        }
+    }
+
     /**
      * Controls how triangles are culled based on their face direction. The default cull mode is
      * {@link CULLFACE_BACK}.
@@ -2712,6 +2635,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         });
 
         this._vaoMap.clear();
+    }
+
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
     }
 
     /**

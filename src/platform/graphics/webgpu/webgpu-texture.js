@@ -11,6 +11,7 @@ import {
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH
 } from '../constants.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
 const gpuTextureFormats = [];
@@ -125,22 +126,14 @@ class WebgpuTexture {
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
-        Debug.call(() => {
-            device.wgpu.pushErrorScope('validation');
-        });
+        WebgpuDebug.validate(device);
 
         this.gpuTexture = wgpu.createTexture(this.descr);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
-        Debug.call(() => {
-            device.wgpu.popErrorScope().then((error) => {
-                if (error) {
-                    Debug.gpuError(error.message, {
-                        descr: this.descr,
-                        texture
-                    });
-                }
-            });
+        WebgpuDebug.end(device, {
+            descr: this.descr,
+            texture
         });
 
         // default texture view descriptor

@@ -2,6 +2,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
 
 import { ShaderProcessor } from '../shader-processor.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the Shader.
@@ -70,27 +71,20 @@ class WebgpuShader {
     }
 
     createShaderModule(code, shaderType) {
-        const wgpu = this.shader.device.wgpu;
+        const device = this.shader.device;
+        const wgpu = device.wgpu;
 
-        Debug.call(() => {
-            wgpu.pushErrorScope('validation');
-        });
+        WebgpuDebug.validate(device);
 
         const shaderModule = wgpu.createShaderModule({
             code: code
         });
         DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
 
-        Debug.call(() => {
-            wgpu.popErrorScope().then((error) => {
-                if (error) {
-                    Debug.gpuError(error.message, {
-                        shaderType,
-                        source: code,
-                        shader: this.shader
-                    });
-                }
-            });
+        WebgpuDebug.end(device, {
+            shaderType,
+            source: code,
+            shader: this.shader
         });
 
         return shaderModule;
