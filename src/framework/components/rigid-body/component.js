@@ -606,11 +606,13 @@ class RigidBodyComponent extends Component {
             }
 
             if (this._useGravity && this._gravity) {
+                Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#createBody: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
                 body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
 
                 _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
                 body.setGravity(_ammoVec1);
             } else if (!this._useGravity) {
+                Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#createBody: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
                 body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
             }
 
