@@ -5,6 +5,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYTYPE_STATIC,
+    BODYFLAG_GRAVITY_WORLD_ENABLE, BODYFLAG_GRAVITY_WORLD_DISABLE,
     BODYGROUP_DYNAMIC, BODYGROUP_KINEMATIC, BODYGROUP_STATIC,
     BODYMASK_ALL, BODYMASK_NOT_STATIC,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
@@ -100,6 +101,22 @@ class RigidBodyComponent extends Component {
 
     /** @private */
     _type = BODYTYPE_STATIC;
+
+    /**
+     * Whether the RigidBody component uses gravity.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _useGravity = true;
+
+    /**
+     * The current gravity of this body.
+     *
+     * @type {null|Vec3}
+     * @private
+     */
+    _gravity = null;
 
     /**
      * Create a new RigidBodyComponent instance.
@@ -483,6 +500,41 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Whether this rigid body should use gravity.
+     *
+     * @type {boolean}
+     */
+    set useGravity(value) {
+        if (!!value === this._useGravity) {
+            return;
+        }
+
+        Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent.useGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+
+        this._useGravity = !this._useGravity;
+
+        if (this._body) {
+            this._body.setFlags(this._useGravity && !this._gravity ? BODYFLAG_GRAVITY_WORLD_ENABLE : BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+            if (this._useGravity) {
+                if (this._gravity) {
+                    _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+                    this._body.setGravity(_ammoVec1);
+                } else {
+                    this._body.setGravity(this.system.dynamicsWorld.getGravity());
+                }
+            } else {
+                _ammoVec1.setValue(0, 0, 0);
+                this._body.setGravity(_ammoVec1);
+            }
+        }
+    }
+
+    get useGravity() {
+        return this._useGravity;
+    }
+
+    /**
      * If the Entity has a Collision shape attached then create a rigid body using this shape. This
      * method destroys the existing body.
      *
@@ -819,6 +871,76 @@ class RigidBodyComponent extends Component {
 
             body.applyTorqueImpulse(_ammoVec1);
         }
+    }
+
+    /**
+     * Set the gravity for this rigid body. This function has two valid signatures:
+     * you can either pass a 3D vector or 3 numbers.
+     *
+     * @param {Vec3|number} x - 3-dimensional vector holding gravity or X-axis gravity.
+     * @param {number} [y] - Y-axis gravity.
+     * @param {number} [z] - Z-axis gravity.
+     * @example
+     * // Set via 3 numbers
+     * this.entity.rigidbody.setGravity(0, -9.81, 0);
+     * @example
+     * // Set via vector
+     * var gravity = new pc.Vec3(0, -9.81, 0);
+     * this.entity.rigidbody.setGravity(gravity);
+     */
+    setGravity(x, y, z) {
+        Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#setGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+
+        if (!this._gravity) {
+            this._gravity = new Vec3();
+        }
+
+        if (x instanceof Vec3) {
+            this._gravity.copy(x);
+        } else {
+            this._gravity.set(x, y, z);
+        }
+
+        if (this._body && this._useGravity) {
+            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+            _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+            this._body.setGravity(_ammoVec1);
+        }
+    }
+
+    /**
+     * Reset the gravity for this rigid body. Remove any gravity assigned by {@link RigidBodyComponent#setGravity}
+     * and uses world gravity back.
+     */
+    resetGravity() {
+        this._gravity = null;
+
+        if (this._body && this._useGravity && Ammo.btRigidBody.prototype.setFlags) {
+            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_ENABLE);
+            this._body.setGravity(this.system.dynamicsWorld.getGravity());
+        }
+    }
+
+    /**
+     * Get the gravity that affects this rigid body. The gravity is returned as a
+     * {@link Vec3}. The value returned by this function should be considered read-only. In order
+     * to set the gravity of the rigid body, use {@link RigidBodyComponent#setGravity}.
+     *
+     * @returns {Vec3} The gravity of the rigid body.
+     * @example
+     * var gravity = this.entity.rigidbody.getGravity();
+     * gravity.x = 10;
+     * this.entity.rigidbody.setGravity(gravity);
+     */
+    getGravity() {
+        if (this._gravity) {
+            return this._gravity;
+        } else if (this._useGravity) {
+            return this.system.gravity;
+        }
+
+        return new Vec3(0, 0, 0);
     }
 
     /**
