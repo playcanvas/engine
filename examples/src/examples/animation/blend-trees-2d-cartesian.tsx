@@ -89,7 +89,7 @@ class BlendTrees2DCartesianExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

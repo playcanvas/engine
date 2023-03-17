@@ -90,7 +90,7 @@ void main(void)
     };
 
 
-    example(canvas: HTMLCanvasElement, files: { 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }): void {
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
 

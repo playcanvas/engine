@@ -44,7 +44,7 @@ void main(void)
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
         // This example uses draco point cloud loader library from https://loaders.gl/
         // Note that many additional formats are supported by the library and can be used.
 

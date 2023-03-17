@@ -260,7 +260,6 @@ const stripFunctions = [
     'Debug.warnOnce',
     'Debug.error',
     'Debug.errorOnce',
-    'Debug.gpuError',
     'Debug.log',
     'Debug.logOnce',
     'Debug.trace',
@@ -270,6 +269,10 @@ const stripFunctions = [
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
     'DebugGraphics.popGpuMarker',
+    'WebgpuDebug.validate',
+    'WebgpuDebug.memory',
+    'WebgpuDebug.internal',
+    'WebgpuDebug.end',
     'WorldClustersDebug.render'
 ];
 

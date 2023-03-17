@@ -13,7 +13,7 @@ class GltfExportExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, pcx: any, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, pcx: any, data: any): void {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});

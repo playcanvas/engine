@@ -55,6 +55,7 @@ import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
+import { DepthState } from '../platform/graphics/depth-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
@@ -580,6 +581,7 @@ GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
 };
 
 const _tempBlendState = new BlendState();
+const _tempDepthState = new DepthState();
 
 GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
     Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
@@ -634,6 +636,27 @@ GraphicsDevice.prototype.setBlending = function (blending) {
     _tempBlendState.copy(this.blendState);
     _tempBlendState.blend = blending;
     this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setDepthWrite = function (write) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.write = write;
+    this.setDepthState(_tempDepthState);
+};
+
+GraphicsDevice.prototype.setDepthFunc = function (func) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.func = func;
+    this.setDepthState(_tempDepthState);
+};
+
+GraphicsDevice.prototype.setDepthTest = function (test) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.test = test;
+    this.setDepthState(_tempDepthState);
 };
 
 // SCENE

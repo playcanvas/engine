@@ -1188,10 +1188,16 @@ class AppBase extends EventHandler {
         // #endif
     }
 
+    frameStart() {
+        this.graphicsDevice.frameStart();
+    }
+
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
      * need to be called explicitly.
+     *
+     * @ignore
      */
     render() {
         // #if _PROFILER
@@ -2204,6 +2210,7 @@ const makeTick = function (_app) {
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
                 application.updateCanvasSize();
+                application.frameStart();
                 application.render();
                 application.renderNextFrame = false;
 
