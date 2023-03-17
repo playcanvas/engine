@@ -535,6 +535,28 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * The gravity that affects this rigid body. Defaults to null to use world gravity.
+     *
+     * @type {Vec3}
+     */
+    set gravity(value) {
+        Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#gravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+
+        this._gravity = value;
+
+        if (this._body && this._useGravity) {
+            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+            _ammoVec1.setValue(value.x, value.y, value.z);
+            this._body.setGravity(_ammoVec1);
+        }
+    }
+
+    get gravity() {
+        return this._gravity;
+    }
+
+    /**
      * If the Entity has a Collision shape attached then create a rigid body using this shape. This
      * method destroys the existing body.
      *
@@ -581,6 +603,15 @@ class RigidBodyComponent extends Component {
             } else if (this._type === BODYTYPE_KINEMATIC) {
                 body.setCollisionFlags(body.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
                 body.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+            }
+
+            if (this._useGravity && this._gravity) {
+                this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+                _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+                this._body.setGravity(_ammoVec1);
+            } else if (!this._useGravity) {
+                this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
             }
 
             body.entity = entity;
@@ -871,76 +902,6 @@ class RigidBodyComponent extends Component {
 
             body.applyTorqueImpulse(_ammoVec1);
         }
-    }
-
-    /**
-     * Set the gravity for this rigid body. This function has two valid signatures:
-     * you can either pass a 3D vector or 3 numbers.
-     *
-     * @param {Vec3|number} x - 3-dimensional vector holding gravity or X-axis gravity.
-     * @param {number} [y] - Y-axis gravity.
-     * @param {number} [z] - Z-axis gravity.
-     * @example
-     * // Set via 3 numbers
-     * this.entity.rigidbody.setGravity(0, -9.81, 0);
-     * @example
-     * // Set via vector
-     * var gravity = new pc.Vec3(0, -9.81, 0);
-     * this.entity.rigidbody.setGravity(gravity);
-     */
-    setGravity(x, y, z) {
-        Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#setGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
-
-        if (!this._gravity) {
-            this._gravity = new Vec3();
-        }
-
-        if (x instanceof Vec3) {
-            this._gravity.copy(x);
-        } else {
-            this._gravity.set(x, y, z);
-        }
-
-        if (this._body && this._useGravity) {
-            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
-
-            _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
-            this._body.setGravity(_ammoVec1);
-        }
-    }
-
-    /**
-     * Reset the gravity for this rigid body. Remove any gravity assigned by {@link RigidBodyComponent#setGravity}
-     * and uses world gravity back.
-     */
-    resetGravity() {
-        this._gravity = null;
-
-        if (this._body && this._useGravity && Ammo.btRigidBody.prototype.setFlags) {
-            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_ENABLE);
-            this._body.setGravity(this.system.dynamicsWorld.getGravity());
-        }
-    }
-
-    /**
-     * Get the gravity that affects this rigid body. The gravity is returned as a
-     * {@link Vec3}. The value returned by this function should be considered read-only. In order
-     * to set the gravity of the rigid body, use {@link RigidBodyComponent#setGravity}.
-     *
-     * @returns {Vec3} The gravity of the rigid body.
-     * @example
-     * var gravity = this.entity.rigidbody.getGravity();
-     * gravity.x = 10;
-     * this.entity.rigidbody.setGravity(gravity);
-     */
-    getGravity() {
-        if (this._gravity) {
-            return this._gravity;
-        } else if (this._useGravity) {
-            return this.system.gravity;
-        }
-
-        return new Vec3(0, 0, 0);
     }
 
     /**
