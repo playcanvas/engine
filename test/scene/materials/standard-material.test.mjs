@@ -129,6 +129,7 @@ describe('StandardMaterial', function () {
         expect(material.enableGGXSpecular).to.equal(false);
         expect(material.fresnelModel).to.equal(FRESNEL_SCHLICK);
 
+        expect(material.gloss).to.equal(0.25);
         expect(material.glossMap).to.be.null;
         expect(material.glossMapChannel).to.equal('g');
         expect(material.glossMapOffset).to.be.an.instanceof(Vec2);
@@ -228,7 +229,6 @@ describe('StandardMaterial', function () {
         expect(material.refraction).to.equal(0);
         expect(material.refractionIndex).to.equal(1.0 / 1.5);
         expect(material.shadingModel).to.equal(SPECULAR_BLINN);
-        expect(material.shininess).to.equal(25);
 
         expect(material.specular).to.be.instanceof(Color);
         expect(material.specular.r).to.equal(0);

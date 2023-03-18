@@ -86,7 +86,7 @@ class ClusteredLightingExample {
                 material.bumpiness = 1;
 
                 // enable specular
-                material.shininess = 50;
+                material.gloss = 0.5;
                 material.metalness = 0.3;
                 material.useMetalness = true;
 

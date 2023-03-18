@@ -20,8 +20,8 @@ class BoxReflectionExample {
                         { v: 30, t: 'Every 30 frames' }
                     ]} />
                 </LabelGroup>}
-                <LabelGroup text='Shininess'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shininess' }} min={0} max={100} precision={0}/>
+                <LabelGroup text='Gloss'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.gloss' }} min={0} max={1} precision={2}/>
                 </LabelGroup>
                 <LabelGroup text='Metalness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.metalness' }} min={0} max={1} precision={2}/>
@@ -91,7 +91,7 @@ class BoxReflectionExample {
 
                 data.set('settings', {
                     updateFrequency: 10,
-                    shininess: 80,
+                    gloss: 0.8,
                     metalness: 0.9,
                     bumpiness: 0.2,
                     reflectivity: 0.5
@@ -124,7 +124,7 @@ class BoxReflectionExample {
                 roomMaterial.normalMap = assets.normal.resource;
                 roomMaterial.normalMapTiling.set(5, 5);
                 roomMaterial.bumpiness = 0.1;
-                roomMaterial.shininess = 90;
+                roomMaterial.gloss = 0.9;
                 roomMaterial.reflectivity = 0.3;
                 // @ts-ignore
                 roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
@@ -155,7 +155,7 @@ class BoxReflectionExample {
                 sphereMaterial.normalMap = assets.normal.resource;
                 sphereMaterial.normalMapTiling.set(5, 5);
                 sphereMaterial.bumpiness = 0.7;
-                sphereMaterial.shininess = 30;
+                sphereMaterial.gloss = 0.3;
                 sphereMaterial.metalness = 0.7;
                 sphereMaterial.reflectivity = 0.3;
                 // @ts-ignore
@@ -375,18 +375,18 @@ class BoxReflectionExample {
                     }
 
                     // update material properties based on settings
-                    const shininess = data.get('settings.shininess');
+                    const gloss = data.get('settings.gloss');
                     const metalness = data.get('settings.metalness');
                     const bumpiness = data.get('settings.bumpiness');
                     const reflectivity = data.get('settings.reflectivity');
 
-                    roomMaterial.shininess = shininess;
+                    roomMaterial.gloss = gloss;
                     roomMaterial.metalness = metalness;
                     roomMaterial.bumpiness = bumpiness;
                     roomMaterial.reflectivity = reflectivity;
                     roomMaterial.update();
 
-                    sphereMaterial.shininess = shininess;
+                    sphereMaterial.gloss = gloss;
                     sphereMaterial.metalness = metalness;
                     sphereMaterial.bumpiness = bumpiness;
                     sphereMaterial.reflectivity = reflectivity;

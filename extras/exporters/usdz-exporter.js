@@ -415,7 +415,7 @@ class UsdzExporter extends CoreExporter {
         addTexture('emissiveMap', material.emissive, 'color3f', 'emissiveColor', 'emissive', false, true);
         addTexture('aoMap', null, 'float', 'occlusion', 'occlusion');
         addTexture('metalnessMap', material.metalness, 'float', 'metallic', 'metallic');
-        addTexture('glossMap', material.shininess / 100, 'float', 'roughness', 'roughness');
+        addTexture('glossMap', material.gloss, 'float', 'roughness', 'roughness');
 
         // main material object
         const materialObject = `
