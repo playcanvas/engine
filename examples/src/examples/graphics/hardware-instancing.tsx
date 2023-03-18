@@ -70,7 +70,7 @@ class HardwareInstancingExample {
                     options.litOptions.useInstancing = true;
                     return options;
                 };
-                material.shininess = 60;
+                material.gloss = 0.6;
                 material.metalness = 0.7;
                 material.useMetalness = true;
                 material.update();

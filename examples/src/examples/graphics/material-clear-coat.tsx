@@ -94,7 +94,7 @@ class MaterialClearCoatExample {
                 material.diffuse = new pc.Color(0.6, 0.6, 0.9);
                 material.diffuseTint = true;
                 material.metalness = 1.0;
-                material.shininess = 90.0;
+                material.gloss = 0.9;
                 material.bumpiness = 0.7;
                 material.useMetalness = true;
                 material.update();
@@ -111,7 +111,7 @@ class MaterialClearCoatExample {
                 clearCoatMaterial.diffuse = new pc.Color(0.6, 0.6, 0.9);
                 clearCoatMaterial.diffuseTint = true;
                 clearCoatMaterial.metalness = 1.0;
-                clearCoatMaterial.shininess = 90;
+                clearCoatMaterial.gloss = 0.9;
                 clearCoatMaterial.bumpiness = 0.7;
                 clearCoatMaterial.useMetalness = true;
                 clearCoatMaterial.clearCoat = 0.25;
