@@ -81,7 +81,7 @@ class MaterialTranslucentSpecularExample {
                     material.diffuse = new pc.Color(0.7, 0.7, 0.7);
                     material.specular = new pc.Color(1, 1, 1);
                     material.metalness = 0.0;
-                    material.shininess = ((z) / (NUM_SPHERES_Z - 1) * 50) + 50;
+                    material.gloss = ((z) / (NUM_SPHERES_Z - 1) * 0.5) + 0.5;
                     material.useMetalness = true;
                     material.blendType = pc.BLEND_NORMAL;
                     material.opacity = (x >= 5) ? ((x - 5) / 5 + 0.2) * ((x - 5) / 5 + 0.2) : (x / 5 + 0.2) * (x / 5 + 0.2);

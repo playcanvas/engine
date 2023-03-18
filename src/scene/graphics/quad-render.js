@@ -74,7 +74,7 @@ class QuadRender {
     }
 
     /**
-     * Destroyes the resources associated with this instance.
+     * Destroys the resources associated with this instance.
      */
     destroy() {
         this.uniformBuffer?.destroy();

@@ -155,9 +155,9 @@ class LightPhysicalUnitsExample {
                 const material = new pc.StandardMaterial();
                 material.diffuseMap = assets.color.resource;
                 material.normalMap = assets.normal.resource;
+                material.gloss = 0.8;
                 material.glossMap = assets.gloss.resource;
                 material.metalness = 0.7;
-                material.shininess = 80;
                 material.useMetalness = true;
 
                 material.diffuseMapTiling.set(17, 17);

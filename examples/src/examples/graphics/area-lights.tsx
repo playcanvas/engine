@@ -66,7 +66,7 @@ class AreaLightsExample {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
-                    material.shininess = 80;
+                    material.gloss = 0.8;
                     material.useMetalness = true;
 
                     if (assetManifest) {

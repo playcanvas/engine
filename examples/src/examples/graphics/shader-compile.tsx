@@ -29,7 +29,7 @@ class ShaderCompileExample {
                 // create material of specified color
                 const material = new pc.StandardMaterial();
                 material.diffuse = color;
-                material.shininess = 40;
+                material.gloss = 0.4;
                 material.useMetalness = true;
 
                 material.diffuseMap = assetManifest.color.resource;

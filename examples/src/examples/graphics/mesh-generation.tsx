@@ -155,7 +155,7 @@ class MeshGenerationExample {
                 // create material
                 const material = new pc.StandardMaterial();
                 material.diffuseMap = assets.playcanvasGrey.resource;
-                material.shininess = 50;
+                material.gloss = 0.5;
                 material.metalness = 0.3;
                 material.useMetalness = true;
                 material.update();
