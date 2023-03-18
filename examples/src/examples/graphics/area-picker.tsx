@@ -86,7 +86,7 @@ class AreaPickerExample {
                     // create material of random color
                     const material = new pc.StandardMaterial();
                     material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
-                    material.shininess = 60;
+                    material.gloss = 0.6;
                     material.metalness = 0.4;
                     material.useMetalness = true;
                     material.update();

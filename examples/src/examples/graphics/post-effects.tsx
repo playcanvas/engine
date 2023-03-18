@@ -158,7 +158,7 @@ class PostEffectsExample {
 
                     // create a material
                     const material = new pc.StandardMaterial();
-                    material.shininess = 40;
+                    material.gloss = 0.4;
                     material.metalness = 0.6;
                     material.useMetalness = true;
                     material.emissive = pc.Color.YELLOW;

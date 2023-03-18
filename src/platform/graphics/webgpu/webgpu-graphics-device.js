@@ -243,9 +243,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        if (outColorBuffer) {
-            wrt.assignColorTexture(outColorBuffer);
-        }
+        wrt.assignColorTexture(outColorBuffer);
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
@@ -411,6 +409,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(rt);
 
         this.renderTarget = rt;
+
+        /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
         WebgpuDebug.internal(this);

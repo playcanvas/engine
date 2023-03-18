@@ -959,6 +959,16 @@ Object.defineProperty(Material.prototype, 'blendDst', {
     }
 });
 
+// shininess (range 0..100) - maps to internal gloss value (range 0..1)
+Object.defineProperty(StandardMaterial.prototype, 'shininess', {
+    get: function () {
+        return this.gloss * 100;
+    },
+    set: function (value) {
+        this.gloss = value * 0.01;
+    }
+});
+
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
