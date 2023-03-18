@@ -133,7 +133,7 @@ class ClusteredOmniShadowsExample {
                     material.bumpiness = 0.7;
 
                     // enable specular
-                    material.shininess = 40;
+                    material.gloss = 0.4;
                     material.metalness = 0.3;
                     material.useMetalness = true;
 
