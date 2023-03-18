@@ -50,7 +50,7 @@ class MeshDecalsExample {
 
                 // create material for the plane
                 const planeMaterial = new pc.StandardMaterial();
-                planeMaterial.shininess = 60;
+                planeMaterial.gloss = 0.6;
                 planeMaterial.metalness = 0.3;
                 planeMaterial.useMetalness = true;
                 planeMaterial.update();

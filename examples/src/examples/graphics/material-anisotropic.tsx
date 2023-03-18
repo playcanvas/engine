@@ -80,7 +80,7 @@ class LightsExample {
                 const createSphere = function (x: number, y: number, z: number) {
                     const material = new pc.StandardMaterial();
                     material.metalness = 1.0;
-                    material.shininess = (z) / (NUM_SPHERES_Z - 1) * 100;
+                    material.gloss = z / (NUM_SPHERES_Z - 1);
                     material.useMetalness = true;
                     material.anisotropy = ((2 * x / (NUM_SPHERES_X - 1)) - 1.0) * -1.0;
                     material.enableGGXSpecular = true;

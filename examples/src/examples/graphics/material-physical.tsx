@@ -64,7 +64,7 @@ class MaterialPhysicalExample {
                 const createSphere = function (x: number, y: number, z: number) {
                     const material = new pc.StandardMaterial();
                     material.metalness = y / (NUM_SPHERES - 1);
-                    material.shininess = x / (NUM_SPHERES - 1) * 100;
+                    material.gloss = x / (NUM_SPHERES - 1);
                     material.useMetalness = true;
                     material.update();
 
