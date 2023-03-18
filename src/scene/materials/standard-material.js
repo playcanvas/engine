@@ -217,8 +217,8 @@ let _params = new Set();
  * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
  * diffuse colors also affect specular instead of the dedicated specular map. This can be used as
- * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
- * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
+ * alternative to specular color to save space. With metalness == 0, the pixel is assumed to be
+ * dielectric, and diffuse color is used as normal. With metalness == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
  * specular map to apply color tint to specular reflections.
@@ -239,14 +239,10 @@ let _params = new Set();
  * is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
- * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny
- * mirror). A higher shininess value results in a more focused specular highlight. Glossiness map/
- * vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used
- * directly as constant output.
  * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
- * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
- * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
- * vertex colors.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Gloss map
+ * (default is null). If specified, will be multiplied by normalized gloss value and/or vertex
+ * colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
  * flag results in material treating the gloss members as roughness.
  * @property {number} glossMapUv Gloss map UV channel.
@@ -354,7 +350,7 @@ let _params = new Set();
  * @property {string} sheenGlossMapChannel Color channels of the sheen glossiness map to use.
  * Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenGlossVertexColor Use mesh vertex colors for sheen glossiness.
- * If sheen glossiness map or sheen glosiness tint are set, they'll be multiplied by vertex colors.
+ * If sheen glossiness map or sheen glossiness tint are set, they'll be multiplied by vertex colors.
  * @property {string} sheenGlossVertexColorChannel Vertex color channels to use for sheen glossiness.
  * Can be "r", "g", "b" or "a".
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where
@@ -1032,7 +1028,7 @@ function _defineColor(name, defaultValue) {
             // HACK: since we can't detect whether a user is going to set a color property
             // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
             // the worst and flag the shader as dirty.
-            // This means currently animating a material colour is horribly slow.
+            // This means currently animating a material color is horribly slow.
             this._dirtyShader = true;
             return this[`_${name}`];
         }
@@ -1108,16 +1104,6 @@ function _defineMaterialProps() {
             // legacy: expand back to specular power
             Math.pow(2, material.gloss * 11) :
             material.gloss;
-    });
-
-    // shininess (range 0..100) - maps to internal gloss value (range 0..1)
-    Object.defineProperty(StandardMaterial.prototype, 'shininess', {
-        get: function () {
-            return this.gloss * 100;
-        },
-        set: function (value) {
-            this.gloss = value * 0.01;
-        }
     });
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {

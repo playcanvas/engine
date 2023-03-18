@@ -178,7 +178,7 @@ class ClusteredSpotShadowsExample {
 
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
-                groundMaterial.shininess = 55;
+                groundMaterial.gloss = 0.55;
                 groundMaterial.metalness = 0.4;
                 groundMaterial.useMetalness = true;
                 groundMaterial.normalMap = assets.normal.resource;
@@ -188,7 +188,7 @@ class ClusteredSpotShadowsExample {
 
                 // cube material
                 const cubeMaterial = new pc.StandardMaterial();
-                cubeMaterial.shininess = 55;
+                cubeMaterial.gloss = 0.55;
                 cubeMaterial.metalness = 0.4;
                 cubeMaterial.useMetalness = true;
                 cubeMaterial.normalMap = assets.normal.resource;

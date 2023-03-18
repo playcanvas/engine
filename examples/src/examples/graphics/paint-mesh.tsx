@@ -132,7 +132,7 @@ class PaintMeshExample {
             // material used on the sphere
             const material = new pc.StandardMaterial();
             material.diffuseMap = texture;
-            material.shininess = 60;
+            material.gloss = 0.6;
             material.metalness = 0.4;
             material.useMetalness = true;
             material.update();

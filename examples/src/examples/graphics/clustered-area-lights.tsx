@@ -10,8 +10,8 @@ class AreaLightsExample {
     controls(data: Observer) {
         return <>
             <Panel headerText='Material'>
-                <LabelGroup text='Shininess'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.shininess' }} min={0} max={100} precision={0}/>
+                <LabelGroup text='Gloss'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.gloss' }} min={0} max={1} precision={2}/>
                 </LabelGroup>
                 <LabelGroup text='Metalness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.metalness' }} min={0} max={1} precision={2}/>
@@ -24,7 +24,7 @@ class AreaLightsExample {
 
         data.set('settings', {
             material: {
-                shininess: 80,
+                gloss: 0.8,
                 metalness: 0.7
             }
         });
@@ -111,7 +111,7 @@ class AreaLightsExample {
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
                 groundMaterial.diffuse = pc.Color.GRAY;
-                groundMaterial.shininess = 80;
+                groundMaterial.gloss = 0.8;
                 groundMaterial.metalness = 0.7;
                 groundMaterial.useMetalness = true;
 
@@ -266,7 +266,7 @@ class AreaLightsExample {
                 // handle HUD changes - update properties on the material
                 data.on('*:set', (path: string, value: any) => {
                     const pathArray = path.split('.');
-                    if (pathArray[2] === "shininess") groundMaterial.shininess = value;
+                    if (pathArray[2] === "gloss") groundMaterial.gloss = value;
                     if (pathArray[2] === "metalness") groundMaterial.metalness = value;
                     groundMaterial.update();
                 });
