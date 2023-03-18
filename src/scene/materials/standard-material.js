@@ -1028,7 +1028,7 @@ function _defineColor(name, defaultValue) {
             // HACK: since we can't detect whether a user is going to set a color property
             // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
             // the worst and flag the shader as dirty.
-            // This means currently animating a material colour is horribly slow.
+            // This means currently animating a material color is horribly slow.
             this._dirtyShader = true;
             return this[`_${name}`];
         }
