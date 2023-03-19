@@ -832,7 +832,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
-     * @returns {HitResult[]} An array of capsuletest hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of capsuleTest hit results (0 length if there were no hits).
      */
     capsuleTestAll(radius, height, axis, position, rotation) {
         return this._shapeTestAll(createShape('Capsule', axis, radius, height), position, rotation);
@@ -849,7 +849,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
-     * @returns {HitResult[]} An array of conetest hit results (0 length if there were no hits).
+     * @returns {HitResult[]} An array of coneTest hit results (0 length if there were no hits).
      */
     coneTestAll(radius, height, axis, position, rotation) {
         return this._shapeTestAll(createShape('Cone', axis, radius, height), position, rotation);
@@ -895,13 +895,154 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {boolean} destroyShape - Whether to destroy the shape once done.
+     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
+     *
+     * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
+     * @ignore
+     */
+    _shapeTestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
+        return this._shapeTest(shape, position, rotation, false, destroyShape);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the shape hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {object} shape - The shape to use for collision.
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
+     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
+     * @param {Vec3} position - The world space position for the shape to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     *
+     * @returns {HitResult|null} A shapeTest hit result (null if there were no hits).
+     */
+    shapeTestFirst(shape, position, rotation) {
+        switch (shape.type) {
+            case 'capsule':
+                return this.capsuleTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'cone':
+                return this.coneTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'cylinder':
+                return this.cylinderTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+            case 'sphere':
+                return this.sphereTestFirst(shape.radius, position, rotation);
+            default:
+                return this.boxTestFirst(shape.halfExtents, position, rotation);
+        }
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the box hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
+     * @param {Vec3} position - The world space position for the box to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
+     *
+     * @returns {HitResult|null} A boxTest hit result (null if there were no hits).
+     */
+    boxTestFirst(halfExtents, position, rotation) {
+        ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
+        return this._shapeTestFirst(new Ammo.btBoxShape(ammoVec3), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the capsule hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {number} radius - The radius of the capsule.
+     * @param {number} height - The total height of the capsule from tip to tip.
+     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the capsule to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
+     *
+     * @returns {HitResult|null} A capsuleTest hit result (null if there were no hits).
+     */
+    capsuleTestFirst(radius, height, axis, position, rotation) {
+        return this._shapeTestFirst(createShape('Capsule', axis, radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the cone hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {number} radius - The radius of the cone.
+     * @param {number} height - The total height of the cone from tip to tip.
+     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the cone to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
+     *
+     * @returns {HitResult|null} A coneTest hit result (null if there were no hits).
+     */
+    coneTestFirst(radius, height, axis, position, rotation) {
+        return this._shapeTestFirst(createShape('Cone', axis, radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the cylinder hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {number} radius - The radius of the cylinder.
+     * @param {number} height - The total height of the cylinder from tip to tip.
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {Vec3} position - The world space position for the cylinder to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
+     *
+     * @returns {HitResult|null} A cylinderTest hit result (null if there were no hits).
+     */
+    cylinderTestFirst(radius, height, axis, position, rotation) {
+        return this._shapeTestFirst(createShape('Cylinder', axis, radius, height), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the sphere hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {number} radius - The radius of the sphere.
+     * @param {Vec3} position - The world space position for the sphere to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
+     *
+     * @returns {HitResult|null} A sphereTest hit result (null if there were no hits).
+     */
+    sphereTestFirst(radius, position, rotation) {
+        return this._shapeTestFirst(new Ammo.btSphereShape(radius), position, rotation);
+    }
+
+    /**
+     * Perform a collision check on the world and return the first entity the shape hits.
+     * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
+     *
+     * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
+     * @param {Vec3} position - The world space position for the shape to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
+     *
+     * @returns {HitResult|null} The shapeTest hit result (null if there were no hits).
+     * @ignore
+     */
+    _shapeTestFirst(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
+        return this._shapeTest(shape, position, rotation, true, destroyShape)[0] || null;
+    }
+
+    /**
+     * Perform a collision check on the world and return all entities the shape hits.
+     * It returns an array of {@link HitResult}. If no hits are
+     * detected, the returned array will be of length 0.
+     *
+     * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
+     * @param {Vec3} position - The world space position for the shape to be.
+     * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     * @param {boolean} [firstOnly] - Whether only the first hit should be saved.
+     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
      */
-    _shapeTestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
-        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapeTestAll: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
+    _shapeTest(shape, position, rotation = Vec3.ZERO, firstOnly = true, destroyShape = true) {
+        Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapeTest: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -933,6 +1074,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Callback for the contactTest results.
         const resultCallback = new Ammo.ConcreteContactResultCallback();
         resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
+            if (firstOnly && results.length === 1) {
+                return 0;
+            }
+
             // Retrieve collided entity.
             const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
 
@@ -952,8 +1097,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         new Vec3(point.x(), point.y(), point.z()),
                         new Vec3(normal.x(), normal.y(), normal.z())
                     ));
+
+                    return 1;
                 }
             }
+
+            return 0;
         };
 
         // Check for contacts.
