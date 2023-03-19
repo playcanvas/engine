@@ -115,7 +115,7 @@ class Application extends AppBase {
      * - sound ({@link SoundComponentSystem})
      * - sprite ({@link SpriteComponentSystem})
      *
-     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
      * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
      * @param {Keyboard} [options.keyboard] - Keyboard handler for input.

@@ -88,6 +88,13 @@ const platform = {
     browser: environment === 'browser',
 
     /**
+     * True if running in a Web Worker.
+     *
+     * @type {boolean}
+     */
+    worker: environment === 'worker',
+
+    /**
      * True if running on a desktop or laptop device.
      *
      * @type {boolean}
