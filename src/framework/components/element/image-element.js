@@ -1043,19 +1043,23 @@ class ImageElement {
                 }
             }
 
-            this._materialAsset = null;
-            if (_id) {
-                const asset = assets.get(_id);
+            this._materialAsset = _id;
+            if (this._materialAsset) {
+                const asset = assets.get(this._materialAsset);
                 if (!asset) {
+                    this._materialAsset = null;
                     this.material = null;
+
                     this._materialAsset = _id;
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
-                    this._materialAsset = _id;
                     this._bindMaterialAsset(asset);
                 }
             } else {
+                this._materialAsset = null;
                 this.material = null;
+
+                this._materialAsset = _id;
             }
         }
     }
