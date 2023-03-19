@@ -444,7 +444,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        this.clientRect = new DOMRect(0, 0, this.canvas.width, this.canvas.height)
+        this.clientRect = new DOMRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     /**
