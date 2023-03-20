@@ -883,6 +883,14 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     indices = new Uint16Array(indices);
                 }
 
+                if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
+                    Debug.warn('Glb file contains 8bit index buffer but these are not supported by WebGPU - converting to 16bit.');
+
+                    // convert to 16bit
+                    indexFormat = INDEXFORMAT_UINT16;
+                    indices = new Uint16Array(indices);
+                }
+
                 const indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
