@@ -14,7 +14,7 @@ void addRefraction(vec3 worldNormal, float thickness, float gloss, vec3 specular
     vec4 tmpRefl = dReflection;
     dReflDirW = refract2(-dViewDirW, worldNormal, material_refractionIndex);
     dReflection = vec4(0);
-    addReflection(gloss);
+    addReflection(dReflDirW, gloss);
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * albedo, transmission);
     dReflection = tmpRefl;
     dReflDirW = tmpDir;
