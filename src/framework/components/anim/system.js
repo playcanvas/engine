@@ -1,3 +1,4 @@
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
@@ -50,7 +51,16 @@ class AnimComponentSystem extends ComponentSystem {
             data.layers.forEach((layer, i) => {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
-                        component.layers[i].assignAnimation(node.name, node.animTrack);
+                        if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
+                            const animationAsset = pc.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            if (animationAsset && !animationAsset.loaded) {
+                                animationAsset.once('load', () => {
+                                    component.layers[i].assignAnimation(node.name, animationAsset.resource);
+                                });
+                            }
+                        } else {
+                            component.layers[i].assignAnimation(node.name, node.animTrack);
+                        }
                     });
                 });
             });
