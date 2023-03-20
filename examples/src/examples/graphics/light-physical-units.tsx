@@ -6,6 +6,7 @@ import { Observer } from '@playcanvas/observer';
 class LightPhysicalUnitsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Light Physical Units';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
