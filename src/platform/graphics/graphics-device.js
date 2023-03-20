@@ -152,7 +152,7 @@ class GraphicsDevice extends EventHandler {
       * True if 16-bit floating-point textures can be used as a frame buffer.
       *
       * @type {boolean}
-     * @readonly
+      * @readonly
       */
     textureHalfFloatRenderable;
 
