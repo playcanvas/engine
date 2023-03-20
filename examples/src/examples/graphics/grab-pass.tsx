@@ -139,7 +139,7 @@ class GrabPassExample {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
-                    material.shininess = 60;
+                    material.gloss = 0.6;
                     material.metalness = 0.4;
                     material.useMetalness = true;
                     material.update();

@@ -108,7 +108,7 @@ class TweenExample {
                     const material = sphere.render.material as pc.StandardMaterial;
                     material.diffuse.set(1, 0, 0);
                     material.specular.set(0.6, 0.6, 0.6);
-                    material.shininess = 20;
+                    material.gloss = 0.2;
 
                     sphere.addComponent("script");
                     sphere.script.create("tween", {
