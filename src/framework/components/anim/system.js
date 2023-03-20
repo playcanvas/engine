@@ -52,7 +52,7 @@ class AnimComponentSystem extends ComponentSystem {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
                         if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
-                            const animationAsset = pc.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            const animationAsset = this.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
                             if (animationAsset && !animationAsset.loaded) {
                                 animationAsset.once('load', () => {
                                     component.layers[i].assignAnimation(node.name, animationAsset.resource);
