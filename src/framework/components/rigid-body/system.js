@@ -563,7 +563,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
             }
 
-            if (options.sort === true) {
+            if (options.sort) {
                 results.sort((a, b) => a.hitFraction - b.hitFraction);
             }
         }
