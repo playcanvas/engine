@@ -88,7 +88,7 @@ const platform = {
     browser: environment === 'browser',
 
     /**
-     * Convenience boolean indicating whether we're running in a web worker
+     * Convenience boolean indicating whether we're running in a Web Worker
      *
      * @type {boolean}
      */
