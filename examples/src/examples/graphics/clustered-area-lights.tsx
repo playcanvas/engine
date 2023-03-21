@@ -6,6 +6,7 @@ import { Observer } from '@playcanvas/observer';
 class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Area Lights';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>

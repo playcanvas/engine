@@ -455,6 +455,7 @@ class AnimController {
             this._stateNames.push(path[0]);
         }
         state.addAnimation(path, animTrack);
+        this._animEvaluator.updateClipTrack(state.name, animTrack);
         if (speed !== undefined) {
             state.speed = speed;
         }
