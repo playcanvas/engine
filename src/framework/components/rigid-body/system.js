@@ -46,6 +46,13 @@ class RaycastResult {
          * @type {Vec3}
          */
         this.normal = normal;
+
+        /**
+         * The distance percentage at which the collision occurred from starting point.
+         *
+         * @type {number}
+         */
+        this.hitFraction = hitFraction;
     }
 }
 
@@ -489,7 +496,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 result = new RaycastResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z())
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    rayCallback.get_m_closestHitFraction()
                 );
 
                 // keeping for backwards compatibility
@@ -530,6 +538,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const collisionObjs = rayCallback.get_m_collisionObjects();
             const points = rayCallback.get_m_hitPointWorld();
             const normals = rayCallback.get_m_hitNormalWorld();
+            const hitFractions = rayCallback.get_m_hitFractions();
 
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
@@ -540,11 +549,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     const result = new RaycastResult(
                         body.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z())
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        hitFractions.at(i)
                     );
+
                     results.push(result);
                 }
             }
+
+            results.sort((a, b) => a.hitFraction - b.hitFraction);
         }
 
         Ammo.destroy(rayCallback);
