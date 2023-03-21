@@ -469,14 +469,32 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
+     * @param {object} [filters] - Filters to find more precise values.
+     * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
+     * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
+     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has} query but within an object.
+     * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes one argument: the entity to evaluate.
      * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end) {
+        // Tags and custom callback can only be performed by looking at all results.
+        if (filters?.tags || filters?.callback) {
+            return this.raycastAll(start, end, filters)[0] || null;
+        }
+
         let result = null;
 
         ammoRayStart.setValue(start.x, start.y, start.z);
         ammoRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
+
+        if (typeof filters?.collisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(filters.collisionGroup);
+        }
+
+        if (typeof filters?.collisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(filters.collisionMask);
+        }
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
@@ -514,6 +532,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
+     * @param {object} [filters] - Filters find more precise values.
+     * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
+     * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
+     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has} query but within an object.
+     * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end) {
@@ -525,6 +548,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd);
 
+        if (typeof filters?.collisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(filters.collisionGroup);
+        }
+
+        if (typeof filters?.collisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(filters.collisionMask);
+        }
+
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
             const collisionObjs = rayCallback.get_m_collisionObjects();
@@ -534,7 +565,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
                 const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
-                if (body) {
+                if (body && body.entity) {
+                    if (filters?.tags && !body.entity.has(...filters.tags) || filters?.callback && !filters.callback(body.entity)) {
+                        continue;
+                    }
+
                     const point = points.at(i);
                     const normal = normals.at(i);
                     const result = new RaycastResult(
@@ -542,6 +577,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         new Vec3(point.x(), point.y(), point.z()),
                         new Vec3(normal.x(), normal.y(), normal.z())
                     );
+
                     results.push(result);
                 }
             }
