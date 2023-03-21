@@ -68,7 +68,8 @@ describe('AnimController', function () {
                 priority: 3
             }
         ];
-        const animBinder = new AnimComponentBinder(this, new Entity(), 'layer', {}, 0);
+        const graph = new Entity();
+        const animBinder = new AnimComponentBinder({ entity: graph }, graph, 'layer', {}, 0);
         animBinder.resolve = () => {};
         const animEvaluator = new AnimEvaluator(animBinder);
         controller = new AnimController(
