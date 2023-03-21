@@ -30,9 +30,10 @@ class HitResult {
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
      * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the hit
      * occurred from the starting point.
+     * @param {number} distance - The distance at which the hit occurred from the starting point.
      * @hideconstructor
      */
-    constructor(entity, point, normal, hitFraction) {
+    constructor(entity, point, normal, hitFraction, distance) {
         /**
          * The entity that was hit.
          *
@@ -55,12 +56,19 @@ class HitResult {
         this.normal = normal;
 
         /**
-         * The normalized distance (between 0 and 1) at which the ray hit occurred from the
-         * starting point.
+         * The normalized distance (between 0 and 1) at which the hit occurred from the
+         * starting point toward the end. Prefer `distance` for shapes.
          *
          * @type {number}
          */
         this.hitFraction = hitFraction;
+
+        /**
+         * The distance at which the hit occurred from the starting point.
+         *
+         * @type {number}
+         */
+        this.distance = distance;
     }
 }
 
@@ -521,18 +529,22 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
+            const rayDistance = start.distance(end);
+
             const collisionObj = rayCallback.get_m_collisionObject();
             const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
 
             if (body) {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
+                const hitFraction = rayCallback.get_m_closestHitFraction();
 
                 result = new HitResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
                     new Vec3(normal.x(), normal.y(), normal.z()),
-                    rayCallback.get_m_closestHitFraction()
+                    hitFraction,
+                    rayDistance * hitFraction
                 );
 
                 // keeping for backwards compatibility
@@ -571,6 +583,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
+            const rayDistance = start.distance(end);
+
             const collisionObjs = rayCallback.get_m_collisionObjects();
             const points = rayCallback.get_m_hitPointWorld();
             const normals = rayCallback.get_m_hitNormalWorld();
@@ -579,14 +593,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
                 const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
+
                 if (body) {
                     const point = points.at(i);
                     const normal = normals.at(i);
+                    const hitFraction = hitFractions.at(i);
+
                     const result = new HitResult(
                         body.entity,
                         new Vec3(point.x(), point.y(), point.z()),
                         new Vec3(normal.x(), normal.y(), normal.z()),
-                        hitFractions.at(i)
+                        hitFraction,
+                        rayDistance * hitFraction
                     );
 
                     results.push(result);
@@ -732,12 +750,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
      * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
-     * @param {boolean} [destroyShape] - Whether to destroy the shape after the cast. Defaults to true.
+     * @param {object} [options] - Options to use when casting the shape.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast. Defaults to true.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      * @private
      */
-    _shapeCastFirst(shape, startPosition, endPosition, startRotation = Vec3.ZERO, endRotation = undefined, destroyShape = true) {
+    _shapeCastFirst(shape, startPosition, endPosition, startRotation = Vec3.ZERO, endRotation = undefined, options = {}) {
         Debug.assert(Ammo.ClosestConvexResultCallback && Ammo.ClosestConvexResultCallback.get_m_hitCollisionObject, 'pc.RigidBodyComponentSystem#_shapeCastFirst: Your version of ammo.js does not expose Ammo.ClosestConvexResultCallback or Ammo.ClosestConvexResultCallback#get_m_hitCollisionObject. Update it to latest.');
 
         let result = null;
@@ -780,18 +799,21 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const point = resultCallback.get_m_hitPointWorld();
                 const normal = resultCallback.get_m_hitNormalWorld();
 
+                const pointVec = new Vec3(point.x(), point.y(), point.z());
+
                 result = new HitResult(
                     body.entity,
-                    new Vec3(point.x(), point.y(), point.z()),
+                    pointVec,
                     new Vec3(normal.x(), normal.y(), normal.z()),
-                    0
+                    resultCallback.get_m_closestHitFraction(),
+                    startPosition.distance(pointVec)
                 );
             }
         }
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
-        if (destroyShape) {
+        if (options.destroyShape !== false) {
             Ammo.destroy(shape);
         }
 
@@ -924,13 +946,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
+     * @param {object} [options] - Options to use when testing the shape.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @ignore
      */
-    _shapeTestAll(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
-        return this._shapeTest(shape, position, rotation, false, destroyShape);
+    _shapeTestAll(shape, position, rotation = Vec3.ZERO, options) {
+        return this._shapeTest(shape, position, rotation, options);
     }
 
     /**
@@ -1052,13 +1075,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
+     * @param {object} [options] - Options to use when testing the shape.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the tets. Defaults to true.
      *
      * @returns {HitResult|null} The shapeTest hit result (null if there were no hits).
      * @ignore
      */
-    _shapeTestFirst(shape, position, rotation = Vec3.ZERO, destroyShape = true) {
-        return this._shapeTest(shape, position, rotation, true, destroyShape)[0] || null;
+    _shapeTestFirst(shape, position, rotation = Vec3.ZERO, options) {
+        return this._shapeTest(shape, position, rotation, options)[0] || null;
     }
 
     /**
@@ -1069,13 +1093,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {boolean} [firstOnly] - Whether only the first hit should be saved.
-     * @param {boolean} [destroyShape] - Whether to destroy the shape once done.
+     * @param {object} [options] - Options to use when testing the shape.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * @private
      */
-    _shapeTest(shape, position, rotation = Vec3.ZERO, firstOnly = true, destroyShape = true) {
+    _shapeTest(shape, position, rotation = Vec3.ZERO, options = {}) {
         Debug.assert(Ammo.ConcreteContactResultCallback, 'pc.RigidBodyComponentSystem#_shapeTest: Your version of ammo.js does not expose Ammo.ConcreteContactResultCallback. Update it to latest.');
 
         const results = [];
@@ -1108,10 +1132,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Callback for the contactTest results.
         const resultCallback = new Ammo.ConcreteContactResultCallback();
         resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
-            if (firstOnly && results.length === 1) {
-                return 0;
-            }
-
             // Retrieve collided entity.
             const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
 
@@ -1126,12 +1146,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     const point = manifold.get_m_positionWorldOnB();
                     const normal = manifold.get_m_normalWorldOnB();
 
+                    const pointVec = new Vec3(point.x(), point.y(), point.z());
+                    const startDistance = position.distance(pointVec);
+
                     // Push the result.
                     results.push(new HitResult(
                         body1.entity,
-                        new Vec3(point.x(), point.y(), point.z()),
+                        pointVec,
                         new Vec3(normal.x(), normal.y(), normal.z()),
-                        0
+                        startDistance / (startDistance - distance), // Minus distance as it's negative.
+                        startDistance
                     ));
 
                     return 1;
@@ -1149,11 +1173,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
-        if (destroyShape) {
+        if (options.destroyShape !== false) {
             Ammo.destroy(shape);
         }
 
-        return results;
+        return results.sort((a, b) => a.distance - b.distance);
     }
 
     /**
