@@ -23,9 +23,10 @@ class RaycastResult {
      * @param {import('../../entity.js').Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     * @param {number} hitFraction - The distance percentage at which the collision occurred from starting point.
      * @hideconstructor
      */
-    constructor(entity, point, normal) {
+    constructor(entity, point, normal, hitFraction) {
         /**
          * The entity that was hit.
          *
