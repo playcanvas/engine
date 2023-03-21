@@ -23,9 +23,11 @@ class RaycastResult {
      * @param {import('../../entity.js').Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the ray hit
+     * occurred from the starting point.
      * @hideconstructor
      */
-    constructor(entity, point, normal) {
+    constructor(entity, point, normal, hitFraction) {
         /**
          * The entity that was hit.
          *
@@ -46,6 +48,14 @@ class RaycastResult {
          * @type {Vec3}
          */
         this.normal = normal;
+
+        /**
+         * The normalized distance (between 0 and 1) at which the ray hit occurred from the
+         * starting point.
+         *
+         * @type {number}
+         */
+        this.hitFraction = hitFraction;
     }
 }
 
@@ -489,7 +499,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 result = new RaycastResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z())
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    rayCallback.get_m_closestHitFraction()
                 );
 
                 // keeping for backwards compatibility
@@ -510,11 +521,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Raycast the world and return all entities the ray hits. It returns an array of
      * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
-     * of length 0.
+     * of length 0. Results are sorted by distance with closest first.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     * Results are sorted by distance with closest first.
      */
     raycastAll(start, end) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
@@ -530,6 +542,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const collisionObjs = rayCallback.get_m_collisionObjects();
             const points = rayCallback.get_m_hitPointWorld();
             const normals = rayCallback.get_m_hitNormalWorld();
+            const hitFractions = rayCallback.get_m_hitFractions();
 
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
@@ -540,11 +553,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     const result = new RaycastResult(
                         body.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z())
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        hitFractions.at(i)
                     );
+
                     results.push(result);
                 }
             }
+
+            results.sort((a, b) => a.hitFraction - b.hitFraction);
         }
 
         Ammo.destroy(rayCallback);
