@@ -527,7 +527,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} end - The world space point where the ray ends.
      * @param {object} [options] - The additional options for the raycasting.
      * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
-     * first. Defaults to true.
+     * first. Defaults to false.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end, options = {}) {
@@ -563,7 +563,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
             }
 
-            if (options.sort !== false) {
+            if (options.sort === true) {
                 results.sort((a, b) => a.hitFraction - b.hitFraction);
             }
         }
