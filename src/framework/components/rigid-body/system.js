@@ -479,19 +479,19 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @param {object} [filters] - Filters to find more precise values.
-     * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
-     * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has}
+     * @param {object} [options] - The additional options for the raycasting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {any[]} [options.filterTags] - Tags filters. Defines the same way as {@link Tags#has}
      * query but within an object.
-     * @param {Function} [filters.callback] - Custom function to use to filter entities.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes one argument: the entity to evaluate.
      * @returns {RaycastResult|null} The result of the raycasting or null if there was no hit.
      */
-    raycastFirst(start, end, filters) {
+    raycastFirst(start, end, options = {}) {
         // Tags and custom callback can only be performed by looking at all results.
-        if (filters?.tags || filters?.callback) {
-            return this.raycastAll(start, end, filters)[0] || null;
+        if (options.filterTags || options.filterCallback) {
+            return this.raycastAll(start, end, options)[0] || null;
         }
 
         let result = null;
@@ -500,18 +500,19 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
 
-        if (typeof filters?.collisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(filters.collisionGroup);
+        if (typeof options.filterCollisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
         }
 
-        if (typeof filters?.collisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(filters.collisionMask);
+        if (typeof options.filterCollisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
         }
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
             const collisionObj = rayCallback.get_m_collisionObject();
             const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
+
             if (body) {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
@@ -545,17 +546,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
-     * @param {object} [filters] - Filters find more precise values.
-     * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
-     * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has}
+     * @param {object} [options] - The additional options for the raycasting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {any[]} [options.filterTags] - Tags filters. Defines the same way as {@link Tags#has}
      * query but within an object.
-     * @param {Function} [filters.callback] - Custom function to use to filter entities.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      * Results are sorted by distance with closest first.
      */
-    raycastAll(start, end, filters) {
+    raycastAll(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
@@ -564,12 +565,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
         ammoRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd);
 
-        if (typeof filters?.collisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(filters.collisionGroup);
+        if (typeof options.filterCollisionGroup === 'number') {
+            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
         }
 
-        if (typeof filters?.collisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(filters.collisionMask);
+        if (typeof options.filterCollisionMask === 'number') {
+            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
         }
 
         this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
@@ -582,8 +583,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
                 const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
+
                 if (body && body.entity) {
-                    if (filters?.tags && !body.entity.has(...filters.tags) || filters?.callback && !filters.callback(body.entity)) {
+                    if (options.filterTags && !body.entity.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
                         continue;
                     }
 
