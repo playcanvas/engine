@@ -837,6 +837,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     shapeTestAll(shape, position, rotation) {
         switch (shape.type) {
@@ -863,6 +864,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     boxTestAll(halfExtents, position, rotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
@@ -882,6 +884,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
      * @returns {HitResult[]} An array of capsuleTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     capsuleTestAll(radius, height, axis, position, rotation) {
         return this._shapeTestAll(createShape('Capsule', axis, radius, height), position, rotation);
@@ -900,6 +903,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
      * @returns {HitResult[]} An array of coneTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     coneTestAll(radius, height, axis, position, rotation) {
         return this._shapeTestAll(createShape('Cone', axis, radius, height), position, rotation);
@@ -918,6 +922,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     cylinderTestAll(radius, height, axis, position, rotation) {
         return this._shapeTestAll(createShape('Cylinder', axis, radius, height), position, rotation);
@@ -933,6 +938,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      */
     sphereTestAll(radius, position, rotation) {
         return this._shapeTestAll(new Ammo.btSphereShape(radius), position, rotation);
@@ -950,6 +956,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      * @ignore
      */
     _shapeTestAll(shape, position, rotation = Vec3.ZERO, options) {
@@ -1097,6 +1104,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
+     * Results are ordered based on distance from starting position with closest first.
      * @private
      */
     _shapeTest(shape, position, rotation = Vec3.ZERO, options = {}) {
