@@ -526,7 +526,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @param {object} [options] - The additional options for the raycasting.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance. Defaults to true.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to true.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
     raycastAll(start, end, options = {}) {
