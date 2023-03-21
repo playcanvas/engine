@@ -476,7 +476,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes one argument: the entity to evaluate.
      * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
      */
-    raycastFirst(start, end) {
+    raycastFirst(start, end, filters) {
         // Tags and custom callback can only be performed by looking at all results.
         if (filters?.tags || filters?.callback) {
             return this.raycastAll(start, end, filters)[0] || null;
@@ -539,7 +539,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      */
-    raycastAll(start, end) {
+    raycastAll(start, end, filters) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
