@@ -28,9 +28,11 @@ class HitResult {
      * @param {import('../../entity.js').Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
+     * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the hit
+     * occurred from the starting point.
      * @hideconstructor
      */
-    constructor(entity, point, normal) {
+    constructor(entity, point, normal, hitFraction) {
         /**
          * The entity that was hit.
          *
@@ -51,6 +53,14 @@ class HitResult {
          * @type {Vec3}
          */
         this.normal = normal;
+
+        /**
+         * The normalized distance (between 0 and 1) at which the ray hit occurred from the
+         * starting point.
+         *
+         * @type {number}
+         */
+        this.hitFraction = hitFraction;
     }
 }
 
@@ -513,6 +523,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (rayCallback.hasHit()) {
             const collisionObj = rayCallback.get_m_collisionObject();
             const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
+
             if (body) {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
@@ -520,7 +531,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 result = new HitResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z())
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    rayCallback.get_m_closestHitFraction()
                 );
 
                 // keeping for backwards compatibility
@@ -541,11 +553,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Raycast the world and return all entities the ray hits. It returns an array of
      * {@link HitResult}, one for each hit. If no hits are detected, the returned array will be
-     * of length 0.
+     * of length 0. Results are sorted by distance with closest first.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @returns {HitResult[]} An array of raycast hit results (0 length if there were no hits).
+     * Results are sorted by distance with closest first.
      */
     raycastAll(start, end) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
@@ -561,6 +574,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             const collisionObjs = rayCallback.get_m_collisionObjects();
             const points = rayCallback.get_m_hitPointWorld();
             const normals = rayCallback.get_m_hitNormalWorld();
+            const hitFractions = rayCallback.get_m_hitFractions();
 
             const numHits = collisionObjs.size();
             for (let i = 0; i < numHits; i++) {
@@ -571,11 +585,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     const result = new HitResult(
                         body.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z())
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        hitFractions.at(i)
                     );
+
                     results.push(result);
                 }
             }
+
+            results.sort((a, b) => a.hitFraction - b.hitFraction);
         }
 
         Ammo.destroy(rayCallback);
@@ -588,17 +606,19 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {object} shape - The shape to use for sweep test.
-     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone
+     * shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
      * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
-     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule",
+     * "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} startPosition - The world space starting position for the shape to be.
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
      * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
      *
-     * @returns {HitResult} The first hit result (null if there were no hits).
+     * @returns {HitResult|null} The first hit result (null if there were no hits).
      */
     shapeCastFirst(shape, startPosition, endPosition, startRotation, endRotation) {
         switch (shape.type) {
@@ -638,7 +658,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
-     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the capsule's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} startPosition - The world space starting position for the shape to be.
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
@@ -656,7 +677,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
-     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cone's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} startPosition - The world space starting position for the shape to be.
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
@@ -674,7 +696,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
-     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} startPosition - The world space starting position for the shape to be.
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
@@ -760,7 +783,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 result = new HitResult(
                     body.entity,
                     new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z())
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    0
                 );
             }
         }
@@ -780,10 +804,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * detected, the returned array will be of length 0.
      *
      * @param {object} shape - The shape to use for collision.
-     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or
+     * cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
      * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
-     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule",
+     * "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
@@ -828,7 +854,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
-     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the capsule's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
@@ -845,7 +872,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
-     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cone's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
@@ -862,7 +890,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
-     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
      *
@@ -909,10 +938,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * It returns a {@link HitResult}. If no hits are detected, the returned value will be null.
      *
      * @param {object} shape - The shape to use for collision.
-     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or
+     * cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
      * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
-     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule", "cone", "cylinder" or "sphere". Defaults to "box".
+     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule",
+     * "cone", "cylinder" or "sphere". Defaults to "box".
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
@@ -955,7 +986,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
-     * @param {number} axis - The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the capsule's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      *
@@ -971,7 +1003,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
-     * @param {number} axis - The local space axis with which the cone's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cone's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      *
@@ -987,7 +1020,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
-     * @param {number} axis - The local space axis with which the cylinder's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @param {number} axis - The local space axis with which the cylinder's length is aligned.
+     * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
      *
@@ -1087,7 +1121,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const manifold = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
                 // Make sure there is a collision
-                if (manifold.getDistance() < 0) {
+                const distance = manifold.getDistance();
+                if (distance < 0) {
                     const point = manifold.get_m_positionWorldOnB();
                     const normal = manifold.get_m_normalWorldOnB();
 
@@ -1095,7 +1130,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     results.push(new HitResult(
                         body1.entity,
                         new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z())
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        0
                     ));
 
                     return 1;
