@@ -482,9 +482,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} [filters] - Filters to find more precise values.
      * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
      * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has} query but within an object.
-     * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes one argument: the entity to evaluate.
-     * @returns {RaycastResult} The result of the raycasting or null if there was no hit.
+     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has}
+     * query but within an object.
+     * @param {Function} [filters.callback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes one argument: the entity to evaluate.
+     * @returns {RaycastResult|null} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end, filters) {
         // Tags and custom callback can only be performed by looking at all results.
@@ -546,8 +548,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} [filters] - Filters find more precise values.
      * @param {number} [filters.collisionGroup] - Collision group to apply to the raycast.
      * @param {number} [filters.collisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has} query but within an object.
-     * @param {Function} [filters.callback] - Custom function to use to filter entities. Must return true to proceed with result. Takes the entity to evaluate as argument.
+     * @param {any[]} [filters.tags] - Tags filters. Defines the same way as {@link Tags#has}
+     * query but within an object.
+     * @param {Function} [filters.callback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
      * Results are sorted by distance with closest first.
      */
