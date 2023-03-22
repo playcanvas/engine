@@ -30,11 +30,7 @@ function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
 }
 
-const maxBlurSize = 25;
 function gaussWeights(kernelSize) {
-    if (kernelSize > maxBlurSize) {
-        kernelSize = maxBlurSize;
-    }
     const sigma = (kernelSize - 1) / (2 * 3);
 
     const halfWidth = (kernelSize - 1) * 0.5;
