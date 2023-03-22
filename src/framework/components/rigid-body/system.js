@@ -491,6 +491,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     raycastFirst(start, end, options = {}) {
         // Tags and custom callback can only be performed by looking at all results.
         if (options.filterTags || options.filterCallback) {
+            options.sort = true;
             return this.raycastAll(start, end, options)[0] || null;
         }
 
@@ -547,6 +548,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @param {object} [options] - The additional options for the raycasting.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
      * @param {any[]} [options.filterTags] - Tags filters. Defines the same way as {@link Tags#has}
@@ -554,7 +557,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
-     * Results are sorted by distance with closest first.
      */
     raycastAll(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
@@ -602,7 +604,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
             }
 
-            results.sort((a, b) => a.hitFraction - b.hitFraction);
+            if (options.sort) {
+                results.sort((a, b) => a.hitFraction - b.hitFraction);
+            }
         }
 
         Ammo.destroy(rayCallback);
