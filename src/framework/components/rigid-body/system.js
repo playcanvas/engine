@@ -571,21 +571,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * });
      * @example
      * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
-     * // where hit entity is tagged by `carnivore` AND `mammal`
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
-     *     filterTags: [ [ "carnivore", "mammal" ] ]
-     * });
-     * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
-     * // where hit entity is tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
-     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
-     *     filterTags: [
-     *         [ "carnivore", "mammal" ],
-     *         [ "carnivore", "reptile" ]
-     *     ]
-     * });
-     * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
      * // where hit entity is having a `camera` component
      * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
      *     filterCallback: (entity) => entity && entity.camera
