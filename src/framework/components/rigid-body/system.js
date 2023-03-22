@@ -486,6 +486,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * query but within an object.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes one argument: the entity to evaluate.
+     *
      * @returns {RaycastResult|null} The result of the raycasting or null if there was no hit.
      */
     raycastFirst(start, end, options = {}) {
@@ -556,7 +557,50 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * query but within an object.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
+     *
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     *
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2));
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // where hit entity is tagged by `bird` OR `mammal`
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterTags: [ "bird", "mammal" ]
+     * });
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // where hit entity is tagged by `carnivore` AND `mammal`
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterTags: [ [ "carnivore", "mammal" ] ]
+     * });
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // where hit entity is tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterTags: [
+     *         [ "carnivore", "mammal" ],
+     *         [ "carnivore", "reptile" ]
+     *     ]
+     * });
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // where hit entity is having a `camera` component
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterCallback: (entity) => entity && entity.camera
+     * });
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // where hit entity is tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+     * // and the entity is having an `anim` component
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     filterTags: [
+     *         [ "carnivore", "mammal" ],
+     *         [ "carnivore", "reptile" ]
+     *     ],
+     *     filterCallback: (entity) => entity && entity.anim
+     * });
      */
     raycastAll(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
