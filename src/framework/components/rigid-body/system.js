@@ -569,10 +569,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
+     * @param {object} [options] - The additional options for the raycasting.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      * @returns {HitResult[]} An array of raycast hit results (0 length if there were no hits).
-     * Results are sorted by distance with closest first.
      */
-    raycastAll(start, end) {
+    raycastAll(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
@@ -611,7 +613,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
             }
 
-            results.sort((a, b) => a.hitFraction - b.hitFraction);
+            if (options.sort) {
+                results.sort((a, b) => a.hitFraction - b.hitFraction);
+            }
         }
 
         Ammo.destroy(rayCallback);
@@ -667,7 +671,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     boxCastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation) {
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapeCastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation);
+        const options = { destroyShape: true };
+        return this._shapeCastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
@@ -686,7 +691,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        return this._shapeCastFirst(createShape('Capsule', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
+        const options = { destroyShape: true };
+        return this._shapeCastFirst(createShape('Capsule', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
@@ -705,7 +711,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        return this._shapeCastFirst(createShape('Cone', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
+        const options = { destroyShape: true };
+        return this._shapeCastFirst(createShape('Cone', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
@@ -724,7 +731,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        return this._shapeCastFirst(createShape('Cylinder', axis, radius, height), startPosition, endPosition, startRotation, endRotation);
+        const options = { destroyShape: true };
+        return this._shapeCastFirst(createShape('Cylinder', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
@@ -738,7 +746,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
     sphereCastFirst(radius, startPosition, endPosition) {
-        return this._shapeCastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition);
+        const options = { destroyShape: true };
+        return this._shapeCastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition, options);
     }
 
     /**
@@ -751,7 +760,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
      * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
      * @param {object} [options] - Options to use when casting the shape.
-     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast. Defaults to true.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast. Defaults to false.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      * @private
@@ -813,7 +822,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
-        if (options.destroyShape !== false) {
+        if (options.destroyShape) {
             Ammo.destroy(shape);
         }
 
@@ -835,22 +844,25 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     * @param {object} [options] - The additional options for the shape testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    shapeTestAll(shape, position, rotation) {
+    shapeTestAll(shape, position, rotation, options) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuleTestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.capsuleTestAll(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'cone':
-                return this.coneTestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.coneTestAll(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'cylinder':
-                return this.cylinderTestAll(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.cylinderTestAll(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'sphere':
-                return this.sphereTestAll(shape.radius, position, rotation);
+                return this.sphereTestAll(shape.radius, position, rotation, options);
             default:
-                return this.boxTestAll(shape.halfExtents, position, rotation);
+                return this.boxTestAll(shape.halfExtents, position, rotation, options);
         }
     }
 
@@ -862,13 +874,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
+     * @param {object} [options] - The additional options for the box testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    boxTestAll(halfExtents, position, rotation) {
+    boxTestAll(halfExtents, position, rotation, options = {}) {
+        options.destroyShape = true;
+
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapeTestAll(new Ammo.btBoxShape(ammoVec3), position, rotation);
+        return this._shapeTestAll(new Ammo.btBoxShape(ammoVec3), position, rotation, options);
     }
 
     /**
@@ -882,12 +899,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
+     * @param {object} [options] - The additional options for the capsule testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of capsuleTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    capsuleTestAll(radius, height, axis, position, rotation) {
-        return this._shapeTestAll(createShape('Capsule', axis, radius, height), position, rotation);
+    capsuleTestAll(radius, height, axis, position, rotation, options = {}) {
+        options.destroyShape = true;
+
+        return this._shapeTestAll(createShape('Capsule', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -901,12 +923,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
+     * @param {object} [options] - The additional options for the cone testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of coneTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    coneTestAll(radius, height, axis, position, rotation) {
-        return this._shapeTestAll(createShape('Cone', axis, radius, height), position, rotation);
+    coneTestAll(radius, height, axis, position, rotation, options = {}) {
+        options.destroyShape = true;
+
+        return this._shapeTestAll(createShape('Cone', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -920,12 +947,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
+     * @param {object} [options] - The additional options for the shape testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    cylinderTestAll(radius, height, axis, position, rotation) {
-        return this._shapeTestAll(createShape('Cylinder', axis, radius, height), position, rotation);
+    cylinderTestAll(radius, height, axis, position, rotation, options = {}) {
+        options.destroyShape = true;
+
+        return this._shapeTestAll(createShape('Cylinder', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -936,12 +968,17 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the sphere.
      * @param {Vec3} position - The world space position for the sphere to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
+     * @param {object} [options] - The additional options for the sphere testing.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      */
-    sphereTestAll(radius, position, rotation) {
-        return this._shapeTestAll(new Ammo.btSphereShape(radius), position, rotation);
+    sphereTestAll(radius, position, rotation, options = {}) {
+        options.destroyShape = true;
+
+        return this._shapeTestAll(new Ammo.btSphereShape(radius), position, rotation, options);
     }
 
     /**
@@ -953,13 +990,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      * @param {object} [options] - Options to use when testing the shape.
-     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to false.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
      * @ignore
      */
-    _shapeTestAll(shape, position, rotation = Vec3.ZERO, options) {
+    _shapeTestAll(shape, position, rotation = Vec3.ZERO, options = {}) {
+        options.destroyShape = true;
+
         return this._shapeTest(shape, position, rotation, options);
     }
 
@@ -1006,8 +1045,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult|null} A boxTest hit result (null if there were no hits).
      */
     boxTestFirst(halfExtents, position, rotation) {
+        const options = { destroyShape: true };
+
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        return this._shapeTestFirst(new Ammo.btBoxShape(ammoVec3), position, rotation);
+        return this._shapeTestFirst(new Ammo.btBoxShape(ammoVec3), position, rotation, options);
     }
 
     /**
@@ -1024,7 +1065,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult|null} A capsuleTest hit result (null if there were no hits).
      */
     capsuleTestFirst(radius, height, axis, position, rotation) {
-        return this._shapeTestFirst(createShape('Capsule', axis, radius, height), position, rotation);
+        const options = { destroyShape: true };
+
+        return this._shapeTestFirst(createShape('Capsule', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -1041,7 +1084,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult|null} A coneTest hit result (null if there were no hits).
      */
     coneTestFirst(radius, height, axis, position, rotation) {
-        return this._shapeTestFirst(createShape('Cone', axis, radius, height), position, rotation);
+        const options = { destroyShape: true };
+
+        return this._shapeTestFirst(createShape('Cone', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -1058,7 +1103,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult|null} A cylinderTest hit result (null if there were no hits).
      */
     cylinderTestFirst(radius, height, axis, position, rotation) {
-        return this._shapeTestFirst(createShape('Cylinder', axis, radius, height), position, rotation);
+        const options = { destroyShape: true };
+
+        return this._shapeTestFirst(createShape('Cylinder', axis, radius, height), position, rotation, options);
     }
 
     /**
@@ -1072,7 +1119,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @returns {HitResult|null} A sphereTest hit result (null if there were no hits).
      */
     sphereTestFirst(radius, position, rotation) {
-        return this._shapeTestFirst(new Ammo.btSphereShape(radius), position, rotation);
+        const options = { destroyShape: true };
+
+        return this._shapeTestFirst(new Ammo.btSphereShape(radius), position, rotation, options);
     }
 
     /**
@@ -1083,7 +1132,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      * @param {object} [options] - Options to use when testing the shape.
-     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the tets. Defaults to true.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the tests. Defaults to false.
      *
      * @returns {HitResult|null} The shapeTest hit result (null if there were no hits).
      * @ignore
@@ -1101,7 +1150,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      * @param {object} [options] - Options to use when testing the shape.
-     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to true.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to false.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -1181,11 +1232,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Destroy unused variables for performance.
         Ammo.destroy(resultCallback);
-        if (options.destroyShape !== false) {
+        if (options.destroyShape) {
             Ammo.destroy(shape);
         }
 
-        return results.sort((a, b) => a.distance - b.distance);
+        if (options.sort) {
+            return results.sort((a, b) => a.distance - b.distance);
+        }
+
+        return results;
     }
 
     /**
