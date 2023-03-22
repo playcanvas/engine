@@ -76,7 +76,7 @@ class ShadowRendererDirectional {
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
-        this.generateSplitDistances(light, nearDist, light.shadowDistance);
+        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
 
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
