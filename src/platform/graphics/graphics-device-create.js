@@ -14,6 +14,8 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * specified array does not contain [{@link DEVICETYPE_WEBGL2} or {@link DEVICETYPE_WEBGL1}], those
  * are internally added to its end in this order. Typically, you'd only specify
  * {@link DEVICETYPE_WEBGPU}, or leave it empty.
+ * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
+ * anti-aliasing if possible. Defaults to true.
  * @param {string} [options.glslangUrl] - An url to glslang script, required if
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
@@ -21,6 +23,9 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
+
+    // defaults
+    options.antialias ??= true;
 
     const deviceTypes = options.deviceTypes ?? [];
 
