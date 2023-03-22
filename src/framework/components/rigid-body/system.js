@@ -707,114 +707,137 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
      * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {object} [options] - The additional options for the shape casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
      *
      * @returns {HitResult|null} The first hit result (null if there were no hits).
      */
-    shapeCastFirst(shape, startPosition, endPosition, startRotation, endRotation) {
+    shapeCastFirst(shape, startPosition, endPosition, startRotation, endRotation, options) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuleCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.capsuleCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation, options);
             case 'cone':
-                return this.coneCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.coneCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation, options);
             case 'cylinder':
-                return this.cylinderCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation);
+                return this.cylinderCastFirst(shape.radius, shape.height, shape.axis, startPosition, endPosition, startRotation, endRotation, options);
             case 'sphere':
-                return this.sphereCastFirst(shape.radius, startPosition, endPosition);
+                return this.sphereCastFirst(shape.radius, startPosition, endPosition, options);
             default:
-                return this.boxCastFirst(shape.halfExtents, startPosition, endPosition, startRotation, endRotation);
+                return this.boxCastFirst(shape.halfExtents, startPosition, endPosition, startRotation, endRotation, options);
         }
     }
 
     /**
-     * Perform a shape casting on the world and return the first entity the box hits.
+     * Perform a box casting on the world and return the first entity the box hits.
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
-     * @param {Vec3} startPosition - The world space starting position for the shape to be.
-     * @param {Vec3} endPosition - The world space ending position for the shape to be.
-     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
-     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {Vec3} startPosition - The world space starting position for the box to be.
+     * @param {Vec3} endPosition - The world space ending position for the box to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the box to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the box to have.
+     * @param {object} [options] - The additional options for the box casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the box cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the box cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    boxCastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation) {
+    boxCastFirst(halfExtents, startPosition, endPosition, startRotation, endRotation, options = {}) {
+        options.destroyShape = true;
+
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
-        const options = { destroyShape: true };
         return this._shapeCastFirst(new Ammo.btBoxShape(ammoVec3), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
-     * Perform a shape casting on the world and return the first entity the capsule hits.
+     * Perform a capsule casting on the world and return the first entity the capsule hits.
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {number} radius - The radius of the capsule.
      * @param {number} height - The total height of the capsule from tip to tip.
      * @param {number} axis - The local space axis with which the capsule's length is aligned.
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} startPosition - The world space starting position for the shape to be.
-     * @param {Vec3} endPosition - The world space ending position for the shape to be.
-     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
-     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {Vec3} startPosition - The world space starting position for the capsule to be.
+     * @param {Vec3} endPosition - The world space ending position for the capsule to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the capsule to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the capsule to have.
+     * @param {object} [options] - The additional options for the capsule casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the capsule cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the capsule cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        const options = { destroyShape: true };
+    capsuleCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation, options = {}) {
+        options.destroyShape = true;
+
         return this._shapeCastFirst(createShape('Capsule', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
-     * Perform a shape casting on the world and return the first entity the cone hits.
+     * Perform a cone casting on the world and return the first entity the cone hits.
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {number} radius - The radius of the cone.
      * @param {number} height - The total height of the cone from tip to tip.
      * @param {number} axis - The local space axis with which the cone's length is aligned.
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} startPosition - The world space starting position for the shape to be.
-     * @param {Vec3} endPosition - The world space ending position for the shape to be.
-     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
-     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {Vec3} startPosition - The world space starting position for the cone to be.
+     * @param {Vec3} endPosition - The world space ending position for the cone to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the cone to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the cone to have.
+     * @param {object} [options] - The additional options for the cone casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cone cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cone cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        const options = { destroyShape: true };
+    coneCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation, options = {}) {
+        options.destroyShape = true;
+
         return this._shapeCastFirst(createShape('Cone', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
-     * Perform a shape casting on the world and return the first entity the cylinder hits.
+     * Perform a cylinder casting on the world and return the first entity the cylinder hits.
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {number} radius - The radius of the cylinder.
      * @param {number} height - The total height of the cylinder from tip to tip.
      * @param {number} axis - The local space axis with which the cylinder's length is aligned.
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @param {Vec3} startPosition - The world space starting position for the shape to be.
-     * @param {Vec3} endPosition - The world space ending position for the shape to be.
-     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
-     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
+     * @param {Vec3} startPosition - The world space starting position for the cylinder to be.
+     * @param {Vec3} endPosition - The world space ending position for the cylinder to be.
+     * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the cylinder to have.
+     * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the cylinder to have.
+     * @param {object} [options] - The additional options for the cylinder casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cylinder cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cylinder cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation) {
-        const options = { destroyShape: true };
+    cylinderCastFirst(radius, height, axis, startPosition, endPosition, startRotation, endRotation, options = {}) {
+        options.destroyShape = true;
+
         return this._shapeCastFirst(createShape('Cylinder', axis, radius, height), startPosition, endPosition, startRotation, endRotation, options);
     }
 
     /**
-     * Perform a shape casting on the world and return the first entity the sphere hits.
+     * Perform a sphere casting on the world and return the first entity the sphere hits.
      * It returns a {@link HitResult}. If no hits are detected, returned value will be null.
      *
      * @param {number} radius - The radius for the sphere.
-     * @param {Vec3} startPosition - The world space starting position for the shape to be.
-     * @param {Vec3} endPosition - The world space ending position for the shape to be.
+     * @param {Vec3} startPosition - The world space starting position for the sphere to be.
+     * @param {Vec3} endPosition - The world space ending position for the sphere to be.
+     * @param {object} [options] - The additional options for the sphere casting.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the sphere cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the sphere cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      */
-    sphereCastFirst(radius, startPosition, endPosition) {
-        const options = { destroyShape: true };
+    sphereCastFirst(radius, startPosition, endPosition, options = {}) {
+        options.destroyShape = true;
+
         return this._shapeCastFirst(new Ammo.btSphereShape(radius), startPosition, endPosition, options);
     }
 
@@ -827,8 +850,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} endPosition - The world space ending position for the shape to be.
      * @param {Vec3|Quat} [startRotation] - The world space starting rotation for the shape to have.
      * @param {Vec3|Quat} [endRotation] - The world space ending rotation for the shape to have.
-     * @param {object} [options] - Options to use when casting the shape.
+     * @param {object} [options] - The additional options for the shape casting.
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
      *
      * @returns {HitResult} The first hit result (null if there were no hits).
      * @private
@@ -866,6 +891,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Callback for the contactTest results.
         const resultCallback = new Ammo.ClosestConvexResultCallback();
+
+        if (typeof options.filterCollisionGroup === 'number') {
+            resultCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        }
+
+        if (typeof options.filterCollisionMask === 'number') {
+            resultCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+        }
 
         // Check for contacts.
         this.app.systems.rigidbody.dynamicsWorld.convexSweepTest(shape, ammoTransform, ammoTransform2, resultCallback);
@@ -913,8 +946,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
      * @param {object} [options] - The additional options for the shape testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {boolean} [options.sort] - Whether to sort shape test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -943,8 +982,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
      * @param {object} [options] - The additional options for the box testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {boolean} [options.sort] - Whether to sort box test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the box test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the box test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of boxTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -968,8 +1013,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
      * @param {object} [options] - The additional options for the capsule testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {boolean} [options.sort] - Whether to sort capsule test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the capsule test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the capsule test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of capsuleTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -992,8 +1043,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
      * @param {object} [options] - The additional options for the cone testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {boolean} [options.sort] - Whether to sort cone test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cone test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cone test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of coneTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -1015,9 +1072,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
-     * @param {object} [options] - The additional options for the shape testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {object} [options] - The additional options for the cylinder testing.
+     * @param {boolean} [options.sort] - Whether to sort cylinder test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cylinder test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cylinder test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of cylinderTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -1037,8 +1100,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} position - The world space position for the sphere to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
      * @param {object} [options] - The additional options for the sphere testing.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * @param {boolean} [options.sort] - Whether to sort sphere test results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the sphere test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the sphere test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult[]} An array of sphereTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -1057,7 +1126,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {object} [options] - Options to use when testing the shape.
+     * @param {object} [options] - The additional options for the shape testing.
+     * @param {boolean} [options.sort] - Whether to sort shape test results based on distance with closest
+     * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to false.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
@@ -1065,8 +1142,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @ignore
      */
     _shapeTestAll(shape, position, rotation = Vec3.ZERO, options = {}) {
-        options.destroyShape = true;
-
         return this._shapeTest(shape, position, rotation, options);
     }
 
@@ -1084,21 +1159,28 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
+     * @param {object} [options] - The additional options for the shape testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A shapeTest hit result (null if there were no hits).
      */
-    shapeTestFirst(shape, position, rotation) {
+    shapeTestFirst(shape, position, rotation, options = {}) {
         switch (shape.type) {
             case 'capsule':
-                return this.capsuleTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.capsuleTestFirst(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'cone':
-                return this.coneTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.coneTestFirst(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'cylinder':
-                return this.cylinderTestFirst(shape.radius, shape.height, shape.axis, position, rotation);
+                return this.cylinderTestFirst(shape.radius, shape.height, shape.axis, position, rotation, options);
             case 'sphere':
-                return this.sphereTestFirst(shape.radius, position, rotation);
+                return this.sphereTestFirst(shape.radius, position, rotation, options);
             default:
-                return this.boxTestFirst(shape.halfExtents, position, rotation);
+                return this.boxTestFirst(shape.halfExtents, position, rotation, options);
         }
     }
 
@@ -1109,11 +1191,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} halfExtents - The half-extents of the box in the x, y and z axes.
      * @param {Vec3} position - The world space position for the box to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the box to have.
+     * @param {object} [options] - The additional options for the box testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the box test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the box test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A boxTest hit result (null if there were no hits).
      */
-    boxTestFirst(halfExtents, position, rotation) {
-        const options = { destroyShape: true };
+    boxTestFirst(halfExtents, position, rotation, options = {}) {
+        options.destroyShape = true;
 
         ammoVec3.setValue(halfExtents.x, halfExtents.y, halfExtents.z);
         return this._shapeTestFirst(new Ammo.btBoxShape(ammoVec3), position, rotation, options);
@@ -1129,11 +1218,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the capsule to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the capsule to have.
+     * @param {object} [options] - The additional options for the capsule testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the capsule test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the capsule test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A capsuleTest hit result (null if there were no hits).
      */
-    capsuleTestFirst(radius, height, axis, position, rotation) {
-        const options = { destroyShape: true };
+    capsuleTestFirst(radius, height, axis, position, rotation, options = {}) {
+        options.destroyShape = true;
 
         return this._shapeTestFirst(createShape('Capsule', axis, radius, height), position, rotation, options);
     }
@@ -1148,11 +1244,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cone to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cone to have.
+     * @param {object} [options] - The additional options for the cone testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cone test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cone test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A coneTest hit result (null if there were no hits).
      */
-    coneTestFirst(radius, height, axis, position, rotation) {
-        const options = { destroyShape: true };
+    coneTestFirst(radius, height, axis, position, rotation, options) {
+        options.destroyShape = true;
 
         return this._shapeTestFirst(createShape('Cone', axis, radius, height), position, rotation, options);
     }
@@ -1167,11 +1270,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} position - The world space position for the cylinder to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the cylinder to have.
+     * @param {object} [options] - The additional options for the cylinder testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the cylinder test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the cylinder test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A cylinderTest hit result (null if there were no hits).
      */
-    cylinderTestFirst(radius, height, axis, position, rotation) {
-        const options = { destroyShape: true };
+    cylinderTestFirst(radius, height, axis, position, rotation, options) {
+        options.destroyShape = true;
 
         return this._shapeTestFirst(createShape('Cylinder', axis, radius, height), position, rotation, options);
     }
@@ -1183,11 +1293,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} radius - The radius of the sphere.
      * @param {Vec3} position - The world space position for the sphere to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the sphere to have.
+     * @param {object} [options] - The additional options for the sphere testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the sphere test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the sphere test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
      * @returns {HitResult|null} A sphereTest hit result (null if there were no hits).
      */
-    sphereTestFirst(radius, position, rotation) {
-        const options = { destroyShape: true };
+    sphereTestFirst(radius, position, rotation, options) {
+        options.destroyShape = true;
 
         return this._shapeTestFirst(new Ammo.btSphereShape(radius), position, rotation, options);
     }
@@ -1199,13 +1316,21 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {object} [options] - Options to use when testing the shape.
+     * @param {object} [options] - The additional options for the shape testing.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the tests. Defaults to false.
      *
      * @returns {HitResult|null} The shapeTest hit result (null if there were no hits).
      * @ignore
      */
     _shapeTestFirst(shape, position, rotation = Vec3.ZERO, options) {
+        options.sort = true;
+
         return this._shapeTest(shape, position, rotation, options)[0] || null;
     }
 
@@ -1217,10 +1342,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} shape - The Ammo.btCollisionShape to use for collision check.
      * @param {Vec3} position - The world space position for the shape to be.
      * @param {Vec3|Quat} [rotation] - The world space rotation for the shape to have.
-     * @param {object} [options] - Options to use when testing the shape.
-     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to false.
+     * @param {object} [options] - The additional options for the shape testing.
      * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
      * first. Defaults to false.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape test.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape test.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
+     * query but within an array.
+     * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument.
+     * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the test. Defaults to false.
      *
      * @returns {HitResult[]} An array of shapeTest hit results (0 length if there were no hits).
      * Results are ordered based on distance from starting position with closest first.
@@ -1264,6 +1395,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
             // Make sure there is an existing entity.
             if (body1.entity) {
+                if (options.filterTags && !body1.entity.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body1.entity)) {
+                    return 0;
+                }
+
                 // Retrieve manifold point.
                 const manifold = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
 
@@ -1291,6 +1426,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
             return 0;
         };
+
+        if (typeof options.filterCollisionGroup === 'number') {
+            resultCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        }
+
+        if (typeof options.filterCollisionMask === 'number') {
+            resultCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+        }
 
         // Check for contacts.
         this.dynamicsWorld.contactTest(shapeTestBody, resultCallback);
