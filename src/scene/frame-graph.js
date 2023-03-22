@@ -1,7 +1,3 @@
-import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
-import { Debug } from '../core/debug.js';
-import { Tracing } from '../core/tracing.js';
-
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
@@ -121,58 +117,6 @@ class FrameGraph {
         for (let i = 0; i < renderPasses.length; i++) {
             renderPasses[i].render();
         }
-
-        this.log(device);
-    }
-
-    log(device) {
-        // #if _DEBUG
-        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
-
-            this.renderPasses.forEach((renderPass, index) => {
-
-                let rt = renderPass.renderTarget;
-                if (rt === null && device.isWebGPU) {
-                    rt = device.frameBuffer;
-                }
-                const hasColor = rt?.colorBuffer ?? rt?.impl.assignedColorTexture;
-                const hasDepth = rt?.depth;
-                const hasStencil = rt?.stencil;
-                const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
-                    `${hasColor ? '[Color]' : ''}` +
-                    `${hasDepth ? '[Depth]' : ''}` +
-                    `${hasStencil ? '[Stencil]' : ''}` +
-                    `${(renderPass.samples > 0 ? ' samples: ' + renderPass.samples : '')}`;
-
-                Debug.trace(TRACEID_RENDER_PASS,
-                            `${index.toString().padEnd(2, ' ')}: ${renderPass.name.padEnd(20, ' ')}` +
-                            rtInfo.padEnd(30));
-
-                if (renderPass.colorOps && hasColor) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
-                                `${renderPass.colorOps.clear ? 'clear' : 'load'}->` +
-                                `${renderPass.colorOps.store ? 'store' : 'discard'} ` +
-                                `${renderPass.colorOps.resolve ? 'resolve ' : ''}` +
-                                `${renderPass.colorOps.mipmaps ? 'mipmaps ' : ''}`);
-                }
-
-                if (renderPass.depthStencilOps) {
-
-                    if (hasDepth) {
-                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
-                                    `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                    `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
-                    }
-
-                    if (hasStencil) {
-                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
-                                    `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                    `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
-                    }
-                }
-            });
-        }
-        // #endif
     }
 }
 

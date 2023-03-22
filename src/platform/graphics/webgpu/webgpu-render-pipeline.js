@@ -2,6 +2,7 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
 import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
 
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
+import { WebgpuDebug } from "./webgpu-debug.js";
 
 let _pipelineId = 0;
 let _layoutId = 0;
@@ -96,7 +97,7 @@ class WebgpuRenderPipeline {
             const vertexBufferLayout = this.vertexBufferLayout.get(vertexFormat0, vertexFormat1);
 
             // pipeline
-            pipeline = this.create(primitiveTopology, shader.impl, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout);
+            pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout);
             this.cache.set(key, pipeline);
         }
 
@@ -206,9 +207,12 @@ class WebgpuRenderPipeline {
         return depthStencil;
     }
 
-    create(primitiveTopology, webgpuShader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout) {
+    create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout) {
 
         const wgpu = this.device.wgpu;
+
+        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        const webgpuShader = shader.impl;
 
         /** @type {GPURenderPipelineDescriptor} */
         const descr = {
@@ -255,6 +259,8 @@ class WebgpuRenderPipeline {
             };
         }
 
+        WebgpuDebug.validate(this.device);
+
         _pipelineId++;
         DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
 
@@ -262,6 +268,12 @@ class WebgpuRenderPipeline {
 
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
         Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, descr);
+
+        WebgpuDebug.end(this.device, {
+            renderPipeline: this,
+            descr,
+            shader
+        });
 
         return pipeline;
     }

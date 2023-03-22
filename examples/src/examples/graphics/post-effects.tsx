@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class PostEffectsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Post Effects';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -102,7 +103,10 @@ class PostEffectsExample {
         const gfxOptions = {
             deviceTypes: [deviceType],
             glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
+            twgslUrl: '/static/lib/twgsl/twgsl.js',
+
+            // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
+            antialias: false
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
