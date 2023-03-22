@@ -3,14 +3,14 @@ uniform float material_refractionIndex;
 uniform float material_invAttenuationDistance;
 uniform vec3 material_attenuation;
 
-vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
-    float vn = dot(viewVec, Normal);
+vec3 refract2(vec3 viewVec, vec3 normal, float IOR) {
+    float vn = dot(viewVec, normal);
     float k = 1.0 - IOR * IOR * (1.0 - vn * vn);
-    vec3 refrVec = IOR * viewVec - (IOR * vn + sqrt(k)) * Normal;
+    vec3 refrVec = IOR * viewVec - (IOR * vn + sqrt(k)) * normal;
     return refrVec;
 }
 
-void addRefraction(vec3 worldNormal, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, IridescenceArgs iridescence) {
+void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, IridescenceArgs iridescence) {
 
     // Extract scale from the model transform
     vec3 modelScale;
@@ -19,7 +19,7 @@ void addRefraction(vec3 worldNormal, float thickness, float gloss, vec3 specular
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-dViewDirW, worldNormal, material_refractionIndex)) * thickness * modelScale;
+    vec3 refractionVector = normalize(refract(-viewDir, worldNormal, material_refractionIndex)) * thickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -52,7 +52,7 @@ void addRefraction(vec3 worldNormal, float thickness, float gloss, vec3 specular
     }
 
     // Apply fresnel effect on refraction
-    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, worldNormal), gloss, specularity, iridescence);
     dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
+    vec3 fresnel = vec3(1.0) - getFresnel(dot(viewDir, worldNormal), gloss, specularity, iridescence);
 }
 `;

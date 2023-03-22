@@ -318,7 +318,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
-void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     dAtten3 = vec3(1.0);
 
@@ -364,11 +364,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                dAttenD = getRectLightDiffuse(worldNormal) * 16.0;
+                dAttenD = getRectLightDiffuse(worldNormal, viewDir) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                dAttenD = getDiskLightDiffuse(worldNormal) * 16.0;
+                dAttenD = getDiskLightDiffuse(worldNormal, viewDir) * 16.0;
             } else { // sphere
-                dAttenD = getSphereLightDiffuse(worldNormal) * 16.0;
+                dAttenD = getSphereLightDiffuse(worldNormal, viewDir) * 16.0;
             }
 
         } else
@@ -376,7 +376,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
         #endif
 
         {
-            dAtten *= getLightDiffuse(worldNormal); 
+            dAtten *= getLightDiffuse(worldNormal, dViewDirW); 
         }
 
         // spot light falloff
@@ -487,11 +487,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                 float areaLightSpecular;
 
                 if (isClusteredLightRect(light)) {
-                    areaLightSpecular = getRectLightSpecular(worldNormal);
+                    areaLightSpecular = getRectLightSpecular(worldNormal, viewDir);
                 } else if (isClusteredLightDisk(light)) {
-                    areaLightSpecular = getDiskLightSpecular(worldNormal);
+                    areaLightSpecular = getDiskLightSpecular(worldNormal, viewDir);
                 } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular(worldNormal);
+                    areaLightSpecular = getSphereLightSpecular(worldNormal, viewDir);
                 }
 
                 dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
@@ -502,11 +502,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecular(clearcoat.worldNormal);
+                        areaLightSpecularCC = getRectLightSpecular(clearcoat.worldNormal, viewDir);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecular(clearcoat.worldNormal);
+                        areaLightSpecularCC = getDiskLightSpecular(clearcoat.worldNormal, viewDir);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecular(clearcoat.worldNormal);
+                        areaLightSpecularCC = getSphereLightSpecular(clearcoat.worldNormal, viewDir);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
@@ -539,25 +539,25 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef LIT_SPECULAR
 
-                vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);
+                vec3 halfDir = normalize(-dLightDirNormW + viewDir);
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, worldNormal, gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), gloss, specularity, iridescence);
+                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, viewDir, worldNormal, gloss) * dAtten * light.color * dAtten3 * getFresnel(dot(viewDir, halfDir), gloss, specularity, iridescence);
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, worldNormal, gloss) * dAtten * light.color * dAtten3 * specularity;
+                    dSpecularLight += getLightSpecular(halfDir, dReflDirW, viewDir, worldNormal, gloss) * dAtten * light.color * dAtten3 * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, viewDir, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3 * getFresnelCC(dot(viewDir, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3; 
+                        ccSpecularLight += getLightSpecular(halfDir, ccReflDirW, viewDir, clearcoat.worldNormal, clearcoat.gloss) * dAtten * light.color * dAtten3; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, sheen.gloss) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, sheen.gloss) * dAtten * light.color * dAtten3;
                 #endif
 
             #endif
@@ -565,7 +565,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, float gloss, vec3 s
     }
 }
 
-void evaluateClusterLight(float lightIndex, vec3 worldNormal, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void evaluateClusterLight(float lightIndex, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     // decode core light data from textures
     ClusterLightData clusterLightData;
@@ -573,10 +573,10 @@ void evaluateClusterLight(float lightIndex, vec3 worldNormal, float gloss, vec3 
 
     // evaluate light if it uses accepted light mask
     if (acceptLightMask(clusterLightData))
-        evaluateLight(clusterLightData, worldNormal, gloss, specularity, clearcoat, sheen, iridescence);
+        evaluateLight(clusterLightData, worldNormal, viewDir, gloss, specularity, clearcoat, sheen, iridescence);
 }
 
-void addClusteredLights(vec3 worldNormal, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void addClusteredLights(vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     // skip lights if no lights at all
     if (clusterSkip > 0.5)
@@ -606,7 +606,7 @@ void addClusteredLights(vec3 worldNormal, float gloss, vec3 specularity, Clearco
                 if (lightIndex <= 0.0)
                         return;
 
-                evaluateClusterLight(lightIndex * 255.0, worldNormal, gloss, specularity, clearcoat, sheen, iridescence); 
+                evaluateClusterLight(lightIndex * 255.0, worldNormal, viewDir, gloss, specularity, clearcoat, sheen, iridescence); 
             }
 
         #else
@@ -622,7 +622,7 @@ void addClusteredLights(vec3 worldNormal, float gloss, vec3 specularity, Clearco
                 if (lightIndex <= 0.0)
                     return;
                 
-                evaluateClusterLight(lightIndex * 255.0, worldNormal, gloss, specularity, clearcoat, sheen, iridescence); 
+                evaluateClusterLight(lightIndex * 255.0, worldNormal, viewDir, gloss, specularity, clearcoat, sheen, iridescence); 
 
                 // end of the cell array
                 if (lightCellIndex >= clusterMaxCells) {

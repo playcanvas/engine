@@ -1,7 +1,7 @@
 export default /* glsl */`
 
-void addReflectionSheen(vec3 worldNormal, float gloss) {
-    float NoV = dot(worldNormal, dViewDirW);
+void addReflectionSheen(vec3 worldNormal, vec3 viewDir, float gloss) {
+    float NoV = dot(worldNormal, viewDir);
     float alphaG = gloss * gloss;
 
     // Avoid using a LUT and approximate the values analytically

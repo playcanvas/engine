@@ -1,5 +1,5 @@
 export default /* glsl */`
-void getReflDir(vec3 worldNormal, float gloss) {
-    dReflDirW = normalize(-reflect(dViewDirW, worldNormal));
+void getReflDir(vec3 worldNormal, vec3 viewDir, float gloss) {
+    dReflDirW = normalize(-reflect(viewDir, worldNormal));
 }
 `;
