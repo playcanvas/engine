@@ -525,10 +525,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
+     * @param {object} [options] - The additional options for the raycasting.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
+     * first. Defaults to false.
      * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
-     * Results are sorted by distance with closest first.
      */
-    raycastAll(start, end) {
+    raycastAll(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
@@ -561,7 +563,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 }
             }
 
-            results.sort((a, b) => a.hitFraction - b.hitFraction);
+            if (options.sort) {
+                results.sort((a, b) => a.hitFraction - b.hitFraction);
+            }
         }
 
         Ammo.destroy(rayCallback);
