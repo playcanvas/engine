@@ -482,7 +482,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} [options] - The additional options for the raycasting.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [options.filterTags] - Tags filters. Defines the same way as {@link Tags#has}
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
      * query but within an object.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes one argument: the entity to evaluate.
