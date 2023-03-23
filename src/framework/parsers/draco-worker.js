@@ -34,6 +34,16 @@ function DracoWorker(jsUrl, wasmUrl) {
         return attribute.num_components() * componentSizeInBytes(attribute.data_type());
     };
 
+    const attributeOrder = {
+        0: 0,   // position
+        1: 1,   // normal
+        5: 2,   // tangent
+        2: 3,   // color
+        7: 4,   // joints
+        8: 5,   // weights
+        3: 6,   // texcoord
+    };
+
     const generateNormals = (vertices, indices) => {
         const subtract = (dst, a, b) => {
             dst[0] = a[0] - b[0];
@@ -72,8 +82,6 @@ function DracoWorker(jsUrl, wasmUrl) {
               t1 = [0, 0, 0],
               t2 = [0, 0, 0],
               n = [0, 0, 0];
-
-        console.log(vertices, indices);
 
         for (let i = 0; i < numTriangles; ++i) {
             const v0 = indices[i * 3 + 0] * 3;
@@ -120,13 +128,6 @@ function DracoWorker(jsUrl, wasmUrl) {
             return result;
         }
 
-        // if (decoder.GetEncodedGeometryType(buffer) !== draco.TRIANGULAR_MESH) {
-        //     result.error = 'Draco point clouds are not supported';
-        //     return result;
-        // }
-
-        console.log(decoder.GetEncodedGeometryType(buffer));
-
         // indices
         const numIndices = mesh.num_faces() * 3;
         const shortIndices = mesh.num_points() <= 65535;
@@ -146,6 +147,11 @@ function DracoWorker(jsUrl, wasmUrl) {
         for (let i = 0; i < mesh.num_attributes(); ++i) {
             attributes.push(decoder.GetAttribute(mesh, i));
         }
+
+        // order attributes
+        attributes.sort((a, b) => {
+            return (attributeOrder[a.attribute_type()] ?? attributeOrder.length) - (attributeOrder[b.attribute_type()] ?? attributeOrder.length);
+        });
 
         // calculate total vertex size and attribute offsets
         let totalVertexSize = 0;
@@ -171,7 +177,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         // decode and interleave the vertex data
         const dst = new Uint8Array(result.vertices);
         for (let i = 0; i < mesh.num_attributes(); ++i) {
-            const attribute = decoder.GetAttribute(mesh, i);
+            const attribute = attributes[i];
             const sizeInBytes = attributeSizeInBytes(attribute);
             const ptrSize = mesh.num_points() * sizeInBytes;
             const ptr = draco._malloc(ptrSize);

@@ -164,6 +164,24 @@ const gltfToEngineSemanticMap = {
     'TEXCOORD_7': SEMANTIC_TEXCOORD7
 };
 
+// order vertexDesc to match the rest of the engine
+const attributeOrder = {
+    [SEMANTIC_POSITION]: 0,
+    [SEMANTIC_NORMAL]: 1,
+    [SEMANTIC_TANGENT]: 2,
+    [SEMANTIC_COLOR]: 3,
+    [SEMANTIC_BLENDINDICES]: 4,
+    [SEMANTIC_BLENDWEIGHT]: 5,
+    [SEMANTIC_TEXCOORD0]: 6,
+    [SEMANTIC_TEXCOORD1]: 7,
+    [SEMANTIC_TEXCOORD2]: 8,
+    [SEMANTIC_TEXCOORD3]: 9,
+    [SEMANTIC_TEXCOORD4]: 10,
+    [SEMANTIC_TEXCOORD5]: 11,
+    [SEMANTIC_TEXCOORD6]: 12,
+    [SEMANTIC_TEXCOORD7]: 13
+};
+
 // returns a function for dequantizing the data type
 const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
@@ -481,29 +499,9 @@ const createVertexBufferInternal = function (device, sourceDesc, flipV) {
         }
     }
 
-    // order vertexDesc to match the rest of the engine
-    const elementOrder = [
-        SEMANTIC_POSITION,
-        SEMANTIC_NORMAL,
-        SEMANTIC_TANGENT,
-        SEMANTIC_COLOR,
-        SEMANTIC_BLENDINDICES,
-        SEMANTIC_BLENDWEIGHT,
-        SEMANTIC_TEXCOORD0,
-        SEMANTIC_TEXCOORD1,
-        SEMANTIC_TEXCOORD2,
-        SEMANTIC_TEXCOORD3,
-        SEMANTIC_TEXCOORD4,
-        SEMANTIC_TEXCOORD5,
-        SEMANTIC_TEXCOORD6,
-        SEMANTIC_TEXCOORD7
-    ];
-
     // sort vertex elements by engine-ideal order
-    vertexDesc.sort(function (lhs, rhs) {
-        const lhsOrder = elementOrder.indexOf(lhs.semantic);
-        const rhsOrder = elementOrder.indexOf(rhs.semantic);
-        return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
+    vertexDesc.sort((lhs, rhs) => {
+        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
     });
 
     let i, j, k;
@@ -778,12 +776,17 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
 
     // draco decompressor will generate normals if they are missing
     if (!primitive?.attributes?.NORMAL) {
-        vertexDesc.splice(1, 0, {
+        vertexDesc.push({
             semantic: 'NORMAL',
             components: 3,
             type: TYPE_FLOAT32
         });
     }
+
+    // sort vertex elements by engine-ideal order
+    vertexDesc.sort((lhs, rhs) => {
+        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
+    });
 
     const numVertices = accessors[primitive.attributes.POSITION].count;
     const vertexFormat = new VertexFormat(device, vertexDesc);
