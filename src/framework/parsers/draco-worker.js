@@ -41,7 +41,8 @@ function DracoWorker(jsUrl, wasmUrl) {
         2: 3,   // color
         7: 4,   // joints
         8: 5,   // weights
-        3: 6,   // texcoord
+        4: 6,   // generic (used for blend indices and weights)
+        3: 7,   // texcoord
     };
 
     const generateNormals = (vertices, indices) => {
