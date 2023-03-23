@@ -1,6 +1,6 @@
 export default /* glsl */`
 // Anisotropic GGX
-float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 viewDir, vec3 h) {
+float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 viewDir, vec3 h, vec3 lightDirNorm) {
     float PI = 3.141592653589793;
     float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
     float anisotropy = material_anisotropy * roughness;
@@ -20,10 +20,10 @@ float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 viewDir, vec3 h) 
 
     float ToV = dot(dTBN[0], viewDir);
     float BoV = dot(dTBN[1], viewDir);
-    float ToL = dot(dTBN[0], -dLightDirNormW);
-    float BoL = dot(dTBN[1], -dLightDirNormW);
+    float ToL = dot(dTBN[0], -lightDirNorm);
+    float BoL = dot(dTBN[1], -lightDirNorm);
     float NoV = dot(tNormalW, viewDir);
-    float NoL = dot(tNormalW, -dLightDirNormW);
+    float NoL = dot(tNormalW, -lightDirNorm);
 
     float lambdaV = NoL * length(vec3(at * ToV, ab * BoV, NoV));
     float lambdaL = NoV * length(vec3(at * ToL, ab * BoL, NoL));

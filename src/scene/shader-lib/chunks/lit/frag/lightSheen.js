@@ -14,9 +14,9 @@ float sheenV(vec3 normal, vec3 viewDir, vec3 light) {
     return 1.0 / (4.0 * (NoL + NoV - NoL * NoV));
 }
 
-float getLightSpecularSheen(vec3 h, vec3 worldNormal, vec3 viewDir, float sheenGloss) {
+float getLightSpecularSheen(vec3 h, vec3 worldNormal, vec3 viewDir, vec3 lightDirNorm, float sheenGloss) {
     float D = sheenD(worldNormal, h, sheenGloss);
-    float V = sheenV(worldNormal, viewDir, -dLightDirNormW);
+    float V = sheenV(worldNormal, viewDir, -lightDirNorm);
     return D * V;
 }
 `;

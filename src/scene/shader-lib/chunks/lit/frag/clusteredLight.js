@@ -342,7 +342,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
             calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
         }
 
-        dAtten = getFalloffWindow(light.range);
+        dAtten = getFalloffWindow(light.range, dLightDirW);
 
     } else
 
@@ -351,9 +351,9 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
     {   // punctual light
 
         if (isClusteredLightFalloffLinear(light))
-            dAtten = getFalloffLinear(light.range);
+            dAtten = getFalloffLinear(light.range, dLightDirW);
         else
-            dAtten = getFalloffInvSquared(light.range);
+            dAtten = getFalloffInvSquared(light.range, dLightDirW);
     }
 
     if (dAtten > 0.00001) {
@@ -364,11 +364,11 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                dAttenD = getRectLightDiffuse(worldNormal, viewDir) * 16.0;
+                dAttenD = getRectLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                dAttenD = getDiskLightDiffuse(worldNormal, viewDir) * 16.0;
+                dAttenD = getDiskLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             } else { // sphere
-                dAttenD = getSphereLightDiffuse(worldNormal, viewDir) * 16.0;
+                dAttenD = getSphereLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             }
 
         } else
@@ -376,13 +376,13 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
         #endif
 
         {
-            dAtten *= getLightDiffuse(worldNormal, dViewDirW); 
+            dAtten *= getLightDiffuse(worldNormal, dViewDirW, dLightDirW, dLightDirNormW); 
         }
 
         // spot light falloff
         if (isClusteredLightSpot(light)) {
             decodeClusterLightSpot(light);
-            dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
+            dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, dLightDirNormW);
         }
 
         #if defined(CLUSTER_COOKIES_OR_SHADOWS)
@@ -428,7 +428,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
+                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, dLightPosW, dLightDirW);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
@@ -442,7 +442,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
                     } else {
 
                         // omni shadow
-                        normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
+                        normalOffsetPointShadow(shadowParams, dLightPosW, dLightDirW, dLightDirNormW);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);

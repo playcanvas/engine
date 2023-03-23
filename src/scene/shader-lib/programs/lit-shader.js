@@ -173,7 +173,7 @@ class LitShader {
         if (light.numCascades > 1) {
             // compute which cascade matrix needs to be used
             code += `getShadowCascadeMatrix(light${lightIndex}_shadowMatrixPalette, light${lightIndex}_shadowCascadeDistances, light${lightIndex}_shadowCascadeCount);\n`;
-            shadowCoordArgs = `(cascadeShadowMat, ${shadowParamArg});\n`;
+            shadowCoordArgs = `(cascadeShadowMat, ${shadowParamArg}, dLightPosW, dLightDirW, dLightDirNormW);\n`;
         }
 
         // shadow coordinate generation
@@ -186,7 +186,7 @@ class LitShader {
     }
 
     _nonPointShadowMapProjection(device, light, shadowMatArg, shadowParamArg, lightIndex) {
-        const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
+        const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg}, dLightPosW, dLightDirW, dLightDirNormW);\n`;
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
@@ -1141,15 +1141,15 @@ class LitShader {
 
                     if (lightShape === LIGHTSHAPE_PUNCTUAL) {
                         if (light._falloffMode === LIGHTFALLOFF_LINEAR) {
-                            backend.append("    dAtten = getFalloffLinear(light" + i + "_radius);");
+                            backend.append("    dAtten = getFalloffLinear(light" + i + "_radius, dLightDirW);");
                             usesLinearFalloff = true;
                         } else {
-                            backend.append("    dAtten = getFalloffInvSquared(light" + i + "_radius);");
+                            backend.append("    dAtten = getFalloffInvSquared(light" + i + "_radius, dLightDirW);");
                             usesInvSquaredFalloff = true;
                         }
                     } else {
                         // non punctual lights only gets the range window here
-                        backend.append("    dAtten = getFalloffWindow(light" + i + "_radius);");
+                        backend.append("    dAtten = getFalloffWindow(light" + i + "_radius, dLightDirW);");
                         usesInvSquaredFalloff = true;
                     }
 
@@ -1157,7 +1157,7 @@ class LitShader {
 
                     if (lightType === LIGHTTYPE_SPOT) {
                         if (!(usesCookieNow && !light._cookieFalloff)) {
-                            backend.append("    dAtten *= getSpotEffect(light" + i + "_direction, light" + i + "_innerConeAngle, light" + i + "_outerConeAngle);");
+                            backend.append("    dAtten *= getSpotEffect(light" + i + "_direction, light" + i + "_innerConeAngle, light" + i + "_outerConeAngle, dLightDirNormW);");
                             usesSpot = true;
                         }
                     }
@@ -1167,13 +1167,13 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                     if (lightType === LIGHTTYPE_DIRECTIONAL) {
                         // NB: A better aproximation perhaps using wrap lighting could be implemented here
-                        backend.append("    dAttenD = getLightDiffuse(litShaderArgs.worldNormal, dViewDirW);");
+                        backend.append("    dAttenD = getLightDiffuse(litShaderArgs.worldNormal, dViewDirW, dLightDirW, dLightDirNormW);");
                     } else {
                         // 16.0 is a constant that is in getFalloffInvSquared()
-                        backend.append("    dAttenD = get" + shapeString + "LightDiffuse(litShaderArgs.worldNormal, dViewDirW) * 16.0;");
+                        backend.append("    dAttenD = get" + shapeString + "LightDiffuse(litShaderArgs.worldNormal, dViewDirW, dLightDirW, dLightDirNormW) * 16.0;");
                     }
                 } else {
-                    backend.append("    dAtten *= getLightDiffuse(litShaderArgs.worldNormal, dViewDirW);");
+                    backend.append("    dAtten *= getLightDiffuse(litShaderArgs.worldNormal, dViewDirW, dLightDirW, dLightDirNormW);");
                 }
 
                 if (light.castShadows && !options.noShadow) {
@@ -1200,9 +1200,9 @@ class LitShader {
 
                     if (shadowReadMode !== null) {
                         if (lightType === LIGHTTYPE_OMNI) {
-                            const shadowCoordArgs = "(light" + i + "_shadowMap, light" + i + "_shadowParams);";
+                            const shadowCoordArgs = "(light" + i + "_shadowMap, light" + i + "_shadowParams, dLightDirW, dLightDirW, dLightDirNormW);";
                             if (light._normalOffsetBias) {
-                                backend.append("    normalOffsetPointShadow(light" + i + "_shadowParams);");
+                                backend.append("    normalOffsetPointShadow(light" + i + "_shadowParams, dLightPosW, dLightDirW, dLightDirNormW);");
                             }
                             backend.append(`    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`);
                             backend.append(`    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);`);

@@ -371,18 +371,18 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     return formFactor*scale;
 }
 
-float getRectLightDiffuse(vec3 worldNormal, vec3 viewDir) {
+float getRectLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getDiskLightDiffuse(vec3 worldNormal, vec3 viewDir) {
+float getDiskLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     return LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords );
 }
 
-float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir) {
+float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
     // NB: this could be improved further with distance based wrap lighting
-    float falloff = dSphereRadius / (dot(dLightDirW, dLightDirW) + dSphereRadius);
-    return getLightDiffuse(worldNormal, viewDir) * falloff;
+    float falloff = dSphereRadius / (dot(lightDir, lightDir) + dSphereRadius);
+    return getLightDiffuse(worldNormal, viewDir, lightDir, lightDirNorm) * falloff;
 }
 
 mat3 getLTCLightInvMat(vec2 uv)

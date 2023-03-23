@@ -183,8 +183,8 @@ float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
     return 1.0 - dot( shadowValues, vec4( 1.0 ) ) * 0.25;
 }
 
-float getShadowPointPCF3x3(samplerCube shadowMap, vec4 shadowParams) {
-    return _getShadowPoint(shadowMap, shadowParams, dLightDirW);
+float getShadowPointPCF3x3(samplerCube shadowMap, vec4 shadowParams, vec3 lightDir) {
+    return _getShadowPoint(shadowMap, shadowParams, lightDir);
 }
 
 #endif

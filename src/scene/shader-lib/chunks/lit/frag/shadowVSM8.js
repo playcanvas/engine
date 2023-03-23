@@ -20,7 +20,7 @@ float getShadowVSM8(sampler2D shadowMap, vec3 shadowParams, float exponent) {
     return VSM8(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, 0.0);
 }
 
-float getShadowSpotVSM8(sampler2D shadowMap, vec4 shadowParams, float exponent) {
-    return VSM8(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z, shadowParams.y, 0.0);
+float getShadowSpotVSM8(sampler2D shadowMap, vec4 shadowParams, float exponent, vec3 lightDir) {
+    return VSM8(shadowMap, dShadowCoord.xy, shadowParams.x, length(lightDir) * shadowParams.w + shadowParams.z, shadowParams.y, 0.0);
 }
 `;
