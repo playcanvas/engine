@@ -1,4 +1,4 @@
-import * as pc from '../../../../build/playcanvas';
+import * as pc from '../../../../';
 
 class ReflectionCubemapExample {
     static CATEGORY = 'Graphics';
