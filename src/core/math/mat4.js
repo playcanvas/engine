@@ -782,7 +782,7 @@ class Mat4 {
      * Sets the matrix to a reflection matrix, which can be used as a mirror transformation by the
      * plane.
      *
-     * @param {import(./plane.js).Plane} plane - The plane to reflect by.
+     * @param {import('./plane.js').Plane} plane - The plane to reflect by.
      * @returns {Mat4} Self for chaining.
      */
     setReflection(plane) {
