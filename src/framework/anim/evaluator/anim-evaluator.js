@@ -146,6 +146,15 @@ class AnimEvaluator {
         }
     }
 
+    updateClipTrack(name, animTrack) {
+        this._clips.forEach((clip) => {
+            if (clip.name.includes(name)) {
+                clip.track = animTrack;
+            }
+        });
+        this.rebind();
+    }
+
     /**
      * Returns the first clip which matches the given name, or null if no such clip was found.
      *

@@ -58,14 +58,20 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     const renderPass = new RenderPass(device, () => {
         quad.render(rect, scissorRect);
     });
-    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : ''}`);
+    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : 'Framebuffer'}`);
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;
 
-    // TODO: this is temporary, till the webgpu supports setDepthTest
-    if (device.isWebGPU) {
-        renderPass.depthStencilOps.clearDepth = true;
+    // TODO: This is a workaround for the case where post-effects are used together with multi-sampled framebuffer. Last post-effect
+    // renders into multi-sampled framebuffer (render pass A), which is typically followed by further rendering to this framebuffer,
+    // in a separate render pass B (e.g. rendering UI). Those two render passes need to be merged into one, as they both render into
+    // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
+    // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
+    if (device.isWebGPU && target === null) {
+        const samples = target?.samples ?? device.samples;
+        if (samples > 1)
+            renderPass.colorOps.store = true;
     }
 
     renderPass.render();

@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class GroundFogExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Ground Fog';
+    static WEBGPU_ENABLED = true;
 
     static FILES = {
         'shader.vert': /* glsl */ `
@@ -113,7 +114,10 @@ class GroundFogExample {
         const gfxOptions = {
             deviceTypes: [deviceType],
             glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
+            twgslUrl: '/static/lib/twgsl/twgsl.js',
+
+            // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
+            antialias: false
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {

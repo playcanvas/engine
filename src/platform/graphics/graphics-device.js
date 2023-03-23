@@ -28,6 +28,7 @@ class GraphicsDevice extends EventHandler {
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
      * @type {HTMLCanvasElement}
+     * @readonly
      */
     canvas;
 
@@ -35,6 +36,7 @@ class GraphicsDevice extends EventHandler {
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
+     * @readonly
      */
     isWebGPU = false;
 
@@ -42,6 +44,7 @@ class GraphicsDevice extends EventHandler {
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}
+     * @readonly
      */
     scope;
 
@@ -49,6 +52,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum number of supported bones using uniform buffers.
      *
      * @type {number}
+     * @readonly
      */
     boneLimit;
 
@@ -56,6 +60,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
+     * @readonly
      */
     maxAnisotropy;
 
@@ -63,6 +68,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a cube map.
      *
      * @type {number}
+     * @readonly
      */
     maxCubeMapSize;
 
@@ -70,6 +76,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a texture.
      *
      * @type {number}
+     * @readonly
      */
     maxTextureSize;
 
@@ -77,6 +84,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a 3D texture (any axis).
      *
      * @type {number}
+     * @readonly
      */
     maxVolumeSize;
 
@@ -85,8 +93,17 @@ class GraphicsDevice extends EventHandler {
      * 'lowp'.
      *
      * @type {string}
+     * @readonly
      */
     precision;
+
+    /**
+     * The number of hardware anti-aliasing samples used by the frame buffer.
+     *
+     * @readonly
+     * @type {number}
+     */
+    samples;
 
     /**
      * Currently active render target.
@@ -96,6 +113,14 @@ class GraphicsDevice extends EventHandler {
      */
     renderTarget = null;
 
+    /**
+     * Index of the currently active render pass.
+     *
+     * @type {number}
+     * @ignore
+     */
+    renderPassIndex;
+
     /** @type {boolean} */
     insideRenderPass = false;
 
@@ -103,6 +128,7 @@ class GraphicsDevice extends EventHandler {
      * True if hardware instancing is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     supportsInstancing;
 
@@ -118,6 +144,7 @@ class GraphicsDevice extends EventHandler {
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
+     * @readonly
      */
     textureFloatRenderable;
 
@@ -125,6 +152,7 @@ class GraphicsDevice extends EventHandler {
       * True if 16-bit floating-point textures can be used as a frame buffer.
       *
       * @type {boolean}
+      * @readonly
       */
     textureHalfFloatRenderable;
 
@@ -539,6 +567,7 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameStart() {
+        this.renderPassIndex = 0;
     }
 }
 

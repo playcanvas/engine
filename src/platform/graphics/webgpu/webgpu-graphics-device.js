@@ -68,6 +68,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
 
+        // WebGPU currently only supports 1 and 4 samples
+        this.samples = options.antialias ? 4 : 1;
+
         this.initDeviceCaps();
     }
 
@@ -198,7 +201,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: true,
-            samples: 4
+            samples: this.samples
         });
     }
 
@@ -215,6 +218,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     frameStart() {
+
+        super.frameStart();
 
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
@@ -587,7 +592,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // cannot copy depth from multisampled buffer. On WebGPU, it cannot be resolve at the end of the pass either,
             // and so we need to implement a custom depth resolve shader based copy
             // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
-            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture`, sourceRT);
+            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture ${sourceRT.name}`, sourceRT);
 
             /** @type {GPUImageCopyTexture} */
             const copySrc = {

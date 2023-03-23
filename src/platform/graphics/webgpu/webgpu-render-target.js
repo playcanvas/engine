@@ -120,6 +120,7 @@ class WebgpuRenderTarget {
         this.assignedColorTexture = gpuTexture;
 
         const view = gpuTexture.createView();
+        DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
 
         // use it as render buffer or resolve target
         const colorAttachment = this.renderPassDescriptor.colorAttachments[0];
@@ -145,6 +146,8 @@ class WebgpuRenderTarget {
     init(device, renderTarget) {
 
         Debug.assert(!this.initialized);
+        Debug.assert(this.renderPassDescriptor, 'The render target has been destroyed and cannot be used anymore.', { renderTarget });
+
         const wgpu = device.wgpu;
 
         WebgpuDebug.memory(device);
@@ -234,8 +237,11 @@ class WebgpuRenderTarget {
 
             // allocate multi-sampled color buffer
             this.multisampledColorBuffer = wgpu.createTexture(multisampledTextureDesc);
+            DebugHelper.setLabel(this.multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
 
             colorAttachment.view = this.multisampledColorBuffer.createView();
+            DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);
+
             colorAttachment.resolveTarget = colorView;
 
         } else {
