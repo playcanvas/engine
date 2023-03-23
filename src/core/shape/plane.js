@@ -4,8 +4,6 @@ const tmpVecA = new Vec3();
 
 /**
  * An infinite plane.
- *
- * @ignore
  */
 class Plane {
     /**
@@ -40,6 +38,16 @@ class Plane {
     }
 
     /**
+     * The d term for a scalar equation of the form ax + by + cz + d = 0, where a, b and c
+     * are the x, y and z components of the plane's normal.
+     *
+     * @type {number}
+     */
+    get d() {
+        return -this.normal.dot(this.point);
+    }
+
+    /**
      * Sets point and normal to the supplied vector values.
      *
      * @param {Vec3} point - The starting point of the plane.
@@ -62,7 +70,7 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsLine(start, end, point) {
-        const d = -this.normal.dot(this.point);
+        const d = this.d;
         const d0 = this.normal.dot(start) + d;
         const d1 = this.normal.dot(end) + d;
 
