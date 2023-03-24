@@ -177,7 +177,7 @@ class ReflectionPlanarExample {
                 reflectionCamera.script.create('planarRenderer', {
                     attributes: {
                         sceneCameraEntity: camera,
-                        scale: 0.8,
+                        scale: 1,
                         mipmaps: false,
                         depth: true,
                         planePoint: pc.Vec3.ZERO,
