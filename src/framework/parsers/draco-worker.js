@@ -115,14 +115,19 @@ function DracoWorker(jsUrl, wasmUrl) {
     let draco;
 
     const decodeMesh = (inputBuffer) => {
-        const buffer = new draco.DecoderBuffer();
-        const mesh = new draco.Mesh();
-        const decoder = new draco.Decoder();
-
-        buffer.Init(inputBuffer, inputBuffer.length);
-        const status = decoder.DecodeBufferToMesh(buffer, mesh);
-
         const result = { };
+
+        const buffer = new draco.DecoderBuffer();
+        buffer.Init(inputBuffer, inputBuffer.length);
+        
+        const decoder = new draco.Decoder();
+        if (decoder.GetEncodedGeometryType(buffer) !== draco.TRIANGULAR_MESH) {
+            result.error = 'Failed to decode draco mesh: not a mesh';
+            return result;
+        }
+
+        const mesh = new draco.Mesh();
+        const status = decoder.DecodeBufferToMesh(buffer, mesh);
 
         if (!status || !status.ok() || mesh.ptr === 0) {
             result.error = 'Failed to decode draco asset';

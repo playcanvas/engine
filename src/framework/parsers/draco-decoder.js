@@ -106,14 +106,13 @@ const initializeWorkers = (config) => {
     }
 
     // worker urls must be absolute
-    const relativeUrl = (url) => {
-        const tmp = new URL(window.location.href);
-        tmp.pathname += config.jsUrl;
-        return tmp.toString();
+    const absoluteUrl = (url) => {
+        return ABSOLUTE_URL.test(url) ? url : new URL(window.location.href).origin + url;
     };
 
-    const jsUrl = ABSOLUTE_URL.test(config.jsUrl) ? config.jsUrl : relativeUrl(config.jsUrl);
-    const wasmUrl = ABSOLUTE_URL.test(config.wasmUrl) ? config.wasmUrl : relativeUrl(config.wasmUrl);
+    const urlBase = window.ASSET_PREFIX || '';
+    const jsUrl = absoluteUrl(config.jsUrl);
+    const wasmUrl = absoluteUrl(config.wasmUrl);
 
     // create workers
     const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
