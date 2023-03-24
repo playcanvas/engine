@@ -1,4 +1,5 @@
 import { WasmModule } from "../../core/wasm-module";
+import { ABSOLUTE_URL } from "../asset/constants";
 import { DracoWorker } from "./draco-worker";
 
 class JobQueue {
@@ -105,15 +106,18 @@ const initializeWorkers = (config) => {
     }
 
     // worker urls must be absolute
-    const jsUrl = new URL(window.location.href);
-    jsUrl.pathname += config.jsUrl;
+    const relativeUrl = (url) => {
+        const tmp = new URL(window.location.href);
+        tmp.pathname += config.jsUrl;
+        return tmp.toString();
+    };
 
-    const wasmUrl = new URL(window.location.href);
-    wasmUrl.pathname += config.wasmUrl;
+    const jsUrl = ABSOLUTE_URL.test(config.jsUrl) ? config.jsUrl : relativeUrl(config.jsUrl);
+    const wasmUrl = ABSOLUTE_URL.test(config.wasmUrl) ? config.wasmUrl : relativeUrl(config.wasmUrl);
 
     // create workers
     const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
-    const code = `(${DracoWorker.toString()})('${jsUrl.toString()}', '${wasmUrl.toString()}')\n\n`;
+    const code = `(${DracoWorker.toString()})('${jsUrl}', '${wasmUrl}')\n\n`;
     const blob = new Blob([code], { type: 'application/javascript' });
     const workerUrl = URL.createObjectURL(blob);
     const workers = [];
