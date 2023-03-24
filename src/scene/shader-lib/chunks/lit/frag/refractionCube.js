@@ -10,13 +10,11 @@ vec3 refract2(vec3 viewVec, vec3 normal, vec3 viewDir, float IOR) {
 
 void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, inout opacity, IridescenceArgs iridescence) {
     // use same reflection code with refraction vector
-    vec3 tmpDir = dReflDirW;
     vec4 tmpRefl = dReflection;
-    dReflDirW = refract2(-viewDir, worldNormal, material_refractionIndex);
+    vec3 reflectionDir = refract2(-viewDir, worldNormal, material_refractionIndex);
     dReflection = vec4(0);
-    addReflection(dReflDirW, gloss);
+    addReflection(reflectionDir, gloss);
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * albedo, transmission);
     dReflection = tmpRefl;
-    dReflDirW = tmpDir;
 }
 `;

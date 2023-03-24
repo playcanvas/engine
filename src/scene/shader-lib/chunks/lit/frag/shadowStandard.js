@@ -101,7 +101,7 @@ float _getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams)
     depthKernel[2][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
     depthKernel[2][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
 
-    return _xgetShadowPCF3x3(depthKernel, shadowMap, shadowParams);
+    return _xgetShadowPCF3x3(depthKernel, shadowCoord, shadowMap, shadowParams);
 }
 
 float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams) {

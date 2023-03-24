@@ -52,7 +52,7 @@ void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss,
     }
 
     // Apply fresnel effect on refraction
-    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
     vec3 fresnel = vec3(1.0) - getFresnel(dot(viewDir, worldNormal), gloss, specularity, iridescence);
+    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
 }
 `;

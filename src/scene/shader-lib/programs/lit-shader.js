@@ -90,7 +90,7 @@ class LitShader {
         this.reflections = !!options.reflectionSource;
         this.shadowPass = ShaderPass.isShadow(options.pass);
         this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMapEnabled || options.enableGGXSpecular ||
-                            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
+            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
         this.needsNormal = this.needsNormal && !this.shadowPass;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
@@ -197,7 +197,7 @@ class LitShader {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
-                    return "       getShadowCoordPerspZbuffer" +  shadowCoordArgs;
+                    return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 }
                 return "       getShadowCoordPersp" + shadowCoordDirArgs;
             }
@@ -995,7 +995,7 @@ class LitShader {
 
             code.append("    getViewDir();");
             if (hasTBN) {
-                code.append("    getTBN();");
+                code.append("    getTBN(dTangentW, dBinormalW, dVertexNormalW);");
             }
         }
 
@@ -1005,7 +1005,7 @@ class LitShader {
         // transform tangent space normals to world space
         if (this.needsNormal) {
             if (options.useSpecular) {
-                backend.append("    getReflDir(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss);");
+                backend.append("    getReflDir(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, dTBN);");
             }
 
             if (options.useClearCoat) {
@@ -1047,7 +1047,7 @@ class LitShader {
         }
 
         if (options.lightMapEnabled || options.useLightMapVertexColors) {
-            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, litShaderArgs.gloss, litShaderArgs.specularity, dLightDirNormW, dVertexNormalW, litShaderArgs.iridescence);");
+            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, dViewDirW, dReflDirW, litShaderArgs.gloss, litShaderArgs.specularity, dLightDirNormW, dVertexNormalW, litShaderArgs.iridescence);");
         }
 
         if (this.lighting || this.reflections) {
@@ -1057,7 +1057,7 @@ class LitShader {
                     if (options.fresnelModel > 0) {
                         backend.append("    ccFresnel = getFresnelCC(dot(dViewDirW, litShaderArgs.clearcoat.worldNormal));");
                         backend.append("    ccReflection.rgb *= ccFresnel;");
-                    }  else {
+                    } else {
                         backend.append("    ccFresnel = 0.0;");
                     }
                 }
@@ -1266,16 +1266,16 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, litShaderArgs.clearcoat.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, litShaderArgs.clearcoat.gloss, dTBN) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
                     }
                     if (options.useSheen) {
-                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3;" : ";"));
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss) * dAtten * light" + i + "_color" +
+                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, dTBN) * dAtten * light" + i + "_color" +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);" : "* litShaderArgs.specularity;"));
                     }
@@ -1291,7 +1291,21 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                backend.append("    addClusteredLights(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, litShaderArgs.specularity, dVertexNormalW, litShaderArgs.clearcoat, litShaderArgs.sheen, litShaderArgs.iridescence);");
+                backend.append(`    addClusteredLights(
+                                        litShaderArgs.worldNormal, 
+                                        dViewDirW, 
+                                        dReflDirW,
+                                #if defined(LIT_CLEARCOAT)
+                                        ccReflDirW,
+                                #endif
+                                        litShaderArgs.gloss, 
+                                        litShaderArgs.specularity, 
+                                        dVertexNormalW, 
+                                        dTBN, 
+                                        litShaderArgs.clearcoat, 
+                                        litShaderArgs.sheen, 
+                                        litShaderArgs.iridescence
+                                    );`);
             }
 
             if (hasAreaLights) {
