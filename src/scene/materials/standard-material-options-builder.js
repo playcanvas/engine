@@ -307,7 +307,8 @@ class StandardMaterialOptionsBuilder {
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && stdMat.cubeMap && !isPhong) {
-            options.litOptions.reflectionSource = 'envAtlasHQ';
+            // magnopus patched, force envAtlas source due to missing reflections
+            options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.envAtlas && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlas';
@@ -321,7 +322,8 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.reflectionSource = 'sphereMap';
             options.litOptions.reflectionEncoding = stdMat.sphereMap.encoding;
         } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox && !isPhong) {
-            options.litOptions.reflectionSource = 'envAtlasHQ';
+            // magnopus patched, force envAtlas source due to missing reflections
+            options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
