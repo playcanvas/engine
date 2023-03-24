@@ -107,8 +107,9 @@ class Plane {
      * @returns {this} A duplicate Plane.
      */
     clone() {
-        const clone = new this.constructor();
-        return clone.copy(this);
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 }
 
