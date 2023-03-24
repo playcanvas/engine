@@ -32,6 +32,9 @@ uniform highp sampler2D lightsTextureFloat;
     uniform vec4 lightsTextureInvSize;
 #endif
 
+// 1.0 if clustered lighting can be skipped (0 lights in the clusters)
+uniform float clusterSkip;
+
 uniform vec3 clusterCellsCountByBoundsSize;
 uniform vec3 clusterTextureSize;
 uniform vec3 clusterBoundsMin;
@@ -574,6 +577,11 @@ void evaluateClusterLight(float lightIndex) {
 }
 
 void addClusteredLights() {
+
+    // skip lights if no lights at all
+    if (clusterSkip > 0.5)
+        return;
+
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 

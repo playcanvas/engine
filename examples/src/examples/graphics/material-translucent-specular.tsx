@@ -3,15 +3,22 @@ import * as pc from '../../../../';
 class MaterialTranslucentSpecularExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Translucent Specular';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -74,7 +81,7 @@ class MaterialTranslucentSpecularExample {
                     material.diffuse = new pc.Color(0.7, 0.7, 0.7);
                     material.specular = new pc.Color(1, 1, 1);
                     material.metalness = 0.0;
-                    material.shininess = ((z) / (NUM_SPHERES_Z - 1) * 50) + 50;
+                    material.gloss = ((z) / (NUM_SPHERES_Z - 1) * 0.5) + 0.5;
                     material.useMetalness = true;
                     material.blendType = pc.BLEND_NORMAL;
                     material.opacity = (x >= 5) ? ((x - 5) / 5 + 0.2) * ((x - 5) / 5 + 0.2) : (x / 5 + 0.2) * (x / 5 + 0.2);

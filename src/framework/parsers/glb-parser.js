@@ -48,6 +48,7 @@ import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 import { Asset } from '../asset/asset.js';
 import { GlbContainerResource } from './glb-container-resource.js';
+import { ABSOLUTE_URL } from '../asset/constants.js';
 
 // instance of the draco decoder
 let dracoDecoderInstance = null;
@@ -876,6 +877,14 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                         console.warn('Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.');
                     }
                     // #endif
+
+                    // convert to 16bit
+                    indexFormat = INDEXFORMAT_UINT16;
+                    indices = new Uint16Array(indices);
+                }
+
+                if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
+                    Debug.warn('Glb file contains 8bit index buffer but these are not supported by WebGPU - converting to 16bit.');
 
                     // convert to 16bit
                     indexFormat = INDEXFORMAT_UINT16;
@@ -2135,7 +2144,7 @@ const loadImageAsync = function (gltfImage, index, bufferViews, urlBase, registr
                 if (isDataURI(gltfImage.uri)) {
                     loadTexture(gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
                 } else {
-                    loadTexture(path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
+                    loadTexture(ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
                 }
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
@@ -2282,7 +2291,7 @@ const loadBuffersAsync = function (gltf, binaryChunk, urlBase, options, callback
                         onLoad(i, binaryArray);
                     } else {
                         http.get(
-                            path.join(urlBase, gltfBuffer.uri),
+                            ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
                             { cache: true, responseType: 'arraybuffer', retry: false },
                             function (i, err, result) {                         // eslint-disable-line no-loop-func
                                 if (err) {

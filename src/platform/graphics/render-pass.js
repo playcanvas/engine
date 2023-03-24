@@ -1,4 +1,7 @@
+import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
+import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 class ColorAttachmentOps {
@@ -227,6 +230,10 @@ class RenderPass {
         const realPass = this.renderTarget !== undefined;
         DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
+        Debug.call(() => {
+            this.log(device, device.renderPassIndex);
+        });
+
         this.before?.();
 
         if (realPass) {
@@ -241,9 +248,58 @@ class RenderPass {
 
         this.after?.();
 
+        device.renderPassIndex++;
+
         DebugGraphics.popGpuMarker(device);
 
     }
+
+    // #if _DEBUG
+    log(device, index) {
+        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
+
+            let rt = this.renderTarget;
+            if (rt === null && device.isWebGPU) {
+                rt = device.frameBuffer;
+            }
+            const hasColor = rt?.colorBuffer ?? rt?.impl.assignedColorTexture;
+            const hasDepth = rt?.depth;
+            const hasStencil = rt?.stencil;
+            const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+                `${hasColor ? '[Color]' : ''}` +
+                `${hasDepth ? '[Depth]' : ''}` +
+                `${hasStencil ? '[Stencil]' : ''}` +
+                `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
+
+            Debug.trace(TRACEID_RENDER_PASS,
+                        `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        rtInfo.padEnd(30));
+
+            if (this.colorOps && hasColor) {
+                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
+                            `${this.colorOps.clear ? 'clear' : 'load'}->` +
+                            `${this.colorOps.store ? 'store' : 'discard'} ` +
+                            `${this.colorOps.resolve ? 'resolve ' : ''}` +
+                            `${this.colorOps.mipmaps ? 'mipmaps ' : ''}`);
+            }
+
+            if (this.depthStencilOps) {
+
+                if (hasDepth) {
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                                `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
+                }
+
+                if (hasStencil) {
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                                `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                }
+            }
+        }
+    }
+    // #endif
 }
 
 export { RenderPass, ColorAttachmentOps, DepthStencilAttachmentOps };

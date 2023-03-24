@@ -140,7 +140,8 @@ const CodeEditor = (props: CodeEditorProps) => {
             options={{
                 scrollbar: {
                     horizontal: 'visible'
-                }
+                },
+                readOnly: false
             }}
         />
     </Panel>;

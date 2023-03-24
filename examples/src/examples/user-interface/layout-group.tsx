@@ -1,18 +1,23 @@
 import * as pc from '../../../../';
 
-
 class LayoutGroupExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Layout Group';
+    static WEBGPU_ENABLED = true;
 
-
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

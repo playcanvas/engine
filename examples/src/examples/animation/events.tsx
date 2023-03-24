@@ -4,7 +4,7 @@ class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),
@@ -58,7 +58,7 @@ class EventsExample {
                     box.setLocalScale(0.95, 1, 0.95);
                     const material = new pc.StandardMaterial();
                     material.diffuse = new pc.Color(0.7, 0.7, 0.7);
-                    material.shininess = 30;
+                    material.gloss = 0.3;
                     material.metalness = 0.2;
                     material.useMetalness = true;
                     box.model.material = material;

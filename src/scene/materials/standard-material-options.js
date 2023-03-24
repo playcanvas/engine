@@ -47,7 +47,7 @@ class StandardMaterialOptions {
     metalnessTint = false;
 
     /**
-     * Defines if {@link StandardMaterial#shininess} constant should affect glossiness value.
+     * Defines if {@link StandardMaterial#gloss} constant should affect glossiness value.
      *
      * @type {boolean}
      */

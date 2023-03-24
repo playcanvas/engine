@@ -4,7 +4,7 @@ class ShaderCompileExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shader Compile';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // This example servers as a test framework for large shader compilation speed test. Enable tracking for it.
         pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
@@ -29,7 +29,7 @@ class ShaderCompileExample {
                 // create material of specified color
                 const material = new pc.StandardMaterial();
                 material.diffuse = color;
-                material.shininess = 40;
+                material.gloss = 0.4;
                 material.useMetalness = true;
 
                 material.diffuseMap = assetManifest.color.resource;

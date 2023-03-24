@@ -2,7 +2,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -66,6 +66,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     constructor(canvas, options = {}) {
         super(canvas);
         this.isWebGPU = true;
+        this._deviceType = DEVICETYPE_WEBGPU;
+
+        // WebGPU currently only supports 1 and 4 samples
+        this.samples = options.antialias ? 4 : 1;
 
         this.initDeviceCaps();
     }
@@ -197,7 +201,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: true,
-            samples: 4
+            samples: this.samples
         });
     }
 
@@ -214,6 +218,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     frameStart() {
+
+        super.frameStart();
 
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
@@ -242,9 +248,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        if (outColorBuffer) {
-            wrt.assignColorTexture(outColorBuffer);
-        }
+        wrt.assignColorTexture(outColorBuffer);
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
@@ -331,7 +335,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState);
+                                                     this.bindGroupFormats, this.blendState, this.depthState);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -367,6 +371,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.blendState.copy(blendState);
     }
 
+    setDepthState(depthState) {
+        this.depthState.copy(depthState);
+    }
+
     setBlendColor(r, g, b, a) {
         // TODO: this should use passEncoder.setBlendConstant(color)
     }
@@ -375,10 +383,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthTest(depthTest) {
-    }
-
-    getDepthTest() {
-        return true;
     }
 
     setCullMode(cullMode) {
@@ -392,10 +396,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthWrite(writeDepth) {
-    }
-
-    getDepthWrite() {
-        return true;
     }
 
     initializeContextCaches() {
@@ -414,6 +414,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(rt);
 
         this.renderTarget = rt;
+
+        /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
         WebgpuDebug.internal(this);
@@ -590,7 +592,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // cannot copy depth from multisampled buffer. On WebGPU, it cannot be resolve at the end of the pass either,
             // and so we need to implement a custom depth resolve shader based copy
             // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
-            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture`, sourceRT);
+            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture ${sourceRT.name}`, sourceRT);
 
             /** @type {GPUImageCopyTexture} */
             const copySrc = {

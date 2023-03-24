@@ -3,8 +3,9 @@ import * as pc from '../../../../';
 class SpineboyExample {
     static CATEGORY = 'Misc';
     static NAME = 'Spineboy';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'skeleton': new pc.Asset('skeleton', 'json', { url: '/static/assets/spine/spineboy-pro.json' }),
@@ -13,7 +14,13 @@ class SpineboyExample {
             'spinescript': new pc.Asset('spinescript', 'script', { url: '/static/scripts/spine/playcanvas-spine.3.8.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
