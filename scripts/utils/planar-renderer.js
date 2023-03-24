@@ -104,6 +104,8 @@ PlanarRenderer.prototype.updateRenderTarget = function () {
             height: height,
             format: pc.PIXELFORMAT_RGBA8,
             mipmaps: this.mipmaps,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: pc.FILTER_LINEAR
         });
