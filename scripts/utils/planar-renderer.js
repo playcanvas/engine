@@ -50,7 +50,7 @@ PlanarRenderer.attributes.add('planeNormal', {
 PlanarRenderer.prototype.initialize = function () {
 
     this.plane = new pc.Plane();
-    this.reflectioNMatrix = new pc.Mat4();
+    this.reflectionMatrix = new pc.Mat4();
 
     // sceneCameraEntity needs to be set
     var sceneCamera = this.sceneCameraEntity.camera;
@@ -126,14 +126,14 @@ PlanarRenderer.prototype.frameUpdate = function () {
     if (planarCamera.enabled) {
 
         // update reflection camera orientation by mirroring the scene camera by the plane
-        this.plane.set(this.planePoint, this.planeNormal);
-        this.reflectioNMatrix.setReflection(this.plane);
+        this.plane.set(this.planeNormal, this.planePoint);
+        this.reflectionMatrix.setReflection(this.plane);
 
         var pos = this.sceneCameraEntity.getPosition();
-        var reflectedPos = this.reflectioNMatrix.transformPoint(pos);
+        var reflectedPos = this.reflectionMatrix.transformPoint(pos);
 
         var target = pos.clone().add(this.sceneCameraEntity.forward);
-        var reflectedTarget = this.reflectioNMatrix.transformPoint(target);
+        var reflectedTarget = this.reflectionMatrix.transformPoint(target);
 
         this.entity.setPosition(reflectedPos);
         this.entity.lookAt(reflectedTarget);

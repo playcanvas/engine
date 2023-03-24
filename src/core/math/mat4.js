@@ -791,7 +791,7 @@ class Mat4 {
         const a = normal.x;
         const b = normal.y;
         const c = normal.z;
-        const d = plane.d;
+        const d = plane.distance;
         const data = this.data;
 
         data[0] = 1.0 - 2 * a * a;
