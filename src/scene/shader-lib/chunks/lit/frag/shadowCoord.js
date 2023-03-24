@@ -19,7 +19,7 @@ void _getShadowCoordPersp(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos, vec3 
     #endif
 }
 
-void getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams, vec3 lightPos, vec3 lightDir) {
+void getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams) {
     _getShadowCoordOrtho(shadowMatrix, shadowParams, vPositionW);
 }
 
