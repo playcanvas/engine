@@ -70,8 +70,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = options.antialias ? 4 : 1;
-
-        this.initDeviceCaps();
     }
 
     /**
@@ -82,13 +80,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     initDeviceCaps() {
+
+        const limits = this.gpuAdapter.limits;
+
         this.precision = 'highp';
         this.maxPrecision = 'highp';
         this.maxSamples = 4;
         this.maxTextures = 16;
-        this.maxTextureSize = 4096;
-        this.maxCubeMapSize = 4096;
-        this.maxVolumeSize = 2048;
+        this.maxTextureSize = limits.maxTextureDimension2D;
+        this.maxCubeMapSize = limits.maxTextureDimension2D;
+        this.maxVolumeSize = limits.maxTextureDimension3D;
         this.maxPixelRatio = 1;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
@@ -106,7 +107,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
-        this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.areaLightLutFormat = this.floatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
     }
 
@@ -149,11 +150,44 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
+        // optional features:
+        //      "depth-clip-control",
+        //      "depth32float-stencil8",
+        //      "texture-compression-bc",
+        //      "texture-compression-etc2",
+        //      "texture-compression-astc",
+        //      "timestamp-query",
+        //      "indirect-first-instance",
+        //      "shader-f16",
+        //      "rg11b10ufloat-renderable",
+        //      "bgra8unorm-storage",
+        //      "float32-filterable"
+
+        // request optional features
+        const requiredFeatures = [];
+        const requireFeature = (feature) => {
+            if (this.gpuAdapter.features.has(feature)) {
+                requiredFeatures.push(feature);
+                Debug.log("Enabled WEBGPU feature: " + feature);
+                return true;
+            }
+            return false;
+        };
+        this.floatFilterable = requireFeature('float32-filterable');
+
         /**
          * @type {GPUDevice}
          * @private
          */
-        this.wgpu = await this.gpuAdapter.requestDevice();
+        this.wgpu = await this.gpuAdapter.requestDevice({
+            requiredFeatures,
+
+            // Note that we can request limits, but it does not seem to be supported at the moment
+            requiredLimits: {
+            }
+        });
+
+        this.initDeviceCaps();
 
         // initially fill the window. This needs improvement.
         this.setResolution(window.innerWidth, window.innerHeight);
@@ -318,20 +352,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     draw(primitive, numInstances = 1, keepBuffers) {
 
-        if (this.shader.ready) {
+        if (this.shader.ready && !this.shader.failed) {
+
+            WebgpuDebug.validate(this);
+
             const passEncoder = this.passEncoder;
             Debug.assert(passEncoder);
 
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
             const vb1 = this.vertexBuffers[1];
+            this.vertexBuffers.length = 0;
+
             if (vb0) {
                 const vbSlot = this.submitVertexBuffer(vb0, 0);
                 if (vb1) {
                     this.submitVertexBuffer(vb1, vbSlot);
                 }
             }
-            this.vertexBuffers.length = 0;
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
@@ -352,6 +390,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } else {
                 passEncoder.draw(primitive.count, numInstances, 0, 0);
             }
+
+            WebgpuDebug.end(this, {
+                vb0,
+                vb1,
+                ib,
+                primitive,
+                numInstances,
+                pipeline
+            });
         }
     }
 
