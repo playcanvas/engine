@@ -52,12 +52,11 @@ class AnimationHandler {
             }
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
                 callback(`Error loading animation resource: ${url.original} [${err}]`);
             } else {
-                // callback(null, response);
-
+                // parse the result immediately (this used to happen during open)
                 if (path.getExtension(url.original).toLowerCase() === '.glb') {
                     GlbParser.parse('filename.glb', response, null, null, (err, parseResult) => {
                         if (err) {
