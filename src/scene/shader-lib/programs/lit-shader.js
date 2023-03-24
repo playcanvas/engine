@@ -1384,7 +1384,8 @@ class LitShader {
         code.append(end());
 
         const mergedCode = decl.code + func.code + code.code;
-        if (mergedCode.includes("dReflection")) structCode += "vec4 dReflection;\n";
+
+        // Light inputs
         if (mergedCode.includes("dTBN")) structCode += "mat3 dTBN;\n";
         if (mergedCode.includes("dVertexNormalW")) structCode += "vec3 dVertexNormalW;\n";
         if (mergedCode.includes("dTangentW")) structCode += "vec3 dTangentW;\n";
@@ -1392,19 +1393,24 @@ class LitShader {
         if (mergedCode.includes("dViewDirW")) structCode += "vec3 dViewDirW;\n";
         if (mergedCode.includes("dReflDirW")) structCode += "vec3 dReflDirW;\n";
         if (mergedCode.includes("dHalfDirW")) structCode += "vec3 dHalfDirW;\n";
-        if (mergedCode.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";
-        if (mergedCode.includes("dSpecularLight")) structCode += "vec3 dSpecularLight;\n";
+        if (mergedCode.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
+
+        // Per-light temporaries
         if (mergedCode.includes("dLightDirNormW")) structCode += "vec3 dLightDirNormW;\n";
         if (mergedCode.includes("dLightDirW")) structCode += "vec3 dLightDirW;\n";
         if (mergedCode.includes("dLightPosW")) structCode += "vec3 dLightPosW;\n";
         if (mergedCode.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
+
+        // Outputs
+        if (mergedCode.includes("dReflection")) structCode += "vec4 dReflection;\n";
+        if (mergedCode.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";
+        if (mergedCode.includes("dSpecularLight")) structCode += "vec3 dSpecularLight;\n";
         if (mergedCode.includes("dAtten")) structCode += "float dAtten;\n";
         if (mergedCode.includes("dAttenD")) structCode += "float dAttenD;\n"; // separate diffuse attenuation for non-punctual light sources
         if (mergedCode.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (mergedCode.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
         if (mergedCode.includes("ccFresnel")) structCode += "float ccFresnel;\n";
         if (mergedCode.includes("ccReflection")) structCode += "vec3 ccReflection;\n";
-        if (mergedCode.includes("ccReflDirW")) structCode += "vec3 ccReflDirW;\n";
         if (mergedCode.includes("ccSpecularLight")) structCode += "vec3 ccSpecularLight;\n";
         if (mergedCode.includes("ccSpecularityNoFres")) structCode += "float ccSpecularityNoFres;\n";
         if (mergedCode.includes("sSpecularLight")) structCode += "vec3 sSpecularLight;\n";
