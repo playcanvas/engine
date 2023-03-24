@@ -1,12 +1,12 @@
 export default /* glsl */`
-void addLightMap(vec3 lightmap, vec3 dir, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, IridescenceArgs iridescence) {
+void addLightMap(vec3 lightmap, vec3 dir, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, inout vec3 lightDirNorm, vec3 vertexNormal, IridescenceArgs iridescence) {
     if (dot(dir, dir) < 0.0001) {
         dDiffuseLight += lightmap;
     } else {
-        dLightDirNormW = dir;
+        lightDirNorm = dir;
 
-        float vlight = saturate(dot(dLightDirNormW, -dVertexNormalW));
-        float flight = saturate(dot(dLightDirNormW, -worldNormal));
+        float vlight = saturate(dot(lightDirNorm, -vertexNormal));
+        float flight = saturate(dot(lightDirNorm, -worldNormal));
         float nlight = (flight / max(vlight, 0.01)) * 0.5;
 
         dDiffuseLight += lightmap * nlight * 2.0;

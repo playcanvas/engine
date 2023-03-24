@@ -189,10 +189,11 @@ class LitShader {
 
     _nonPointShadowMapProjection(device, light, shadowMatArg, shadowParamArg, lightIndex) {
         const lightDirArgs = `dLightDirW`;
-        const lightDirNormArgs = `dLightPosW, dLightDirW, dLightDirNormW`;
+        const lightDirNormArgs = `dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW`;
         const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
+        const shadowCoordNormArgs = `(${shadowMatArg}, ${shadowParamArg}, dVertexNormalW);\n`;
         const shadowCoordDirArgs = `(${shadowMatArg}, ${shadowParamArg}, ${lightDirArgs});\n`;
-        const shadowCoordNormArgs = `(${shadowMatArg}, ${shadowParamArg}, ${lightDirNormArgs});\n`;
+        const shadowCoordLightNormArgs = `(${shadowMatArg}, ${shadowParamArg}, ${lightDirNormArgs});\n`;
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
@@ -204,9 +205,9 @@ class LitShader {
         }
         if (light._type === LIGHTTYPE_SPOT) {
             if (light._isPcf && (device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
-                return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
+                return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordNormArgs;
             }
-            return "       getShadowCoordPerspNormalOffset" + shadowCoordNormArgs;
+            return "       getShadowCoordPerspNormalOffset" + shadowCoordLightNormArgs;
         }
         return this._directionalShadowMapProjection(light, shadowMatArg, shadowParamArg, lightDirNormArgs, lightIndex, "getShadowCoordOrthoNormalOffset");
     }
@@ -1046,7 +1047,7 @@ class LitShader {
         }
 
         if (options.lightMapEnabled || options.useLightMapVertexColors) {
-            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);");
+            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, litShaderArgs.gloss, litShaderArgs.specularity, dLightDirNormW, dVertexNormalW, litShaderArgs.iridescence);");
         }
 
         if (this.lighting || this.reflections) {
@@ -1208,7 +1209,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_OMNI) {
                             const shadowCoordArgs = "(light" + i + "_shadowMap, dShadowCoord, light" + i + "_shadowParams, dLightDirW);";
                             if (light._normalOffsetBias) {
-                                backend.append("    normalOffsetPointShadow(light" + i + "_shadowParams, dLightPosW, dLightDirW, dLightDirNormW);");
+                                backend.append("    normalOffsetPointShadow(light" + i + "_shadowParams, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);");
                             }
                             backend.append(`    float shadow${i} = getShadowPoint${shadowReadMode}${shadowCoordArgs}`);
                             backend.append(`    dAtten *= mix(1.0, shadow${i}, light${i}_shadowIntensity);`);
@@ -1290,7 +1291,7 @@ class LitShader {
                 usesLinearFalloff = true;
                 usesInvSquaredFalloff = true;
                 hasPointLights = true;
-                backend.append("    addClusteredLights(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.clearcoat, litShaderArgs.sheen, litShaderArgs.iridescence);");
+                backend.append("    addClusteredLights(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, litShaderArgs.specularity, dVertexNormalW, litShaderArgs.clearcoat, litShaderArgs.sheen, litShaderArgs.iridescence);");
             }
 
             if (hasAreaLights) {

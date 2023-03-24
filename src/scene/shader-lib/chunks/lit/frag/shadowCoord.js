@@ -27,15 +27,15 @@ void getShadowCoordPersp(mat4 shadowMatrix, vec4 shadowParams, vec3 lightPos, ve
     _getShadowCoordPersp(shadowMatrix, shadowParams, vPositionW, lightDir);
 }
 
-void getShadowCoordPerspNormalOffset(mat4 shadowMatrix, vec4 shadowParams, vec3 lightPos, vec3 lightDir, vec3 lightDirNorm) {
+void getShadowCoordPerspNormalOffset(mat4 shadowMatrix, vec4 shadowParams, vec3 lightPos, vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
     float distScale = abs(dot(vPositionW - lightPos, lightDirNorm)); // fov?
-    vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -lightDirNorm), 0.0, 1.0) * distScale;
+    vec3 wPos = vPositionW + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
 
     _getShadowCoordPersp(shadowMatrix, shadowParams, wPos, lightDir);
 }
 
-void getShadowCoordOrthoNormalOffset(mat4 shadowMatrix, vec3 shadowParams, vec3 lightPos, vec3 lightDir, vec3 lightDirNorm) {
-    vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -lightDirNorm), 0.0, 1.0); //0.08
+void getShadowCoordOrthoNormalOffset(mat4 shadowMatrix, vec3 shadowParams, vec3 lightPos, vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
+    vec3 wPos = vPositionW + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0); //0.08
 
     _getShadowCoordOrtho(shadowMatrix, shadowParams, wPos);
 }

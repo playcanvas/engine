@@ -318,7 +318,7 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
-void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, vec3 geometricNormal, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     dAtten3 = vec3(1.0);
 
@@ -428,7 +428,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
+                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, dLightDirW);
@@ -442,7 +442,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
                     } else {
 
                         // omni shadow
-                        normalOffsetPointShadow(shadowParams, dLightPosW, dLightDirW, dLightDirNormW);  // normalBias adjusted for distance
+                        normalOffsetPointShadow(shadowParams, dLightPosW, dLightDirW, dLightDirNormW, geometricNormal);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
@@ -565,7 +565,7 @@ void evaluateLight(ClusterLightData light, vec3 worldNormal, vec3 viewDir, float
     }
 }
 
-void evaluateClusterLight(float lightIndex, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void evaluateClusterLight(float lightIndex, vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, vec3 geometricNormal, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     // decode core light data from textures
     ClusterLightData clusterLightData;
@@ -573,10 +573,10 @@ void evaluateClusterLight(float lightIndex, vec3 worldNormal, vec3 viewDir, floa
 
     // evaluate light if it uses accepted light mask
     if (acceptLightMask(clusterLightData))
-        evaluateLight(clusterLightData, worldNormal, viewDir, gloss, specularity, clearcoat, sheen, iridescence);
+        evaluateLight(clusterLightData, worldNormal, viewDir, gloss, specularity, geometricNormal, clearcoat, sheen, iridescence);
 }
 
-void addClusteredLights(vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
+void addClusteredLights(vec3 worldNormal, vec3 viewDir, float gloss, vec3 specularity, vec3 geometricNormal, ClearcoatArgs clearcoat, SheenArgs sheen, IridescenceArgs iridescence) {
 
     // skip lights if no lights at all
     if (clusterSkip > 0.5)
@@ -606,7 +606,7 @@ void addClusteredLights(vec3 worldNormal, vec3 viewDir, float gloss, vec3 specul
                 if (lightIndex <= 0.0)
                         return;
 
-                evaluateClusterLight(lightIndex * 255.0, worldNormal, viewDir, gloss, specularity, clearcoat, sheen, iridescence); 
+                evaluateClusterLight(lightIndex * 255.0, worldNormal, viewDir, gloss, specularity, geometricNormal, clearcoat, sheen, iridescence); 
             }
 
         #else
