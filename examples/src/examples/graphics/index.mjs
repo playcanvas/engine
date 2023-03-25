@@ -2,7 +2,7 @@ import AreaLightsExample from "./area-lights";
 import AreaPickerExample from "./area-picker";
 import AssetViewerExample from "./asset-viewer";
 import BatchingDynamicExample from "./batching-dynamic";
-import BoxReflectionExample from "./box-reflection";
+import ReflectionBoxExample from "./reflection-box";
 import ClusteredAreaLightsExample from "./clustered-area-lights";
 import ClusteredLightingExample from "./clustered-lighting";
 import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
@@ -41,8 +41,9 @@ import PointCloudSimulationExample from "./point-cloud-simulation";
 import PointCloudExample from "./point-cloud";
 import PortalExample from "./portal";
 import PostEffectsExample from "./post-effects";
+import ReflectionPlanarExample from "./reflection-planar";
 import RenderAssetExample from "./render-asset";
-import RenderCubemapExample from "./render-cubemap";
+import ReflectionCubemapExample from "./reflection-cubemap";
 import RenderToTextureExample from "./render-to-texture";
 import ShaderBurnExample from "./shader-burn";
 import ShaderCompileExample from "./shader-compile";
@@ -59,7 +60,7 @@ export {
     AreaPickerExample,
     AssetViewerExample,
     BatchingDynamicExample,
-    BoxReflectionExample,
+    ReflectionBoxExample,
     ClusteredAreaLightsExample,
     ClusteredLightingExample,
     ClusteredOmniShadowsExample,
@@ -98,8 +99,9 @@ export {
     PointCloudExample,
     PortalExample,
     PostEffectsExample,
+    ReflectionPlanarExample,
     RenderAssetExample,
-    RenderCubemapExample,
+    ReflectionCubemapExample,
     RenderToTextureExample,
     ShaderBurnExample,
     ShaderCompileExample,
