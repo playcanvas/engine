@@ -80,15 +80,6 @@ class Quat {
         return this;
     }
 
-    static conjugate(rhs) {
-        return new Quat(
-            rhs.x * -1,
-            rhs.y * -1,
-            rhs.z * -1,
-            rhs.w
-        );
-    }
-
     /**
      * Copies the contents of a source quaternion to a destination quaternion.
      *
