@@ -4,9 +4,9 @@ import * as pc from '../../../../';
 import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
-class BoxReflectionExample {
+class ReflectionBoxExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Box Reflection';
+    static NAME = 'Reflection Box';
     static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
@@ -397,4 +397,4 @@ class BoxReflectionExample {
     }
 }
 
-export default BoxReflectionExample;
+export default ReflectionBoxExample;
