@@ -61,6 +61,25 @@ class Vec2 {
      *
      * @param {Vec2} lhs - The first vector operand for the addition.
      * @param {Vec2} rhs - The second vector operand for the addition.
+     * @returns {Vec2} The resulting 2-dimensional vectors.
+     * @example
+     * var a = new pc.Vec2(10, 10);
+     * var b = new pc.Vec2(20, 20);
+     *
+     * const r = pc.Vec2.add(a, b);
+     * // Outputs [30, 30]
+     *
+     * console.log("The result of the addition is: " + r.toString());
+     */
+    static add(lhs, rhs) {
+        return new Vec2(lhs.x + rhs.x, lhs.y + rhs.y);
+    }
+
+    /**
+     * Adds two 2-dimensional vectors together and returns the result.
+     *
+     * @param {Vec2} lhs - The first vector operand for the addition.
+     * @param {Vec2} rhs - The second vector operand for the addition.
      * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
@@ -97,6 +116,24 @@ class Vec2 {
         this.y += scalar;
 
         return this;
+    }
+
+    /**
+     * Adds a number to each element of a vector.
+     *
+     * @param {Vec2} rhs - The vector to add the scalar to.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var vec = new pc.Vec2(3, 4);
+     *
+     * const result = pc.Vec2.addScalar(vec, 2);
+     *
+     * // Outputs [5, 6]
+     * console.log("The result of the addition is: " + result.toString());
+     */
+    static addScalar(rhs, scalar) {
+        return new Vec2(rhs.x + scalar, rhs.y + scalar);
     }
 
     /**
@@ -191,6 +228,25 @@ class Vec2 {
     }
 
     /**
+     * Divides one 2-dimensional vector by another and writes the result to a new vector.
+     *
+     * @param {Vec2} lhs - The dividend vector (the vector being divided).
+     * @param {Vec2} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var a = new pc.Vec2(4, 9);
+     * var b = new pc.Vec2(2, 3);
+     *
+     * const r = pc.Vec2.div(a, b);
+     * // Outputs [2, 3]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    static div(lhs, rhs) {
+        return new Vec2(lhs.x / rhs.x, lhs.y / rhs.y);
+    }
+
+    /**
      * Divides one 2-dimensional vector by another and writes the result to the specified vector.
      *
      * @param {Vec2} lhs - The dividend vector (the vector being divided).
@@ -231,6 +287,25 @@ class Vec2 {
         this.y /= scalar;
 
         return this;
+    }
+
+    /**
+     * Divides each element of a vector by a number and stores the result in
+     * a new instance.
+     *
+     * @param {Vec2} rhs - The vector to divide.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var vec = new pc.Vec2(3, 6);
+     *
+     * const result = pc.Vec2.divScalar(vec, 3);
+     *
+     * // Outputs [1, 2]
+     * console.log("The result of the division is: " + result.toString());
+     */
+    static divScalar(rhs, scalar) {
+        return new Vec2(rhs.x / scalar, rhs.y / scalar);
     }
 
     /**
@@ -317,6 +392,28 @@ class Vec2 {
     }
 
     /**
+     * Returns the result of a linear interpolation between two specified 2-dimensional vectors.
+     *
+     * @param {Vec2} lhs - The 2-dimensional to interpolate from.
+     * @param {Vec2} rhs - The 2-dimensional to interpolate to.
+     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
+     * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
+     * range, the linear interpolant will occur on a ray extrapolated from this line.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var a = new pc.Vec2(0, 0);
+     * var b = new pc.Vec2(10, 10);
+     *
+     * var r;
+     * r = pc.Vec2.lerp(a, b, 0);   // r is equal to a
+     * r = pc.Vec2.lerp(a, b, 0.5); // r is 5, 5
+     * r = pc.Vec2.lerp(a, b, 1);   // r is equal to b
+     */
+    static lerp(lhs, rhs, alpha) {
+        return new Vec2(lhs.x + alpha * (rhs.x - lhs.x), lhs.y + alpha * (rhs.y - lhs.y));
+    }
+
+    /**
      * Multiplies a 2-dimensional vector to another in place.
      *
      * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
@@ -335,6 +432,25 @@ class Vec2 {
         this.y *= rhs.y;
 
         return this;
+    }
+
+    /**
+     * Returns the result of multiplying the specified 2-dimensional vectors together.
+     *
+     * @param {Vec2} lhs - The 2-dimensional vector used as the first multiplicand of the operation.
+     * @param {Vec2} rhs - The 2-dimensional vector used as the second multiplicand of the operation.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var a = new pc.Vec2(2, 3);
+     * var b = new pc.Vec2(4, 5);
+     *
+     * const r = pc.Vec2.mul(a, b);
+     *
+     * // Outputs 8, 15
+     * console.log("The result of the multiplication is: " + r.toString());
+     */
+    static mul(lhs, rhs) {
+        return new Vec2(lhs.x * rhs.x, lhs.y * rhs.y);
     }
 
     /**
@@ -378,6 +494,24 @@ class Vec2 {
         this.y *= scalar;
 
         return this;
+    }
+
+    /**
+     * Multiplies each element of a vector by a number.
+     *
+     * @param {Vec2} rhs - The 2-dimensional vector to multiply.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var vec = new pc.Vec2(3, 6);
+     *
+     * const result = pc.Vec2.mulScalar(vec, 3);
+     *
+     * // Outputs [9, 18]
+     * console.log("The result of the multiplication is: " + result.toString());
+     */
+    static mulScalar(rhs, scalar) {
+        return new Vec2(rhs.x * scalar, rhs.y * scalar);
     }
 
     /**
@@ -507,6 +641,25 @@ class Vec2 {
      *
      * @param {Vec2} lhs - The first vector operand for the subtraction.
      * @param {Vec2} rhs - The second vector operand for the subtraction.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var a = new pc.Vec2(10, 10);
+     * var b = new pc.Vec2(20, 20);
+     *
+     * const r = pc.Vec2.sub(a, b);
+     *
+     * // Outputs [-10, -10]
+     * console.log("The result of the subtraction is: " + r.toString());
+     */
+    static sub(lhs, rhs) {
+        return new Vec2(lhs.x - rhs.x, lhs.y - rhs.y);
+    }
+
+    /**
+     * Subtracts two 2-dimensional vectors from one another and returns the result.
+     *
+     * @param {Vec2} lhs - The first vector operand for the subtraction.
+     * @param {Vec2} rhs - The second vector operand for the subtraction.
      * @returns {Vec2} Self for chaining.
      * @example
      * var a = new pc.Vec2(10, 10);
@@ -543,6 +696,24 @@ class Vec2 {
         this.y -= scalar;
 
         return this;
+    }
+
+    /**
+     * Subtracts a number from each element of a vector.
+     *
+     * @param {Vec2} rhs - The 2-dimensional vector to substract from.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec2} The resulting 2-dimensional vector.
+     * @example
+     * var vec = new pc.Vec2(3, 4);
+     *
+     * const result = pc.Vec2.subScalar(vec, 2);
+     *
+     * // Outputs [1, 2]
+     * console.log("The result of the subtraction is: " + result.toString());
+     */
+    static subScalar(rhs, scalar) {
+        return new Vec2(rhs.x - scalar, rhs.y - scalar);
     }
 
     /**
