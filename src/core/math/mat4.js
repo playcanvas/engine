@@ -779,6 +779,42 @@ class Mat4 {
     }
 
     /**
+     * Sets the matrix to a reflection matrix, which can be used as a mirror transformation by the
+     * plane.
+     *
+     * @param {import('./plane.js').Plane} plane - The plane to reflect by.
+     * @returns {Mat4} Self for chaining.
+     */
+    setReflection(plane) {
+
+        const normal = plane.normal;
+        const a = normal.x;
+        const b = normal.y;
+        const c = normal.z;
+        const d = plane.distance;
+        const data = this.data;
+
+        data[0] = 1.0 - 2 * a * a;
+        data[1] = -2 * a * b;
+        data[2] = -2 * a * c;
+        data[3] = 0;
+        data[4] = -2 * a * b;
+        data[5] = 1.0 - 2 * b * b;
+        data[6] = -2 * b * c;
+        data[7] = 0;
+        data[8] = -2 * a * c;
+        data[9] = -2 * b * c;
+        data[10] = 1.0 - 2 * c * c;
+        data[11] = 0;
+        data[12] = -2 * a * d;
+        data[13] = -2 * b * d;
+        data[14] = -2 * c * d;
+        data[15] = 1;
+
+        return this;
+    }
+
+    /**
      * Sets the specified matrix to its inverse.
      *
      * @returns {Mat4} Self for chaining.
