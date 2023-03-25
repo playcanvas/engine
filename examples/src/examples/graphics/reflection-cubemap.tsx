@@ -1,8 +1,8 @@
 import * as pc from '../../../../';
 
-class RenderCubemapExample {
+class ReflectionCubemapExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Render Cubemap';
+    static NAME = 'Reflection Cubemap';
     static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
@@ -285,4 +285,4 @@ class RenderCubemapExample {
     }
 }
 
-export default RenderCubemapExample;
+export default ReflectionCubemapExample;

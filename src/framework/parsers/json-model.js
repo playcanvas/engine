@@ -1,5 +1,3 @@
-import { Debug } from '../../core/debug.js';
-
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
@@ -55,15 +53,16 @@ class JsonModelParser {
         this._defaultMaterial = defaultMaterial;
     }
 
-    parse(data) {
+    parse(data, callback) {
         const modelData = data.model;
         if (!modelData) {
-            return null;
+            callback(null, null);
+            return;
         }
 
         if (modelData.version <= 1) {
-            Debug.warn('JsonModelParser#parse: Trying to parse unsupported model format.');
-            return null;
+            callback('JsonModelParser#parse: Trying to parse unsupported model format.');
+            return;
         }
 
         // NODE HIERARCHY
@@ -94,7 +93,7 @@ class JsonModelParser {
         model.morphInstances = morphs.instances;
         model.getGraph().syncHierarchy();
 
-        return model;
+        callback(null, model);
     }
 
     _parseNodes(data) {
