@@ -80,6 +80,15 @@ class Quat {
         return this;
     }
 
+    static conjugate(rhs) {
+        return new Quat(
+            rhs.x * -1,
+            rhs.y * -1,
+            rhs.z * -1,
+            rhs.w
+        );
+    }
+
     /**
      * Copies the contents of a source quaternion to a destination quaternion.
      *
@@ -281,6 +290,41 @@ class Quat {
         this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
 
         return this;
+    }
+
+    /**
+     * Returns the result of multiplying the specified quaternions together.
+     *
+     * @param {Quat} lhs - The quaternion used as the first multiplicand of the operation.
+     * @param {Quat} rhs - The quaternion used as the second multiplicand of the operation.
+     * @returns {Quat} The resulting quaternion.
+     * @example
+     * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
+     * var b = new pc.Quat().setFromEulerAngles(0, 60, 0);
+     *
+     * // r is set to a 90 degree rotation around the Y axis
+     * // In other words, r = a * b
+     * const r = pc.Quat.mul(a, b);
+     *
+     * console.log("The result of the multiplication is: " + r.toString());
+     */
+    static mul(lhs, rhs) {
+        const q1x = lhs.x;
+        const q1y = lhs.y;
+        const q1z = lhs.z;
+        const q1w = lhs.w;
+
+        const q2x = rhs.x;
+        const q2y = rhs.y;
+        const q2z = rhs.z;
+        const q2w = rhs.w;
+
+        return new Quat(
+            q1w * q2x + q1x * q2w + q1y * q2z - q1z * q2y,
+            q1w * q2y + q1y * q2w + q1z * q2x - q1x * q2z,
+            q1w * q2z + q1z * q2w + q1x * q2y - q1y * q2x,
+            q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z
+        );
     }
 
     /**
@@ -665,6 +709,70 @@ class Quat {
         this.y = (ly * ratioA + ry * ratioB);
         this.z = (lz * ratioA + rz * ratioB);
         return this;
+    }
+
+    /**
+     * Performs a spherical interpolation between two quaternions. The result of the interpolation
+     * is written to a new quaternion instance.
+     *
+     * @param {Quat} lhs - The quaternion to interpolate from.
+     * @param {Quat} rhs - The quaternion to interpolate to.
+     * @param {number} alpha - The value controlling the interpolation in relation to the two input
+     * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+     * in between generating a spherical interpolation between the two.
+     * @returns {Quat} The resulting quaternion.
+     * @example
+     * var q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+     * var q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
+     *
+     * var result;
+     * result = pc.Quat.slerp(q1, q2, 0);   // Return q1
+     * result = pc.Quat.slerp(q1, q2, 0.5); // Return the midpoint interpolant
+     * result = pc.Quat.slerp(q1, q2, 1);   // Return q2
+     */
+    static slerp(lhs, rhs, alpha) {
+        // Algorithm sourced from:
+        // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+        const lx = lhs.x;
+        const ly = lhs.y;
+        const lz = lhs.z;
+        const lw = lhs.w;
+        let rx = rhs.x;
+        let ry = rhs.y;
+        let rz = rhs.z;
+        let rw = rhs.w;
+
+        // Calculate angle between them.
+        let cosHalfTheta = lw * rw + lx * rx + ly * ry + lz * rz;
+
+        if (cosHalfTheta < 0) {
+            rw = -rw;
+            rx = -rx;
+            ry = -ry;
+            rz = -rz;
+            cosHalfTheta = -cosHalfTheta;
+        }
+
+        // If lhs == rhs or lhs == -rhs then theta == 0 and we can return lhs
+        if (Math.abs(cosHalfTheta) >= 1) {
+            return new Quat(lx, ly, lz, lw);
+        }
+
+        // Calculate temporary values.
+        const halfTheta = Math.acos(cosHalfTheta);
+        const sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);
+
+        // If theta = 180 degrees then result is not fully defined
+        // we could rotate around any axis normal to qa or qb
+        if (Math.abs(sinHalfTheta) < 0.001) {
+            return new Quat(lx * 0.5 + rx * 0.5, ly * 0.5 + ry * 0.5, lz * 0.5 + rz * 0.5, lw * 0.5 + rw * 0.5);
+        }
+
+        const ratioA = Math.sin((1 - alpha) * halfTheta) / sinHalfTheta;
+        const ratioB = Math.sin(alpha * halfTheta) / sinHalfTheta;
+
+        // Calculate Quaternion.
+        return new Quat(lx * ratioA + rx * ratioB, ly * ratioA + ry * ratioB, lz * ratioA + rz * ratioB, lw * ratioA + rw * ratioB);
     }
 
     /**
