@@ -355,6 +355,24 @@ class Mat4 {
     }
 
     /**
+     * Multiplies the specified 4x4 matrices together and stores the result in a new instance.
+     * This function assumes the matrices are affine transformation matrices, where the
+     * upper left 3x3 elements are a rotation matrix, and the bottom left 3 elements are
+     * translation. The rightmost column is assumed to be [0, 0, 0, 1]. The parameters are not
+     * verified to be in the expected format. This function is faster than general
+     * {@link Mat4#mul}.
+     *
+     * @param {Mat4} lhs - The affine transformation 4x4 matrix used as the first multiplicand of
+     * the operation.
+     * @param {Mat4} rhs - The affine transformation 4x4 matrix used as the second multiplicand of
+     * the operation.
+     * @returns {Mat4} The resulting 4x4 matrix.
+     */
+    static mulAffine(lhs, rhs) {
+        return new Mat4().mulAffine2(lhs, rhs);
+    }
+
+    /**
      * Multiplies the current instance by the specified 4x4 matrix.
      *
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
@@ -370,6 +388,26 @@ class Mat4 {
      */
     mul(rhs) {
         return this.mul2(this, rhs);
+    }
+
+    /**
+     * Multiplies the specified 4x4 matrices together and stores the result in a new
+     * instance.
+     *
+     * @param {Mat4} lhs - The 4x4 matrix used as the first multiplicand of the operation.
+     * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
+     * @returns {Mat4} The resulting 4x4 matrix.
+     * @example
+     * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     *
+     * // r = a * b
+     * const r = pc.Mat4.mul2(a, b);
+     *
+     * console.log("The result of the multiplication is: " + r.toString());
+     */
+    static mul(lhs, rhs) {
+        return new Mat4().mul2(lhs, rhs);
     }
 
     /**
