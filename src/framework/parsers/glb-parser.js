@@ -2528,32 +2528,30 @@ class GlbParser {
     }
 
     // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    static parse(filename, data, device, options) {
-        let result = null;
-
+    static parse(filename, data, device, options, callback) {
         options = options || { };
 
         // parse the data
         parseChunk(filename, data, function (err, chunks) {
             if (err) {
-                console.error(err);
+                callback(err);
             } else {
                 // parse gltf
                 parseGltf(chunks.gltfChunk, function (err, gltf) {
                     if (err) {
-                        console.error(err);
+                        callback(err);
                     } else {
                         // parse buffer views
                         parseBufferViewsAsync(gltf, [chunks.binaryChunk], options, function (err, bufferViews) {
                             if (err) {
-                                console.error(err);
+                                callback(err);
                             } else {
                                 // create resources
-                                createResources(device, gltf, bufferViews, [], options, function (err, result_) {
+                                createResources(device, gltf, bufferViews, [], options, function (err, result) {
                                     if (err) {
-                                        console.error(err);
+                                        callback(err);
                                     } else {
-                                        result = result_;
+                                        callback(null, result);
                                     }
                                 });
                             }
@@ -2562,8 +2560,6 @@ class GlbParser {
                 });
             }
         });
-
-        return result;
     }
 
     constructor(device, assets, maxRetries) {
