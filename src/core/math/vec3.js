@@ -72,6 +72,25 @@ class Vec3 {
      *
      * @param {Vec3} lhs - The first vector operand for the addition.
      * @param {Vec3} rhs - The second vector operand for the addition.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var a = new pc.Vec3(10, 10, 10);
+     * var b = new pc.Vec3(20, 20, 20);
+     *
+     * const r = pc.Vec3.add(a, b);
+     * // Outputs [30, 30, 30]
+     *
+     * console.log("The result of the addition is: " + r.toString());
+     */
+    static add(lhs, rhs) {
+        return new Vec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+    }
+
+    /**
+     * Adds two 3-dimensional vectors together and returns the result.
+     *
+     * @param {Vec3} lhs - The first vector operand for the addition.
+     * @param {Vec3} rhs - The second vector operand for the addition.
      * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
@@ -110,6 +129,24 @@ class Vec3 {
         this.z += scalar;
 
         return this;
+    }
+
+    /**
+     * Adds a number to each element of a vector.
+     *
+     * @param {Vec3} rhs - The vector to add scalar to.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var vec = new pc.Vec3(3, 4, 5);
+     *
+     * const result = pc.Vec3.addScalar(vec, 2);
+     *
+     * // Outputs [5, 6, 7]
+     * console.log("The result of the addition is: " + result.toString());
+     */
+    static addScalar(rhs, scalar) {
+        return new Vec3(rhs.x + scalar, rhs.y + scalar, rhs.z + scalar);
     }
 
     /**
@@ -222,6 +259,25 @@ class Vec3 {
      *
      * @param {Vec3} lhs - The dividend vector (the vector being divided).
      * @param {Vec3} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec3} The resulting 3-dimentional vector.
+     * @example
+     * var a = new pc.Vec3(4, 9, 16);
+     * var b = new pc.Vec3(2, 3, 4);
+     *
+     * const r = pc.Vec3.div(a, b);
+     * // Outputs [2, 3, 4]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    static div(lhs, rhs) {
+        return new Vec3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);
+    }
+
+    /**
+     * Divides one 3-dimensional vector by another and writes the result to the specified vector.
+     *
+     * @param {Vec3} lhs - The dividend vector (the vector being divided).
+     * @param {Vec3} rhs - The divisor vector (the vector dividing the dividend).
      * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(4, 9, 16);
@@ -260,6 +316,24 @@ class Vec3 {
         this.z /= scalar;
 
         return this;
+    }
+
+    /**
+     * Divides each element of a vector by a number.
+     *
+     * @param {Vec3} rhs - The vector to divide.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var vec = new pc.Vec3(3, 6, 9);
+     *
+     * const result = pc.Vec3.divScalar(vec, 3);
+     *
+     * // Outputs [1, 2, 3]
+     * console.log("The result of the division is: " + result.toString());
+     */
+    static divScalar(rhs, scalar) {
+        return new Vec3(rhs.x / scalar, rhs.y / scalar, rhs.z / scalar);
     }
 
     /**
@@ -347,6 +421,28 @@ class Vec3 {
     }
 
     /**
+     * Returns the result of a linear interpolation between two specified 3-dimensional vectors.
+     *
+     * @param {Vec3} lhs - The 3-dimensional to interpolate from.
+     * @param {Vec3} rhs - The 3-dimensional to interpolate to.
+     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
+     * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
+     * range, the linear interpolant will occur on a ray extrapolated from this line.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var a = new pc.Vec3(0, 0, 0);
+     * var b = new pc.Vec3(10, 10, 10);
+     *
+     * var r;
+     * r = pc.Vec3.lerp(a, b, 0);   // r is equal to a
+     * r = pc.Vec3.lerp(a, b, 0.5); // r is 5, 5, 5
+     * r = pc.Vec3.lerp(a, b, 1);   // r is equal to b
+     */
+    static lerp(lhs, rhs, alpha) {
+        return new Vec3(lhs.x + alpha * (rhs.x - lhs.x), lhs.y + alpha * (rhs.y - lhs.y), lhs.z + alpha * (rhs.z - lhs.z));
+    }
+
+    /**
      * Multiplies a 3-dimensional vector to another in place.
      *
      * @param {Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
@@ -366,6 +462,25 @@ class Vec3 {
         this.z *= rhs.z;
 
         return this;
+    }
+
+    /**
+     * Returns the result of multiplying the specified 3-dimensional vectors together.
+     *
+     * @param {Vec3} lhs - The 3-dimensional vector used as the first multiplicand of the operation.
+     * @param {Vec3} rhs - The 3-dimensional vector used as the second multiplicand of the operation.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var a = new pc.Vec3(2, 3, 4);
+     * var b = new pc.Vec3(4, 5, 6);
+     *
+     * const r = pc.Vec3.mul(a, b);
+     *
+     * // Outputs 8, 15, 24
+     * console.log("The result of the multiplication is: " + r.toString());
+     */
+    static mul(lhs, rhs) {
+        return new Vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
     }
 
     /**
@@ -411,6 +526,24 @@ class Vec3 {
         this.z *= scalar;
 
         return this;
+    }
+
+    /**
+     * Multiplies each element of a vector by a number.
+     *
+     * @param {Vec3} rhs - The 3-dimensional vector to multiply.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var vec = new pc.Vec3(3, 6, 9);
+     *
+     * const result = vec.mulScalar(3);
+     *
+     * // Outputs [9, 18, 27]
+     * console.log("The result of the multiplication is: " + result.toString());
+     */
+    static mulScalar(rhs, scalar) {
+        return new Vec3(rhs.x * scalar, rhs.y * scalar, rhs.z * scalar);
     }
 
     /**
@@ -573,6 +706,25 @@ class Vec3 {
      *
      * @param {Vec3} lhs - The first vector operand for the subtraction.
      * @param {Vec3} rhs - The second vector operand for the subtraction.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var a = new pc.Vec3(10, 10, 10);
+     * var b = new pc.Vec3(20, 20, 20);
+     *
+     * const r = pc.Vec3.sub(a, b);
+     *
+     * // Outputs [-10, -10, -10]
+     * console.log("The result of the subtraction is: " + r.toString());
+     */
+    static sub(lhs, rhs) {
+        return new Vec3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+    }
+
+    /**
+     * Subtracts two 3-dimensional vectors from one another and returns the result.
+     *
+     * @param {Vec3} lhs - The first vector operand for the subtraction.
+     * @param {Vec3} rhs - The second vector operand for the subtraction.
      * @returns {Vec3} Self for chaining.
      * @example
      * var a = new pc.Vec3(10, 10, 10);
@@ -611,6 +763,24 @@ class Vec3 {
         this.z -= scalar;
 
         return this;
+    }
+
+    /**
+     * Subtracts a number from each element of a vector.
+     *
+     * @param {Vec3} rhs - The vector to get subtracted.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec3} The resulting 3-dimensional vector.
+     * @example
+     * var vec = new pc.Vec3(3, 4, 5);
+     *
+     * const result = pc.Vec3.subScalar(vec, 2);
+     *
+     * // Outputs [1, 2, 3]
+     * console.log("The result of the subtraction is: " + result.toString());
+     */
+    static subScalar(rhs, scalar) {
+        return new Vec3(rhs.x - scalar, rhs.y - scalar, rhs.z - scalar);
     }
 
     /**
