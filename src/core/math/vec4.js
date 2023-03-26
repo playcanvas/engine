@@ -83,6 +83,25 @@ class Vec4 {
      *
      * @param {Vec4} lhs - The first vector operand for the addition.
      * @param {Vec4} rhs - The second vector operand for the addition.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var a = new pc.Vec4(10, 10, 10, 10);
+     * var b = new pc.Vec4(20, 20, 20, 20);
+     *
+     * const r = pc.Vec4.add(a, b);
+     * // Outputs [30, 30, 30]
+     *
+     * console.log("The result of the addition is: " + r.toString());
+     */
+    static add(lhs, rhs) {
+        return new Vec4(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w);
+    }
+
+    /**
+     * Adds two 4-dimensional vectors together and returns the result.
+     *
+     * @param {Vec4} lhs - The first vector operand for the addition.
+     * @param {Vec4} rhs - The second vector operand for the addition.
      * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
@@ -123,6 +142,24 @@ class Vec4 {
         this.w += scalar;
 
         return this;
+    }
+
+    /**
+     * Adds a number to each element of a vector.
+     *
+     * @param {Vec4} rhs - The 4-dimensional vector to add the scalar to.
+     * @param {number} scalar - The number to add.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var vec = new pc.Vec4(3, 4, 5, 6);
+     *
+     * const result = pc.Vec4.addScalar(vec, 2);
+     *
+     * // Outputs [5, 6, 7, 8]
+     * console.log("The result of the addition is: " + result.toString());
+     */
+    static addScalar(rhs, scalar) {
+        return new Vec4(rhs.x + scalar, rhs.y + scalar, rhs.z + scalar, rhs.w + scalar);
     }
 
     /**
@@ -186,6 +223,25 @@ class Vec4 {
     }
 
     /**
+     * Divides one 4-dimensional vector by another and returns the result.
+     *
+     * @param {Vec4} lhs - The dividend vector (the vector being divided).
+     * @param {Vec4} rhs - The divisor vector (the vector dividing the dividend).
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var a = new pc.Vec4(4, 9, 16, 25);
+     * var b = new pc.Vec4(2, 3, 4, 5);
+     *
+     * const r = pc.Vec4.div(a, b);
+     * // Outputs [2, 3, 4, 5]
+     *
+     * console.log("The result of the division is: " + r.toString());
+     */
+    static div(lhs, rhs) {
+        return new Vec4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
+    }
+
+    /**
      * Divides one 4-dimensional vector by another and writes the result to the specified vector.
      *
      * @param {Vec4} lhs - The dividend vector (the vector being divided).
@@ -230,6 +286,24 @@ class Vec4 {
         this.w /= scalar;
 
         return this;
+    }
+
+    /**
+     * Divides each element of a vector by a number.
+     *
+     * @param {Vec4} rhs - The vector to divide.
+     * @param {number} scalar - The number to divide by.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var vec = new pc.Vec4(3, 6, 9, 12);
+     *
+     * const result = pc.Vec4.divScalar(vec, 3);
+     *
+     * // Outputs [1, 2, 3, 4]
+     * console.log("The result of the division is: " + result.toString());
+     */
+    static divScalar(rhs, scalar) {
+        return new Vec4(rhs.x / scalar, rhs.y / scalar, rhs.z / scalar, rhs.w / scalar);
     }
 
     /**
@@ -318,6 +392,28 @@ class Vec4 {
     }
 
     /**
+     * Returns the result of a linear interpolation between two specified 4-dimensional vectors.
+     *
+     * @param {Vec4} lhs - The 4-dimensional to interpolate from.
+     * @param {Vec4} rhs - The 4-dimensional to interpolate to.
+     * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1,
+     * the linear interpolant will occur on a straight line between lhs and rhs. Outside of this
+     * range, the linear interpolant will occur on a ray extrapolated from this line.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var a = new pc.Vec4(0, 0, 0, 0);
+     * var b = new pc.Vec4(10, 10, 10, 10);
+     *
+     * var r;
+     * r = pc.Vec4.lerp(a, b, 0);   // r is equal to a
+     * r = pc.Vec4.lerp(a, b, 0.5); // r is 5, 5, 5, 5
+     * r = pc.Vec4.lerp(a, b, 1);   // r is equal to b
+     */
+    static lerp(lhs, rhs, alpha) {
+        return new Vec4(lhs.x + alpha * (rhs.x - lhs.x), lhs.y + alpha * (rhs.y - lhs.y), lhs.z + alpha * (rhs.z - lhs.z), lhs.w + alpha * (rhs.w - lhs.w));
+    }
+
+    /**
      * Multiplies a 4-dimensional vector to another in place.
      *
      * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
@@ -338,6 +434,25 @@ class Vec4 {
         this.w *= rhs.w;
 
         return this;
+    }
+
+    /**
+     * Returns the result of multiplying the specified 4-dimensional vectors together.
+     *
+     * @param {Vec4} lhs - The 4-dimensional vector used as the first multiplicand of the operation.
+     * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var a = new pc.Vec4(2, 3, 4, 5);
+     * var b = new pc.Vec4(4, 5, 6, 7);
+     *
+     * const r = pc.Vec4.mul(a, b);
+     *
+     * // Outputs 8, 15, 24, 35
+     * console.log("The result of the multiplication is: " + r.toString());
+     */
+    static mul(lhs, rhs) {
+        return new Vec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w);
     }
 
     /**
@@ -385,6 +500,24 @@ class Vec4 {
         this.w *= scalar;
 
         return this;
+    }
+
+    /**
+     * Multiplies each element of a vector by a number.
+     *
+     * @param {Vec4} rhs - The vector to multiply.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var vec = new pc.Vec4(3, 6, 9, 12);
+     *
+     * const result = pc.Vec4.mulScalar(vec, 3);
+     *
+     * // Outputs [9, 18, 27, 36]
+     * console.log("The result of the multiplication is: " + result.toString());
+     */
+    static mulScalar(rhs, scalar) {
+        return new Vec4(rhs.x * scalar, rhs.y * scalar, rhs.z * scalar, rhs.w * scalar);
     }
 
     /**
@@ -532,6 +665,25 @@ class Vec4 {
      *
      * @param {Vec4} lhs - The first vector operand for the subtraction.
      * @param {Vec4} rhs - The second vector operand for the subtraction.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var a = new pc.Vec4(10, 10, 10, 10);
+     * var b = new pc.Vec4(20, 20, 20, 20);
+     *
+     * const r = pc.Vec4.sub(a, b);
+     *
+     * // Outputs [-10, -10, -10, -10]
+     * console.log("The result of the subtraction is: " + r.toString());
+     */
+    static sub(lhs, rhs) {
+        return new Vec4(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w);
+    }
+
+    /**
+     * Subtracts two 4-dimensional vectors from one another and returns the result.
+     *
+     * @param {Vec4} lhs - The first vector operand for the subtraction.
+     * @param {Vec4} rhs - The second vector operand for the subtraction.
      * @returns {Vec4} Self for chaining.
      * @example
      * var a = new pc.Vec4(10, 10, 10, 10);
@@ -572,6 +724,24 @@ class Vec4 {
         this.w -= scalar;
 
         return this;
+    }
+
+    /**
+     * Subtracts a number from each element of a vector.
+     *
+     * @param {Vec4} rhs - The vector to get subtracted.
+     * @param {number} scalar - The number to subtract.
+     * @returns {Vec4} The resulting 4-dimensional vector.
+     * @example
+     * var vec = new pc.Vec4(3, 4, 5, 6);
+     *
+     * const result = pc.Vec4.subScalar(vec, 2);
+     *
+     * // Outputs [1, 2, 3, 4]
+     * console.log("The result of the subtraction is: " + result.toString());
+     */
+    static subScalar(rhs, scalar) {
+        return new Vec4(rhs.x - scalar, rhs.y - scalar, rhs.z - scalar, rhs.w - scalar);
     }
 
     /**
