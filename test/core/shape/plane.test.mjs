@@ -16,18 +16,30 @@ describe('Plane', function () {
         });
 
         it('supports arguments', function () {
-            const p = new Plane(Vec3.UP, new Vec3(1, 2, 3));
+            const p = new Plane(Vec3.UP, 5);
             expect(p.normal.x).to.equal(0);
             expect(p.normal.y).to.equal(1);
             expect(p.normal.z).to.equal(0);
-            expect(p.distance).to.equal(-2);
+            expect(p.distance).to.equal(5);
         });
+
+    });
+
+    describe('#setFromPointNormal', function () {
+
+        const p = new Plane();
+        p.setFromPointNormal(new Vec3(1, 2, 3), Vec3.UP);
+        expect(p.normal.x).to.equal(0);
+        expect(p.normal.y).to.equal(1);
+        expect(p.normal.z).to.equal(0);
+        expect(p.distance).to.equal(-2);
 
     });
 
     describe('#intersectsLine', function () {
 
-        const p = new Plane(Vec3.UP, new Vec3(0, 5, 0));
+        const p = new Plane();
+        p.setFromPointNormal(new Vec3(0, 5, 0), Vec3.UP);
         const intersection = new Vec3();
         const intersects = p.intersectsLine(new Vec3(1, 0, 3), new Vec3(1, 6, 3), intersection);
         expect(intersects).to.equal(true);

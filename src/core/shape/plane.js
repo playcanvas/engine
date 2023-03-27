@@ -14,7 +14,7 @@ class Plane {
     normal = new Vec3();
 
     /**
-     * The distance from the plan to the origin, along its normal.
+     * The distance from the plane to the origin, along its normal.
      *
      * @readonly
      * @type {number}
@@ -26,21 +26,22 @@ class Plane {
      *
      * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter. Defaults
      * to {@link pc.Vec3#UP}.
-     * @param {Vec3} [point] - Point position on the plane. The constructor copies this parameter.
-     * Defaults to {@link pc.Vec3#ZERO}.
+     * @param {Vec3} [distance] - The distance from the plane to the origin, along its normal.
+     * Defaults to 0.
      */
-    constructor(normal = Vec3.UP, point = Vec3.ZERO) {
-        this.set(normal, point);
+    constructor(normal = Vec3.UP, distance = 0) {
+        this.normal.copy(normal);
+        this.distance = distance;
     }
 
     /**
-     * Sets the plane to use a specified normal and pass through a specified point.
+     * Sets the plane based on  a specified normal and a point on a plane.
      *
-     * @param {Vec3} normal - The normal of the plane.
      * @param {Vec3} point - The point on a plane.
+     * @param {Vec3} normal - The normal of the plane.
      * @returns {Plane} Self for chaining.
      */
-    set(normal, point) {
+    setFromPointNormal(point, normal) {
         this.normal.copy(normal);
         this.distance = -this.normal.dot(point);
         return this;
