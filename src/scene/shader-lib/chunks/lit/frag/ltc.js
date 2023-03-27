@@ -144,7 +144,7 @@ void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 viewDir, vec3 specul
     dLTCSpecFres = getLTCLightSpecFres(dLTCUV, specularity); 
 
 #ifdef LIT_CLEARCOAT
-    ccLTCUV = getLTCLightUV(clearcoatGloss, clearcoatWorldNormal);
+    ccLTCUV = getLTCLightUV(clearcoatGloss, clearcoatWorldNormal, viewDir);
     ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(clearcoatSpecularity));
 #endif
 }
