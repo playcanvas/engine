@@ -642,7 +642,7 @@ void addClusteredLights(
     // skip lights if no lights at all
     if (clusterSkip > 0.5)
         return;
-        
+
     // world space position to 3d integer cell cordinates in the cluster structure
     vec3 cellCoords = floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize);
 
