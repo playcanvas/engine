@@ -37,7 +37,7 @@ class Plane {
     /**
      * Sets the plane based on a specified normal and a point on the plane.
      *
-     * @param {Vec3} point - The point on a plane.
+     * @param {Vec3} point - The point on the plane.
      * @param {Vec3} normal - The normal of the plane.
      * @returns {Plane} Self for chaining.
      */
