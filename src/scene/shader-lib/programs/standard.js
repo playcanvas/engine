@@ -388,11 +388,9 @@ const standard = {
             }
 
             if (options.litOptions.useIridescence) {
-                decl.append("vec3 dIridescenceFresnel;");
                 decl.append("float dIridescence;");
                 code.append(this._addMap("iridescence", "iridescencePS", options, litShader.chunks, textureMapping));
                 func.append("getIridescence();");
-                args.append("_litShaderArgs.iridescence.fresnel = dIridescenceFresnel;");
                 args.append("_litShaderArgs.iridescence.intensity = dIridescence;");
 
                 decl.append("float dIridescenceThickness;");

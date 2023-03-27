@@ -330,6 +330,9 @@ void evaluateLight(
     vec3 specularity, 
     vec3 geometricNormal, 
     mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
     ClearcoatArgs clearcoat, 
     SheenArgs sheen, 
     IridescenceArgs iridescence
@@ -560,7 +563,17 @@ void evaluateLight(
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, viewDir, worldNormal, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnel(dot(viewDir, halfDir), gloss, specularity, iridescence);
+                    dSpecularLight += 
+                        getLightSpecular(halfDir, reflectionDir, viewDir, worldNormal, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
+                        getFresnel(
+                            dot(viewDir, halfDir), 
+                            gloss, 
+                            specularity
+                        #if defined(LIT_IRIDESCENCE)
+                            , iridescenceFresnel,
+                            iridescence
+                        #endif
+                            );
                 #else
                     dSpecularLight += getLightSpecular(halfDir, reflectionDir, viewDir, worldNormal, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
                 #endif
@@ -594,6 +607,9 @@ void evaluateClusterLight(
     vec3 specularity, 
     vec3 geometricNormal, 
     mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
     ClearcoatArgs clearcoat, 
     SheenArgs sheen, 
     IridescenceArgs iridescence
@@ -617,6 +633,9 @@ void evaluateClusterLight(
             specularity, 
             geometricNormal, 
             tbn, 
+#if defined(LIT_IRIDESCENCE)
+            iridescenceFresnel,
+#endif
             clearcoat, 
             sheen, 
             iridescence
@@ -634,6 +653,9 @@ void addClusteredLights(
     vec3 specularity, 
     vec3 geometricNormal, 
     mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
     ClearcoatArgs clearcoat, 
     SheenArgs sheen, 
     IridescenceArgs iridescence
@@ -679,6 +701,9 @@ void addClusteredLights(
                     specularity, 
                     geometricNormal, 
                     tbn, 
+#if defined(LIT_IRIDESCENCE)
+                    iridescenceFresnel,
+#endif
                     clearcoat, 
                     sheen, 
                     iridescence
@@ -710,6 +735,9 @@ void addClusteredLights(
                     specularity, 
                     geometricNormal, 
                     tbn, 
+#if defined(LIT_IRIDESCENCE)
+                    iridescenceFresnel,
+#endif
                     clearcoat, 
                     sheen, 
                     iridescence

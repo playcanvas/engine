@@ -2,9 +2,6 @@ export default /* glsl */`
 
 struct IridescenceArgs
 {
-    // The color of the fresnel effect, set by the backend
-    vec3 fresnel;
-
     // Iridescence effect intensity, range [0..1]
     float intensity;
 
@@ -26,7 +23,7 @@ struct ClearcoatArgs
 
 struct SheenArgs
 {
-    /// Glossiness of the sheen layer, range [0..1]
+    // Glossiness of the sheen layer, range [0..1]
     float gloss;
 
     // The color of the f0 specularity factor for the sheen layer

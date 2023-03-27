@@ -8,7 +8,20 @@ vec3 refract2(vec3 viewVec, vec3 normal, vec3 viewDir, float IOR) {
     return refrVec;
 }
 
-void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, inout opacity, IridescenceArgs iridescence) {
+void addRefraction(
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    float thickness, 
+    float gloss, 
+    vec3 specularity, 
+    vec3 albedo, 
+    float transmission, 
+    inout opacity
+#if defined(LIT_IRIDESCENCE)
+    , vec3 iridescenceFresnel,
+    IridescenceArgs iridescence
+#endif 
+) {
     // use same reflection code with refraction vector
     vec4 tmpRefl = dReflection;
     vec3 reflectionDir = refract2(-viewDir, worldNormal, material_refractionIndex);

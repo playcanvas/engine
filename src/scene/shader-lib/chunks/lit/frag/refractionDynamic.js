@@ -10,7 +10,19 @@ vec3 refract2(vec3 viewVec, vec3 normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss, vec3 specularity, vec3 albedo, float transmission, IridescenceArgs iridescence) {
+void addRefraction(
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    float thickness, 
+    float gloss, 
+    vec3 specularity, 
+    vec3 albedo, 
+    float transmission
+#if defined(LIT_IRIDESCENCE)
+    , vec3 iridescenceFresnel,
+    IridescenceArgs iridescence
+#endif
+) {
 
     // Extract scale from the model transform
     vec3 modelScale;
@@ -52,7 +64,16 @@ void addRefraction(vec3 worldNormal, vec3 viewDir, float thickness, float gloss,
     }
 
     // Apply fresnel effect on refraction
-    vec3 fresnel = vec3(1.0) - getFresnel(dot(viewDir, worldNormal), gloss, specularity, iridescence);
+    vec3 fresnel = vec3(1.0) - 
+        getFresnel(
+            dot(viewDir, worldNormal), 
+            gloss, 
+            specularity
+        #if defined(LIT_IRIDESCENCE)
+            , iridescenceFresnel,
+            iridescence
+        #endif
+        );
     dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
 }
 `;

@@ -1026,7 +1026,7 @@ class LitShader {
             }
 
             if (options.useIridescence) {
-                backend.append("    getIridescence(saturate(dot(dViewDirW, litShaderArgs.worldNormal)), litShaderArgs.specularity, litShaderArgs.iridescence);");
+                backend.append("    vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litShaderArgs.worldNormal)), litShaderArgs.specularity, litShaderArgs.iridescence);");
             }
         }
 
@@ -1080,7 +1080,16 @@ class LitShader {
                 backend.append("    addReflection(dReflDirW, litShaderArgs.gloss);");
 
                 if (options.fresnelModel > 0) {
-                    backend.append("    dReflection.rgb *= getFresnel(dot(dViewDirW, litShaderArgs.worldNormal), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);");
+                    backend.append(`    dReflection.rgb *= 
+                        getFresnel(
+                            dot(dViewDirW, litShaderArgs.worldNormal), 
+                            litShaderArgs.gloss, 
+                            litShaderArgs.specularity
+                        #if defined(LIT_IRIDESCENCE)
+                            , iridescenceFresnel,
+                            litShaderArgs.iridescence
+                        #endif
+                            );`);
                 } else {
                     backend.append("    dReflection.rgb *= litShaderArgs.specularity;");
                 }
@@ -1273,18 +1282,27 @@ class LitShader {
 
                     // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
                     if (options.useClearCoat) {
-                        backend.append("    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, litShaderArgs.clearcoat.gloss, dTBN) * dAtten * light" + i + "_color" +
+                        backend.append(`    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, litShaderArgs.clearcoat.gloss, dTBN) * dAtten * light${i}_color` +
                             (usesCookieNow ? " * dAtten3" : "") +
                             (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
                     }
                     if (options.useSheen) {
-                        backend.append("    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.sheen.gloss) * dAtten * light" + i + "_color" +
+                        backend.append(`    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.sheen.gloss) * dAtten * light${i}_color` +
                             (usesCookieNow ? " * dAtten3;" : ";"));
                     }
                     if (options.useSpecular) {
-                        backend.append("    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, dTBN) * dAtten * light" + i + "_color" +
+                        backend.append(`    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, litShaderArgs.gloss, dTBN) * dAtten * light${i}_color` +
                             (usesCookieNow ? " * dAtten3" : "") +
-                            (calcFresnel ? " * getFresnel(dot(dViewDirW, dHalfDirW), litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.iridescence);" : "* litShaderArgs.specularity;"));
+                            (calcFresnel ? ` 
+                                * getFresnel(
+                                    dot(dViewDirW, dHalfDirW), 
+                                    litShaderArgs.gloss, 
+                                    litShaderArgs.specularity
+                                #if defined(LIT_IRIDESCENCE)
+                                    , iridescenceFresnel, 
+                                    litShaderArgs.iridescence
+                                #endif
+                                );` : `* litShaderArgs.specularity;`));
                     }
                 }
 
@@ -1309,6 +1327,9 @@ class LitShader {
                                         litShaderArgs.specularity, 
                                         dVertexNormalW, 
                                         dTBN, 
+                                #if defined(LIT_IRIDESCENCE)
+                                        iridescenceFresnel,
+                                #endif
                                         litShaderArgs.clearcoat, 
                                         litShaderArgs.sheen, 
                                         litShaderArgs.iridescence
@@ -1326,7 +1347,19 @@ class LitShader {
             }
 
             if (options.useRefraction) {
-                backend.append("    addRefraction(litShaderArgs.worldNormal, dViewDirW, litShaderArgs.thickness, litShaderArgs.gloss, litShaderArgs.specularity, litShaderArgs.albedo, litShaderArgs.transmission, litShaderArgs.iridescence);");
+                backend.append(`    addRefraction(
+                        litShaderArgs.worldNormal, 
+                        dViewDirW, 
+                        litShaderArgs.thickness, 
+                        litShaderArgs.gloss, 
+                        litShaderArgs.specularity, 
+                        litShaderArgs.albedo, 
+                        litShaderArgs.transmission
+                    #if defined(LIT_IRIDESCENCE)
+                        , iridescenceFresnel, 
+                        litShaderArgs.iridescence
+                    #endif
+                    );`);
             }
         }
 
