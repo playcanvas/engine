@@ -144,6 +144,7 @@ class Renderer {
 
         this.exposureId = scope.resolve('exposure');
         this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
+        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphWeightsA = scope.resolve('morph_weights_a');
         this.morphWeightsB = scope.resolve('morph_weights_b');
