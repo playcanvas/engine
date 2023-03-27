@@ -782,16 +782,15 @@ class Mat4 {
      * Sets the matrix to a reflection matrix, which can be used as a mirror transformation by the
      * plane.
      *
-     * @param {import('./plane.js').Plane} plane - The plane to reflect by.
+     * @param {Vec3} normal - The normal of the plane to reflect by.
+     * @param {number} distance - The distance of plane to reflect by.
      * @returns {Mat4} Self for chaining.
      */
-    setReflection(plane) {
+    setReflection(normal, distance) {
 
-        const normal = plane.normal;
         const a = normal.x;
         const b = normal.y;
         const c = normal.z;
-        const d = plane.distance;
         const data = this.data;
 
         data[0] = 1.0 - 2 * a * a;
@@ -806,9 +805,9 @@ class Mat4 {
         data[9] = -2 * b * c;
         data[10] = 1.0 - 2 * c * c;
         data[11] = 0;
-        data[12] = -2 * a * d;
-        data[13] = -2 * b * d;
-        data[14] = -2 * c * d;
+        data[12] = -2 * a * distance;
+        data[13] = -2 * b * distance;
+        data[14] = -2 * c * distance;
         data[15] = 1;
 
         return this;
