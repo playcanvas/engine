@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
