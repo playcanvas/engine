@@ -1,9 +1,9 @@
 export default /* glsl */`
 // Energy-conserving (hopefully) Blinn-Phong
-float calcLightSpecular(float tGlossiness, vec3 tNormalW, vec3 h) {
-    float nh = max( dot( h, tNormalW ), 0.0 );
+float calcLightSpecular(float gloss, vec3 worldNormal, vec3 h) {
+    float nh = max( dot( h, worldNormal ), 0.0 );
 
-    float specPow = exp2(tGlossiness * 11.0); // glossiness is linear, power is not; 0 - 2048
+    float specPow = exp2(gloss * 11.0); // glossiness is linear, power is not; 0 - 2048
 
     // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
     specPow = max(specPow, 0.0001);

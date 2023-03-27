@@ -115,10 +115,10 @@ vec2 dLTCUV;
 #ifdef LIT_CLEARCOAT
 vec2 ccLTCUV;
 #endif
-vec2 getLTCLightUV(float tGlossiness, vec3 tNormalW, vec3 viewDir)
+vec2 getLTCLightUV(float gloss, vec3 worldNormal, vec3 viewDir)
 {
-    float roughness = max((1.0 - tGlossiness) * (1.0 - tGlossiness), 0.001);
-    return LTC_Uv( tNormalW, viewDir, roughness );
+    float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
+    return LTC_Uv( worldNormal, viewDir, roughness );
 }
 
 //used for energy conservation and to modulate specular
@@ -126,7 +126,7 @@ vec3 dLTCSpecFres;
 #ifdef LIT_CLEARCOAT
 vec3 ccLTCSpecFres;
 #endif
-vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
+vec3 getLTCLightSpecFres(vec2 uv, vec3 specularity)
 {
     vec4 t2 = texture2DLodEXT(areaLightsLutTex2, uv, 0.0);
 
@@ -135,7 +135,7 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 tSpecularity)
     t2 += vec4(0.306897,0,0,0);
     #endif
 
-    return tSpecularity * t2.x + ( vec3( 1.0 ) - tSpecularity) * t2.y;
+    return specularity * t2.x + ( vec3( 1.0 ) - specularity) * t2.y;
 }
 
 void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 viewDir, vec3 specularity, float clearcoatGloss, vec3 clearcoatWorldNormal, float clearcoatSpecularity)
@@ -401,18 +401,18 @@ mat3 getLTCLightInvMat(vec2 uv)
     );
 }
 
-float calcRectLightSpecular(vec3 tNormalW, vec3 viewDir, vec2 uv) {
+float calcRectLightSpecular(vec3 worldNormal, vec3 viewDir, vec2 uv) {
     mat3 mInv = getLTCLightInvMat(uv);
-    return LTC_EvaluateRect( tNormalW, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
 }
 
 float getRectLightSpecular(vec3 worldNormal, vec3 viewDir) {
     return calcRectLightSpecular(worldNormal, viewDir, dLTCUV);
 }
 
-float calcDiskLightSpecular(vec3 tNormalW, vec3 viewDir, vec2 uv) {
+float calcDiskLightSpecular(vec3 worldNormal, vec3 viewDir, vec2 uv) {
     mat3 mInv = getLTCLightInvMat(uv);
-    return LTC_EvaluateDisk( tNormalW, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
 }
 
 float getDiskLightSpecular(vec3 worldNormal, vec3 viewDir) {

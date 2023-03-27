@@ -21,12 +21,12 @@ float shinyMipLevel(vec2 uv) {
     return clamp(0.5 * log2(maxd) - 1.0 + textureBias, 0.0, 5.0);
 }
 
-vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
+vec3 calcReflection(vec3 reflDir, float gloss) {
+    vec3 dir = cubeMapProject(reflDir) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
     // calculate roughness level
-    float level = saturate(1.0 - tGlossiness) * 5.0;
+    float level = saturate(1.0 - gloss) * 5.0;
     float ilevel = floor(level);
 
     // accessing the shiny (top level) reflection - perform manual mipmap lookup
