@@ -24,7 +24,7 @@ void addLightMap(
         dDiffuseLight += lightmap * nlight * 2.0;
 
         vec3 halfDirW = normalize(-dir + viewDir);
-        vec3 specularLight = lightmap * getLightSpecular(halfDirW, reflectionDir, viewDir, worldNormal, gloss);
+        vec3 specularLight = lightmap * getLightSpecular(halfDirW, reflectionDir, worldNormal, viewDir, gloss);
 
 #ifdef LIT_SPECULAR_FRESNEL
         specularLight *= 
