@@ -593,6 +593,8 @@ void evaluateLight(
             #endif
         }
     }
+
+    // Write to global attenuation values (for lightmapper)
     dAtten = falloffAttenuation;
     dAttenD = diffuseAttenuation;
     dAtten3 = cookieAttenuation;
