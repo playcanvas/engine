@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
@@ -167,6 +167,8 @@ class RenderTarget {
 
             this.destroyFrameBuffers();
         }
+
+        DebugHelper.setDestroyed(this);
     }
 
     /**
@@ -206,6 +208,7 @@ class RenderTarget {
      * @ignore
      */
     init() {
+        Debug.assertDestroyed(this);
         this.impl.init(this._device, this);
     }
 
