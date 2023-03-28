@@ -43,7 +43,7 @@ class JobQueue {
                             this.workers[0].push(worker);
                         } else {
                             // logical error
-                            console.log('logical error');
+                            Debug.error('logical error');
                         }
                     }
                 }
@@ -72,7 +72,7 @@ class JobQueue {
     }
 };
 
-const defaultNumWorkers = 4;
+const defaultNumWorkers = 1;
 
 let jobQueue;
 let lazyConfig;
@@ -90,12 +90,14 @@ const initializeWorkers = (config) => {
             if (moduleConfig) {
                 config = {
                     jsUrl: moduleConfig.glueUrl,
-                    wasmUrl: moduleConfig.wasmUrl
+                    wasmUrl: moduleConfig.wasmUrl,
+                    numWorkers: moduleConfig.numWorkers
                 };
             } else {
                 config = {
                     jsUrl: 'draco.wasm.js',
-                    wasmUrl: 'draco.wasm.wasm'
+                    wasmUrl: 'draco.wasm.wasm',
+                    numWorkers: defaultNumWorkers
                 };
             }
         }
@@ -110,7 +112,6 @@ const initializeWorkers = (config) => {
         return ABSOLUTE_URL.test(url) ? url : new URL(window.location.href).origin + url;
     };
 
-    const urlBase = window.ASSET_PREFIX || '';
     const jsUrl = absoluteUrl(config.jsUrl);
     const wasmUrl = absoluteUrl(config.wasmUrl);
 
@@ -127,6 +128,14 @@ const initializeWorkers = (config) => {
     return true;
 };
 
+/**
+ * Initialize the Draco mesh decoder.
+ *
+ * @param {object} [config] - The Draco decoder configuration.
+ * @param {string} [config.jsUrl] - URL of glue script.
+ * @param {string} [config.wasmUrl] - URL of the wasm module.
+ * @param {number} [config.numWorkers] - Number of workers to use for decoding (default is 1).
+ */
 const dracoInitialize = (config) => {
     if (config.lazyInit) {
         lazyConfig = config;
@@ -135,6 +144,14 @@ const dracoInitialize = (config) => {
     }
 };
 
+/**
+ * Enqueue a buffer for decoding.
+ *
+ * @param {ArrayBuffer} buffer - The draco data to decode.
+ * @param {Function} callback - Callback function to receive decoded result.
+ * @returns {boolean} True if the draco worker was initialized and false otherwise.
+ * @ignore
+ */
 const dracoDecode = (buffer, callback) => {
     if (!initializeWorkers()) {
         return false;
