@@ -7,7 +7,6 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_55,
     CHUNKAPI_1_62,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
