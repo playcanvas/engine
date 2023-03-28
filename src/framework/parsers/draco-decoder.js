@@ -135,6 +135,8 @@ const initializeWorkers = (config) => {
  * @param {string} [config.jsUrl] - URL of glue script.
  * @param {string} [config.wasmUrl] - URL of the wasm module.
  * @param {number} [config.numWorkers] - Number of workers to use for decoding (default is 1).
+ * @param {boolean} [config.lazyConfig] - Wait for first decode request before initializing workers
+ * (default is false). Otherwise initialize workers immediately.
  */
 const dracoInitialize = (config) => {
     if (config.lazyInit) {
