@@ -8,15 +8,15 @@ float sheenD(vec3 normal, vec3 h, float roughness) {
     return (2.0 + invR) * pow(sin2h, invR * 0.5) / (2.0 * PI);
 }
 
-float sheenV(vec3 normal, vec3 view, vec3 light) {
-    float NoV = max(dot(normal, view), 0.000001);
+float sheenV(vec3 normal, vec3 viewDir, vec3 light) {
+    float NoV = max(dot(normal, viewDir), 0.000001);
     float NoL = max(dot(normal, light), 0.000001);
     return 1.0 / (4.0 * (NoL + NoV - NoL * NoV));
 }
 
-float getLightSpecularSheen(vec3 h) {
-    float D = sheenD(dNormalW, h, sGlossiness);
-    float V = sheenV(dNormalW, dViewDirW, -dLightDirNormW);
+float getLightSpecularSheen(vec3 h, vec3 worldNormal, vec3 viewDir, vec3 lightDirNorm, float sheenGloss) {
+    float D = sheenD(worldNormal, h, sheenGloss);
+    float V = sheenV(worldNormal, viewDir, -lightDirNorm);
     return D * V;
 }
 `;

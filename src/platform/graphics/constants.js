@@ -1289,3 +1289,4 @@ export const CHUNKAPI_1_56 = '1.56';
 export const CHUNKAPI_1_57 = '1.57';
 export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';

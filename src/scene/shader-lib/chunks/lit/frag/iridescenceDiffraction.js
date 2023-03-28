@@ -51,9 +51,9 @@ vec3 iridescence_fresnel(float cosTheta, vec3 f0) {
     return f0 + (vec3(1.0) - f0) * x5;
 }
 
-vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
+vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0, float iridescenceThickness) {
 
-    float iridescenceIor = mix(outsideIor, material_iridescenceRefractionIndex, smoothstep(0.0, 0.03, dIridescenceThickness));
+    float iridescenceIor = mix(outsideIor, material_iridescenceRefractionIndex, smoothstep(0.0, 0.03, iridescenceThickness));
     float sinTheta2Sq = pow(outsideIor / iridescenceIor, 2.0) * (1.0 - pow(cosTheta, 2.0));
     float cosTheta2Sq = 1.0 - sinTheta2Sq;
 
@@ -79,7 +79,7 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
     if (baseIor[0] < iridescenceIor) phi23[0] = PI;
     if (baseIor[1] < iridescenceIor) phi23[1] = PI;
     if (baseIor[2] < iridescenceIor) phi23[2] = PI;
-    float opd = 2.0 * iridescenceIor * dIridescenceThickness * cosTheta2;
+    float opd = 2.0 * iridescenceIor * iridescenceThickness * cosTheta2;
     vec3 phi = vec3(phi21) + phi23; 
 
     vec3 r123Sq = clamp(r12 * r23, 1e-5, 0.9999);
@@ -98,7 +98,7 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0) {
     return max(i, vec3(0.0));
 }
 
-void getIridescence(float cosTheta) {
-    dIridescenceFresnel = calcIridescence(1.0, cosTheta, dSpecularity);
+vec3 getIridescence(float cosTheta, vec3 specularity, inout IridescenceArgs iridescence) {
+    return calcIridescence(1.0, cosTheta, specularity, iridescence.thickness);
 }
 `;

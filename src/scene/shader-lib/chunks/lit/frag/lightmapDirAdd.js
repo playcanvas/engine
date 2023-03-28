@@ -1,22 +1,42 @@
 export default /* glsl */`
-void addLightMap() {
-    if (dot(dLightmapDir, dLightmapDir) < 0.0001) {
-        dDiffuseLight += dLightmap;
+void addLightMap(
+    vec3 lightmap, 
+    vec3 dir, 
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    vec3 reflectionDir, 
+    float gloss, 
+    vec3 specularity, 
+    inout vec3 lightDirNorm, 
+    vec3 vertexNormal, 
+    vec3 iridescenceFresnel, 
+    IridescenceArgs iridescence
+) {
+    if (dot(dir, dir) < 0.0001) {
+        dDiffuseLight += lightmap;
     } else {
-        dLightDirNormW = dLightmapDir;
+        lightDirNorm = dir;
 
-        float vlight = saturate(dot(dLightDirNormW, -dVertexNormalW));
-        float flight = saturate(dot(dLightDirNormW, -dNormalW));
+        float vlight = saturate(dot(lightDirNorm, -vertexNormal));
+        float flight = saturate(dot(lightDirNorm, -worldNormal));
         float nlight = (flight / max(vlight, 0.01)) * 0.5;
 
-        dDiffuseLight += dLightmap * nlight * 2.0;
+        dDiffuseLight += lightmap * nlight * 2.0;
 
-        vec3 halfDirW = normalize(-dLightmapDir + dViewDirW);
-        vec3 specularLight = dLightmap * getLightSpecular(halfDirW);
+        vec3 halfDirW = normalize(-dir + viewDir);
+        vec3 specularLight = lightmap * getLightSpecular(halfDirW, reflectionDir, worldNormal, viewDir, gloss);
 
-        #ifdef LIT_SPECULAR_FRESNEL
-        specularLight *= getFresnel(dot(dViewDirW, halfDirW), dSpecularity);
-        #endif
+#ifdef LIT_SPECULAR_FRESNEL
+        specularLight *= 
+            getFresnel(dot(viewDir, halfDirW), 
+            gloss, 
+            specularity
+            #if defined(LIT_IRIDESCENCE)
+            , iridescenceFresnel,
+            iridescence
+            #endif
+            );
+#endif
 
         dSpecularLight += specularLight;
     }
