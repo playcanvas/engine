@@ -101,7 +101,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)
 
-    float getShadowSpotClusteredPCF1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
         return textureShadow(shadowMap, shadowCoord);
     }
 
@@ -109,7 +109,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
-    float getShadowSpotClusteredPCF3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
         return getShadowSpotPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
     }
 
@@ -117,7 +117,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF5)
 
-    float getShadowSpotClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
         return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
     }
     #endif
@@ -126,7 +126,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)
 
-    float getShadowSpotClusteredPCF1(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF1(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
 
         float depth = unpackFloat(textureShadow(shadowMap, shadowCoord.xy));
 
@@ -138,7 +138,7 @@ export default /* glsl */`
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF3)
 
-    float getShadowSpotClusteredPCF3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
         return getShadowSpotPCF3x3(shadowMap, shadowCoord, shadowParams);
     }
 
@@ -147,7 +147,7 @@ export default /* glsl */`
     #if defined(CLUSTER_SHADOW_TYPE_PCF5)
 
     // we don't have PCF5 implementation for webgl1, use PCF3
-    float getShadowSpotClusteredPCF5(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
+    float getShadowSpotClusteredPCF5(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
         return getShadowSpotPCF3x3(shadowMap, shadowCoord, shadowParams);
     }
 
