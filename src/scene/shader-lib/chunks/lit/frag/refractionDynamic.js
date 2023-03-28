@@ -3,13 +3,6 @@ uniform float material_refractionIndex;
 uniform float material_invAttenuationDistance;
 uniform vec3 material_attenuation;
 
-vec3 refract2(vec3 viewVec, vec3 normal, float IOR) {
-    float vn = dot(viewVec, normal);
-    float k = 1.0 - IOR * IOR * (1.0 - vn * vn);
-    vec3 refrVec = IOR * viewVec - (IOR * vn + sqrt(k)) * normal;
-    return refrVec;
-}
-
 void addRefraction(
     vec3 worldNormal, 
     vec3 viewDir, 
