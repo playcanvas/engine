@@ -593,6 +593,9 @@ void evaluateLight(
             #endif
         }
     }
+    dAtten = falloffAttenuation;
+    dAttenD = diffuseAttenuation;
+    dAtten3 = cookieAttenuation;
 }
 
 void evaluateClusterLight(
