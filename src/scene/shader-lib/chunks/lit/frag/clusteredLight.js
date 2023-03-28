@@ -564,7 +564,7 @@ void evaluateLight(
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
                     dSpecularLight += 
-                        getLightSpecular(halfDir, reflectionDir, viewDir, worldNormal, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
+                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
                         getFresnel(
                             dot(viewDir, halfDir), 
                             gloss, 
@@ -575,14 +575,14 @@ void evaluateLight(
                         #endif
                             );
                 #else
-                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, viewDir, worldNormal, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
+                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, viewDir, clearcoat.worldNormal, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, viewDir, clearcoat.worldNormal, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
                     #endif
                 #endif
 
