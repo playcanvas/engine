@@ -147,6 +147,11 @@ class WasmModule {
         }
     }
 
+    /**
+     * Get a wasm module's configuration.
+     * 
+     * @returns {object | undefined} The previously set configuration.
+     */
     static getConfig(moduleName) {
         return Impl.modules?.[moduleName]?.config;
     }

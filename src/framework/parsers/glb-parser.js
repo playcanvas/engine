@@ -760,7 +760,11 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
 };
 
 const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises) => {
-    // create vertex buffer
+    // create the mesh
+    const result = new Mesh(device);
+    result.aabb = getAccessorBoundingBox(accessors[primitive.attributes.POSITION]);
+
+    // create vertex description
     const vertexDesc = [];
     for (const [name, index] of Object.entries(primitive.attributes)) {
         const accessor = accessors[index];
@@ -788,23 +792,37 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
         return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
     });
 
-    const numVertices = accessors[primitive.attributes.POSITION].count;
     const vertexFormat = new VertexFormat(device, vertexDesc);
-    const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC);
 
-    // create index buffer
-    const numIndices = accessors[primitive.indices].count;
-    const indexBuffer = new IndexBuffer(device, numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32, numIndices, BUFFER_STATIC);
+    promises.push(new Promise((resolve, reject) => {
+        // decode draco data
+        const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
+        dracoDecode(bufferViews[dracoExt.bufferView].slice().buffer, (err, decompressedData) => {
+            if (err) {
+                console.log(err);
+                reject(err);
+            } else {
+                // create vertex buffer
+                const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
+                Debug.assert(numVertices === accessors[primitive.attributes.POSITION].count, 'mesh has invalid draco sizes');
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
 
-    // create the mesh
-    const result = new Mesh(device);
-    result.vertexBuffer = vertexBuffer;
-    result.indexBuffer[0] = indexBuffer;
-    result.primitive[0].type = getPrimitiveType(primitive);
-    result.primitive[0].base = 0;
-    result.primitive[0].count = indexBuffer ? numIndices : numVertices;
-    result.primitive[0].indexed = !!indexBuffer;
-    result.aabb = getAccessorBoundingBox(accessors[primitive.attributes.POSITION]);
+                // create index buffer
+                const numIndices = accessors[primitive.indices].count;
+                const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
+                const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
+
+                result.vertexBuffer = vertexBuffer;
+                result.indexBuffer[0] = indexBuffer;
+                result.primitive[0].type = getPrimitiveType(primitive);
+                result.primitive[0].base = 0;
+                result.primitive[0].count = indexBuffer ? numIndices : numVertices;
+                result.primitive[0].indexed = !!indexBuffer;
+
+                resolve();
+            }            
+        });
+    }));
 
     // handle material variants
     if (primitive?.extensions?.KHR_materials_variants) {
@@ -818,22 +836,6 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
         meshVariants[result.id] = tempMapping;
     }
     meshDefaultMaterials[result.id] = primitive.material;
-
-    promises.push(new Promise((resolve, reject) => {
-        // decode draco data
-        const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
-        dracoDecode(bufferViews[dracoExt.bufferView].slice().buffer, (err, result) => {
-            if (err) {
-                console.log(err);
-                reject(err);
-            } else {
-                // copy index buffer data
-                indexBuffer.setData(result.indices);
-                vertexBuffer.setData(result.vertices);
-                resolve();
-            }            
-        });
-    }));
 
     return result;
 };
@@ -2019,37 +2021,38 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const promises = [];
     const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises);
 
+    const skins = createSkins(device, gltf, nodes, bufferViews);
+
+    // create renders to wrap meshes
+    const renders = [];
+    for (let i = 0; i < meshes.length; i++) {
+        renders[i] = new Render();
+        renders[i].meshes = meshes[i];
+    }
+
+    // link skins to meshes
+    linkSkins(gltf, renders, skins);
+
+    const result = new GlbResources(gltf);
+    result.nodes = nodes;
+    result.scenes = scenes;
+    result.animations = animations;
+    result.textures = textureAssets;
+    result.materials = materials;
+    result.variants = variants;
+    result.meshVariants = meshVariants;
+    result.meshDefaultMaterials = meshDefaultMaterials;
+    result.renders = renders;
+    result.skins = skins;
+    result.lights = lights;
+    result.cameras = cameras;
+
+    if (postprocess) {
+        postprocess(gltf, result);
+    }
+
+    // wait for all promises to complete before returning
     Promise.all(promises).then(() => {
-        const skins = createSkins(device, gltf, nodes, bufferViews);
-
-        // create renders to wrap meshes
-        const renders = [];
-        for (let i = 0; i < meshes.length; i++) {
-            renders[i] = new Render();
-            renders[i].meshes = meshes[i];
-        }
-
-        // link skins to meshes
-        linkSkins(gltf, renders, skins);
-
-        const result = new GlbResources(gltf);
-        result.nodes = nodes;
-        result.scenes = scenes;
-        result.animations = animations;
-        result.textures = textureAssets;
-        result.materials = materials;
-        result.variants = variants;
-        result.meshVariants = meshVariants;
-        result.meshDefaultMaterials = meshDefaultMaterials;
-        result.renders = renders;
-        result.skins = skins;
-        result.lights = lights;
-        result.cameras = cameras;
-
-        if (postprocess) {
-            postprocess(gltf, result);
-        }
-
         callback(null, result);
     });
 };
