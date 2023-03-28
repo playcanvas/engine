@@ -135,6 +135,8 @@ class WasmModule {
      * @param {string} [config.wasmUrl] - URL of the wasm script.
      * @param {string} [config.fallbackUrl] - URL of the fallback script to use when wasm modules
      * aren't supported.
+     * @param {number} [config.numWorkers] - For modules running on worker threads, the number of
+     * threads to use.
      * @param {ModuleErrorCallback} [config.errorHandler] - Function to be called if the module fails
      * to download.
      */
