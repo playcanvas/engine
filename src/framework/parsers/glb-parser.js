@@ -1,6 +1,5 @@
 import { Debug } from '../../core/debug.js';
 import { path } from '../../core/path.js';
-import { WasmModule } from '../../core/wasm-module.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
@@ -51,13 +50,6 @@ import { GlbContainerResource } from './glb-container-resource.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
-
-// instance of the draco decoder
-let dracoDecoderInstance = null;
-
-const getGlobalDracoDecoderModule = () => {
-    return typeof window !== 'undefined' && window.DracoDecoderModule;
-};
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -2345,15 +2337,7 @@ const parseGltf = function (gltfChunk, callback) {
     }
 
     // check required extensions
-    const extensionsUsed = gltf?.extensionsUsed || [];
-    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
-        WasmModule.getInstance('DracoDecoderModule', (instance) => {
-            dracoDecoderInstance = instance;
-            callback(null, gltf);
-        });
-    } else {
-        callback(null, gltf);
-    }
+    callback(null, gltf);
 };
 
 // parse glb data, returns the gltf and binary chunk
