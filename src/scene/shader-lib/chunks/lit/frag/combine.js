@@ -1,10 +1,10 @@
 export default /* glsl */`
-vec3 combineColor() {
+vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity) {
     vec3 ret = vec3(0);
 #ifdef LIT_OLD_AMBIENT
-    ret += (dDiffuseLight - light_globalAmbient) * dAlbedo + material_ambient * light_globalAmbient;
+    ret += (dDiffuseLight - light_globalAmbient) * albedo + material_ambient * light_globalAmbient;
 #else
-    ret += dAlbedo * dDiffuseLight;
+    ret += albedo * dDiffuseLight;
 #endif
 #ifdef LIT_SPECULAR
     ret += dSpecularLight;
@@ -14,12 +14,12 @@ vec3 combineColor() {
 #endif
 
 #ifdef LIT_SHEEN
-    float sheenScaling = 1.0 - max(max(sSpecularity.r, sSpecularity.g), sSpecularity.b) * 0.157;
-    ret = ret * sheenScaling + (sSpecularLight + sReflection.rgb) * sSpecularity;
+    float sheenScaling = 1.0 - max(max(sheenSpecularity.r, sheenSpecularity.g), sheenSpecularity.b) * 0.157;
+    ret = ret * sheenScaling + (sSpecularLight + sReflection.rgb) * sheenSpecularity;
 #endif
 #ifdef LIT_CLEARCOAT
-    float clearCoatScaling = 1.0 - ccFresnel * ccSpecularity;
-    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * ccSpecularity;
+    float clearCoatScaling = 1.0 - ccFresnel * clearcoatSpecularity;
+    ret = ret * clearCoatScaling + (ccSpecularLight + ccReflection.rgb) * clearcoatSpecularity;
 #endif
 
     return ret;

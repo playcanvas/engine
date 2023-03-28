@@ -1,3 +1,3 @@
 export default /* glsl */`
-gl_FragColor.a = dAlpha;
+gl_FragColor.a = litShaderArgs.opacity;
 `;

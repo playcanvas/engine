@@ -6,8 +6,8 @@ void _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos
     // depth bias is already applied on render
 }
 
-void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams) {
-    vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y;
+void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams, vec3 normal) {
+    vec3 wPos = vPositionW + normal * shadowParams.y;
     _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, wPos);
 }
 
