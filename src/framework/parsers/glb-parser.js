@@ -676,12 +676,13 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     for (const [name, index] of Object.entries(primitive.attributes)) {
         const accessor = accessors[index];
         const semantic = gltfToEngineSemanticMap[name];
+        const componentType = getComponentType(accessor.componentType);
 
         vertexDesc.push({
             semantic: semantic,
             components: getNumComponents(accessor.type),
-            type: getComponentType(accessor.componentType),
-            normalize: accessor.normalized ?? (semantic === SEMANTIC_COLOR && (storageType === TYPE_UINT8 || storageType === TYPE_UINT16))
+            type: componentType,
+            normalize: accessor.normalized ?? (semantic === SEMANTIC_COLOR && (componentType === TYPE_UINT8 || componentType === TYPE_UINT16))
         });
     }
 
@@ -727,7 +728,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 result.primitive[0].indexed = !!indexBuffer;
 
                 resolve();
-            }            
+            }
         });
     }));
 
@@ -757,7 +758,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             meshes.push(createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises));
         } else {
             // handle uncompressed mesh
-            const indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
+            let indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
             const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
             const primitiveType = getPrimitiveType(primitive);
 

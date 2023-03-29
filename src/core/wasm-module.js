@@ -151,7 +151,8 @@ class WasmModule {
 
     /**
      * Get a wasm module's configuration.
-     * 
+     *
+     * @param {string} moduleName - Name of the module.
      * @returns {object | undefined} The previously set configuration.
      */
     static getConfig(moduleName) {

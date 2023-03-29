@@ -1,6 +1,7 @@
 import { WasmModule } from "../../core/wasm-module";
 import { ABSOLUTE_URL } from "../asset/constants";
 import { DracoWorker } from "./draco-worker";
+import { Debug } from "../../core/debug";
 
 class JobQueue {
     constructor(workers) {
@@ -70,7 +71,7 @@ class JobQueue {
             this.jobQueue.push(job);
         }
     }
-};
+}
 
 const defaultNumWorkers = 1;
 
