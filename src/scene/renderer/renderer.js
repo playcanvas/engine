@@ -429,20 +429,14 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    setCullMode(cullFaces, flip, drawCall) {
+    setupCullMode(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
         if (cullFaces) {
             let flipFaces = 1;
 
             if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
-                if (drawCall.flipFaces)
-                    flipFaces *= -1;
-
-                if (flip)
-                    flipFaces *= -1;
-
-                flipFaces *= drawCall.node.negativeScaleWorld;
+                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
             }
 
             if (flipFaces < 0) {
@@ -454,7 +448,7 @@ class Renderer {
         this.device.setCullMode(mode);
 
         if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.negativeScaleWorld);
+            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
         }
     }
 

@@ -541,6 +541,7 @@ class ForwardRenderer extends Renderer {
         const device = this.device;
         const scene = this.scene;
         const passFlag = 1 << pass;
+        const flipFactor = flipFaces ? -1 : 1;
 
         // Render the scene
         let skipMaterial = false;
@@ -604,7 +605,7 @@ class ForwardRenderer extends Renderer {
 
                 DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
-                this.setCullMode(camera._cullFaces, flipFaces, drawCall);
+                this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
                 const stencilFront = drawCall.stencilFront || material.stencilFront;
                 const stencilBack = drawCall.stencilBack || material.stencilBack;

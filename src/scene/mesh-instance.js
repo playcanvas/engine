@@ -256,7 +256,7 @@ class MeshInstance {
         this.stencilBack = null;
 
         // Negative scale batching support
-        this.flipFaces = false;
+        this.flipFacesFactor = 1;
     }
 
     /**
