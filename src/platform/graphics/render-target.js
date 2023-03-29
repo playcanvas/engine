@@ -167,8 +167,6 @@ class RenderTarget {
 
             this.destroyFrameBuffers();
         }
-
-        DebugHelper.setDestroyed(this);
     }
 
     /**
@@ -208,7 +206,6 @@ class RenderTarget {
      * @ignore
      */
     init() {
-        Debug.assertDestroyed(this);
         this.impl.init(this._device, this);
     }
 
