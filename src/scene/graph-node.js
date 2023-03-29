@@ -22,9 +22,6 @@ const invParentRot = new Quat();
 const matrix = new Mat4();
 const target = new Vec3();
 const up = new Vec3();
-const _worldMatX = new Vec3();
-const _worldMatY = new Vec3();
-const _worldMatZ = new Vec3();
 
 /**
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
@@ -181,7 +178,7 @@ class GraphNode extends EventHandler {
          * @type {number}
          * @private
          */
-        this._negativeScaleWorld = 0;
+        this._worldScaleSign = 0;
 
         /**
          * @type {Mat3}
@@ -922,19 +919,13 @@ class GraphNode extends EventHandler {
      * @returns {number} -1 if world transform has negative scale, 1 otherwise.
      * @ignore
      */
-    get negativeScaleWorld() {
+    get worldScaleSign() {
 
-        if (this._negativeScaleWorld === 0) {
-
-            const wt = this.getWorldTransform();
-            wt.getX(_worldMatX);
-            wt.getY(_worldMatY);
-            wt.getZ(_worldMatZ);
-            _worldMatX.cross(_worldMatX, _worldMatY);
-            this._negativeScaleWorld = _worldMatX.dot(_worldMatZ) < 0 ? -1 : 1;
+        if (this._worldScaleSign === 0) {
+            this._worldScaleSign = this.getWorldTransform().scaleSign;
         }
 
-        return this._negativeScaleWorld;
+        return this._worldScaleSign;
     }
 
     /**
@@ -1105,7 +1096,7 @@ class GraphNode extends EventHandler {
             }
         }
         this._dirtyNormal = true;
-        this._negativeScaleWorld = 0;   // world matrix is dirty, mark this flag dirty too
+        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
         this._aabbVer++;
     }
 
