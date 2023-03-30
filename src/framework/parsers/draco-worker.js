@@ -1,9 +1,15 @@
 function DracoWorker(jsUrl, wasmUrl) {
+    let draco;
+
+    // https://github.com/google/draco/blob/master/src/draco/attributes/geometry_attribute.h#L43
+    const POSITION_ATTRIBUTE = 0;
+    const NORMAL_ATTRIBUTE = 1;
+
     // load the wasm module and return a promise which will resolve
     // to the emscripten module instance
     const loadWasm = (moduleName, jsUrl, wasmUrl) => {
         // import js
-        importScripts(jsUrl);
+        importScripts(jsUrl);   // eslint-disable-line no-undef
 
         // instantiate the module
         return self[moduleName]({ locateFile: () => wasmUrl })
@@ -12,16 +18,22 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const wrap = (typedArray, dataType) => {
         switch (dataType) {
+            case draco.DT_INT8: return new Int8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+            case draco.DT_INT16: return new Int16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
+            case draco.DT_INT32: return new Int32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
             case draco.DT_UINT8: return new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
             case draco.DT_UINT16: return new Uint16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
             case draco.DT_UINT32: return new Uint32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
             case draco.DT_FLOAT32: return new Float32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
         }
         return null;
-    }
+    };
 
     const componentSizeInBytes = (dataType) => {
         switch (dataType) {
+            case draco.DT_INT8: return 1;
+            case draco.DT_INT16: return 2;
+            case draco.DT_INT32: return 4;
             case draco.DT_UINT8: return 1;
             case draco.DT_UINT16: return 2;
             case draco.DT_UINT32: return 4;
@@ -42,7 +54,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         7: 4,   // joints
         8: 5,   // weights
         4: 6,   // generic (used for blend indices and weights)
-        3: 7,   // texcoord
+        3: 7    // texcoord
     };
 
     const generateNormals = (vertices, indices) => {
@@ -51,13 +63,13 @@ function DracoWorker(jsUrl, wasmUrl) {
             dst[1] = a[1] - b[1];
             dst[2] = a[2] - b[2];
         };
-    
+
         const cross = (dst, a, b) => {
             dst[0] = a[1] * b[2] - b[1] * a[2];
             dst[1] = a[2] * b[0] - b[2] * a[0];
             dst[2] = a[0] * b[1] - b[0] * a[1];
         };
-    
+
         const normalize = (dst, offset) => {
             const a = dst[offset + 0];
             const b = dst[offset + 1];
@@ -67,22 +79,22 @@ function DracoWorker(jsUrl, wasmUrl) {
             dst[offset + 1] *= l;
             dst[offset + 2] *= l;
         };
-    
+
         const copy = (dst, src, srcOffset) => {
             for (let i = 0; i < 3; ++i) {
                 dst[i] = src[srcOffset + i];
             }
         };
-    
+
         const numTriangles = indices.length / 3;
         const numVertices = vertices.length / 3;
         const result = new Float32Array(vertices.length);
         const a = [0, 0, 0],
-              b = [0, 0, 0],
-              c = [0, 0, 0],
-              t1 = [0, 0, 0],
-              t2 = [0, 0, 0],
-              n = [0, 0, 0];
+            b = [0, 0, 0],
+            c = [0, 0, 0],
+            t1 = [0, 0, 0],
+            t2 = [0, 0, 0],
+            n = [0, 0, 0];
 
         for (let i = 0; i < numTriangles; ++i) {
             const v0 = indices[i * 3 + 0] * 3;
@@ -112,14 +124,12 @@ function DracoWorker(jsUrl, wasmUrl) {
         return new Uint8Array(result.buffer);
     };
 
-    let draco;
-
     const decodeMesh = (inputBuffer) => {
         const result = { };
 
         const buffer = new draco.DecoderBuffer();
         buffer.Init(inputBuffer, inputBuffer.length);
-        
+
         const decoder = new draco.Decoder();
         if (decoder.GetEncodedGeometryType(buffer) !== draco.TRIANGULAR_MESH) {
             result.error = 'Failed to decode draco mesh: not a mesh';
@@ -168,7 +178,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         });
 
         // we will generate normals if they're missing
-        const hasNormals = attributes.some(a => a.attribute_type() === 1);
+        const hasNormals = attributes.some(a => a.attribute_type() === NORMAL_ATTRIBUTE);
         const normalOffset = offsets[1];
         if (!hasNormals) {
             for (let i = 1; i < offsets.length; ++i) {
@@ -197,7 +207,7 @@ function DracoWorker(jsUrl, wasmUrl) {
                 }
             }
 
-            if (!hasNormals && attribute.attribute_type() === 0) {
+            if (!hasNormals && attribute.attribute_type() === POSITION_ATTRIBUTE) {
                 // generate normals just after position
                 const normals = generateNormals(wrap(src, attribute.data_type()),
                                                 shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
@@ -231,15 +241,16 @@ function DracoWorker(jsUrl, wasmUrl) {
         }, [result.indices, result.vertices].filter(t => t != null));
     };
 
+    const workQueue = [];
+
     // initialize draco
     loadWasm('DracoDecoderModule', jsUrl, wasmUrl)
-        .then(instance => {
+        .then((instance) => {
             draco = instance;
             workQueue.forEach(data => decode(data));
         });
 
     // handle incoming message
-    const workQueue = [];
     self.onmessage = (message) => {
         const data = message.data;
         switch (data.type) {

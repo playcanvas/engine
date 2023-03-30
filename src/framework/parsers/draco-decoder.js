@@ -1,9 +1,15 @@
 import { WasmModule } from "../../core/wasm-module";
 import { ABSOLUTE_URL } from "../asset/constants";
 import { DracoWorker } from "./draco-worker";
+import { Debug } from "../../core/debug";
 
+// JobQueue keeps track of a set of web workers and enqueues jobs
+// on them. To keep workload as balanced as possible (but also keep
+// workers busy) workers have a maximum of 2 jobs assigned at any
+// one time.
 class JobQueue {
     constructor(workers) {
+        // list of workers with: [[0 jobs], [1 job], [2 jobs]]
         this.workers = [workers, [], []];
         this.jobId = 0;
         this.jobQueue = [];
@@ -70,7 +76,7 @@ class JobQueue {
             this.jobQueue.push(job);
         }
     }
-};
+}
 
 const defaultNumWorkers = 1;
 
