@@ -24,7 +24,7 @@ vec3 RRTAndODTFit(vec3 v) {
 }
 
 vec3 toneMap(vec3 color) {
-    color *= exposure;
+    color *= exposure / 0.6;
     color = color * ACESInputMat;
 
     // Apply RRT and ODT
