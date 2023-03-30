@@ -32,7 +32,7 @@ function DracoWorker(jsUrl, wasmUrl) {
     const componentSizeInBytes = (dataType) => {
         switch (dataType) {
             case draco.DT_INT8: return 1;
-            case draco.DT_UINT16: return 2;
+            case draco.DT_INT16: return 2;
             case draco.DT_INT32: return 4;
             case draco.DT_UINT8: return 1;
             case draco.DT_UINT16: return 2;
