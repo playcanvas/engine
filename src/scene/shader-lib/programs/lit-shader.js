@@ -1053,7 +1053,21 @@ class LitShader {
         }
 
         if (options.lightMapEnabled || options.useLightMapVertexColors) {
-            backend.append("    addLightMap(litShaderArgs.lightmap, litShaderArgs.lightmapDir, litShaderArgs.worldNormal, dViewDirW, dReflDirW, litShaderArgs.gloss, litShaderArgs.specularity, dLightDirNormW, dVertexNormalW, litShaderArgs.iridescence);");
+            backend.append(`    addLightMap(
+                litShaderArgs.lightmap, 
+                litShaderArgs.lightmapDir, 
+                litShaderArgs.worldNormal, 
+                dViewDirW, 
+                dReflDirW, 
+                litShaderArgs.gloss, 
+                litShaderArgs.specularity, 
+                dVertexNormalW,
+                dTBN
+            #if defined(LIT_IRIDESCENCE)
+                , iridescenceFresnel,
+                litShaderArgs.iridescence
+            #endif
+                );`);
         }
 
         if (this.lighting || this.reflections) {

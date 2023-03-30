@@ -1182,6 +1182,20 @@ class Mat4 {
     }
 
     /**
+     * -1 if the the matrix has an odd number of negative scales (mirrored); 1 otherwise.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get scaleSign() {
+        this.getX(x);
+        this.getY(y);
+        this.getZ(z);
+        x.cross(x, y);
+        return x.dot(z) < 0 ? -1 : 1;
+    }
+
+    /**
      * Sets the specified matrix to a rotation matrix defined by Euler angles. The Euler angles are
      * specified in XYZ order and in degrees.
      *

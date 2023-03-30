@@ -20,7 +20,7 @@ import {
     UNIFORMTYPE_MAT4,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
+    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -41,9 +41,6 @@ const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
-const worldMatX = new Vec3();
-const worldMatY = new Vec3();
-const worldMatZ = new Vec3();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
@@ -432,27 +429,14 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    setCullMode(cullFaces, flip, drawCall) {
+    setupCullMode(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
         if (cullFaces) {
             let flipFaces = 1;
 
-            if (material.cull > CULLFACE_NONE && material.cull < CULLFACE_FRONTANDBACK) {
-                if (drawCall.flipFaces)
-                    flipFaces *= -1;
-
-                if (flip)
-                    flipFaces *= -1;
-
-                const wt = drawCall.node.worldTransform;
-                wt.getX(worldMatX);
-                wt.getY(worldMatY);
-                wt.getZ(worldMatZ);
-                worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0) {
-                    flipFaces *= -1;
-                }
+            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
+                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
             }
 
             if (flipFaces < 0) {
@@ -464,12 +448,7 @@ class Renderer {
         this.device.setCullMode(mode);
 
         if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            const wt2 = drawCall.node.worldTransform;
-            wt2.getX(worldMatX);
-            wt2.getY(worldMatY);
-            wt2.getZ(worldMatZ);
-            worldMatX.cross(worldMatX, worldMatY);
-            this.twoSidedLightingNegScaleFactorId.setValue(worldMatX.dot(worldMatZ) < 0 ? -1.0 : 1.0);
+            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
         }
     }
 
