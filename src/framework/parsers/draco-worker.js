@@ -1,6 +1,10 @@
 function DracoWorker(jsUrl, wasmUrl) {
     let draco;
 
+    // https://github.com/google/draco/blob/master/src/draco/attributes/geometry_attribute.h#L43
+    const POSITION_ATTRIBUTE = 0;
+    const NORMAL_ATTRIBUTE = 1;
+
     // load the wasm module and return a promise which will resolve
     // to the emscripten module instance
     const loadWasm = (moduleName, jsUrl, wasmUrl) => {
@@ -14,6 +18,9 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const wrap = (typedArray, dataType) => {
         switch (dataType) {
+            case draco.DT_INT8: return new Int8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+            case draco.DT_INT16: return new Int16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
+            case draco.DT_INT32: return new Int32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
             case draco.DT_UINT8: return new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
             case draco.DT_UINT16: return new Uint16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
             case draco.DT_UINT32: return new Uint32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
@@ -24,6 +31,9 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const componentSizeInBytes = (dataType) => {
         switch (dataType) {
+            case draco.DT_INT8: return 1;
+            case draco.DT_UINT16: return 2;
+            case draco.DT_INT32: return 4;
             case draco.DT_UINT8: return 1;
             case draco.DT_UINT16: return 2;
             case draco.DT_UINT32: return 4;
@@ -168,7 +178,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         });
 
         // we will generate normals if they're missing
-        const hasNormals = attributes.some(a => a.attribute_type() === 1);
+        const hasNormals = attributes.some(a => a.attribute_type() === NORMAL_ATTRIBUTE);
         const normalOffset = offsets[1];
         if (!hasNormals) {
             for (let i = 1; i < offsets.length; ++i) {
@@ -197,7 +207,7 @@ function DracoWorker(jsUrl, wasmUrl) {
                 }
             }
 
-            if (!hasNormals && attribute.attribute_type() === 0) {
+            if (!hasNormals && attribute.attribute_type() === POSITION_ATTRIBUTE) {
                 // generate normals just after position
                 const normals = generateNormals(wrap(src, attribute.data_type()),
                                                 shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
