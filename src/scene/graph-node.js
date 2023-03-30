@@ -162,6 +162,7 @@ class GraphNode extends EventHandler {
          * @private
          */
         this.worldTransform = new Mat4();
+
         /**
          * @type {boolean}
          * @private
@@ -169,10 +170,22 @@ class GraphNode extends EventHandler {
         this._dirtyWorld = false;
 
         /**
+         * Cached value representing the negatively scaled world transform. If the value is 0,
+         * this marks this value as dirty and it needs to be recalculated. If the value is 1, the
+         * world transform is not negatively scaled. If the value is -1, the world transform is
+         * negatively scaled.
+         *
+         * @type {number}
+         * @private
+         */
+        this._worldScaleSign = 0;
+
+        /**
          * @type {Mat3}
          * @private
          */
         this._normalMatrix = new Mat3();
+
         /**
          * @type {boolean}
          * @private
@@ -184,6 +197,7 @@ class GraphNode extends EventHandler {
          * @private
          */
         this._right = null;
+
         /**
          * @type {Vec3|null}
          * @private
@@ -900,6 +914,21 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Returns cached value of negative scale of the world transform.
+     *
+     * @returns {number} -1 if world transform has negative scale, 1 otherwise.
+     * @ignore
+     */
+    get worldScaleSign() {
+
+        if (this._worldScaleSign === 0) {
+            this._worldScaleSign = this.getWorldTransform().scaleSign;
+        }
+
+        return this._worldScaleSign;
+    }
+
+    /**
      * Remove graph node from current parent and add as child to new parent.
      *
      * @param {GraphNode} parent - New parent to attach graph node to.
@@ -1067,6 +1096,7 @@ class GraphNode extends EventHandler {
             }
         }
         this._dirtyNormal = true;
+        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
         this._aabbVer++;
     }
 
