@@ -1,7 +1,7 @@
-import { WasmModule } from "../../core/wasm-module";
-import { ABSOLUTE_URL } from "../asset/constants";
-import { DracoWorker } from "./draco-worker";
-import { Debug } from "../../core/debug";
+import { WasmModule } from "../../core/wasm-module.js";
+import { ABSOLUTE_URL } from "../asset/constants.js";
+import { DracoWorker } from "./draco-worker.js";
+import { Debug } from "../../core/debug.js";
 
 // JobQueue keeps track of a set of web workers and enqueues jobs
 // on them. To keep workload as balanced as possible (but also keep
