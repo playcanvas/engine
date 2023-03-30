@@ -1,5 +1,5 @@
 export default /* glsl */`
-float calcLightSpecular(float gloss, vec3 reflDir, vec3 h, vec3 lightDirNorm) {
+float calcLightSpecular(float gloss, vec3 reflDir, vec3 lightDirNorm) {
     float specPow = gloss;
 
     // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
@@ -7,6 +7,6 @@ float calcLightSpecular(float gloss, vec3 reflDir, vec3 h, vec3 lightDirNorm) {
 }
 
 float getLightSpecular(vec3 h, vec3 reflDir, vec3 worldNormal, vec3 viewDir, vec3 lightDirNorm, float gloss, mat3 tbn) {
-    return calcLightSpecular(gloss, reflDir, h);
+    return calcLightSpecular(gloss, reflDir, lightDirNorm);
 }
 `;
