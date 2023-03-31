@@ -48,6 +48,203 @@ const up = new Vec3();
  */
 class GraphNode extends EventHandler {
     /**
+     * The non-unique name of a graph node. Defaults to 'Untitled'.
+     *
+     * @type {string}
+     */
+    name;
+
+    /**
+     * Interface for tagging graph nodes. Tag based searches can be performed using the
+     * {@link GraphNode#findByTag} function.
+     *
+     * @type {Tags}
+     */
+    tags = new Tags(this);
+
+    /** @private */
+    _labels = {};
+
+    // Local-space properties of transform (only first 3 are settable by the user)
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    localRotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localScale = new Vec3(1, 1, 1);
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localEulerAngles = new Vec3(); // Only calculated on request
+
+    // World-space properties of transform
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    rotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    eulerAngles = new Vec3();
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _scale = null;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    localTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _wasDirty = false;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _aabbVer = 0;
+
+    /**
+     * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine code
+     * automatically freezes and unfreezes objects whenever required. Segregating dynamic and
+     * stationary nodes into subhierarchies allows to reduce sync time significantly.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _frozen = false;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    worldTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyWorld = false;
+
+    /**
+     * Cached value representing the negatively scaled world transform. If the value is 0, this
+     * marks this value as dirty and it needs to be recalculated. If the value is 1, the world
+     * transform is not negatively scaled. If the value is -1, the world transform is negatively
+     * scaled.
+     *
+     * @type {number}
+     * @private
+     */
+    _worldScaleSign = 0;
+
+    /**
+     * @type {Mat3}
+     * @private
+     */
+    _normalMatrix = new Mat3();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyNormal = true;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _right = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _up = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _forward = null;
+
+    /**
+     * @type {GraphNode|null}
+     * @private
+     */
+    _parent = null;
+
+    /**
+     * @type {GraphNode[]}
+     * @private
+     */
+    _children = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _graphDepth = 0;
+
+    /**
+     * Represents enabled state of the entity. If the entity is disabled, the entity including all
+     * children are excluded from updates.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * Represents enabled state of the entity in the hierarchy. It's true only if this entity and
+     * all parent entities all the way to the scene's root are enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabledInHierarchy = false;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    scaleCompensation = false;
+
+    /**
      * Create a new GraphNode instance.
      *
      * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
@@ -55,202 +252,7 @@ class GraphNode extends EventHandler {
     constructor(name = 'Untitled') {
         super();
 
-        /**
-         * The non-unique name of a graph node. Defaults to 'Untitled'.
-         *
-         * @type {string}
-         */
         this.name = name;
-
-        /**
-         * Interface for tagging graph nodes. Tag based searches can be performed using the
-         * {@link GraphNode#findByTag} function.
-         *
-         * @type {Tags}
-         */
-        this.tags = new Tags(this);
-
-        /** @private */
-        this._labels = {};
-
-        // Local-space properties of transform (only first 3 are settable by the user)
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localPosition = new Vec3();
-
-        /**
-         * @type {Quat}
-         * @private
-         */
-        this.localRotation = new Quat();
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localScale = new Vec3(1, 1, 1);
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localEulerAngles = new Vec3(); // Only calculated on request
-
-        // World-space properties of transform
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.position = new Vec3();
-
-        /**
-         * @type {Quat}
-         * @private
-         */
-        this.rotation = new Quat();
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.eulerAngles = new Vec3();
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._scale = null;
-
-        /**
-         * @type {Mat4}
-         * @private
-         */
-        this.localTransform = new Mat4();
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyLocal = false;
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._wasDirty = false;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._aabbVer = 0;
-
-        /**
-         * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine
-         * code automatically freezes and unfreezes objects whenever required. Segregating dynamic
-         * and stationary nodes into subhierarchies allows to reduce sync time significantly.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._frozen = false;
-
-        /**
-         * @type {Mat4}
-         * @private
-         */
-        this.worldTransform = new Mat4();
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyWorld = false;
-
-        /**
-         * Cached value representing the negatively scaled world transform. If the value is 0,
-         * this marks this value as dirty and it needs to be recalculated. If the value is 1, the
-         * world transform is not negatively scaled. If the value is -1, the world transform is
-         * negatively scaled.
-         *
-         * @type {number}
-         * @private
-         */
-        this._worldScaleSign = 0;
-
-        /**
-         * @type {Mat3}
-         * @private
-         */
-        this._normalMatrix = new Mat3();
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyNormal = true;
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._right = null;
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._up = null;
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._forward = null;
-
-        /**
-         * @type {GraphNode|null}
-         * @private
-         */
-        this._parent = null;
-
-        /**
-         * @type {GraphNode[]}
-         * @private
-         */
-        this._children = [];
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._graphDepth = 0;
-
-        /**
-         * Represents enabled state of the entity. If the entity is disabled, the entity including
-         * all children are excluded from updates.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._enabled = true;
-
-        /**
-         * Represents enabled state of the entity in the hierarchy. It's true only if this entity
-         * and all parent entities all the way to the scene's root are enabled.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._enabledInHierarchy = false;
-
-        /**
-         * @type {boolean}
-         * @ignore
-         */
-        this.scaleCompensation = false;
     }
 
     /**
