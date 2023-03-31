@@ -109,8 +109,6 @@ class Material {
      * away from the view point).
      * - {@link CULLFACE_FRONT}: Cull the front faces of triangles (do not render triangles facing
      * towards the view point).
-     * - {@link CULLFACE_FRONTANDBACK}: Cull both front and back faces (triangles will not be
-     * rendered).
      *
      * Defaults to {@link CULLFACE_BACK}.
      *
