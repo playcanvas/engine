@@ -3,6 +3,7 @@ import { BindBufferFormat, BindGroupFormat } from "../bind-group-format.js";
 import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
 import { BlendState } from "../blend-state.js";
 import {
+    CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL
 } from "../constants.js";
@@ -125,6 +126,8 @@ class WebgpuClearRenderer {
             if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
                 Debug.warnOnce("ClearRenderer does not support stencil clear at the moment");
             }
+
+            device.setCullMode(CULLFACE_NONE);
 
             // render 4 verticies without vertex buffer
             device.setShader(this.shader);

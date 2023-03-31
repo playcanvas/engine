@@ -5,8 +5,8 @@ import { now } from '../../core/time.js';
 
 import {
     BUFFER_STATIC,
-    CLEARFLAG_COLOR,
-    CLEARFLAG_DEPTH,
+    CULLFACE_BACK,
+    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
 import { BlendState } from './blend-state.js';
@@ -315,6 +315,7 @@ class GraphicsDevice extends EventHandler {
 
         this.blendState = new BlendState();
         this.depthState = new DepthState();
+        this.cullMode = CULLFACE_BACK;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -336,6 +337,20 @@ class GraphicsDevice extends EventHandler {
      * @param {DepthState} depthState - New depth state.
      */
     setDepthState(depthState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Controls how triangles are culled based on their face direction. The default cull mode is
+     * {@link CULLFACE_BACK}.
+     *
+     * @param {number} cullMode - The cull mode to set. Can be:
+     *
+     * - {@link CULLFACE_NONE}
+     * - {@link CULLFACE_BACK}
+     * - {@link CULLFACE_FRONT}
+     */
+    setCullMode(cullMode) {
         Debug.assert(false);
     }
 
