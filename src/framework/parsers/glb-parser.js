@@ -1,6 +1,5 @@
 import { Debug } from '../../core/debug.js';
 import { path } from '../../core/path.js';
-import { WasmModule } from '../../core/wasm-module.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { math } from '../../core/math/math.js';
@@ -50,12 +49,7 @@ import { Asset } from '../asset/asset.js';
 import { GlbContainerResource } from './glb-container-resource.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
-// instance of the draco decoder
-let dracoDecoderInstance = null;
-
-const getGlobalDracoDecoderModule = () => {
-    return typeof window !== 'undefined' && window.DracoDecoderModule;
-};
+import { dracoDecode } from './draco-decoder.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -160,6 +154,24 @@ const gltfToEngineSemanticMap = {
     'TEXCOORD_5': SEMANTIC_TEXCOORD5,
     'TEXCOORD_6': SEMANTIC_TEXCOORD6,
     'TEXCOORD_7': SEMANTIC_TEXCOORD7
+};
+
+// order vertexDesc to match the rest of the engine
+const attributeOrder = {
+    [SEMANTIC_POSITION]: 0,
+    [SEMANTIC_NORMAL]: 1,
+    [SEMANTIC_TANGENT]: 2,
+    [SEMANTIC_COLOR]: 3,
+    [SEMANTIC_BLENDINDICES]: 4,
+    [SEMANTIC_BLENDWEIGHT]: 5,
+    [SEMANTIC_TEXCOORD0]: 6,
+    [SEMANTIC_TEXCOORD1]: 7,
+    [SEMANTIC_TEXCOORD2]: 8,
+    [SEMANTIC_TEXCOORD3]: 9,
+    [SEMANTIC_TEXCOORD4]: 10,
+    [SEMANTIC_TEXCOORD5]: 11,
+    [SEMANTIC_TEXCOORD6]: 12,
+    [SEMANTIC_TEXCOORD7]: 13
 };
 
 // returns a function for dequantizing the data type
@@ -479,23 +491,9 @@ const createVertexBufferInternal = function (device, sourceDesc, flipV) {
         }
     }
 
-    // order vertexDesc to match the rest of the engine
-    const elementOrder = [
-        SEMANTIC_POSITION,
-        SEMANTIC_NORMAL,
-        SEMANTIC_TANGENT,
-        SEMANTIC_COLOR,
-        SEMANTIC_BLENDINDICES,
-        SEMANTIC_BLENDWEIGHT,
-        SEMANTIC_TEXCOORD0,
-        SEMANTIC_TEXCOORD1
-    ];
-
     // sort vertex elements by engine-ideal order
-    vertexDesc.sort(function (lhs, rhs) {
-        const lhsOrder = elementOrder.indexOf(lhs.semantic);
-        const rhsOrder = elementOrder.indexOf(rhs.semantic);
-        return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
+    vertexDesc.sort((lhs, rhs) => {
+        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
     });
 
     let i, j, k;
@@ -625,91 +623,6 @@ const createVertexBuffer = function (device, attributes, indices, accessors, buf
     return vb;
 };
 
-const createVertexBufferDraco = function (device, outputGeometry, extDraco, decoder, decoderModule, indices, flipV) {
-
-    const numPoints = outputGeometry.num_points();
-
-    // helper function to decode data stream with id to TypedArray of appropriate type
-    const extractDracoAttributeInfo = function (uniqueId, semantic) {
-        const attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
-        const numValues = numPoints * attribute.num_components();
-        const dracoFormat = attribute.data_type();
-        let ptr, values, componentSizeInBytes, storageType;
-
-        // storage format is based on draco attribute data type
-        switch (dracoFormat) {
-
-            case decoderModule.DT_UINT8:
-                storageType = TYPE_UINT8;
-                componentSizeInBytes = 1;
-                ptr = decoderModule._malloc(numValues * componentSizeInBytes);
-                decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT8, numValues * componentSizeInBytes, ptr);
-                values = new Uint8Array(decoderModule.HEAPU8.buffer, ptr, numValues).slice();
-                break;
-
-            case decoderModule.DT_UINT16:
-                storageType = TYPE_UINT16;
-                componentSizeInBytes = 2;
-                ptr = decoderModule._malloc(numValues * componentSizeInBytes);
-                decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_UINT16, numValues * componentSizeInBytes, ptr);
-                values = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numValues).slice();
-                break;
-
-            case decoderModule.DT_FLOAT32:
-            default:
-                storageType = TYPE_FLOAT32;
-                componentSizeInBytes = 4;
-                ptr = decoderModule._malloc(numValues * componentSizeInBytes);
-                decoder.GetAttributeDataArrayForAllPoints(outputGeometry, attribute, decoderModule.DT_FLOAT32, numValues * componentSizeInBytes, ptr);
-                values = new Float32Array(decoderModule.HEAPF32.buffer, ptr, numValues).slice();
-                break;
-        }
-
-        decoderModule._free(ptr);
-
-        return {
-            values: values,
-            numComponents: attribute.num_components(),
-            componentSizeInBytes: componentSizeInBytes,
-            storageType: storageType,
-
-            // there are glb files around where 8bit colors are missing normalized flag
-            normalized: (semantic === SEMANTIC_COLOR && (storageType === TYPE_UINT8 || storageType === TYPE_UINT16)) ? true : attribute.normalized()
-        };
-    };
-
-    // build vertex buffer format desc and source
-    const sourceDesc = {};
-    const attributes = extDraco.attributes;
-    for (const attrib in attributes) {
-        if (attributes.hasOwnProperty(attrib) && gltfToEngineSemanticMap.hasOwnProperty(attrib)) {
-            const semantic = gltfToEngineSemanticMap[attrib];
-            const attributeInfo = extractDracoAttributeInfo(attributes[attrib], semantic);
-
-            // store the info we'll need to copy this data into the vertex buffer
-            const size = attributeInfo.numComponents * attributeInfo.componentSizeInBytes;
-            sourceDesc[semantic] = {
-                values: attributeInfo.values,
-                buffer: attributeInfo.values.buffer,
-                size: size,
-                offset: 0,
-                stride: size,
-                count: numPoints,
-                components: attributeInfo.numComponents,
-                type: attributeInfo.storageType,
-                normalize: attributeInfo.normalized
-            };
-        }
-    }
-
-    // generate normals if they're missing (this should probably be a user option)
-    if (!sourceDesc.hasOwnProperty(SEMANTIC_NORMAL)) {
-        generateNormals(sourceDesc, indices);
-    }
-
-    return createVertexBufferInternal(device, sourceDesc, flipV);
-};
-
 const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) {
     let i, j, bindMatrix;
     const joints = gltfSkin.joints;
@@ -753,106 +666,104 @@ const createSkin = function (device, gltfSkin, accessors, bufferViews, nodes, gl
     return skin;
 };
 
-const tempMat = new Mat4();
-const tempVec = new Vec3();
+const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises) => {
+    // create the mesh
+    const result = new Mesh(device);
+    result.aabb = getAccessorBoundingBox(accessors[primitive.attributes.POSITION]);
 
-const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions) {
+    // create vertex description
+    const vertexDesc = [];
+    for (const [name, index] of Object.entries(primitive.attributes)) {
+        const accessor = accessors[index];
+        const semantic = gltfToEngineSemanticMap[name];
+        const componentType = getComponentType(accessor.componentType);
+
+        vertexDesc.push({
+            semantic: semantic,
+            components: getNumComponents(accessor.type),
+            type: componentType,
+            normalize: accessor.normalized ?? (semantic === SEMANTIC_COLOR && (componentType === TYPE_UINT8 || componentType === TYPE_UINT16))
+        });
+    }
+
+    // draco decompressor will generate normals if they are missing
+    if (!primitive?.attributes?.NORMAL) {
+        vertexDesc.push({
+            semantic: 'NORMAL',
+            components: 3,
+            type: TYPE_FLOAT32
+        });
+    }
+
+    // sort vertex elements by engine-ideal order
+    vertexDesc.sort((lhs, rhs) => {
+        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
+    });
+
+    const vertexFormat = new VertexFormat(device, vertexDesc);
+
+    promises.push(new Promise((resolve, reject) => {
+        // decode draco data
+        const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
+        dracoDecode(bufferViews[dracoExt.bufferView].slice().buffer, (err, decompressedData) => {
+            if (err) {
+                console.log(err);
+                reject(err);
+            } else {
+                // create vertex buffer
+                const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
+                Debug.assert(numVertices === accessors[primitive.attributes.POSITION].count, 'mesh has invalid draco sizes');
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
+
+                // create index buffer
+                const numIndices = accessors[primitive.indices].count;
+                const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
+                const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
+
+                result.vertexBuffer = vertexBuffer;
+                result.indexBuffer[0] = indexBuffer;
+                result.primitive[0].type = getPrimitiveType(primitive);
+                result.primitive[0].base = 0;
+                result.primitive[0].count = indexBuffer ? numIndices : numVertices;
+                result.primitive[0].indexed = !!indexBuffer;
+
+                resolve();
+            }
+        });
+    }));
+
+    // handle material variants
+    if (primitive?.extensions?.KHR_materials_variants) {
+        const variants = primitive.extensions.KHR_materials_variants;
+        const tempMapping = {};
+        variants.mappings.forEach((mapping) => {
+            mapping.variants.forEach((variant) => {
+                tempMapping[variant] = mapping.material;
+            });
+        });
+        meshVariants[result.id] = tempMapping;
+    }
+    meshDefaultMaterials[result.id] = primitive.material;
+
+    return result;
+};
+
+const createMesh = function (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) {
     const meshes = [];
 
     gltfMesh.primitives.forEach(function (primitive) {
 
-        let primitiveType, vertexBuffer, numIndices;
-        let indices = null;
-        let canUseMorph = true;
+        if (primitive.extensions?.KHR_draco_mesh_compression) {
+            // handle draco compressed mesh
+            meshes.push(createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises));
+        } else {
+            // handle uncompressed mesh
+            let indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
+            const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
+            const primitiveType = getPrimitiveType(primitive);
 
-        // try and get draco compressed data first
-        if (primitive.hasOwnProperty('extensions')) {
-            const extensions = primitive.extensions;
-            if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
-
-                // access DracoDecoderModule
-                const decoderModule = dracoDecoderInstance || getGlobalDracoDecoderModule();
-                if (decoderModule) {
-                    const extDraco = extensions.KHR_draco_mesh_compression;
-                    if (extDraco.hasOwnProperty('attributes')) {
-                        const uint8Buffer = bufferViews[extDraco.bufferView];
-                        const buffer = new decoderModule.DecoderBuffer();
-                        buffer.Init(uint8Buffer, uint8Buffer.length);
-
-                        const decoder = new decoderModule.Decoder();
-                        const geometryType = decoder.GetEncodedGeometryType(buffer);
-
-                        let outputGeometry, status;
-                        switch (geometryType) {
-                            case decoderModule.POINT_CLOUD:
-                                primitiveType = PRIMITIVE_POINTS;
-                                outputGeometry = new decoderModule.PointCloud();
-                                status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
-                                break;
-                            case decoderModule.TRIANGULAR_MESH:
-                                primitiveType = PRIMITIVE_TRIANGLES;
-                                outputGeometry = new decoderModule.Mesh();
-                                status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
-                                break;
-                            case decoderModule.INVALID_GEOMETRY_TYPE:
-                            default:
-                                break;
-                        }
-
-                        if (!status || !status.ok() || outputGeometry.ptr === 0) {
-                            callback('Failed to decode draco compressed asset: ' +
-                            (status ? status.error_msg() : ('Mesh asset - invalid draco compressed geometry type: ' + geometryType)));
-                            return;
-                        }
-
-                        // indices
-                        const numFaces = outputGeometry.num_faces();
-                        if (geometryType === decoderModule.TRIANGULAR_MESH) {
-                            const bit32 = outputGeometry.num_points() > 65535;
-
-                            numIndices = numFaces * 3;
-                            const dataSize = numIndices * (bit32 ? 4 : 2);
-                            const ptr = decoderModule._malloc(dataSize);
-
-                            if (bit32) {
-                                decoder.GetTrianglesUInt32Array(outputGeometry, dataSize, ptr);
-                                indices = new Uint32Array(decoderModule.HEAPU32.buffer, ptr, numIndices).slice();
-                            } else {
-                                decoder.GetTrianglesUInt16Array(outputGeometry, dataSize, ptr);
-                                indices = new Uint16Array(decoderModule.HEAPU16.buffer, ptr, numIndices).slice();
-                            }
-
-                            decoderModule._free(ptr);
-                        }
-
-                        // vertices
-                        vertexBuffer = createVertexBufferDraco(device, outputGeometry, extDraco, decoder, decoderModule, indices, flipV);
-
-                        // clean up
-                        decoderModule.destroy(outputGeometry);
-                        decoderModule.destroy(decoder);
-                        decoderModule.destroy(buffer);
-
-                        // morph streams are not compatible with draco compression, disable morphing
-                        canUseMorph = false;
-                    }
-                } else {
-                    Debug.warn('File contains draco compressed data, but DracoDecoderModule is not configured.');
-                }
-            }
-        }
-
-        // if mesh was not constructed from draco data, use uncompressed
-        if (!vertexBuffer) {
-            indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
-            vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
-            primitiveType = getPrimitiveType(primitive);
-        }
-
-        let mesh = null;
-        if (vertexBuffer) {
             // build the mesh
-            mesh = new Mesh(device);
+            const mesh = new Mesh(device);
             mesh.vertexBuffer = vertexBuffer;
             mesh.primitive[0].type = primitiveType;
             mesh.primitive[0].base = 0;
@@ -915,7 +826,7 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
             mesh.aabb = getAccessorBoundingBox(accessor);
 
             // morph targets
-            if (canUseMorph && primitive.hasOwnProperty('targets')) {
+            if (primitive.hasOwnProperty('targets')) {
                 const targets = [];
 
                 primitive.targets.forEach(function (target, index) {
@@ -956,9 +867,8 @@ const createMesh = function (device, gltfMesh, accessors, bufferViews, callback,
                     preferHighPrecision: assetOptions.morphPreferHighPrecision
                 });
             }
+            meshes.push(mesh);
         }
-
-        meshes.push(mesh);
     });
 
     return meshes;
@@ -1621,6 +1531,9 @@ const createAnimation = function (gltfAnimation, animationIndex, gltfAccessors, 
         curves);
 };
 
+const tempMat = new Mat4();
+const tempVec = new Vec3();
+
 const createNode = function (gltfNode, nodeIndex) {
     const entity = new GraphNode();
 
@@ -1749,7 +1662,7 @@ const createSkins = function (device, gltf, nodes, bufferViews) {
     });
 };
 
-const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options) {
+const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises) {
     if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
         !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
         !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
@@ -1764,7 +1677,7 @@ const createMeshes = function (device, gltf, bufferViews, callback, flipV, meshV
     const vertexBufferDict = {};
 
     return gltf.meshes.map(function (gltfMesh) {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
     });
 };
 
@@ -2013,7 +1926,9 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
     const variants = createVariants(gltf);
     const meshVariants = {};
     const meshDefaultMaterials = {};
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options);
+    const promises = [];
+    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises);
+
     const skins = createSkins(device, gltf, nodes, bufferViews);
 
     // create renders to wrap meshes
@@ -2044,7 +1959,10 @@ const createResources = function (device, gltf, bufferViews, textureAssets, opti
         postprocess(gltf, result);
     }
 
-    callback(null, result);
+    // wait for all promises to complete before returning
+    Promise.all(promises).then(() => {
+        callback(null, result);
+    });
 };
 
 const applySampler = function (texture, gltfSampler) {
@@ -2335,15 +2253,7 @@ const parseGltf = function (gltfChunk, callback) {
     }
 
     // check required extensions
-    const extensionsUsed = gltf?.extensionsUsed || [];
-    if (!dracoDecoderInstance && !getGlobalDracoDecoderModule() && extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
-        WasmModule.getInstance('DracoDecoderModule', (instance) => {
-            dracoDecoderInstance = instance;
-            callback(null, gltf);
-        });
-    } else {
-        callback(null, gltf);
-    }
+    callback(null, gltf);
 };
 
 // parse glb data, returns the gltf and binary chunk
