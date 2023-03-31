@@ -264,6 +264,7 @@ export const CULLFACE_FRONT = 2;
  * that point or line primitives are unaffected by this render state.
  *
  * @type {number}
+ * @ignore
  */
 export const CULLFACE_FRONTANDBACK = 3;
 

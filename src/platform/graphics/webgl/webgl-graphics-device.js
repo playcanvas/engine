@@ -1050,7 +1050,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
 
-        this.cullMode = CULLFACE_BACK;
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
 
@@ -2521,17 +2520,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Controls how triangles are culled based on their face direction. The default cull mode is
-     * {@link CULLFACE_BACK}.
-     *
-     * @param {number} cullMode - The cull mode to set. Can be:
-     *
-     * - {@link CULLFACE_NONE}
-     * - {@link CULLFACE_BACK}
-     * - {@link CULLFACE_FRONT}
-     * - {@link CULLFACE_FRONTANDBACK}
-     */
     setCullMode(cullMode) {
         if (this.cullMode !== cullMode) {
             if (cullMode === CULLFACE_NONE) {
@@ -2549,16 +2537,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.cullMode = cullMode;
         }
-    }
-
-    /**
-     * Gets the current cull mode.
-     *
-     * @returns {number} The current cull mode.
-     * @ignore
-     */
-    getCullMode() {
-        return this.cullMode;
     }
 
     /**

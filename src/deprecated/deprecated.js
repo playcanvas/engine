@@ -659,6 +659,10 @@ GraphicsDevice.prototype.setDepthTest = function (test) {
     this.setDepthState(_tempDepthState);
 };
 
+GraphicsDevice.prototype.getCullMode = function () {
+    return this.cullMode;
+};
+
 // SCENE
 
 export const PhongMaterial = StandardMaterial;
