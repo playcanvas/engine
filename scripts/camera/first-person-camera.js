@@ -24,7 +24,7 @@ CharacterController.prototype.move = function (direction) {
         if (length > 0) {
             // calculate new forward vec parallel to the current ground surface
             tmp.cross(this.groundNormal, direction).cross(tmp, this.groundNormal);
-            tmp.normalize().scale(length * this.speed);
+            tmp.normalize().mulScalar(length * this.speed);
         }
         this.entity.rigidbody.linearVelocity = tmp;
     }
@@ -137,19 +137,19 @@ FirstPersonCamera.prototype.postUpdate = function (dt) {
 
     // Move forwards/backwards
     if (this.forward !== 0) {
-        this.z.scale(this.forward);
+        this.z.mulScalar(this.forward);
         this.heading.add(this.z);
     }
 
     // Strafe left/right
     if (this.strafe !== 0) {
-        this.x.scale(this.strafe);
+        this.x.mulScalar(this.strafe);
         this.heading.add(this.x);
     }
 
     if (this.heading.length() > 0.0001) {
         this.magnitude.set(this.forward, this.strafe);
-        this.heading.normalize().scale(this.magnitude.length());
+        this.heading.normalize().mulScalar(this.magnitude.length());
     }
 
     if (this.jump) {
@@ -275,7 +275,7 @@ function applyRadialDeadZone(pos, remappedPos, deadZoneLow, deadZoneHigh) {
         var legalRange = 1 - deadZoneHigh - deadZoneLow;
         var normalizedMag = Math.min(1, (magnitude - deadZoneLow) / legalRange);
         var scale = normalizedMag / magnitude;
-        remappedPos.copy(pos).scale(scale);
+        remappedPos.copy(pos).mulScalar(scale);
     } else {
         remappedPos.set(0, 0);
     }
@@ -380,12 +380,12 @@ TouchInput.prototype.initialize = function () {
             if (touch.identifier === this.leftStick.identifier) {
                 this.leftStick.pos.set(touch.pageX, touch.pageY);
                 this.leftStick.pos.sub(this.leftStick.center);
-                this.leftStick.pos.scale(1 / this.radius);
+                this.leftStick.pos.mulScalar(1 / this.radius);
                 app.fire('leftjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             } else if (touch.identifier === this.rightStick.identifier) {
                 this.rightStick.pos.set(touch.pageX, touch.pageY);
                 this.rightStick.pos.sub(this.rightStick.center);
-                this.rightStick.pos.scale(1 / this.radius);
+                this.rightStick.pos.mulScalar(1 / this.radius);
                 app.fire('rightjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             }
         }
