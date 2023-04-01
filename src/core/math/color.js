@@ -5,6 +5,34 @@ import { math } from './math.js';
  */
 class Color {
     /**
+     * The red component of the color.
+     *
+     * @type {number}
+     */
+    r;
+
+    /**
+     * The green component of the color.
+     *
+     * @type {number}
+     */
+    g;
+
+    /**
+     * The blue component of the color.
+     *
+     * @type {number}
+     */
+    b;
+
+    /**
+     * The alpha component of the color.
+     *
+     * @type {number}
+     */
+    a;
+
+    /**
      * Create a new Color object.
      *
      * @param {number|number[]} [r] - The value of the red component (0-1). Defaults to 0. If r is
@@ -16,29 +44,9 @@ class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
         if (length === 3 || length === 4) {
-            /**
-             * The red component of the color.
-             *
-             * @type {number}
-             */
             this.r = r[0];
-            /**
-             * The green component of the color.
-             *
-             * @type {number}
-             */
             this.g = r[1];
-            /**
-             * The blue component of the color.
-             *
-             * @type {number}
-             */
             this.b = r[2];
-            /**
-             * The alpha component of the color.
-             *
-             * @type {number}
-             */
             this.a = r[3] !== undefined ? r[3] : 1;
         } else {
             this.r = r;
@@ -65,8 +73,8 @@ class Color {
      * @param {Color} rhs - A color to copy to the specified color.
      * @returns {Color} Self for chaining.
      * @example
-     * var src = new pc.Color(1, 0, 0, 1);
-     * var dst = new pc.Color();
+     * const src = new pc.Color(1, 0, 0, 1);
+     * const dst = new pc.Color();
      *
      * dst.copy(src);
      *
@@ -87,8 +95,8 @@ class Color {
      * @param {Color} rhs - The color to compare to the specified color.
      * @returns {boolean} True if the colors are equal and false otherwise.
      * @example
-     * var a = new pc.Color(1, 0, 0, 1);
-     * var b = new pc.Color(1, 1, 0, 1);
+     * const a = new pc.Color(1, 0, 0, 1);
+     * const b = new pc.Color(1, 1, 0, 1);
      * console.log("The two colors are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
@@ -123,9 +131,9 @@ class Color {
      * range, the linear interpolant will occur on a ray extrapolated from this line.
      * @returns {Color} Self for chaining.
      * @example
-     * var a = new pc.Color(0, 0, 0);
-     * var b = new pc.Color(1, 1, 0.5);
-     * var r = new pc.Color();
+     * const a = new pc.Color(0, 0, 0);
+     * const b = new pc.Color(1, 1, 0.5);
+     * const r = new pc.Color();
      *
      * r.lerp(a, b, 0);   // r is equal to a
      * r.lerp(a, b, 0.5); // r is 0.5, 0.5, 0.25
@@ -171,7 +179,7 @@ class Color {
      * @param {boolean} alpha - If true, the output string will include the alpha value.
      * @returns {string} The color in string form.
      * @example
-     * var c = new pc.Color(1, 1, 1);
+     * const c = new pc.Color(1, 1, 1);
      * // Outputs #ffffffff
      * console.log(c.toString());
      */

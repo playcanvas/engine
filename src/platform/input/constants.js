@@ -791,3 +791,87 @@ export const PAD_R_STICK_X = 2;
  * @type {number}
  */
 export const PAD_R_STICK_Y = 3;
+
+/**
+ * Name of event fired when a gamepad connects.
+ *
+ * @type {string}
+ */
+export const EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+
+/**
+ * Name of event fired when a gamepad disconnects.
+ *
+ * @type {string}
+ */
+export const EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
+/**
+ * Horizontal axis on the touchpad of a XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_TOUCHPAD_X = 0;
+
+/**
+ * Vertical axis on the thouchpad of a XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_TOUCHPAD_Y = 1;
+
+/**
+ * Horizontal axis on the stick of a XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_STICK_X = 2;
+
+/**
+ * Vertical axis on the stick of a XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_STICK_Y = 3;
+
+/**
+ * The button when pressing the XR pad's touchpad.
+ *
+ * @type {number}
+ */
+export const XRPAD_TOUCHPAD_BUTTON = 2;
+
+/**
+ * The trigger button from XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_TRIGGER = 0;
+
+/**
+ * The squeeze button from XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_SQUEEZE = 1;
+
+/**
+ * The button when pressing the XR pad's stick.
+ *
+ * @type {number}
+ */
+export const XRPAD_STICK_BUTTON = 3;
+
+/**
+ * The A button from XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_A = 4;
+
+/**
+ * The B button from XR pad.
+ *
+ * @type {number}
+ */
+export const XRPAD_B = 5;

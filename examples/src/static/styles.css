@@ -397,6 +397,39 @@ body {
     min-width: 46px;
 }
 
+#controlPanel > .pcui-panel-content {
+    background-color: #364346;
+}
+
+@media only screen and (max-width: 600px) {
+    #controls-wrapper {
+        position: absolute;
+        width: 100%;
+        height: calc(100% - 48px);
+    }
+
+    #controls-wrapper.has-controls {
+        height: calc(100% - 100px);
+    }
+}
+
+#deviceTypeSelectInput {
+    margin: 8px;
+    min-width: 200px;
+}
+
+#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-value {
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+}
+
+#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-icon {
+    top: 4px;
+}
+
 .filter-input {
     margin: 8px 8px 0px 8px !important;
     width: calc(100% - 16px);

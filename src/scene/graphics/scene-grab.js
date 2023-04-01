@@ -1,19 +1,22 @@
+import { Debug } from '../../core/debug.js';
+
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RGBA8, PIXELFORMAT_RGB8
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import {
     LAYERID_DEPTH, LAYERID_WORLD,
     SHADER_DEPTH
-} from '../../scene/constants.js';
+} from '../constants.js';
 
-import { Layer } from '../../scene/layer.js';
+import { Layer } from '../layer.js';
 
 // uniform names (first is current name, second one is deprecated name for compatibility)
 const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
@@ -33,25 +36,50 @@ const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
  * @ignore
  */
 class SceneGrab {
-    constructor(application) {
-        this.application = application;
+    /**
+     * Create an instance of SceneGrab.
+     *
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {import('../scene.js').Scene} scene - The scene.
+     */
+    constructor(device, scene) {
 
-        /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
-        this.device = application.graphicsDevice;
+        Debug.assert(scene);
+        this.scene = scene;
+
+        Debug.assert(device);
+        this.device = device;
 
         // create depth layer
         this.layer = null;
 
-        // color buffer format
-        this.colorFormat = this.device.defaultFramebufferAlpha ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
-
         // create a depth layer, which is a default depth layer, but also a template used
         // to patch application created depth layers to behave as one
-        if (this.device.webgl2) {
-            this.initWebGl2();
+        if (this.device.webgl2 || this.device.isWebGPU) {
+            this.initMainPath();
         } else {
-            this.initWebGl1();
+            this.initFallbackPath();
         }
+    }
+
+    /**
+     * Returns true if the camera rendering scene grab textures requires a render pass to do it.
+     *
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device used for rendering.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera that
+     * needs scene grab textures.
+     */
+    static requiresRenderPass(device, camera) {
+
+        // just copy out the textures, no render pass needed
+        if (device.webgl2 || device.isWebGPU) {
+            return false;
+        }
+
+        // on WebGL1 device, only depth rendering needs render pass
+        return camera.renderSceneDepthMap;
     }
 
     setupUniform(device, depth, buffer) {
@@ -77,10 +105,26 @@ class SceneGrab {
         });
     }
 
-    resizeCondition(target, source, device) {
-        const width = source?.width || device.width;
-        const height = source?.height || device.height;
-        return !target || width !== target.width || height !== target.height;
+    // texture format of the source texture the grab pass needs to copy
+    getSourceColorFormat(texture) {
+        // based on the RT the camera renders to, otherwise framebuffer
+        return texture?.format ?? this.device.framebufferFormat;
+    }
+
+    shouldReallocate(targetRT, sourceTexture, testFormat) {
+
+        // need to reallocate if format does not match
+        if (testFormat) {
+            const targetFormat = targetRT?.colorBuffer.format;
+            const sourceFormat = this.getSourceColorFormat(sourceTexture);
+            if (targetFormat !== sourceFormat)
+                return true;
+        }
+
+        // need to reallocate if dimensions don't match
+        const width = sourceTexture?.width || this.device.width;
+        const height = sourceTexture?.height || this.device.height;
+        return !targetRT || width !== targetRT.width || height !== targetRT.height;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
@@ -126,9 +170,10 @@ class SceneGrab {
         }
     }
 
-    initWebGl2() {
+    // main path where both color and depth is copied from existing surface
+    initMainPath() {
 
-        const app = this.application;
+        const device = this.device;
         const self = this;
 
         // WebGL 2 depth layer just copies existing color or depth
@@ -147,30 +192,36 @@ class SceneGrab {
 
             onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
 
-                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
-                const device = app.graphicsDevice;
-
-                /** @type {import('../components/camera/component.js').CameraComponent} */
+                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
                     // allocate / resize existing RT as needed
-                    if (self.resizeCondition(this.colorRenderTarget, camera.renderTarget?.colorBuffer, device)) {
+                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer, true)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, true, false);
+                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
+                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, true, false);
                     }
 
                     // copy color from the current render target
                     DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
 
-                    device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
-
-                    // generate mipmaps
-                    device.activeTexture(device.maxCombinedTextures - 1);
                     const colorBuffer = this.colorRenderTarget.colorBuffer;
-                    device.bindTexture(colorBuffer);
-                    device.gl.generateMipmap(colorBuffer.impl._glTarget);
+
+                    if (device.isWebGPU) {
+
+                        device.copyRenderTarget(camera.renderTarget, this.colorRenderTarget, true, false);
+
+                    } else {
+
+                        device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
+
+                        // generate mipmaps
+                        device.activeTexture(device.maxCombinedTextures - 1);
+                        device.bindTexture(colorBuffer);
+                        device.gl.generateMipmap(colorBuffer.impl._glTarget);
+                    }
 
                     DebugGraphics.popGpuMarker(device);
 
@@ -181,7 +232,7 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
+                    if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
                     }
@@ -201,10 +252,12 @@ class SceneGrab {
         });
     }
 
-    initWebGl1() {
+    // fallback path, where copy is not possible and the scene gets re-rendered
+    initFallbackPath() {
 
-        const app = this.application;
         const self = this;
+        const device = this.device;
+        const scene = this.scene;
 
         // WebGL 1 depth layer renders the same objects as in World, but with RGBA-encoded depth shader to get depth
         this.layer = new Layer({
@@ -219,9 +272,9 @@ class SceneGrab {
                 this.depthRenderTarget = new RenderTarget({
                     name: 'depthRenderTarget-webgl1',
                     depth: true,
-                    stencil: app.graphicsDevice.supportsStencil,
+                    stencil: device.supportsStencil,
                     autoResolve: false,
-                    graphicsDevice: app.graphicsDevice
+                    graphicsDevice: device
                 });
 
                 // assign it so the render actions knows to render to it
@@ -241,16 +294,13 @@ class SceneGrab {
 
             onPostCull: function (cameraPass) {
 
-                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
-                const device = app.graphicsDevice;
-
-                /** @type {import('../components/camera/component.js').CameraComponent} */
+                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget.depthBuffer || self.resizeCondition(this.depthRenderTarget, camera.renderTarget?.depthBuffer, device)) {
+                    if (!this.depthRenderTarget.depthBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
                         this.depthRenderTarget.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
                     }
@@ -258,13 +308,12 @@ class SceneGrab {
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
                     const visibleObjects = this.instances.visibleOpaque[cameraPass];
                     const visibleList = visibleObjects.list;
-                    const layerComposition = app.scene.layers;
+                    const layerComposition = scene.layers;
                     const subLayerEnabled = layerComposition.subLayerEnabled;
                     const isTransparent = layerComposition.subLayerList;
 
                     // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
-                    const rt = app.scene.layers.getLayerById(LAYERID_WORLD).renderTarget;
-                    const cam = this.cameras[cameraPass];
+                    const rt = layerComposition.getLayerById(LAYERID_WORLD).renderTarget;
 
                     let visibleLength = 0;
                     const layers = layerComposition.layerList;
@@ -273,7 +322,7 @@ class SceneGrab {
                         if (layer === this) break;
                         if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
 
-                        const layerCamId = layer.cameras.indexOf(cam);
+                        const layerCamId = layer.cameras.indexOf(camera);
                         if (layerCamId < 0) continue;
 
                         const transparent = isTransparent[i];
@@ -295,18 +344,16 @@ class SceneGrab {
 
             onPreRenderOpaque: function (cameraPass) {
 
-                /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
-                const device = app.graphicsDevice;
-
-                /** @type {import('../components/camera/component.js').CameraComponent} */
+                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneColorMap) {
 
                     // reallocate RT if needed
-                    if (self.resizeCondition(this.colorRenderTarget, camera.renderTarget?.colorBuffer, device)) {
+                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, this.colorFormat, false, false, false);
+                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
+                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, false, false);
                     }
 
                     // copy out the color buffer
@@ -340,12 +387,13 @@ class SceneGrab {
             },
 
             onDrawCall: function () {
-                app.graphicsDevice.setColorWrite(true, true, true, true);
+                // writing depth to color render target, force no blending and writing to all channels
+                device.setBlendState(BlendState.DEFAULT);
             },
 
             onPostRenderOpaque: function (cameraPass) {
 
-                /** @type {import('../components/camera/component.js').CameraComponent} */
+                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
                 if (camera.renderSceneDepthMap) {

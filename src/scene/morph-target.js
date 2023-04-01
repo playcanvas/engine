@@ -49,12 +49,7 @@ class MorphTarget {
         this._defaultWeight = options.defaultWeight || 0;
 
         // bounds
-        this.aabb = options.aabb;
-        if (!this.aabb) {
-            this.aabb = new BoundingBox();
-            if (options.deltaPositions)
-                this.aabb.compute(options.deltaPositions);
-        }
+        this._aabb = options.aabb;
 
         // store delta positions, used by aabb evaluation
         this.deltaPositions = options.deltaPositions;
@@ -91,6 +86,18 @@ class MorphTarget {
      */
     get defaultWeight() {
         return this._defaultWeight;
+    }
+
+    get aabb() {
+
+        // lazy evaluation, which allows us to skip this completely if customAABB is used
+        if (!this._aabb) {
+            this._aabb = new BoundingBox();
+            if (this.deltaPositions)
+                this._aabb.compute(this.deltaPositions);
+        }
+
+        return this._aabb;
     }
 
     get morphPositions() {

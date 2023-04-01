@@ -27,6 +27,11 @@ class DeviceCache {
             device.on('destroy', () => {
                 this.remove(device);
             });
+
+            // when the context is lost, call optional loseContext on its entry
+            device.on('devicelost', () => {
+                this._cache.get(device)?.loseContext?.(device);
+            });
         }
 
         return this._cache.get(device);
@@ -38,7 +43,7 @@ class DeviceCache {
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      */
     remove(device) {
-        this._cache.get(device)?.destroy();
+        this._cache.get(device)?.destroy?.(device);
         this._cache.delete(device);
     }
 }

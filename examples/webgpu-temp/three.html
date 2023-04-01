@@ -28,7 +28,7 @@
         import { Texture } from '../../src/platform/graphics/texture.js';
         import { RenderTarget } from '../../src/platform/graphics/render-target.js';
         import {
-            DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU,
+            DEVICETYPE_WEBGPU,
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
         } from '../../src/platform/graphics/constants.js';
@@ -217,8 +217,9 @@
 
             const canvas = document.querySelector('#gpuCanvas');
             const gfxOptions = {
-                deviceTypes: [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL],
-                glslangUrl: '../src/lib/glslang/glslang.js'
+                deviceTypes: [DEVICETYPE_WEBGPU],
+                glslangUrl: '../src/lib/glslang/glslang.js',
+                twgslUrl: '../src/lib/twgsl/twgsl.js'
             };
             createGraphicsDevice(canvas, gfxOptions).then((graphicsDevice) => {
 

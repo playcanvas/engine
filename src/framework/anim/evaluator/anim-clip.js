@@ -42,6 +42,11 @@ class AnimClip {
         return this._name;
     }
 
+    set track(track) {
+        this._track = track;
+        this._snapshot = new AnimSnapshot(track);
+    }
+
     get track() {
         return this._track;
     }
@@ -129,6 +134,10 @@ class AnimClip {
         if (Number.isFinite(clippedFrameDuration)) {
             this.activeEventsForFrame(0, clippedFrameDuration);
         }
+    }
+
+    progressForTime(time) {
+        return (time * this._speed) / this._track.duration;
     }
 
     _update(deltaTime) {

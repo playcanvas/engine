@@ -375,9 +375,6 @@ function BasisWorker() {
     };
 
     const workerInit = (config, callback) => {
-        // load the basis file (this is synchronous)
-        self.importScripts(config.basisUrl);
-
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)

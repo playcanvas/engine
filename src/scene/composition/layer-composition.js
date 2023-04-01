@@ -46,7 +46,7 @@ class LayerComposition extends EventHandler {
         this.layerList = [];
 
         /**
-         * A read-only array of boolean values, matching {@link Layer#layerList}. True means only
+         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
          * semi-transparent objects are rendered, and false means opaque.
          *
          * @type {boolean[]}
@@ -54,7 +54,7 @@ class LayerComposition extends EventHandler {
         this.subLayerList = [];
 
         /**
-         * A read-only array of boolean values, matching {@link Layer#layerList}. True means the
+         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
          * layer is rendered, false means it's skipped.
          *
          * @type {boolean[]}
@@ -324,7 +324,8 @@ class LayerComposition extends EventHandler {
                 for (let j = 0; j < len; j++) {
 
                     const layer = this.layerList[j];
-                    if (layer) {
+                    const isLayerEnabled = this.subLayerEnabled[j];
+                    if (layer && isLayerEnabled) {
 
                         // if layer needs to be rendered
                         if (layer.cameras.length > 0) {
@@ -541,6 +542,8 @@ class LayerComposition extends EventHandler {
             const ra = this._renderActions[i];
             const layer = this.layerList[ra.layerIndex];
 
+            ra.lightClusters = null;
+
             // if the layer has lights used by clusters
             if (layer.hasClusteredLights) {
 
@@ -737,7 +740,7 @@ class LayerComposition extends EventHandler {
     // Whole layer API
 
     /**
-     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link Layer#layerList}.
+     * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      */
@@ -758,7 +761,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the
-     * {@link Layer#layerList}.
+     * {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -780,7 +783,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Removes a layer (both opaque and semi-transparent parts) from {@link Layer#layerList}.
+     * Removes a layer (both opaque and semi-transparent parts) from {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
      */
@@ -812,7 +815,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Adds part of the layer with opaque (non semi-transparent) objects to the end of the
-     * {@link Layer#layerList}.
+     * {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      */
@@ -830,7 +833,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen
-     * index in the {@link Layer#layerList}.
+     * index in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -853,7 +856,7 @@ class LayerComposition extends EventHandler {
 
     /**
      * Removes an opaque part of the layer (non semi-transparent mesh instances) from
-     * {@link Layer#layerList}.
+     * {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
      */
@@ -880,7 +883,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Adds part of the layer with semi-transparent objects to the end of the {@link Layer#layerList}.
+     * Adds part of the layer with semi-transparent objects to the end of the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      */
@@ -897,7 +900,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Inserts a semi-transparent part of the layer at the chosen index in the {@link Layer#layerList}.
+     * Inserts a semi-transparent part of the layer at the chosen index in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
@@ -919,7 +922,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Removes a transparent part of the layer from {@link Layer#layerList}.
+     * Removes a transparent part of the layer from {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
      */
@@ -961,7 +964,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Gets index of the opaque part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the opaque part of the supplied layer in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
@@ -971,7 +974,7 @@ class LayerComposition extends EventHandler {
     }
 
     /**
-     * Gets index of the semi-transparent part of the supplied layer in the {@link Layer#layerList}.
+     * Gets index of the semi-transparent part of the supplied layer in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.

@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -291,10 +291,9 @@ class Scene extends EventHandler {
      * {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
-     *     var list = newComp.layerList;
-     *     var layer;
-     *     for (var i = 0; i < list.length; i++) {
-     *         layer = list[i];
+     *     const list = newComp.layerList;
+     *     for (let i = 0; i < list.length; i++) {
+     *         const layer = list[i];
      *         switch (layer.name) {
      *             case 'MyLayer':
      *                 layer.onEnable = myOnEnableFunction;
@@ -396,6 +395,16 @@ class Scene extends EventHandler {
     set envAtlas(value) {
         if (value !== this._envAtlas) {
             this._envAtlas = value;
+
+            // make sure required options are set up on the texture
+            if (value) {
+                value.addressU = ADDRESS_REPEAT;
+                value.addressV = ADDRESS_CLAMP_TO_EDGE;
+                value.minFilter = FILTER_LINEAR;
+                value.magFilter = FILTER_LINEAR;
+                value.mipmaps = false;
+            }
+
             this.updateShaders = true;
         }
     }
@@ -700,9 +709,9 @@ class Scene extends EventHandler {
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
-        this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
-        this._skyboxLuminance = render.skyboxLuminance === undefined ? 20000 : render.skyboxLuminance;
-        this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
+        this._skyboxIntensity = render.skyboxIntensity ?? 1;
+        this._skyboxLuminance = render.skyboxLuminance ?? 20000;
+        this._skyboxMip = render.skyboxMip ?? 0;
 
         if (render.skyboxRotation) {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
@@ -785,9 +794,9 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Get the lightmap pixel format.
+     * The lightmap pixel format.
      *
-     * @type {number} The pixel format.
+     * @type {number}
      */
     get lightmapPixelFormat() {
         return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;

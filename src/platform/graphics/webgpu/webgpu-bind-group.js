@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
@@ -6,7 +7,10 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
  * @ignore
  */
 class WebgpuBindGroup {
-    // type {GPUBindGroup}
+    /**
+     * @type {GPUBindGroup}
+     * @private
+     */
     bindGroup;
 
     update(bindGroup) {
@@ -14,11 +18,19 @@ class WebgpuBindGroup {
         this.destroy();
         const device = bindGroup.device;
 
-        // type {GPUBindGroupDescriptor}
+        /** @type {GPUBindGroupDescriptor} */
         const descr = this.createDescriptor(device, bindGroup);
-        DebugHelper.setLabel(descr, bindGroup.name);
+
+        WebgpuDebug.validate(device);
 
         this.bindGroup = device.wgpu.createBindGroup(descr);
+
+        WebgpuDebug.end(device, {
+            debugFormat: this.debugFormat,
+            descr: descr,
+            format: bindGroup.format,
+            bindGroup: bindGroup
+        });
     }
 
     destroy() {
@@ -40,11 +52,21 @@ class WebgpuBindGroup {
         // Note: This needs to match WebgpuBindGroupFormat.createDescriptor
         const entries = [];
 
+        const format = bindGroup.format;
+
+        Debug.call(() => {
+            this.debugFormat = '';
+        });
+
         // uniform buffers
         let index = 0;
         bindGroup.uniformBuffers.forEach((ub) => {
             const buffer = ub.impl.buffer;
             Debug.assert(buffer, 'NULL uniform buffer cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${index}: UB\n`;
+            });
+
             entries.push({
                 binding: index++,
                 resource: {
@@ -54,32 +76,45 @@ class WebgpuBindGroup {
         });
 
         // textures
-        bindGroup.textures.forEach((tex) => {
+        bindGroup.textures.forEach((tex, textureIndex) => {
 
             /** @type {import('./webgpu-texture.js').WebgpuTexture} */
             const wgpuTexture = tex.impl;
+            const textureFormat = format.textureFormats[textureIndex];
 
             // texture
             const view = wgpuTexture.getView(device);
             Debug.assert(view, 'NULL texture view cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${index}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
+            });
+
             entries.push({
                 binding: index++,
                 resource: view
             });
 
             // sampler
-            const sampler = wgpuTexture.getSampler(device);
+            const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
             Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${index}: ${sampler.label}\n`;
+            });
+
             entries.push({
                 binding: index++,
                 resource: sampler
             });
         });
 
-        return {
+        const descr = {
             layout: bindGroup.format.impl.bindGroupLayout,
             entries: entries
         };
+
+        DebugHelper.setLabel(descr, bindGroup.name);
+
+        return descr;
     }
 }
 

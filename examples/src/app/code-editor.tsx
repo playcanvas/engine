@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { LegacyRef, useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 // @ts-ignore: library file import
@@ -22,8 +22,8 @@ interface CodeEditorProps {
     setLintErrors: (value: boolean) => void,
     useTypeScript: boolean,
     lintErrors: boolean,
-    languageButtonRef: React.RefObject<unknown>,
-    playButtonRef: React.RefObject<unknown>
+    languageButtonRef: LegacyRef<any>,
+    playButtonRef: LegacyRef<any>
 }
 
 const CodeEditor = (props: CodeEditorProps) => {
@@ -126,7 +126,7 @@ const CodeEditor = (props: CodeEditorProps) => {
             <Container class='tabs-container'>
                 {props.files.map((file: File, index: number) => {
                     const hidden = (props.useTypeScript && index === 0 || !props.useTypeScript && index === 1);
-                    return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : ''} onClick={() => selectFile(index)}/>;
+                    return <Button key={index} id={`code-editor-file-tab-${index}`} hidden={hidden} text={file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name} class={index === selectedFile ? 'selected' : null} onClick={() => selectFile(index)}/>;
                 })}
             </Container>
         </Container>
@@ -140,7 +140,8 @@ const CodeEditor = (props: CodeEditorProps) => {
             options={{
                 scrollbar: {
                     horizontal: 'visible'
-                }
+                },
+                readOnly: false
             }}
         />
     </Panel>;

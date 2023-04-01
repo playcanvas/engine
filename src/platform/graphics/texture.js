@@ -3,13 +3,14 @@ import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constant
 import { math } from '../../core/math/math.js';
 
 import {
+    isCompressedPixelFormat,
+    pixelFormatByteSizes,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
+    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
@@ -19,7 +20,6 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
 
-let _pixelSizeTable = null;
 let _blockSizeTable = null;
 
 let id = 0;
@@ -30,12 +30,34 @@ let id = 0;
  */
 class Texture {
     /**
+     * The name of the texture.
+     *
+     * @type {string}
+     */
+    name;
+
+    /** @protected */
+    _isRenderTarget = false;
+
+    /** @protected */
+    _gpuSize = 0;
+
+    /** @protected */
+    id = id++;
+
+    /** @protected */
+    _invalid = false;
+
+    /** @protected */
+    _lockedLevel = -1;
+
+    /**
      * Create a new Texture instance.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this texture.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {string} [options.name] - The name of the texture.
+     * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only).
@@ -63,7 +85,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
      * - {@link PIXELFORMAT_111110F}
-     * - {@link PIXELFORMAT_ASTC_4x4}>/li>
+     * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
      *
@@ -76,7 +98,7 @@ class Texture {
      * - {@link TEXTUREPROJECTION_EQUIRECT}
      * - {@link TEXTUREPROJECTION_OCTAHEDRAL}
      *
-     * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is specified, otherwise
+     * Defaults to {@link TEXTUREPROJECTION_CUBE} if options.cubemap is true, otherwise
      * {@link TEXTUREPROJECTION_NONE}.
      * @param {number} [options.minFilter] - The minification filter type to use. Defaults to
      * {@link FILTER_LINEAR_MIPMAP_LINEAR}.
@@ -96,7 +118,15 @@ class Texture {
      * Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
      * (WebGL2 only). Defaults to false.
-     * @param {string} [options.type] - Specifies the image type, see {@link TEXTURETYPE_DEFAULT}.
+     * @param {string} [options.type] - Specifies the texture type.  Can be:
+     *
+     * - {@link TEXTURETYPE_DEFAULT}
+     * - {@link TEXTURETYPE_RGBM}
+     * - {@link TEXTURETYPE_RGBE}
+     * - {@link TEXTURETYPE_RGBP}
+     * - {@link TEXTURETYPE_SWIZZLEGGGR}
+     *
+     * Defaults to {@link TEXTURETYPE_DEFAULT}.
      * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires
      * special seam fixing shader code to look right. Defaults to false.
      * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the
@@ -123,17 +153,17 @@ class Texture {
      * @param {Uint8Array[]} [options.levels] - Array of Uint8Array.
      * @example
      * // Create a 8x8x24-bit texture
-     * var texture = new pc.Texture(graphicsDevice, {
+     * const texture = new pc.Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
      *     format: pc.PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient
-     * var pixels = texture.lock();
-     * var count = 0;
-     * for (var i = 0; i < 8; i++) {
-     *     for (var j = 0; j < 8; j++) {
+     * const pixels = texture.lock();
+     * const count = 0;
+     * for (let i = 0; i < 8; i++) {
+     *     for (let j = 0; j < 8; j++) {
      *         pixels[count++] = i * 32;
      *         pixels[count++] = j * 32;
      *         pixels[count++] = 255;
@@ -141,124 +171,70 @@ class Texture {
      * }
      * texture.unlock();
      */
-    constructor(graphicsDevice, options) {
-        this.id = id++;
+    constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
-        Debug.assert(this.device, "Texture contructor requires a graphicsDevice to be valid");
+        Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
 
-        /**
-         * The name of the texture. Defaults to null.
-         *
-         * @type {string}
-         */
-        this.name = null;
+        this.name = options.name ?? null;
 
-        this._width = 4;
-        this._height = 4;
-        this._depth = 1;
+        this._width = options.width ?? 4;
+        this._height = options.height ?? 4;
 
-        this._format = PIXELFORMAT_RGBA8;
-        this.type = TEXTURETYPE_DEFAULT;
-        this.projection = TEXTUREPROJECTION_NONE;
+        this._format = options.format ?? PIXELFORMAT_RGBA8;
+        this._compressed = isCompressedPixelFormat(this._format);
 
-        this._cubemap = false;
-        this._volume = false;
-        this.fixCubemapSeams = false;
-        this._flipY = false;
-        this._premultiplyAlpha = false;
-
-        this._isRenderTarget = false;
-
-        this._mipmaps = true;
-
-        this._minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
-        this._magFilter = FILTER_LINEAR;
-        this._anisotropy = 1;
-        this._addressU = ADDRESS_REPEAT;
-        this._addressV = ADDRESS_REPEAT;
-        this._addressW = ADDRESS_REPEAT;
-
-        this._compareOnRead = false;
-        this._compareFunc = FUNC_LESS;
-
-        // #if _PROFILER
-        this.profilerHint = 0;
-        // #endif
-
-        if (options !== undefined) {
-            if (options.name !== undefined) {
-                this.name = options.name;
-            }
-            this._width = (options.width !== undefined) ? options.width : this._width;
-            this._height = (options.height !== undefined) ? options.height : this._height;
-
-            this._format = (options.format !== undefined) ? options.format : this._format;
-
-            if (options.hasOwnProperty('type')) {
-                this.type = options.type;
-            } else if (options.hasOwnProperty('rgbm')) {
-                Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
-                this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-            } else if (options.hasOwnProperty('swizzleGGGR')) {
-                Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
-                this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
-            }
-
-            if (options.mipmaps !== undefined) {
-                this._mipmaps = options.mipmaps;
-            } else {
-                this._mipmaps = (options.autoMipmap !== undefined) ? options.autoMipmap : this._mipmaps;
-            }
-
-            this._levels = options.levels;
-
-            this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
-            this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
-
-            if (this._cubemap) {
-                this.projection = TEXTUREPROJECTION_CUBE;
-            } else if (options.projection && options.projection !== TEXTUREPROJECTION_CUBE) {
-                this.projection = options.projection;
-            }
-
-            this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
-            this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
-            this._anisotropy = (options.anisotropy !== undefined) ? options.anisotropy : this._anisotropy;
-            this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
-            this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
-
-            this._compareOnRead = (options.compareOnRead !== undefined) ? options.compareOnRead : this._compareOnRead;
-            this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
-
-            this._flipY = (options.flipY !== undefined) ? options.flipY : this._flipY;
-            this._premultiplyAlpha = (options.premultiplyAlpha !== undefined) ? options.premultiplyAlpha : this._premultiplyAlpha;
-
-            if (graphicsDevice.webgl2) {
-                this._depth = (options.depth !== undefined) ? options.depth : this._depth;
-                this._volume = (options.volume !== undefined) ? options.volume : this._volume;
-                this._addressW = (options.addressW !== undefined) ? options.addressW : this._addressW;
-            }
-
-            // #if _PROFILER
-            this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
-            // #endif
+        if (graphicsDevice.webgl2) {
+            this._volume = options.volume ?? false;
+            this._depth = options.depth ?? 1;
+        } else {
+            this._volume = false;
+            this._depth = 1;
         }
 
-        this._compressed = (this._format === PIXELFORMAT_DXT1 ||
-                            this._format === PIXELFORMAT_DXT3 ||
-                            this._format === PIXELFORMAT_DXT5 ||
-                            this._format >= PIXELFORMAT_ETC1);
+        this._cubemap = options.cubemap ?? false;
+        this.fixCubemapSeams = options.fixCubemapSeams ?? false;
+        this._flipY = options.flipY ?? false;
+        this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 
-        // Mip levels
-        this._invalid = false;
-        this._lockedLevel = -1;
+        this._mipmaps = options.mipmaps ?? options.autoMipmap ?? true;
+        this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
+        this._magFilter = options.magFilter ?? FILTER_LINEAR;
+        this._anisotropy = options.anisotropy ?? 1;
+        this._addressU = options.addressU ?? ADDRESS_REPEAT;
+        this._addressV = options.addressV ?? ADDRESS_REPEAT;
+        this._addressW = options.addressW ?? ADDRESS_REPEAT;
+
+        this._compareOnRead = options.compareOnRead ?? false;
+        this._compareFunc = options.compareFunc ?? FUNC_LESS;
+
+        this.type = TEXTURETYPE_DEFAULT;
+        if (options.hasOwnProperty('type')) {
+            this.type = options.type;
+        } else if (options.hasOwnProperty('rgbm')) {
+            Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
+            this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+        } else if (options.hasOwnProperty('swizzleGGGR')) {
+            Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
+            this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+        }
+
+        this.projection = TEXTUREPROJECTION_NONE;
+        if (this._cubemap) {
+            this.projection = TEXTUREPROJECTION_CUBE;
+        } else if (options.projection && options.projection !== TEXTUREPROJECTION_CUBE) {
+            this.projection = options.projection;
+        }
+
+        // #if _PROFILER
+        this.profilerHint = options.profilerHint ?? 0;
+        // #endif
+
+        this._levels = options.levels;
         if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
 
         this.dirtyAll();
-
-        this._gpuSize = 0;
 
         this.impl = graphicsDevice.createTextureImpl(this);
 
@@ -681,28 +657,6 @@ class Texture {
      * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
-        if (!_pixelSizeTable) {
-            _pixelSizeTable = [];
-            _pixelSizeTable[PIXELFORMAT_A8] = 1;
-            _pixelSizeTable[PIXELFORMAT_L8] = 1;
-            _pixelSizeTable[PIXELFORMAT_LA8] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGB565] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGBA5551] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGBA4] = 2;
-            _pixelSizeTable[PIXELFORMAT_RGB8] = 4;
-            _pixelSizeTable[PIXELFORMAT_RGBA8] = 4;
-            _pixelSizeTable[PIXELFORMAT_RGB16F] = 8;
-            _pixelSizeTable[PIXELFORMAT_RGBA16F] = 8;
-            _pixelSizeTable[PIXELFORMAT_RGB32F] = 16;
-            _pixelSizeTable[PIXELFORMAT_RGBA32F] = 16;
-            _pixelSizeTable[PIXELFORMAT_R32F] = 4;
-            _pixelSizeTable[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-            _pixelSizeTable[PIXELFORMAT_DEPTHSTENCIL] = 4;
-            _pixelSizeTable[PIXELFORMAT_111110F] = 4;
-            _pixelSizeTable[PIXELFORMAT_SRGB] = 4;
-            _pixelSizeTable[PIXELFORMAT_SRGBA] = 4;
-        }
-
         if (!_blockSizeTable) {
             _blockSizeTable = [];
             _blockSizeTable[PIXELFORMAT_ETC1] = 8;
@@ -720,7 +674,7 @@ class Texture {
             _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
         }
 
-        const pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+        const pixelSize = pixelFormatByteSizes[format] ?? 0;
         const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
         let result = 0;
 

@@ -51,7 +51,7 @@ class ResourceLoader {
      * @param {import('./handler.js').ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
-     * var loader = new ResourceLoader();
+     * const loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
      */
     addHandler(type, handler) {
@@ -98,7 +98,7 @@ class ResourceLoader {
         const handler = this._handlers[type];
         if (!handler) {
             const err = `No resource handler for asset type: '${type}' when loading [${url}]`;
-            Debug.warnOnce(err);
+            Debug.errorOnce(err);
             callback(err);
             return;
         }

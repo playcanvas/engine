@@ -30,6 +30,8 @@ npm run build:thumbnails
 
 Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
 
+As the examples are written in TypeScript, you will also need to build the type definitions in the engine repo with `npm run build:types`.
+
 ## Creating an example
 
 The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.

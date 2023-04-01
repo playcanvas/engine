@@ -18,6 +18,10 @@ void getSheenGlossiness() {
     sheenGlossiness *= saturate(vVertexColor.$VC);
     #endif
 
+    #ifdef MAPINVERT
+    sheenGlossiness = 1.0 - sheenGlossiness;
+    #endif
+
     sheenGlossiness += 0.0000001;
     sGlossiness = sheenGlossiness;
 }

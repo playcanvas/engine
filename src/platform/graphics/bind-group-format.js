@@ -1,9 +1,18 @@
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
-import { TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH } from './constants.js';
+import {
+    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
+    SAMPLETYPE_FLOAT
+} from './constants.js';
 
 let id = 0;
+
+const textureDimensionInfo = {
+    [TEXTUREDIMENSION_2D]: 'texture2D',
+    [TEXTUREDIMENSION_CUBE]: 'textureCube',
+    [TEXTUREDIMENSION_3D]: 'texture3D'
+};
 
 /**
  * @ignore
@@ -47,10 +56,12 @@ class BindGroupFormat {
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {BindBufferFormat[]} bufferFormats -
-     * @param {BindTextureFormat[]} textureFormats -
+     * @param {BindBufferFormat[]} [bufferFormats] - An array of bind buffer formats (uniform
+     * buffers). Defaults to an empty array.
+     * @param {BindTextureFormat[]} [textureFormats] - An array of bind texture formats (textures).
+     * Defaults to an empty array.
      */
-    constructor(graphicsDevice, bufferFormats, textureFormats) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = []) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 
@@ -112,11 +123,10 @@ class BindGroupFormat {
         let bindIndex = this.bufferFormats.length;
         this.textureFormats.forEach((format) => {
 
-            // TODO: suport different types of textures and samplers
-            Debug.assert(format.textureDimension === TEXTUREDIMENSION_2D);
-            Debug.assert(format.sampleType !== SAMPLETYPE_DEPTH);
+            const textureType = textureDimensionInfo[format.textureDimension];
+            Debug.assert(textureType, "Unsupported texture type");
 
-            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform texture2D ${format.name};\n` +
+            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name};\n` +
                     `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;
         });
 

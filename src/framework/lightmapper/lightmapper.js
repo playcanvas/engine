@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_55,
+    CHUNKAPI_1_62,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -16,7 +16,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';
@@ -44,6 +44,8 @@ import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -75,7 +77,7 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
-        this.shadowMapCache = renderer._shadowRenderer.shadowMapCache;
+        this.shadowMapCache = renderer.shadowMapCache;
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -220,7 +222,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_55;
+        material.chunks.APIVersion = CHUNKAPI_1_62;
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
@@ -269,9 +271,9 @@ class Lightmapper {
             this.ambientAOMaterial = this.createMaterialForPass(device, scene, 0, true);
             this.ambientAOMaterial.onUpdateShader = function (options) {
                 // mark LM as without ambient, to add it
-                options.lightMapWithoutAmbient = true;
+                options.litOptions.lightMapWithoutAmbient = true;
                 // don't add ambient to diffuse directly but keep it separate, to allow AO to be multiplied in
-                options.separateAmbient = true;
+                options.litOptions.separateAmbient = true;
                 return options;
             };
         }
@@ -841,23 +843,26 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
+    renderShadowMap(shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            if (!light.shadowMap && !this.scene.clusteredLightingEnabled) {
+            if (!light.shadowMap && !isClustered) {
                 light.shadowMap = this.shadowMapCache.get(this.device, light);
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRenderer.cullDirectional(light, casters, this.camera);
+                this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
             } else {
-                this.renderer._shadowRenderer.cullLocal(light, casters);
+                this.renderer._shadowRendererLocal.cull(light, casters);
             }
 
-            this.renderer.renderShadows(lightArray[light.type], this.camera);
+            const insideRenderPass = false;
+            this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
         }
 
         return true;
@@ -873,6 +878,9 @@ class Lightmapper {
         if (filterLightmap) {
             this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
         }
+
+        device.setBlendState(BlendState.DEFAULT);
+        device.setDepthState(DepthState.NODEPTH);
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -1014,7 +1022,7 @@ class Lightmapper {
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
                         const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
@@ -1078,7 +1086,7 @@ class Lightmapper {
 
                         // prepare clustered lighting
                         if (clusteredLightingEnabled) {
-                            this.worldClusters.activate(this.renderer.lightTextureAtlas);
+                            this.worldClusters.activate();
                         }
 
                         this.renderer._forwardTime = 0;

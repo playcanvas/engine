@@ -6,7 +6,7 @@ class CoreExporter {
      * @param {object} options - Object for passing optional arguments.
      * @param {Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
-     * @returns {any} - The canvas element containing the image.
+     * @returns {HTMLCanvasElement|undefined} - The canvas element containing the image.
      */
     textureToCanvas(texture, options = {}) {
 

@@ -50,12 +50,12 @@ function type(obj) {
  * @param {object} ex - The object that is merged with target.
  * @returns {object} The target object.
  * @example
- * var A = {
+ * const A = {
  *     a: function () {
  *         console.log(this.a);
  *     }
  * };
- * var B = {
+ * const B = {
  *     b: function () {
  *         console.log(this.b);
  *     }
@@ -84,16 +84,4 @@ function extend(target, ex) {
     return target;
 }
 
-/**
- * Return true if the Object is not undefined.
- *
- * @param {object} o - The Object to test.
- * @returns {boolean} True if the Object is not undefined.
- * @ignore
- */
-function isDefined(o) {
-    let a;
-    return (o !== a);
-}
-
-export { apps, common, config, data, extend, isDefined, revision, type, version };
+export { apps, common, config, data, extend, revision, type, version };

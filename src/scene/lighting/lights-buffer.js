@@ -99,6 +99,9 @@ class LightsBuffer {
     // active light texture format, initialized at app start
     static lightTextureFormat = LightsBuffer.FORMAT_8BIT;
 
+    // on webgl2 we use texelFetch instruction to read data textures
+    static useTexelFetch = false;
+
     // defines used for unpacking of light textures to allow CPU packing to match the GPU unpacking
     static shaderDefines = '';
 
@@ -115,8 +118,9 @@ class LightsBuffer {
     // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
     static buildShaderDefines(object, prefix) {
         let str = '';
+        const floatOffset = LightsBuffer.useTexelFetch ? '' : '.5';
         Object.keys(object).forEach((key) => {
-            str += `\n#define ${prefix}${key} ${object[key]}.5`;
+            str += `\n#define ${prefix}${key} ${object[key]}${floatOffset}`;
         });
         return str;
     }
@@ -127,6 +131,8 @@ class LightsBuffer {
         // precision for texture storage
         // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
         LightsBuffer.lightTextureFormat = (device.extTextureFloat && device.maxTextures > 8) ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
+
+        LightsBuffer.useTexelFetch = device.supportsTextureFetch;
 
         LightsBuffer.initShaderDefines();
     }

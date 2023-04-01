@@ -1,3 +1,5 @@
+import { Debug } from "../../core/debug.js";
+
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat3 } from '../../core/math/mat3.js';
@@ -579,7 +581,6 @@ class XrManager extends EventHandler {
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
-
                 this._camera.camera.xr = null;
                 this._camera = null;
             }
@@ -608,10 +609,17 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
+        // A framebufferScaleFactor scale of 1 is the full resolution of the display
+        // so we need to calculate this based on devicePixelRatio of the dislay and what
+        // we've set this in the graphics device
+        Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
+        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
+
         this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
             alpha: true,
             depth: true,
-            stencil: true
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor
         });
 
         session.updateRenderState({
@@ -683,34 +691,31 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
+        const lengthOld = this.views.length;
         const lengthNew = pose.views.length;
 
-        if (lengthNew > this.views.length) {
-            // add new views into list
-            for (let i = 0; i <= (lengthNew - this.views.length); i++) {
-                let view = this.viewsPool.pop();
-                if (!view) {
-                    view = {
-                        viewport: new Vec4(),
-                        projMat: new Mat4(),
-                        viewMat: new Mat4(),
-                        viewOffMat: new Mat4(),
-                        viewInvMat: new Mat4(),
-                        viewInvOffMat: new Mat4(),
-                        projViewOffMat: new Mat4(),
-                        viewMat3: new Mat3(),
-                        position: new Float32Array(3),
-                        rotation: new Quat()
-                    };
-                }
+        while (lengthNew > this.views.length) {
+            let view = this.viewsPool.pop();
+            if (!view) {
+                view = {
+                    viewport: new Vec4(),
+                    projMat: new Mat4(),
+                    viewMat: new Mat4(),
+                    viewOffMat: new Mat4(),
+                    viewInvMat: new Mat4(),
+                    viewInvOffMat: new Mat4(),
+                    projViewOffMat: new Mat4(),
+                    viewMat3: new Mat3(),
+                    position: new Float32Array(3),
+                    rotation: new Quat()
+                };
+            }
 
-                this.views.push(view);
-            }
-        } else if (lengthNew <= this.views.length) {
-            // remove views from list into pool
-            for (let i = 0; i < (this.views.length - lengthNew); i++) {
-                this.viewsPool.push(this.views.pop());
-            }
+            this.views.push(view);
+        }
+        // remove views from list into pool
+        while (lengthNew < this.views.length) {
+            this.viewsPool.push(this.views.pop());
         }
 
         // reset position
@@ -735,6 +740,31 @@ class XrManager extends EventHandler {
             view.projMat.set(viewRaw.projectionMatrix);
             view.viewMat.set(viewRaw.transform.inverse.matrix);
             view.viewInvMat.set(viewRaw.transform.matrix);
+        }
+
+        // update the camera fov properties only when we had 0 views
+        if (lengthOld === 0 && this.views.length > 0) {
+            const viewProjMat = new Mat4();
+            const view = this.views[0];
+
+            viewProjMat.copy(view.projMat);
+            const data = viewProjMat.data;
+
+            const fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
+            const aspectRatio = data[5] / data[0];
+            const farClip = data[14] / (data[10] + 1);
+            const nearClip = data[14] / (data[10] - 1);
+            const horizontalFov = false;
+
+
+            const camera = this._camera.camera;
+            camera.setXrProperties({
+                aspectRatio,
+                farClip,
+                fov,
+                horizontalFov,
+                nearClip
+            });
         }
 
         // position and rotate camera based on calculated vectors

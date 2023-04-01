@@ -1,24 +1,50 @@
 import { Vec3 } from '../math/vec3.js';
 
-const tmpVecA = new Vec3();
-
 /**
- * An infinite plane.
- *
- * @ignore
+ * An infinite plane. Internally it's represented in a parametric equation form:
+ * ax + by + cz + distance = 0.
  */
 class Plane {
     /**
+     * The normal of the plane.
+     *
+     * @readonly
+     * @type {Vec3}
+     */
+    normal = new Vec3();
+
+    /**
+     * The distance from the plane to the origin, along its normal.
+     *
+     * @readonly
+     * @type {number}
+     */
+    distance;
+
+    /**
      * Create a new Plane instance.
      *
-     * @param {Vec3} [point] - Point position on the plane. The constructor takes a reference of
-     * this parameter.
-     * @param {Vec3} [normal] - Normal of the plane. The constructor takes a reference of this
-     * parameter.
+     * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter. Defaults
+     * to {@link Vec3#UP}.
+     * @param {Vec3} [distance] - The distance from the plane to the origin, along its normal.
+     * Defaults to 0.
      */
-    constructor(point = new Vec3(), normal = new Vec3(0, 0, 1)) {
-        this.point = point;
-        this.normal = normal;
+    constructor(normal = Vec3.UP, distance = 0) {
+        this.normal.copy(normal);
+        this.distance = distance;
+    }
+
+    /**
+     * Sets the plane based on a specified normal and a point on the plane.
+     *
+     * @param {Vec3} point - The point on the plane.
+     * @param {Vec3} normal - The normal of the plane.
+     * @returns {Plane} Self for chaining.
+     */
+    setFromPointNormal(point, normal) {
+        this.normal.copy(normal);
+        this.distance = -this.normal.dot(point);
+        return this;
     }
 
     /**
@@ -31,7 +57,7 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsLine(start, end, point) {
-        const d = -this.normal.dot(this.point);
+        const d = this.distance;
         const d0 = this.normal.dot(start) + d;
         const d1 = this.normal.dot(end) + d;
 
@@ -52,14 +78,39 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
-        const pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
-        const t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
-        const intersects = t >= 0;
+        const denominator = this.normal.dot(ray.direction);
+        if (denominator === 0)
+            return false;
 
-        if (intersects && point)
+        const t = -(this.normal.dot(ray.origin) + this.distance) / denominator;
+        if (t >= 0 && point) {
             point.copy(ray.direction).mulScalar(t).add(ray.origin);
+        }
 
-        return intersects;
+        return t >= 0;
+    }
+
+    /**
+     * Copies the contents of a source Plane.
+     *
+     * @param {Plane} src - The Plane to copy from.
+     * @returns {Plane} Self for chaining.
+     */
+    copy(src) {
+        this.normal.copy(src.normal);
+        this.distance = src.distance;
+        return this;
+    }
+
+    /**
+     * Returns a clone of the Plane.
+     *
+     * @returns {this} A duplicate Plane.
+     */
+    clone() {
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 }
 

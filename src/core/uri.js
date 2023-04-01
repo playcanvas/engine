@@ -65,42 +65,51 @@ const re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
  */
 class URI {
     /**
+     * The scheme. (e.g. http).
+     *
+     * @type {string}
+     */
+    scheme;
+
+    /**
+     * The authority. (e.g. `www.example.com`).
+     *
+     * @type {string}
+     */
+    authority;
+
+    /**
+     * The path. (e.g. /users/example).
+     *
+     * @type {string}
+     */
+    path;
+
+    /**
+     * The query, the section after a ?. (e.g. search=value).
+     *
+     * @type {string}
+     */
+    query;
+
+    /**
+     * The fragment, the section after a #.
+     *
+     * @type {string}
+     */
+    fragment;
+
+    /**
      * Create a new URI instance.
      *
      * @param {string} uri - URI string.
      */
     constructor(uri) {
         const result = uri.match(re);
-
-        /**
-         * The scheme. (e.g. http).
-         *
-         * @type {string}
-         */
         this.scheme = result[2];
-        /**
-         * The authority. (e.g. `www.example.com`).
-         *
-         * @type {string}
-         */
         this.authority = result[4];
-        /**
-         * The path. (e.g. /users/example).
-         *
-         * @type {string}
-         */
         this.path = result[5];
-        /**
-         * The query, the section after a ?. (e.g. search=value).
-         *
-         * @type {string}
-         */
         this.query = result[7];
-        /**
-         * The fragment, the section after a #.
-         *
-         * @type {string}
-         */
         this.fragment = result[9];
     }
 
@@ -138,9 +147,9 @@ class URI {
      *
      * @returns {object} The URI's query parameters converted to an Object.
      * @example
-     * var s = "http://example.com?a=1&b=2&c=3";
-     * var uri = new pc.URI(s);
-     * var q = uri.getQuery();
+     * const s = "http://example.com?a=1&b=2&c=3";
+     * const uri = new pc.URI(s);
+     * const q = uri.getQuery();
      * console.log(q.a); // logs "1"
      * console.log(q.b); // logs "2"
      * console.log(q.c); // logs "3"
@@ -164,8 +173,8 @@ class URI {
      *
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example
-     * var s = "http://example.com";
-     * var uri = new pc.URI(s);
+     * const s = "http://example.com";
+     * const uri = new pc.URI(s);
      * uri.setQuery({
      *     "a": 1,
      *     "b": 2

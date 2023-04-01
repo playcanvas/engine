@@ -130,7 +130,7 @@ class Layer {
          * @type {boolean}
          * @private
          */
-        this._enabled = options.enabled === undefined ? true : options.enabled;
+        this._enabled = options.enabled ?? true;
         /**
          * @type {number}
          * @private
@@ -151,7 +151,7 @@ class Layer {
          *
          * @type {number}
          */
-        this.opaqueSortMode = options.opaqueSortMode === undefined ? SORTMODE_MATERIALMESH : options.opaqueSortMode;
+        this.opaqueSortMode = options.opaqueSortMode ?? SORTMODE_MATERIALMESH;
 
         /**
          * Defines the method used for sorting semi-transparent mesh instances before rendering. Can be:
@@ -166,7 +166,7 @@ class Layer {
          *
          * @type {number}
          */
-        this.transparentSortMode = options.transparentSortMode === undefined ? SORTMODE_BACK2FRONT : options.transparentSortMode;
+        this.transparentSortMode = options.transparentSortMode ?? SORTMODE_BACK2FRONT;
 
         if (options.renderTarget) {
             this.renderTarget = options.renderTarget;
@@ -185,7 +185,7 @@ class Layer {
          *
          * @type {number}
          */
-        this.shaderPass = options.shaderPass === undefined ? SHADER_FORWARD : options.shaderPass;
+        this.shaderPass = options.shaderPass ?? SHADER_FORWARD;
 
         /**
          * Tells that this layer is simple and needs to just render a bunch of mesh instances
@@ -194,7 +194,7 @@ class Layer {
          *
          * @type {boolean}
          */
-        this.passThrough = options.passThrough === undefined ? false : options.passThrough;
+        this.passThrough = options.passThrough ?? false;
 
         // clear flags
         /**
@@ -445,23 +445,6 @@ class Layer {
      */
     get hasClusteredLights() {
         return this._clusteredLightsSet.size > 0;
-    }
-
-    /**
-     * @type {import('../platform/graphics/render-target.js').RenderTarget}
-     * @ignore
-     */
-    set renderTarget(rt) {
-        /**
-         * @type {import('../platform/graphics/render-target.js').RenderTarget}
-         * @private
-         */
-        this._renderTarget = rt;
-        this._dirtyCameras = true;
-    }
-
-    get renderTarget() {
-        return this._renderTarget;
     }
 
     /**

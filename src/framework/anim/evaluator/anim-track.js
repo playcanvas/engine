@@ -6,6 +6,14 @@ import { AnimEvents } from './anim-events.js';
  */
 class AnimTrack {
     /**
+     * This AnimTrack can be used as a placeholder track when creating a state graph before having all associated animation data available.
+     *
+     * @type {AnimTrack}
+     */
+    static EMPTY = Object.freeze(new AnimTrack('empty', Number.MAX_VALUE, [], [], []));
+
+
+    /**
      * Create a new AnimTrack instance.
      *
      * @param {string} name - The track name.

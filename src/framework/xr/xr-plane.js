@@ -159,15 +159,15 @@ class XrPlane extends EventHandler {
      * @type {object[]}
      * @example
      * // prepare reusable objects
-     * var vecA = new pc.Vec3();
-     * var vecB = new pc.Vec3();
-     * var color = new pc.Color(1, 1, 1);
+     * const vecA = new pc.Vec3();
+     * const vecB = new pc.Vec3();
+     * const color = new pc.Color(1, 1, 1);
      *
      * // update Mat4 to plane position and rotation
      * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
      *
      * // draw lines between points
-     * for (var i = 0; i < plane.points.length; i++) {
+     * for (let i = 0; i < plane.points.length; i++) {
      *     vecA.copy(plane.points[i]);
      *     vecB.copy(plane.points[(i + 1) % plane.points.length]);
      *

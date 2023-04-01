@@ -1,54 +1,79 @@
 import * as pc from '../../../../';
 
-
 class KeyboardExample {
     static CATEGORY = 'Input';
     static NAME = 'Keyboard';
+    static WEBGPU_ENABLED = true;
 
-
-    example(canvas: HTMLCanvasElement): void {
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
 
-            app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5)
-            });
-            camera.translate(0, 7, 25);
-            app.root.addChild(camera);
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
 
-            // Create an Entity with a omni light component and a sphere model component.
-            const light = new pc.Entity();
-            light.addComponent("light", {
-                type: "omni",
-                color: new pc.Color(1, 1, 1),
-                range: 100
-            });
-            light.translate(5, 5, 10);
-            app.root.addChild(light);
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler
+            ];
 
-            const entity = assets.statue.resource.instantiateRenderEntity();
-            app.root.addChild(entity);
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
-            const keyboard = new pc.Keyboard(document.body);
-            app.on("update", function () {
-                if (keyboard.isPressed(pc.KEY_LEFT)) {
-                    entity.rotate(0, -1, 0);
-                }
-                if (keyboard.isPressed(pc.KEY_RIGHT)) {
-                    entity.rotate(0, 1, 0);
-                }
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
+
+                app.start();
+
+                // set skybox
+                app.scene.envAtlas = assets.helipad.resource;
+                app.scene.toneMapping = pc.TONEMAP_ACES;
+                app.scene.exposure = 1.6;
+                app.scene.skyboxMip = 1;
+
+                // Create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.4, 0.45, 0.5)
+                });
+                camera.translate(0, 7, 25);
+                app.root.addChild(camera);
+
+                const entity = assets.statue.resource.instantiateRenderEntity();
+                app.root.addChild(entity);
+
+                const keyboard = new pc.Keyboard(document.body);
+                app.on("update", function () {
+                    if (keyboard.isPressed(pc.KEY_LEFT)) {
+                        entity.rotate(0, -1, 0);
+                    }
+                    if (keyboard.isPressed(pc.KEY_RIGHT)) {
+                        entity.rotate(0, 1, 0);
+                    }
+                });
             });
         });
     }

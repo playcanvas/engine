@@ -1,6 +1,9 @@
 class TagsCache {
+    _index = {};
+
+    _key;
+
     constructor(key = null) {
-        this._index = {};
         this._key = key;
     }
 

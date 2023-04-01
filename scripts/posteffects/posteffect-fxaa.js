@@ -11,22 +11,8 @@ function FxaaEffect(graphicsDevice) {
     pc.PostEffect.call(this, graphicsDevice);
 
     // Shaders
-    var attributes = {
-        aPosition: pc.SEMANTIC_POSITION
-    };
-
-    var passThroughVert = [
-        "attribute vec2 aPosition;",
-        "",
-        "void main(void)",
-        "{",
-        "    gl_Position = vec4(aPosition, 0.0, 1.0);",
-        "}"
-    ].join("\n");
-
+    // TODO: this shader does not use UV coordinates from vertex shader, and might render upside down on WebGPU. Needs to be fixed.
     var fxaaFrag = [
-        "precision " + graphicsDevice.precision + " float;",
-        "",
         "uniform sampler2D uColorBuffer;",
         "uniform vec2 uResolution;",
         "",
@@ -84,10 +70,8 @@ function FxaaEffect(graphicsDevice) {
         "}"
     ].join("\n");
 
-    this.fxaaShader = new pc.Shader(graphicsDevice, {
-        attributes: attributes,
-        vshader: passThroughVert,
-        fshader: fxaaFrag
+    this.fxaaShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fxaaFrag, 'FxaaShader', {
+        aPosition: pc.SEMANTIC_POSITION
     });
 
     // Uniforms
@@ -106,7 +90,7 @@ Object.assign(FxaaEffect.prototype, {
         this.resolution[1] = 1 / inputTarget.height;
         scope.resolve("uResolution").setValue(this.resolution);
         scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-        pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader, rect);
+        this.drawQuad(outputTarget, this.fxaaShader, rect);
     }
 });
 

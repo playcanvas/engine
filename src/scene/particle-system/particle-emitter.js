@@ -25,6 +25,7 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import {
     BLEND_NORMAL,
@@ -696,7 +697,6 @@ class ParticleEmitter {
         this.material.name = this.node.name;
         this.material.cull = CULLFACE_NONE;
         this.material.alphaWrite = false;
-        this.material.blend = true;
         this.material.blendType = this.blendType;
 
         this.material.depthWrite = this.depthWrite;
@@ -854,6 +854,7 @@ class ParticleEmitter {
 
             // set by Editor if running inside editor
             const inTools = this.emitter.inTools;
+            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
             const shader = programLib.getProgram('particle', {
                 useCpu: this.emitter.useCpu,
@@ -877,7 +878,7 @@ class ParticleEmitter {
                 animTexLoop: this.emitter.animLoop,
                 pack8: this.emitter.pack8,
                 customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
-            });
+            }, processingOptions);
 
             return shader;
         };

@@ -27,8 +27,9 @@
         import { Shader } from '../../src/platform/graphics/shader.js';
         import { Texture } from '../../src/platform/graphics/texture.js';
         import { RenderTarget } from '../../src/platform/graphics/render-target.js';
+        import { drawQuadWithShader } from '../../src/scene/graphics/quad-render-utils.js';
         import {
-            DEVICETYPE_WEBGL, DEVICETYPE_WEBGPU,
+            DEVICETYPE_WEBGPU,
             SEMANTIC_TEXCOORD0, SEMANTIC_POSITION, CULLFACE_NONE,
             PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
         } from '../../src/platform/graphics/constants.js';
@@ -43,6 +44,7 @@
         import { StandardMaterial } from "../../src/scene/materials/standard-material.js";
         import { BLEND_ADDITIVE, BLEND_SUBTRACTIVE, BLEND_SCREEN, BLEND_NORMAL, BLEND_NONE } from "../../src/scene/constants.js";
 
+        import { createShaderFromCode } from '../../src/scene/shader-lib/utils.js';
         import { Material } from "../../src/scene/materials/material.js";
         import { BasicMaterial } from "../../src/scene/materials/basic-material.js";
         import { RenderComponentSystem } from '../../src/framework/components/render/system.js';
@@ -167,6 +169,7 @@ void main() {
 
             // Create the shader definition and shader from the vertex and fragment shaders
             const shaderDefinition = {
+                name: 'OneExampleTestShader',
                 attributes: {
                     vertex_position: SEMANTIC_POSITION,
                     vertex_texCoord0: SEMANTIC_TEXCOORD0
@@ -236,21 +239,21 @@ void main() {
             const worldLayer = app.scene.layers.getLayerByName("World");
             const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
 
-            const textureCamera = new Entity("TextureCamera");
-            textureCamera.addComponent("camera", {
-                clearColor: new Color(0.2, 0.2, 0.4),
+            // const textureCamera = new Entity("TextureCamera");
+            // textureCamera.addComponent("camera", {
+            //     clearColor: new Color(0.2, 0.2, 0.4),
 
-                layers: [worldLayer.id, skyboxLayer.id],
+            //     layers: [worldLayer.id, skyboxLayer.id],
 
-                // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
-                // to make it rendered first each frame
-                priority: -1,
+            //     // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
+            //     // to make it rendered first each frame
+            //     priority: -1,
 
-                // this camera renders into texture target
-                renderTarget: renderTarget
-            });
-            app.root.addChild(textureCamera);
-            textureCamera.setLocalPosition(0, 0, 12);
+            //     // this camera renders into texture target
+            //     renderTarget: renderTarget
+            // });
+            // app.root.addChild(textureCamera);
+            // textureCamera.setLocalPosition(0, 0, 12);
 
             /////////////// skinning - commented out as it is still not functional
 
@@ -301,6 +304,21 @@ void main() {
             app.root.addChild(lightDir);
 
 
+            const textureBlitVertexShader = `
+                attribute vec2 vertex_position;
+                void main(void) {
+                    gl_Position = vec4(vertex_position, 0.5, 1.0);
+                }`;
+
+            const textureBlitFragmentShader = `
+                void main(void) {
+                    gl_FragColor = vec4(1, 0, 0, 1);
+                }`;
+
+
+
+            // console.log("create shadewr !!!!!!!!");
+            const blitShader = createShaderFromCode(app.graphicsDevice, textureBlitVertexShader, textureBlitFragmentShader, `blitShader`);
 
 
             let time = 0;
@@ -328,8 +346,18 @@ void main() {
                 camera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
                 camera.lookAt(Vec3.ZERO);
 
-                textureCamera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
-                textureCamera.lookAt(Vec3.ZERO);
+                // textureCamera.setLocalPosition(20 * Math.cos(time * 0.2), 2, 20 * Math.sin(time * 0.2));
+                // textureCamera.lookAt(Vec3.ZERO);
+
+
+
+
+                drawQuadWithShader(app.graphicsDevice, renderTarget, blitShader);
+
+
+
+
+
 
                 app.drawTexture(0.6, -0.7, 0.6, 0.3, assets.rocks.resource);
                 app.drawTexture(-0.6, -0.7, 0.6, 0.5, renderTexture);
@@ -348,8 +376,9 @@ void main() {
 
             const canvas = document.querySelector('#gpuCanvas');
             const gfxOptions = {
-                deviceTypes: [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL],
-                glslangUrl: '../src/lib/glslang/glslang.js'
+                deviceTypes: [DEVICETYPE_WEBGPU],
+                glslangUrl: '../src/lib/glslang/glslang.js',
+                twgslUrl: '../src/lib/twgsl/twgsl.js'
             };
             createGraphicsDevice(canvas, gfxOptions).then((graphicsDevice) => {
 

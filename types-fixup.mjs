@@ -86,33 +86,6 @@ import { Asset } from '../../../framework/asset/asset.js';
 `;
 fs.writeFileSync(path, dts);
 
-const cameraComponentProps = [
-    ['aspectRatioMode', 'number'],
-    ['calculateProjection', 'CalculateMatrixCallback'],
-    ['calculateTransform', 'CalculateMatrixCallback'],
-    ['clearColor', 'Color'],
-    ['cullFaces', 'boolean'],
-    ['farClip', 'number'],
-    ['flipFaces', 'boolean'],
-    ['fov', 'number'],
-    ['frustumCulling', 'boolean'],
-    ['horizontalFov', 'boolean'],
-    ['nearClip', 'number'],
-    ['orthoHeight', 'number'],
-    ['projection', 'number'],
-    ['scissorRect', 'Vec4']
-];
-
-path = './types/framework/components/camera/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(cameraComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Color } from '../../../core/math/color.js';
-import { Vec4 } from '../../../core/math/vec4.js';
-`;
-fs.writeFileSync(path, dts);
-
 const collisionComponentProps = [
     ['axis', 'number'],
     ['halfExtents', 'Vec3'],
@@ -374,7 +347,7 @@ const standardMaterialProps = [
     ['clearCoatGlossMapUv', 'number'],
     ['clearCoatGlossVertexColor', 'boolean'],
     ['clearCoatGlossVertexColorChannel', 'string'],
-    ['clearCoatGlossiness', 'number'],
+    ['clearCoatGloss', 'number'],
     ['clearCoatMap', 'Texture|null'],
     ['clearCoatMapChannel', 'string'],
     ['clearCoatMapOffset', 'Vec2'],
@@ -422,6 +395,7 @@ const standardMaterialProps = [
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],
     ['fresnelModel', 'number'],
+    ['gloss', 'number'],
     ['glossMap', 'Texture|null'],
     ['glossMapChannel', 'string'],
     ['glossMapOffset', 'Vec2'],
@@ -484,7 +458,6 @@ const standardMaterialProps = [
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
     ['shadingModel', 'number'],
-    ['shininess', 'number'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],

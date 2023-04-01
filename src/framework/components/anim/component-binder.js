@@ -178,7 +178,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
             };
         }
 
-        // when animating individual members of vec/colour/quaternion, we must also invoke the
+        // when animating individual members of vec/color/quaternion, we must also invoke the
         // object's setter. this is required by some component properties which have custom
         // handlers which propagate the changes correctly.
         if ([Vec2, Vec3, Vec4, Color, Quat].indexOf(obj.constructor) !== -1 && path.length > 1) {

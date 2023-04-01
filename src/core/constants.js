@@ -6,6 +6,13 @@
 export const TRACEID_RENDER_FRAME = 'RenderFrame';
 
 /**
+ * Logs a frame time.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_FRAME_TIME = 'RenderFrameTime';
+
+/**
  * Logs basic information about generated render passes.
  *
  * @type {string}
@@ -89,3 +96,17 @@ export const TRACEID_BINDGROUP_ALLOC = 'BindGroupAlloc';
  * @type {string}
  */
 export const TRACEID_BINDGROUPFORMAT_ALLOC = 'BindGroupFormatAlloc';
+
+/**
+ * Logs the creation of render pipelines. WebBPU only.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDERPIPELINE_ALLOC = 'RenderPipelineAlloc';
+
+/**
+ * Logs the creation of pipeline layouts. WebBPU only.
+ *
+ * @type {string}
+ */
+export const TRACEID_PIPELINELAYOUT_ALLOC = 'PipelineLayoutAlloc';

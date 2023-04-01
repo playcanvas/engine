@@ -65,13 +65,22 @@ class Camera {
         this._viewProjMatDirty = true;
 
         this.frustum = new Frustum();
+
+        // Set by XrManager
+        this._xr = null;
+        this._xrProperties = {
+            horizontalFov: this._horizontalFov,
+            fov: this._fov,
+            aspectRatio: this._aspectRatio,
+            farClip: this._farClip,
+            nearClip: this._nearClip
+        };
     }
 
     /**
      * True if the camera clears the full render target. (viewport / scissor are full size)
      */
     get fullSizeClearRect() {
-
         const rect = this._scissorRectClear ? this.scissorRect : this._rect;
         return rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1;
     }
@@ -84,7 +93,7 @@ class Camera {
     }
 
     get aspectRatio() {
-        return this._aspectRatio;
+        return (this.xr?.active) ? this._xrProperties.aspectRatio : this._aspectRatio;
     }
 
     set aspectRatioMode(newValue) {
@@ -187,7 +196,7 @@ class Camera {
     }
 
     get farClip() {
-        return this._farClip;
+        return (this.xr?.active) ? this._xrProperties.farClip : this._farClip;
     }
 
     set flipFaces(newValue) {
@@ -206,7 +215,7 @@ class Camera {
     }
 
     get fov() {
-        return this._fov;
+        return (this.xr?.active) ? this._xrProperties.fov : this._fov;
     }
 
     set frustumCulling(newValue) {
@@ -225,7 +234,7 @@ class Camera {
     }
 
     get horizontalFov() {
-        return this._horizontalFov;
+        return (this.xr?.active) ? this._xrProperties.horizontalFov : this._horizontalFov;
     }
 
     set layers(newValue) {
@@ -249,7 +258,7 @@ class Camera {
     }
 
     get nearClip() {
-        return this._nearClip;
+        return (this.xr?.active) ? this._xrProperties.nearClip : this._nearClip;
     }
 
     set node(newValue) {
@@ -344,6 +353,17 @@ class Camera {
         return this._shutter;
     }
 
+    set xr(newValue) {
+        if (this._xr !== newValue) {
+            this._xr = newValue;
+            this._projMatDirty = true;
+        }
+    }
+
+    get xr() {
+        return this._xr;
+    }
+
     /**
      * Creates a duplicate of the camera.
      *
@@ -360,7 +380,22 @@ class Camera {
      * @returns {Camera} Self for chaining.
      */
     copy(other) {
-        this.aspectRatio = other.aspectRatio;
+        // We aren't using the getters and setters because there is additional logic
+        // around using WebXR in the getters for these properties so that functions
+        // like screenToWorld work correctly with other systems like the UI input
+        // system
+        this._aspectRatio = other._aspectRatio;
+        this._farClip = other._farClip;
+        this._fov = other._fov;
+        this._horizontalFov = other._horizontalFov;
+        this._nearClip = other._nearClip;
+
+        this._xrProperties.aspectRatio = other._xrProperties.aspectRatio;
+        this._xrProperties.farClip = other._xrProperties.farClip;
+        this._xrProperties.fov = other._xrProperties.fov;
+        this._xrProperties.horizontalFov = other._xrProperties.horizontalFov;
+        this._xrProperties.nearClip = other._xrProperties.nearClip;
+
         this.aspectRatioMode = other.aspectRatioMode;
         this.calculateProjection = other.calculateProjection;
         this.calculateTransform = other.calculateTransform;
@@ -372,13 +407,9 @@ class Camera {
         this.clearStencilBuffer = other.clearStencilBuffer;
         this.cullFaces = other.cullFaces;
         this.cullingMask = other.cullingMask;
-        this.farClip = other.farClip;
         this.flipFaces = other.flipFaces;
-        this.fov = other.fov;
         this.frustumCulling = other.frustumCulling;
-        this.horizontalFov = other.horizontalFov;
         this.layers = other.layers;
-        this.nearClip = other.nearClip;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;
         this.rect = other.rect;
@@ -387,6 +418,9 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+
+        this._projMatDirty = true;
+
         return this;
     }
 
@@ -437,7 +471,7 @@ class Camera {
     screenToWorld(x, y, z, cw, ch, worldCoord = new Vec3()) {
 
         // Calculate the screen click as a point on the far plane of the normalized device coordinate 'box' (z=1)
-        const range = this._farClip - this._nearClip;
+        const range = this.farClip - this.nearClip;
         _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
         _deviceCoord.mulScalar(2);
         _deviceCoord.sub(Vec3.ONE);
@@ -445,7 +479,7 @@ class Camera {
         if (this._projection === PROJECTION_PERSPECTIVE) {
 
             // calculate half width and height at the near clip plane
-            Mat4._getPerspectiveHalfSize(_halfSize, this._fov, this._aspectRatio, this._nearClip, this._horizontalFov);
+            Mat4._getPerspectiveHalfSize(_halfSize, this.fov, this.aspectRatio, this.nearClip, this.horizontalFov);
 
             // scale by normalized screen coordinates
             _halfSize.x *= _deviceCoord.x;
@@ -453,7 +487,7 @@ class Camera {
 
             // transform to world space
             const invView = this._node.getWorldTransform();
-            _halfSize.z = -this._nearClip;
+            _halfSize.z = -this.nearClip;
             invView.transformPoint(_halfSize, _point);
 
             // point along camera->_point ray at distance z from the camera
@@ -478,13 +512,13 @@ class Camera {
     _evaluateProjectionMatrix() {
         if (this._projMatDirty) {
             if (this._projection === PROJECTION_PERSPECTIVE) {
-                this._projMat.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip, this._horizontalFov);
+                this._projMat.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip, this.horizontalFov);
                 this._projMatSkybox.copy(this._projMat);
             } else {
                 const y = this._orthoHeight;
-                const x = y * this._aspectRatio;
-                this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
-                this._projMatSkybox.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip);
+                const x = y * this.aspectRatio;
+                this._projMat.setOrtho(-x, x, -y, y, this.nearClip, this.farClip);
+                this._projMatSkybox.setPerspective(this.fov, this.aspectRatio, this.nearClip, this.farClip);
             }
 
             this._projMatDirty = false;
@@ -522,7 +556,7 @@ class Camera {
             const sphereViewHeight = Math.tan(viewAngle);
 
             // The size of (half) the screen if the near clipping plane is at a distance of 1
-            const screenViewHeight = Math.tan((this._fov / 2) * math.DEG_TO_RAD);
+            const screenViewHeight = Math.tan((this.fov / 2) * math.DEG_TO_RAD);
 
             // The ratio of the geometry's screen size compared to the actual size of the screen
             return Math.min(sphereViewHeight / screenViewHeight, 1);
@@ -540,11 +574,11 @@ class Camera {
      * @param {number} [far] - Far distance for the frustum points. Defaults to the far clip distance of the camera.
      * @returns {Vec3[]} - An array of corners, using a global storage space.
      */
-    getFrustumCorners(near = this._nearClip, far = this._farClip) {
+    getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
-        const fov = this._fov * Math.PI / 180.0;
+        const fov = this.fov * Math.PI / 180.0;
         let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
-        let x = y * this._aspectRatio;
+        let x = y * this.aspectRatio;
 
         const points = _frustumPoints;
         points[0].x = x;
@@ -562,7 +596,7 @@ class Camera {
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * far;
-            x = y * this._aspectRatio;
+            x = y * this.aspectRatio;
         }
         points[4].x = x;
         points[4].y = -y;
@@ -578,6 +612,21 @@ class Camera {
         points[7].z = -far;
 
         return points;
+    }
+
+    /**
+     * Sets XR camera properties that should be derived physical camera in {@link XrManager}.
+     *
+     * @param {object} [properties] - Properties object.
+     * @param {number} [properties.aspectRatio] - Aspect ratio.
+     * @param {number} [properties.farClip] - Far clip.
+     * @param {number} [properties.fov] - Field of view.
+     * @param {boolean} [properties.horizontalFov] - Enable horizontal field of view.
+     * @param {number} [properties.nearClip] - Near clip.
+     */
+    setXrProperties(properties) {
+        Object.assign(this._xrProperties, properties);
+        this._projMatDirty = true;
     }
 }
 

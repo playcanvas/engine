@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
+import { MIN_DESKTOP_WIDTH } from './constants.js';
 
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
@@ -41,7 +41,7 @@ const SideBar = () => {
             topNavItem.scrollIntoView();
         });
 
-        if (!filteredCategories && document.body.offsetWidth < 601) {
+        if (!filteredCategories && document.body.offsetWidth < MIN_DESKTOP_WIDTH) {
             // @ts-ignore
             sideBar.ui.collapsed = true;
         }
@@ -58,7 +58,7 @@ const SideBar = () => {
     const categories = filteredCategories || defaultCategories;
     return (
         <>
-            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < 601} collapsed={true} id='sideBar' class='small-thumbnails'>
+            <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < MIN_DESKTOP_WIDTH} collapsed={true} id='sideBar' class='small-thumbnails'>
                 <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(filter: string) => {
                     const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
                     if (!reg) {
@@ -99,7 +99,7 @@ const SideBar = () => {
                                     {
                                         Object.keys(categories[category].examples).sort((a: string, b: string) => (a > b ? 1 : -1)).map((example: string) => {
                                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
-                                            const className = `nav-item ${isSelected ? 'selected' : ''}`;
+                                            const className = `nav-item ${isSelected ? 'selected' : null}`;
                                             return <Link key={example} to={`/${category}/${example}`} onClick={() => {
                                                 const sideBar = document.getElementById('sideBar');
                                                 // @ts-ignore

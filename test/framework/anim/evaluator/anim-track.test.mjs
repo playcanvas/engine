@@ -39,3 +39,21 @@ describe('AnimTrack', function () {
     });
 
 });
+
+describe('EmptyAnimTrack', function () {
+    const emptyAnimTrack = AnimTrack.EMPTY;
+
+    describe('#constructor', function () {
+
+        it('instantiates correctly', function () {
+            expect(emptyAnimTrack).to.be.ok;
+            expect(emptyAnimTrack.name).to.equal('empty');
+            expect(emptyAnimTrack.duration).to.equal(Number.MAX_VALUE);
+            expect(emptyAnimTrack.inputs.length).to.equal(0);
+            expect(emptyAnimTrack.outputs.length).to.equal(0);
+            expect(emptyAnimTrack.curves.length).to.equal(0);
+        });
+
+    });
+
+});
