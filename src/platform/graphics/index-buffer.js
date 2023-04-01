@@ -38,10 +38,10 @@ class IndexBuffer {
      * // static, hinting that the buffer will never be modified.
      * const indices = new UInt16Array([0, 1, 2]);
      * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
-     *                                      pc.INDEXFORMAT_UINT16,
-     *                                      3,
-     *                                      pc.BUFFER_STATIC,
-     *                                      indices);
+     *                                        pc.INDEXFORMAT_UINT16,
+     *                                        3,
+     *                                        pc.BUFFER_STATIC,
+     *                                        indices);
      */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)

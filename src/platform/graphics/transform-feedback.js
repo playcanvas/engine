@@ -42,7 +42,7 @@ import { ShaderUtils } from './shader-utils.js';
  *
  * ```javascript
  * // *** script asset ***
- * const TransformExample = pc.createScript('transformExample');
+ * var TransformExample = pc.createScript('transformExample');
  *
  * // attribute that references shader asset and material
  * TransformExample.attributes.add('shaderCode', { type: 'asset', assetType: 'shader' });
