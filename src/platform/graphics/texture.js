@@ -123,17 +123,17 @@ class Texture {
      * @param {Uint8Array[]} [options.levels] - Array of Uint8Array.
      * @example
      * // Create a 8x8x24-bit texture
-     * var texture = new pc.Texture(graphicsDevice, {
+     * const texture = new pc.Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
      *     format: pc.PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient
-     * var pixels = texture.lock();
-     * var count = 0;
-     * for (var i = 0; i < 8; i++) {
-     *     for (var j = 0; j < 8; j++) {
+     * const pixels = texture.lock();
+     * const count = 0;
+     * for (let i = 0; i < 8; i++) {
+     *     for (let j = 0; j < 8; j++) {
      *         pixels[count++] = i * 32;
      *         pixels[count++] = j * 32;
      *         pixels[count++] = 255;

@@ -105,12 +105,12 @@ let app = null;
  *
  * MyScript.prototype.initialize = function() {
  *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     var app = this.app;
+ *     const app = this.app;
  * };
  *
  * MyScript.prototype.update = function(dt) {
  *     // ...and update functions.
- *     var app = this.app;
+ *     const app = this.app;
  * };
  * ```
  *
@@ -126,8 +126,8 @@ class AppBase extends EventHandler {
      * @param {HTMLCanvasElement} canvas - The canvas element.
      * @example
      * // Engine-only example: create the application manually
-     * var options = new AppOptions();
-     * var app = new pc.AppBase(canvas);
+     * const options = new AppOptions();
+     * const app = new pc.AppBase(canvas);
      * app.init(options);
      *
      * // Start the application's main loop
@@ -306,7 +306,7 @@ class AppBase extends EventHandler {
          * @type {Entity}
          * @example
          * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
-         * var camera = this.app.root.findByName('Camera');
+         * const camera = this.app.root.findByName('Camera');
          */
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
@@ -317,7 +317,7 @@ class AppBase extends EventHandler {
          * @type {AssetRegistry}
          * @example
          * // Search the asset registry for all assets with the tag 'vehicle'
-         * var vehicleAssets = this.app.assets.findByTag('vehicle');
+         * const vehicleAssets = this.app.assets.findByTag('vehicle');
          */
         this.assets = new AssetRegistry(this.loader);
         if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
@@ -359,7 +359,7 @@ class AppBase extends EventHandler {
          * @type {SceneRegistry}
          * @example
          * // Search the scene registry for a item with the name 'racetrack1'
-         * var sceneItem = this.app.scenes.find('racetrack1');
+         * const sceneItem = this.app.scenes.find('racetrack1');
          *
          * // Load the scene using the item's url
          * this.app.scenes.loadScene(sceneItem.url);
@@ -635,7 +635,7 @@ class AppBase extends EventHandler {
      * this id. Otherwise current application will be returned.
      * @returns {AppBase|undefined} The running application, if any.
      * @example
-     * var app = pc.AppBase.getApplication();
+     * const app = pc.AppBase.getApplication();
      */
     static getApplication(id) {
         return id ? AppBase._applications[id] : getApplication();
@@ -1545,7 +1545,7 @@ class AppBase extends EventHandler {
      * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
      * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
      * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
-     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
+     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brightness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
@@ -1568,7 +1568,7 @@ class AppBase extends EventHandler {
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
-     * var settings = {
+     * const settings = {
      *     physics: {
      *         gravity: [0, -9.8, 0]
      *     },
@@ -1706,19 +1706,19 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end, pc.Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
-     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
     drawLine(start, end, color, depthTest, layer) {
@@ -1741,12 +1741,12 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     new pc.Vec3(0, 0, 0),
      *     new pc.Vec3(1, 0, 0),
@@ -1754,7 +1754,7 @@ class AppBase extends EventHandler {
      *     new pc.Vec3(1, 1, 0),
      *     new pc.Vec3(1, 1, 1)
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     pc.Color.RED,
      *     pc.Color.YELLOW,
@@ -1782,7 +1782,7 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     0, 0, 0,
      *     1, 0, 0,
@@ -1790,7 +1790,7 @@ class AppBase extends EventHandler {
      *     1, 1, 0,
      *     1, 1, 1
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     1, 0, 0, 1,  // red
      *     0, 1, 0, 1,  // green
@@ -1817,7 +1817,7 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * var center = new pc.Vec3(0, 0, 0);
+     * const center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
      * @ignore
      */
@@ -1836,8 +1836,8 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire aligned box
-     * var min = new pc.Vec3(-1, -1, -1);
-     * var max = new pc.Vec3(1, 1, 1);
+     * const min = new pc.Vec3(-1, -1, -1);
+     * const max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      * @ignore
      */

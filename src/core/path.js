@@ -19,10 +19,10 @@ const path = {
      * @param {...string} section - Section of path to join. 2 or more can be provided as parameters.
      * @returns {string} The joined file path.
      * @example
-     * var path = pc.path.join('foo', 'bar');
+     * const path = pc.path.join('foo', 'bar');
      * console.log(path); // Prints 'foo/bar'
      * @example
-     * var path = pc.path.join('alpha', 'beta', 'gamma');
+     * const path = pc.path.join('alpha', 'beta', 'gamma');
      * console.log(path); // Prints 'alpha/beta/gamma'
      */
     join: function () {

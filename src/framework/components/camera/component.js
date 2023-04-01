@@ -21,7 +21,7 @@ import { Debug } from '../../../core/debug.js';
  *
  * ```javascript
  * // Add a pc.CameraComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
@@ -29,7 +29,7 @@ import { Debug } from '../../../core/debug.js';
  * });
  *
  * // Get the pc.CameraComponent on an entity
- * var cameraComponent = entity.camera;
+ * const cameraComponent = entity.camera;
  *
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
@@ -675,8 +675,8 @@ class CameraComponent extends Component {
      * coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
-     * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
-     * var end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
+     * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
+     * const end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
      *
      * // Use the ray coordinates to perform a raycast
      * app.systems.rigidbody.raycastFirst(start, end, function (result) {

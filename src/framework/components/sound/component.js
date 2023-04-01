@@ -359,7 +359,7 @@ class SoundComponent extends Component {
      * @returns {SoundSlot|null} The new slot or null if the slot already exists.
      * @example
      * // get an asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // add a slot
      * this.entity.sound.addSlot('beep', {
      *     asset: asset
@@ -487,7 +487,7 @@ class SoundComponent extends Component {
      * or if the SoundComponent has no slot with the specified name.
      * @example
      * // get asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // create a slot and play it
      * this.entity.sound.addSlot('beep', {
      *     asset: asset
