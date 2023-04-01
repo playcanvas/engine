@@ -51,7 +51,7 @@ class Shader {
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
      * // Create a shader that renders primitives with a solid red color
-     * var shaderDefinition = {
+     * const shaderDefinition = {
      *     attributes: {
      *         aPosition: pc.SEMANTIC_POSITION
      *     },
@@ -73,7 +73,7 @@ class Shader {
      *     ].join("\n")
      * };
      *
-     * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
         this.id = id++;

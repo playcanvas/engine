@@ -23,8 +23,8 @@ const shapePrimitives = [];
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
- * var normals = pc.calculateNormals(positions, indices);
- * var mesh = pc.createMesh(graphicsDevice, positions, {
+ * const normals = pc.calculateNormals(positions, indices);
+ * const mesh = pc.createMesh(graphicsDevice, positions, {
  *     normals: normals,
  *     uvs: uvs,
  *     indices: indices
@@ -96,8 +96,8 @@ function calculateNormals(positions, indices) {
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
- * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
- * var mesh = pc.createMesh(graphicsDevice, positions, {
+ * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * const mesh = pc.createMesh(graphicsDevice, positions, {
  *     normals: normals,
  *     tangents: tangents,
  *     uvs: uvs,
@@ -233,7 +233,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
- * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
+ * const mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
  *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
  *     uvs: [0, 0, 1, 0, 0, 1],
  *     indices: [0, 1, 2]

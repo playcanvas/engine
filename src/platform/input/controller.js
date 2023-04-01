@@ -23,7 +23,7 @@ class Controller {
      * @param {Mouse} [options.mouse] - A Mouse object to use.
      * @param {import('./game-pads.js').GamePads} [options.gamepads] - A Gamepads object to use.
      * @example
-     * var c = new pc.Controller(document);
+     * const c = new pc.Controller(document);
      *
      * // Register the "fire" action and assign it to both the Enter key and the space bar.
      * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);

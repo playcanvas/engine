@@ -36,8 +36,8 @@ class IndexBuffer {
      * @example
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
-     * var indices = new UInt16Array([0, 1, 2]);
-     * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
+     * const indices = new UInt16Array([0, 1, 2]);
+     * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
      *                                      pc.INDEXFORMAT_UINT16,
      *                                      3,
      *                                      pc.BUFFER_STATIC,

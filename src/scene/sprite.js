@@ -50,10 +50,10 @@ class Sprite extends EventHandler {
         super();
 
         this._device = device;
-        this._pixelsPerUnit = options && options.pixelsPerUnit !== undefined ? options.pixelsPerUnit : 1;
-        this._renderMode = options && options.renderMode !== undefined ? options.renderMode : SPRITE_RENDERMODE_SIMPLE;
-        this._atlas = options && options.atlas !== undefined ? options.atlas : null;
-        this._frameKeys = options && options.frameKeys !== undefined ? options.frameKeys : null;
+        this._pixelsPerUnit = options?.pixelsPerUnit ?? 1;
+        this._renderMode = options?.renderMode ?? SPRITE_RENDERMODE_SIMPLE;
+        this._atlas = options?.atlas ?? null;
+        this._frameKeys = options?.frameKeys ?? null;
         this._meshes = [];
 
         // set to true to update multiple
