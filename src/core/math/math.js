@@ -39,7 +39,7 @@ const math = {
      * @returns {number[]} An array of 3 bytes.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33]
-     * var bytes = pc.math.intToBytes24(0x112233);
+     * const bytes = pc.math.intToBytes24(0x112233);
      */
     intToBytes24: function (i) {
         const r = (i >> 16) & 0xff;
@@ -56,7 +56,7 @@ const math = {
      * @returns {number[]} An array of 4 bytes.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33, 0x44]
-     * var bytes = pc.math.intToBytes32(0x11223344);
+     * const bytes = pc.math.intToBytes32(0x11223344);
      */
     intToBytes32: function (i) {
         const r = (i >> 24) & 0xff;
@@ -76,10 +76,10 @@ const math = {
      * @returns {number} A single unsigned 24 bit Number.
      * @example
      * // Set result1 to 0x112233 from an array of 3 values
-     * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
+     * const result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
      *
      * // Set result2 to 0x112233 from 3 discrete values
-     * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
+     * const result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
      */
     bytesToInt24: function (r, g, b) {
         if (r.length) {
@@ -100,10 +100,10 @@ const math = {
      * @returns {number} A single unsigned 32bit Number.
      * @example
      * // Set result1 to 0x11223344 from an array of 4 values
-     * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
+     * const result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
      *
      * // Set result2 to 0x11223344 from 4 discrete values
-     * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
+     * const result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      */
     bytesToInt32: function (r, g, b, a) {
         if (r.length) {

@@ -128,8 +128,8 @@ PlanarRenderer.prototype.frameUpdate = function () {
     if (planarCamera.enabled) {
 
         // update reflection camera orientation by mirroring the scene camera by the plane
-        this.plane.set(this.planeNormal, this.planePoint);
-        this.reflectionMatrix.setReflection(this.plane);
+        this.plane.setFromPointNormal(this.planePoint, this.planeNormal);
+        this.reflectionMatrix.setReflection(this.plane.normal, this.plane.distance);
 
         var pos = this.sceneCameraEntity.getPosition();
         var reflectedPos = this.reflectionMatrix.transformPoint(pos);

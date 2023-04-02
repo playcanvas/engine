@@ -7,7 +7,7 @@ const events = {
      * @param {object} target - The object to add events to.
      * @returns {object} The target object.
      * @example
-     * var obj = { };
+     * const obj = { };
      * pc.events.attach(obj);
      * @ignore
      */

@@ -64,16 +64,8 @@ const _triStripIndices = [0, 1, 3, 0, 3, 2];
 
 const mat3 = new Mat3();
 
-const worldMatX = new Vec3();
-const worldMatY = new Vec3();
-const worldMatZ = new Vec3();
 function getScaleSign(mi) {
-    const wt = mi.node.worldTransform;
-    wt.getX(worldMatX);
-    wt.getY(worldMatY);
-    wt.getZ(worldMatZ);
-    worldMatX.cross(worldMatX, worldMatY);
-    return worldMatX.dot(worldMatZ) >= 0 ? 1 : -1;
+    return mi.node.worldTransform.scaleSign;
 }
 
 /**
@@ -884,7 +876,7 @@ class BatchManager {
             meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
             meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
             meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
-            meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
+            meshInstance.flipFacesFactor = getScaleSign(batch.origMeshInstances[0]);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
 
             batch.meshInstance = meshInstance;

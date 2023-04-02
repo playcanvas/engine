@@ -1,12 +1,11 @@
 export default /* glsl */`
-void occludeSpecular() {
-    dSpecularLight *= dAo;
-    dReflection *= dAo;
+void occludeSpecular(float gloss, float ao, vec3 worldNormal, vec3 viewDir) {
+    dSpecularLight *= ao;
+    dReflection *= ao;
 
 #ifdef LIT_SHEEN
-    sSpecularLight *= dAo;
-    sReflection *= dAo;
+    sSpecularLight *= ao;
+    sReflection *= ao;
 #endif
-
 }
 `;

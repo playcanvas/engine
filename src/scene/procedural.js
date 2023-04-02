@@ -1,6 +1,5 @@
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
-import { Debug } from '../core/debug.js';
 
 import {
     SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
@@ -23,8 +22,8 @@ const shapePrimitives = [];
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
- * var normals = pc.calculateNormals(positions, indices);
- * var mesh = pc.createMesh(graphicsDevice, positions, {
+ * const normals = pc.calculateNormals(positions, indices);
+ * const mesh = pc.createMesh(graphicsDevice, positions, {
  *     normals: normals,
  *     uvs: uvs,
  *     indices: indices
@@ -96,8 +95,8 @@ function calculateNormals(positions, indices) {
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
- * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
- * var mesh = pc.createMesh(graphicsDevice, positions, {
+ * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * const mesh = pc.createMesh(graphicsDevice, positions, {
  *     normals: normals,
  *     tangents: tangents,
  *     uvs: uvs,
@@ -233,7 +232,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
- * var mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
+ * const mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
  *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
  *     uvs: [0, 0, 1, 0, 0, 1],
  *     indices: [0, 1, 2]
@@ -306,13 +305,13 @@ function createMesh(device, positions, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new torus-shaped mesh.
  */
-function createTorus(device, opts) {
+function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const rc = opts && opts.tubeRadius !== undefined ? opts.tubeRadius : 0.2;
-    const rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
-    const segments = opts && opts.segments !== undefined ? opts.segments : 30;
-    const sides = opts && opts.sides !== undefined ? opts.sides : 20;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const rc = opts.tubeRadius ?? 0.2;
+    const rt = opts.ringRadius ?? 0.3;
+    const segments = opts.segments ?? 30;
+    const sides = opts.sides ?? 20;
+    const calcTangents = opts.calculateTangents ?? false;
 
     // Variable declarations
     const positions = [];
@@ -603,20 +602,13 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
-function createCylinder(device, opts) {
-    // #if _DEBUG
-    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
-        Debug.deprecated('"baseRadius" in arguments, use "radius" instead');
-    }
-    // #endif
-
+function createCylinder(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    let radius = opts && (opts.radius || opts.baseRadius);
-    radius = radius !== undefined ? radius : 0.5;
-    const height = opts && opts.height !== undefined ? opts.height : 1.0;
-    const heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
-    const capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const radius = opts.radius ?? 0.5;
+    const height = opts.height ?? 1;
+    const heightSegments = opts.heightSegments ?? 5;
+    const capSegments = opts.capSegments ?? 20;
+    const calcTangents = opts.calculateTangents ?? false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     const options = _createConeData(radius, radius, height, heightSegments, capSegments, false);
@@ -652,13 +644,13 @@ function createCylinder(device, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
  */
-function createCapsule(device, opts) {
+function createCapsule(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
-    const height = opts && opts.height !== undefined ? opts.height : 1.0;
-    const heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
-    const sides = opts && opts.sides !== undefined ? opts.sides : 20;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const radius = opts.radius ?? 0.3;
+    const height = opts.height ?? 1;
+    const heightSegments = opts.heightSegments ?? 1;
+    const sides = opts.sides ?? 20;
+    const calcTangents = opts.calculateTangents ?? false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     const options = _createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
@@ -693,14 +685,14 @@ function createCapsule(device, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cone-shaped mesh.
  */
-function createCone(device, opts) {
+function createCone(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
-    const peakRadius = opts && opts.peakRadius !== undefined ? opts.peakRadius : 0.0;
-    const height = opts && opts.height !== undefined ? opts.height : 1.0;
-    const heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
-    const capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const baseRadius = opts.baseRadius ?? 0.5;
+    const peakRadius = opts.peakRadius ?? 0;
+    const height = opts.height ?? 1;
+    const heightSegments = opts.heightSegments ?? 5;
+    const capSegments = opts.capSegments ?? 18;
+    const calcTangents = opts.calculateTangents ?? false;
 
     const options = _createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
@@ -732,12 +724,12 @@ function createCone(device, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new sphere-shaped mesh.
  */
-function createSphere(device, opts) {
+function createSphere(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
-    const latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
-    const longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const radius = opts.radius ?? 0.5;
+    const latitudeBands = opts.latitudeBands ?? 16;
+    const longitudeBands = opts.longitudeBands ?? 16;
+    const calcTangents = opts.calculateTangents ?? false;
 
     // Variable declarations
     const positions = [];
@@ -815,12 +807,12 @@ function createSphere(device, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new plane-shaped mesh.
  */
-function createPlane(device, opts) {
+function createPlane(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new Vec2(0.5, 0.5);
-    const ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
-    const ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const he = opts.halfExtents ?? new Vec2(0.5, 0.5);
+    const ws = opts.widthSegments ?? 5;
+    const ls = opts.lengthSegments ?? 5;
+    const calcTangents = opts.calculateTangents ?? false;
 
     // Variable declarations
     const positions = [];
@@ -898,13 +890,13 @@ function createPlane(device, opts) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new box-shaped mesh.
  */
-function createBox(device, opts) {
+function createBox(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
-    const he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new Vec3(0.5, 0.5, 0.5);
-    const ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
-    const ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
-    const hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
-    const calcTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
+    const he = opts.halfExtents ?? new Vec3(0.5, 0.5, 0.5);
+    const ws = opts.widthSegments ?? 1;
+    const ls = opts.lengthSegments ?? 1;
+    const hs = opts.heightSegments ?? 1;
+    const calcTangents = opts.calculateTangents ?? false;
 
     const corners = [
         new Vec3(-he.x, -he.y, he.z),
@@ -1030,7 +1022,7 @@ function getShapePrimitive(device, type) {
         switch (type) {
 
             case 'box':
-                mesh = createBox(device, { halfExtents: new Vec3(0.5, 0.5, 0.5) });
+                mesh = createBox(device);
                 area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
                 break;
 

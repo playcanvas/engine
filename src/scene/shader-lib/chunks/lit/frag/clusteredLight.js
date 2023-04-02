@@ -318,9 +318,29 @@ void decodeClusterLightCookieData(inout ClusterLightData clusterLightData) {
     clusterLightData.cookieChannelMask = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_COOKIE_B);
 }
 
-void evaluateLight(ClusterLightData light) {
+void evaluateLight(
+    ClusterLightData light, 
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    vec3 reflectionDir,
+#if defined(LIT_CLEARCOAT)
+    vec3 clearcoatReflectionDir,
+#endif
+    float gloss, 
+    vec3 specularity, 
+    vec3 geometricNormal, 
+    mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
+    ClearcoatArgs clearcoat, 
+    SheenArgs sheen, 
+    IridescenceArgs iridescence
+) {
 
-    dAtten3 = vec3(1.0);
+    vec3 cookieAttenuation = vec3(1.0);
+    float diffuseAttenuation = 1.0;
+    float falloffAttenuation = 1.0;
 
     // evaluate omni part of the light
     getLightDirPoint(light.position);
@@ -342,7 +362,7 @@ void evaluateLight(ClusterLightData light) {
             calcSphereLightValues(light.position, light.halfWidth, light.halfHeight);
         }
 
-        dAtten = getFalloffWindow(light.range);
+        falloffAttenuation = getFalloffWindow(light.range, dLightDirW);
 
     } else
 
@@ -351,12 +371,12 @@ void evaluateLight(ClusterLightData light) {
     {   // punctual light
 
         if (isClusteredLightFalloffLinear(light))
-            dAtten = getFalloffLinear(light.range);
+            falloffAttenuation = getFalloffLinear(light.range, dLightDirW);
         else
-            dAtten = getFalloffInvSquared(light.range);
+            falloffAttenuation = getFalloffInvSquared(light.range, dLightDirW);
     }
 
-    if (dAtten > 0.00001) {
+    if (falloffAttenuation > 0.00001) {
 
         #ifdef CLUSTER_AREALIGHTS
 
@@ -364,11 +384,11 @@ void evaluateLight(ClusterLightData light) {
 
             // handle light shape
             if (isClusteredLightRect(light)) {
-                dAttenD = getRectLightDiffuse() * 16.0;
+                diffuseAttenuation = getRectLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             } else if (isClusteredLightDisk(light)) {
-                dAttenD = getDiskLightDiffuse() * 16.0;
+                diffuseAttenuation = getDiskLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             } else { // sphere
-                dAttenD = getSphereLightDiffuse() * 16.0;
+                diffuseAttenuation = getSphereLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW) * 16.0;
             }
 
         } else
@@ -376,18 +396,18 @@ void evaluateLight(ClusterLightData light) {
         #endif
 
         {
-            dAtten *= getLightDiffuse();
+            falloffAttenuation *= getLightDiffuse(worldNormal, viewDir, dLightDirW, dLightDirNormW); 
         }
 
         // spot light falloff
         if (isClusteredLightSpot(light)) {
             decodeClusterLightSpot(light);
-            dAtten *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos);
+            falloffAttenuation *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, dLightDirNormW);
         }
 
         #if defined(CLUSTER_COOKIES_OR_SHADOWS)
 
-        if (dAtten > 0.00001) {
+        if (falloffAttenuation > 0.00001) {
 
             // shadow / cookie
             if (isClusteredLightCastShadow(light) || isClusteredLightCookie(light)) {
@@ -409,9 +429,9 @@ void evaluateLight(ClusterLightData light) {
                     decodeClusterLightCookieData(light);
 
                     if (isClusteredLightSpot(light)) {
-                        dAtten3 = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
+                        cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask);
                     } else {
-                        dAtten3 = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
+                        cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), dLightDirW, light.cookieIntensity, isClusteredLightCookieRgb(light), light.cookieChannelMask, shadowTextureResolution, shadowEdgePixels, light.omniAtlasViewport);
                     }
                 }
 
@@ -428,21 +448,21 @@ void evaluateLight(ClusterLightData light) {
                     if (isClusteredLightSpot(light)) {
 
                         // spot shadow
-                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams);
+                        getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
                         
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
-                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
+                            float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
-                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams);
+                            float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
                         #endif
-                        dAtten *= mix(1.0, shadow, light.shadowIntensity);
+                        falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
 
                     } else {
 
                         // omni shadow
-                        normalOffsetPointShadow(shadowParams);  // normalBias adjusted for distance
+                        normalOffsetPointShadow(shadowParams, dLightPosW, dLightDirW, dLightDirNormW, geometricNormal);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
@@ -451,7 +471,7 @@ void evaluateLight(ClusterLightData light) {
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
                             float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, light.omniAtlasViewport, shadowEdgePixels, dLightDirW);
                         #endif
-                        dAtten *= mix(1.0, shadow, light.shadowIntensity);
+                        falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
                     }
                 }
 
@@ -468,7 +488,7 @@ void evaluateLight(ClusterLightData light) {
 
             // area light diffuse
             {
-                vec3 areaDiffuse = (dAttenD * dAtten) * light.color * dAtten3;
+                vec3 areaDiffuse = (diffuseAttenuation * falloffAttenuation) * light.color * cookieAttenuation;
 
                 #if defined(LIT_SPECULAR)
                     #if defined(LIT_CONSERVE_ENERGY)
@@ -487,14 +507,14 @@ void evaluateLight(ClusterLightData light) {
                 float areaLightSpecular;
 
                 if (isClusteredLightRect(light)) {
-                    areaLightSpecular = getRectLightSpecular();
+                    areaLightSpecular = getRectLightSpecular(worldNormal, viewDir);
                 } else if (isClusteredLightDisk(light)) {
-                    areaLightSpecular = getDiskLightSpecular();
+                    areaLightSpecular = getDiskLightSpecular(worldNormal, viewDir);
                 } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular();
+                    areaLightSpecular = getSphereLightSpecular(worldNormal, viewDir);
                 }
 
-                dSpecularLight += dLTCSpecFres * areaLightSpecular * dAtten * light.color * dAtten3;
+                dSpecularLight += dLTCSpecFres * areaLightSpecular * falloffAttenuation * light.color * cookieAttenuation;
 
                 #ifdef LIT_CLEARCOAT
 
@@ -502,14 +522,14 @@ void evaluateLight(ClusterLightData light) {
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecularCC();
+                        areaLightSpecularCC = getRectLightSpecular(clearcoat.worldNormal, viewDir);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecularCC();
+                        areaLightSpecularCC = getDiskLightSpecular(clearcoat.worldNormal, viewDir);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecularCC();
+                        areaLightSpecularCC = getSphereLightSpecular(clearcoat.worldNormal, viewDir);
                     }
 
-                    ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * dAtten * light.color  * dAtten3;
+                    ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
 
                 #endif
 
@@ -523,12 +543,12 @@ void evaluateLight(ClusterLightData light) {
 
             // punctual light diffuse
             {
-                vec3 punctualDiffuse = dAtten * light.color * dAtten3;
+                vec3 punctualDiffuse = falloffAttenuation * light.color * cookieAttenuation;
 
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
                 #if defined(LIT_CONSERVE_ENERGY)
-                    punctualDiffuse = mix(punctualDiffuse, vec3(0), dSpecularity);
+                    punctualDiffuse = mix(punctualDiffuse, vec3(0), specularity);
                 #endif
                 #endif
                 #endif
@@ -539,33 +559,66 @@ void evaluateLight(ClusterLightData light) {
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef LIT_SPECULAR
 
-                vec3 halfDir = normalize(-dLightDirNormW + dViewDirW);
+                vec3 halfDir = normalize(-dLightDirNormW + viewDir);
                 
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * getFresnel(dot(dViewDirW, halfDir), dSpecularity);
+                    dSpecularLight += 
+                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * 
+                        getFresnel(
+                            dot(viewDir, halfDir), 
+                            gloss, 
+                            specularity
+                        #if defined(LIT_IRIDESCENCE)
+                            , iridescenceFresnel,
+                            iridescence
+                        #endif
+                            );
                 #else
-                    dSpecularLight += getLightSpecular(halfDir) * dAtten * light.color * dAtten3 * dSpecularity;
+                    dSpecularLight += getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dLightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3 * getFresnelCC(dot(dViewDirW, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecularCC(halfDir) * dAtten * light.color * dAtten3;
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir) * dAtten * light.color * dAtten3;
+                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, dLightDirNormW, sheen.gloss) * falloffAttenuation * light.color * cookieAttenuation;
                 #endif
 
             #endif
         }
     }
+
+    // Write to global attenuation values (for lightmapper)
+    dAtten = falloffAttenuation;
+    dAttenD = diffuseAttenuation;
+    dAtten3 = cookieAttenuation;
 }
 
-void evaluateClusterLight(float lightIndex) {
+void evaluateClusterLight(
+    float lightIndex, 
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    vec3 reflectionDir, 
+#if defined(LIT_CLEARCOAT)
+    vec3 clearcoatReflectionDir,
+#endif
+    float gloss, 
+    vec3 specularity, 
+    vec3 geometricNormal, 
+    mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
+    ClearcoatArgs clearcoat, 
+    SheenArgs sheen, 
+    IridescenceArgs iridescence
+) {
 
     // decode core light data from textures
     ClusterLightData clusterLightData;
@@ -573,10 +626,45 @@ void evaluateClusterLight(float lightIndex) {
 
     // evaluate light if it uses accepted light mask
     if (acceptLightMask(clusterLightData))
-        evaluateLight(clusterLightData);
+        evaluateLight(
+            clusterLightData, 
+            worldNormal, 
+            viewDir, 
+            reflectionDir, 
+#if defined(LIT_CLEARCOAT)
+            clearcoatReflectionDir, 
+#endif
+            gloss, 
+            specularity, 
+            geometricNormal, 
+            tbn, 
+#if defined(LIT_IRIDESCENCE)
+            iridescenceFresnel,
+#endif
+            clearcoat, 
+            sheen, 
+            iridescence
+        );
 }
 
-void addClusteredLights() {
+void addClusteredLights(
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    vec3 reflectionDir, 
+#if defined(LIT_CLEARCOAT)
+    vec3 clearcoatReflectionDir,
+#endif
+    float gloss, 
+    vec3 specularity, 
+    vec3 geometricNormal, 
+    mat3 tbn, 
+#if defined(LIT_IRIDESCENCE)
+    vec3 iridescenceFresnel,
+#endif
+    ClearcoatArgs clearcoat, 
+    SheenArgs sheen, 
+    IridescenceArgs iridescence
+) {
 
     // skip lights if no lights at all
     if (clusterSkip > 0.5)
@@ -606,7 +694,25 @@ void addClusteredLights() {
                 if (lightIndex <= 0.0)
                         return;
 
-                evaluateClusterLight(lightIndex * 255.0); 
+                evaluateClusterLight(
+                    lightIndex * 255.0, 
+                    worldNormal, 
+                    viewDir, 
+                    reflectionDir,
+#if defined(LIT_CLEARCOAT)
+                    clearcoatReflectionDir,
+#endif
+                    gloss, 
+                    specularity, 
+                    geometricNormal, 
+                    tbn, 
+#if defined(LIT_IRIDESCENCE)
+                    iridescenceFresnel,
+#endif
+                    clearcoat, 
+                    sheen, 
+                    iridescence
+                ); 
             }
 
         #else
@@ -622,8 +728,25 @@ void addClusteredLights() {
                 if (lightIndex <= 0.0)
                     return;
                 
-                evaluateClusterLight(lightIndex * 255.0); 
-
+                evaluateClusterLight(
+                    lightIndex * 255.0, 
+                    worldNormal, 
+                    viewDir, 
+                    reflectionDir,
+#if defined(LIT_CLEARCOAT)
+                    clearcoatReflectionDir,
+#endif
+                    gloss, 
+                    specularity, 
+                    geometricNormal, 
+                    tbn, 
+#if defined(LIT_IRIDESCENCE)
+                    iridescenceFresnel,
+#endif
+                    clearcoat, 
+                    sheen, 
+                    iridescence
+                ); 
                 // end of the cell array
                 if (lightCellIndex >= clusterMaxCells) {
                     break;

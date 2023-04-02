@@ -1,9 +1,9 @@
 export default /* glsl */`
-float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowParams) {
+float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
     // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 
-    float z = dShadowCoord.z;
-    vec2 uv = dShadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
+    float z = shadowCoord.z;
+    vec2 uv = shadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
     float shadowMapSizeInv = 1.0 / shadowParams.x;
     vec2 base_uv = floor(uv + 0.5);
     float s = (uv.x + 0.5 - base_uv.x);
@@ -58,11 +58,11 @@ float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowParams) {
     return sum;
 }
 
-float getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowParams) {
-    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams);
+float getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
+    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
 }
 
-float getShadowSpotPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec4 shadowParams) {
-    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowParams.xyz);
+float getShadowSpotPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
+    return _getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
 }
 `;

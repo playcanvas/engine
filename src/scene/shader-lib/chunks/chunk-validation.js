@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60 } from '../../../platform/graphics/constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -27,17 +27,60 @@ const chunkVersions = {
     transmissionPS: CHUNKAPI_1_57,
 
     // backend
-    clusteredLightPS: CHUNKAPI_1_55,
-    fresnelSchlickPS: CHUNKAPI_1_55,
-    endPS: CHUNKAPI_1_55,
-    lightmapAddPS: CHUNKAPI_1_55,
-    lightmapDirAddPS: CHUNKAPI_1_55,
-    lightSpecularAnisoGGXPS: CHUNKAPI_1_55,
-    lightSpecularBlinnPS: CHUNKAPI_1_55,
-    lightSpecularPhongPS: CHUNKAPI_1_55,
     normalVertexPS: CHUNKAPI_1_55,
     startPS: CHUNKAPI_1_55,
-    reflectionEnvPS: CHUNKAPI_1_56
+
+    ambientConstantPS: CHUNKAPI_1_62,
+    ambientEnvPS: CHUNKAPI_1_62,
+    ambientSHPS: CHUNKAPI_1_62,
+    aoDiffuseOccPS: CHUNKAPI_1_62,
+    aoSpecOccPS: CHUNKAPI_1_62,
+    aoSpecOccConstPS: CHUNKAPI_1_62,
+    aoSpecOccConstSimplePS: CHUNKAPI_1_62,
+    aoSpecOccSimplePS: CHUNKAPI_1_62,
+    clusteredLightPS: CHUNKAPI_1_62,
+    clusteredLightShadowPS: CHUNKAPI_1_62,
+    combinePS: CHUNKAPI_1_62,
+    endPS: CHUNKAPI_1_62,
+    falloffInvSquaredPS: CHUNKAPI_1_62,
+    falloffLinearPS: CHUNKAPI_1_62,
+    fresnelSchlickPS: CHUNKAPI_1_62,
+    iridescenceDiffractionPS: CHUNKAPI_1_62,
+    lightDiffuseLambertPS: CHUNKAPI_1_62,
+    lightSheenPS: CHUNKAPI_1_62,
+    lightSpecularAnisoGGXPS: CHUNKAPI_1_62,
+    lightSpecularBlinnPS: CHUNKAPI_1_62,
+    lightSpecularPhongPS: CHUNKAPI_1_62,
+    lightmapAddPS: CHUNKAPI_1_62,
+    lightmapDirAddPS: CHUNKAPI_1_62,
+    ltcPS: CHUNKAPI_1_62,
+    metalnessModulatePS: CHUNKAPI_1_62,
+    outputAlphaPS: CHUNKAPI_1_62,
+    outputAlphaPremulPS: CHUNKAPI_1_62,
+    reflDirPS: CHUNKAPI_1_62,
+    reflDirAnisoPS: CHUNKAPI_1_62,
+    reflectionCCPS: CHUNKAPI_1_62,
+    reflectionCubePS: CHUNKAPI_1_62,
+    reflectionEnvPS: CHUNKAPI_1_62,
+    reflectionEnvHQPS: CHUNKAPI_1_62,
+    reflectionSheenPS: CHUNKAPI_1_62,
+    reflectionSpherePS: CHUNKAPI_1_62,
+    reflectionSphereLowPS: CHUNKAPI_1_62,
+    refractionCubePS: CHUNKAPI_1_62,
+    refractionDynamicPS: CHUNKAPI_1_62,
+    shadowCommonPS: CHUNKAPI_1_62,
+    shadowCoordPS: CHUNKAPI_1_62,
+    shadowCoordPerspZBufferPS: CHUNKAPI_1_62,
+    shadowEVSMPS: CHUNKAPI_1_62,
+    shadowEVSMnPS: CHUNKAPI_1_62,
+    shadowStandardPS: CHUNKAPI_1_62,
+    shadowStandardGL2PS: CHUNKAPI_1_62,
+    shadowVSM8PS: CHUNKAPI_1_62,
+    spotPS: CHUNKAPI_1_62,
+    TBNPS: CHUNKAPI_1_62,
+    TBNObjectSpacePS: CHUNKAPI_1_62,
+    TBNderivativePS: CHUNKAPI_1_62,
+    TBNfastPS: CHUNKAPI_1_62
 };
 
 // removed

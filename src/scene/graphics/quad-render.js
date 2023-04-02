@@ -23,8 +23,8 @@ const _tempScissor = new Vec4();
  * Example:
  *
  * ```javascript
- * var = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
- * var quad = new QuadRender(shader);
+ * const shader = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
+ * const quad = new QuadRender(shader);
  * quad.render();
  * quad.destroy();
  * ```

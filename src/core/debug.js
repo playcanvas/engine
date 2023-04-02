@@ -52,6 +52,22 @@ class Debug {
     }
 
     /**
+     * Assertion error message that writes an error message to the log if the object has already
+     * been destroyed. To be used along setDestroyed.
+     *
+     * @param {object} object - The object to check.
+     */
+    static assertDestroyed(object) {
+        if (object?.__alreadyDestroyed) {
+            const message = `[${object.constructor?.name}] with name [${object.name}] has already been destroyed, and cannot be used.`;
+            if (!Debug._loggedMessages.has(message)) {
+                Debug._loggedMessages.add(message);
+                console.error('ASSERT FAILED: ', message, object);
+            }
+        }
+    }
+
+    /**
      * Executes a function in debug mode only.
      *
      * @param {Function} func - Function to call.
@@ -167,6 +183,17 @@ class DebugHelper {
     static setLabel(object, label) {
         if (object) {
             object.label = label;
+        }
+    }
+
+    /**
+     * Marks object as destroyed. Executes only in the debug build. To be used along assertDestroyed.
+     *
+     * @param {object} object - The object to mark as destroyed.
+     */
+    static setDestroyed(object) {
+        if (object) {
+            object.__alreadyDestroyed = true;
         }
     }
 }

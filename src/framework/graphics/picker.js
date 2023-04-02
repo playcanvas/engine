@@ -89,10 +89,10 @@ class Picker {
      * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
-     * var selection = picker.getSelection(10, 20);
+     * const selection = picker.getSelection(10, 20);
      * @example
      * // Get all models in rectangle with corners at (10,20) and (20,40)
-     * var selection = picker.getSelection(10, 20, 10, 20);
+     * const selection = picker.getSelection(10, 20, 10, 20);
      */
     getSelection(x, y, width, height) {
         const device = this.device;
