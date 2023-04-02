@@ -254,6 +254,7 @@ const moduleOptions = buildType => ({
 const stripFunctions = [
     'Debug.assert',
     'Debug.assertDeprecated',
+    'Debug.assertDestroyed',
     'Debug.call',
     'Debug.deprecated',
     'Debug.warn',
@@ -265,6 +266,7 @@ const stripFunctions = [
     'Debug.trace',
     'DebugHelper.setName',
     'DebugHelper.setLabel',
+    `DebugHelper.setDestroyed`,
     'DebugGraphics.toString',
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',

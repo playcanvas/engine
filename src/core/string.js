@@ -130,7 +130,7 @@ const string = {
      * @param {object} [arguments] - All other arguments are substituted into the string.
      * @returns {string} The formatted string.
      * @example
-     * var s = pc.string.format("Hello {0}", "world");
+     * const s = pc.string.format("Hello {0}", "world");
      * console.log(s); // Prints "Hello world"
      */
     format: function (s) {

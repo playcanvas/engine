@@ -2,9 +2,9 @@ export default /* glsl */`
 
 uniform float material_f0;
 
-void getMetalnessModulate() {
-    vec3 dielectricF0 = material_f0 * dSpecularity;
-    dSpecularity = mix(dielectricF0, dAlbedo, dMetalness);
-    dAlbedo *= 1.0 - dMetalness;
+void getMetalnessModulate(inout LitShaderArguments litShaderArgs) {
+    vec3 dielectricF0 = material_f0 * litShaderArgs.specularity;
+    litShaderArgs.specularity = mix(dielectricF0, litShaderArgs.albedo, litShaderArgs.metalness);
+    litShaderArgs.albedo *= 1.0 - litShaderArgs.metalness;
 }
 `;

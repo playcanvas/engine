@@ -518,7 +518,7 @@ class StandardMaterial extends Material {
      *
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Update the material's diffuse and specular properties
      * material.diffuse.set(1, 0, 0);
@@ -528,7 +528,7 @@ class StandardMaterial extends Material {
      * material.update();
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Assign a texture to the diffuse slot
      * material.diffuseMap = texture;

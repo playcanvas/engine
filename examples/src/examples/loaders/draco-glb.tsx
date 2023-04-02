@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
@@ -17,12 +18,12 @@ class DracoGlbExample {
         function demo() {
 
             const gfxOptions = {
-            deviceTypes: [deviceType],
-            glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
-        };
+                deviceTypes: [deviceType],
+                glslangUrl: '/static/lib/glslang/glslang.js',
+                twgslUrl: '/static/lib/twgsl/twgsl.js'
+            };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;

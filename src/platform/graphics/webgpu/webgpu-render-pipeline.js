@@ -52,6 +52,12 @@ const _depthCompareFunction = [
     'always'                // FUNC_ALWAYS
 ];
 
+const _cullModes = [
+    'none',                 // CULLFACE_NONE
+    'back',                 // CULLFACE_BACK
+    'front'                 // CULLFACE_FRONT
+];
+
 // temp array to avoid allocation
 const _bindGroupLayouts = [];
 
@@ -78,10 +84,10 @@ class WebgpuRenderPipeline {
         this.cache = new Map();
     }
 
-    get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState) {
+    get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState, cullMode) {
 
         // render pipeline unique key
-        const key = this.getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState);
+        const key = this.getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState, cullMode);
 
         // cached pipeline
         let pipeline = this.cache.get(key);
@@ -97,7 +103,7 @@ class WebgpuRenderPipeline {
             const vertexBufferLayout = this.vertexBufferLayout.get(vertexFormat0, vertexFormat1);
 
             // pipeline
-            pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout);
+            pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout, cullMode);
             this.cache.set(key, pipeline);
         }
 
@@ -108,7 +114,7 @@ class WebgpuRenderPipeline {
      * Generate a unique key for the render pipeline. Keep this function as lean as possible,
      * as it executes for each draw call.
      */
-    getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState) {
+    getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState, depthState, cullMode) {
 
         let bindGroupKey = '';
         for (let i = 0; i < bindGroupFormats.length; i++) {
@@ -119,7 +125,7 @@ class WebgpuRenderPipeline {
         const renderTargetKey = renderTarget.impl.key;
 
         return vertexBufferLayoutKey + shader.impl.vertexCode + shader.impl.fragmentCode +
-            renderTargetKey + primitive.type + bindGroupKey + blendState.key + depthState.key;
+            renderTargetKey + primitive.type + bindGroupKey + blendState.key + depthState.key + cullMode;
     }
 
     // TODO: this could be cached using bindGroupKey
@@ -207,7 +213,7 @@ class WebgpuRenderPipeline {
         return depthStencil;
     }
 
-    create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout) {
+    create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout, cullMode) {
 
         const wgpu = this.device.wgpu;
 
@@ -223,7 +229,8 @@ class WebgpuRenderPipeline {
             },
             primitive: {
                 topology: primitiveTopology,
-                cullMode: "none"
+                frontFace: 'ccw',
+                cullMode: _cullModes[cullMode]
             },
 
             depthStencil: this.getDepthStencil(depthState, renderTarget),

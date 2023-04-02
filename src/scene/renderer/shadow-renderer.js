@@ -280,7 +280,7 @@ class ShadowRenderer {
 
             if (material.chunks) {
 
-                renderer.setCullMode(true, false, meshInstance);
+                renderer.setupCullMode(true, 1, meshInstance);
 
                 // Uniforms I (shadow): material
                 material.setParameters(device);

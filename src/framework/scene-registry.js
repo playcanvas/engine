@@ -226,7 +226,7 @@ class SceneRegistry {
      * @param {LoadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneData(sceneItem, function (err, sceneItem) {
      *     if (err) {
      *         // error
@@ -243,7 +243,7 @@ class SceneRegistry {
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
      * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.unloadSceneData(sceneItem);
      */
     unloadSceneData(sceneItem) {
@@ -310,10 +310,10 @@ class SceneRegistry {
      * @param {LoadHierarchyCallback} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
      *     if (!err) {
-     *         var e = app.root.find("My New Entity");
+     *         const e = app.root.find("My New Entity");
      *     } else {
      *         // error
      *     }
@@ -331,7 +331,7 @@ class SceneRegistry {
      * @param {LoadSettingsCallback} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneSettings(sceneItem, function (err) {
      *     if (!err) {
      *         // success
