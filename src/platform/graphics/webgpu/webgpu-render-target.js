@@ -78,12 +78,14 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * Release associated resources. Note that this needs to leave this instance in a state where
+     * it can be re-initialized again, which is used by render target resizing.
+     *
      * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
      * graphics device.
      */
     destroy(device) {
         this.initialized = false;
-        this.renderPassDescriptor = null;
 
         if (this.depthTextureInternal) {
             this.depthTexture?.destroy();
@@ -146,7 +148,6 @@ class WebgpuRenderTarget {
     init(device, renderTarget) {
 
         Debug.assert(!this.initialized);
-        Debug.assert(this.renderPassDescriptor, 'The render target has been destroyed and cannot be used anymore.', { renderTarget });
 
         const wgpu = device.wgpu;
 

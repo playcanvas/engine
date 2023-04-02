@@ -17,7 +17,7 @@ import { ShaderUtils } from './shader-utils.js';
  * 3. Create the shader using `TransformFeedback.createShader(device, vsCode, yourShaderName)`.
  * 4. Create/acquire the input vertex buffer. Can be any VertexBuffer, either manually created, or
  * from a Mesh.
- * 5. Create the TransformFeedback object: `var tf = new TransformFeedback(inputBuffer)`. This
+ * 5. Create the TransformFeedback object: `const tf = new TransformFeedback(inputBuffer)`. This
  * object will internally create an output buffer.
  * 6. Run the shader: `tf.process(shader)`. Shader will take the input buffer, process it and write
  * to the output buffer, then the input/output buffers will be automatically swapped, so you'll
@@ -49,10 +49,10 @@ import { ShaderUtils } from './shader-utils.js';
  * TransformExample.attributes.add('material', { type: 'asset', assetType: 'material' });
  *
  * TransformExample.prototype.initialize = function() {
- *     var device = this.app.graphicsDevice;
- *     var mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
- *     var meshInstance = new pc.MeshInstance(mesh, this.material.resource);
- *     var entity = new pc.Entity();
+ *     const device = this.app.graphicsDevice;
+ *     const mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
+ *     const meshInstance = new pc.MeshInstance(mesh, this.material.resource);
+ *     const entity = new pc.Entity();
  *     entity.addComponent('render', {
  *         type: 'asset',
  *         meshInstances: [meshInstance]
@@ -61,7 +61,7 @@ import { ShaderUtils } from './shader-utils.js';
  *
  *     // if webgl2 is not supported, transform-feedback is not available
  *     if (!device.webgl2) return;
- *     var inputBuffer = mesh.vertexBuffer;
+ *     const inputBuffer = mesh.vertexBuffer;
  *     this.tf = new pc.TransformFeedback(inputBuffer);
  *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
  * };

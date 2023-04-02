@@ -266,7 +266,8 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 export { Picker } from './framework/graphics/picker.js';
 
 // FRAMEWORK / HANDLERS
-export { basisInitialize, basisTranscode } from './framework/handlers/basis.js';
+export { basisInitialize } from './framework/handlers/basis.js';
+export { dracoInitialize } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

@@ -4,11 +4,6 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
-const defaultOptions = {
-    depth: true,
-    face: 0
-};
-
 let id = 0;
 
 /**
@@ -18,7 +13,7 @@ class RenderTarget {
     /**
      * Creates a new RenderTarget instance. A color buffer or a depth buffer must be set.
      *
-     * @param {object} options - Object for passing optional arguments.
+     * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true.
      * @param {import('./texture.js').Texture} [options.colorBuffer] - The texture that this render
@@ -49,12 +44,12 @@ class RenderTarget {
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
-     * var colorBuffer = new pc.Texture(graphicsDevice, {
+     * const colorBuffer = new pc.Texture(graphicsDevice, {
      *     width: 512,
      *     height: 512,
      *     format: pc.PIXELFORMAT_RGB8
      * });
-     * var renderTarget = new pc.RenderTarget({
+     * const renderTarget = new pc.RenderTarget({
      *     colorBuffer: colorBuffer,
      *     depth: true
      * });
@@ -68,7 +63,7 @@ class RenderTarget {
      * renderTarget.destroy();
      * camera.renderTarget = null;
      */
-    constructor(options) {
+    constructor(options = {}) {
         this.id = id++;
 
         const _arg2 = arguments[1];
@@ -92,9 +87,8 @@ class RenderTarget {
         }
 
         // Process optional arguments
-        options = (options !== undefined) ? options : defaultOptions;
         this._depthBuffer = options.depthBuffer;
-        this._face = (options.face !== undefined) ? options.face : 0;
+        this._face = options.face ?? 0;
 
         if (this._depthBuffer) {
             const format = this._depthBuffer._format;
@@ -110,8 +104,8 @@ class RenderTarget {
                 this._stencil = false;
             }
         } else {
-            this._depth = (options.depth !== undefined) ? options.depth : true;
-            this._stencil = (options.stencil !== undefined) ? options.stencil : false;
+            this._depth = options.depth ?? true;
+            this._stencil = options.stencil ?? false;
         }
 
         // device, from one of the buffers
@@ -119,8 +113,9 @@ class RenderTarget {
         Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
 
-        this._samples = (options.samples !== undefined) ? Math.min(options.samples, this._device.maxSamples) : 1;
-        this.autoResolve = (options.autoResolve !== undefined) ? options.autoResolve : true;
+        this._samples = Math.min(options.samples ?? 1, this._device.maxSamples);
+
+        this.autoResolve = options.autoResolve ?? true;
 
         // use specified name, otherwise get one from color or depth buffer
         this.name = options.name;
@@ -135,7 +130,7 @@ class RenderTarget {
         }
 
         // render image flipped in Y
-        this.flipY = !!options.flipY;
+        this.flipY = options.flipY ?? false;
 
         // device specific implementation
         this.impl = device.createRenderTargetImpl(this);
@@ -201,7 +196,7 @@ class RenderTarget {
     }
 
     /**
-     * Initialises the resources associated with this render target.
+     * Initializes the resources associated with this render target.
      *
      * @ignore
      */
