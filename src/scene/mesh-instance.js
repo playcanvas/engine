@@ -129,12 +129,12 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.StandardMaterial();
+     * const mesh = pc.createBox(graphicsDevice);
+     * const material = new pc.StandardMaterial();
      *
-     * var meshInstance = new pc.MeshInstance(mesh, material);
+     * const meshInstance = new pc.MeshInstance(mesh, material);
      *
-     * var entity = new pc.Entity();
+     * const entity = new pc.Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });
@@ -256,7 +256,7 @@ class MeshInstance {
         this.stencilBack = null;
 
         // Negative scale batching support
-        this.flipFaces = false;
+        this.flipFacesFactor = 1;
     }
 
     /**

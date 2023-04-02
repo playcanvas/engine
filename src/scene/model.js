@@ -41,7 +41,7 @@ class Model {
      *
      * @example
      * // Create a new model
-     * var model = new pc.Model();
+     * const model = new pc.Model();
      */
     constructor() {
         this.cameras = [];
@@ -94,7 +94,7 @@ class Model {
      *
      * @returns {Model} A clone of the specified model.
      * @example
-     * var clonedModel = model.clone();
+     * const clonedModel = model.clone();
      */
     clone() {
 
@@ -196,7 +196,7 @@ class Model {
      *
      * @example
      * model.generateWireframe();
-     * for (var i = 0; i < model.meshInstances.length; i++) {
+     * for (let i = 0; i < model.meshInstances.length; i++) {
      *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */

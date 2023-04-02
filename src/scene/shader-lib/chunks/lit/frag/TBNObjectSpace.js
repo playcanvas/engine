@@ -1,30 +1,30 @@
 export default /* glsl */`
-void getTBN() {
+void getTBN(vec3 tangent, vec3 binormal, vec3 normal) {
 
-    vec3 B = cross(dVertexNormalW, vObjectSpaceUpW);
-    vec3 T = cross(dVertexNormalW, B);
+    vec3 B = cross(normal, vObjectSpaceUpW);
+    vec3 T = cross(normal, B);
 
-    if (dot(B,B)==0.0) // deal with case when vObjectSpaceUpW dVertexNormalW are parallel
+    if (dot(B,B)==0.0) // deal with case when vObjectSpaceUpW normal are parallel
     {
-        float major=max(max(dVertexNormalW.x, dVertexNormalW.y),dVertexNormalW.z);
+        float major=max(max(normal.x, normal.y), normal.z);
 
-        if (dVertexNormalW.x==major)
+        if (normal.x == major)
         {
-            B=cross(dVertexNormalW, vec3(0,1,0));
-            T=cross(dVertexNormalW, B);
+            B=cross(normal, vec3(0,1,0));
+            T=cross(normal, B);
         }
-        else if (dVertexNormalW.y==major)
+        else if (normal.y == major)
         {
-            B=cross(dVertexNormalW, vec3(0,0,1));
-            T=cross(dVertexNormalW, B);
+            B=cross(normal, vec3(0,0,1));
+            T=cross(normal, B);
         }
-        else if (dVertexNormalW.z==major)
+        else if (normal.z == major)
         {
-            B=cross(dVertexNormalW, vec3(1,0,0));
-            T=cross(dVertexNormalW, B);
+            B=cross(normal, vec3(1,0,0));
+            T=cross(normal, B);
         }
     }
 
-    dTBN = mat3(normalize(T), normalize(B), normalize(dVertexNormalW));
+    dTBN = mat3(normalize(T), normalize(B), normalize(normal));
 }
 `;

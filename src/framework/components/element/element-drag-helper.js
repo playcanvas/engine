@@ -161,7 +161,7 @@ class ElementDragHelper extends EventHandler {
         }
 
         _normal.copy(this._element.entity.forward).mulScalar(-1);
-        _plane.set(_normal, this._element.entity.getPosition());
+        _plane.setFromPointNormal(this._element.entity.getPosition(), _normal);
 
         if (_plane.intersectsRay(_ray, _point)) {
             _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(_point, _point);

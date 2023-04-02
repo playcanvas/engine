@@ -3,14 +3,19 @@ uniform float material_refractionIndex;
 uniform float material_invAttenuationDistance;
 uniform vec3 material_attenuation;
 
-vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
-    float vn = dot(viewVec, Normal);
-    float k = 1.0 - IOR * IOR * (1.0 - vn * vn);
-    vec3 refrVec = IOR * viewVec - (IOR * vn + sqrt(k)) * Normal;
-    return refrVec;
-}
-
-void addRefraction() {
+void addRefraction(
+    vec3 worldNormal, 
+    vec3 viewDir, 
+    float thickness, 
+    float gloss, 
+    vec3 specularity, 
+    vec3 albedo, 
+    float transmission
+#if defined(LIT_IRIDESCENCE)
+    , vec3 iridescenceFresnel,
+    IridescenceArgs iridescence
+#endif
+) {
 
     // Extract scale from the model transform
     vec3 modelScale;
@@ -19,7 +24,7 @@ void addRefraction() {
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-dViewDirW, dNormalW, material_refractionIndex)) * dThickness * modelScale;
+    vec3 refractionVector = normalize(refract(-viewDir, worldNormal, material_refractionIndex)) * thickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -32,7 +37,7 @@ void addRefraction() {
 
     #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip
-        float iorToRoughness = (1.0 - dGlossiness) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
+        float iorToRoughness = (1.0 - gloss) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
         float refractionLod = log2(uScreenSize.x) * iorToRoughness;
         vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
     #else
@@ -52,7 +57,16 @@ void addRefraction() {
     }
 
     // Apply fresnel effect on refraction
-    vec3 fresnel = vec3(1.0) - getFresnel(dot(dViewDirW, dNormalW), dSpecularity);
-    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, dTransmission);
+    vec3 fresnel = vec3(1.0) - 
+        getFresnel(
+            dot(viewDir, worldNormal), 
+            gloss, 
+            specularity
+        #if defined(LIT_IRIDESCENCE)
+            , iridescenceFresnel,
+            iridescence
+        #endif
+        );
+    dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);
 }
 `;
