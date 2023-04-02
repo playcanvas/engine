@@ -2,13 +2,13 @@ export default /* glsl */`
 uniform samplerCube texture_cubeMap;
 uniform float material_reflectivity;
 
-vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    vec3 lookupVec = fixSeams(cubeMapProject(tReflDirW));
+vec3 calcReflection(vec3 reflDir, float gloss) {
+    vec3 lookupVec = fixSeams(cubeMapProject(reflDir));
     lookupVec.x *= -1.0;
     return $DECODE(textureCube(texture_cubeMap, lookupVec));
 }
 
-void addReflection() {   
-    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
+void addReflection(vec3 reflDir, float gloss) {   
+    dReflection += vec4(calcReflection(reflDir, gloss), material_reflectivity);
 }
 `;

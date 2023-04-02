@@ -10,7 +10,7 @@ class Frustum {
      * Create a new Frustum instance.
      *
      * @example
-     * var frustum = new pc.Frustum();
+     * const frustum = new pc.Frustum();
      */
     constructor() {
         for (let i = 0; i < 6; i++)
@@ -24,11 +24,11 @@ class Frustum {
      * frustum.
      * @example
      * // Create a perspective projection matrix
-     * var projMat = pc.Mat4();
+     * const projMat = pc.Mat4();
      * projMat.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
-     * var frustum = new pc.Frustum();
+     * const frustum = new pc.Frustum();
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {

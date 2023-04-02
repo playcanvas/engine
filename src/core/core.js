@@ -50,12 +50,12 @@ function type(obj) {
  * @param {object} ex - The object that is merged with target.
  * @returns {object} The target object.
  * @example
- * var A = {
+ * const A = {
  *     a: function () {
  *         console.log(this.a);
  *     }
  * };
- * var B = {
+ * const B = {
  *     b: function () {
  *         console.log(this.b);
  *     }

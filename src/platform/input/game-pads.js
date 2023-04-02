@@ -813,7 +813,7 @@ class GamePads extends EventHandler {
      * @event GamePads#gamepadconnected
      * @param {GamePad} gamepad - The gamepad that was just connected.
      * @example
-     * var onPadConnected = function (pad) {
+     * const onPadConnected = function (pad) {
      *     if (!pad.mapping) {
      *         // Map the gamepad as the system could not find the proper map.
      *     } else {
@@ -829,7 +829,7 @@ class GamePads extends EventHandler {
      * @event GamePads#gamepaddisconnected
      * @param {GamePad} gamepad - The gamepad that was just disconnected.
      * @example
-     * var onPadDisconnected = function (pad) {
+     * const onPadDisconnected = function (pad) {
      *     // Pause the game.
      * };
      * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
@@ -929,8 +929,8 @@ class GamePads extends EventHandler {
      * @returns {GamePad[]} An array of gamepads and mappings for the model of gamepad that is
      * attached.
      * @example
-     * var gamepads = new pc.GamePads();
-     * var pads = gamepads.poll();
+     * const gamepads = new pc.GamePads();
+     * const pads = gamepads.poll();
      */
     poll(pads = []) {
         if (pads.length > 0) {

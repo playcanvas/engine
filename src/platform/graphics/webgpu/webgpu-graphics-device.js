@@ -2,7 +2,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK, DEVICETYPE_WEBGPU
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -373,7 +373,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState, this.depthState);
+                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -426,23 +426,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this should use passEncoder.setBlendConstant(color)
     }
 
-    setDepthFunc(func) {
-    }
-
-    setDepthTest(depthTest) {
-    }
-
     setCullMode(cullMode) {
-    }
-
-    getCullMode() {
-        return CULLFACE_BACK;
+        this.cullMode = cullMode;
     }
 
     setAlphaToCoverage(state) {
-    }
-
-    setDepthWrite(writeDepth) {
     }
 
     initializeContextCaches() {

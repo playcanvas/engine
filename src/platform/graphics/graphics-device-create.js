@@ -54,7 +54,7 @@ function createGraphicsDevice(canvas, options = {}) {
     }
 
     Debug.assert(device, 'Failed to allocate graphics device based on requested device types: ', options.deviceTypes);
-    return Promise.reject(new Error("Failed to allocated graphics device"));
+    return Promise.reject(new Error("Failed to allocate graphics device"));
 }
 
 export { createGraphicsDevice };

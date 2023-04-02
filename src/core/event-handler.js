@@ -16,7 +16,7 @@
  * Abstract base class that implements functionality for event handling.
  *
  * ```javascript
- * var obj = new EventHandlerSubclass();
+ * const obj = new EventHandlerSubclass();
  *
  * // subscribe to an event
  * obj.on('hello', function (str) {
@@ -109,7 +109,7 @@ class EventHandler {
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * var handler = function () {
+     * const handler = function () {
      * };
      * obj.on('test', handler);
      *

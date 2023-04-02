@@ -37,9 +37,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
 
-    const oldCullMode = device.getCullMode();
     device.setCullMode(CULLFACE_NONE);
-
     device.setDepthState(DepthState.NODEPTH);
 
     // prepare the quad for rendering with the shader
@@ -76,8 +74,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     renderPass.render();
     quad.destroy();
-
-    device.setCullMode(oldCullMode);
 
     DebugGraphics.popGpuMarker(device);
 }

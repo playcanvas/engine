@@ -6,12 +6,12 @@ uniform sampler2D texture_envAtlas;
 uniform samplerCube texture_cubeMap;
 uniform float material_reflectivity;
 
-vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
-    vec3 dir = cubeMapProject(tReflDirW) * vec3(-1.0, 1.0, 1.0);
+vec3 calcReflection(vec3 reflDir, float gloss) {
+    vec3 dir = cubeMapProject(reflDir) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
     // calculate roughness level
-    float level = saturate(1.0 - tGlossiness) * 5.0;
+    float level = saturate(1.0 - gloss) * 5.0;
     float ilevel = floor(level);
     float flevel = level - ilevel;
 
@@ -22,7 +22,7 @@ vec3 calcReflection(vec3 tReflDirW, float tGlossiness) {
     return processEnvironment(mix(sharp, mix(roughA, roughB, flevel), min(level, 1.0)));
 }
 
-void addReflection() {   
-    dReflection += vec4(calcReflection(dReflDirW, dGlossiness), material_reflectivity);
+void addReflection(vec3 reflDir, float gloss) {   
+    dReflection += vec4(calcReflection(reflDir, gloss), material_reflectivity);
 }
 `;
