@@ -3,15 +3,16 @@ import { GlbParser } from './glb-parser.js';
 
 class GlbModelParser {
     constructor(modelHandler) {
-        this.modelHandler = modelHandler;
+        this._device = modelHandler.device;
+        this._defaultMaterial = modelHandler.defaultMaterial;
     }
 
     parse(data, callback, asset) {
-        GlbParser.parse('filename.glb', '', data, this.modelHandler.device, this.modelHandler.assets, asset?.options, (err, result) => {
+        GlbParser.parse('filename.glb', '', data, this._device, this._assets, asset?.options || {}, (err, result) => {
             if (err) {
                 callback(err);
             } else {
-                const model = GlbContainerResource.createModel(result, this.modelHandler.defaultMaterial);
+                const model = GlbContainerResource.createModel(result, this._defaultMaterial);
                 result.destroy();
                 callback(null, model);
             }
