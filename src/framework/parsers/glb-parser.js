@@ -2429,6 +2429,7 @@ const createBufferViews = (gltf, buffers, options) => {
         if (gltfBufferView.hasOwnProperty('byteStride')) {
             promise = promise.then((typedArray) => {
                 typedArray.byteStride = gltfBufferView.byteStride;
+                return typedArray;
             });
         }
 
