@@ -10,7 +10,7 @@ class KeyboardEvent {
      * event.
      * @param {globalThis.KeyboardEvent} event - The original browser event that was fired.
      * @example
-     * var onKeyDown = function (e) {
+     * const onKeyDown = function (e) {
      *     if (e.key === pc.KEY_SPACE) {
      *         // space key pressed
      *     }

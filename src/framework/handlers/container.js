@@ -24,7 +24,7 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateModelEntity({
+     *     const entity = asset.resource.instantiateModelEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
@@ -44,13 +44,13 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
      *
      *     // find all render components containing mesh instances, and change blend mode on their materials
-     *     var renders = entity.findComponents("render");
+     *     const renders = entity.findComponents("render");
      *     renders.forEach(function (render) {
      *         render.meshInstances.forEach(function (meshInstance) {
      *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
@@ -82,11 +82,11 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = asset.resource.getMaterialVariants();
+     *     const materialVariants = asset.resource.getMaterialVariants();
      *     asset.resource.applyMaterialVariant(entity, materialVariants[0]);
      */
     applyMaterialVariant(entity, name) {}
@@ -103,14 +103,14 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = asset.resource.getMaterialVariants();
-     *     var renders = entity.findComponents("render");
-     *     for (var i = 0; i < renders.length; i++) {
-     *         var renderComponent = renders[i];
+     *     const materialVariants = asset.resource.getMaterialVariants();
+     *     const renders = entity.findComponents("render");
+     *     for (let i = 0; i < renders.length; i++) {
+     *         const renderComponent = renders[i];
      *         asset.resource.applyMaterialVariantInstances(renderComponent.meshInstances, materialVariants[0]);
      *     }
      */
@@ -154,7 +154,7 @@ class ContainerResource {
  * For example, to receive a texture preprocess callback:
  *
  * ```javascript
- * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
  *         preprocess(gltfTexture) { console.log("texture preprocess"); }
  *     },

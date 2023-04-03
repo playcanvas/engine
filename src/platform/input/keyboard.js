@@ -75,7 +75,7 @@ class Keyboard extends EventHandler {
      * event.
      * @example
      * // attach keyboard listeners to the window
-     * var keyboard = new pc.Keyboard(window);
+     * const keyboard = new pc.Keyboard(window);
      */
     constructor(element, options = {}) {
         super();
@@ -105,7 +105,7 @@ class Keyboard extends EventHandler {
      * @event Keyboard#keydown
      * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
      * @example
-     * var onKeyDown = function (e) {
+     * const onKeyDown = function (e) {
      *     if (e.key === pc.KEY_SPACE) {
      *         // space key pressed
      *     }
@@ -120,7 +120,7 @@ class Keyboard extends EventHandler {
      * @event Keyboard#keyup
      * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
      * @example
-     * var onKeyUp = function (e) {
+     * const onKeyUp = function (e) {
      *     if (e.key === pc.KEY_SPACE) {
      *         // space key released
      *     }

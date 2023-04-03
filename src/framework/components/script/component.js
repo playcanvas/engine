@@ -589,7 +589,7 @@ class ScriptComponent extends Component {
      * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
      * instance is returned. Otherwise null is returned.
      * @example
-     * var controller = entity.script.get('playerController');
+     * const controller = entity.script.get('playerController');
      */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {

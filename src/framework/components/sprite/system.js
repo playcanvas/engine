@@ -154,9 +154,9 @@ class SpriteComponentSystem extends ComponentSystem {
 
         if (data.color !== undefined) {
             if (data.color instanceof Color) {
-                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity ?? 1);
             } else {
-                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity ?? 1);
             }
 
             /* eslint-disable no-self-assign */
