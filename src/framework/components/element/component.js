@@ -1317,9 +1317,8 @@ class ElementComponent extends Component {
             // #endif
 
             // remove stencil params if this is image or text
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(null);
-            }
+            renderableElement?._setStencil(null);
+
             this._maskedBy = null;
         }
     }
@@ -1357,9 +1356,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // if mask counter was increased, decrement it as we come back up the hierarchy
@@ -1394,9 +1391,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // decrement mask counter as we come back up the hierarchy
