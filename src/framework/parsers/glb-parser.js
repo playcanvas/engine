@@ -2080,7 +2080,9 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 });
             });
         } else {
-            promise = new Promise(resolve => resolve(null));
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
         }
 
         promise = promise.then((textureAsset) => {
@@ -2090,16 +2092,15 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 // uri specified
                 if (isDataURI(gltfImage.uri)) {
                     return loadTexture(gltfImage, gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
-                } else {
-                    return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
                 }
+                return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
                 return loadTexture(gltfImage, null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null);
-            } else {
-                // fail
-                return Promise.reject(`Invalid image found in gltf (neither uri or bufferView found). index=${i}`);
             }
+
+            // fail
+            return Promise.reject(new Error(`Invalid image found in gltf (neither uri or bufferView found). index=${i}`));
         });
 
         if (postprocess) {
@@ -2148,7 +2149,9 @@ const createTextures = (gltf, images, options) => {
                 });
             });
         } else {
-            promise = new Promise((resolve) => resolve(null));
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
         }
 
         promise = promise.then((gltfImageIndex) => {
@@ -2212,7 +2215,9 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options, callback) => {
                 });
             });
         } else {
-            promise = new Promise(resolve => resolve(null));
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
         }
 
         promise = promise.then((arrayBuffer) => {
@@ -2233,24 +2238,24 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options, callback) => {
                     }
 
                     return binaryArray;
-                } else {
-                    return new Promise((resolve, reject) => {
-                        http.get(
-                            ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
-                            { cache: true, responseType: 'arraybuffer', retry: false },
-                            (err, result) => {                         // eslint-disable-line no-loop-func
-                                if (err)
-                                    reject(err);
-                                else
-                                    resolve(new Uint8Array(result));
-                            }
-                        );
-                    });
                 }
-            } else {
-                // glb buffer reference
-                return binaryChunk;
+
+                return new Promise((resolve, reject) => {
+                    http.get(
+                        ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        (err, result) => {                         // eslint-disable-line no-loop-func
+                            if (err)
+                                reject(err);
+                            else
+                                resolve(new Uint8Array(result));
+                        }
+                    );
+                });
             }
+
+            // glb buffer reference
+            return binaryChunk;
         });
 
         if (postprocess) {
@@ -2323,7 +2328,7 @@ const parseGlb = (glbData, callback) => {
     while (offset < length) {
         const chunkLength = data.getUint32(offset, true);
         if (offset + chunkLength + 8 > data.byteLength) {
-            throw new Error('Invalid chunk length found in glb. Found ' + chunkLength);
+            callback(`Invalid chunk length found in glb. Found ${chunkLength}`);
         }
         const chunkType = data.getUint32(offset + 4, true);
         const chunkData = new Uint8Array(data.buffer, data.byteOffset + offset + 8, chunkLength);
@@ -2337,12 +2342,12 @@ const parseGlb = (glbData, callback) => {
     }
 
     if (chunks[0].type !== 0x4E4F534A) {
-        callback('Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x' + chunks[0].type.toString(16));
+        callback(`Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x${chunks[0].type.toString(16)}`);
         return;
     }
 
     if (chunks.length > 1 && chunks[1].type !== 0x004E4942) {
-        callback('Invalid chunk type found in glb file. Expected 0x004E4942, found 0x' + chunks[1].type.toString(16));
+        callback(`Invalid chunk type found in glb file. Expected 0x004E4942, found 0x${chunks[1].type.toString(16)}`);
         return;
     }
 
@@ -2379,10 +2384,8 @@ const createBufferViews = (gltf, buffers, options) => {
     const processAsync = options?.bufferView?.processAsync;
     const postprocess = options?.bufferView?.postprocess;
 
-    let remaining = gltf.bufferViews ? gltf.bufferViews.length : 0;
-
     // handle case of no buffers
-    if (!remaining) {
+    if (!gltf.bufferViews?.length) {
         return result;
     }
 
@@ -2398,24 +2401,29 @@ const createBufferViews = (gltf, buffers, options) => {
         if (processAsync) {
             promise = new Promise((resolve, reject) => {
                 processAsync(gltfBufferView, buffers, (err, result) => {
-                    if (err) reject(err); else resolve(result);
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
                 });
             });
         } else {
-            promise = new Promise(resolve => resolve(null));
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
         }
 
         promise = promise.then((buffer) => {
             if (buffer) {
                 return buffer;
-            } else {
-                // convert buffer to typed array
-                return buffers[gltfBufferView.buffer].then((buffer) => {
-                    return new Uint8Array(buffer.buffer,
-                                          buffer.byteOffset + (gltfBufferView.byteOffset || 0),
-                                          gltfBufferView.byteLength);
-                });
             }
+
+            // convert buffer to typed array
+            return buffers[gltfBufferView.buffer].then((buffer) => {
+                return new Uint8Array(buffer.buffer,
+                                      buffer.byteOffset + (gltfBufferView.byteOffset || 0),
+                                      gltfBufferView.byteLength);
+            });
         });
 
         // add a 'byteStride' member to the typed array so we have easy access to it later
@@ -2441,7 +2449,7 @@ const createBufferViews = (gltf, buffers, options) => {
 // -- GlbParser
 class GlbParser {
     // parse the gltf or glb data asynchronously, loading external resources
-    static parseAsync(filename, urlBase, data, device, registry, options, callback) {
+    static parse(filename, urlBase, data, device, registry, options, callback) {
         // parse the data
         parseChunk(filename, data, (err, chunks) => {
             if (err) {
@@ -2466,41 +2474,6 @@ class GlbParser {
         });
     }
 
-    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    static parse(filename, data, device, options, callback) {
-        options = options || { };
-
-        // parse the data
-        parseChunk(filename, data, (err, chunks) => {
-            if (err) {
-                callback(err);
-            } else {
-                // parse gltf
-                parseGltf(chunks.gltfChunk, (err, gltf) => {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        // parse buffer views
-                        parseBufferViewsAsync(gltf, [chunks.binaryChunk], options, (err, bufferViews) => {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                // create resources
-                                createResources(device, gltf, bufferViews, [], options, (err, result) => {
-                                    if (err) {
-                                        callback(err);
-                                    } else {
-                                        callback(null, result);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    }
-
     constructor(device, assets, maxRetries) {
         this._device = device;
         this._assets = assets;
@@ -2519,7 +2492,7 @@ class GlbParser {
             if (err) {
                 callback(err);
             } else {
-                GlbParser.parseAsync(
+                GlbParser.parse(
                     this._getUrlWithoutParams(url.original),
                     path.extractPath(url.load),
                     result,

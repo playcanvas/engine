@@ -48,9 +48,8 @@ const JSON_VERTEX_ELEMENT_TYPE = {
 
 // Take PlayCanvas JSON model data and create pc.Model
 class JsonModelParser {
-    constructor(device, defaultMaterial) {
-        this._device = device;
-        this._defaultMaterial = defaultMaterial;
+    constructor(modelHandler) {
+        this.modelHandler = modelHandler;
     }
 
     parse(data, callback) {
@@ -126,8 +125,8 @@ class JsonModelParser {
         const skinInstances = [];
         let i, j;
 
-        if (!this._device.supportsBoneTextures && modelData.skins.length > 0) {
-            const boneLimit = this._device.getBoneLimit();
+        if (!this.modelHandler.device.supportsBoneTextures && modelData.skins.length > 0) {
+            const boneLimit = this.modelHandler.device.getBoneLimit();
             partitionSkin(modelData, null, boneLimit);
         }
 
@@ -140,7 +139,7 @@ class JsonModelParser {
                 inverseBindMatrices[j] = new Mat4().set(ibm);
             }
 
-            const skin = new Skin(this._device, inverseBindMatrices, skinData.boneNames);
+            const skin = new Skin(this.modelHandler.device, inverseBindMatrices, skinData.boneNames);
             skins.push(skin);
 
             const skinInstance = new SkinInstance(skin);
@@ -230,7 +229,7 @@ class JsonModelParser {
                     morphTargetArray.push(morphTarget);
                 }
 
-                const morph = new Morph(morphTargetArray, this._device);
+                const morph = new Morph(morphTargetArray, this.modelHandler.device);
                 morphs.push(morph);
 
                 const morphInstance = new MorphInstance(morph);
@@ -278,11 +277,11 @@ class JsonModelParser {
                     normalize: (attributeMap[attributeName] === SEMANTIC_COLOR)
                 });
             }
-            const vertexFormat = new VertexFormat(this._device, formatDesc);
+            const vertexFormat = new VertexFormat(this.modelHandler.device, formatDesc);
 
             // Create the vertex buffer
             const numVertices = vertexData.position.data.length / vertexData.position.components;
-            const vertexBuffer = new VertexBuffer(this._device, vertexFormat, numVertices);
+            const vertexBuffer = new VertexBuffer(this.modelHandler.device, vertexFormat, numVertices);
 
             const iterator = new VertexIterator(vertexBuffer);
             for (let j = 0; j < numVertices; j++) {
@@ -335,11 +334,11 @@ class JsonModelParser {
             maxVerts = Math.max(maxVerts, vertexBuffers[i].numVertices);
         }
         if (numIndices > 0) {
-            if (maxVerts > 0xFFFF && this._device.extUintElement) {
-                indexBuffer = new IndexBuffer(this._device, INDEXFORMAT_UINT32, numIndices);
+            if (maxVerts > 0xFFFF && this.modelHandler.device.extUintElement) {
+                indexBuffer = new IndexBuffer(this.modelHandler.device, INDEXFORMAT_UINT32, numIndices);
                 indexData = new Uint32Array(indexBuffer.lock());
             } else {
-                indexBuffer = new IndexBuffer(this._device, INDEXFORMAT_UINT16, numIndices);
+                indexBuffer = new IndexBuffer(this.modelHandler.device, INDEXFORMAT_UINT16, numIndices);
                 indexData = new Uint16Array(indexBuffer.lock());
             }
         }
@@ -368,7 +367,7 @@ class JsonModelParser {
             );
 
             const indexed = (meshData.indices !== undefined);
-            const mesh = new Mesh(this._device);
+            const mesh = new Mesh(this.modelHandler.device);
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
             mesh.indexBuffer[0] = indexed ? indexBuffer : null;
             mesh.primitive[0].type = JSON_PRIMITIVE_TYPE[meshData.type];
@@ -406,7 +405,7 @@ class JsonModelParser {
             const node = nodes[meshInstanceData.node];
             const mesh = meshes[meshInstanceData.mesh];
 
-            const meshInstance = new MeshInstance(mesh, this._defaultMaterial, node);
+            const meshInstance = new MeshInstance(mesh, this.modelHandler.defaultMaterial, node);
 
             if (mesh.skin) {
                 const skinIndex = skins.indexOf(mesh.skin);
