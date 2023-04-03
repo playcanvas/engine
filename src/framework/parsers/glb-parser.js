@@ -1686,7 +1686,7 @@ const createMaterials = (gltf, textures, options, flipV) => {
     }
 
     const preprocess = options?.material?.preprocess;
-    const process = options?.material?.process || createMaterial;
+    const process = options?.material?.process ?? createMaterial;
     const postprocess = options?.material?.postprocess;
 
     return gltf.materials.map((gltfMaterial) => {
@@ -1739,7 +1739,7 @@ const createNodes = (gltf, options) => {
     }
 
     const preprocess = options?.node?.preprocess;
-    const process = options?.node?.process || createNode;
+    const process = options?.node?.process ?? createNode;
     const postprocess = options?.node?.postprocess;
 
     const nodes = gltf.nodes.map((gltfNode, index) => {
@@ -1810,7 +1810,7 @@ const createCameras = (gltf, nodes, options) => {
     if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
 
         const preprocess = options?.camera?.preprocess;
-        const process = options?.camera?.process || createCamera;
+        const process = options?.camera?.process ?? createCamera;
         const postprocess = options?.camera?.postprocess;
 
         gltf.nodes.forEach((gltfNode, nodeIndex) => {
@@ -1849,7 +1849,7 @@ const createLights = (gltf, nodes, options) => {
         if (gltfLights.length) {
 
             const preprocess = options?.light?.preprocess;
-            const process = options?.light?.process || createLight;
+            const process = options?.light?.process ?? createLight;
             const postprocess = options?.light?.postprocess;
 
             // handle nodes with lights
@@ -1994,7 +1994,7 @@ const applySampler = (texture, gltfSampler) => {
     };
 
     if (texture) {
-        gltfSampler = gltfSampler || { };
+        gltfSampler = gltfSampler ?? { };
         texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
         texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
         texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
@@ -2164,7 +2164,7 @@ const createTextures = (gltf, images, options) => {
 
             return images[gltfImageIndex].then((imageAsset) => {
                 const asset = cloneAsset ? cloneTextureAsset(imageAsset) : imageAsset;
-                applySampler(asset.resource, (gltf.samplers || [])[gltfTexture.sampler]);
+                applySampler(asset.resource, (gltf.samplers ?? [])[gltfTexture.sampler]);
                 return asset;
             });
         });

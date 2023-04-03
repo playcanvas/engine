@@ -60,7 +60,7 @@ class AnimationHandler {
             } else {
                 // parse the result immediately (this used to happen during open)
                 if (path.getExtension(url.original).toLowerCase() === '.glb') {
-                    GlbParser.parse('filename.glb', '', response, this.device, this.assets, asset?.options || {}, (err, parseResult) => {
+                    GlbParser.parse('filename.glb', '', response, this.device, this.assets, asset?.options ?? {}, (err, parseResult) => {
                         if (err) {
                             callback(err);
                         } else {

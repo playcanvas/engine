@@ -9,7 +9,7 @@ class GlbModelParser {
     }
 
     parse(data, callback, asset) {
-        GlbParser.parse('filename.glb', '', data, this._device, this._assets, asset?.options || {}, (err, result) => {
+        GlbParser.parse('filename.glb', '', data, this._device, this._assets, asset?.options ?? {}, (err, result) => {
             if (err) {
                 callback(err);
             } else {
