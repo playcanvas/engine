@@ -2478,6 +2478,6 @@ class GlbParser {
             name: 'defaultGlbMaterial'
         }, []);
     }
-};
+}
 
 export { GlbParser };

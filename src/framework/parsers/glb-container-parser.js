@@ -1,4 +1,5 @@
-
+import { path } from '../../core/path.js';
+import { Asset } from '../../framework/asset/asset.js';
 import { GlbParser } from "./glb-parser.js";
 import { GlbContainerResource } from './glb-container-resource.js';
 
