@@ -46,7 +46,6 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 import { Asset } from '../asset/asset.js';
-import { GlbContainerResource } from './glb-container-resource.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
@@ -2446,7 +2445,6 @@ const createBufferViews = (gltf, buffers, options) => {
     return result;
 };
 
-// -- GlbParser
 class GlbParser {
     // parse the gltf or glb data asynchronously, loading external resources
     static parse(filename, urlBase, data, device, registry, options, callback) {
@@ -2474,50 +2472,11 @@ class GlbParser {
         });
     }
 
-    constructor(device, assets, maxRetries) {
-        this._device = device;
-        this._assets = assets;
-        this._defaultMaterial = createMaterial({
+    static createDefaultMaterial() {
+        return createMaterial({
             name: 'defaultGlbMaterial'
         }, []);
-        this.maxRetries = maxRetries;
     }
-
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, (err, result) => {
-            if (err) {
-                callback(err);
-            } else {
-                GlbParser.parse(
-                    this._getUrlWithoutParams(url.original),
-                    path.extractPath(url.load),
-                    result,
-                    this._device,
-                    asset.registry,
-                    asset.options,
-                    (err, result) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            // return everything
-                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
-                        }
-                    });
-            }
-        }, asset, this.maxRetries);
-    }
-
-    open(url, data, asset) {
-        return data;
-    }
-
-    patch(asset, assets) {
-
-    }
-}
+};
 
 export { GlbParser };

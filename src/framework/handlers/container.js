@@ -1,6 +1,6 @@
 import { path } from '../../core/path.js';
 
-import { GlbParser } from '../parsers/glb-parser.js';
+import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
@@ -178,12 +178,12 @@ class ContainerHandler {
      * @hideconstructor
      */
     constructor(app) {
-        this.glbParser = new GlbParser(app.graphicsDevice, app.assets, 0);
+        this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }
 
     set maxRetries(value) {
-        this.glbParser.maxRetries = value;
+        this.glbContainerParser.maxRetries = value;
         for (const parser in this.parsers) {
             if (this.parsers.hasOwnProperty(parser)) {
                 this.parsers[parser].maxRetries = value;
@@ -192,7 +192,7 @@ class ContainerHandler {
     }
 
     get maxRetries() {
-        return this.glbParser.maxRetries;
+        return this.glbContainerParser.maxRetries;
     }
 
     /**
@@ -211,7 +211,7 @@ class ContainerHandler {
      */
     _getParser(url) {
         const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
-        return this.parsers[ext] || this.glbParser;
+        return this.parsers[ext] || this.glbContainerParser;
     }
 
     /**
