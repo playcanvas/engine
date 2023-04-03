@@ -19,6 +19,7 @@ import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -373,7 +374,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode);
+                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                                                     this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -420,6 +422,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setDepthState(depthState) {
         this.depthState.copy(depthState);
+    }
+
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.stencilEnabled = true;
+            this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
+            this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+        } else {
+            this.stencilEnabled = false;
+        }
     }
 
     setBlendColor(r, g, b, a) {

@@ -119,14 +119,14 @@ class Material {
     /**
      * Stencil parameters for front faces (default is null).
      *
-     * @type {import('../stencil-parameters.js').StencilParameters|null}
+     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces (default is null).
      *
-     * @type {import('../stencil-parameters.js').StencilParameters|null}
+     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
      */
     stencilBack = null;
 

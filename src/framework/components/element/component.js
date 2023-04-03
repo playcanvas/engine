@@ -9,7 +9,7 @@ import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from 
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
-import { StencilParameters } from '../../../scene/stencil-parameters.js';
+import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 
 import { Entity } from '../../entity.js';
 
@@ -1304,15 +1304,11 @@ class ElementComponent extends Component {
             if (_debugLogging) console.log('masking: ' + this.entity.name + ' with ' + ref);
             // #endif
 
-            const sp = new StencilParameters({
+            // if this is image or text, set the stencil parameters
+            renderableElement?._setStencil(new StencilParameters({
                 ref: ref,
                 func: FUNC_EQUAL
-            });
-
-            // if this is image or text, set the stencil parameters
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(sp);
-            }
+            }));
 
             this._maskedBy = mask;
         } else {

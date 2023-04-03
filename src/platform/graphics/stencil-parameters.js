@@ -1,4 +1,4 @@
-import { FUNC_ALWAYS, STENCILOP_KEEP } from '../platform/graphics/constants.js';
+import { FUNC_ALWAYS, STENCILOP_KEEP } from './constants.js';
 
 /**
  * Holds stencil test settings.
@@ -56,9 +56,9 @@ class StencilParameters {
     /**
      * Create a new StencilParameters instance.
      *
-     * @param {object} options - Options object to configure the stencil parameters.
+     * @param {object} [options] - Options object to configure the stencil parameters.
      */
-    constructor(options) {
+    constructor(options = {}) {
         this.func = options.func ?? FUNC_ALWAYS;
         this.ref = options.ref ?? 0;
         this.readMask = options.readMask ?? 0xFF;
@@ -69,22 +69,45 @@ class StencilParameters {
         this.zpass = options.zpass ?? STENCILOP_KEEP;
     }
 
+    get key() {
+        const { func, ref, fail, zfail, zpass, readMask, writeMask } = this;
+        return `${func},${ref},${fail},${zfail},${zpass},${readMask},${writeMask}`;
+    }
+
+    /**
+     * Copies the contents of a source stencil parameters to this stencil parameters.
+     *
+     * @param {StencilParameters} rhs - A stencil parameters to copy from.
+     * @returns {StencilParameters} Self for chaining.
+     */
+    copy(rhs) {
+        this.func = rhs.func;
+        this.ref = rhs.ref;
+        this.readMask = rhs.readMask;
+        this.writeMask = rhs.writeMask;
+        this.fail = rhs.fail;
+        this.zfail = rhs.zfail;
+        this.zpass = rhs.zpass;
+        return this;
+    }
+
     /**
      * Clone the stencil parameters.
      *
      * @returns {StencilParameters} A cloned StencilParameters object.
      */
     clone() {
-        return new StencilParameters({
-            func: this.func,
-            ref: this.ref,
-            readMask: this.readMask,
-            writeMask: this.writeMask,
-            fail: this.fail,
-            zfail: this.zfail,
-            zpass: this.zpass
-        });
+        const clone = new this.constructor();
+        return clone.copy(this);
     }
+
+    /**
+     * A default stencil state.
+     *
+     * @type {StencilParameters}
+     * @readonly
+     */
+    static DEFAULT = Object.freeze(new StencilParameters());
 }
 
 export { StencilParameters };

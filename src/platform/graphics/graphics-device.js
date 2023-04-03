@@ -14,6 +14,7 @@ import { DepthState } from './depth-state.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
+import { StencilParameters } from './stencil-parameters.js';
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -177,6 +178,27 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     depthState = new DepthState();
+
+    /**
+     * True if stencil is enabled and stencilFront and stencilBack are used
+     *
+     * @ignore
+     */
+    stencilEnabled = false;
+
+    /**
+     * The current front stencil parameters.
+     *
+     * @ignore
+     */
+    stencilFront = new StencilParameters();
+
+    /**
+     * The current back stencil parameters.
+     *
+     * @ignore
+     */
+    stencilBack = new StencilParameters();
 
     defaultClearOptions = {
         color: [0, 0, 0, 1],

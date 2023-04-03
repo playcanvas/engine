@@ -37,6 +37,7 @@ import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 const invalidateAttachments = [];
 
@@ -2481,6 +2482,32 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
             this.gl.blendColor(r, g, b, a);
             c.set(r, g, b, a);
+        }
+    }
+
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.setStencilTest(true);
+            if (stencilFront === stencilBack) {
+
+                // identical front/back stencil
+                this.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+            } else {
+
+                // front
+                stencilFront ??= StencilParameters.DEFAULT;
+                this.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+                // back
+                stencilBack ??= StencilParameters.DEFAULT;
+                this.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                this.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+            }
+        } else {
+            this.setStencilTest(false);
         }
     }
 
