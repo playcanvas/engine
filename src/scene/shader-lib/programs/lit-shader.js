@@ -838,6 +838,9 @@ class LitShader {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "32") : chunks.shadowEVSMnPS.replace(/\$/g, "32"));
                 }
             }
+            if (usePcss) {
+                func.append(chunks.shadowPCSSPS);
+            }
 
             if (!(device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
                 func.append(chunks.biasConstPS);

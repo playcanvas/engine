@@ -287,8 +287,15 @@ export const SHADOW_PCF5 = 4;
  */
 export const SHADOW_PCF1 = 5;
 
+/**
+ * Render depth buffer only, shadows are sampled using PCSS.
+ *
+ * @type {number}
+ */
+export const SHADOW_PCSS = 6;
+
 // non-public: number of supported depth shadow modes
-export const SHADOW_COUNT = 6;
+export const SHADOW_COUNT = 7;
 
 /**
  * map of engine SHADOW__*** to a string representation
@@ -303,6 +310,7 @@ shadowTypeToString[SHADOW_VSM16] = 'VSM16';
 shadowTypeToString[SHADOW_VSM32] = 'VSM32';
 shadowTypeToString[SHADOW_PCF5] = 'PCF5';
 shadowTypeToString[SHADOW_PCF1] = 'PCF1';
+shadowTypeToString[SHADOW_PCSS] = 'PCSS';
 
 /**
  * Box filter.
