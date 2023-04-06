@@ -363,7 +363,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.gl = gl;
-        this.webgl2 = gl instanceof WebGL2RenderingContext;
+        this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
         this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
@@ -394,7 +394,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // only enable ImageBitmap on chrome
-        this.supportsImageBitmap = isChrome;
+        this.supportsImageBitmap = typeof ImageBitmap !== 'undefined' && isChrome;
 
         // run image alpha test
         Debug.call(() => {
