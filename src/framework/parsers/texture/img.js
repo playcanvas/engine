@@ -61,8 +61,6 @@ class ImgParser {
     }
 
     open(url, data, device) {
-        const ext = path.getExtension(url).toLowerCase();
-        const format = (ext === '.jpg' || ext === '.jpeg') ? PIXELFORMAT_RGB8 : PIXELFORMAT_RGBA8;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -70,7 +68,7 @@ class ImgParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: format
+            format: PIXELFORMAT_RGBA8
         });
         texture.setSource(data);
         return texture;
@@ -129,7 +127,8 @@ class ImgParser {
                 callback(err);
             } else {
                 createImageBitmap(blob, {
-                    premultiplyAlpha: 'none'
+                    premultiplyAlpha: 'none',
+                    colorSpaceConversion: 'none'
                 })
                     .then(imageBitmap => callback(null, imageBitmap))
                     .catch(e => callback(e));
@@ -138,7 +137,10 @@ class ImgParser {
     }
 
     _loadImageBitmapFromData(data, callback) {
-        createImageBitmap(new Blob([data]), { premultiplyAlpha: 'none' })
+        createImageBitmap(new Blob([data]), {
+            premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none'
+        })
             .then(imageBitmap => callback(null, imageBitmap))
             .catch(e => callback(e));
     }
