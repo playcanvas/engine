@@ -2,13 +2,18 @@ import { Texture } from '../texture.js';
 import { PIXELFORMAT_RGBA8 } from '../constants.js';
 import { RenderTarget } from '../render-target.js';
 
-// ImageBitmap current state (April 2023):
+//
+// Current state of ImageBitmap (April 2023):
+//
 // Chrome MacOS and Android (Pixel 3a and Pixel 7 Pro):
 //   Correctly loads PNG alpha and runs faster (significantly so on mobile) than HTMLImageElement.
-// Firefox on MacOS:
+//
+// Firefox MacOS:
 //   Correctly loads PNG alpha, but runs significantly slower than HTMLImageElement.
-// Safari on MacOS and iOS (iPhone 8 and iPhone 13 Pro Max):
+//
+// Safari MacOS and iOS (iPhone 8 and iPhone 13 Pro Max):
 //   Incorrectly loads PNG alpha and runs significantly slower than HTMLImageElement.
+//
 
 // 1x1 png image containing rgba(1, 2, 3, 63)
 const pngBytes = new Uint8Array([

@@ -396,9 +396,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = isChrome;
 
-        // run image test
+        // run image alpha test
         Debug.call(() => {
-            if (Tracing.get('RUN_IMAGE_ALPHA_TEST')) {
+            if (Tracing.get('IMAGE_ALPHA_TEST')) {
                 WebglImageTest.run(this);
             }
         });
