@@ -70,6 +70,7 @@
     "build/playcanvas.prf.mjs",
     "build/playcanvas.d.ts",
     "build/playcanvas-extras.js",
+    "build/playcanvas-extras.mjs",
     "scripts",
     "LICENSE",
     "package.json",
