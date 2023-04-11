@@ -380,7 +380,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._tempEnableSafariTextureUnitWorkaround = isSafari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !gl.alpha;
+        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs under webgl1
         if (!this.webgl2) {
@@ -396,7 +396,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // only enable ImageBitmap on chrome
-        this.supportsImageBitmap = typeof ImageBitmap !== 'undefined' && isChrome;
+        this.supportsImageBitmap = isChrome && typeof ImageBitmap !== 'undefined';
 
         // run image alpha test
         Debug.call(() => {
