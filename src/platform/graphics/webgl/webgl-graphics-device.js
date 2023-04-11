@@ -302,6 +302,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
         super(canvas);
