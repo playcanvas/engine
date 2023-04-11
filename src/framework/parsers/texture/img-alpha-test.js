@@ -1,6 +1,6 @@
-import { Texture } from '../texture.js';
-import { PIXELFORMAT_RGBA8 } from '../constants.js';
-import { RenderTarget } from '../render-target.js';
+import { PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { RenderTarget } from '../../../platform/graphics/render-target.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 //
 // Current state of ImageBitmap (April 2023):
@@ -44,7 +44,7 @@ const testAlpha = (device, image) => {
     texture.destroy();
 
     return data[0] === 1 && data[1] === 2 && data[2] === 3 && data[3] === 63;
-}
+};
 
 // Test whether ImageBitmap correctly loads PNG alpha data.
 const testImageBitmapAlpha = (device) => {
@@ -58,7 +58,7 @@ const testImageBitmapAlpha = (device) => {
             return testAlpha(device, image);
         })
         .catch(e => false);
-}
+};
 
 // Test whether image element correctly loads PNG alpha data.
 const testImgElementAlpha = (device) => {
@@ -69,9 +69,9 @@ const testImgElementAlpha = (device) => {
             resolve(testAlpha(device, image));
         };
     });
-}
+};
 
-class WebglImageTest {
+class ImgAlphaTest {
     static run(device) {
         testImageBitmapAlpha(device).then((result) => {
             console.log(`imageBitmapIsCorrect=${result}`);
@@ -84,5 +84,5 @@ class WebglImageTest {
 }
 
 export {
-    WebglImageTest
+    ImgAlphaTest
 };

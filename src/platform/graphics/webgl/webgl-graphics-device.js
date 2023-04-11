@@ -1,6 +1,5 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { Debug } from '../../../core/debug.js';
-import { Tracing } from '../../../core/tracing.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 
@@ -30,7 +29,6 @@ import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
-import { WebglImageTest } from './wegbl-image-test.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
@@ -302,6 +300,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
         super(canvas);
@@ -378,7 +378,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._tempEnableSafariTextureUnitWorkaround = isSafari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !gl.alpha;
+        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         // init polyfill for VAOs under webgl1
         if (!this.webgl2) {
@@ -394,14 +394,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // only enable ImageBitmap on chrome
-        this.supportsImageBitmap = typeof ImageBitmap !== 'undefined' && isChrome;
-
-        // run image alpha test
-        Debug.call(() => {
-            if (Tracing.get('IMAGE_ALPHA_TEST')) {
-                WebglImageTest.run(this);
-            }
-        });
+        this.supportsImageBitmap = isChrome && typeof ImageBitmap !== 'undefined';
 
         this.glAddress = [
             gl.REPEAT,
