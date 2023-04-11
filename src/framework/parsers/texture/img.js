@@ -30,7 +30,7 @@ class ImgParser {
         if (hasContents) {
             // ImageBitmap interface can load iage
             if (this.device.supportsImageBitmap) {
-                this._loadImageBitmapFromData(asset.file.contents, callback);
+                this._loadImageBitmapFromBlob(new Blob([asset.file.contents]), callback);
                 return;
             }
             url = {
@@ -61,8 +61,6 @@ class ImgParser {
     }
 
     open(url, data, device) {
-        const ext = path.getExtension(url).toLowerCase();
-        const format = (ext === '.jpg' || ext === '.jpeg') ? PIXELFORMAT_RGB8 : PIXELFORMAT_RGBA8;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -70,7 +68,7 @@ class ImgParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: format
+            format: PIXELFORMAT_RGBA8
         });
         texture.setSource(data);
         return texture;
@@ -124,21 +122,20 @@ class ImgParser {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
-        http.get(url, options, function (err, blob) {
+        http.get(url, options, (err, blob) => {
             if (err) {
                 callback(err);
             } else {
-                createImageBitmap(blob, {
-                    premultiplyAlpha: 'none'
-                })
-                    .then(imageBitmap => callback(null, imageBitmap))
-                    .catch(e => callback(e));
+                this._loadImageBitmapFromBlob(blob, callback);
             }
         });
     }
 
-    _loadImageBitmapFromData(data, callback) {
-        createImageBitmap(new Blob([data]), { premultiplyAlpha: 'none' })
+    _loadImageBitmapFromBlob(blob, callback) {
+        createImageBitmap(blob, {
+            premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none'
+        })
             .then(imageBitmap => callback(null, imageBitmap))
             .catch(e => callback(e));
     }
