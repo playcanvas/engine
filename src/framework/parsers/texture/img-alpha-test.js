@@ -1,6 +1,6 @@
-import { Texture } from '../../../platform/graphics/texture.js';
 import { PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 //
 // Current state of ImageBitmap (April 2023):
