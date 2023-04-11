@@ -1,7 +1,5 @@
-import { path } from '../../../core/path.js';
-
 import {
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, TEXHINT_ASSET
+    PIXELFORMAT_RGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
