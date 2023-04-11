@@ -83,6 +83,4 @@ class ImgAlphaTest {
     }
 }
 
-export {
-    ImgAlphaTest
-};
+export { ImgAlphaTest };
