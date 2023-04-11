@@ -1,6 +1,5 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { Debug } from '../../../core/debug.js';
-import { Tracing } from '../../../core/tracing.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 
@@ -30,7 +29,6 @@ import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
 
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
-import { WebglImageTest } from './wegbl-image-test.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
@@ -397,13 +395,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = isChrome && typeof ImageBitmap !== 'undefined';
-
-        // run image alpha test
-        Debug.call(() => {
-            if (Tracing.get('IMAGE_ALPHA_TEST')) {
-                WebglImageTest.run(this);
-            }
-        });
 
         this.glAddress = [
             gl.REPEAT,
