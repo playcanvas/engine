@@ -1,7 +1,5 @@
-import { path } from '../../../core/path.js';
-
 import {
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, TEXHINT_ASSET
+    PIXELFORMAT_RGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
@@ -30,7 +28,7 @@ class ImgParser {
         if (hasContents) {
             // ImageBitmap interface can load iage
             if (this.device.supportsImageBitmap) {
-                this._loadImageBitmapFromData(asset.file.contents, callback);
+                this._loadImageBitmapFromBlob(new Blob([asset.file.contents]), callback);
                 return;
             }
             url = {
@@ -122,22 +120,17 @@ class ImgParser {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
         };
-        http.get(url, options, function (err, blob) {
+        http.get(url, options, (err, blob) => {
             if (err) {
                 callback(err);
             } else {
-                createImageBitmap(blob, {
-                    premultiplyAlpha: 'none',
-                    colorSpaceConversion: 'none'
-                })
-                    .then(imageBitmap => callback(null, imageBitmap))
-                    .catch(e => callback(e));
+                this._loadImageBitmapFromBlob(blob, callback);
             }
         });
     }
 
-    _loadImageBitmapFromData(data, callback) {
-        createImageBitmap(new Blob([data]), {
+    _loadImageBitmapFromBlob(blob, callback) {
+        createImageBitmap(blob, {
             premultiplyAlpha: 'none',
             colorSpaceConversion: 'none'
         })
