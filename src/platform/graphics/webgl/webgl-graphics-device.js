@@ -394,7 +394,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // only enable ImageBitmap on chrome
-        this.supportsImageBitmap = isChrome && typeof ImageBitmap !== 'undefined';
+        this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
 
         this.glAddress = [
             gl.REPEAT,
