@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
 
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
@@ -32,6 +31,10 @@ import { StencilParameters } from '../../../scene/stencil-parameters.js';
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
 import { Asset } from '../../asset/asset.js';
+
+// #if _DEBUG
+const _debugLogging = false;
+// #endif
 
 const _vertexFormatDeviceCache = new DeviceCache();
 
@@ -187,16 +190,17 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            // #if _DEBUG
+            if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            // #endif
         }
     }
 
     setDrawOrder(drawOrder) {
-        if (!this.meshInstance)
-            return;
-
-        Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
-
+        if (!this.meshInstance) return;
+        // #if _DEBUG
+        if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
+        // #endif
         this.meshInstance.drawOrder = drawOrder;
     }
 
