@@ -346,6 +346,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
         super(canvas);
@@ -386,35 +388,40 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
-        // Retrieve the WebGL context
-        const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-
-        const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
-        for (let i = 0; i < names.length; i++) {
-            gl = canvas.getContext(names[i], options);
 
-            if (gl) {
-                this.webgl2 = (names[i] === DEVICETYPE_WEBGL2);
-                this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
-                break;
+        // Retrieve the WebGL context
+        if (options.gl) {
+            gl = options.gl;
+        } else {
+            const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+            const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
+            for (let i = 0; i < names.length; i++) {
+                gl = canvas.getContext(names[i], options);
+                if (gl) {
+                    break;
+                }
             }
         }
-        this.gl = gl;
 
         if (!gl) {
             throw new Error("WebGL not supported");
         }
+
+        this.gl = gl;
+        this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+        this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
         const isChrome = platform.browser && !!window.chrome;
+        const isSafari = platform.browser && !!window.safari;
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = isSafari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
