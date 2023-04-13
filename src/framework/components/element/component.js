@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
 
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -19,6 +18,10 @@ import { Component } from '../component.js';
 import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
+
+// #if _DEBUG
+const _debugLogging = false;
+// #endif
 
 const position = new Vec3();
 const invParentWtm = new Mat4();
@@ -1204,7 +1207,9 @@ class ElementComponent extends Component {
                     this.system._prerender = [];
                     this.system.app.once('prerender', this._onPrerender, this);
 
-                    Debug.trace(TRACE_ID_ELEMENT, 'register prerender');
+                    // #if _DEBUG
+                    if (_debugLogging) console.log('register prerender');
+                    // #endif
                 }
                 const i = this.system._prerender.indexOf(this.entity);
                 if (i >= 0) {
@@ -1214,7 +1219,9 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                Debug.trace(TRACE_ID_ELEMENT, 'set prerender root to: ' + current.name);
+                // #if _DEBUG
+                if (_debugLogging) console.log('set prerender root to: ' + current.name);
+                // #endif
             }
 
             current = next;
@@ -1224,7 +1231,9 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (let i = 0; i < this.system._prerender.length; i++) {
             const mask = this.system._prerender[i];
-            Debug.trace(TRACE_ID_ELEMENT, 'prerender from: ' + mask.name);
+            // #if _DEBUG
+            if (_debugLogging) console.log('prerender from: ' + mask.name);
+            // #endif
 
             // prevent call if element has been removed since being added
             if (mask.element) {
@@ -1291,7 +1300,9 @@ class ElementComponent extends Component {
 
         if (mask) {
             const ref = mask.element._image._maskRef;
-            Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
+            // #if _DEBUG
+            if (_debugLogging) console.log('masking: ' + this.entity.name + ' with ' + ref);
+            // #endif
 
             const sp = new StencilParameters({
                 ref: ref,
@@ -1305,7 +1316,9 @@ class ElementComponent extends Component {
 
             this._maskedBy = mask;
         } else {
-            Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
+            // #if _DEBUG
+            if (_debugLogging) console.log('no masking on: ' + this.entity.name);
+            // #endif
 
             // remove stencil params if this is image or text
             if (renderableElement && renderableElement._setStencil) {
@@ -1335,8 +1348,12 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
-                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
+                // #if _DEBUG
+                if (_debugLogging) {
+                    console.log('masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                    console.log('depth++ to: ', depth);
+                }
+                // #endif
 
                 currentMask = this.entity;
             }
@@ -1368,8 +1385,12 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
-                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
+                // #if _DEBUG
+                if (_debugLogging) {
+                    console.log('masking from: ' + this.entity.name + ' with ' + sp.ref);
+                    console.log('depth++ to: ', depth);
+                }
+                // #endif
 
                 currentMask = this.entity;
             }
