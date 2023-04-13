@@ -458,7 +458,8 @@ class ForwardRenderer extends Renderer {
 
             /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
-
+            // magnopus patched.  ensure empty drawcalls are skipped
+            if (!drawCall.mesh) continue;
             // apply visibility override
             if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
                 continue;

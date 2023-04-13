@@ -84,7 +84,9 @@ class AnimComponentSystem extends ComponentSystem {
                     });
                     return;
                 }
+                // magnopus patched
                 if (
+                    animComponent._mi &&
                     animComponent._mi.visible &&
                     (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
                     animComponent.entity.enabled &&
@@ -149,9 +151,10 @@ class AnimComponentSystem extends ComponentSystem {
                     animComponent.update(dt);
                     animComponent.setupDelayed = true;
                 }
+                // magnopus patched
                 if (!animComponent.animationFrameSkip) {
                     this.updateMeshInstanceCache(animComponent, id);
-                    if (
+                    if (animComponent._mi &&
                         animComponent._mi.visible &&
                         (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
                         // componentData.enabled &&
