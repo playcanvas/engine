@@ -712,6 +712,9 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
+        // start at point where sound was paused
+        let offset = this.currentTime;
+
         // set state back to playing
         this._state = STATE_PLAYING;
 
@@ -723,9 +726,6 @@ class SoundInstance extends EventHandler {
         if (!this.source) {
             this._createSource();
         }
-
-        // start at point where sound was paused
-        let offset = this.currentTime;
 
         // if the user set the 'currentTime' property while the sound
         // was paused then use that as the offset instead
