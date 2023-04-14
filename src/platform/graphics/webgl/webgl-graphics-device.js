@@ -2214,6 +2214,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Enables or disables stencil test.
      *
      * @param {boolean} enable - True to enable stencil test and false to disable it.
+     * @ignore
      */
     setStencilTest(enable) {
         if (this.stencil !== enable) {
@@ -2245,6 +2246,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before
      * comparison.
+     * @ignore
      */
     setStencilFunc(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
@@ -2274,6 +2276,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
+     * @ignore
      */
     setStencilFuncFront(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
@@ -2302,6 +2305,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {number} ref - Reference value used in comparison.
      * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
+     * @ignore
      */
     setStencilFuncBack(func, ref, mask) {
         if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
@@ -2335,6 +2339,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
      * the same values as `fail`.
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
+     * @ignore
      */
     setStencilOperation(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
@@ -2373,6 +2378,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} zpass - Action to take if both depth and stencil test are passed.  Accepts
      * the same values as `fail`.
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
+     * @ignore
      */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
@@ -2409,6 +2415,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
      * the same values as `fail`.
      * @param {number} writeMask - A bit mask applied to the reference value, when written.
+     * @ignore
      */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
         if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
