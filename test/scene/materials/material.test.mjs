@@ -23,8 +23,8 @@ describe('Material', function () {
         expect(material.redWrite).to.equal(true);
         expect(material.shader).to.be.null;
         expect(material.slopeDepthBias).to.equal(0);
-        expect(material.stencilBack).to.be.null;
-        expect(material.stencilFront).to.be.null;
+        expect(material.stencilBack).to.not.exist;
+        expect(material.stencilFront).to.not.exist;
     }
 
     describe('#constructor()', function () {
