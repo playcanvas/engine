@@ -69,6 +69,10 @@ class StencilParameters {
         this.zpass = options.zpass ?? STENCILOP_KEEP;
     }
 
+    // TODO: we could store the key as a property and only update it when the parameters change,
+    // by using a dirty flag. But considering stencil is used rarely, this can be done at a later
+    // stage. This function is only called when the stencil state is enabled. We could also use
+    // BitField to store the parameters and to speed up the key generation.
     get key() {
         const { func, ref, fail, zfail, zpass, readMask, writeMask } = this;
         return `${func},${ref},${fail},${zfail},${zpass},${readMask},${writeMask}`;
