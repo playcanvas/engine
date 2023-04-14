@@ -5,8 +5,8 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
 
 import { ABSOLUTE_URL } from '../../asset/constants.js';
-import { ImgAlphaTest } from './img-alpha-test.js';
 // #if _DEBUG
+import { ImgAlphaTest } from './img-alpha-test.js';
 import { Tracing } from '../../../core/tracing.js';
 // #endif
 
