@@ -518,7 +518,7 @@ class StandardMaterial extends Material {
      *
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Update the material's diffuse and specular properties
      * material.diffuse.set(1, 0, 0);
@@ -528,7 +528,7 @@ class StandardMaterial extends Material {
      * material.update();
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Assign a texture to the diffuse slot
      * material.diffuseMap = texture;
@@ -701,7 +701,9 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
             }
 
-            if (this.refractionIndex !== 1.0 / 1.5) {
+            if (this.refractionIndex === 0.0) {
+                this._setParameter('material_f0', 1.0);
+            } else if (this.refractionIndex !== 1.0 / 1.5) {
                 const oneOverRefractionIndex = 1.0 / this.refractionIndex;
                 const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
                 this._setParameter('material_f0', f0 * f0);

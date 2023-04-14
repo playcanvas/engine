@@ -75,7 +75,7 @@ class XrInput extends EventHandler {
      * @param {XrInputSource} inputSource - Input source that triggered select event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
-     * var ray = new pc.Ray();
+     * const ray = new pc.Ray();
      * app.xr.input.on('select', function (inputSource, evt) {
      *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
      *     if (obj.intersectsRay(ray)) {

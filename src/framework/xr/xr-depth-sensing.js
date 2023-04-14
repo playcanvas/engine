@@ -15,10 +15,10 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *
  * ```javascript
  * // CPU path
- * var depthSensing = app.xr.depthSensing;
+ * const depthSensing = app.xr.depthSensing;
  * if (depthSensing.available) {
  *     // get depth in the middle of the screen, value is in meters
- *     var depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
+ *     const depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
  * }
  * ```
  *
@@ -319,7 +319,7 @@ class XrDepthSensing extends EventHandler {
      * @returns {number|null} Depth in meters or null if depth information is currently not
      * available.
      * @example
-     * var depth = app.xr.depthSensing.getDepth(u, v);
+     * const depth = app.xr.depthSensing.getDepth(u, v);
      * if (depth !== null) {
      *     // depth in meters
      * }
@@ -349,7 +349,7 @@ class XrDepthSensing extends EventHandler {
      * @type {boolean}
      * @example
      * if (app.xr.depthSensing.available) {
-     *     var depth = app.xr.depthSensing.getDepth(x, y);
+     *     const depth = app.xr.depthSensing.getDepth(x, y);
      * }
      */
     get available() {
