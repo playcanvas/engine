@@ -92,6 +92,7 @@ function quadWithShader(device, target, shader) {
     device.setCullMode(CULLFACE_NONE);
     device.setBlendState(BlendState.DEFAULT);
     device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
