@@ -352,6 +352,19 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
+     * operation is disabled.
+     *
+     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters#DEFAULT} if not specified.
+     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters#DEFAULT} if not specified.
+     */
+    setStencilState(stencilFront, stencilBack) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified blend state.
      *
      * @param {BlendState} blendState - New blend state.
