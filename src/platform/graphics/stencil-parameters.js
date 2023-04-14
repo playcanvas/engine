@@ -5,49 +5,71 @@ import { FUNC_ALWAYS, STENCILOP_KEEP } from './constants.js';
  */
 class StencilParameters {
     /**
-     * Sets stencil test function. See {@link GraphicsDevice#setStencilFunc}.
+     * A comparison function that decides if the pixel should be written, based on the current
+     * stencil buffer value, reference value, and mask value. Can be:
+     *
+     * - {@link FUNC_NEVER}: never pass
+     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+     * - {@link FUNC_ALWAYS}: always pass
      *
      * @type {number}
      */
     func;
 
     /**
-     * Sets stencil test reference value. See {@link GraphicsDevice#setStencilFunc}.
+     * Sets stencil test reference value used in comparisons.
      *
      * @type {number}
      */
     ref;
 
     /**
-     * Sets operation to perform if stencil test is failed. See {@link GraphicsDevice#setStencilOperation}.
+     * Operation to perform if stencil test is failed. Can be:
+     *
+     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
+     * - {@link STENCILOP_ZERO}: set value to zero
+     * - {@link STENCILOP_REPLACE}: replace value with the reference value.
+     * - {@link STENCILOP_INCREMENT}: increment the value
+     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
+     * than a maximum representable value
+     * - {@link STENCILOP_DECREMENT}: decrement the value
+     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
+     * representable value, if the current value is 0
+     * - {@link STENCILOP_INVERT}: invert the value bitwise
      *
      * @type {number}
      */
     fail;
 
     /**
-     * Sets operation to perform if depth test is failed. See {@link GraphicsDevice#setStencilOperation}.
+     * Operation to perform if depth test is failed. Accepts the same values as `fail`.
      *
      * @type {number}
      */
     zfail;
 
     /**
-     * Sets operation to perform if both stencil and depth test are passed. See {@link GraphicsDevice#setStencilOperation}.
+     * Operation to perform if both stencil and depth test are passed. Accepts the same values as
+     * `fail`.
      *
      * @type {number}
      */
     zpass;
 
     /**
-     * Sets stencil test reading mask. See {@link GraphicsDevice#setStencilFunc}.
+     * Mask applied to stencil buffer value and reference value before comparison.
      *
      * @type {number}
      */
     readMask;
 
     /**
-     * Sets stencil test writing mask. See {@link GraphicsDevice#setStencilOperation}.
+     * A bit mask applied to the stencil value, when written.
      *
      * @type {number}
      */
