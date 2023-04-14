@@ -73,6 +73,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = options.antialias ? 4 : 1;
+
+        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -432,6 +434,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.stencilEnabled = true;
             this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
             this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+
+            // ref value - based on stencil front
+            const ref = this.stencilFront.ref;
+            if (this.stencilRef !== ref) {
+                this.stencilRef = ref;
+                this.passEncoder.setStencilReference(ref);
+            }
         } else {
             this.stencilEnabled = false;
         }
@@ -439,6 +448,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setBlendColor(r, g, b, a) {
         // TODO: this should use passEncoder.setBlendConstant(color)
+        // similar implementation to this.stencilRef
     }
 
     setCullMode(cullMode) {
@@ -450,6 +460,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initializeContextCaches() {
         super.initializeContextCaches();
+    }
+
+    /**
+     * Set up default values for the render pass encoder.
+     */
+    setupPassEncoderDefaults() {
+        this.stencilRef = 0;
     }
 
     /**
@@ -489,6 +506,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
+
+        this.setupPassEncoderDefaults();
 
         // the pass always clears full target
         // TODO: avoid this setting the actual viewport/scissor on webgpu as those are automatically reset to full
