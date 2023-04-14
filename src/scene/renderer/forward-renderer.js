@@ -31,7 +31,13 @@ const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 2
 const _drawCallList = {
     drawCalls: [],
     isNewMaterial: [],
-    lightMaskChanged: []
+    lightMaskChanged: [],
+
+    clear: function () {
+        this.drawCalls.length = 0;
+        this.isNewMaterial.length = 0;
+        this.lightMaskChanged.length = 0;
+    }
 };
 
 /**
@@ -429,9 +435,7 @@ class ForwardRenderer extends Renderer {
         };
 
         // start with empty arrays
-        _drawCallList.drawCalls.length = 0;
-        _drawCallList.isNewMaterial.length = 0;
-        _drawCallList.lightMaskChanged.length = 0;
+        _drawCallList.clear();
 
         const device = this.device;
         const scene = this.scene;
@@ -710,7 +714,7 @@ class ForwardRenderer extends Renderer {
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
 
-        _drawCallList.length = 0;
+        _drawCallList.clear();
 
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
