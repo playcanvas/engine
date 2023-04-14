@@ -907,7 +907,7 @@ export const STENCILOP_KEEP = 0;
 export const STENCILOP_ZERO = 1;
 
 /**
- * Replace value with the reference value (see {@link GraphicsDevice#setStencilFunc}).
+ * Replace value with the reference value (see {@link StencilParameters}).
  *
  * @type {number}
  */
