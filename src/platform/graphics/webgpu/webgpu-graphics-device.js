@@ -65,7 +65,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     commandEncoder;
 
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
+
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
 
@@ -235,7 +237,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
-            depth: true,
+            depth: this.initOptions.depth,
+            stencil: this.initOptions.stencil,
             samples: this.samples
         });
     }

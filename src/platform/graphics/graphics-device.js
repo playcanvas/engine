@@ -209,10 +209,17 @@ class GraphicsDevice extends EventHandler {
 
     static EVENT_RESIZE = 'resizecanvas';
 
-    constructor(canvas) {
+    constructor(canvas, options) {
         super();
 
         this.canvas = canvas;
+
+        // copy options and handle defaults
+        this.initOptions = { ...options };
+        this.initOptions.depth ??= true;
+        this.initOptions.stencil ??= true;
+        this.initOptions.antialias ??= true;
+        this.initOptions.powerPreference ??= 'high-performance';
 
         // local width/height without pixelRatio applied
         this._width = 0;

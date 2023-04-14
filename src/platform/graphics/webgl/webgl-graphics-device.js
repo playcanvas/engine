@@ -321,7 +321,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * alpha buffer.
      * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
      * requested to have a depth buffer of at least 16 bits.
-     * @param {boolean} [options.stencil=false] - Boolean that indicates that the drawing buffer is
+     * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
      * requested to have a stencil buffer of at least 8 bits.
      * @param {boolean} [options.antialias=true] - Boolean that indicates whether or not to perform
      * anti-aliasing if possible.
@@ -349,7 +349,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * compatible graphics adapter for an immersive XR device.
      */
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
 
         this.defaultFramebuffer = null;
 
@@ -372,12 +373,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.contextLost = false;
             this.fire('devicerestored');
         };
-
-        // options defaults
-        options.stencil = true;
-        if (!options.powerPreference) {
-            options.powerPreference = 'high-performance';
-        }
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
         const ua = (typeof navigator !== 'undefined') && navigator.userAgent;

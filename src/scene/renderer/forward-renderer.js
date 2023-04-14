@@ -4,10 +4,6 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
-import {
-    FUNC_ALWAYS,
-    STENCILOP_KEEP
-} from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 

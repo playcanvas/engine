@@ -237,27 +237,18 @@ class WebgpuRenderPipeline {
 
                 depthStencil.stencilFront = {
                     compare: _compareFunction[stencilFront.func],
-
-
-                    // TODO: ???
-                    // webgl: stencil-fail, zpass, zfail
-                    // webgpu: stencil-fail, stencil-pass, zfail
-
-
                     failOp: _stencilOps[stencilFront.fail],
-                    passOp: _stencilOps[stencilFront.fail],
-                    depthFailOp: _stencilOps[stencilFront.fail]
+                    passOp: _stencilOps[stencilFront.zpass],
+                    depthFailOp: _stencilOps[stencilFront.zfail]
                 };
 
                 depthStencil.stencilBack = {
-
-                    // TODO: do this too
-
+                    compare: _compareFunction[stencilBack.func],
+                    failOp: _stencilOps[stencilBack.fail],
+                    passOp: _stencilOps[stencilBack.zpass],
+                    depthFailOp: _stencilOps[stencilBack.zfail]
                 };
             }
-
-
-
         }
 
         return depthStencil;
