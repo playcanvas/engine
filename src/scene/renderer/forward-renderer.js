@@ -1112,7 +1112,7 @@ class ForwardRenderer extends Renderer {
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
             // it requires (the properties are part of render pipeline on WebGPU anyways)
             device.setBlendState(BlendState.DEFAULT);
-            device.setStencilTest(false); // don't leak stencil state
+            device.setStencilState(null, null);
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);
         }
