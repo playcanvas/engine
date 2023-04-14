@@ -6,8 +6,9 @@ import { http } from '../../../platform/net/http.js';
 
 import { ABSOLUTE_URL } from '../../asset/constants.js';
 import { ImgAlphaTest } from './img-alpha-test.js';
-import { Debug } from '../../../core/debug.js';
+// #if _DEBUG
 import { Tracing } from '../../../core/tracing.js';
+// #endif
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -25,11 +26,11 @@ class ImgParser {
         this.device = device;
 
         // run image alpha test
-        Debug.call(() => {
-            if (Tracing.get('IMG_ALPHA_TEST')) {
-                ImgAlphaTest.run(this.device);
-            }
-        });
+        // #if _DEBUG
+        if (Tracing.get('IMG_ALPHA_TEST')) {
+            ImgAlphaTest.run(this.device);
+        }
+        // #endif
     }
 
     load(url, callback, asset) {
