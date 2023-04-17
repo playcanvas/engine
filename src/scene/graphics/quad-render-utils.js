@@ -39,6 +39,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     device.setCullMode(CULLFACE_NONE);
     device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);

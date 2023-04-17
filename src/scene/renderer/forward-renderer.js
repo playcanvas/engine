@@ -4,10 +4,6 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
-import {
-    FUNC_ALWAYS,
-    STENCILOP_KEEP
-} from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -611,39 +607,9 @@ class ForwardRenderer extends Renderer {
 
                 this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
-                const stencilFront = drawCall.stencilFront || material.stencilFront;
-                const stencilBack = drawCall.stencilBack || material.stencilBack;
-
-                if (stencilFront || stencilBack) {
-                    device.setStencilTest(true);
-                    if (stencilFront === stencilBack) {
-                        // identical front/back stencil
-                        device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                        device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                    } else {
-                        // separate
-                        if (stencilFront) {
-                            // set front
-                            device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                            device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                        } else {
-                            // default front
-                            device.setStencilFuncFront(FUNC_ALWAYS, 0, 0xFF);
-                            device.setStencilOperationFront(STENCILOP_KEEP, STENCILOP_KEEP, STENCILOP_KEEP, 0xFF);
-                        }
-                        if (stencilBack) {
-                            // set back
-                            device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
-                            device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
-                        } else {
-                            // default back
-                            device.setStencilFuncBack(FUNC_ALWAYS, 0, 0xFF);
-                            device.setStencilOperationBack(STENCILOP_KEEP, STENCILOP_KEEP, STENCILOP_KEEP, 0xFF);
-                        }
-                    }
-                } else {
-                    device.setStencilTest(false);
-                }
+                const stencilFront = drawCall.stencilFront ?? material.stencilFront;
+                const stencilBack = drawCall.stencilBack ?? material.stencilBack;
+                device.setStencilState(stencilFront, stencilBack);
 
                 const mesh = drawCall.mesh;
 
@@ -659,9 +625,7 @@ class ForwardRenderer extends Renderer {
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                if (drawCallback) {
-                    drawCallback(drawCall, i);
-                }
+                drawCallback?.(drawCall, i);
 
                 if (camera.xr && camera.xr.session && camera.xr.views.length) {
                     const views = camera.xr.views;
@@ -1152,7 +1116,7 @@ class ForwardRenderer extends Renderer {
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
             // it requires (the properties are part of render pipeline on WebGPU anyways)
             device.setBlendState(BlendState.DEFAULT);
-            device.setStencilTest(false); // don't leak stencil state
+            device.setStencilState(null, null);
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);
         }

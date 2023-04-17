@@ -37,6 +37,7 @@ import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 const invalidateAttachments = [];
 
@@ -91,6 +92,7 @@ function quadWithShader(device, target, shader) {
     device.setCullMode(CULLFACE_NONE);
     device.setBlendState(BlendState.DEFAULT);
     device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -274,7 +276,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * alpha buffer.
      * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
      * requested to have a depth buffer of at least 16 bits.
-     * @param {boolean} [options.stencil=false] - Boolean that indicates that the drawing buffer is
+     * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
      * requested to have a stencil buffer of at least 8 bits.
      * @param {boolean} [options.antialias=true] - Boolean that indicates whether or not to perform
      * anti-aliasing if possible.
@@ -304,7 +306,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
 
         this.defaultFramebuffer = null;
 
@@ -327,12 +330,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.contextLost = false;
             this.fire('devicerestored');
         };
-
-        // options defaults
-        options.stencil = true;
-        if (!options.powerPreference) {
-            options.powerPreference = 'high-performance';
-        }
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
         const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
@@ -2169,11 +2166,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl.polygonOffset(slopeBias, constBias);
     }
 
-    /**
-     * Enables or disables stencil test.
-     *
-     * @param {boolean} enable - True to enable stencil test and false to disable it.
-     */
     setStencilTest(enable) {
         if (this.stencil !== enable) {
             const gl = this.gl;
@@ -2186,54 +2178,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for both front and back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before
-     * comparison.
-     */
     setStencilFunc(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
             this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
-            const gl = this.gl;
-            gl.stencilFunc(this.glComparison[func], ref, mask);
+            this.gl.stencilFunc(this.glComparison[func], ref, mask);
             this.stencilFuncFront = this.stencilFuncBack = func;
             this.stencilRefFront = this.stencilRefBack = ref;
             this.stencilMaskFront = this.stencilMaskBack = mask;
         }
     }
 
-    /**
-     * Configures stencil test for front faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncFront(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
             const gl = this.gl;
@@ -2244,24 +2198,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncBack(func, ref, mask) {
         if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
             const gl = this.gl;
@@ -2272,29 +2208,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for both front and back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperation(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
             this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
@@ -2310,29 +2223,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for front faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed.  Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
             this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2346,29 +2236,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed. Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
         if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
             this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2437,6 +2304,32 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
             this.gl.blendColor(r, g, b, a);
             c.set(r, g, b, a);
+        }
+    }
+
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.setStencilTest(true);
+            if (stencilFront === stencilBack) {
+
+                // identical front/back stencil
+                this.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+            } else {
+
+                // front
+                stencilFront ??= StencilParameters.DEFAULT;
+                this.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+                // back
+                stencilBack ??= StencilParameters.DEFAULT;
+                this.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                this.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+            }
+        } else {
+            this.setStencilTest(false);
         }
     }
 
