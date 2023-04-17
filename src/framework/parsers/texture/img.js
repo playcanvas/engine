@@ -5,6 +5,10 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
 
 import { ABSOLUTE_URL } from '../../asset/constants.js';
+// #if _DEBUG
+import { ImgAlphaTest } from './img-alpha-test.js';
+import { Tracing } from '../../../core/tracing.js';
+// #endif
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -20,6 +24,13 @@ class ImgParser {
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;
         this.device = device;
+
+        // run image alpha test
+        // #if _DEBUG
+        if (Tracing.get('IMG_ALPHA_TEST')) {
+            ImgAlphaTest.run(this.device);
+        }
+        // #endif
     }
 
     load(url, callback, asset) {

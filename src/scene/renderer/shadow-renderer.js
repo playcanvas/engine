@@ -201,6 +201,7 @@ class ShadowRenderer {
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
         device.setDepthState(DepthState.DEFAULT);
+        device.setStencilState(null, null);
     }
 
     restoreRenderState(device) {

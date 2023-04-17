@@ -119,14 +119,14 @@ class Material {
     /**
      * Stencil parameters for front faces (default is null).
      *
-     * @type {import('../stencil-parameters.js').StencilParameters|null}
+     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces (default is null).
      *
-     * @type {import('../stencil-parameters.js').StencilParameters|null}
+     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
      */
     stencilBack = null;
 
@@ -410,13 +410,10 @@ class Material {
 
         this.depthBias = source.depthBias;
         this.slopeDepthBias = source.slopeDepthBias;
-        if (source.stencilFront) this.stencilFront = source.stencilFront.clone();
+
+        this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
-            if (source.stencilFront === source.stencilBack) {
-                this.stencilBack = this.stencilFront;
-            } else {
-                this.stencilBack = source.stencilBack.clone();
-            }
+            this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
 
         return this;
