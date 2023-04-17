@@ -12,5 +12,5 @@
         "strictPropertyInitialization": true,
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
     },
-    "include": ["src/**/*.js"]
+    "include": ["src/**/*.js", "rollup.config.mjs"]
 }
