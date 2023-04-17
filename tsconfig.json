@@ -2,10 +2,15 @@
     "compilerOptions": {
         "baseUrl": ".",
         "allowJs": true,
+        "checkJs": true,
         "module": "es6",
         "target": "es6",
         "moduleResolution": "node",
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "strictPropertyInitialization": true,
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
     },
-    "include": ["src/**/*.js"]
+    "include": ["src/**/*.js", "rollup.config.mjs"]
 }
