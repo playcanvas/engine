@@ -661,7 +661,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
 
                 if (body && body.entity) {
-                    if (options.filterTags && !body.entity.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
+                    if (options.filterTags && !body.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
                         continue;
                     }
 
@@ -1395,7 +1395,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
             // Make sure there is an existing entity.
             if (body1.entity) {
-                if (options.filterTags && !body1.entity.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body1.entity)) {
+                if (options.filterTags && !body1.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body1.entity)) {
                     return 0;
                 }
 
