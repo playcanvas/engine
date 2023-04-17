@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class ScrollViewExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Scroll View';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 

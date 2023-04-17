@@ -10,7 +10,7 @@ import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from 
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
-import { StencilParameters } from '../../../scene/stencil-parameters.js';
+import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 
 import { Entity } from '../../entity.js';
 
@@ -1293,24 +1293,19 @@ class ElementComponent extends Component {
             const ref = mask.element._image._maskRef;
             Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
 
-            const sp = new StencilParameters({
+            // if this is image or text, set the stencil parameters
+            renderableElement?._setStencil(new StencilParameters({
                 ref: ref,
                 func: FUNC_EQUAL
-            });
-
-            // if this is image or text, set the stencil parameters
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(sp);
-            }
+            }));
 
             this._maskedBy = mask;
         } else {
             Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
 
             // remove stencil params if this is image or text
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(null);
-            }
+            renderableElement?._setStencil(null);
+
             this._maskedBy = null;
         }
     }
@@ -1344,9 +1339,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // if mask counter was increased, decrement it as we come back up the hierarchy
@@ -1377,9 +1370,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // decrement mask counter as we come back up the hierarchy
