@@ -113,14 +113,14 @@ class WebgpuBindGroupFormat {
             const visibility = WebgpuUtils.shaderStage(textureFormat.visibility);
 
             // texture
-            const sampleType = textureFormat.sampleType;
+            const textureViewType = textureFormat.sampleType;
             const viewDimension = textureFormat.textureDimension;
             const multisampled = false;
 
-            const gpuSampleType = sampleTypes[sampleType];
-            Debug.assert(gpuSampleType);
+            const gpuTextureViewType = sampleTypes[textureViewType];
+            Debug.assert(gpuTextureViewType);
 
-            key += `#${index}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
+            key += `#${index}T:${visibility}-${gpuTextureViewType}-${viewDimension}-${multisampled}`;
 
             entries.push({
                 binding: index++,
@@ -128,7 +128,7 @@ class WebgpuBindGroupFormat {
                 texture: {
                     // Indicates the type required for texture views bound to this binding.
                     // "float", "unfilterable-float", "depth", "sint", "uint",
-                    sampleType: gpuSampleType,
+                    sampleType: gpuTextureViewType,
 
                     // Indicates the required dimension for texture views bound to this binding.
                     // "1d", "2d", "2d-array", "cube", "cube-array", "3d"
@@ -140,7 +140,7 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const gpuSamplerType = samplerTypes[sampleType];
+            const gpuSamplerType = samplerTypes[textureViewType];
             Debug.assert(gpuSamplerType);
 
             key += `#${index}S:${visibility}-${gpuSamplerType}`;
