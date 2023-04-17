@@ -27,7 +27,7 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { StencilParameters } from '../../../scene/stencil-parameters.js';
+import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
