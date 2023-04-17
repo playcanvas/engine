@@ -179,6 +179,7 @@ class Render2d {
         device.setCullMode(CULLFACE_NONE);
         device.setBlendState(this.blendState);
         device.setDepthState(DepthState.NODEPTH);
+        device.setStencilState(null, null);
 
         device.setVertexBuffer(buffer, 0);
         device.setIndexBuffer(this.indexBuffer);
