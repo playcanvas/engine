@@ -1,5 +1,3 @@
-import { Debug } from '../../../core/debug.js';
-
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
@@ -991,20 +989,16 @@ class RigidBodyComponent extends Component {
      */
     _updateDynamic() {
         const body = this._body;
-        const entity = this.entity;
 
-        // Update motion state if body is active
-        // or entity's transform was manually modified
-        if (body.isActive() || entity._wasDirty) {
-            if (entity._wasDirty) {
-                // Warn the user about setting transform instead of using teleport function
-                Debug.warn('Cannot set rigid body transform from entity. Use entity.rigidbody#teleport instead.');
-            }
-
+        // If a dynamic body is frozen, we can assume its motion state transform is
+        // the same is the entity world transform
+        if (body.isActive()) {
             // Update the motion state. Note that the test for the presence of the motion
             // state is technically redundant since the engine creates one for all bodies.
             const motionState = body.getMotionState();
             if (motionState) {
+                const entity = this.entity;
+
                 motionState.getWorldTransform(_ammoTransform);
 
                 const p = _ammoTransform.getOrigin();
@@ -1024,12 +1018,11 @@ class RigidBodyComponent extends Component {
                     entityRot.transformVector(lo, _vec3);
                     entity.setPosition(p.x() - _vec3.x, p.y() - _vec3.y, p.z() - _vec3.z);
                     entity.setRotation(entityRot);
+
                 } else {
                     entity.setPosition(p.x(), p.y(), p.z());
                     entity.setRotation(q.x(), q.y(), q.z(), q.w());
                 }
-
-                entity._wasDirty = false;
             }
         }
     }
