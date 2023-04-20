@@ -918,9 +918,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeCapabilities() {
         const gl = this.gl;
         let ext;
-
-        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
-
+        
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
