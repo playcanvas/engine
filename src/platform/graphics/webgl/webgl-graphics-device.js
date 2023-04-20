@@ -918,7 +918,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeCapabilities() {
         const gl = this.gl;
         let ext;
-        
+
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
