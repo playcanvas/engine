@@ -66,7 +66,6 @@ class ShaderPass {
      * Allocated shader passes, map of a shader pass name to info.
      *
      * @type {Map<string, ShaderPassInfo>}
-     * @ignore
      */
     passesNamed = new Map();
 
@@ -74,7 +73,6 @@ class ShaderPass {
      * Allocated shader passes, indexed by their index.
      *
      * @type {Array<ShaderPassInfo>}
-     * @ignore
      */
     passesIndexed = [];
 
