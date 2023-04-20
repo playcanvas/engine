@@ -15,7 +15,7 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_PICK,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
@@ -93,9 +93,11 @@ class LitShader {
             this.chunks = shaderChunks;
         }
 
+        this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
+        this.shadowPass = this.shaderPassInfo.isShadow;
+
         this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
-        this.shadowPass = ShaderPass.isShadow(options.pass);
         this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMapEnabled || options.enableGGXSpecular ||
             (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
         this.needsNormal = this.needsNormal && !this.shadowPass;
@@ -433,13 +435,13 @@ class LitShader {
             }
         });
 
-        const shaderPassDefine = ShaderPass.getPassShaderDefine(this.options.pass);
+        const shaderPassDefine = this.shaderPassInfo.shaderDefine;
         this.vshader = shaderPassDefine + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        let code = ShaderPass.getPassShaderDefine(this.options.pass);
+        let code = this.shaderPassInfo.shaderDefine;
 
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
@@ -485,8 +487,8 @@ class LitShader {
         const chunks = this.chunks;
         const varyings = this.varyings;
 
-        const lightType = ShaderPass.toLightType(options.pass);
-        const shadowType = ShaderPass.toShadowType(options.pass);
+        const lightType = this.shaderPassInfo.lightType;
+        const shadowType = this.shaderPassInfo.shadowType;
 
         let code = this._fsGetBeginCode();
 
@@ -544,7 +546,7 @@ class LitShader {
 
         if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             code += "    gl_FragColor = packFloat(depth);\n";
-        } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
+        } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
@@ -1510,7 +1512,7 @@ class LitShader {
             fragmentCode: this.fshader
         });
 
-        if (ShaderPass.isForward(this.options.pass)) {
+        if (this.options.isForwardPass) {
             definition.tag = SHADERTAG_MATERIAL;
         }
 

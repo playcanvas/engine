@@ -650,30 +650,8 @@ export const SHADER_DEPTH = 2;
 // shader pass used by the Picker class to render mesh ID
 export const SHADER_PICK = 3;
 
-// next shader pass constants are undocumented - see ShaderPass class
-export const SHADER_SHADOW = 4; // start of shadow related pass constants
-// 4 = PCF3 DIR
-// 5 = VSM8 DIR
-// 6 = VSM16 DIR
-// 7 = VSM32 DIR
-// 8 = PCF5 DIR
-// 9 = PCF1 DIR
-
-// 10 = PCF3 OMNI
-// 11 = VSM8 OMNI
-// 12 = VSM16 OMNI
-// 13 = VSM32 OMNI
-// 14 = PCF5 OMNI
-// 15 = PCF1 OMNI
-
-// 16 = PCF3 SPOT
-// 17 = VSM8 SPOT
-// 18 = VSM16 SPOT
-// 19 = VSM32 SPOT
-// 20 = PCF5 SPOT
-// 21 = PCF1 SPOT
-
-// Note: the Editor is using constant 24 for its internal purpose
+// shadow pass used by the shadow rendering code
+export const SHADER_SHADOW = 4;
 
 /**
  * Shader that performs forward rendering.

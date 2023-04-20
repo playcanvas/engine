@@ -46,7 +46,8 @@ const basic = {
             attributes.vertex_texCoord0 = SEMANTIC_TEXCOORD0;
         }
 
-        const shaderPassDefine = ShaderPass.getPassShaderDefine(options.pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const shaderPassDefine = shaderPassInfo.shaderDefine;
 
         // GENERATE VERTEX SHADER
         let vshader = shaderPassDefine;
