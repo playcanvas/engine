@@ -94,7 +94,7 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = ShaderPass.isForward(options.pass);
+        const isMainPass = options.isForwardPass;
 
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -240,6 +240,11 @@ const standard = {
      * @ignore
      */
     createShaderDefinition: function (device, options) {
+
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const isForwardPass = shaderPassInfo.isForward;
+        options.isForwardPass = isForwardPass;
+
         const litShader = new LitShader(device, options.litOptions);
 
         // generate vertex shader
@@ -308,7 +313,7 @@ const standard = {
             decl.append(`uniform float textureBias;`);
         }
 
-        if (ShaderPass.isForward(options.pass)) {
+        if (isForwardPass) {
             // parallax
             if (options.heightMap) {
                 // if (!options.normalMap) {

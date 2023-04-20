@@ -8,6 +8,9 @@ class StandardMaterialOptions {
     /** @private */
     _pass = 0;
 
+    /** @private */
+    _isForwardPass = false;
+
     chunks = [];
 
     /**
@@ -114,6 +117,15 @@ class StandardMaterialOptions {
 
     get pass() {
         return this._pass;
+    }
+
+    set isForwardPass(value) {
+        this._isForwardPass = value;
+        this.litOptions._isForwardPass = value;
+    }
+
+    get isForwardPass() {
+        return this._isForwardPass;
     }
 }
 
