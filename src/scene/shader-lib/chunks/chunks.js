@@ -27,6 +27,8 @@ import cookiePS from './lit/frag/cookie.js';
 import cubeMapProjectBoxPS from './lit/frag/cubeMapProjectBox.js';
 import cubeMapProjectNonePS from './lit/frag/cubeMapProjectNone.js';
 import cubeMapRotatePS from './lit/frag/cubeMapRotate.js';
+import debugOutputPS from './lit/frag/debug-output.js';
+import debugProcessFrontendPS from './lit/frag/debug-process-frontend.js';
 import decodePS from './common/frag/decode.js';
 import detailModesPS from './standard/frag/detailModes.js';
 import diffusePS from './standard/frag/diffuse.js';
@@ -233,6 +235,8 @@ const shaderChunks = {
     cubeMapProjectBoxPS,
     cubeMapProjectNonePS,
     cubeMapRotatePS,
+    debugOutputPS,
+    debugProcessFrontendPS,
     detailModesPS,
     diffusePS,
     diffuseDetailMapPS,

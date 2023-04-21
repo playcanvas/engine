@@ -1,10 +1,12 @@
+import { Debug } from '../../../core/debug.js';
+
 import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
+import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
-import { Debug } from '../../../core/debug.js';
 
 /**
  * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
@@ -93,6 +95,9 @@ class CameraComponent extends Component {
      */
     _disablePostEffectsLayer = LAYERID_UI;
 
+    /** @private */
+    _camera = new Camera();
+
     /**
      * Create a new CameraComponent instance.
      *
@@ -104,11 +109,52 @@ class CameraComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this._camera = new Camera();
         this._camera.node = entity;
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
+    }
+
+    /**
+     * Sets the name of the shader pass the camera will use when rendering.
+     *
+     * @param {string} name - The name of the shader pass. Defaults to undefined, which is
+     * equivalent to {@link SHADERTYPE_FORWARD}.
+     * Can be:
+     *
+     * - {@link SHADERTYPE_FORWARD}
+     * - {@link SHADERTYPE_DEBUG_ALBEDO}
+     * - {@link SHADERTYPE_DEBUG_OPACITY}
+     * - {@link SHADERTYPE_DEBUG_WORLDNORMAL}
+     * - {@link SHADERTYPE_DEBUG_SPECULARITY}
+     * - {@link SHADERTYPE_DEBUG_GLOSS}
+     * - {@link SHADERTYPE_DEBUG_METALNESS}
+     * - {@link SHADERTYPE_DEBUG_AO}
+     * - {@link SHADERTYPE_DEBUG_EMISSION}
+     * - {@link SHADERTYPE_DEBUG_LIGHTING}
+     * - {@link SHADERTYPE_DEBUG_UV0}
+     *
+     * Additionally, a new name can be specified, which creates a new shader pass with the given
+     * name. The name provided can only use alphanumeric characters and underscores. When a shader
+     * is compiled for the new pass, a define is added to the shader. For example if the name is
+     * 'custom_rendering', the define 'CUSTOM_RENDERING_PASS' is added to the shader, allowing the
+     * shader code to conditionally execute code only when that shader pass is active.
+     */
+    setShaderPassName(name) {
+        const shaderPass =  ShaderPass.get(this.system.app.graphicsDevice);
+        const shaderPassInfo = name ? shaderPass.allocate(name, {
+            isForward: true
+        }) : null;
+        this._camera.shaderPassInfo = shaderPassInfo;
+    }
+
+    /**
+     * Shader pass name.
+     *
+     * @returns {string} The name of the shader pass, or undefined if no shader pass is set.
+     */
+    getShaderPassName() {
+        return this._camera.shaderPassInfo?.name;
     }
 
     /**

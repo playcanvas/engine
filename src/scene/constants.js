@@ -682,6 +682,76 @@ export const SHADERTYPE_PICK = 'pick';
 export const SHADERTYPE_SHADOW = 'shadow';
 
 /**
+ * Shader used for debug rendering of albedo.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_ALBEDO = 'debug_albedo';
+
+/**
+ * Shader used for debug rendering of world normal.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_WORLDNORMAL = 'debug_world_normal';
+
+/**
+ * Shader used for debug rendering of opacity.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_OPACITY = 'debug_opacity';
+
+/**
+ * Shader used for debug rendering of specularity.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_SPECULARITY = 'debug_specularity';
+
+/**
+ * Shader used for debug rendering of gloss.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_GLOSS = 'debug_gloss';
+
+/**
+ * Shader used for debug rendering of metalness.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_METALNESS = 'debug_metalness';
+
+/**
+ * Shader used for debug rendering of ao.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_AO = 'debug_ao';
+
+/**
+ * Shader used for debug rendering of emission.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_EMISSION = 'debug_emission';
+
+/**
+ * Shader used for debug rendering of lighting.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_LIGHTING = 'debug_lighting';
+
+/**
+ * Shader used for debug rendering of UV0 texture coordinates.
+ *
+ * @type {string}
+ */
+export const SHADERTYPE_DEBUG_UV0 = 'debug_uv0';
+
+/**
  * This mode renders a sprite as a simple quad.
  *
  * @type {number}
