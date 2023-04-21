@@ -145,7 +145,7 @@ class CameraComponent extends Component {
      * callback can modify the shader generation options specifically for this shader pass.
      *
      * ```javascript
-     * var shaderPassId = camera.setShaderPassName('custom_rendering');
+     * const shaderPassId = camera.setShaderPassName('custom_rendering');
      *
      * material.onUpdateShader = function (options) {
      *    if (options.pass === shaderPassId) {
