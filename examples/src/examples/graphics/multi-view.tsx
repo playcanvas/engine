@@ -13,17 +13,17 @@ class MultiViewExample {
             <Panel headerText='Debug Shader Rendering'>
                 {<LabelGroup text='Mode'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
-                        { v: pc.SHADERTYPE_FORWARD, t: 'Normal' },
-                        { v: pc.SHADERTYPE_DEBUG_ALBEDO, t: 'Albedo' },
-                        { v: pc.SHADERTYPE_DEBUG_OPACITY, t: 'Opacity' },
-                        { v: pc.SHADERTYPE_DEBUG_WORLDNORMAL, t: 'World Normal' },
-                        { v: pc.SHADERTYPE_DEBUG_SPECULARITY, t: 'Specularity' },
-                        { v: pc.SHADERTYPE_DEBUG_GLOSS, t: 'Gloss' },
-                        { v: pc.SHADERTYPE_DEBUG_METALNESS, t: 'Metalness' },
-                        { v: pc.SHADERTYPE_DEBUG_AO, t: 'AO' },
-                        { v: pc.SHADERTYPE_DEBUG_EMISSION, t: 'Emission' },
-                        { v: pc.SHADERTYPE_DEBUG_LIGHTING, t: 'Lighting' },
-                        { v: pc.SHADERTYPE_DEBUG_UV0, t: 'UV0' }
+                        { v: pc.SHADERPASS_FORWARD, t: 'Normal' },
+                        { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
+                        { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
+                        { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
+                        { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
+                        { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
+                        { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
+                        { v: pc.SHADERPASS_AO, t: 'AO' },
+                        { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
+                        { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
+                        { v: pc.SHADERPASS_UV0, t: 'UV0' }
                     ]} />
                 </LabelGroup>}
             </Panel>
@@ -93,7 +93,7 @@ class MultiViewExample {
                     app.start();
 
                     data.set('settings', {
-                        shaderPassName: pc.SHADERTYPE_FORWARD
+                        shaderPassName: pc.SHADERPASS_FORWARD
                     });
 
                     // get the instance of the chess board and set up with render component
@@ -168,7 +168,7 @@ class MultiViewExample {
 
                     // handle HUD changes - update the debug mode on the top camera
                     data.on('*:set', (path: string, value: any) => {
-                        cameraTop.camera.setShaderPassName(value);
+                        cameraTop.camera.setShaderPass(value);
                     });
 
                     // update function called once per frame

@@ -119,19 +119,19 @@ class CameraComponent extends Component {
      * Sets the name of the shader pass the camera will use when rendering.
      *
      * @param {string} name - The name of the shader pass. Defaults to undefined, which is
-     * equivalent to {@link SHADERTYPE_FORWARD}. Can be:
+     * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
-     * - {@link SHADERTYPE_FORWARD}
-     * - {@link SHADERTYPE_DEBUG_ALBEDO}
-     * - {@link SHADERTYPE_DEBUG_OPACITY}
-     * - {@link SHADERTYPE_DEBUG_WORLDNORMAL}
-     * - {@link SHADERTYPE_DEBUG_SPECULARITY}
-     * - {@link SHADERTYPE_DEBUG_GLOSS}
-     * - {@link SHADERTYPE_DEBUG_METALNESS}
-     * - {@link SHADERTYPE_DEBUG_AO}
-     * - {@link SHADERTYPE_DEBUG_EMISSION}
-     * - {@link SHADERTYPE_DEBUG_LIGHTING}
-     * - {@link SHADERTYPE_DEBUG_UV0}
+     * - {@link SHADERPASS_FORWARD}
+     * - {@link SHADERPASS_ALBEDO}
+     * - {@link SHADERPASS_OPACITY}
+     * - {@link SHADERPASS_WORLDNORMAL}
+     * - {@link SHADERPASS_SPECULARITY}
+     * - {@link SHADERPASS_GLOSS}
+     * - {@link SHADERPASS_METALNESS}
+     * - {@link SHADERPASS_AO}
+     * - {@link SHADERPASS_EMISSION}
+     * - {@link SHADERPASS_LIGHTING}
+     * - {@link SHADERPASS_UV0}
      *
      * Additionally, a new name can be specified, which creates a new shader pass with the given
      * name. The name provided can only use alphanumeric characters and underscores. When a shader
@@ -145,7 +145,7 @@ class CameraComponent extends Component {
      * callback can modify the shader generation options specifically for this shader pass.
      *
      * ```javascript
-     * const shaderPassId = camera.setShaderPassName('custom_rendering');
+     * const shaderPassId = camera.setShaderPass('custom_rendering');
      *
      * material.onUpdateShader = function (options) {
      *    if (options.pass === shaderPassId) {
@@ -158,7 +158,7 @@ class CameraComponent extends Component {
      *
      * @returns {number} The id of the shader pass.
      */
-    setShaderPassName(name) {
+    setShaderPass(name) {
         const shaderPass =  ShaderPass.get(this.system.app.graphicsDevice);
         const shaderPassInfo = name ? shaderPass.allocate(name, {
             isForward: true
@@ -173,7 +173,7 @@ class CameraComponent extends Component {
      *
      * @returns {string} The name of the shader pass, or undefined if no shader pass is set.
      */
-    getShaderPassName() {
+    getShaderPass() {
         return this._camera.shaderPassInfo?.name;
     }
 
