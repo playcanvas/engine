@@ -135,7 +135,7 @@ class CameraComponent extends Component {
      *
      * Additionally, a new name can be specified, which creates a new shader pass with the given
      * name. The name provided can only use alphanumeric characters and underscores. When a shader
-     * is compiled for the new pass, a define is added to the shader. For example if the name is
+     * is compiled for the new pass, a define is added to the shader. For example, if the name is
      * 'custom_rendering', the define 'CUSTOM_RENDERING_PASS' is added to the shader, allowing the
      * shader code to conditionally execute code only when that shader pass is active.
      *
