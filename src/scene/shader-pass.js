@@ -35,10 +35,10 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.initShaderDefine();
+        this.initShaderDefines();
     }
 
-    initShaderDefine() {
+    initShaderDefines() {
 
         let keyword;
         if (this.isShadow) {
@@ -51,8 +51,13 @@ class ShaderPassInfo {
             keyword = 'PICK';
         }
 
-        keyword ??= this.name.toUpperCase();
-        this.shaderDefine = `#define ${keyword}_PASS\n`;
+        // define based on on the options based name
+        const define1 = keyword ? `#define ${keyword}_PASS\n` : '';
+
+        // define based on the name
+        const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
+
+        this.shaderDefines = define1 + define2;
     }
 }
 
@@ -144,4 +149,4 @@ class ShaderPass {
     }
 }
 
-export { ShaderPass };
+export { ShaderPass, ShaderPassInfo };

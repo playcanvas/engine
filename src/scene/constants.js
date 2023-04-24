@@ -658,28 +658,77 @@ export const SHADER_SHADOW = 4;
  *
  * @type {string}
  */
-export const SHADERTYPE_FORWARD = 'forward';
+export const SHADERPASS_FORWARD = 'forward';
 
 /**
- * Shader that performs depth rendering.
+ * Shader used for debug rendering of albedo.
  *
  * @type {string}
  */
-export const SHADERTYPE_DEPTH = 'depth';
+export const SHADERPASS_ALBEDO = 'debug_albedo';
 
 /**
- * Shader used for picking.
+ * Shader used for debug rendering of world normal.
  *
  * @type {string}
  */
-export const SHADERTYPE_PICK = 'pick';
+export const SHADERPASS_WORLDNORMAL = 'debug_world_normal';
 
 /**
- * Shader used for rendering shadow textures.
+ * Shader used for debug rendering of opacity.
  *
  * @type {string}
  */
-export const SHADERTYPE_SHADOW = 'shadow';
+export const SHADERPASS_OPACITY = 'debug_opacity';
+
+/**
+ * Shader used for debug rendering of specularity.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_SPECULARITY = 'debug_specularity';
+
+/**
+ * Shader used for debug rendering of gloss.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_GLOSS = 'debug_gloss';
+
+/**
+ * Shader used for debug rendering of metalness.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_METALNESS = 'debug_metalness';
+
+/**
+ * Shader used for debug rendering of ao.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_AO = 'debug_ao';
+
+/**
+ * Shader used for debug rendering of emission.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_EMISSION = 'debug_emission';
+
+/**
+ * Shader used for debug rendering of lighting.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_LIGHTING = 'debug_lighting';
+
+/**
+ * Shader used for debug rendering of UV0 texture coordinates.
+ *
+ * @type {string}
+ */
+export const SHADERPASS_UV0 = 'debug_uv0';
 
 /**
  * This mode renders a sprite as a simple quad.

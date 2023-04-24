@@ -435,13 +435,13 @@ class LitShader {
             }
         });
 
-        const shaderPassDefine = this.shaderPassInfo.shaderDefine;
-        this.vshader = shaderPassDefine + this.varyings + code;
+        const shaderPassDefines = this.shaderPassInfo.shaderDefines;
+        this.vshader = shaderPassDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        let code = this.shaderPassInfo.shaderDefine;
+        let code = this.shaderPassInfo.shaderDefines;
 
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
@@ -1413,6 +1413,7 @@ class LitShader {
             backend.append("    gl_FragColor = applyMsdf(gl_FragColor);");
         }
 
+        backend.append(chunks.debugOutputPS);
 
         if (hasPointLights) {
             func.prepend(chunks.lightDirPointPS);
@@ -1434,6 +1435,9 @@ class LitShader {
 
         const backendCode = `void evaluateBackend(LitShaderArguments litShaderArgs) {\n${backend.code}\n}`;
         func.append(backendCode);
+
+        code.append(chunks.debugProcessFrontendPS);
+
         code.append("    evaluateBackend(litShaderArgs);");
 
         code.append(end());
