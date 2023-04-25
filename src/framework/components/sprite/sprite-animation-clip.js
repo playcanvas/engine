@@ -285,6 +285,10 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     _unbindSpriteAsset(asset) {
+        if (!asset) {
+            return;
+        }
+
         asset.off('load', this._onSpriteAssetLoad, this);
         asset.off('remove', this._onSpriteAssetRemove, this);
 
