@@ -289,7 +289,7 @@ class SpriteAnimationClip extends EventHandler {
         asset.off('remove', this._onSpriteAssetRemove, this);
 
         // unbind atlas
-        if (asset.resource && asset.resource.atlas) {
+        if (asset.resource && !asset.resource.atlas) {
             this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
         }
     }
@@ -415,6 +415,12 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     _destroy() {
+        // cleanup events
+        if (this._spriteAsset) {
+            const assets = this._component.system.app.assets;
+            this._unbindSpriteAsset(assets.get(this._spriteAsset));
+        }
+
         // remove sprite
         if (this._sprite) {
             this.sprite = null;

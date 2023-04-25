@@ -47,10 +47,10 @@ const basic = {
         }
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
-        const shaderPassDefine = shaderPassInfo.shaderDefine;
+        const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         // GENERATE VERTEX SHADER
-        let vshader = shaderPassDefine;
+        let vshader = shaderPassDefines;
 
         // VERTEX SHADER DECLARATIONS
         vshader += shaderChunks.transformDeclVS;
@@ -102,7 +102,7 @@ const basic = {
         vshader += end();
 
         // GENERATE FRAGMENT SHADER
-        let fshader = shaderPassDefine;
+        let fshader = shaderPassDefines;
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
