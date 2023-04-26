@@ -69,16 +69,18 @@ class ImgParser {
         }
     }
 
-    open(url, data, device) {
-        const texture = new Texture(device, {
-            name: url,
-            // #if _PROFILER
-            profilerHint: TEXHINT_ASSET,
-            // #endif
-            width: data.width,
-            height: data.height,
-            format: PIXELFORMAT_RGBA8
-        });
+    open(url, data, device, textureOptions = {}) {
+
+        // #if _PROFILER
+        textureOptions.profilerHint ??= TEXHINT_ASSET;
+        // #endif
+
+        textureOptions.name ??= url;
+        textureOptions.width ??= data.width;
+        textureOptions.height ??= data.height;
+        textureOptions.format ??= PIXELFORMAT_RGBA8;
+
+        const texture = new Texture(device, textureOptions);
         texture.setSource(data);
         return texture;
     }

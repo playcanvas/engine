@@ -62,27 +62,27 @@ class KtxParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const textureData = this.parse(data);
 
         if (!textureData) {
             return null;
         }
 
-        const texture = new Texture(device, {
-            name: url,
-            // #if _PROFILER
-            profilerHint: TEXHINT_ASSET,
-            // #endif
-            addressU: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
-            addressV: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
-            width: textureData.width,
-            height: textureData.height,
-            format: textureData.format,
-            cubemap: textureData.cubemap,
-            levels: textureData.levels
-        });
+        // #if _PROFILER
+        textureOptions.profilerHint ??= TEXHINT_ASSET;
+        // #endif
 
+        textureOptions.name ??= url;
+        textureOptions.width ??= textureData.width;
+        textureOptions.height ??= textureData.height;
+        textureOptions.format ??= textureData.format;
+        textureOptions.levels ??= textureData.levels;
+        textureOptions.cubemap ??= textureData.cubemap;
+        textureOptions.addressU ??= textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
+        textureOptions.addressV ??= textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
+
+        const texture = new Texture(device, textureOptions);
         texture.upload();
 
         return texture;

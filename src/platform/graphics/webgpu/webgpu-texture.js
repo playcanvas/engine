@@ -109,6 +109,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
+        const mipLevelCount = texture.mipmaps ? Math.floor(Math.log2(Math.max(texture.width, texture.height))) + 1 : 1;
 
         this.descr = {
             size: {
@@ -117,12 +118,13 @@ class WebgpuTexture {
                 depthOrArrayLayers: texture.cubemap ? 6 : 1
             },
             format: this.format,
-            mipLevelCount: 1,
+            mipLevelCount: mipLevelCount,
             sampleCount: 1,
             dimension: texture.volume ? '3d' : '2d',
 
             // TODO: use only required usage flags
             // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
+            // RENDER_ATTACHMENT - needed for mipmap generation
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
         };
 
@@ -315,6 +317,10 @@ class WebgpuTexture {
             } else {
 
                 Debug.error('Unsupported texture source data', mipObject);
+            }
+
+            if (texture.mipmaps) {
+                device.mipmapRenderer.generate(this);
             }
         }
     }

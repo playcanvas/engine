@@ -562,6 +562,17 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
         }
+    },
+
+    autoMipmap: {
+        get: function () {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use Use pc.Texture#mipmaps instead.');
+            return this._mipmaps;
+        },
+        set: function (value) {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use Use pc.Texture#mipmaps instead.');
+            this._mipmaps = value;
+        }
     }
 });
 

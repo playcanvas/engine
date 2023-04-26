@@ -474,21 +474,6 @@ class Texture {
     }
 
     /**
-     * Toggles automatic mipmap generation. Can't be used on non power of two textures.
-     *
-     * @type {boolean}
-     * @ignore
-     * @deprecated
-     */
-    set autoMipmap(v) {
-        this._mipmaps = v;
-    }
-
-    get autoMipmap() {
-        return this._mipmaps;
-    }
-
-    /**
      * Defines if texture should generate/upload mipmaps if possible.
      *
      * @type {boolean}
@@ -496,6 +481,11 @@ class Texture {
     set mipmaps(v) {
         if (this._mipmaps !== v) {
             this._mipmaps = v;
+
+            if (this.device.isWebGPU) {
+                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture approproately.", this);
+            }
+
             if (v) this._needsMipmapsUpload = true;
         }
     }

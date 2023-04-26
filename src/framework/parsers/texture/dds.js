@@ -30,7 +30,7 @@ class DdsParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const header = new Uint32Array(data, 0, 128 / 4);
 
         const width = header[4];
@@ -95,7 +95,7 @@ class DdsParser {
         }
 
         if (!format) {
-            Debug.error('This DDS pixel format is currently unsupported. Empty texture will be created instead.');
+            Debug.error(`This DDS pixel format is currently unsupported. Empty texture will be created instead of ${url}.`);
             texture = new Texture(device, {
                 width: 4,
                 height: 4,
@@ -105,19 +105,21 @@ class DdsParser {
             return texture;
         }
 
-        texture = new Texture(device, {
-            name: url,
-            // #if _PROFILER
-            profilerHint: TEXHINT_ASSET,
-            // #endif
-            addressU: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
-            addressV: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
-            width: width,
-            height: height,
-            format: format,
-            cubemap: isCubemap,
-            mipmaps: mips > 1
-        });
+        // #if _PROFILER
+        textureOptions.profilerHint ??= TEXHINT_ASSET;
+        // #endif
+
+        textureOptions.name ??= url;
+
+        textureOptions.width = width;
+        textureOptions.height = height;
+        textureOptions.format = format;
+        textureOptions.cubeMap = isCubemap;
+        textureOptions.mipmap = mips > 1;
+        textureOptions.addressU = isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
+        textureOptions.addressV = isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
+
+        texture = new Texture(device, textureOptions);
 
         let offset = 128;
         const faces = isCubemap ? 6 : 1;
