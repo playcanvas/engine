@@ -34,21 +34,21 @@ class Sky {
 
         material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
-            const options = texture.cubemap ? {
-                type: 'cubemap',
-                encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
-                mip: texture.fixCubemapSeams ? scene.skyboxMip : 0,
-                fixSeams: texture.fixCubemapSeams,
-                gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
-            } : {
-                type: 'envAtlas',
+            const options = {
+                pass: pass,
                 encoding: texture.encoding,
                 useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping)
             };
+
+            if (texture.cubemap) {
+                options.type = 'cubemap';
+                options.mip = texture.fixCubemapSeams ? scene.skyboxMip : 0;
+                options.fixSeams = texture.fixCubemapSeams;
+            } else {
+                options.type = 'envAtlas';
+            }
 
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
