@@ -72,6 +72,14 @@ function getDepthKey(meshInstance) {
  */
 class ShadowRenderer {
     /**
+     * A cache of shadow passes. First index is looked up by light type, second by shadow type.
+     *
+     * @type {import('../shader-pass.js').ShaderPassInfo[][]}
+     * @private
+     */
+    shadowPassCache = [];
+
+    /**
      * @param {import('./renderer.js').Renderer} renderer - The renderer.
      * @param {import('../lighting/light-texture-atlas.js').LightTextureAtlas} lightTextureAtlas - The
      * shadow map atlas.
@@ -201,6 +209,7 @@ class ShadowRenderer {
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
         device.setDepthState(DepthState.DEFAULT);
+        device.setStencilState(null, null);
     }
 
     restoreRenderState(device) {
@@ -242,6 +251,31 @@ class ShadowRenderer {
         }
     }
 
+    getShadowPass(light) {
+
+        // get shader pass from cache for this light type and shadow type
+        const lightType = light._type;
+        const shadowType = light._shadowType;
+        let shadowPassInfo = this.shadowPassCache[lightType]?.[shadowType];
+        if (!shadowPassInfo) {
+
+            // new shader pass if not in cache
+            const shadowPassName = `ShadowPass_${lightType}_${shadowType}`;
+            shadowPassInfo = ShaderPass.get(this.device).allocate(shadowPassName, {
+                isShadow: true,
+                lightType: lightType,
+                shadowType: shadowType
+            });
+
+            // add it to the cache
+            if (!this.shadowPassCache[lightType])
+                this.shadowPassCache[lightType] = [];
+            this.shadowPassCache[lightType][shadowType] = shadowPassInfo;
+        }
+
+        return shadowPassInfo.index;
+    }
+
     /**
      * @param {import('../mesh-instance.js').MeshInstance[]} visibleCasters - Visible mesh
      * instances.
@@ -253,9 +287,7 @@ class ShadowRenderer {
         const renderer = this.renderer;
         const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
-
-        // Sort shadow casters
-        const shadowPass = ShaderPass.getShadow(light._type, light._shadowType);
+        const shadowPass = this.getShadowPass(light);
 
         // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
         // and endShaderBatch should be called at its end

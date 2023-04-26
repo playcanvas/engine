@@ -16,6 +16,10 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * {@link DEVICETYPE_WEBGPU}, or leave it empty.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
+ * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
+ * requested to have a depth buffer of at least 16 bits.
+ * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
+ * requested to have a stencil buffer of at least 8 bits.
  * @param {string} [options.glslangUrl] - An url to glslang script, required if
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
@@ -23,9 +27,6 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
-
-    // defaults
-    options.antialias ??= true;
 
     const deviceTypes = options.deviceTypes ?? [];
 

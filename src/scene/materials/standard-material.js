@@ -832,7 +832,8 @@ class StandardMaterial extends Material {
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadowPass;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
