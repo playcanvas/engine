@@ -32,7 +32,8 @@ import {
     EMITTERSHAPE_BOX,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
-    PARTICLESORT_NONE
+    PARTICLESORT_NONE,
+    SHADER_FORWARD
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -857,6 +858,7 @@ class ParticleEmitter {
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
             const shader = programLib.getProgram('particle', {
+                pass: SHADER_FORWARD,
                 useCpu: this.emitter.useCpu,
                 normal: this.emitter.normalOption,
                 halflambert: this.emitter.halfLambert,
