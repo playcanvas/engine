@@ -115,6 +115,11 @@ class RenderTarget {
 
         this._samples = Math.min(options.samples ?? 1, this._device.maxSamples);
 
+        // WebGPU only supports values of 1 or 4 for samples
+        if (device.isWebGPU) {
+            this._samples = this._samples > 1 ? 4 : 1;
+        }
+
         this.autoResolve = options.autoResolve ?? true;
 
         // use specified name, otherwise get one from color or depth buffer
