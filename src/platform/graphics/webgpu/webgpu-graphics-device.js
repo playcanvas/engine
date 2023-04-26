@@ -549,12 +549,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
+        this.insideRenderPass = false;
+
         // generate mipmaps
         if (renderPass.colorOps.mipmaps) {
             this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
         }
-
-        this.insideRenderPass = false;
     }
 
     clear(options) {
