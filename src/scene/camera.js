@@ -24,6 +24,11 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  * @ignore
  */
 class Camera {
+    /**
+     * @type {import('./shader-pass.js').ShaderPassInfo|null}
+     */
+    shaderPassInfo;
+
     constructor() {
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
@@ -418,6 +423,8 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+
+        this.shaderPassInfo = other.shaderPassInfo;
 
         this._projMatDirty = true;
 

@@ -1,11 +1,36 @@
+import React from 'react';
 import * as pc from '../../../../';
+import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
+import { Observer } from '@playcanvas/observer';
 
 class MultiViewExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Multi View';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Debug Shader Rendering'>
+                {<LabelGroup text='Mode'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
+                        { v: pc.SHADERPASS_FORWARD, t: 'Normal' },
+                        { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
+                        { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
+                        { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
+                        { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
+                        { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
+                        { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
+                        { v: pc.SHADERPASS_AO, t: 'AO' },
+                        { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
+                        { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
+                        { v: pc.SHADERPASS_UV0, t: 'UV0' }
+                    ]} />
+                </LabelGroup>}
+            </Panel>
+        </>;
+    }
+
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -66,6 +91,10 @@ class MultiViewExample {
                 assetListLoader.load(() => {
 
                     app.start();
+
+                    data.set('settings', {
+                        shaderPassName: pc.SHADERPASS_FORWARD
+                    });
 
                     // get the instance of the chess board and set up with render component
                     const boardEntity = assets.board.resource.instantiateRenderEntity({
@@ -136,6 +165,11 @@ class MultiViewExample {
                     app.scene.envAtlas = assets.helipad.resource;
                     app.scene.toneMapping = pc.TONEMAP_ACES;
                     app.scene.skyboxMip = 1;
+
+                    // handle HUD changes - update the debug mode on the top camera
+                    data.on('*:set', (path: string, value: any) => {
+                        cameraTop.camera.setShaderPass(value);
+                    });
 
                     // update function called once per frame
                     let time = 0;
