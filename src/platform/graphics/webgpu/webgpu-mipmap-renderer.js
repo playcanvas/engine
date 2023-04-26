@@ -8,7 +8,7 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
  * @ignore
  */
 class WebgpuMipmapRenderer {
-    /** @type {WebgpuGraphicsDevice} */
+    /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
     device;
 
     constructor(device) {
@@ -59,7 +59,7 @@ class WebgpuMipmapRenderer {
     /**
      * Generates mipmaps for the specified WebGPU texture.
      *
-     * @param {WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
+     * @param {import('./webgpu-texture.js').WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
      */
     generate(webgpuTexture) {
 
