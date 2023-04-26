@@ -1100,12 +1100,15 @@ class ForwardRenderer extends Renderer {
             // has flipY enabled
             const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
 
+            // shader pass - use setting from camera if available, otherwise use layer setting
+            const shaderPass = camera.camera.shaderPassInfo?.index ?? layer.shaderPass;
+
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
                                visible.list,
                                visible.length,
                                layer._splitLights,
-                               layer.shaderPass,
+                               shaderPass,
                                layer.cullingMask,
                                layer.onDrawCall,
                                layer,

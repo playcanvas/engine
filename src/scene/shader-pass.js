@@ -1,111 +1,152 @@
 import { Debug } from '../core/debug.js';
 import {
-    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK,
-    SHADER_SHADOW, SHADOW_COUNT, LIGHTTYPE_COUNT,
-    SHADERTYPE_FORWARD, SHADERTYPE_DEPTH, SHADERTYPE_PICK, SHADERTYPE_SHADOW
+    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW
 } from './constants.js';
 
+import { DeviceCache } from '../platform/graphics/device-cache.js';
+
+// device cache storing shader pass data per device
+const shaderPassDeviceCache = new DeviceCache();
+
 /**
- * A pure static utility class, responsible for math operations on the shader pass constants.
+ * Info about a shader pass. Shader pass is represented by a unique index and a name, and the
+ * index is used to access the shader required for the pass, from an array stored in the
+ * material or mesh instance.
+ *
+ * @ignore
+ */
+class ShaderPassInfo {
+    /** @type {number} */
+    index;
+
+    /** @type {string} */
+    name;
+
+    /** @type {string} */
+    shaderDefine;
+
+    constructor(name, index, options = {}) {
+
+        Debug.assert(/^[a-zA-Z][_a-zA-Z0-9]*$/.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+
+        this.name = name;
+        this.index = index;
+
+        // assign options as properties to this object
+        Object.assign(this, options);
+
+        this.initShaderDefines();
+    }
+
+    initShaderDefines() {
+
+        let keyword;
+        if (this.isShadow) {
+            keyword = 'SHADOW';
+        } else if (this.isForward) {
+            keyword = 'FORWARD';
+        } else if (this.index === SHADER_DEPTH) {
+            keyword = 'DEPTH';
+        } else if (this.index === SHADER_PICK) {
+            keyword = 'PICK';
+        }
+
+        // define based on on the options based name
+        const define1 = keyword ? `#define ${keyword}_PASS\n` : '';
+
+        // define based on the name
+        const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
+
+        this.shaderDefines = define1 + define2;
+    }
+}
+
+/**
+ * Class responsible for management of shader passes, associated with a device.
  *
  * @ignore
  */
 class ShaderPass {
     /**
-     * Returns the shader type given the shader pass.
+     * Allocated shader passes, map of a shader pass name to info.
      *
-     * @param {number} shaderPass - The shader pass.
-     * @returns {string} - The shader type.
+     * @type {Map<string, ShaderPassInfo>}
      */
-    static getType(shaderPass) {
-        switch (shaderPass) {
-            case SHADER_FORWARD:
-            case SHADER_FORWARDHDR:
-                return SHADERTYPE_FORWARD;
-            case SHADER_DEPTH:
-                return SHADERTYPE_DEPTH;
-            case SHADER_PICK:
-                return SHADERTYPE_PICK;
-            default:
-                return (shaderPass >= SHADER_SHADOW && shaderPass < SHADER_SHADOW + SHADOW_COUNT * LIGHTTYPE_COUNT) ? SHADERTYPE_SHADOW : SHADERTYPE_FORWARD;
+    passesNamed = new Map();
+
+    /**
+     * Allocated shader passes, indexed by their index.
+     *
+     * @type {Array<ShaderPassInfo>}
+     */
+    passesIndexed = [];
+
+    /** Next available index */
+    nextIndex = 0;
+
+    constructor() {
+
+        const add = (name, index, options) => {
+            const info = this.allocate(name, options);
+            Debug.assert(info.index === index);
+        };
+
+        // add default passes in the required order, to match the constants
+        add('forward', SHADER_FORWARD, { isForward: true });
+        add('forward_hdr', SHADER_FORWARDHDR, { isForward: true });
+        add('depth', SHADER_DEPTH);
+        add('pick', SHADER_PICK);
+        add('shadow', SHADER_SHADOW);
+    }
+
+    /**
+     * Get access to the shader pass instance for the specified device.
+     *
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @returns { ShaderPass } The shader pass instance for the specified device.
+     */
+    static get(device) {
+        Debug.assert(device);
+
+        return shaderPassDeviceCache.get(device, () => {
+            return new ShaderPass();
+        });
+    }
+
+    /**
+     * Allocates a shader pass with the specified name and options.
+     *
+     * @param {string} name - A name of the shader pass.
+     * @param {object} options - Options for the shader pass, which are added as properties to the
+     * shader pass info.
+     * @returns {ShaderPassInfo} The allocated shader pass info.
+     */
+    allocate(name, options) {
+        let info = this.passesNamed.get(name);
+        if (info === undefined) {
+            info = new ShaderPassInfo(name, this.nextIndex, options);
+            this.passesNamed.set(info.name, info);
+            this.passesIndexed[info.index] = info;
+            this.nextIndex++;
         }
+        return info;
     }
 
     /**
-     * Returns true if the shader pass is a forward shader pass.
+     * Return the shader pass info for the specified index.
      *
-     * @param {number} pass - The shader pass.
-     * @returns {boolean} - True if the pass is a forward shader pass.
+     * @param {number} index - The shader pass index.
+     * @returns {ShaderPassInfo} - The shader pass info.
      */
-    static isForward(pass) {
-        return this.getType(pass) === SHADERTYPE_FORWARD;
+    getByIndex(index) {
+        const info = this.passesIndexed[index];
+        Debug.assert(info);
+        return info;
     }
 
-    /**
-     * Returns true if the shader pass is a shadow shader pass.
-     *
-     * @param {number} pass - The shader pass.
-     * @returns {boolean} - True if the pass is a shadow shader pass.
-     */
-    static isShadow(pass) {
-        return this.getType(pass) === SHADERTYPE_SHADOW;
-    }
-
-    /**
-     * Returns the light type based on the shader shadow pass.
-     *
-     * @param {number} pass - The shader pass.
-     * @returns {number} - A light type.
-     */
-    static toLightType(pass) {
-        Debug.assert(ShaderPass.isShadow(pass));
-        const shadowMode = pass - SHADER_SHADOW;
-        return Math.floor(shadowMode / SHADOW_COUNT);
-    }
-
-    /**
-     * Returns the shadow type based on the shader shadow pass.
-     *
-     * @param {number} pass - The shader pass.
-     * @returns {number} - A shadow type.
-     */
-    static toShadowType(pass) {
-        Debug.assert(ShaderPass.isShadow(pass));
-        const shadowMode = pass - SHADER_SHADOW;
-        const lightType = Math.floor(shadowMode / SHADOW_COUNT);
-        return shadowMode - lightType * SHADOW_COUNT;
-    }
-
-    /**
-     * Returns a shader pass for specified light and shadow type.
-     *
-     * @param {number} lightType - A light type.
-     * @param {number} shadowType - A shadow type.
-     * @returns {number} - A shader pass.
-     */
-    static getShadow(lightType, shadowType) {
-        const shadowMode = shadowType + lightType * SHADOW_COUNT;
-        const pass = SHADER_SHADOW + shadowMode;
-        Debug.assert(ShaderPass.isShadow(pass));
-        return pass;
-    }
-
-    /**
-     * Returns the define code line for the shader pass.
-     *
-     * @param {number} pass - The shader pass.
-     * @returns {string} - A code line.
-     */
-    static getPassShaderDefine(pass) {
-        if (pass === SHADER_PICK) {
-            return '#define PICK_PASS\n';
-        } else if (pass === SHADER_DEPTH) {
-            return '#define DEPTH_PASS\n';
-        } else if (ShaderPass.isShadow(pass)) {
-            return '#define SHADOW_PASS\n';
-        }
-        return '';
+    getByName(name) {
+        return this.passesNamed.get(name);
     }
 }
 
-export { ShaderPass };
+export { ShaderPass, ShaderPassInfo };

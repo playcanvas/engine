@@ -125,6 +125,7 @@ export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
+export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';

@@ -19,6 +19,8 @@ class LitOptions {
 
     _pass = 0;
 
+    _isForwardPass = false;
+
     /**
      * Enable alpha testing. See {@link Material#alphaTest}.
      *
@@ -327,6 +329,14 @@ class LitOptions {
 
     get pass() {
         return this._pass;
+    }
+
+    set isForwardPass(p) {
+        Debug.warn(`pc.LitOptions#isForwardPass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
+    }
+
+    get isForwardPass() {
+        return this._isForwardPass;
     }
 }
 

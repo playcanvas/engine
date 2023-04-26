@@ -490,13 +490,21 @@ class GraphicsDevice extends EventHandler {
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
-                (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
-                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+                this._isImageCanvasInterface(texture) ||
+                this._isImageVideoInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
         return (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement);
+    }
+
+    _isImageCanvasInterface(texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement);
+    }
+
+    _isImageVideoInterface(texture) {
+        return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
     }
 
     /**
