@@ -36,26 +36,26 @@ class HdrParser {
             return null;
         }
 
-        // #if _PROFILER
-        textureOptions.profilerHint ??= TEXHINT_ASSET;
-        // #endif
+        const texture = new Texture(device, {
+            name: url,
+            // #if _PROFILER
+            profilerHint: TEXHINT_ASSET,
+            // #endif
+            addressU: ADDRESS_REPEAT,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            width: textureData.width,
+            height: textureData.height,
+            levels: textureData.levels,
+            format: PIXELFORMAT_RGBA8,
+            type: TEXTURETYPE_RGBE,
+            // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
+            mipmaps: false,
 
-        textureOptions.name ??= url;
-        textureOptions.width ??= textureData.width;
-        textureOptions.height ??= textureData.height;
-        textureOptions.format ??= PIXELFORMAT_RGBA8;
-        textureOptions.type ??= TEXTURETYPE_RGBE;
-        textureOptions.minFilter ??= FILTER_NEAREST;
-        textureOptions.magFilter ??= FILTER_NEAREST;
-        textureOptions.levels ??= textureData.levels;
+            ...textureOptions
+        });
 
-        // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
-        textureOptions.mipmaps = false;
-
-        textureOptions.addressU = ADDRESS_REPEAT;
-        textureOptions.addressV = ADDRESS_CLAMP_TO_EDGE;
-
-        const texture = new Texture(device, textureOptions);
         texture.upload();
 
         return texture;

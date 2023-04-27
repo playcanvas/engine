@@ -105,21 +105,21 @@ class DdsParser {
             return texture;
         }
 
-        // #if _PROFILER
-        textureOptions.profilerHint ??= TEXHINT_ASSET;
-        // #endif
+        texture = new Texture(device, {
+            name: url,
+            // #if _PROFILER
+            profilerHint: TEXHINT_ASSET,
+            // #endif
+            addressU: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
+            addressV: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
+            width: width,
+            height: height,
+            format: format,
+            cubemap: isCubemap,
+            mipmaps: mips > 1,
 
-        textureOptions.name ??= url;
-
-        textureOptions.width = width;
-        textureOptions.height = height;
-        textureOptions.format = format;
-        textureOptions.cubeMap = isCubemap;
-        textureOptions.mipmap = mips > 1;
-        textureOptions.addressU = isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
-        textureOptions.addressV = isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
-
-        texture = new Texture(device, textureOptions);
+            ...textureOptions
+        });
 
         let offset = 128;
         const faces = isCubemap ? 6 : 1;

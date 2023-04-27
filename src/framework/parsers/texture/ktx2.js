@@ -37,21 +37,22 @@ class Ktx2Parser {
     }
 
     open(url, data, device, textureOptions = {}) {
+        const texture = new Texture(device, {
+            name: url,
+            // #if _PROFILER
+            profilerHint: TEXHINT_ASSET,
+            // #endif
+            addressU: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
+            addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
+            width: data.width,
+            height: data.height,
+            format: data.format,
+            cubemap: data.cubemap,
+            levels: data.levels,
 
-        // #if _PROFILER
-        textureOptions.profilerHint ??= TEXHINT_ASSET;
-        // #endif
+            ...textureOptions
+        });
 
-        textureOptions.name ??= url;
-        textureOptions.width ??= data.width;
-        textureOptions.height ??= data.height;
-        textureOptions.format ??= data.format;
-        textureOptions.levels ??= data.levels;
-        textureOptions.cubemap ??= data.cubemap;
-        textureOptions.addressU ??= data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
-        textureOptions.addressV ??= data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT;
-
-        const texture = new Texture(device, textureOptions);
         texture.upload();
 
         return texture;
