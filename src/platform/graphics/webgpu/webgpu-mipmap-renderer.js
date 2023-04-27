@@ -1,6 +1,7 @@
 import { Shader } from "../shader.js";
 import { SHADERLANGUAGE_WGSL } from "../constants.js";
 import { Debug, DebugHelper } from "../../../core/debug.js";
+import { DebugGraphics } from "../debug-graphics.js";
 
 /**
  * A WebGPU helper class implementing texture mipmap generation.
@@ -70,6 +71,7 @@ class WebgpuMipmapRenderer {
         }
 
         const device = this.device;
+        DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
         // cannot run this inside render pass
         Debug.assert(!device.insideRenderPass);
@@ -145,6 +147,8 @@ class WebgpuMipmapRenderer {
 
         // clear invalidated state
         device.pipeline = null;
+
+        DebugGraphics.popGpuMarker(device);
     }
 }
 
