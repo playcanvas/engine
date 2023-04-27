@@ -290,7 +290,7 @@ function buildTarget(buildType, moduleFormat) {
         debug: ' (DEBUG PROFILER)',
         release: '',
         profiler: ' (PROFILER)',
-        min: null
+        min: ' (MIN)'
     };
 
     const outputPlugins = {
@@ -346,7 +346,7 @@ function buildTarget(buildType, moduleFormat) {
     };
     /** @type {OutputOptions} */
     const outputOptions = {
-        banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
+        banner: getBanner(banner[buildType]),
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
