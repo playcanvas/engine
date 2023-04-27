@@ -102,6 +102,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
+        this.supportsGpuParticles = false;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
