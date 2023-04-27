@@ -24,7 +24,7 @@ const particle = {
 
     createShaderDefinition: function (device, options) {
 
-        const executionDefine = options.useCpu ? "#define PARTICLE_CPU\n" : "#define PARTICLE_GPU\n";
+        const executionDefine = `#define PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
 
         let fshader = '#define PARTICLE\n' + executionDefine;
         let vshader = "#define VERTEXSHADER\n" + executionDefine;
