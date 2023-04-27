@@ -287,10 +287,10 @@ const stripFunctions = [
  */
 function buildTarget(buildType, moduleFormat) {
     const banner = {
-        debug: ' (DEBUG PROFILER)',
-        release: '',
-        profiler: ' (PROFILER)',
-        min: null
+        debug: ' (DEBUG)',
+        release: ' (RELEASE)',
+        profiler: ' (PROFILE)',
+        min: ' (RELEASE)'
     };
 
     const outputPlugins = {
@@ -346,7 +346,7 @@ function buildTarget(buildType, moduleFormat) {
     };
     /** @type {OutputOptions} */
     const outputOptions = {
-        banner: banner[buildType] && getBanner(banner[buildType] || banner.release),
+        banner: moduleFormat === 'es5' && getBanner(banner[buildType]),
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
