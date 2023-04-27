@@ -346,7 +346,7 @@ function buildTarget(buildType, moduleFormat) {
     };
     /** @type {OutputOptions} */
     const outputOptions = {
-        banner: getBanner(banner[buildType]),
+        banner: moduleFormat === 'es5' && getBanner(banner[buildType]),
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
