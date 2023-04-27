@@ -288,7 +288,7 @@ const stripFunctions = [
 function buildTarget(buildType, moduleFormat) {
     const banner = {
         debug: ' (DEBUG)',
-        release: '(RELEASE)',
+        release: ' (RELEASE)',
         profiler: ' (PROFILE)',
         min: ' (RELEASE)'
     };
