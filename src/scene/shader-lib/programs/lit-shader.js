@@ -454,14 +454,14 @@ class LitShader {
 
     _fsGetPickPassCode() {
         let code = this._fsGetBeginCode();
-        code += "uniform vec4 uPickColorId;\n";
+        code += "uniform vec4 uColor;\n";
         code += this.varyings;
         code += this.varyingDefines;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += begin();
         code += this.frontendFunc;
-        code += "    gl_FragColor = uPickColorId;\n";
+        code += "    gl_FragColor = uColor;\n";
         code += end();
         return code;
     }
