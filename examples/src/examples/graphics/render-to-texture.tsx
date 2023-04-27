@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class RenderToTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render to Texture';
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
