@@ -195,7 +195,7 @@ class LitShader {
     }
 
     _nonPointShadowMapProjection(device, light, shadowMatArg, shadowParamArg, lightIndex) {
-        const lightDirArgs = `dLightDirW`;
+        const lightDirArgs = `dLightPosW, dLightDirW`;
         const lightDirNormArgs = `dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW`;
         const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
         const shadowCoordNormArgs = `(${shadowMatArg}, ${shadowParamArg}, dVertexNormalW);\n`;
