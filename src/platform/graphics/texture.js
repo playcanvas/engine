@@ -309,6 +309,16 @@ class Texture {
     }
 
     /**
+     * Returns number of required mip levels for the texture based on its dimensions and parameters.
+     *
+     * @ignore
+     * @type {number}
+     */
+    get requiredMipLevels() {
+        return this.mipmaps ? Math.floor(Math.log2(Math.max(this.width, this.height))) + 1 : 1;
+    }
+
+    /**
      * The minification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}

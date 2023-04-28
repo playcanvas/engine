@@ -183,7 +183,11 @@ class ClusteredOmniShadowsExample {
                         assets.xmas_posx.id, assets.xmas_negx.id,
                         assets.xmas_posy.id, assets.xmas_negy.id,
                         assets.xmas_posz.id, assets.xmas_negz.id
-                    ]
+                    ],
+
+                    // don't generate mipmaps for the cookie cubemap if clustered lighting is used,
+                    // as only top levels are copied to the cookie atlas.
+                    mipmaps: !app.scene.clusteredLightingEnabled
                 });
                 cubemapAsset.loadFaces = true;
                 app.assets.add(cubemapAsset);
