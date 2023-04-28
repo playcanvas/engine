@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -94,7 +95,7 @@ class ClusteredOmniShadowsExample {
                 data.set('settings', {
                     shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
                     shadowType: pc.SHADOW_PCF3,      // shadow filter type
-                    shadowsEnabled: true,
+                    shadowsEnabled: false,
                     cookiesEnabled: true
                 });
 
@@ -183,7 +184,11 @@ class ClusteredOmniShadowsExample {
                         assets.xmas_posx.id, assets.xmas_negx.id,
                         assets.xmas_posy.id, assets.xmas_negy.id,
                         assets.xmas_posz.id, assets.xmas_negz.id
-                    ]
+                    ],
+
+                    // don't generate mipmaps for the cookie cubemap if clustered lighting is used,
+                    // as only top levels are copied to the cookie atlas.
+                    mipmaps: !app.scene.clusteredLightingEnabled
                 });
                 cubemapAsset.loadFaces = true;
                 app.assets.add(cubemapAsset);

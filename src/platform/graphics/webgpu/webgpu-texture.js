@@ -109,7 +109,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const mipLevelCount = texture.mipmaps ? Math.floor(Math.log2(Math.max(texture.width, texture.height))) + 1 : 1;
+        const mipLevelCount = texture.requiredMipLevels;
 
         this.descr = {
             size: {
@@ -296,33 +296,91 @@ class WebgpuTexture {
         const texture = this.texture;
         const wgpu = device.wgpu;
 
-        if (this.texture.cubemap) {
-            Debug.warn('Cubemap texture data upload is not supported yet', this.texture);
-            return;
-        }
-
         // upload texture data if any
-        const mipLevel = 0;
-        const mipObject = texture._levels[mipLevel];
-        if (mipObject) {
+        var anyUploads = false;
+        const requiredMipLevels = texture.requiredMipLevels;
+        for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
-            if (mipObject instanceof ImageBitmap) {
+            const mipObject = texture._levels[mipLevel];
+            if (mipObject) {
 
-                wgpu.queue.copyExternalImageToTexture({ source: mipObject }, { texture: this.gpuTexture }, this.descr.size);
+                if (texture.cubemap) {
 
-            } else if (ArrayBuffer.isView(mipObject)) { // typed array
+                    for (let face = 0; face < 6; face++) {
 
-                this.uploadTypedArrayData(wgpu, mipObject);
+                        const faceSource = mipObject[face];
+                        if (this.isExternalImage(faceSource)) {
 
-            } else {
+                            this.uploadExternalImage(device, faceSource, mipLevel, face);
+                            anyUploads = true;
 
-                Debug.error('Unsupported texture source data', mipObject);
-            }
+                        } else {
 
-            if (texture.mipmaps) {
-                device.mipmapRenderer.generate(this);
+                            Debug.error('Unsupported texture source data for cubemap face', faceSource);
+                        }
+                    }
+
+                } else if (texture._volume) {
+
+                    Debug.warn('Volume texture data upload is not supported yet', this.texture);
+
+                } else { // 2d texture
+
+                    if (this.isExternalImage(mipObject)) {
+
+                        this.uploadExternalImage(device, mipObject, mipLevel, 0);
+                        anyUploads = true;
+
+                    } else if (ArrayBuffer.isView(mipObject)) { // typed array
+
+                        this.uploadTypedArrayData(wgpu, mipObject);
+                        anyUploads = true;
+
+                    } else {
+
+                        Debug.error('Unsupported texture source data', mipObject);
+                    }
+                }
             }
         }
+
+        if (anyUploads && texture.mipmaps) {
+            device.mipmapRenderer.generate(this);
+        }
+    }
+
+    // image types supported by copyExternalImageToTexture
+    isExternalImage(image) {
+        return (image instanceof ImageBitmap) ||
+            (image instanceof HTMLVideoElement) ||
+            (image instanceof HTMLCanvasElement) ||
+            (image instanceof OffscreenCanvas);
+    }
+
+    uploadExternalImage(device, image, mipLevel, face) {
+
+        Debug.assert(mipLevel < this.descr.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.descr.mipLevelCount} mip levels`, this);
+
+        const src = {
+            source: image,
+            origin: [0, 0],
+            flipY: false
+        };
+
+        const dst = {
+            texture: this.gpuTexture,
+            mipLevel: mipLevel,
+            origin: [0, 0, face],
+            aspect: 'all'  // can be: "all", "stencil-only", "depth-only"
+        };
+
+        const copySize = {
+            width: this.descr.size.width,
+            height: this.descr.size.height,
+            depthOrArrayLayers: 1   // single layer
+        };
+
+        device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
     uploadTypedArrayData(wgpu, data) {

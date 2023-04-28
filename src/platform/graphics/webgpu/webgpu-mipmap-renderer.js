@@ -64,9 +64,15 @@ class WebgpuMipmapRenderer {
      */
     generate(webgpuTexture) {
 
+        // ignore texture with no mipmaps
+        const textureDescr = webgpuTexture.descr;
+        if (textureDescr.mipLevelCount <= 1) {
+            return;
+        }
+
         // not all types are currently supported
         if (webgpuTexture.texture.cubemap || webgpuTexture.texture.volume) {
-            Debug.warnOnce('WebGPU mipmap generation is not supported for cubemaps or volume textures.');
+            Debug.warnOnce('WebGPU mipmap generation is not supported for cubemaps or volume texture.', webgpuTexture.texture);
             return;
         }
 
@@ -77,7 +83,6 @@ class WebgpuMipmapRenderer {
         Debug.assert(!device.insideRenderPass);
 
         const wgpu = device.wgpu;
-        const textureDescr = webgpuTexture.descr;
 
         /** @type {import('./webgpu-shader.js').WebgpuShader} */
         const webgpuShader = this.shader.impl;
