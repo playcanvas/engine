@@ -7,7 +7,6 @@ import { Observer } from '@playcanvas/observer';
 class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Omni Shadows';
-    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -95,7 +94,7 @@ class ClusteredOmniShadowsExample {
                 data.set('settings', {
                     shadowAtlasResolution: 1300,     // shadow map resolution storing all shadows
                     shadowType: pc.SHADOW_PCF3,      // shadow filter type
-                    shadowsEnabled: false,
+                    shadowsEnabled: true,
                     cookiesEnabled: true
                 });
 
