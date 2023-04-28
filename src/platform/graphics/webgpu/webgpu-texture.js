@@ -297,7 +297,7 @@ class WebgpuTexture {
         const wgpu = device.wgpu;
 
         // upload texture data if any
-        var anyUploads = false;
+        let anyUploads = false;
         const requiredMipLevels = texture.requiredMipLevels;
         for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
