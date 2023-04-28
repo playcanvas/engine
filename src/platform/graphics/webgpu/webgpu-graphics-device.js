@@ -226,7 +226,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             colorSpace: 'srgb',
             alphaMode: 'opaque',  // could also be 'premultiplied'
 
-            // use prefered format for optimal performance on mobile
+            // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
@@ -248,12 +248,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createFramebuffer() {
+        this.supportsStencil = this.initOptions.stencil;
         this.frameBufferDimensions = new Vec2();
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
-            stencil: this.initOptions.stencil,
+            stencil: this.supportsStencil,
             samples: this.samples
         });
     }
