@@ -110,7 +110,7 @@ class GraphicsDevice extends EventHandler {
      * True if the main framebuffer contains stencil attachment.
      *
      * @ignore
-     * @type {number}
+     * @type {boolean}
      */
     supportsStencil;
 
