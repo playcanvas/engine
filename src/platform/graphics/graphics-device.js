@@ -107,6 +107,14 @@ class GraphicsDevice extends EventHandler {
     samples;
 
     /**
+     * True if the main framebuffer contains stencil attachment.
+     *
+     * @ignore
+     * @type {number}
+     */
+    supportsStencil;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget}
