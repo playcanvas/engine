@@ -156,7 +156,7 @@ class ShadowRendererLocal {
         if (applyVsm) {
             renderPass.after = () => {
                 // after the pass is done, apply VSM blur if needed
-                this.shadowRenderer.renderVms(light, shadowCamera);
+                this.shadowRenderer.renderVsm(light, shadowCamera);
             };
         }
 
