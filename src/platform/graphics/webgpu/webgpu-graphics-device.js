@@ -17,6 +17,7 @@ import { WebgpuTexture } from './webgpu-texture.js';
 import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
+import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -40,6 +41,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type { WebgpuClearRenderer }
      */
     clearRenderer;
+
+    /**
+     * Object responsible for mipmap generation.
+     *
+     * @type { WebgpuMipmapRenderer }
+     */
+    mipmapRenderer;
 
     /**
      * Render pipeline currently set on the device.
@@ -232,6 +240,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.createFramebuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
+        this.mipmapRenderer = new WebgpuMipmapRenderer(this);
 
         this.postInit();
 
@@ -545,6 +554,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats.length = 0;
 
         this.insideRenderPass = false;
+
+        // generate mipmaps
+        if (renderPass.colorOps.mipmaps) {
+            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        }
     }
 
     clear(options) {
