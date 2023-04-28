@@ -483,7 +483,7 @@ class Texture {
             this._mipmaps = v;
 
             if (this.device.isWebGPU) {
-                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture approproately.", this);
+                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
             }
 
             if (v) this._needsMipmapsUpload = true;
