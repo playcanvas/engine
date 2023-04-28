@@ -566,7 +566,7 @@ Object.defineProperties(Texture.prototype, {
 
     autoMipmap: {
         get: function () {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use Use pc.Texture#mipmaps instead.');
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
             return this._mipmaps;
         },
         set: function (value) {
