@@ -1897,8 +1897,6 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
         preprocess(gltf);
     }
 
-    const bufferViewData = await Promise.all(bufferViews);
-
     // The original version of FACT generated incorrectly flipped V texture
     // coordinates. We must compensate by flipping V in this case. Once
     // all models have been re-exported we can remove this flag.
@@ -1913,11 +1911,14 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
     const cameras = createCameras(gltf, nodes, options);
-    const animations = createAnimations(gltf, nodes, bufferViewData, options);
     const variants = createVariants(gltf);
-    const [meshes, meshVariants, meshDefaultMaterials, promises] = createMeshes(device, gltf, bufferViewData, flipV, options);
 
-    // textures must have finished loading before we can create materials
+    // buffer data must have finished loading in order to create meshes and animations
+    const bufferViewData = await Promise.all(bufferViews);
+    const [meshes, meshVariants, meshDefaultMaterials, promises] = createMeshes(device, gltf, bufferViewData, flipV, options);
+    const animations = createAnimations(gltf, nodes, bufferViewData, options);
+
+    // textures must have finished loading in order to create materials
     const textureAssets = await Promise.all(textures);
     const textureInstances = textureAssets.map(t => t.resource);
     const materials = createMaterials(gltf, textureInstances, options, flipV);
