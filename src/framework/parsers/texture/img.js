@@ -70,11 +70,6 @@ class ImgParser {
     }
 
     open(url, data, device, textureOptions = {}) {
-
-
-        console.log("!!!!!", url);
-
-
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
