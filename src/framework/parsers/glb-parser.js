@@ -1995,10 +1995,8 @@ let gltfTextureUniqueId = 0;
 
 // create gltf images. returns an array of promises that resolve to texture assets.
 const createImages = (gltf, bufferViews, urlBase, registry, options) => {
-    const result = [];
-
     if (!gltf.images || gltf.images.length === 0) {
-        return result;
+        return [];
     }
 
     const preprocess = options?.image?.preprocess;
@@ -2049,9 +2047,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
         });
     };
 
-    for (let i = 0; i < gltf.images.length; ++i) {
-        const gltfImage = gltf.images[i];
-
+    return gltf.images.map((gltfImage, i) => {
         if (preprocess) {
             preprocess(gltfImage);
         }
@@ -2098,18 +2094,15 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
             });
         }
 
-        result.push(promise);
-    }
-
-    return result;
+        return promise;
+    });
 };
 
 // create gltf textures. returns an array of promises that resolve to texture assets.
 const createTextures = (gltf, images, options) => {
-    const result = [];
 
     if (!gltf?.images?.length || !gltf?.textures?.length) {
-        return result;
+        return [];
     }
 
     const preprocess = options?.texture?.preprocess;
@@ -2118,9 +2111,7 @@ const createTextures = (gltf, images, options) => {
 
     const seenImages = new Set();
 
-    for (let i = 0; i < gltf.textures.length; ++i) {
-        const gltfTexture = gltf.textures[i];
-
+    return gltf.textures.map((gltfTexture) => {
         if (preprocess) {
             preprocess(gltfTexture);
         }
@@ -2165,28 +2156,21 @@ const createTextures = (gltf, images, options) => {
             });
         }
 
-        result.push(promise);
-    }
-
-    return result;
+        return promise;
+    });
 };
 
 // load gltf buffers. returns an array of promises that resolve to typed arrays.
-const loadBuffers = (gltf, binaryChunk, urlBase, options, callback) => {
-    const result = [];
-
+const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
     if (!gltf.buffers || gltf.buffers.length === 0) {
-        callback(null, result);
-        return;
+        return [];
     }
 
     const preprocess = options?.buffer?.preprocess;
     const processAsync = options?.buffer?.processAsync;
     const postprocess = options?.buffer?.postprocess;
 
-    for (let i = 0; i < gltf.buffers.length; ++i) {
-        const gltfBuffer = gltf.buffers[i];
-
+    return gltf.buffers.map((gltfBuffer, i) => {
         if (preprocess) {
             preprocess(gltfBuffer);
         }
@@ -2253,10 +2237,8 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options, callback) => {
             });
         }
 
-        result.push(promise);
-    }
-
-    return result;
+        return promise;
+    });
 };
 
 // parse the gltf chunk, returns the gltf json
