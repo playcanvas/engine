@@ -52,20 +52,8 @@ import { dracoDecode } from './draco-decoder.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
-    constructor(gltf) {
-        this.gltf = gltf;
-        this.nodes = null;
-        this.scenes = null;
-        this.animations = null;
-        this.textures = null;
-        this.materials = null;
-        this.variants = null;
-        this.meshVariants = null;
-        this.meshDefaultMaterials = null;
-        this.renders = null;
-        this.skins = null;
-        this.lights = null;
-        this.cameras = null;
+    constructor(members) {
+        Object.assign(this, members);
     }
 
     destroy() {
@@ -747,7 +735,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     return result;
 };
 
-const createMesh = (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
@@ -1661,23 +1649,28 @@ const createSkins = (device, gltf, nodes, bufferViews) => {
     });
 };
 
-const createMeshes = (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises) => {
-    if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
-        !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
-        !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
-        return [];
-    }
-
-    if (options.skipMeshes) {
-        return [];
+const createMeshes = (device, gltf, bufferViews, flipV, options) => {
+    if (options.skipMeshes ||
+        !gltf?.meshes?.length ||
+        !gltf?.accessors?.length ||
+        !gltf?.bufferViews?.length) {
+        return [[], {}, {}, []];
     }
 
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
+    const meshVariants = {};
+    const meshDefaultMaterials = {};
+    const promises = [];
 
-    return gltf.meshes.map((gltfMesh) => {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
-    });
+    return [
+        gltf.meshes.map((gltfMesh) => {
+            return createMesh(device, gltfMesh, gltf.accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+        }),
+        meshVariants,
+        meshDefaultMaterials,
+        promises
+    ];
 };
 
 const createMaterials = (gltf, textures, options, flipV) => {
@@ -1896,7 +1889,7 @@ const linkSkins = (gltf, renders, skins) => {
 };
 
 // create engine resources from the downloaded GLB data
-const createResources = (device, gltf, bufferViews, textures, options, callback) => {
+const createResources = async (device, gltf, bufferViews, textures, options) => {
     const preprocess = options?.global?.preprocess;
     const postprocess = options?.global?.postprocess;
 
@@ -1904,71 +1897,66 @@ const createResources = (device, gltf, bufferViews, textures, options, callback)
         preprocess(gltf);
     }
 
-    Promise.all(bufferViews).then((bufferViewData) => {
-        // The original version of FACT generated incorrectly flipped V texture
-        // coordinates. We must compensate by flipping V in this case. Once
-        // all models have been re-exported we can remove this flag.
-        const flipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
+    const bufferViewData = await Promise.all(bufferViews);
 
-        // We'd like to remove the flipV code at some point.
-        if (flipV) {
-            Debug.warn('glTF model may have flipped UVs. Please reconvert.');
-        }
+    // The original version of FACT generated incorrectly flipped V texture
+    // coordinates. We must compensate by flipping V in this case. Once
+    // all models have been re-exported we can remove this flag.
+    const flipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
 
-        const promises = [];
+    // We'd like to remove the flipV code at some point.
+    if (flipV) {
+        Debug.warn('glTF model may have flipped UVs. Please reconvert.');
+    }
 
-        const nodes = createNodes(gltf, options);
-        const scenes = createScenes(gltf, nodes);
-        const lights = createLights(gltf, nodes, options);
-        const cameras = createCameras(gltf, nodes, options);
-        const animations = createAnimations(gltf, nodes, bufferViewData, options);
-        const variants = createVariants(gltf);
-        const meshVariants = {};
-        const meshDefaultMaterials = {};
-        const meshes = createMeshes(device, gltf, bufferViewData, callback, flipV, meshVariants, meshDefaultMaterials, options, promises);
+    const nodes = createNodes(gltf, options);
+    const scenes = createScenes(gltf, nodes);
+    const lights = createLights(gltf, nodes, options);
+    const cameras = createCameras(gltf, nodes, options);
+    const animations = createAnimations(gltf, nodes, bufferViewData, options);
+    const variants = createVariants(gltf);
+    const [meshes, meshVariants, meshDefaultMaterials, promises] = createMeshes(device, gltf, bufferViewData, flipV, options);
 
-        Promise.all(textures).then((textureAssets) => {
-            const textureInstances = textureAssets.map(t => t.resource);
+    // textures must have finished loading before we can create materials
+    const textureAssets = await Promise.all(textures);
+    const textureInstances = textureAssets.map(t => t.resource);
+    const materials = createMaterials(gltf, textureInstances, options, flipV);
+    const skins = createSkins(device, gltf, nodes, bufferViewData);
 
-            // textures must have finished loading before we can create materials
-            const materials = createMaterials(gltf, textureInstances, options, flipV);
+    // create renders to wrap meshes
+    const renders = [];
+    for (let i = 0; i < meshes.length; i++) {
+        renders[i] = new Render();
+        renders[i].meshes = meshes[i];
+    }
 
-            const skins = createSkins(device, gltf, nodes, bufferViewData);
+    // link skins to meshes
+    linkSkins(gltf, renders, skins);
 
-            // create renders to wrap meshes
-            const renders = [];
-            for (let i = 0; i < meshes.length; i++) {
-                renders[i] = new Render();
-                renders[i].meshes = meshes[i];
-            }
-
-            // link skins to meshes
-            linkSkins(gltf, renders, skins);
-
-            const result = new GlbResources(gltf);
-            result.nodes = nodes;
-            result.scenes = scenes;
-            result.animations = animations;
-            result.textures = textureAssets;
-            result.materials = materials;
-            result.variants = variants;
-            result.meshVariants = meshVariants;
-            result.meshDefaultMaterials = meshDefaultMaterials;
-            result.renders = renders;
-            result.skins = skins;
-            result.lights = lights;
-            result.cameras = cameras;
-
-            if (postprocess) {
-                postprocess(gltf, result);
-            }
-
-            // wait for all promises to complete before returning
-            Promise.all(promises).then(() => {
-                callback(null, result);
-            });
-        });
+    const result = new GlbResources({
+        gltf,
+        nodes,
+        scenes,
+        animations,
+        textures: textureAssets,
+        materials,
+        variants,
+        meshVariants,
+        meshDefaultMaterials,
+        renders,
+        skins,
+        lights,
+        cameras
     });
+
+    if (postprocess) {
+        postprocess(gltf, result);
+    }
+
+    // wait for draco meshes to complete decoding
+    await Promise.all(promises);
+
+    return result;
 };
 
 const applySampler = (texture, gltfSampler) => {
@@ -2463,12 +2451,14 @@ class GlbParser {
                     return;
                 }
 
-                // load buffer asynchronously
                 const buffers = loadBuffers(gltf, chunks.binaryChunk, urlBase, options);
                 const bufferViews = createBufferViews(gltf, buffers, options);
                 const images = createImages(gltf, bufferViews, urlBase, registry, options);
                 const textures = createTextures(gltf, images, options);
-                createResources(device, gltf, bufferViews, textures, options, callback);
+
+                createResources(device, gltf, bufferViews, textures, options)
+                    .then(result => callback(null, result))
+                    .catch(err => callback(err));
             });
         });
     }
