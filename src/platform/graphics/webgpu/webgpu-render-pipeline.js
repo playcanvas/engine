@@ -167,7 +167,10 @@ class WebgpuRenderPipeline {
         /** @type {GPUPipelineLayout} */
         const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
         DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
-        Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, descr);
+        Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, {
+            descr,
+            bindGroupFormats
+        });
 
         _bindGroupLayouts.length = 0;
 
