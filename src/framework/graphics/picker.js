@@ -191,7 +191,7 @@ class Picker {
 
         const device = this.device;
         const self = this;
-        const pickColorId = device.scope.resolve('uPickColorId');
+        const pickColorId = device.scope.resolve('uColor');
 
         // camera
         this.cameraEntity = new Entity();
