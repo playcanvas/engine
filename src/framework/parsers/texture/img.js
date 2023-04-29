@@ -69,7 +69,7 @@ class ImgParser {
         }
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -77,8 +77,11 @@ class ImgParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: PIXELFORMAT_RGBA8
+            format: PIXELFORMAT_RGBA8,
+
+            ...textureOptions
         });
+
         texture.setSource(data);
         return texture;
     }

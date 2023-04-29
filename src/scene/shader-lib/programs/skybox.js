@@ -35,6 +35,7 @@ const skybox = {
         }
 
         return ShaderUtils.createDefinition(device, {
+            name: 'SkyboxShader',
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
