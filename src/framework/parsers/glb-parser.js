@@ -52,9 +52,31 @@ import { dracoDecode } from './draco-decoder.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
-    constructor(members) {
-        Object.assign(this, members);
-    }
+    gltf;
+
+    nodes;
+
+    scenes;
+
+    animations;
+
+    textures;
+
+    materials;
+
+    variants;
+
+    meshVariants;
+
+    meshDefaultMaterials;
+
+    renders;
+
+    skins;
+
+    lights;
+
+    cameras;
 
     destroy() {
         // render needs to dec ref meshes
@@ -1934,21 +1956,20 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     // link skins to meshes
     linkSkins(gltf, renders, skins);
 
-    const result = new GlbResources({
-        gltf,
-        nodes,
-        scenes,
-        animations,
-        textures: textureAssets,
-        materials,
-        variants,
-        meshVariants,
-        meshDefaultMaterials,
-        renders,
-        skins,
-        lights,
-        cameras
-    });
+    const result = new GlbResources();
+    result.gltf = gltf;
+    result.nodes = nodes;
+    result.scenes = scenes;
+    result.animations = animations;
+    result.textures = textureAssets;
+    result.materials = materials;
+    result.variants = variants;
+    result.meshVariants = meshVariants;
+    result.meshDefaultMaterials = meshDefaultMaterials;
+    result.renders = renders;
+    result.skins = skins;
+    result.lights = lights;
+    result.cameras = cameras;
 
     if (postprocess) {
         postprocess(gltf, result);
