@@ -36,7 +36,7 @@ class Ktx2Parser {
         }, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -48,7 +48,9 @@ class Ktx2Parser {
             height: data.height,
             format: data.format,
             cubemap: data.cubemap,
-            levels: data.levels
+            levels: data.levels,
+
+            ...textureOptions
         });
 
         texture.upload();

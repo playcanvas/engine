@@ -170,6 +170,7 @@ class CubemapHandler {
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
                     format: format === PIXELFORMAT_RGB8 ? PIXELFORMAT_RGBA8 : format,
+                    mipmaps: assetData.mipmaps ?? true,
                     levels: faceLevels,
                     minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : faceTextures[0].minFilter,
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,

@@ -212,7 +212,11 @@ class WebgpuRenderTarget {
         const colorBuffer = renderTarget.colorBuffer;
         let colorView = null;
         if (colorBuffer) {
-            colorView = colorBuffer.impl.getView(device);
+
+            // render to top mip level in case of mip-mapped buffer
+            colorView = colorBuffer.impl.createView({
+                mipLevelCount: 1
+            });
 
             // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
             if (colorBuffer.cubemap) {

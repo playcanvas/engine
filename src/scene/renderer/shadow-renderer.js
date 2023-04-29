@@ -473,11 +473,11 @@ class ShadowRenderer {
             }
 
             // apply vsm
-            this.renderVms(light, camera);
+            this.renderVsm(light, camera);
         }
     }
 
-    renderVms(light, camera) {
+    renderVsm(light, camera) {
 
         // VSM blur if light supports vsm (directional and spot in general)
         if (light._isVsm && light._vsmBlurSize > 1) {
