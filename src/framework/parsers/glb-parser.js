@@ -1672,27 +1672,23 @@ const createSkins = (device, gltf, nodes, bufferViews) => {
 };
 
 const createMeshes = (device, gltf, bufferViews, flipV, options) => {
-    if (options.skipMeshes ||
-        !gltf?.meshes?.length ||
-        !gltf?.accessors?.length ||
-        !gltf?.bufferViews?.length) {
-        return [[], {}, {}, []];
-    }
-
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
     const meshVariants = {};
     const meshDefaultMaterials = {};
     const promises = [];
 
-    return [
-        gltf.meshes.map((gltfMesh) => {
-            return createMesh(device, gltfMesh, gltf.accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
-        }),
+    const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
+    const meshes = valid ? gltf.meshes.map((gltfMesh) => {
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+    }) : [];
+
+    return {
+        meshes,
         meshVariants,
         meshDefaultMaterials,
         promises
-    ];
+    };
 };
 
 const createMaterials = (gltf, textures, options, flipV) => {
@@ -1937,7 +1933,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
-    const [meshes, meshVariants, meshDefaultMaterials, promises] = createMeshes(device, gltf, bufferViewData, flipV, options);
+    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, flipV, options);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
 
     // textures must have finished loading in order to create materials
