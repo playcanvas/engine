@@ -246,10 +246,10 @@ function DracoWorker(jsUrl, wasmUrl) {
                         return {};
                     }
                 })
-                .then(instance => {
-                    draco = instance;
-                    workQueue.forEach(data => decode(data));
-                });
+                    .then((instance) => {
+                        draco = instance;
+                        workQueue.forEach(data => decode(data));
+                    });
                 break;
             case 'decodeMesh':
                 if (draco) {
