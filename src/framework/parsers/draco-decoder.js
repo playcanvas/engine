@@ -162,8 +162,8 @@ const initializeWorkers = (config) => {
                 };
             } else {
                 config = {
-                    jsUrl: 'draco.wasm.js',
-                    wasmUrl: 'draco.wasm.wasm',
+                    jsUrl: '/draco.wasm.js',
+                    wasmUrl: '/draco.wasm.wasm',
                     numWorkers: defaultNumWorkers
                 };
             }

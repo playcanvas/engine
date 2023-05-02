@@ -29,7 +29,7 @@ class HdrParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const textureData = this.parse(data);
 
         if (!textureData) {
@@ -51,7 +51,9 @@ class HdrParser {
             format: PIXELFORMAT_RGBA8,
             type: TEXTURETYPE_RGBE,
             // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
-            mipmaps: false
+            mipmaps: false,
+
+            ...textureOptions
         });
 
         texture.upload();

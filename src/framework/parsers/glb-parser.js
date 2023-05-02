@@ -46,28 +46,37 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 import { Asset } from '../asset/asset.js';
-import { GlbContainerResource } from './glb-container-resource.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
-    constructor(gltf) {
-        this.gltf = gltf;
-        this.nodes = null;
-        this.scenes = null;
-        this.animations = null;
-        this.textures = null;
-        this.materials = null;
-        this.variants = null;
-        this.meshVariants = null;
-        this.meshDefaultMaterials = null;
-        this.renders = null;
-        this.skins = null;
-        this.lights = null;
-        this.cameras = null;
-    }
+    gltf;
+
+    nodes;
+
+    scenes;
+
+    animations;
+
+    textures;
+
+    materials;
+
+    variants;
+
+    meshVariants;
+
+    meshDefaultMaterials;
+
+    renders;
+
+    skins;
+
+    lights;
+
+    cameras;
 
     destroy() {
         // render needs to dec ref meshes
@@ -748,7 +757,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     return result;
 };
 
-const createMesh = (device, gltfMesh, accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
@@ -1662,23 +1671,24 @@ const createSkins = (device, gltf, nodes, bufferViews) => {
     });
 };
 
-const createMeshes = (device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises) => {
-    if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
-        !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
-        !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
-        return [];
-    }
-
-    if (options.skipMeshes) {
-        return [];
-    }
-
+const createMeshes = (device, gltf, bufferViews, flipV, options) => {
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
+    const meshVariants = {};
+    const meshDefaultMaterials = {};
+    const promises = [];
 
-    return gltf.meshes.map((gltfMesh) => {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, callback, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
-    });
+    const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
+    const meshes = valid ? gltf.meshes.map((gltfMesh) => {
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+    }) : [];
+
+    return {
+        meshes,
+        meshVariants,
+        meshDefaultMaterials,
+        promises
+    };
 };
 
 const createMaterials = (gltf, textures, options, flipV) => {
@@ -1687,7 +1697,7 @@ const createMaterials = (gltf, textures, options, flipV) => {
     }
 
     const preprocess = options?.material?.preprocess;
-    const process = options?.material?.process || createMaterial;
+    const process = options?.material?.process ?? createMaterial;
     const postprocess = options?.material?.postprocess;
 
     return gltf.materials.map((gltfMaterial) => {
@@ -1740,7 +1750,7 @@ const createNodes = (gltf, options) => {
     }
 
     const preprocess = options?.node?.preprocess;
-    const process = options?.node?.process || createNode;
+    const process = options?.node?.process ?? createNode;
     const postprocess = options?.node?.postprocess;
 
     const nodes = gltf.nodes.map((gltfNode, index) => {
@@ -1811,7 +1821,7 @@ const createCameras = (gltf, nodes, options) => {
     if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
 
         const preprocess = options?.camera?.preprocess;
-        const process = options?.camera?.process || createCamera;
+        const process = options?.camera?.process ?? createCamera;
         const postprocess = options?.camera?.postprocess;
 
         gltf.nodes.forEach((gltfNode, nodeIndex) => {
@@ -1850,7 +1860,7 @@ const createLights = (gltf, nodes, options) => {
         if (gltfLights.length) {
 
             const preprocess = options?.light?.preprocess;
-            const process = options?.light?.process || createLight;
+            const process = options?.light?.process ?? createLight;
             const postprocess = options?.light?.postprocess;
 
             // handle nodes with lights
@@ -1897,7 +1907,7 @@ const linkSkins = (gltf, renders, skins) => {
 };
 
 // create engine resources from the downloaded GLB data
-const createResources = (device, gltf, bufferViews, textureAssets, options, callback) => {
+const createResources = async (device, gltf, bufferViews, textures, options) => {
     const preprocess = options?.global?.preprocess;
     const postprocess = options?.global?.postprocess;
 
@@ -1919,17 +1929,18 @@ const createResources = (device, gltf, bufferViews, textureAssets, options, call
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
     const cameras = createCameras(gltf, nodes, options);
-    const animations = createAnimations(gltf, nodes, bufferViews, options);
-    const materials = createMaterials(gltf, textureAssets.map((textureAsset) => {
-        return textureAsset.resource;
-    }), options, flipV);
     const variants = createVariants(gltf);
-    const meshVariants = {};
-    const meshDefaultMaterials = {};
-    const promises = [];
-    const meshes = createMeshes(device, gltf, bufferViews, callback, flipV, meshVariants, meshDefaultMaterials, options, promises);
 
-    const skins = createSkins(device, gltf, nodes, bufferViews);
+    // buffer data must have finished loading in order to create meshes and animations
+    const bufferViewData = await Promise.all(bufferViews);
+    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, flipV, options);
+    const animations = createAnimations(gltf, nodes, bufferViewData, options);
+
+    // textures must have finished loading in order to create materials
+    const textureAssets = await Promise.all(textures);
+    const textureInstances = textureAssets.map(t => t.resource);
+    const materials = createMaterials(gltf, textureInstances, options, flipV);
+    const skins = createSkins(device, gltf, nodes, bufferViewData);
 
     // create renders to wrap meshes
     const renders = [];
@@ -1941,7 +1952,8 @@ const createResources = (device, gltf, bufferViews, textureAssets, options, call
     // link skins to meshes
     linkSkins(gltf, renders, skins);
 
-    const result = new GlbResources(gltf);
+    const result = new GlbResources();
+    result.gltf = gltf;
     result.nodes = nodes;
     result.scenes = scenes;
     result.animations = animations;
@@ -1959,10 +1971,10 @@ const createResources = (device, gltf, bufferViews, textureAssets, options, call
         postprocess(gltf, result);
     }
 
-    // wait for all promises to complete before returning
-    Promise.all(promises).then(() => {
-        callback(null, result);
-    });
+    // wait for draco meshes to complete decoding
+    await Promise.all(promises);
+
+    return result;
 };
 
 const applySampler = (texture, gltfSampler) => {
@@ -1988,7 +2000,7 @@ const applySampler = (texture, gltfSampler) => {
     };
 
     if (texture) {
-        gltfSampler = gltfSampler || { };
+        gltfSampler = gltfSampler ?? { };
         texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
         texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
         texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
@@ -1998,20 +2010,15 @@ const applySampler = (texture, gltfSampler) => {
 
 let gltfTextureUniqueId = 0;
 
-// load an image
-const loadImageAsync = (gltfImage, index, bufferViews, urlBase, registry, options, callback) => {
-    const preprocess = options?.image?.preprocess;
-    const processAsync = options?.image?.processAsync || ((gltfImage, callback) => {
-        callback(null, null);
-    });
-    const postprocess = options?.image?.postprocess;
+// create gltf images. returns an array of promises that resolve to texture assets.
+const createImages = (gltf, bufferViews, urlBase, registry, options) => {
+    if (!gltf.images || gltf.images.length === 0) {
+        return [];
+    }
 
-    const onLoad = (textureAsset) => {
-        if (postprocess) {
-            postprocess(gltfImage, textureAsset);
-        }
-        callback(null, textureAsset);
-    };
+    const preprocess = options?.image?.preprocess;
+    const processAsync = options?.image?.processAsync;
+    const postprocess = options?.image?.postprocess;
 
     const mimeTypeFileExtensions = {
         'image/png': 'png',
@@ -2022,211 +2029,233 @@ const loadImageAsync = (gltfImage, index, bufferViews, urlBase, registry, option
         'image/vnd-ms.dds': 'dds'
     };
 
-    const loadTexture = (url, bufferView, mimeType, options) => {
-        const name = (gltfImage.name || 'gltf-texture') + '-' + gltfTextureUniqueId++;
+    const loadTexture = (gltfImage, url, bufferView, mimeType, options) => {
+        return new Promise((resolve, reject) => {
+            const continuation = (bufferViewData) => {
+                const name = (gltfImage.name || 'gltf-texture') + '-' + gltfTextureUniqueId++;
 
-        // construct the asset file
-        const file = {
-            url: url || name
-        };
-        if (bufferView) {
-            file.contents = bufferView.slice(0).buffer;
-        }
-        if (mimeType) {
-            const extension = mimeTypeFileExtensions[mimeType];
-            if (extension) {
-                file.filename = file.url + '.' + extension;
+                // construct the asset file
+                const file = {
+                    url: url || name
+                };
+                if (bufferViewData) {
+                    file.contents = bufferViewData.slice(0).buffer;
+                }
+                if (mimeType) {
+                    const extension = mimeTypeFileExtensions[mimeType];
+                    if (extension) {
+                        file.filename = file.url + '.' + extension;
+                    }
+                }
+
+                // create and load the asset
+                const asset = new Asset(name, 'texture', file, null, options);
+                asset.on('load', asset => resolve(asset));
+                asset.on('error', err => reject(err));
+                registry.add(asset);
+                registry.load(asset);
+            };
+
+            if (bufferView) {
+                bufferView.then(bufferViewData => continuation(bufferViewData));
+            } else {
+                continuation(null);
             }
-        }
-
-        // create and load the asset
-        const asset = new Asset(name, 'texture', file, null, options);
-        asset.on('load', onLoad);
-        asset.on('error', callback);
-        registry.add(asset);
-        registry.load(asset);
+        });
     };
 
-    if (preprocess) {
-        preprocess(gltfImage);
-    }
+    return gltf.images.map((gltfImage, i) => {
+        if (preprocess) {
+            preprocess(gltfImage);
+        }
 
-    processAsync(gltfImage, (err, textureAsset) => {
-        if (err) {
-            callback(err);
-        } else if (textureAsset) {
-            onLoad(textureAsset);
+        let promise;
+
+        if (processAsync) {
+            promise = new Promise((resolve, reject) => {
+                processAsync(gltfImage, (err, textureAsset) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(textureAsset);
+                });
+            });
         } else {
-            if (gltfImage.hasOwnProperty('uri')) {
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
+        }
+
+        promise = promise.then((textureAsset) => {
+            if (textureAsset) {
+                return textureAsset;
+            } else if (gltfImage.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(gltfImage.uri)) {
-                    loadTexture(gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
-                } else {
-                    loadTexture(ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
+                    return loadTexture(gltfImage, gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
                 }
+                return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
-                loadTexture(null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null);
-            } else {
-                // fail
-                callback('Invalid image found in gltf (neither uri or bufferView found). index=' + index);
+                return loadTexture(gltfImage, null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null);
             }
+
+            // fail
+            return Promise.reject(new Error(`Invalid image found in gltf (neither uri or bufferView found). index=${i}`));
+        });
+
+        if (postprocess) {
+            promise = promise.then((textureAsset) => {
+                postprocess(gltfImage, textureAsset);
+                return textureAsset;
+            });
         }
+
+        return promise;
     });
 };
 
-// load textures using the asset system
-const loadTexturesAsync = (gltf, bufferViews, urlBase, registry, options, callback) => {
-    if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
-        !gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
-        callback(null, []);
-        return;
+// create gltf textures. returns an array of promises that resolve to texture assets.
+const createTextures = (gltf, images, options) => {
+
+    if (!gltf?.images?.length || !gltf?.textures?.length) {
+        return [];
     }
 
     const preprocess = options?.texture?.preprocess;
-    const processAsync = options?.texture?.processAsync || ((gltfTexture, gltfImages, callback) => {
-        callback(null, null);
-    });
+    const processAsync = options?.texture?.processAsync;
     const postprocess = options?.texture?.postprocess;
 
-    const assets = [];        // one per image
-    const textures = [];      // list per image
+    const seenImages = new Set();
 
-    let remaining = gltf.textures.length;
-    const onLoad = (textureIndex, imageIndex) => {
-        if (!textures[imageIndex]) {
-            textures[imageIndex] = [];
-        }
-        textures[imageIndex].push(textureIndex);
-
-        if (--remaining === 0) {
-            const result = [];
-            textures.forEach((textureList, imageIndex) => {
-                textureList.forEach((textureIndex, index) => {
-                    const textureAsset = (index === 0) ? assets[imageIndex] : cloneTextureAsset(assets[imageIndex]);
-                    applySampler(textureAsset.resource, (gltf.samplers || [])[gltf.textures[textureIndex].sampler]);
-                    result[textureIndex] = textureAsset;
-                    if (postprocess) {
-                        postprocess(gltf.textures[textureIndex], textureAsset);
-                    }
-                });
-            });
-            callback(null, result);
-        }
-    };
-
-    for (let i = 0; i < gltf.textures.length; ++i) {
-        const gltfTexture = gltf.textures[i];
-
+    return gltf.textures.map((gltfTexture) => {
         if (preprocess) {
             preprocess(gltfTexture);
         }
 
-        processAsync(gltfTexture, gltf.images, function (i, gltfTexture, err, gltfImageIndex) {
-            if (err) {
-                callback(err);
-            } else {
-                if (gltfImageIndex === undefined || gltfImageIndex === null) {
-                    gltfImageIndex = gltfTexture?.extensions?.KHR_texture_basisu?.source;
-                    if (gltfImageIndex === undefined) {
-                        gltfImageIndex = gltfTexture.source;
-                    }
-                }
+        let promise;
 
-                if (assets[gltfImageIndex]) {
-                    // image has already been loaded
-                    onLoad(i, gltfImageIndex);
-                } else {
-                    // first occcurrence, load it
-                    const gltfImage = gltf.images[gltfImageIndex];
-                    loadImageAsync(gltfImage, i, bufferViews, urlBase, registry, options, (err, textureAsset) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            assets[gltfImageIndex] = textureAsset;
-                            onLoad(i, gltfImageIndex);
-                        }
-                    });
-                }
-            }
-        }.bind(null, i, gltfTexture));
-    }
+        if (processAsync) {
+            promise = new Promise((resolve, reject) => {
+                processAsync(gltfTexture, gltf.images, (err, gltfImageIndex) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(gltfImageIndex);
+                });
+            });
+        } else {
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
+        }
+
+        promise = promise.then((gltfImageIndex) => {
+            // resolve image index
+            gltfImageIndex = gltfImageIndex ??
+                             gltfTexture?.extensions?.KHR_texture_basisu?.source ??
+                             gltfTexture.source;
+
+            const cloneAsset = seenImages.has(gltfImageIndex);
+            seenImages.add(gltfImageIndex);
+
+            return images[gltfImageIndex].then((imageAsset) => {
+                const asset = cloneAsset ? cloneTextureAsset(imageAsset) : imageAsset;
+                applySampler(asset.resource, (gltf.samplers ?? [])[gltfTexture.sampler]);
+                return asset;
+            });
+        });
+
+        if (postprocess) {
+            promise = promise.then((textureAsset) => {
+                postprocess(gltfTexture, textureAsset);
+                return textureAsset;
+            });
+        }
+
+        return promise;
+    });
 };
 
-// load gltf buffers asynchronously, returning them in the callback
-const loadBuffersAsync = (gltf, binaryChunk, urlBase, options, callback) => {
-    const result = [];
-
+// load gltf buffers. returns an array of promises that resolve to typed arrays.
+const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
     if (!gltf.buffers || gltf.buffers.length === 0) {
-        callback(null, result);
-        return;
+        return [];
     }
 
     const preprocess = options?.buffer?.preprocess;
-    const processAsync = options?.buffer?.processAsync || ((gltfBuffer, callback) => {
-        callback(null, null);
-    });
+    const processAsync = options?.buffer?.processAsync;
     const postprocess = options?.buffer?.postprocess;
 
-    let remaining = gltf.buffers.length;
-    const onLoad = (index, buffer) => {
-        result[index] = buffer;
-        if (postprocess) {
-            postprocess(gltf.buffers[index], buffer);
-        }
-        if (--remaining === 0) {
-            callback(null, result);
-        }
-    };
-
-    for (let i = 0; i < gltf.buffers.length; ++i) {
-        const gltfBuffer = gltf.buffers[i];
-
+    return gltf.buffers.map((gltfBuffer, i) => {
         if (preprocess) {
             preprocess(gltfBuffer);
         }
 
-        processAsync(gltfBuffer, function (i, gltfBuffer, err, arrayBuffer) {           // eslint-disable-line no-loop-func
-            if (err) {
-                callback(err);
-            } else if (arrayBuffer) {
-                onLoad(i, new Uint8Array(arrayBuffer));
-            } else {
-                if (gltfBuffer.hasOwnProperty('uri')) {
-                    if (isDataURI(gltfBuffer.uri)) {
-                        // convert base64 to raw binary data held in a string
-                        // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-                        const byteString = atob(gltfBuffer.uri.split(',')[1]);
+        let promise;
 
-                        // create a view into the buffer
-                        const binaryArray = new Uint8Array(byteString.length);
+        if (processAsync) {
+            promise = new Promise((resolve, reject) => {
+                processAsync(gltfBuffer, (err, arrayBuffer) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(arrayBuffer);
+                });
+            });
+        } else {
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
+        }
 
-                        // set the bytes of the buffer to the correct values
-                        for (let j = 0; j < byteString.length; j++) {
-                            binaryArray[j] = byteString.charCodeAt(j);
-                        }
+        promise = promise.then((arrayBuffer) => {
+            if (arrayBuffer) {
+                return arrayBuffer;
+            } else if (gltfBuffer.hasOwnProperty('uri')) {
+                if (isDataURI(gltfBuffer.uri)) {
+                    // convert base64 to raw binary data held in a string
+                    // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+                    const byteString = atob(gltfBuffer.uri.split(',')[1]);
 
-                        onLoad(i, binaryArray);
-                    } else {
-                        http.get(
-                            ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
-                            { cache: true, responseType: 'arraybuffer', retry: false },
-                            function (i, err, result) {                         // eslint-disable-line no-loop-func
-                                if (err) {
-                                    callback(err);
-                                } else {
-                                    onLoad(i, new Uint8Array(result));
-                                }
-                            }.bind(null, i)
-                        );
+                    // create a view into the buffer
+                    const binaryArray = new Uint8Array(byteString.length);
+
+                    // set the bytes of the buffer to the correct values
+                    for (let j = 0; j < byteString.length; j++) {
+                        binaryArray[j] = byteString.charCodeAt(j);
                     }
-                } else {
-                    // glb buffer reference
-                    onLoad(i, binaryChunk);
+
+                    return binaryArray;
                 }
+
+                return new Promise((resolve, reject) => {
+                    http.get(
+                        ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        (err, result) => {                         // eslint-disable-line no-loop-func
+                            if (err)
+                                reject(err);
+                            else
+                                resolve(new Uint8Array(result));
+                        }
+                    );
+                });
             }
-        }.bind(null, i, gltfBuffer));
-    }
+
+            // glb buffer reference
+            return binaryChunk;
+        });
+
+        if (postprocess) {
+            promise = promise.then((buffer) => {
+                postprocess(gltf.buffers[i], buffer);
+                return buffer;
+            });
+        }
+
+        return promise;
+    });
 };
 
 // parse the gltf chunk, returns the gltf json
@@ -2286,7 +2315,7 @@ const parseGlb = (glbData, callback) => {
     while (offset < length) {
         const chunkLength = data.getUint32(offset, true);
         if (offset + chunkLength + 8 > data.byteLength) {
-            throw new Error('Invalid chunk length found in glb. Found ' + chunkLength);
+            callback(`Invalid chunk length found in glb. Found ${chunkLength}`);
         }
         const chunkType = data.getUint32(offset + 4, true);
         const chunkData = new Uint8Array(data.buffer, data.byteOffset + offset + 8, chunkLength);
@@ -2300,12 +2329,12 @@ const parseGlb = (glbData, callback) => {
     }
 
     if (chunks[0].type !== 0x4E4F534A) {
-        callback('Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x' + chunks[0].type.toString(16));
+        callback(`Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x${chunks[0].type.toString(16)}`);
         return;
     }
 
     if (chunks.length > 1 && chunks[1].type !== 0x004E4942) {
-        callback('Invalid chunk type found in glb file. Expected 0x004E4942, found 0x' + chunks[1].type.toString(16));
+        callback(`Invalid chunk type found in glb file. Expected 0x004E4942, found 0x${chunks[1].type.toString(16)}`);
         return;
     }
 
@@ -2334,38 +2363,18 @@ const parseChunk = (filename, data, callback) => {
 };
 
 // create buffer views
-const parseBufferViewsAsync = (gltf, buffers, options, callback) => {
+const createBufferViews = (gltf, buffers, options) => {
 
     const result = [];
 
     const preprocess = options?.bufferView?.preprocess;
-    const processAsync = options?.bufferView?.processAsync || ((gltfBufferView, buffers, callback) => {
-        callback(null, null);
-    });
+    const processAsync = options?.bufferView?.processAsync;
     const postprocess = options?.bufferView?.postprocess;
 
-    let remaining = gltf.bufferViews ? gltf.bufferViews.length : 0;
-
     // handle case of no buffers
-    if (!remaining) {
-        callback(null, null);
-        return;
+    if (!gltf.bufferViews?.length) {
+        return result;
     }
-
-    const onLoad = (index, bufferView) => {
-        const gltfBufferView = gltf.bufferViews[index];
-        if (gltfBufferView.hasOwnProperty('byteStride')) {
-            bufferView.byteStride = gltfBufferView.byteStride;
-        }
-
-        result[index] = bufferView;
-        if (postprocess) {
-            postprocess(gltfBufferView, bufferView);
-        }
-        if (--remaining === 0) {
-            callback(null, result);
-        }
-    };
 
     for (let i = 0; i < gltf.bufferViews.length; ++i) {
         const gltfBufferView = gltf.bufferViews[i];
@@ -2374,26 +2383,60 @@ const parseBufferViewsAsync = (gltf, buffers, options, callback) => {
             preprocess(gltfBufferView);
         }
 
-        processAsync(gltfBufferView, buffers, function (i, gltfBufferView, err, result) {       // eslint-disable-line no-loop-func
-            if (err) {
-                callback(err);
-            } else if (result) {
-                onLoad(i, result);
-            } else {
-                const buffer = buffers[gltfBufferView.buffer];
-                const typedArray = new Uint8Array(buffer.buffer,
-                                                  buffer.byteOffset + (gltfBufferView.byteOffset || 0),
-                                                  gltfBufferView.byteLength);
-                onLoad(i, typedArray);
+        let promise;
+
+        if (processAsync) {
+            promise = new Promise((resolve, reject) => {
+                processAsync(gltfBufferView, buffers, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
+        } else {
+            promise = new Promise((resolve) => {
+                resolve(null);
+            });
+        }
+
+        promise = promise.then((buffer) => {
+            if (buffer) {
+                return buffer;
             }
-        }.bind(null, i, gltfBufferView));
+
+            // convert buffer to typed array
+            return buffers[gltfBufferView.buffer].then((buffer) => {
+                return new Uint8Array(buffer.buffer,
+                                      buffer.byteOffset + (gltfBufferView.byteOffset || 0),
+                                      gltfBufferView.byteLength);
+            });
+        });
+
+        // add a 'byteStride' member to the typed array so we have easy access to it later
+        if (gltfBufferView.hasOwnProperty('byteStride')) {
+            promise = promise.then((typedArray) => {
+                typedArray.byteStride = gltfBufferView.byteStride;
+                return typedArray;
+            });
+        }
+
+        if (postprocess) {
+            promise = promise.then((typedArray) => {
+                postprocess(gltfBufferView, typedArray);
+                return typedArray;
+            });
+        }
+
+        result.push(promise);
     }
+
+    return result;
 };
 
-// -- GlbParser
 class GlbParser {
     // parse the gltf or glb data asynchronously, loading external resources
-    static parseAsync(filename, urlBase, data, device, registry, options, callback) {
+    static parse(filename, urlBase, data, device, registry, options, callback) {
         // parse the data
         parseChunk(filename, data, (err, chunks) => {
             if (err) {
@@ -2408,113 +2451,22 @@ class GlbParser {
                     return;
                 }
 
-                // async load external buffers
-                loadBuffersAsync(gltf, chunks.binaryChunk, urlBase, options, (err, buffers) => {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
+                const buffers = loadBuffers(gltf, chunks.binaryChunk, urlBase, options);
+                const bufferViews = createBufferViews(gltf, buffers, options);
+                const images = createImages(gltf, bufferViews, urlBase, registry, options);
+                const textures = createTextures(gltf, images, options);
 
-                    // async load buffer views
-                    parseBufferViewsAsync(gltf, buffers, options, (err, bufferViews) => {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-
-                        // async load images
-                        loadTexturesAsync(gltf, bufferViews, urlBase, registry, options, (err, textureAssets) => {
-                            if (err) {
-                                callback(err);
-                                return;
-                            }
-
-                            createResources(device, gltf, bufferViews, textureAssets, options, callback);
-                        });
-                    });
-                });
+                createResources(device, gltf, bufferViews, textures, options)
+                    .then(result => callback(null, result))
+                    .catch(err => callback(err));
             });
         });
     }
 
-    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
-    static parse(filename, data, device, options, callback) {
-        options = options || { };
-
-        // parse the data
-        parseChunk(filename, data, (err, chunks) => {
-            if (err) {
-                callback(err);
-            } else {
-                // parse gltf
-                parseGltf(chunks.gltfChunk, (err, gltf) => {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        // parse buffer views
-                        parseBufferViewsAsync(gltf, [chunks.binaryChunk], options, (err, bufferViews) => {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                // create resources
-                                createResources(device, gltf, bufferViews, [], options, (err, result) => {
-                                    if (err) {
-                                        callback(err);
-                                    } else {
-                                        callback(null, result);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    constructor(device, assets, maxRetries) {
-        this._device = device;
-        this._assets = assets;
-        this._defaultMaterial = createMaterial({
+    static createDefaultMaterial() {
+        return createMaterial({
             name: 'defaultGlbMaterial'
         }, []);
-        this.maxRetries = maxRetries;
-    }
-
-    _getUrlWithoutParams(url) {
-        return url.indexOf('?') >= 0 ? url.split('?')[0] : url;
-    }
-
-    load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, (err, result) => {
-            if (err) {
-                callback(err);
-            } else {
-                GlbParser.parseAsync(
-                    this._getUrlWithoutParams(url.original),
-                    path.extractPath(url.load),
-                    result,
-                    this._device,
-                    asset.registry,
-                    asset.options,
-                    (err, result) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            // return everything
-                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
-                        }
-                    });
-            }
-        }, asset, this.maxRetries);
-    }
-
-    open(url, data, asset) {
-        return data;
-    }
-
-    patch(asset, assets) {
-
     }
 }
 

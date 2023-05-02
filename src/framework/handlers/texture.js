@@ -1,6 +1,7 @@
 import { path } from '../../core/path.js';
 
 import {
+    TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
@@ -177,7 +178,6 @@ class TextureHandler {
 
         this._device = device;
         this._assets = assets;
-        this._loader = app.loader;
 
         // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.
@@ -222,6 +222,63 @@ class TextureHandler {
         return this.parsers[ext] || this.imgParser;
     }
 
+    _getTextureOptions(asset) {
+
+        const options = {
+            // #if _PROFILER
+            profilerHint: TEXHINT_ASSET
+            // #endif
+        };
+
+        if (asset) {
+            if (asset.name?.length > 0) {
+                options.name = asset.name;
+            }
+
+            const assetData = asset.data;
+
+            if (assetData.hasOwnProperty('minfilter')) {
+                options.minFilter = JSON_FILTER_MODE[assetData.minfilter];
+            }
+
+            if (assetData.hasOwnProperty('magfilter')) {
+                options.magFilter = JSON_FILTER_MODE[assetData.magfilter];
+            }
+
+            if (assetData.hasOwnProperty('addressu')) {
+                options.addressU = JSON_ADDRESS_MODE[assetData.addressu];
+            }
+
+            if (assetData.hasOwnProperty('addressv')) {
+                options.addressV = JSON_ADDRESS_MODE[assetData.addressv];
+            }
+
+            if (assetData.hasOwnProperty('mipmaps')) {
+                options.mipmaps = assetData.mipmaps;
+            }
+
+            if (assetData.hasOwnProperty('anisotropy')) {
+                options.anisotropy = assetData.anisotropy;
+            }
+
+            if (assetData.hasOwnProperty('flipY')) {
+                options.flipY = !!assetData.flipY;
+            }
+
+            // extract asset type (this is bit of a mess)
+            if (assetData.hasOwnProperty('type')) {
+                options.type = JSON_TEXTURE_TYPE[assetData.type];
+            } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
+                options.type = TEXTURETYPE_RGBM;
+            } else if (asset.file && (asset.file.opt & 8) !== 0) {
+                // basis normalmaps flag the variant as swizzled
+                options.type = TEXTURETYPE_SWIZZLEGGGR;
+            }
+        }
+
+        return options;
+    }
+
     load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
@@ -237,7 +294,8 @@ class TextureHandler {
         if (!url)
             return undefined;
 
-        let texture = this._getParser(url).open(url, data, this._device);
+        const textureOptions = this._getTextureOptions(asset);
+        let texture = this._getParser(url).open(url, data, this._device, textureOptions);
 
         if (texture === null) {
             texture = new Texture(this._device, {
@@ -265,50 +323,10 @@ class TextureHandler {
             return;
         }
 
-        if (asset.name && asset.name.length > 0) {
-            texture.name = asset.name;
-        }
-
-        const assetData = asset.data;
-
-        if (assetData.hasOwnProperty('minfilter')) {
-            texture.minFilter = JSON_FILTER_MODE[assetData.minfilter];
-        }
-
-        if (assetData.hasOwnProperty('magfilter')) {
-            texture.magFilter = JSON_FILTER_MODE[assetData.magfilter];
-        }
-
-        if (!texture.cubemap) {
-            if (assetData.hasOwnProperty('addressu')) {
-                texture.addressU = JSON_ADDRESS_MODE[assetData.addressu];
-            }
-
-            if (assetData.hasOwnProperty('addressv')) {
-                texture.addressV = JSON_ADDRESS_MODE[assetData.addressv];
-            }
-        }
-
-        if (assetData.hasOwnProperty('mipmaps')) {
-            texture.mipmaps = assetData.mipmaps;
-        }
-
-        if (assetData.hasOwnProperty('anisotropy')) {
-            texture.anisotropy = assetData.anisotropy;
-        }
-
-        if (assetData.hasOwnProperty('flipY')) {
-            texture.flipY = !!assetData.flipY;
-        }
-
-        // extract asset type (this is bit of a mess)
-        if (assetData.hasOwnProperty('type')) {
-            texture.type = JSON_TEXTURE_TYPE[assetData.type];
-        } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
-            texture.type = TEXTURETYPE_RGBM;
-        } else if (asset.file && (asset.file.opt & 8) !== 0) {
-            // basis normalmaps flag the variant as swizzled
-            texture.type = TEXTURETYPE_SWIZZLEGGGR;
+        // apply asset options, based on asset.data
+        const options = this._getTextureOptions(asset);
+        for (const key of Object.keys(options)) {
+            texture[key] = options[key];
         }
     }
 }

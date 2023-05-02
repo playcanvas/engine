@@ -287,10 +287,10 @@ class WebglTexture {
         let mipObject;
         let resMult;
 
-        const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+        const requiredMipLevels = texture.requiredMipLevels;
 
+        // Upload all existing mip levels. Initialize 0 mip anyway.
         while (texture._levels[mipLevel] || mipLevel === 0) {
-            // Upload all existing mip levels. Initialize 0 mip anyway.
 
             if (!texture._needsUpload && mipLevel === 0) {
                 mipLevel++;

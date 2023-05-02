@@ -30,7 +30,7 @@ class DdsParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const header = new Uint32Array(data, 0, 128 / 4);
 
         const width = header[4];
@@ -95,7 +95,7 @@ class DdsParser {
         }
 
         if (!format) {
-            Debug.error('This DDS pixel format is currently unsupported. Empty texture will be created instead.');
+            Debug.error(`This DDS pixel format is currently unsupported. Empty texture will be created instead of ${url}.`);
             texture = new Texture(device, {
                 width: 4,
                 height: 4,
@@ -116,7 +116,9 @@ class DdsParser {
             height: height,
             format: format,
             cubemap: isCubemap,
-            mipmaps: mips > 1
+            mipmaps: mips > 1,
+
+            ...textureOptions
         });
 
         let offset = 128;
