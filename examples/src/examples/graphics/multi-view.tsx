@@ -13,7 +13,7 @@ class MultiViewExample {
             <Panel headerText='Debug Shader Rendering'>
                 {<LabelGroup text='Mode'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
-                        { v: pc.SHADERPASS_FORWARD, t: 'Normal' },
+                        { v: pc.SHADERPASS_FORWARD, t: 'None' },
                         { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
                         { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
                         { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
