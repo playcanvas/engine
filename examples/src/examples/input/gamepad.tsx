@@ -9,7 +9,7 @@ class GamepadExample {
         // Create the application and start the update loop
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
         };
 

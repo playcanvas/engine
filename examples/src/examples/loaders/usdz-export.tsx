@@ -17,7 +17,7 @@ class UsdzExportExample {
     example(canvas: HTMLCanvasElement, deviceType: string, pcx: any, data: any): void {
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'bench': new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' })
         };
 

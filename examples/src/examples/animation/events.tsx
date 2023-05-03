@@ -10,7 +10,7 @@ class EventsExample {
         const assets = {
             'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
             'walkAnim': new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
         };
         const gfxOptions = {
