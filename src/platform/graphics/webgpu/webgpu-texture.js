@@ -294,58 +294,60 @@ class WebgpuTexture {
     uploadData(device) {
 
         const texture = this.texture;
-        const wgpu = device.wgpu;
+        if (texture._levels) {
+            const wgpu = device.wgpu;
 
-        // upload texture data if any
-        let anyUploads = false;
-        const requiredMipLevels = texture.requiredMipLevels;
-        for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
+            // upload texture data if any
+            let anyUploads = false;
+            const requiredMipLevels = texture.requiredMipLevels;
+            for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
-            const mipObject = texture._levels[mipLevel];
-            if (mipObject) {
+                const mipObject = texture._levels[mipLevel];
+                if (mipObject) {
 
-                if (texture.cubemap) {
+                    if (texture.cubemap) {
 
-                    for (let face = 0; face < 6; face++) {
+                        for (let face = 0; face < 6; face++) {
 
-                        const faceSource = mipObject[face];
-                        if (this.isExternalImage(faceSource)) {
+                            const faceSource = mipObject[face];
+                            if (this.isExternalImage(faceSource)) {
 
-                            this.uploadExternalImage(device, faceSource, mipLevel, face);
+                                this.uploadExternalImage(device, faceSource, mipLevel, face);
+                                anyUploads = true;
+
+                            } else {
+
+                                Debug.error('Unsupported texture source data for cubemap face', faceSource);
+                            }
+                        }
+
+                    } else if (texture._volume) {
+
+                        Debug.warn('Volume texture data upload is not supported yet', this.texture);
+
+                    } else { // 2d texture
+
+                        if (this.isExternalImage(mipObject)) {
+
+                            this.uploadExternalImage(device, mipObject, mipLevel, 0);
+                            anyUploads = true;
+
+                        } else if (ArrayBuffer.isView(mipObject)) { // typed array
+
+                            this.uploadTypedArrayData(wgpu, mipObject);
                             anyUploads = true;
 
                         } else {
 
-                            Debug.error('Unsupported texture source data for cubemap face', faceSource);
+                            Debug.error('Unsupported texture source data', mipObject);
                         }
-                    }
-
-                } else if (texture._volume) {
-
-                    Debug.warn('Volume texture data upload is not supported yet', this.texture);
-
-                } else { // 2d texture
-
-                    if (this.isExternalImage(mipObject)) {
-
-                        this.uploadExternalImage(device, mipObject, mipLevel, 0);
-                        anyUploads = true;
-
-                    } else if (ArrayBuffer.isView(mipObject)) { // typed array
-
-                        this.uploadTypedArrayData(wgpu, mipObject);
-                        anyUploads = true;
-
-                    } else {
-
-                        Debug.error('Unsupported texture source data', mipObject);
                     }
                 }
             }
-        }
 
-        if (anyUploads && texture.mipmaps) {
-            device.mipmapRenderer.generate(this);
+            if (anyUploads && texture.mipmaps) {
+                device.mipmapRenderer.generate(this);
+            }
         }
     }
 
