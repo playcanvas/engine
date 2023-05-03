@@ -145,7 +145,9 @@ class ReflectionCubemapExample {
                 shinyBall.script.create('cubemapRenderer', {
                     attributes: {
                         resolution: 256,
-                        mipmaps: true,
+
+                        // TODO: WebGPU does not yet support cubemap mipmap generation after rendering
+                        mipmaps: !app.graphicsDevice.isWebGPU,
                         depth: true
                     }
                 });

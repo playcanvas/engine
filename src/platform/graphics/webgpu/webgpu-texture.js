@@ -310,14 +310,16 @@ class WebgpuTexture {
                         for (let face = 0; face < 6; face++) {
 
                             const faceSource = mipObject[face];
-                            if (this.isExternalImage(faceSource)) {
+                            if (faceSource) {
+                                if (this.isExternalImage(faceSource)) {
 
-                                this.uploadExternalImage(device, faceSource, mipLevel, face);
-                                anyUploads = true;
+                                    this.uploadExternalImage(device, faceSource, mipLevel, face);
+                                    anyUploads = true;
 
-                            } else {
+                                } else {
 
-                                Debug.error('Unsupported texture source data for cubemap face', faceSource);
+                                    Debug.error('Unsupported texture source data for cubemap face', faceSource);
+                                }
                             }
                         }
 
