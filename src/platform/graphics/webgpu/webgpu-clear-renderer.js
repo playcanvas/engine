@@ -105,7 +105,7 @@ class WebgpuClearRenderer {
                 const color = options.color ?? defaultOptions.color;
                 this.colorData.set(color);
 
-                device.setBlendState(BlendState.DEFAULT);
+                device.setBlendState(BlendState.NOBLEND);
             } else {
                 device.setBlendState(BlendState.NOWRITE);
             }

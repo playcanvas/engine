@@ -391,7 +391,7 @@ class SceneGrab {
 
             onDrawCall: function () {
                 // writing depth to color render target, force no blending and writing to all channels
-                device.setBlendState(BlendState.DEFAULT);
+                device.setBlendState(BlendState.NOBLEND);
             },
 
             onPostRenderOpaque: function (cameraPass) {
