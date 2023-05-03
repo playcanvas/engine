@@ -28,7 +28,7 @@ class GltfExportExample {
         function demo() {
 
             const assets = {
-                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'bench': new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' }),
                 'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
                 'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })

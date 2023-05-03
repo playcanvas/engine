@@ -44,7 +44,7 @@ class MultiViewExample {
         function demo() {
             const assets = {
                 'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
             };
 
