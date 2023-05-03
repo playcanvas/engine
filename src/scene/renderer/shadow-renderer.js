@@ -524,7 +524,7 @@ class ShadowRenderer {
         DebugGraphics.pushGpuMarker(device, `VSM ${light._node.name}`);
 
         // render state
-        device.setBlendState(BlendState.DEFAULT);
+        device.setBlendState(BlendState.NOBLEND);
 
         const lightRenderData = light.getRenderData(light._type === LIGHTTYPE_DIRECTIONAL ? camera : null, 0);
         const shadowCam = lightRenderData.shadowCamera;

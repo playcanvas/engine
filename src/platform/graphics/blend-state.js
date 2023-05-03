@@ -1,5 +1,5 @@
 import { BitPacking } from "../../core/math/bit-packing.js";
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO } from '../../platform/graphics/constants.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA } from '../../platform/graphics/constants.js';
 
 // masks (to only keep relevant bits)
 const opMask = 0b111;
@@ -227,12 +227,12 @@ class BlendState {
     }
 
     /**
-     * A default blend state that has blending disabled and writes to all color channels.
+     * A blend state that has blending disabled and writes to all color channels.
      *
      * @type {BlendState}
      * @readonly
      */
-    static DEFAULT = Object.freeze(new BlendState());
+    static NOBLEND = Object.freeze(new BlendState());
 
     /**
      * A blend state that does not write to color channels.
@@ -241,6 +241,14 @@ class BlendState {
      * @readonly
      */
     static NOWRITE = Object.freeze(new BlendState(undefined, undefined, undefined, undefined, undefined, undefined, undefined, false, false, false, false));
+
+    /**
+     * A blend state that does simple translucency using alpha channel.
+     *
+     * @type {BlendState}
+     * @readonly
+     */
+    static ALPHABLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA));
 }
 
 export { BlendState };
