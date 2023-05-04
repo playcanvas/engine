@@ -28,7 +28,7 @@ gl_FragColor = vec4(vec3(litShaderArgs.metalness) , 1.0);
 #endif
 
 #ifdef DEBUG_AO_PASS
-gl_FragColor = vec4(gammaCorrectOutput(vec3(litShaderArgs.ao)) , 1.0);
+gl_FragColor = vec4(vec3(litShaderArgs.ao) , 1.0);
 #endif
 
 #ifdef DEBUG_EMISSION_PASS
