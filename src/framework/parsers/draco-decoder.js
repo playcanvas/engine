@@ -223,7 +223,7 @@ const initializeWorkers = (config) => {
  * (default is false). Otherwise initialize workers immediately.
  */
 const dracoInitialize = (config) => {
-    if (config.lazyInit) {
+    if (config?.lazyInit) {
         lazyConfig = config;
     } else {
         initializeWorkers(config);
