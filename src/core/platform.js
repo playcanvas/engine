@@ -36,7 +36,7 @@ if (typeof navigator !== 'undefined') {
         touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
     }
 
-    gamepads = 'getGamepads' in navigator;
+    gamepads = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
     workers = (typeof Worker !== 'undefined');
 

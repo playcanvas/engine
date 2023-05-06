@@ -1,19 +1,24 @@
 import * as pc from '../../../../';
 
-
 class ButtonSpriteExample {
     static CATEGORY = 'User Interface';
     static NAME = 'Button Sprite';
+    static WEBGPU_ENABLED = true;
 
-
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' }),
             'red_button_atlas': new pc.Asset('red_button_atlas', 'texture', { url: '/static/assets/button/red_button_atlas.png' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

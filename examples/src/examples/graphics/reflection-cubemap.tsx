@@ -1,17 +1,24 @@
 import * as pc from '../../../../';
 
-class RenderCubemapExample {
+class ReflectionCubemapExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Render Cubemap';
+    static NAME = 'Reflection Cubemap';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -78,7 +85,7 @@ class RenderCubemapExample {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
-                    material.shininess = 60;
+                    material.gloss = 0.6;
                     material.metalness = 0.7;
                     material.useMetalness = true;
                     material.update();
@@ -138,7 +145,9 @@ class RenderCubemapExample {
                 shinyBall.script.create('cubemapRenderer', {
                     attributes: {
                         resolution: 256,
-                        mipmaps: true,
+
+                        // TODO: WebGPU does not yet support cubemap mipmap generation after rendering
+                        mipmaps: !app.graphicsDevice.isWebGPU,
                         depth: true
                     }
                 });
@@ -278,4 +287,4 @@ class RenderCubemapExample {
     }
 }
 
-export default RenderCubemapExample;
+export default ReflectionCubemapExample;

@@ -256,7 +256,7 @@ OrbitCamera.prototype._updatePosition = function () {
 
     var position = this.entity.getPosition();
     position.copy(this.entity.forward);
-    position.scale(-this._distance);
+    position.mulScalar(-this._distance);
     position.add(this.pivotPoint);
     this.entity.setPosition(position);
 };
@@ -542,7 +542,7 @@ OrbitCameraInputTouch.prototype.getPinchDistance = function (pointA, pointB) {
 
 OrbitCameraInputTouch.prototype.calcMidPoint = function (pointA, pointB, result) {
     result.set(pointB.x - pointA.x, pointB.y - pointA.y);
-    result.scale(0.5);
+    result.mulScalar(0.5);
     result.x += pointA.x;
     result.y += pointA.y;
 };

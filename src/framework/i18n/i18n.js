@@ -135,8 +135,8 @@ class I18n extends EventHandler {
      * locale.
      * @example
      * // With a defined dictionary of locales
-     * var availableLocales = { en: 'en-US', fr: 'fr-FR' };
-     * var locale = pc.I18n.getText('en-US', availableLocales);
+     * const availableLocales = { en: 'en-US', fr: 'fr-FR' };
+     * const locale = pc.I18n.getText('en-US', availableLocales);
      * // returns 'en'
      * @ignore
      */
@@ -153,7 +153,7 @@ class I18n extends EventHandler {
      * @returns {string} The locale found or if no locale is available returns the default en-US
      * locale.
      * @example
-     * var locale = this.app.i18n.getText('en-US');
+     * const locale = this.app.i18n.getText('en-US');
      */
     findAvailableLocale(desiredLocale) {
         if (this._translations[desiredLocale]) {
@@ -174,8 +174,8 @@ class I18n extends EventHandler {
      * then it will return the en-US translation. If no translation exists for that key then it will
      * return the localization key.
      * @example
-     * var localized = this.app.i18n.getText('localization-key');
-     * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
+     * const localized = this.app.i18n.getText('localization-key');
+     * const localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
      */
     getText(key, locale) {
         // default translation is the key
@@ -227,7 +227,7 @@ class I18n extends EventHandler {
      * will return the localization key.
      * @example
      * // manually replace {number} in the resulting translation with our number
-     * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
+     * const localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
      */
     getPluralText(key, n, locale) {
         // default translation is the key

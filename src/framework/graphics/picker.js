@@ -15,6 +15,7 @@ import { LayerComposition } from '../../scene/composition/layer-composition.js';
 import { getApplication } from '../globals.js';
 import { Entity } from '../entity.js';
 import { Debug } from '../../core/debug.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const tempSet = new Set();
 
@@ -88,10 +89,10 @@ class Picker {
      * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
-     * var selection = picker.getSelection(10, 20);
+     * const selection = picker.getSelection(10, 20);
      * @example
      * // Get all models in rectangle with corners at (10,20) and (20,40)
-     * var selection = picker.getSelection(10, 20, 10, 20);
+     * const selection = picker.getSelection(10, 20, 10, 20);
      */
     getSelection(x, y, width, height) {
         const device = this.device;
@@ -208,7 +209,7 @@ class Picker {
                 self.pickColor[1] = ((index >> 8) & 0xff) / 255;
                 self.pickColor[2] = (index & 0xff) / 255;
                 pickColorId.setValue(self.pickColor);
-                device.setBlending(false);
+                device.setBlendState(BlendState.NOBLEND);
 
                 // keep the index -> meshInstance index mapping
                 self.mapping[index] = meshInstance;

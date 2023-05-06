@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class PostEffectsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Post Effects';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -79,7 +80,7 @@ class PostEffectsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -96,10 +97,19 @@ class PostEffectsExample {
             'vignette': new pc.Asset('vignette', 'script', { url: '/static/scripts/posteffects/posteffect-vignette.js' }),
             'ssao': new pc.Asset('ssao', 'script', { url: '/static/scripts/posteffects/posteffect-ssao.js' }),
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js',
+
+            // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
+            antialias: false
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -152,7 +162,7 @@ class PostEffectsExample {
 
                     // create a material
                     const material = new pc.StandardMaterial();
-                    material.shininess = 40;
+                    material.gloss = 0.4;
                     material.metalness = 0.6;
                     material.useMetalness = true;
                     material.emissive = pc.Color.YELLOW;

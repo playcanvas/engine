@@ -4,9 +4,10 @@ import * as pc from '../../../../';
 class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Area Lights';
+    static WEBGPU_ENABLED = true;
 
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'color': new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
@@ -14,10 +15,16 @@ class AreaLightsExample {
             'gloss': new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
             'luts': new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -53,15 +60,13 @@ class AreaLightsExample {
             const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
             assetListLoader.load(() => {
 
-                app.start();
-
                 // helper function to create a primitive with shape type, position, scale, color
                 function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color, assetManifest: any) {
 
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
-                    material.shininess = 80;
+                    material.gloss = 0.8;
                     material.useMetalness = true;
 
                     if (assetManifest) {

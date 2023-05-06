@@ -131,9 +131,16 @@ class ProgramLibrary {
             const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
             Debug.assert(generatedShaderDef);
 
+            // use shader pass name if known
+            let passName = '';
+            if (options.pass !== undefined) {
+                const shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
+                passName = `-${shaderPassInfo.name}`;
+            }
+
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
-                name: `${generatedShaderDef.name}-processed`,
+                name: `${generatedShaderDef.name}${passName}-proc`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -224,7 +231,8 @@ class ProgramLibrary {
     }
 
     _getDefaultStdMatOptions(pass) {
-        return (pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass)) ?
+        const shaderPassInfo = ShaderPass.get(this._device).getByIndex(pass);
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 

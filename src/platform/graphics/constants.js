@@ -98,32 +98,18 @@ export const BLENDMODE_DST_ALPHA = 9;
 export const BLENDMODE_ONE_MINUS_DST_ALPHA = 10;
 
 /**
- * Multiplies all colors by a constant color.
+ * Multiplies all fragment components by a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_CONSTANT_COLOR = 11;
+export const BLENDMODE_CONSTANT = 11;
 
 /**
- * Multiplies all colors by 1 minus a constant color.
+ * Multiplies all fragment components by 1 minus a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = 12;
-
-/**
- * Multiplies all colors by a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_CONSTANT_ALPHA = 13;
-
-/**
- * Multiplies all colors by 1 minus a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = 14;
+export const BLENDMODE_ONE_MINUS_CONSTANT = 12;
 
 /**
  * Add the results of the source and destination fragment multiplies.
@@ -278,6 +264,7 @@ export const CULLFACE_FRONT = 2;
  * that point or line primitives are unaffected by this render state.
  *
  * @type {number}
+ * @ignore
  */
 export const CULLFACE_FRONTANDBACK = 3;
 
@@ -920,7 +907,7 @@ export const STENCILOP_KEEP = 0;
 export const STENCILOP_ZERO = 1;
 
 /**
- * Replace value with the reference value (see {@link GraphicsDevice#setStencilFunc}).
+ * Replace value with the reference value (see {@link StencilParameters}).
  *
  * @type {number}
  */
@@ -1024,9 +1011,9 @@ export const TEXTUREDIMENSION_CUBE = 'cube';
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
 export const TEXTUREDIMENSION_3D = '3d';
 
-export const SAMPLETYPE_FLOAT = 'float';
-export const SAMPLETYPE_UNFILTERABLE_FLOAT = 'unfilterable-float';
-export const SAMPLETYPE_DEPTH = 'depth';
+export const SAMPLETYPE_FLOAT = 0;
+export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+export const SAMPLETYPE_DEPTH = 2;
 
 /**
  * Texture data is not stored a specific projection format.
@@ -1055,6 +1042,20 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
  * @type {string}
  */
 export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
+
+/**
+ * Shader source code uses GLSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_GLSL = 'glsl';
+
+/**
+ * Shader source code uses WGSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_WGSL = 'wgsl';
 
 /**
  * Signed byte vertex element type.
@@ -1289,3 +1290,4 @@ export const CHUNKAPI_1_56 = '1.56';
 export const CHUNKAPI_1_57 = '1.57';
 export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';

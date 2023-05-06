@@ -23,8 +23,8 @@ const _tempScissor = new Vec4();
  * Example:
  *
  * ```javascript
- * var = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
- * var quad = new QuadRender(shader);
+ * const shader = pc.createShaderFromCode(app.graphicsDevice, vertexShader, fragmentShader, `MyShader`);
+ * const quad = new QuadRender(shader);
  * quad.render();
  * quad.destroy();
  * ```
@@ -66,15 +66,15 @@ class QuadRender {
             }
 
             // bind group
-            const bingGroupFormat = this.shader.meshBindGroupFormat;
-            Debug.assert(bingGroupFormat);
-            this.bindGroup = new BindGroup(device, bingGroupFormat, this.uniformBuffer);
+            const bindGroupFormat = this.shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, this.uniformBuffer);
             DebugHelper.setName(this.bindGroup, `QuadRender-MeshBindGroup_${this.bindGroup.id}`);
         }
     }
 
     /**
-     * Destroyes the resources associated with this instance.
+     * Destroys the resources associated with this instance.
      */
     destroy() {
         this.uniformBuffer?.destroy();

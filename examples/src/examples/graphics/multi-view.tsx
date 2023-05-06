@@ -1,10 +1,36 @@
+import React from 'react';
 import * as pc from '../../../../';
+import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
+import { Observer } from '@playcanvas/observer';
 
 class MultiViewExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Multi View';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    controls(data: Observer) {
+        return <>
+            <Panel headerText='Debug Shader Rendering'>
+                {<LabelGroup text='Mode'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
+                        { v: pc.SHADERPASS_FORWARD, t: 'None' },
+                        { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
+                        { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
+                        { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
+                        { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
+                        { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
+                        { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
+                        { v: pc.SHADERPASS_AO, t: 'AO' },
+                        { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
+                        { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
+                        { v: pc.SHADERPASS_UV0, t: 'UV0' }
+                    ]} />
+                </LabelGroup>}
+            </Panel>
+        </>;
+    }
+
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -18,11 +44,17 @@ class MultiViewExample {
         function demo() {
             const assets = {
                 'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
             };
 
-            pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+            const gfxOptions = {
+                deviceTypes: [deviceType],
+                glslangUrl: '/static/lib/glslang/glslang.js',
+                twgslUrl: '/static/lib/twgsl/twgsl.js'
+            };
+
+            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -59,6 +91,10 @@ class MultiViewExample {
                 assetListLoader.load(() => {
 
                     app.start();
+
+                    data.set('settings', {
+                        shaderPassName: pc.SHADERPASS_FORWARD
+                    });
 
                     // get the instance of the chess board and set up with render component
                     const boardEntity = assets.board.resource.instantiateRenderEntity({
@@ -129,6 +165,11 @@ class MultiViewExample {
                     app.scene.envAtlas = assets.helipad.resource;
                     app.scene.toneMapping = pc.TONEMAP_ACES;
                     app.scene.skyboxMip = 1;
+
+                    // handle HUD changes - update the debug mode on the top camera
+                    data.on('*:set', (path: string, value: any) => {
+                        cameraTop.camera.setShaderPass(value);
+                    });
 
                     // update function called once per frame
                     let time = 0;

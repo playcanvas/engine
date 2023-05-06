@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
 
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
@@ -26,15 +27,11 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { StencilParameters } from '../../../scene/stencil-parameters.js';
+import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 
 import { Asset } from '../../asset/asset.js';
-
-// #if _DEBUG
-const _debugLogging = false;
-// #endif
 
 const _vertexFormatDeviceCache = new DeviceCache();
 
@@ -190,17 +187,16 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            // #if _DEBUG
-            if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
-            // #endif
+            Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     }
 
     setDrawOrder(drawOrder) {
-        if (!this.meshInstance) return;
-        // #if _DEBUG
-        if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
-        // #endif
+        if (!this.meshInstance)
+            return;
+
+        Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
+
         this.meshInstance.drawOrder = drawOrder;
     }
 
@@ -993,6 +989,15 @@ class ImageElement {
         }
 
         this._material = value;
+
+        // Remove material asset if changed
+        if (this._materialAsset) {
+            const asset = this._system.app.assets.get(this._materialAsset);
+            if (!asset || asset.resource !== value) {
+                this.materialAsset = null;
+            }
+        }
+
         if (value) {
             this._renderable.setMaterial(value);
 
@@ -1038,13 +1043,19 @@ class ImageElement {
             if (this._materialAsset) {
                 const asset = assets.get(this._materialAsset);
                 if (!asset) {
+                    this._materialAsset = null;
                     this.material = null;
+
+                    this._materialAsset = _id;
                     assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
                 }
             } else {
+                this._materialAsset = null;
                 this.material = null;
+
+                this._materialAsset = _id;
             }
         }
     }

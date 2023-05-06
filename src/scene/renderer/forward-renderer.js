@@ -4,10 +4,6 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 
-import {
-    FUNC_ALWAYS,
-    STENCILOP_KEEP
-} from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -24,13 +20,20 @@ import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { SceneGrab } from '../graphics/scene-grab.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 
 const _drawCallList = {
     drawCalls: [],
     isNewMaterial: [],
-    lightMaskChanged: []
+    lightMaskChanged: [],
+
+    clear: function () {
+        this.drawCalls.length = 0;
+        this.isNewMaterial.length = 0;
+        this.lightMaskChanged.length = 0;
+    }
 };
 
 /**
@@ -415,23 +418,6 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderShadowsLocal(lights, camera) {
-
-        const isClustered = this.scene.clusteredLightingEnabled;
-
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            Debug.assert(light._type !== LIGHTTYPE_DIRECTIONAL);
-
-            // skip clustered shadows with no assigned atlas slot
-            if (isClustered && !light.atlasViewportAllocated) {
-                continue;
-            }
-
-            this.shadowRenderer.render(light, camera);
-        }
-    }
-
     // execute first pass over draw calls, in order to update materials / shaders
     // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
     // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
@@ -445,9 +431,7 @@ class ForwardRenderer extends Renderer {
         };
 
         // start with empty arrays
-        _drawCallList.drawCalls.length = 0;
-        _drawCallList.isNewMaterial.length = 0;
-        _drawCallList.lightMaskChanged.length = 0;
+        _drawCallList.clear();
 
         const device = this.device;
         const scene = this.scene;
@@ -515,7 +499,7 @@ class ForwardRenderer extends Renderer {
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
 
                     // marker to allow us to see the source node for shader alloc
-                    DebugGraphics.pushGpuMarker(device, drawCall.node.name);
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
                     // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
@@ -558,6 +542,7 @@ class ForwardRenderer extends Renderer {
         const device = this.device;
         const scene = this.scene;
         const passFlag = 1 << pass;
+        const flipFactor = flipFaces ? -1 : 1;
 
         // Render the scene
         let skipMaterial = false;
@@ -592,6 +577,8 @@ class ForwardRenderer extends Renderer {
                     if (skipMaterial)
                         break;
 
+                    DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+
                     // Uniforms I: material
                     material.setParameters(device);
 
@@ -602,27 +589,8 @@ class ForwardRenderer extends Renderer {
 
                     this.alphaTestId.setValue(material.alphaTest);
 
-                    device.setBlending(material.blend);
-                    if (material.blend) {
-                        if (material.separateAlphaBlend) {
-                            device.setBlendFunctionSeparate(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
-                            device.setBlendEquationSeparate(material.blendEquation, material.blendAlphaEquation);
-                        } else {
-                            device.setBlendFunction(material.blendSrc, material.blendDst);
-                            device.setBlendEquation(material.blendEquation);
-                        }
-                    }
-                    device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
-                    device.setDepthWrite(material.depthWrite);
-
-                    // this fixes the case where the user wishes to turn off depth testing but wants to write depth
-                    if (material.depthWrite && !material.depthTest) {
-                        device.setDepthFunc(FUNC_ALWAYS);
-                        device.setDepthTest(true);
-                    } else {
-                        device.setDepthFunc(material.depthFunc);
-                        device.setDepthTest(material.depthTest);
-                    }
+                    device.setBlendState(material.blendState);
+                    device.setDepthState(material.depthState);
 
                     device.setAlphaToCoverage(material.alphaToCoverage);
 
@@ -632,43 +600,17 @@ class ForwardRenderer extends Renderer {
                     } else {
                         device.setDepthBias(false);
                     }
+
+                    DebugGraphics.popGpuMarker(device);
                 }
 
-                this.setCullMode(camera._cullFaces, flipFaces, drawCall);
+                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
-                const stencilFront = drawCall.stencilFront || material.stencilFront;
-                const stencilBack = drawCall.stencilBack || material.stencilBack;
+                this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
-                if (stencilFront || stencilBack) {
-                    device.setStencilTest(true);
-                    if (stencilFront === stencilBack) {
-                        // identical front/back stencil
-                        device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                        device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                    } else {
-                        // separate
-                        if (stencilFront) {
-                            // set front
-                            device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                            device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                        } else {
-                            // default front
-                            device.setStencilFuncFront(FUNC_ALWAYS, 0, 0xFF);
-                            device.setStencilOperationFront(STENCILOP_KEEP, STENCILOP_KEEP, STENCILOP_KEEP, 0xFF);
-                        }
-                        if (stencilBack) {
-                            // set back
-                            device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
-                            device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
-                        } else {
-                            // default back
-                            device.setStencilFuncBack(FUNC_ALWAYS, 0, 0xFF);
-                            device.setStencilOperationBack(STENCILOP_KEEP, STENCILOP_KEEP, STENCILOP_KEEP, 0xFF);
-                        }
-                    }
-                } else {
-                    device.setStencilTest(false);
-                }
+                const stencilFront = drawCall.stencilFront ?? material.stencilFront;
+                const stencilBack = drawCall.stencilBack ?? material.stencilBack;
+                device.setStencilState(stencilFront, stencilBack);
 
                 const mesh = drawCall.mesh;
 
@@ -684,9 +626,7 @@ class ForwardRenderer extends Renderer {
                 const style = drawCall.renderStyle;
                 device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                if (drawCallback) {
-                    drawCallback(drawCall, i);
-                }
+                drawCallback?.(drawCall, i);
 
                 if (camera.xr && camera.xr.session && camera.xr.views.length) {
                     const views = camera.xr.views;
@@ -721,6 +661,8 @@ class ForwardRenderer extends Renderer {
                 if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
                     material.setParameters(device, drawCall.parameters);
                 }
+
+                DebugGraphics.popGpuMarker(device);
             }
         }
     }
@@ -737,7 +679,7 @@ class ForwardRenderer extends Renderer {
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
 
-        _drawCallList.length = 0;
+        _drawCallList.clear();
 
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
@@ -824,42 +766,53 @@ class ForwardRenderer extends Renderer {
      */
     buildFrameGraph(frameGraph, layerComposition) {
 
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
         frameGraph.reset();
 
         this.update(layerComposition);
 
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        // clustered lighting render passes
         if (clusteredLightingEnabled) {
 
-            const renderPass = new RenderPass(this.device, () => {
-                // render cookies for all local visible lights
-                if (this.scene.lighting.cookiesEnabled) {
-                    this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                    this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+            // cookies
+            {
+                const renderPass = new RenderPass(this.device, () => {
+                    // render cookies for all local visible lights
+                    if (this.scene.lighting.cookiesEnabled) {
+                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
+                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+                    }
+                });
+                renderPass.requiresCubemaps = false;
+                DebugHelper.setName(renderPass, 'ClusteredCookies');
+                frameGraph.addRenderPass(renderPass);
+            }
+
+            // local shadows - these are shared by all cameras (not entirely correctly)
+            {
+                const renderPass = new RenderPass(this.device);
+                DebugHelper.setName(renderPass, 'ClusteredLocalShadows');
+                renderPass.requiresCubemaps = false;
+                frameGraph.addRenderPass(renderPass);
+
+                // render shadows only when needed
+                if (this.scene.lighting.shadowsEnabled) {
+                    const splitLights = layerComposition._splitLights;
+                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
                 }
-            });
-            renderPass.requiresCubemaps = false;
-            DebugHelper.setName(renderPass, 'ClusteredCookies');
-            frameGraph.addRenderPass(renderPass);
+
+                // update clusters all the time
+                renderPass.after = () => {
+                    this.updateClusters(layerComposition);
+                };
+            }
+
+        } else {
+
+            // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
+            const splitLights = layerComposition._splitLights;
+            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
         }
-
-        // local shadows
-        const renderPass = new RenderPass(this.device, () => {
-
-            // render shadows for all local visible lights - these shadow maps are shared by all cameras
-            if (!clusteredLightingEnabled || (clusteredLightingEnabled && this.scene.lighting.shadowsEnabled)) {
-                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                this.renderShadowsLocal(layerComposition._splitLights[LIGHTTYPE_OMNI]);
-            }
-
-            // update light clusters
-            if (clusteredLightingEnabled) {
-                this.updateClusters(layerComposition);
-            }
-        });
-        renderPass.requiresCubemaps = false;
-        DebugHelper.setName(renderPass, 'LocalShadowMaps');
-        frameGraph.addRenderPass(renderPass);
 
         // main passes
         let startIndex = 0;
@@ -1106,7 +1059,7 @@ class ForwardRenderer extends Renderer {
             // if this is not a first render action to the render target, or if the render target was not
             // fully cleared on pass start, we need to execute clears here
             if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
-                this.clear(renderAction, camera.camera);
+                this.clear(camera.camera, renderAction.clearColor, renderAction.clearDepth, renderAction.clearStencil);
             }
 
             // #if _PROFILER
@@ -1148,12 +1101,15 @@ class ForwardRenderer extends Renderer {
             // has flipY enabled
             const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
 
+            // shader pass - use setting from camera if available, otherwise use layer setting
+            const shaderPass = camera.camera.shaderPassInfo?.index ?? layer.shaderPass;
+
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
                                visible.list,
                                visible.length,
                                layer._splitLights,
-                               layer.shaderPass,
+                               shaderPass,
                                layer.cullingMask,
                                layer.onDrawCall,
                                layer,
@@ -1163,8 +1119,8 @@ class ForwardRenderer extends Renderer {
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
             // it requires (the properties are part of render pipeline on WebGPU anyways)
-            device.setColorWrite(true, true, true, true);
-            device.setStencilTest(false); // don't leak stencil state
+            device.setBlendState(BlendState.NOBLEND);
+            device.setStencilState(null, null);
             device.setAlphaToCoverage(false); // don't leak a2c state
             device.setDepthBias(false);
         }

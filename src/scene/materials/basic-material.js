@@ -23,7 +23,7 @@ class BasicMaterial extends Material {
      *
      * @example
      * // Create a new Basic material
-     * var material = new pc.BasicMaterial();
+     * const material = new pc.BasicMaterial();
      *
      * // Set the material to have a texture map that is multiplied by a red color
      * material.color.set(1, 0, 0);

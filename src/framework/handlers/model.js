@@ -1,5 +1,4 @@
 import { path } from '../../core/path.js';
-import { Debug } from '../../core/debug.js';
 
 import { http, Http } from '../../platform/net/http.js';
 
@@ -40,20 +39,21 @@ class ModelHandler {
      * @hideconstructor
      */
     constructor(app) {
-        this._device = app.graphicsDevice;
         this._parsers = [];
-        this._defaultMaterial = getDefaultMaterial(this._device);
+        this.device = app.graphicsDevice;
+        this.assets = app.assets;
+        this.defaultMaterial = getDefaultMaterial(this.device);
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new JsonModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new GlbModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
 
-    load(url, callback) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -75,12 +75,27 @@ class ModelHandler {
             }
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (!callback)
                 return;
 
             if (!err) {
-                callback(null, response);
+                // parse the model
+                for (let i = 0; i < this._parsers.length; i++) {
+                    const p = this._parsers[i];
+
+                    if (p.decider(url.original, response)) {
+                        p.parser.parse(response, (err, parseResult) => {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                callback(null, parseResult);
+                            }
+                        }, asset);
+                        return;
+                    }
+                }
+                callback("No parsers found");
             } else {
                 callback(`Error loading model: ${url.original} [${err}]`);
             }
@@ -88,15 +103,8 @@ class ModelHandler {
     }
 
     open(url, data) {
-        for (let i = 0; i < this._parsers.length; i++) {
-            const p = this._parsers[i];
-
-            if (p.decider(url, data)) {
-                return p.parser.parse(data);
-            }
-        }
-        Debug.warn('pc.ModelHandler#open: No model parser found for: ' + url);
-        return null;
+        // parse was done in open, return the data as-is
+        return data;
     }
 
     patch(asset, assets) {

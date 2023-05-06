@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the RenderTarget.
@@ -77,12 +78,14 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * Release associated resources. Note that this needs to leave this instance in a state where
+     * it can be re-initialized again, which is used by render target resizing.
+     *
      * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
      * graphics device.
      */
     destroy(device) {
         this.initialized = false;
-        this.renderPassDescriptor = null;
 
         if (this.depthTextureInternal) {
             this.depthTexture?.destroy();
@@ -119,6 +122,7 @@ class WebgpuRenderTarget {
         this.assignedColorTexture = gpuTexture;
 
         const view = gpuTexture.createView();
+        DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
 
         // use it as render buffer or resolve target
         const colorAttachment = this.renderPassDescriptor.colorAttachments[0];
@@ -144,7 +148,11 @@ class WebgpuRenderTarget {
     init(device, renderTarget) {
 
         Debug.assert(!this.initialized);
+
         const wgpu = device.wgpu;
+
+        WebgpuDebug.memory(device);
+        WebgpuDebug.validate(device);
 
         const { samples, width, height, depth, depthBuffer } = renderTarget;
 
@@ -204,14 +212,22 @@ class WebgpuRenderTarget {
         const colorBuffer = renderTarget.colorBuffer;
         let colorView = null;
         if (colorBuffer) {
-            colorView = colorBuffer.impl.getView(device);
+
+            // render to top mip level in case of mip-mapped buffer
+            const mipLevelCount = 1;
 
             // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
             if (colorBuffer.cubemap) {
                 colorView = colorBuffer.impl.createView({
                     dimension: '2d',
                     baseArrayLayer: renderTarget.face,
-                    arrayLayerCount: 1
+                    arrayLayerCount: 1,
+                    mipLevelCount
+                });
+            } else {
+
+                colorView = colorBuffer.impl.createView({
+                    mipLevelCount
                 });
             }
         }
@@ -230,8 +246,11 @@ class WebgpuRenderTarget {
 
             // allocate multi-sampled color buffer
             this.multisampledColorBuffer = wgpu.createTexture(multisampledTextureDesc);
+            DebugHelper.setLabel(this.multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
 
             colorAttachment.view = this.multisampledColorBuffer.createView();
+            DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);
+
             colorAttachment.resolveTarget = colorView;
 
         } else {
@@ -239,11 +258,15 @@ class WebgpuRenderTarget {
             colorAttachment.view = colorView;
         }
 
-        if (colorAttachment.view) {
+        // if we have color a buffer, or at least a format (main framebuffer that gets assigned later)
+        if (colorAttachment.view || this.colorFormat) {
             this.renderPassDescriptor.colorAttachments.push(colorAttachment);
         }
 
         this.initialized = true;
+
+        WebgpuDebug.end(device, { renderTarget });
+        WebgpuDebug.end(device, { renderTarget });
     }
 
     /**

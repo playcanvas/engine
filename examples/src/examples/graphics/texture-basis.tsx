@@ -10,7 +10,7 @@ class TextureBasisExample {
     // The normalmap has been converted with the following arguments:
     //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // initialize basis
         pc.basisInitialize({
@@ -54,7 +54,7 @@ class TextureBasisExample {
             const material = new pc.StandardMaterial();
             material.useMetalness = true;
             material.diffuse = new pc.Color(0.3, 0.3, 0.3);
-            material.shininess = 80;
+            material.gloss = 0.8;
             material.metalness = 0.7;
             material.diffuseMap = assets.color.resource;
             material.normalMap = assets.normal.resource;

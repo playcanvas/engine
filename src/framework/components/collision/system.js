@@ -233,9 +233,9 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = data.radius || 0.5;
-        const height = Math.max((data.height || 2) - 2 * radius, 0);
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = Math.max((data.height ?? 2) - 2 * radius, 0);
 
         let shape = null;
 
@@ -260,9 +260,9 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = (data.radius !== undefined) ? data.radius : 0.5;
-        const height = (data.height !== undefined) ? data.height : 1;
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = data.height ?? 1;
 
         let halfExtents = null;
         let shape = null;
@@ -294,9 +294,9 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = (data.radius !== undefined) ? data.radius : 0.5;
-        const height = (data.height !== undefined) ? data.height : 1;
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = data.height ?? 1;
 
         let shape = null;
 

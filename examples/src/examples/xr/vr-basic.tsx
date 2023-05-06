@@ -4,7 +4,7 @@ class VrBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'VR Basic';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {

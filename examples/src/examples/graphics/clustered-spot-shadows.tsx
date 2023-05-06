@@ -8,7 +8,7 @@ class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';
-
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -62,17 +62,23 @@ class ClusteredSpotShadowsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             "channels": new pc.Asset("channels", "texture", { url: "/static/assets/textures/channels.png" }),
             "heart": new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -172,7 +178,7 @@ class ClusteredSpotShadowsExample {
 
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
-                groundMaterial.shininess = 55;
+                groundMaterial.gloss = 0.55;
                 groundMaterial.metalness = 0.4;
                 groundMaterial.useMetalness = true;
                 groundMaterial.normalMap = assets.normal.resource;
@@ -182,7 +188,7 @@ class ClusteredSpotShadowsExample {
 
                 // cube material
                 const cubeMaterial = new pc.StandardMaterial();
-                cubeMaterial.shininess = 55;
+                cubeMaterial.gloss = 0.55;
                 cubeMaterial.metalness = 0.4;
                 cubeMaterial.useMetalness = true;
                 cubeMaterial.normalMap = assets.normal.resource;

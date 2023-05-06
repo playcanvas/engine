@@ -4,7 +4,7 @@ class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});

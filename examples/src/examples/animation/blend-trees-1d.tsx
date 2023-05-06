@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -16,17 +17,23 @@ class BlendTrees1DExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
             'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
             'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -171,8 +178,6 @@ class BlendTrees1DExample {
                 characterStateLayer.assignAnimation('Movement.Dance', assets.danceAnim.resource.animations[0].resource);
 
                 app.root.addChild(modelEntity);
-
-                app.start();
 
                 data.on('blend:set', (blend: number) => {
                     modelEntity.anim.setFloat('blend', blend);

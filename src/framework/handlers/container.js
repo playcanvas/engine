@@ -1,6 +1,6 @@
 import { path } from '../../core/path.js';
 
-import { GlbParser } from '../parsers/glb-parser.js';
+import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
@@ -24,7 +24,7 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateModelEntity({
+     *     const entity = asset.resource.instantiateModelEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
@@ -44,13 +44,13 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
      *
      *     // find all render components containing mesh instances, and change blend mode on their materials
-     *     var renders = entity.findComponents("render");
+     *     const renders = entity.findComponents("render");
      *     renders.forEach(function (render) {
      *         render.meshInstances.forEach(function (meshInstance) {
      *             meshInstance.material.blendType = pc.BLEND_MULTIPLICATIVE;
@@ -82,11 +82,11 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = asset.resource.getMaterialVariants();
+     *     const materialVariants = asset.resource.getMaterialVariants();
      *     asset.resource.applyMaterialVariant(entity, materialVariants[0]);
      */
     applyMaterialVariant(entity, name) {}
@@ -103,14 +103,14 @@ class ContainerResource {
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
-     *     var entity = asset.resource.instantiateRenderEntity({
+     *     const entity = asset.resource.instantiateRenderEntity({
      *         castShadows: true
      *     });
      *     app.root.addChild(entity);
-     *     var materialVariants = asset.resource.getMaterialVariants();
-     *     var renders = entity.findComponents("render");
-     *     for (var i = 0; i < renders.length; i++) {
-     *         var renderComponent = renders[i];
+     *     const materialVariants = asset.resource.getMaterialVariants();
+     *     const renders = entity.findComponents("render");
+     *     for (let i = 0; i < renders.length; i++) {
+     *         const renderComponent = renders[i];
      *         asset.resource.applyMaterialVariantInstances(renderComponent.meshInstances, materialVariants[0]);
      *     }
      */
@@ -145,13 +145,16 @@ class ContainerResource {
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
  * allowing the clone operation.
+ * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
+ * be prefered. This is faster to create and allows higher precision, but takes more memory and
+ * might be slower to render. Defaults to false.
  * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
  * useful if you only need access to textures or animations and similar.
  *
  * For example, to receive a texture preprocess callback:
  *
  * ```javascript
- * var containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
+ * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
  *         preprocess(gltfTexture) { console.log("texture preprocess"); }
  *     },
@@ -175,12 +178,12 @@ class ContainerHandler {
      * @hideconstructor
      */
     constructor(app) {
-        this.glbParser = new GlbParser(app.graphicsDevice, app.assets, 0);
+        this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }
 
     set maxRetries(value) {
-        this.glbParser.maxRetries = value;
+        this.glbContainerParser.maxRetries = value;
         for (const parser in this.parsers) {
             if (this.parsers.hasOwnProperty(parser)) {
                 this.parsers[parser].maxRetries = value;
@@ -189,7 +192,7 @@ class ContainerHandler {
     }
 
     get maxRetries() {
-        return this.glbParser.maxRetries;
+        return this.glbContainerParser.maxRetries;
     }
 
     /**
@@ -208,7 +211,7 @@ class ContainerHandler {
      */
     _getParser(url) {
         const ext = url ? path.getExtension(this._getUrlWithoutParams(url)).toLowerCase().replace('.', '') : null;
-        return this.parsers[ext] || this.glbParser;
+        return this.parsers[ext] || this.glbContainerParser;
     }
 
     /**

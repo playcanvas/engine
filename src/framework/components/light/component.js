@@ -29,7 +29,7 @@ const _lightPropsDefault = [];
  *
  * ```javascript
  * // Add a pc.LightComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('light', {
  *     type: "omni",
  *     color: new pc.Color(1, 0, 0),
@@ -37,7 +37,7 @@ const _lightPropsDefault = [];
  * });
  *
  * // Get the pc.LightComponent on an entity
- * var lightComponent = entity.light;
+ * const lightComponent = entity.light;
  *
  * // Update a property on a light component
  * entity.light.range = 20;

@@ -1,7 +1,8 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, CULLFACE_BACK
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -10,14 +11,16 @@ import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
 import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
-import { WebgpuRenderState } from './webgpu-render-state.js';
 import { WebgpuRenderTarget } from './webgpu-render-target.js';
 import { WebgpuShader } from './webgpu-shader.js';
 import { WebgpuTexture } from './webgpu-texture.js';
 import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
+import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { WebgpuDebug } from './webgpu-debug.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -28,21 +31,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     frameBuffer;
 
     /**
-     * Internal representation of the current render state, as requested by the renderer.
-     * In the future this can be completely replaced by a more optimal solution, where
-     * render states are bundled together (DX11 style) and set using a single call.
-     */
-    renderState = new WebgpuRenderState();
-
-    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
+     *
+     * @type { WebgpuClearRenderer }
      */
-    clearRenderer = new WebgpuClearRenderer();
+    clearRenderer;
+
+    /**
+     * Object responsible for mipmap generation.
+     *
+     * @type { WebgpuMipmapRenderer }
+     */
+    mipmapRenderer;
 
     /**
      * Render pipeline currently set on the device.
@@ -68,16 +73,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     commandEncoder;
 
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
+
         this.isWebGPU = true;
+        this._deviceType = DEVICETYPE_WEBGPU;
 
-        // TODO: refactor as needed
-        this.writeRed = true;
-        this.writeGreen = true;
-        this.writeBlue = true;
-        this.writeAlpha = true;
+        // WebGPU currently only supports 1 and 4 samples
+        this.samples = options.antialias ? 4 : 1;
 
-        this.initDeviceCaps();
+        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -88,13 +93,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     initDeviceCaps() {
+
+        // temporarily disabled functionality which is not supported to avoid errors
+        this.disableParticleSystem = true;
+
+        const limits = this.gpuAdapter.limits;
+
         this.precision = 'highp';
         this.maxPrecision = 'highp';
         this.maxSamples = 4;
         this.maxTextures = 16;
-        this.maxTextureSize = 4096;
-        this.maxCubeMapSize = 4096;
-        this.maxVolumeSize = 2048;
+        this.maxTextureSize = limits.maxTextureDimension2D;
+        this.maxCubeMapSize = limits.maxTextureDimension2D;
+        this.maxVolumeSize = limits.maxTextureDimension3D;
         this.maxPixelRatio = 1;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
@@ -102,6 +113,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
+        this.supportsGpuParticles = false;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -111,7 +123,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
-        this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
+        this.extBlendMinmax = true;
+        this.areaLightLutFormat = this.floatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
     }
 
@@ -154,11 +167,44 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter();
 
+        // optional features:
+        //      "depth-clip-control",
+        //      "depth32float-stencil8",
+        //      "texture-compression-bc",
+        //      "texture-compression-etc2",
+        //      "texture-compression-astc",
+        //      "timestamp-query",
+        //      "indirect-first-instance",
+        //      "shader-f16",
+        //      "rg11b10ufloat-renderable",
+        //      "bgra8unorm-storage",
+        //      "float32-filterable"
+
+        // request optional features
+        const requiredFeatures = [];
+        const requireFeature = (feature) => {
+            if (this.gpuAdapter.features.has(feature)) {
+                requiredFeatures.push(feature);
+                Debug.log("Enabled WEBGPU feature: " + feature);
+                return true;
+            }
+            return false;
+        };
+        this.floatFilterable = requireFeature('float32-filterable');
+
         /**
          * @type {GPUDevice}
          * @private
          */
-        this.wgpu = await this.gpuAdapter.requestDevice();
+        this.wgpu = await this.gpuAdapter.requestDevice({
+            requiredFeatures,
+
+            // Note that we can request limits, but it does not seem to be supported at the moment
+            requiredLimits: {
+            }
+        });
+
+        this.initDeviceCaps();
 
         // initially fill the window. This needs improvement.
         this.setResolution(window.innerWidth, window.innerHeight);
@@ -180,11 +226,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             colorSpace: 'srgb',
             alphaMode: 'opaque',  // could also be 'premultiplied'
 
-            // use prefered format for optimal performance on mobile
+            // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
 
             // formats that views created from textures returned by getCurrentTexture may use
             viewFormats: []
@@ -193,18 +239,73 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.createFramebuffer();
 
+        this.clearRenderer = new WebgpuClearRenderer(this);
+        this.mipmapRenderer = new WebgpuMipmapRenderer(this);
+
         this.postInit();
 
         return this;
     }
 
     createFramebuffer() {
+        this.supportsStencil = this.initOptions.stencil;
+        this.frameBufferDimensions = new Vec2();
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
-            depth: true,
-            samples: 4
+            depth: this.initOptions.depth,
+            stencil: this.supportsStencil,
+            samples: this.samples
         });
+    }
+
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
+    }
+
+    frameStart() {
+
+        super.frameStart();
+
+        WebgpuDebug.memory(this);
+        WebgpuDebug.validate(this);
+
+        // current frame color output buffer
+        const outColorBuffer = this.gpuContext.getCurrentTexture();
+        DebugHelper.setLabel(outColorBuffer, `${this.frameBuffer.name}`);
+
+        // reallocate framebuffer if dimensions change, to match the output texture
+        if (this.frameBufferDimensions.x !== outColorBuffer.width || this.frameBufferDimensions.y !== outColorBuffer.height) {
+
+            this.frameBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
+
+            this.frameBuffer.destroy();
+            this.frameBuffer = null;
+
+            this.createFramebuffer();
+        }
+
+        const rt = this.frameBuffer;
+        const wrt = rt.impl;
+
+        // assign the format, allowing following init call to use it to allocate matching multisampled buffer
+        wrt.colorFormat = outColorBuffer.format;
+
+        this.initRenderTarget(rt);
+
+        // assign current frame's render texture
+        wrt.assignColorTexture(outColorBuffer);
+
+        WebgpuDebug.end(this);
+        WebgpuDebug.end(this);
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -271,22 +372,29 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     draw(primitive, numInstances = 1, keepBuffers) {
 
-        if (this.shader.ready) {
+        if (this.shader.ready && !this.shader.failed) {
+
+            WebgpuDebug.validate(this);
+
             const passEncoder = this.passEncoder;
             Debug.assert(passEncoder);
 
             // vertex buffers
             const vb0 = this.vertexBuffers[0];
-            const vbSlot = this.submitVertexBuffer(vb0, 0);
             const vb1 = this.vertexBuffers[1];
-            if (vb1) {
-                this.submitVertexBuffer(vb1, vbSlot);
-            }
             this.vertexBuffers.length = 0;
 
+            if (vb0) {
+                const vbSlot = this.submitVertexBuffer(vb0, 0);
+                if (vb1) {
+                    this.submitVertexBuffer(vb1, vbSlot);
+                }
+            }
+
             // render pipeline
-            const pipeline = this.renderPipeline.get(primitive, vb0.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.renderState);
+            const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
+                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                                                     this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -299,10 +407,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(ib.numIndices, numInstances, 0, 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, 0, 0, 0);
             } else {
-                passEncoder.draw(vb0.numVertices, numInstances, 0, 0);
+                passEncoder.draw(primitive.count, numInstances, 0, 0);
             }
+
+            WebgpuDebug.end(this, {
+                vb0,
+                vb1,
+                ib,
+                primitive,
+                numInstances,
+                pipeline
+            });
         }
     }
 
@@ -318,50 +435,52 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
-    setBlending(blending) {
-        this.renderState.setBlending(blending);
+    setBlendState(blendState) {
+        this.blendState.copy(blendState);
     }
 
-    setBlendFunction(blendSrc, blendDst) {
-        this.renderState.setBlendFunction(blendSrc, blendDst);
+    setDepthState(depthState) {
+        this.depthState.copy(depthState);
     }
 
-    setBlendEquation(blendEquation) {
-        this.renderState.setBlendEquation(blendEquation);
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.stencilEnabled = true;
+            this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
+            this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+
+            // ref value - based on stencil front
+            const ref = this.stencilFront.ref;
+            if (this.stencilRef !== ref) {
+                this.stencilRef = ref;
+                this.passEncoder.setStencilReference(ref);
+            }
+        } else {
+            this.stencilEnabled = false;
+        }
     }
 
-    setDepthFunc(func) {
-    }
-
-    setDepthTest(depthTest) {
-    }
-
-    getDepthTest() {
-        return true;
+    setBlendColor(r, g, b, a) {
+        // TODO: this should use passEncoder.setBlendConstant(color)
+        // similar implementation to this.stencilRef
     }
 
     setCullMode(cullMode) {
-    }
-
-    getCullMode() {
-        return CULLFACE_BACK;
+        this.cullMode = cullMode;
     }
 
     setAlphaToCoverage(state) {
     }
 
-    setColorWrite(writeRed, writeGreen, writeBlue, writeAlpha) {
-    }
-
-    setDepthWrite(writeDepth) {
-    }
-
-    getDepthWrite() {
-        return true;
-    }
-
     initializeContextCaches() {
         super.initializeContextCaches();
+    }
+
+    /**
+     * Set up default values for the render pass encoder.
+     */
+    setupPassEncoderDefaults() {
+        this.stencilRef = 0;
     }
 
     /**
@@ -376,25 +495,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(rt);
 
         this.renderTarget = rt;
+
+        /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
-        // current frame color buffer
-        let outColorBuffer;
-        if (rt === this.frameBuffer) {
-            outColorBuffer = this.gpuContext.getCurrentTexture();
-            DebugHelper.setLabel(outColorBuffer, rt.name);
+        WebgpuDebug.internal(this);
+        WebgpuDebug.validate(this);
 
-            // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-            wrt.colorFormat = outColorBuffer.format;
-        }
-
-        this.initRenderTarget(rt);
-
-        // assign current frame's render texture if rendering to the main frame buffer
-        // TODO: this should probably be done at the start of the frame, so that it can be used
-        // as a destination of the copy operation
-        if (outColorBuffer) {
-            wrt.assignColorTexture(outColorBuffer);
+        // framebuffer is initialized at the start of the frame
+        if (rt !== this.frameBuffer) {
+            this.initRenderTarget(rt);
         }
 
         // set up clear / store / load settings
@@ -410,6 +520,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
+
+        this.setupPassEncoderDefaults();
 
         // the pass always clears full target
         // TODO: avoid this setting the actual viewport/scissor on webgpu as those are automatically reset to full
@@ -436,15 +548,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.wgpu.queue.submit([this.commandEncoder.finish()]);
         this.commandEncoder = null;
 
+        WebgpuDebug.end(this, { renderPass });
+        WebgpuDebug.end(this, { renderPass });
+
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
         this.insideRenderPass = false;
+
+        // generate mipmaps
+        if (renderPass.colorOps.mipmaps) {
+            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        }
     }
 
     clear(options) {
         if (options.flags) {
-            this.clearRenderer.clear(this, this.renderTarget, options);
+            this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
     }
 
@@ -462,27 +582,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     setDepthBiasValues(constBias, slopeBias) {
     }
 
-    setStencilTest(enable) {
-    }
-
-    setStencilFunc(func, ref, mask) {
-    }
-
-    setStencilOperation(fail, zfail, zpass, writeMask) {
-    }
-
     setViewport(x, y, w, h) {
         // TODO: only execute when it changes. Also, the viewport of encoder  matches the rendering attachments,
         // so we can skip this if fullscreen
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.vx = x;
             this.vy = y;
             this.vw = w;
             this.vh = h;
 
-            this.passEncoder.setViewport(x, this.renderTarget.height - y - h, w, h, 0, 1);
+            this.passEncoder.setViewport(x, y, w, h, 0, 1);
         }
     }
 
@@ -492,12 +607,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
+            if (!this.renderTarget.flipY) {
+                y = this.renderTarget.height - y - h;
+            }
+
             this.sx = x;
             this.sy = y;
             this.sw = w;
             this.sh = h;
 
-            this.passEncoder.setScissorRect(x, this.renderTarget.height - y - h, w, h);
+            this.passEncoder.setScissorRect(x, y, w, h);
         }
     }
 
@@ -552,7 +671,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // cannot copy depth from multisampled buffer. On WebGPU, it cannot be resolve at the end of the pass either,
             // and so we need to implement a custom depth resolve shader based copy
             // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
-            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture`, sourceRT);
+            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture ${sourceRT.name}`, sourceRT);
 
             /** @type {GPUImageCopyTexture} */
             const copySrc = {

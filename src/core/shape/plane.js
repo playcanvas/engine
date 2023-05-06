@@ -1,54 +1,49 @@
 import { Vec3 } from '../math/vec3.js';
 
-const tmpVecA = new Vec3();
-
 /**
- * An infinite plane.
- *
- * @ignore
+ * An infinite plane. Internally it's represented in a parametric equation form:
+ * ax + by + cz + distance = 0.
  */
 class Plane {
-    /**
-     * The starting point of the plane.
-     *
-     * @readonly
-     * @type {Vec3}
-     */
-    point = new Vec3();
-
     /**
      * The normal of the plane.
      *
      * @readonly
      * @type {Vec3}
      */
-    normal = Vec3.BACK.clone();
+    normal = new Vec3();
+
+    /**
+     * The distance from the plane to the origin, along its normal.
+     *
+     * @readonly
+     * @type {number}
+     */
+    distance;
 
     /**
      * Create a new Plane instance.
      *
-     * @param {Vec3} [point] - Point position on the plane. The constructor copies this parameter.
-     * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter.
+     * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter. Defaults
+     * to {@link Vec3#UP}.
+     * @param {Vec3} [distance] - The distance from the plane to the origin, along its normal.
+     * Defaults to 0.
      */
-    constructor(point, normal) {
-        if (point) {
-            this.point.copy(point);
-        }
-        if (normal) {
-            this.normal.copy(normal);
-        }
+    constructor(normal = Vec3.UP, distance = 0) {
+        this.normal.copy(normal);
+        this.distance = distance;
     }
 
     /**
-     * Sets point and normal to the supplied vector values.
+     * Sets the plane based on a specified normal and a point on the plane.
      *
-     * @param {Vec3} point - The starting point of the plane.
+     * @param {Vec3} point - The point on the plane.
      * @param {Vec3} normal - The normal of the plane.
      * @returns {Plane} Self for chaining.
      */
-    set(point, normal) {
-        this.point.copy(point);
+    setFromPointNormal(point, normal) {
         this.normal.copy(normal);
+        this.distance = -this.normal.dot(point);
         return this;
     }
 
@@ -62,7 +57,7 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsLine(start, end, point) {
-        const d = -this.normal.dot(this.point);
+        const d = this.distance;
         const d0 = this.normal.dot(start) + d;
         const d1 = this.normal.dot(end) + d;
 
@@ -83,14 +78,16 @@ class Plane {
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
-        const pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
-        const t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
-        const intersects = t >= 0;
+        const denominator = this.normal.dot(ray.direction);
+        if (denominator === 0)
+            return false;
 
-        if (intersects && point)
+        const t = -(this.normal.dot(ray.origin) + this.distance) / denominator;
+        if (t >= 0 && point) {
             point.copy(ray.direction).mulScalar(t).add(ray.origin);
+        }
 
-        return intersects;
+        return t >= 0;
     }
 
     /**
@@ -100,7 +97,9 @@ class Plane {
      * @returns {Plane} Self for chaining.
      */
     copy(src) {
-        return this.set(src.point, src.normal);
+        this.normal.copy(src.normal);
+        this.distance = src.distance;
+        return this;
     }
 
     /**
@@ -109,7 +108,9 @@ class Plane {
      * @returns {this} A duplicate Plane.
      */
     clone() {
-        return new this.constructor(this.point, this.normal);
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
     }
 }
 

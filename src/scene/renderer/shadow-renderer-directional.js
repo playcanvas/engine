@@ -49,6 +49,15 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
  * @ignore
  */
 class ShadowRendererDirectional {
+    /** @type {import('./renderer.js').Renderer} */
+    renderer;
+
+    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    shadowRenderer;
+
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    device;
+
     constructor(renderer, shadowRenderer) {
         this.renderer = renderer;
         this.shadowRenderer = shadowRenderer;
@@ -67,7 +76,7 @@ class ShadowRendererDirectional {
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
-        this.generateSplitDistances(light, nearDist, light.shadowDistance);
+        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
 
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
@@ -221,7 +230,7 @@ class ShadowRendererDirectional {
 
         renderPass.after = () => {
             // after the pass is done, apply VSM blur if needed
-            this.shadowRenderer.renderVms(light, camera);
+            this.shadowRenderer.renderVsm(light, camera);
         };
 
         // setup render pass using any of the cameras, they all have the same pass related properties

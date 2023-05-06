@@ -4,11 +4,11 @@ float VSM$(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBi
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowVSM$(sampler2D shadowMap, vec3 shadowParams, float exponent) {
-    return VSM$(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, exponent);
+float getShadowVSM$(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams, float exponent, vec3 lightDir) {
+    return VSM$(shadowMap, shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, exponent);
 }
 
-float getShadowSpotVSM$(sampler2D shadowMap, vec4 shadowParams, float exponent) {
-    return VSM$(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z, shadowParams.y, exponent);
+float getShadowSpotVSM$(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
+    return VSM$(shadowMap, shadowCoord.xy, shadowParams.x, length(lightDir) * shadowParams.w + shadowParams.z, shadowParams.y, exponent);
 }
 `;
