@@ -1012,6 +1012,10 @@ const extensionUnlit = (data, material, textures) => {
     material.emissiveVertexColor = material.diffuseVertexColor;
     material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
 
+    // disable lighting and skybox
+    material.useLighting = false;
+    material.useSkybox = false;
+
     // blank diffuse
     material.diffuse.set(0, 0, 0);
     material.diffuseTint = false;
