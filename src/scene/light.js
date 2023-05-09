@@ -456,6 +456,14 @@ class Light {
         return this._outerConeAngle;
     }
 
+    set lightSize(value) {
+        this._lightSize = value;
+    }
+
+    get lightSize() {
+        return this._lightSize;
+    }
+
     _updateOuterAngle(angle) {
         const radAngle = angle * Math.PI / 180;
         this._outerConeAngleCos = Math.cos(radAngle);
@@ -654,6 +662,7 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
+        clone.lightSize = this.lightSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 

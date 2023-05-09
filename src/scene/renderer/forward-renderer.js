@@ -90,6 +90,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
+        this.lightSizeId = [];
 
         // shadow cascades
         this.shadowMatrixPaletteId = [];
@@ -161,6 +162,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
         this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
         this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
+        this.lightSizeId[i] = scope.resolve(light + '_size');
 
         // shadow cascades
         this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
@@ -292,6 +294,7 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
+            this.lightSizeId[cnt].setValue(omni.lightSize);
         }
         if (omni._cookie) {
             this.lightCookieId[cnt].setValue(omni._cookie);
@@ -347,6 +350,7 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
+            this.lightSizeId[cnt].setValue(spot.lightSize);
         }
 
         if (spot._cookie) {
