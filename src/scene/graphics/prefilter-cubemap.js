@@ -96,7 +96,7 @@ function shFromCubemap(device, source, dontFlipX) {
                     depth: false
                 });
                 constantTexSource.setValue(tex);
-                device.setBlendState(BlendState.DEFAULT);
+                device.setBlendState(BlendState.NOBLEND);
                 drawQuadWithShader(device, targ, shader);
 
                 const gl = device.gl;

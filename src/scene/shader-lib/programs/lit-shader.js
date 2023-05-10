@@ -549,13 +549,14 @@ class LitShader {
             code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
         }
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
+        const pcfOmniShadows = device.webgl2 || device.isWebGPU;
+        if (shadowType === SHADOW_PCF3 && (!pcfOmniShadows || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.webgl2) {
+            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && pcfOmniShadows) {
                 code += "    gl_FragDepth = depth;\n";
             }
         } else if (shadowType === SHADOW_VSM8) {

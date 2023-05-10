@@ -933,6 +933,8 @@ class Mesh extends RefCountedObject {
         // release existing IB
         this._destroyIndexBuffer(RENDERSTYLE_WIREFRAME);
 
+        const numVertices = this.vertexBuffer.numVertices;
+
         const lines = [];
         let format;
         if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
@@ -943,22 +945,22 @@ class Mesh extends RefCountedObject {
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
             const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
 
-            const uniqueLineIndices = {};
+            const seen = new Set();
 
             for (let j = base; j < base + count; j += 3) {
                 for (let k = 0; k < 3; k++) {
                     const i1 = srcIndices[j + offsets[k][0]];
                     const i2 = srcIndices[j + offsets[k][1]];
-                    const line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
-                    if (uniqueLineIndices[line] === undefined) {
-                        uniqueLineIndices[line] = 0;
+                    const hash = (i1 > i2) ? ((i2 * numVertices) + i1) : ((i1 * numVertices) + i2);
+                    if (!seen.has(hash)) {
+                        seen.add(hash);
                         lines.push(i1, i2);
                     }
                 }
             }
             format = indexBuffer.format;
         } else {
-            for (let i = 0; i < this.vertexBuffer.numVertices; i += 3) {
+            for (let i = 0; i < numVertices; i += 3) {
                 lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
             }
             format = lines.length > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
