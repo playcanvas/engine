@@ -126,13 +126,13 @@ class ModelHandler {
 
                     asset.once('remove', function (asset) {
                         if (meshInstance.material === asset.resource) {
-                            meshInstance.material = self._defaultMaterial;
+                            meshInstance.material = self.defaultMaterial;
                         }
                     });
                 };
 
                 if (!data.mapping[i]) {
-                    meshInstance.material = self._defaultMaterial;
+                    meshInstance.material = self.defaultMaterial;
                     return;
                 }
 
@@ -142,7 +142,7 @@ class ModelHandler {
 
                 if (id !== undefined) { // id mapping
                     if (!id) {
-                        meshInstance.material = self._defaultMaterial;
+                        meshInstance.material = self.defaultMaterial;
                     } else {
                         material = assets.get(id);
                         if (material) {
