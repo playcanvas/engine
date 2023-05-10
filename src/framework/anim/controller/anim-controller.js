@@ -450,7 +450,7 @@ class AnimController {
         const path = pathString.split('.');
         let state = this._findState(path[0]);
         if (!state) {
-            state = new AnimState(this, path[0], 1.0);
+            state = new AnimState(this, path[0], speed);
             this._states[path[0]] = state;
             this._stateNames.push(path[0]);
         }
