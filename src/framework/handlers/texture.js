@@ -178,7 +178,6 @@ class TextureHandler {
 
         this._device = device;
         this._assets = assets;
-        this._loader = app.loader;
 
         // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.

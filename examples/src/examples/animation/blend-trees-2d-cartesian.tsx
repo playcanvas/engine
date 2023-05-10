@@ -98,7 +98,7 @@ class BlendTrees2DCartesianExample {
             'walkAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
             'eagerAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle-eager.glb' }),
             'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
         };
 

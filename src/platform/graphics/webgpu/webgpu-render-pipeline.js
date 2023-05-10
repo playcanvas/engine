@@ -272,6 +272,13 @@ class WebgpuRenderPipeline {
                 entryPoint: webgpuShader.vertexEntryPoint,
                 buffers: vertexBufferLayout
             },
+
+            fragment: {
+                module: webgpuShader.getFragmentShaderModule(),
+                entryPoint: webgpuShader.fragmentEntryPoint,
+                targets: []
+            },
+
             primitive: {
                 topology: primitiveTopology,
                 frontFace: 'ccw',
@@ -288,7 +295,7 @@ class WebgpuRenderPipeline {
             layout: pipelineLayout
         };
 
-        // provide fragment state only when render target contains color buffer, otherwise rendering to depth only
+        // provide fragment targets only when render target contains color buffer, otherwise rendering to depth only
         // TODO: the exclusion of fragment here should be reflected in the key generation (no blend, no frag ..)
         const colorFormat = renderTarget.impl.colorFormat;
         if (colorFormat) {
@@ -299,16 +306,11 @@ class WebgpuRenderPipeline {
             if (blendState.blueWrite) writeMask |= GPUColorWrite.BLUE;
             if (blendState.alphaWrite) writeMask |= GPUColorWrite.ALPHA;
 
-            /** @type {GPUFragmentState} */
-            descr.fragment = {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: [{
-                    format: renderTarget.impl.colorFormat,
-                    writeMask: writeMask,
-                    blend: this.getBlend(blendState)
-                }]
-            };
+            descr.fragment.targets.push({
+                format: colorFormat,
+                writeMask: writeMask,
+                blend: this.getBlend(blendState)
+            });
         }
 
         WebgpuDebug.validate(this.device);
