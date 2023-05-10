@@ -721,16 +721,19 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
             } else {
                 // create vertex buffer
                 const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
+                const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
+                const numIndices = decompressedData.indices.byteLength / (numVertices <= 65535 ? 2 : 4);
+
                 Debug.call(() => {
                     if (numVertices !== accessors[primitive.attributes.POSITION].count) {
-                        Debug.warn('mesh has invalid draco sizes');
+                        Debug.warn('mesh has invalid vertex count');
+                    }
+                    if (numIndices !== accessors[primitive.indices].count) {
+                        Debug.warn('mesh has invalid index count');
                     }
                 });
-                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
 
-                // create index buffer
-                const numIndices = accessors[primitive.indices].count;
-                const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
                 const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
 
                 result.vertexBuffer = vertexBuffer;
