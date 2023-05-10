@@ -591,6 +591,8 @@ GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
     getProgramLibrary(this).removeFromCache(shader);
 };
 
+BlendState.DEFAULT = Object.freeze(new BlendState());
+
 const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();
 

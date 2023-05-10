@@ -18,7 +18,7 @@ class VehicleExample {
         function demo() {
 
             const assets = {
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'script1': new pc.Asset('script1', 'script', { url: '/static/scripts/camera/tracking-camera.js' }),
                 'script2': new pc.Asset('script2', 'script', { url: '/static/scripts/physics/render-physics.js' }),
                 'script3': new pc.Asset('script3', 'script', { url: '/static/scripts/physics/action-physics-reset.js' }),

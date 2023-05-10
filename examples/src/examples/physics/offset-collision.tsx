@@ -20,7 +20,7 @@ class OffsetCollisionExample {
             const assets = {
                 'model': new pc.Asset('model', 'container', {url: '/static/assets/models/bitmoji.glb'}),
                 'idleAnim': new pc.Asset('idleAnim', 'container', {url: '/static/assets/animations/bitmoji/idle.glb'}),
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             };
 
             const gfxOptions = {

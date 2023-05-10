@@ -59,7 +59,7 @@ class LightPhysicalUnitsExample {
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             lights: new pc.Asset('lights', 'container', { url: '/static/assets/models/Lights.glb' }),
             sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
             color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),

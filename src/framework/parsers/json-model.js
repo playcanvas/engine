@@ -48,9 +48,9 @@ const JSON_VERTEX_ELEMENT_TYPE = {
 
 // Take PlayCanvas JSON model data and create pc.Model
 class JsonModelParser {
-    constructor(device, defaultMaterial) {
-        this._device = device;
-        this._defaultMaterial = defaultMaterial;
+    constructor(modelHandler) {
+        this._device = modelHandler.device;
+        this._defaultMaterial = modelHandler.defaultMaterial;
     }
 
     parse(data, callback) {
