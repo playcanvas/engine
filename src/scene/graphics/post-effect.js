@@ -81,7 +81,7 @@ class PostEffect {
             viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
         }
 
-        this.device.setBlendState(BlendState.DEFAULT);
+        this.device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(this.device, target, shader, viewport);
     }
 }

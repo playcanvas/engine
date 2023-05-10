@@ -267,7 +267,7 @@ class MorphInstance {
             this.morphFactor.setValue(this._shaderMorphWeights);
 
             // alpha blending - first pass gets none, following passes are additive
-            device.setBlendState(blending ? blendStateAdditive : BlendState.DEFAULT);
+            device.setBlendState(blending ? blendStateAdditive : BlendState.NOBLEND);
 
             // render quad with shader for required number of textures
             const shader = this._getShader(usedCount);

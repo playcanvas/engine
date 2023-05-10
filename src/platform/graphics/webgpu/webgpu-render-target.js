@@ -214,16 +214,20 @@ class WebgpuRenderTarget {
         if (colorBuffer) {
 
             // render to top mip level in case of mip-mapped buffer
-            colorView = colorBuffer.impl.createView({
-                mipLevelCount: 1
-            });
+            const mipLevelCount = 1;
 
             // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
             if (colorBuffer.cubemap) {
                 colorView = colorBuffer.impl.createView({
                     dimension: '2d',
                     baseArrayLayer: renderTarget.face,
-                    arrayLayerCount: 1
+                    arrayLayerCount: 1,
+                    mipLevelCount
+                });
+            } else {
+
+                colorView = colorBuffer.impl.createView({
+                    mipLevelCount
                 });
             }
         }

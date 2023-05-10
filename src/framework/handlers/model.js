@@ -39,20 +39,21 @@ class ModelHandler {
      * @hideconstructor
      */
     constructor(app) {
-        this._device = app.graphicsDevice;
         this._parsers = [];
-        this._defaultMaterial = getDefaultMaterial(this._device);
+        this.device = app.graphicsDevice;
+        this.assets = app.assets;
+        this.defaultMaterial = getDefaultMaterial(this.device);
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new JsonModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new GlbModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
 
-    load(url, callback) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -90,7 +91,7 @@ class ModelHandler {
                             } else {
                                 callback(null, parseResult);
                             }
-                        });
+                        }, asset);
                         return;
                     }
                 }
@@ -125,13 +126,13 @@ class ModelHandler {
 
                     asset.once('remove', function (asset) {
                         if (meshInstance.material === asset.resource) {
-                            meshInstance.material = self._defaultMaterial;
+                            meshInstance.material = self.defaultMaterial;
                         }
                     });
                 };
 
                 if (!data.mapping[i]) {
-                    meshInstance.material = self._defaultMaterial;
+                    meshInstance.material = self.defaultMaterial;
                     return;
                 }
 
@@ -141,7 +142,7 @@ class ModelHandler {
 
                 if (id !== undefined) { // id mapping
                     if (!id) {
-                        meshInstance.material = self._defaultMaterial;
+                        meshInstance.material = self.defaultMaterial;
                     } else {
                         material = assets.get(id);
                         if (material) {

@@ -13,7 +13,7 @@ class MultiViewExample {
             <Panel headerText='Debug Shader Rendering'>
                 {<LabelGroup text='Mode'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
-                        { v: pc.SHADERPASS_FORWARD, t: 'Normal' },
+                        { v: pc.SHADERPASS_FORWARD, t: 'None' },
                         { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
                         { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
                         { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
@@ -44,7 +44,7 @@ class MultiViewExample {
         function demo() {
             const assets = {
                 'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
             };
 
