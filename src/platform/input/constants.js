@@ -53,7 +53,9 @@ export const EVENT_MOUSEUP = 'mouseup';
 export const EVENT_MOUSEWHEEL = 'mousewheel';
 
 /**
- * Name of event fired when the mouse moves out or enters another DOM element. This can fire on entering a defocused PlayCanvas browser window so you may want to check for focus with {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/hasFocus document.hasFocus()}.
+ * Name of event fired when the mouse moves out or enters another DOM element. This can
+ * fire on entering an unfocused PlayCanvas browser window so you may want to check for focus
+ * with {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/hasFocus document.hasFocus()}.
  *
  * @type {string}
  */
