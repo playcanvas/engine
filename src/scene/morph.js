@@ -8,13 +8,10 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
-    BUFFER_STATIC, TYPE_FLOAT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    BUFFER_STATIC, TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-
-// value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
-const _floatRounding = 0.2;
 
 const defaultOptions = {
     preferHighPrecision: false
@@ -143,7 +140,7 @@ class Morph extends RefCountedObject {
         }
     }
 
-    _findSparseSet(deltaArrays, ids, usedDataIndices) {
+    _findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding) {
 
         let freeIndex = 1;  // reserve slot 0 for zero delta
         const dataCount = deltaArrays[0].length;
@@ -162,12 +159,12 @@ class Morph extends RefCountedObject {
             }
 
             if (vertexUsed) {
-                ids.push(freeIndex + _floatRounding);
+                ids.push(freeIndex + floatRounding);
                 usedDataIndices.push(v / 3);
                 freeIndex++;
             } else {
                 // non morphed vertices would be all mapped to pixel 0 of texture
-                ids.push(0 + _floatRounding);
+                ids.push(0 + floatRounding);
             }
         }
 
@@ -175,6 +172,13 @@ class Morph extends RefCountedObject {
     }
 
     _initTextureBased() {
+
+        // use uint32 for vertex Ids instead of float32
+        const useUintIds = this.device.isWebGPU;
+
+        // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
+        const floatRounding = useUintIds ? 0 : 0.2;
+
         // collect all source delta arrays to find sparse set of vertices
         const deltaArrays = [], deltaInfos = [];
         for (let i = 0; i < this._targets.length; i++) {
@@ -191,7 +195,7 @@ class Morph extends RefCountedObject {
 
         // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
         const ids = [], usedDataIndices = [];
-        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
+        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding);
 
         // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
         // TODO: on webgl2 we could store this in uint32 format and remove this limit
@@ -260,8 +264,9 @@ class Morph extends RefCountedObject {
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
-        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_FLOAT32 }];
-        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc), ids.length, BUFFER_STATIC, new Float32Array(ids));
+        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: useUintIds ? TYPE_UINT32 : TYPE_FLOAT32 }];
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, BUFFER_STATIC,
+                                                useUintIds ? new Uint32Array(ids) : new Float32Array(ids));
 
         return true;
     }
