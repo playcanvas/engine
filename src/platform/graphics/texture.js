@@ -309,6 +309,16 @@ class Texture {
     }
 
     /**
+     * Returns number of required mip levels for the texture based on its dimensions and parameters.
+     *
+     * @ignore
+     * @type {number}
+     */
+    get requiredMipLevels() {
+        return this.mipmaps ? Math.floor(Math.log2(Math.max(this.width, this.height))) + 1 : 1;
+    }
+
+    /**
      * The minification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}
@@ -474,21 +484,6 @@ class Texture {
     }
 
     /**
-     * Toggles automatic mipmap generation. Can't be used on non power of two textures.
-     *
-     * @type {boolean}
-     * @ignore
-     * @deprecated
-     */
-    set autoMipmap(v) {
-        this._mipmaps = v;
-    }
-
-    get autoMipmap() {
-        return this._mipmaps;
-    }
-
-    /**
      * Defines if texture should generate/upload mipmaps if possible.
      *
      * @type {boolean}
@@ -496,6 +491,11 @@ class Texture {
     set mipmaps(v) {
         if (this._mipmaps !== v) {
             this._mipmaps = v;
+
+            if (this.device.isWebGPU) {
+                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
+            }
+
             if (v) this._needsMipmapsUpload = true;
         }
     }

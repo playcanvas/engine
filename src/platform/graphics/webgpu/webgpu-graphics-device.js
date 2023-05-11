@@ -17,8 +17,10 @@ import { WebgpuTexture } from './webgpu-texture.js';
 import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
+import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -39,6 +41,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type { WebgpuClearRenderer }
      */
     clearRenderer;
+
+    /**
+     * Object responsible for mipmap generation.
+     *
+     * @type { WebgpuMipmapRenderer }
+     */
+    mipmapRenderer;
 
     /**
      * Render pipeline currently set on the device.
@@ -64,12 +73,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     commandEncoder;
 
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
+
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = options.antialias ? 4 : 1;
+
+        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -80,6 +93,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     initDeviceCaps() {
+
+        // temporarily disabled functionality which is not supported to avoid errors
+        this.disableParticleSystem = true;
 
         const limits = this.gpuAdapter.limits;
 
@@ -97,6 +113,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
+        this.supportsGpuParticles = false;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -209,7 +226,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             colorSpace: 'srgb',
             alphaMode: 'opaque',  // could also be 'premultiplied'
 
-            // use prefered format for optimal performance on mobile
+            // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
@@ -223,6 +240,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.createFramebuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
+        this.mipmapRenderer = new WebgpuMipmapRenderer(this);
 
         this.postInit();
 
@@ -230,11 +248,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createFramebuffer() {
+        this.supportsStencil = this.initOptions.stencil;
         this.frameBufferDimensions = new Vec2();
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
-            depth: true,
+            depth: this.initOptions.depth,
+            stencil: this.supportsStencil,
             samples: this.samples
         });
     }
@@ -339,12 +359,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const format = vertexBuffer.format;
-        const elementCount = format.elements.length;
+        const elements = vertexBuffer.format.elements;
+        const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
         for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
@@ -373,7 +392,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode);
+                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                                                     this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -422,8 +442,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.depthState.copy(depthState);
     }
 
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.stencilEnabled = true;
+            this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
+            this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+
+            // ref value - based on stencil front
+            const ref = this.stencilFront.ref;
+            if (this.stencilRef !== ref) {
+                this.stencilRef = ref;
+                this.passEncoder.setStencilReference(ref);
+            }
+        } else {
+            this.stencilEnabled = false;
+        }
+    }
+
     setBlendColor(r, g, b, a) {
         // TODO: this should use passEncoder.setBlendConstant(color)
+        // similar implementation to this.stencilRef
     }
 
     setCullMode(cullMode) {
@@ -435,6 +473,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initializeContextCaches() {
         super.initializeContextCaches();
+    }
+
+    /**
+     * Set up default values for the render pass encoder.
+     */
+    setupPassEncoderDefaults() {
+        this.stencilRef = 0;
     }
 
     /**
@@ -475,6 +520,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
+        this.setupPassEncoderDefaults();
+
         // the pass always clears full target
         // TODO: avoid this setting the actual viewport/scissor on webgpu as those are automatically reset to full
         // render target. We just need to update internal state, for the get functionality to return it.
@@ -507,6 +554,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats.length = 0;
 
         this.insideRenderPass = false;
+
+        // generate mipmaps
+        if (renderPass.colorOps.mipmaps) {
+            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        }
     }
 
     clear(options) {
@@ -527,15 +579,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setDepthBiasValues(constBias, slopeBias) {
-    }
-
-    setStencilTest(enable) {
-    }
-
-    setStencilFunc(func, ref, mask) {
-    }
-
-    setStencilOperation(fail, zfail, zpass, writeMask) {
     }
 
     setViewport(x, y, w, h) {

@@ -37,6 +37,7 @@ import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 const invalidateAttachments = [];
 
@@ -89,8 +90,9 @@ function quadWithShader(device, target, shader) {
     device.updateBegin();
 
     device.setCullMode(CULLFACE_NONE);
-    device.setBlendState(BlendState.DEFAULT);
+    device.setBlendState(BlendState.NOBLEND);
     device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -236,52 +238,6 @@ function testTextureFloatHighPrecision(device) {
     return f === 0;
 }
 
-// ImageBitmap current state (Sep 2022):
-// - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
-//   there are likely still issues with older versions of both).
-// - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
-//   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
-//   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
-// - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
-//   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
-//   texture assets on the dom https://playcanvas.com/editor/scene/446278.
-
-// This function tests whether the current browser destroys PNG data or not.
-function testImageBitmap(device) {
-    // 1x1 png image containing rgba(1, 2, 3, 63)
-    const pngBytes = new Uint8Array([
-        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21,
-        196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 100, 98, 182, 7, 0, 0, 89, 0, 71, 67, 133, 148, 237,
-        0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
-    ]);
-
-    return createImageBitmap(new Blob([pngBytes], { type: 'image/png' }), { premultiplyAlpha: 'none' })
-        .then((image) => {
-            // create the texture
-            const texture = new Texture(device, {
-                width: 1,
-                height: 1,
-                format: PIXELFORMAT_RGBA8,
-                mipmaps: false,
-                levels: [image]
-            });
-
-            // read pixels
-            const rt = new RenderTarget({ colorBuffer: texture, depth: false });
-            device.setFramebuffer(rt.impl._glFrameBuffer);
-            device.initRenderTarget(rt);
-
-            const data = new Uint8ClampedArray(4);
-            device.gl.readPixels(0, 0, 1, 1, device.gl.RGBA, device.gl.UNSIGNED_BYTE, data);
-
-            rt.destroy();
-            texture.destroy();
-
-            return data[0] === 1 && data[1] === 2 && data[2] === 3 && data[3] === 63;
-        })
-        .catch(e => false);
-}
-
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
@@ -320,7 +276,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * alpha buffer.
      * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
      * requested to have a depth buffer of at least 16 bits.
-     * @param {boolean} [options.stencil=false] - Boolean that indicates that the drawing buffer is
+     * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
      * requested to have a stencil buffer of at least 8 bits.
      * @param {boolean} [options.antialias=true] - Boolean that indicates whether or not to perform
      * anti-aliasing if possible.
@@ -346,9 +302,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
 
         this.defaultFramebuffer = null;
 
@@ -372,12 +331,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.fire('devicerestored');
         };
 
-        // options defaults
-        options.stencil = true;
-        if (!options.powerPreference) {
-            options.powerPreference = 'high-performance';
-        }
-
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
         const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
         this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
@@ -386,35 +339,40 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
-        // Retrieve the WebGL context
-        const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-
-        const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
-        for (let i = 0; i < names.length; i++) {
-            gl = canvas.getContext(names[i], options);
 
-            if (gl) {
-                this.webgl2 = (names[i] === DEVICETYPE_WEBGL2);
-                this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
-                break;
+        // Retrieve the WebGL context
+        if (options.gl) {
+            gl = options.gl;
+        } else {
+            const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+            const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
+            for (let i = 0; i < names.length; i++) {
+                gl = canvas.getContext(names[i], options);
+                if (gl) {
+                    break;
+                }
             }
         }
-        this.gl = gl;
 
         if (!gl) {
             throw new Error("WebGL not supported");
         }
+
+        this.gl = gl;
+        this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+        this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
         const isChrome = platform.browser && !!window.chrome;
+        const isSafari = platform.browser && !!window.safari;
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = isSafari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
@@ -432,13 +390,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // start async image bitmap test
-        this.supportsImageBitmap = null;
-        if (typeof ImageBitmap !== 'undefined') {
-            testImageBitmap(this).then((result) => {
-                this.supportsImageBitmap = result;
-            });
-        }
+        // only enable ImageBitmap on chrome
+        this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
 
         this.glAddress = [
             gl.REPEAT,
@@ -966,8 +919,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         let ext;
 
-        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
-
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
@@ -1000,16 +951,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
         this.unmaskedVendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : '';
 
-        // Check if we support GPU particles. At the moment, Samsung devices with Exynos (ARM) either crash or render
-        // incorrectly when using GPU for particles. See:
-        // https://github.com/playcanvas/engine/issues/3967
-        // https://github.com/playcanvas/engine/issues/3415
-        // https://github.com/playcanvas/engine/issues/4514
-        // Example UA matches: Starting 'SM' and any combination of letters or numbers:
-        // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
-        // Mozilla/5.0 (Linux, Android 12; SM-G970F)
-        const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
-        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex));
+        // Mali-G52 has rendering issues with GPU particles including
+        // SM-A225M, M2003J15SC and KFRAWI (Amazon Fire HD 8 2022)
+        const maliRendererRegex = /\bMali-G52+/;
+        this.supportsGpuParticles = !(this.unmaskedRenderer.match(maliRendererRegex));
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
@@ -1903,7 +1848,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
                 }
                 if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
                 }
                 // #endif
 
@@ -2071,7 +2016,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.clearColor.set(r, g, b, a);
                 }
 
-                this.setBlendState(BlendState.DEFAULT);
+                this.setBlendState(BlendState.NOBLEND);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
@@ -2213,11 +2158,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl.polygonOffset(slopeBias, constBias);
     }
 
-    /**
-     * Enables or disables stencil test.
-     *
-     * @param {boolean} enable - True to enable stencil test and false to disable it.
-     */
     setStencilTest(enable) {
         if (this.stencil !== enable) {
             const gl = this.gl;
@@ -2230,54 +2170,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for both front and back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before
-     * comparison.
-     */
     setStencilFunc(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
             this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
-            const gl = this.gl;
-            gl.stencilFunc(this.glComparison[func], ref, mask);
+            this.gl.stencilFunc(this.glComparison[func], ref, mask);
             this.stencilFuncFront = this.stencilFuncBack = func;
             this.stencilRefFront = this.stencilRefBack = ref;
             this.stencilMaskFront = this.stencilMaskBack = mask;
         }
     }
 
-    /**
-     * Configures stencil test for front faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncFront(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
             const gl = this.gl;
@@ -2288,24 +2190,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncBack(func, ref, mask) {
         if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
             const gl = this.gl;
@@ -2316,29 +2200,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for both front and back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperation(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
             this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
@@ -2354,29 +2215,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for front faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed.  Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
             this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2390,29 +2228,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed. Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
         if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
             this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2481,6 +2296,32 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
             this.gl.blendColor(r, g, b, a);
             c.set(r, g, b, a);
+        }
+    }
+
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.setStencilTest(true);
+            if (stencilFront === stencilBack) {
+
+                // identical front/back stencil
+                this.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+            } else {
+
+                // front
+                stencilFront ??= StencilParameters.DEFAULT;
+                this.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+                // back
+                stencilBack ??= StencilParameters.DEFAULT;
+                this.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                this.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+            }
+        } else {
+            this.setStencilTest(false);
         }
     }
 

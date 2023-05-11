@@ -110,3 +110,10 @@ export const TRACEID_RENDERPIPELINE_ALLOC = 'RenderPipelineAlloc';
  * @type {string}
  */
 export const TRACEID_PIPELINELAYOUT_ALLOC = 'PipelineLayoutAlloc';
+
+/**
+ * Logs the internal debug information for Elements.
+ *
+ * @type {string}
+ */
+export const TRACE_ID_ELEMENT = "Element";

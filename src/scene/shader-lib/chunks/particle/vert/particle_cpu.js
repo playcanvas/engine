@@ -30,7 +30,6 @@ uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
 uniform vec3 faceTangent;
 uniform vec3 faceBinorm;
-uniform sampler2D texLifeAndSourcePosOUT;
 uniform highp sampler2D internalTex0;
 uniform highp sampler2D internalTex1;
 uniform highp sampler2D internalTex2;

@@ -113,7 +113,13 @@ class RenderTarget {
         Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
 
-        this._samples = Math.min(options.samples ?? 1, this._device.maxSamples);
+        const { maxSamples } = this._device;
+        this._samples = Math.min(options.samples ?? 1, maxSamples);
+
+        // WebGPU only supports values of 1 or 4 for samples
+        if (device.isWebGPU) {
+            this._samples = this._samples > 1 ? maxSamples : 1;
+        }
 
         this.autoResolve = options.autoResolve ?? true;
 

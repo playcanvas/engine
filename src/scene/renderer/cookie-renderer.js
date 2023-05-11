@@ -128,7 +128,7 @@ class CookieRenderer {
             this.blitTextureId.setValue(light.cookie);
 
             // render state
-            device.setBlendState(BlendState.DEFAULT);
+            device.setBlendState(BlendState.NOBLEND);
 
             // render it to a viewport of the target
             for (let face = 0; face < faceCount; face++) {

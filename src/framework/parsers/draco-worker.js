@@ -5,17 +5,6 @@ function DracoWorker(jsUrl, wasmUrl) {
     const POSITION_ATTRIBUTE = 0;
     const NORMAL_ATTRIBUTE = 1;
 
-    // load the wasm module and return a promise which will resolve
-    // to the emscripten module instance
-    const loadWasm = (moduleName, jsUrl, wasmUrl) => {
-        // import js
-        importScripts(jsUrl);   // eslint-disable-line no-undef
-
-        // instantiate the module
-        return self[moduleName]({ locateFile: () => wasmUrl })
-            .then(instance => instance);
-    };
-
     const wrap = (typedArray, dataType) => {
         switch (dataType) {
             case draco.DT_INT8: return new Int8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
@@ -243,17 +232,25 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const workQueue = [];
 
-    // initialize draco
-    loadWasm('DracoDecoderModule', jsUrl, wasmUrl)
-        .then((instance) => {
-            draco = instance;
-            workQueue.forEach(data => decode(data));
-        });
-
     // handle incoming message
     self.onmessage = (message) => {
         const data = message.data;
         switch (data.type) {
+            case 'init':
+                // initialize draco module
+                self.DracoDecoderModule({
+                    instantiateWasm: (imports, successCallback) => {
+                        WebAssembly.instantiate(data.module, imports)
+                            .then(result => successCallback(result))
+                            .catch(reason => console.error('instantiate failed + ' + reason));
+                        return {};
+                    }
+                })
+                    .then((instance) => {
+                        draco = instance;
+                        workQueue.forEach(data => decode(data));
+                    });
+                break;
             case 'decodeMesh':
                 if (draco) {
                     decode(data);

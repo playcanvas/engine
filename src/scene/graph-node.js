@@ -128,12 +128,6 @@ class GraphNode extends EventHandler {
     _dirtyLocal = false;
 
     /**
-     * @type {boolean}
-     * @private
-     */
-    _wasDirty = false;
-
-    /**
      * @type {number}
      * @private
      */
@@ -1064,8 +1058,6 @@ class GraphNode extends EventHandler {
     _dirtifyLocal() {
         if (!this._dirtyLocal) {
             this._dirtyLocal = true;
-            this._wasDirty = true;
-
             if (!this._dirtyWorld)
                 this._dirtifyWorld();
         }

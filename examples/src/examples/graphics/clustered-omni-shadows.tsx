@@ -183,7 +183,11 @@ class ClusteredOmniShadowsExample {
                         assets.xmas_posx.id, assets.xmas_negx.id,
                         assets.xmas_posy.id, assets.xmas_negy.id,
                         assets.xmas_posz.id, assets.xmas_negz.id
-                    ]
+                    ],
+
+                    // don't generate mipmaps for the cookie cubemap if clustered lighting is used,
+                    // as only top levels are copied to the cookie atlas.
+                    mipmaps: !app.scene.clusteredLightingEnabled
                 });
                 cubemapAsset.loadFaces = true;
                 app.assets.add(cubemapAsset);
@@ -265,11 +269,11 @@ class ClusteredOmniShadowsExample {
                         omniLights[i].setPosition(radius * Math.sin(time + fraction), 190 + Math.sin(time + fraction) * 150, radius * Math.cos(time + fraction));
                     }
 
-                    // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-                    // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowMap.texture);
-
-                    // display cookie texture (debug feature)
-                    // app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
+                    // display shadow texture (debug feature)
+                    if (app.graphicsDevice.isWebGPU) {
+                        // @ts-ignore engine-tsd
+                        app.drawTexture(-0.7, -0.7, 0.5, 0.5, app.renderer.lightTextureAtlas.shadowAtlas.texture, undefined, undefined, false);
+                    }
                 });
             });
         });

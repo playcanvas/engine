@@ -465,7 +465,7 @@ function reprojectTexture(source, target, options = {}) {
 
     // render state
     // TODO: set up other render state here to expected state
-    device.setBlendState(BlendState.DEFAULT);
+    device.setBlendState(BlendState.NOBLEND);
 
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
     Debug.assert(constantSource);

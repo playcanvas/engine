@@ -14,6 +14,7 @@ import { DepthState } from './depth-state.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
+import { StencilParameters } from './stencil-parameters.js';
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -106,6 +107,14 @@ class GraphicsDevice extends EventHandler {
     samples;
 
     /**
+     * True if the main framebuffer contains stencil attachment.
+     *
+     * @ignore
+     * @type {boolean}
+     */
+    supportsStencil;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget}
@@ -178,6 +187,27 @@ class GraphicsDevice extends EventHandler {
      */
     depthState = new DepthState();
 
+    /**
+     * True if stencil is enabled and stencilFront and stencilBack are used
+     *
+     * @ignore
+     */
+    stencilEnabled = false;
+
+    /**
+     * The current front stencil parameters.
+     *
+     * @ignore
+     */
+    stencilFront = new StencilParameters();
+
+    /**
+     * The current back stencil parameters.
+     *
+     * @ignore
+     */
+    stencilBack = new StencilParameters();
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -187,10 +217,17 @@ class GraphicsDevice extends EventHandler {
 
     static EVENT_RESIZE = 'resizecanvas';
 
-    constructor(canvas) {
+    constructor(canvas, options) {
         super();
 
         this.canvas = canvas;
+
+        // copy options and handle defaults
+        this.initOptions = { ...options };
+        this.initOptions.depth ??= true;
+        this.initOptions.stencil ??= true;
+        this.initOptions.antialias ??= true;
+        this.initOptions.powerPreference ??= 'high-performance';
 
         // local width/height without pixelRatio applied
         this._width = 0;
@@ -323,6 +360,19 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
+     * operation is disabled.
+     *
+     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters#DEFAULT} if not specified.
+     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters#DEFAULT} if not specified.
+     */
+    setStencilState(stencilFront, stencilBack) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified blend state.
      *
      * @param {BlendState} blendState - New blend state.
@@ -448,13 +498,21 @@ class GraphicsDevice extends EventHandler {
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
-                (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
-                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+                this._isImageCanvasInterface(texture) ||
+                this._isImageVideoInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
         return (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement);
+    }
+
+    _isImageCanvasInterface(texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement);
+    }
+
+    _isImageVideoInterface(texture) {
+        return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
     }
 
     /**

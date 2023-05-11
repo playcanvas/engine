@@ -879,8 +879,9 @@ class Lightmapper {
             this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
         }
 
-        device.setBlendState(BlendState.DEFAULT);
+        device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
+        device.setStencilState(null, null);
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];

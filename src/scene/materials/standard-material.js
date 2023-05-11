@@ -701,7 +701,9 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
             }
 
-            if (this.refractionIndex !== 1.0 / 1.5) {
+            if (this.refractionIndex === 0.0) {
+                this._setParameter('material_f0', 1.0);
+            } else if (this.refractionIndex !== 1.0 / 1.5) {
                 const oneOverRefractionIndex = 1.0 / this.refractionIndex;
                 const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
                 this._setParameter('material_f0', f0 * f0);
@@ -830,7 +832,8 @@ class StandardMaterial extends Material {
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadowPass;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
