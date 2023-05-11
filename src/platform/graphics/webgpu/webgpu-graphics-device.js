@@ -359,12 +359,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const format = vertexBuffer.format;
-        const elementCount = format.elements.length;
+        const elements = vertexBuffer.format.elements;
+        const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
         for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
