@@ -31,7 +31,7 @@ vec3 getNormal() {
 
     #ifdef MORPHING_TEXTURE_BASED_NORMAL
 
-    #ifdef WEBGPU
+        #ifdef WEBGPU
             ivec2 morphUV = getTextureMorphCoords();
             vec3 morphNormal = texelFetch(morphNormalTex, ivec2(morphUV), 0).xyz;
         #else
