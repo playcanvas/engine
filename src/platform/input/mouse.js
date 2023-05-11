@@ -126,7 +126,7 @@ class Mouse extends EventHandler {
         window.removeEventListener('mousemove', this._moveHandler, opts);
         window.removeEventListener('wheel', this._wheelHandler, opts);
         if (this._target) {
-            this._target.removeEventListener('mousein', this._enterHandler, opts);
+            this._target.removeEventListener('mouseenter', this._enterHandler, opts);
             this._target.removeEventListener('mouseout', this._outHandler, opts);
             this._target = null;
         }
