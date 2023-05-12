@@ -1,7 +1,5 @@
 import { WasmModule } from "../../core/wasm-module.js";
-import { ABSOLUTE_URL } from "../asset/constants.js";
 import { DracoWorker } from "./draco-worker.js";
-import { path } from '../../core/path.js';
 import { Debug } from "../../core/debug.js";
 import { http } from '../../platform/net/http.js';
 
