@@ -83,7 +83,8 @@ class CollisionSystemImpl {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
-                this.destroyShape(data);
+                Ammo.destroy(data.shape);
+                data.shape = null;
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -155,13 +156,6 @@ class CollisionSystemImpl {
         }
     }
 
-    destroyShape(data) {
-        if (data.shape) {
-            Ammo.destroy(data.shape);
-            data.shape = null;
-        }
-    }
-
     beforeRemove(entity, component) {
         if (component.data.shape) {
             if (component._compoundParent && !component._compoundParent.entity._destroying) {
@@ -173,7 +167,8 @@ class CollisionSystemImpl {
 
             component._compoundParent = null;
 
-            this.destroyShape(component.data);
+            Ammo.destroy(component.data.shape);
+            component.data.shape = null;
         }
     }
 
@@ -518,6 +513,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
         Ammo.destroy(data.shape);
         data.shape = null;
+    }
+
+    remove(entity, data) {
+        this.destroyShape(data);
+        super.remove(entity, data);
     }
 }
 
