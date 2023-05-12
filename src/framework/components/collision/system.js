@@ -155,12 +155,10 @@ class CollisionSystemImpl {
     }
 
     destroyShape(data) {
-        if (!data.shape) {
-            return;
+        if (data.shape) {
+            Ammo.destroy(data.shape);
+            data.shape = null;
         }
-
-        Ammo.destroy(data.shape);
-        data.shape = null;
     }
 
     beforeRemove(entity, component) {
