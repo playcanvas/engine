@@ -104,6 +104,7 @@ class WebgpuMipmapRenderer {
                 topology: 'triangle-strip'
             }
         });
+        DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
 
         let srcView = webgpuTexture.createView({
             baseMipLevel: 0,
