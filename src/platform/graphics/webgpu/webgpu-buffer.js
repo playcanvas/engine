@@ -1,3 +1,5 @@
+import { DebugHelper } from '../../../core/debug.js';
+
 /**
  * A WebGPU implementation of the Buffer.
  *
@@ -45,6 +47,13 @@ class WebgpuBuffer {
                 size: size,
                 usage: target | GPUBufferUsage.COPY_DST
             });
+
+            DebugHelper.setLabel(this.buffer,
+                                 target & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                                     target & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                                         target & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
+                                             ''
+            );
 
 
             // mappedAtCreation path - this could be used when the data is provided
