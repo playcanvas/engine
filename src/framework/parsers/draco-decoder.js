@@ -179,12 +179,7 @@ const initializeWorkers = (config) => {
     jobQueue = new JobQueue();
 
     // worker urls must be absolute
-    const absoluteUrl = (url) => {
-        return ABSOLUTE_URL.test(url) ? url : path.join(new URL(window.location.href).origin, url);
-    };
-    const jsUrl = absoluteUrl(config.jsUrl);
-    const wasmUrl = absoluteUrl(config.wasmUrl);
-    Promise.all([downloadScript(jsUrl), compileModule(wasmUrl)])
+    Promise.all([downloadScript(config.jsUrl), compileModule(config.wasmUrl)])
         .then(([dracoSource, dracoModule]) => {
             // build worker source
             const code = [
