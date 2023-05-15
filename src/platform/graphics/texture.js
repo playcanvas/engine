@@ -650,12 +650,12 @@ class Texture {
      * @ignore
      */
     static calcLevelGpuSize(width, height, format) {
-        const pixelSize = pixelFormatByteSizes[format] ?? 0;
+        const pixelSize = pixelFormatByteSizes.get(format) ?? 0;
         if (pixelSize > 0) {
             return width * height * pixelSize;
         }
 
-        const blockSize = pixelFormatBlockSizes.hasOwnProperty(format) ? pixelFormatBlockSizes[format] : 0;
+        const blockSize = pixelFormatBlockSizes.get(format) ?? 0;
         let blockWidth = Math.floor((width + 3) / 4);
         const blockHeight = Math.floor((height + 3) / 4);
 

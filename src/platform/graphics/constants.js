@@ -619,41 +619,43 @@ export const PIXELFORMAT_ATC_RGBA = 30;
 export const PIXELFORMAT_BGRA8 = 31;
 
 // map of engine PIXELFORMAT_*** enums to the pixel byte size
-export const pixelFormatByteSizes = [];
-pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
-pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
+export const pixelFormatByteSizes = new Map([
+    [PIXELFORMAT_A8, 1],
+    [PIXELFORMAT_L8, 1],
+    [PIXELFORMAT_LA8, 2],
+    [PIXELFORMAT_RGB565, 2],
+    [PIXELFORMAT_RGBA5551, 2],
+    [PIXELFORMAT_RGBA4, 2],
+    [PIXELFORMAT_RGB8, 4],
+    [PIXELFORMAT_RGBA8, 4],
+    [PIXELFORMAT_RGB16F, 8],
+    [PIXELFORMAT_RGBA16F, 8],
+    [PIXELFORMAT_RGB32F, 16],
+    [PIXELFORMAT_RGBA32F, 16],
+    [PIXELFORMAT_R32F, 4],
+    [PIXELFORMAT_DEPTH, 4], // can be smaller using WebGL1 extension?
+    [PIXELFORMAT_DEPTHSTENCIL, 4],
+    [PIXELFORMAT_111110F, 4],
+    [PIXELFORMAT_SRGB, 4],
+    [PIXELFORMAT_SRGBA, 4]
+]);
 
 // map of PIXELFORMAT_*** enums to the compressed pixel block size
-export const pixelFormatBlockSizes = [];
-pixelFormatBlockSizes[PIXELFORMAT_ETC1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_ETC2_RGB] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_DXT1] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_ATC_RGB] = 8;
-pixelFormatBlockSizes[PIXELFORMAT_ETC2_RGBA] = 16;
-pixelFormatBlockSizes[PIXELFORMAT_DXT3] = 16;
-pixelFormatBlockSizes[PIXELFORMAT_DXT5] = 16;
-pixelFormatBlockSizes[PIXELFORMAT_ASTC_4x4] = 16;
-pixelFormatBlockSizes[PIXELFORMAT_ATC_RGBA] = 16;
+export const pixelFormatBlockSizes = new Map([
+    [PIXELFORMAT_ETC1, 8],
+    [PIXELFORMAT_ETC2_RGB, 8],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1, 8],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, 8],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1, 8],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, 8],
+    [PIXELFORMAT_DXT1, 8],
+    [PIXELFORMAT_ATC_RGB, 8],
+    [PIXELFORMAT_ETC2_RGBA, 16],
+    [PIXELFORMAT_DXT3, 16],
+    [PIXELFORMAT_DXT5, 16],
+    [PIXELFORMAT_ASTC_4x4, 16],
+    [PIXELFORMAT_ATC_RGBA, 16]
+]);
 
 // update this function when exposing additional compressed pixel formats
 export const isCompressedPixelFormat = (format) => {
