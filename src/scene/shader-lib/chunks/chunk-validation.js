@@ -5,7 +5,6 @@ import { shaderChunks } from './chunks.js';
 const chunkVersions = {
     // frontend
     aoPS: CHUNKAPI_1_57,
-    aoDetailMapPS: CHUNKAPI_1_62,
     clearCoatPS: CHUNKAPI_1_57,
     clearCoatGlossPS: CHUNKAPI_1_60,
     clearCoatNormalPS: CHUNKAPI_1_57,
