@@ -929,17 +929,22 @@ class Texture {
     }
 
     async readPixelsAsync() {
+        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
+            const renderTarget = new RenderTarget({
+                colorBuffer: this,
+                depth: false,
+                face: i
+            });
 
-        const renderTarget = new RenderTarget({
-            colorBuffer: this,
-            depth: false
-        });
+            this.device.setRenderTarget(renderTarget);
+            this.device.initRenderTarget(renderTarget);
 
-        this.device.initRenderTarget(renderTarget);
+            await this.impl.readPixelsAsync?.(0, 0, this.width, this.height, this.lock({
+                face: i
+            }));
 
-        await this.impl.readPixelsAsync?.(this.device, this);
-
-        renderTarget.destroy();
+            renderTarget.destroy();
+        }
     }
 
     /**

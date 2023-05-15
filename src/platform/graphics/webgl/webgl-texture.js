@@ -491,56 +491,6 @@ class WebglTexture {
         texture._gpuSize = texture.gpuSize;
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
     }
-
-    async readPixelsAsync(device, texture) {
-        const gl = device.gl;
-        const byteSize = texture.constructor.calcGpuSize(texture.width, texture.height, 1, texture.format, false, false);
-
-        const clientWaitAsync = (flags, interval_ms) => {
-            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gl.flush();
-
-            return new Promise((resolve, reject) => {
-                function test() {
-                    const res = gl.clientWaitSync(sync, flags, 0);
-                    if (res === gl.WAIT_FAILED) {
-                        gl.deleteSync(sync);
-                        reject();
-                        console.log('failed');
-                    } else if (res === gl.TIMEOUT_EXPIRED) {
-                        setTimeout(test, interval_ms);
-                        console.log('timeout');
-                    } else {
-                        gl.deleteSync(sync);
-                        resolve();
-                        console.log('resolved');
-                    }
-                }
-                test();
-            });
-        };
-
-        // create temporary (gpu-side) buffer and copy data into it
-        const buf = gl.createBuffer();
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.bufferData(gl.PIXEL_PACK_BUFFER, byteSize, gl.STREAM_READ);
-        gl.readPixels(0, 0, texture.width, texture.height, this._glFormat, this._glPixelType, 0);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-
-        // async wait for previous read to finish
-        await clientWaitAsync(0, 500);
-
-        // copy out the resulting data once it's arrived
-        const dest = new Uint8Array(byteSize);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, dest);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-
-        gl.deleteBuffer(buf);
-
-        // store the image in data
-        texture._levels = [dest];
-    }
 }
 
 export { WebglTexture };

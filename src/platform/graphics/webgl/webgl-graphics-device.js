@@ -2062,6 +2062,55 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
+    // read pixels
+    async readPixelsAsync(x, y, w, h, pixels) {
+        const gl = this.gl;
+
+        const clientWaitAsync = (flags, interval_ms) => {
+            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            gl.flush();
+
+            return new Promise((resolve, reject) => {
+                function test() {
+                    const res = gl.clientWaitSync(sync, flags, 0);
+                    if (res === gl.WAIT_FAILED) {
+                        gl.deleteSync(sync);
+                        reject();
+                        console.log('failed');
+                    } else if (res === gl.TIMEOUT_EXPIRED) {
+                        setTimeout(test, interval_ms);
+                        console.log('timeout');
+                    } else {
+                        gl.deleteSync(sync);
+                        resolve();
+                        console.log('resolved');
+                    }
+                }
+                test();
+            });
+        };
+
+        const impl = this.renderTarget.colorBuffer?.impl;
+        const format = impl?._glFormat ?? gl.RGBA;
+        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+
+        // create temporary (gpu-side) buffer and copy data into it
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteSize, gl.STREAM_READ);
+        gl.readPixels(x, y, w, h, format, pixelType, 0);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+
+        // async wait for previous read to finish
+        await clientWaitAsync(0, 20);
+
+        // copy the resulting data once it's arrived
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        gl.deleteBuffer(buf);
+    }
+
     /**
      * Enables or disables alpha to coverage (WebGL2 only).
      *
