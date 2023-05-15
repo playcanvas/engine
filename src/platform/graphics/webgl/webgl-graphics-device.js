@@ -90,7 +90,7 @@ function quadWithShader(device, target, shader) {
     device.updateBegin();
 
     device.setCullMode(CULLFACE_NONE);
-    device.setBlendState(BlendState.DEFAULT);
+    device.setBlendState(BlendState.NOBLEND);
     device.setDepthState(DepthState.NODEPTH);
     device.setStencilState(null, null);
 
@@ -2016,7 +2016,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.clearColor.set(r, g, b, a);
                 }
 
-                this.setBlendState(BlendState.DEFAULT);
+                this.setBlendState(BlendState.NOBLEND);
             }
 
             if (flags & CLEARFLAG_DEPTH) {

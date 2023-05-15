@@ -191,7 +191,7 @@ class Picker {
 
         const device = this.device;
         const self = this;
-        const pickColorId = device.scope.resolve('uPickColorId');
+        const pickColorId = device.scope.resolve('uColor');
 
         // camera
         this.cameraEntity = new Entity();
@@ -209,7 +209,7 @@ class Picker {
                 self.pickColor[1] = ((index >> 8) & 0xff) / 255;
                 self.pickColor[2] = (index & 0xff) / 255;
                 pickColorId.setValue(self.pickColor);
-                device.setBlendState(BlendState.DEFAULT);
+                device.setBlendState(BlendState.NOBLEND);
 
                 // keep the index -> meshInstance index mapping
                 self.mapping[index] = meshInstance;

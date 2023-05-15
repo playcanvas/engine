@@ -213,6 +213,9 @@ class SceneGrab {
 
                         device.copyRenderTarget(camera.renderTarget, this.colorRenderTarget, true, false);
 
+                        // generate mipmaps
+                        device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
+
                     } else {
 
                         device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
@@ -388,7 +391,7 @@ class SceneGrab {
 
             onDrawCall: function () {
                 // writing depth to color render target, force no blending and writing to all channels
-                device.setBlendState(BlendState.DEFAULT);
+                device.setBlendState(BlendState.NOBLEND);
             },
 
             onPostRenderOpaque: function (cameraPass) {

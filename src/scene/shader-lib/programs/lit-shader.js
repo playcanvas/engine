@@ -198,7 +198,7 @@ class LitShader {
     }
 
     _nonPointShadowMapProjection(device, light, shadowMatArg, shadowParamArg, lightIndex) {
-        const lightDirArgs = `dLightDirW`;
+        const lightDirArgs = `dLightPosW, dLightDirW`;
         const lightDirNormArgs = `dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW`;
         const shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg});\n`;
         const shadowCoordNormArgs = `(${shadowMatArg}, ${shadowParamArg}, dVertexNormalW);\n`;
@@ -342,7 +342,8 @@ class LitShader {
 
                 // vertex ids attributes
                 this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                code += "attribute float morph_vertex_id;\n";
+                const morphIdType = device.isWebGPU ? 'uint' : 'float';
+                code += `attribute ${morphIdType} morph_vertex_id;\n`;
 
             } else {
 
@@ -454,14 +455,14 @@ class LitShader {
 
     _fsGetPickPassCode() {
         let code = this._fsGetBeginCode();
-        code += "uniform vec4 uPickColorId;\n";
+        code += "uniform vec4 uColor;\n";
         code += this.varyings;
         code += this.varyingDefines;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += begin();
         code += this.frontendFunc;
-        code += "    gl_FragColor = uPickColorId;\n";
+        code += "    gl_FragColor = uColor;\n";
         code += end();
         return code;
     }
@@ -549,13 +550,14 @@ class LitShader {
             code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
         }
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
+        const pcfOmniShadows = device.webgl2 || device.isWebGPU;
+        if (shadowType === SHADOW_PCF3 && (!pcfOmniShadows || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.webgl2) {
+            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && pcfOmniShadows) {
                 code += "    gl_FragDepth = depth;\n";
             }
         } else if (shadowType === SHADOW_VSM8) {

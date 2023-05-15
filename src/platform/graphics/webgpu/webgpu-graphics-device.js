@@ -17,6 +17,7 @@ import { WebgpuTexture } from './webgpu-texture.js';
 import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
+import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -40,6 +41,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type { WebgpuClearRenderer }
      */
     clearRenderer;
+
+    /**
+     * Object responsible for mipmap generation.
+     *
+     * @type { WebgpuMipmapRenderer }
+     */
+    mipmapRenderer;
 
     /**
      * Render pipeline currently set on the device.
@@ -86,6 +94,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initDeviceCaps() {
 
+        // temporarily disabled functionality which is not supported to avoid errors
+        this.disableParticleSystem = true;
+
         const limits = this.gpuAdapter.limits;
 
         this.precision = 'highp';
@@ -102,6 +113,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
+        this.supportsGpuParticles = false;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -214,7 +226,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             colorSpace: 'srgb',
             alphaMode: 'opaque',  // could also be 'premultiplied'
 
-            // use prefered format for optimal performance on mobile
+            // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
@@ -228,6 +240,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.createFramebuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
+        this.mipmapRenderer = new WebgpuMipmapRenderer(this);
 
         this.postInit();
 
@@ -235,12 +248,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createFramebuffer() {
+        this.supportsStencil = this.initOptions.stencil;
         this.frameBufferDimensions = new Vec2();
         this.frameBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
-            stencil: this.initOptions.stencil,
+            stencil: this.supportsStencil,
             samples: this.samples
         });
     }
@@ -345,12 +359,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const format = vertexBuffer.format;
-        const elementCount = format.elements.length;
+        const elements = vertexBuffer.format.elements;
+        const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
         for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
@@ -541,6 +554,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats.length = 0;
 
         this.insideRenderPass = false;
+
+        // generate mipmaps
+        if (renderPass.colorOps.mipmaps) {
+            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        }
     }
 
     clear(options) {

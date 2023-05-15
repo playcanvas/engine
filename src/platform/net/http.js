@@ -454,13 +454,13 @@ class Http {
 
     _guessResponseType(url) {
         const uri = new URI(url);
-        const ext = path.getExtension(uri.path);
+        const ext = path.getExtension(uri.path).toLowerCase();
 
         if (Http.binaryExtensions.indexOf(ext) >= 0) {
             return Http.ResponseType.ARRAY_BUFFER;
-        }
-
-        if (ext === '.xml') {
+        } else if (ext === '.json') {
+            return Http.ResponseType.JSON;
+        } else if (ext === '.xml') {
             return Http.ResponseType.DOCUMENT;
         }
 

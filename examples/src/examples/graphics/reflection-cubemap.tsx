@@ -8,7 +8,7 @@ class ReflectionCubemapExample {
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' })
         };
 
@@ -145,7 +145,9 @@ class ReflectionCubemapExample {
                 shinyBall.script.create('cubemapRenderer', {
                     attributes: {
                         resolution: 256,
-                        mipmaps: true,
+
+                        // TODO: WebGPU does not yet support cubemap mipmap generation after rendering
+                        mipmaps: !app.graphicsDevice.isWebGPU,
                         depth: true
                     }
                 });

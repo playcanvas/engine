@@ -30,9 +30,16 @@ vec3 getNormal() {
     #endif
 
     #ifdef MORPHING_TEXTURE_BASED_NORMAL
+
+        #ifdef WEBGPU
+            ivec2 morphUV = getTextureMorphCoords();
+            vec3 morphNormal = texelFetch(morphNormalTex, ivec2(morphUV), 0).xyz;
+        #else
+            vec2 morphUV = getTextureMorphCoords();
+            vec3 morphNormal = texture2D(morphNormalTex, morphUV).xyz;
+        #endif
+
     // apply morph offset from texture
-    vec2 morphUV = getTextureMorphCoords();
-    vec3 morphNormal = texture2D(morphNormalTex, morphUV).xyz;
     tempNormal += morphNormal;
     #endif
 

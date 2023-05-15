@@ -15,7 +15,7 @@ class AreaLightsExample {
             'gloss': new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
             'luts': new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
         const gfxOptions = {

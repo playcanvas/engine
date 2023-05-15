@@ -8,7 +8,7 @@ class MaterialClearCoatExample {
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/flakes5n.png' }),
             'diffuse': new pc.Asset('diffuse', 'texture', { url: '/static/assets/textures/flakes5c.png' }),
             'other': new pc.Asset('other', 'texture', { url: '/static/assets/textures/flakes5o.png' })

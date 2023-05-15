@@ -133,7 +133,7 @@ class ProgramLibrary {
 
             // use shader pass name if known
             let passName = '';
-            if (options.pass) {
+            if (options.pass !== undefined) {
                 const shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
                 passName = `-${shaderPassInfo.name}`;
             }

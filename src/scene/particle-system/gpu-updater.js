@@ -92,7 +92,7 @@ class ParticleGPUUpdater {
 
         const emitter = this._emitter;
 
-        device.setBlendState(BlendState.DEFAULT);
+        device.setBlendState(BlendState.NOBLEND);
         device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
 

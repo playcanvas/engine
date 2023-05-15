@@ -562,6 +562,17 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
         }
+    },
+
+    autoMipmap: {
+        get: function () {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
+            return this._mipmaps;
+        },
+        set: function (value) {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
+            this._mipmaps = value;
+        }
     }
 });
 
@@ -579,6 +590,8 @@ GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
     Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
     getProgramLibrary(this).removeFromCache(shader);
 };
+
+BlendState.DEFAULT = Object.freeze(new BlendState());
 
 const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();

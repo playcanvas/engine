@@ -17,7 +17,8 @@ import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
 const mat4 = new Mat4();
-const vec3 = new Vec3();
+const p1 = new Vec3();
+const p2 = new Vec3();
 const quat = new Quat();
 const tempGraphNode = new GraphNode();
 
@@ -82,8 +83,7 @@ class CollisionSystemImpl {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
-                Ammo.destroy(data.shape);
-                data.shape = null;
+                this.destroyShape(data);
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -155,6 +155,13 @@ class CollisionSystemImpl {
         }
     }
 
+    destroyShape(data) {
+        if (data.shape) {
+            Ammo.destroy(data.shape);
+            data.shape = null;
+        }
+    }
+
     beforeRemove(entity, component) {
         if (component.data.shape) {
             if (component._compoundParent && !component._compoundParent.entity._destroying) {
@@ -166,8 +173,7 @@ class CollisionSystemImpl {
 
             component._compoundParent = null;
 
-            Ammo.destroy(component.data.shape);
-            component.data.shape = null;
+            this.destroyShape(component.data);
         }
     }
 
@@ -513,11 +519,6 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         Ammo.destroy(data.shape);
         data.shape = null;
     }
-
-    remove(entity, data) {
-        this.destroyShape(data);
-        super.remove(entity, data);
-    }
 }
 
 // Compound Collision System
@@ -783,7 +784,7 @@ class CollisionComponentSystem extends ComponentSystem {
         if (relative) {
             this._calculateNodeRelativeTransform(node, relative);
 
-            pos = vec3;
+            pos = p1;
             rot = quat;
 
             mat4.getTranslation(pos);
@@ -802,12 +803,13 @@ class CollisionComponentSystem extends ComponentSystem {
         if (component && component._hasOffset) {
             const lo = component.data.linearOffset;
             const ao = component.data.angularOffset;
+            const newOrigin = p2;
 
-            quat.copy(rot).transformVector(lo, vec3);
-            vec3.add((pos));
+            quat.copy(rot).transformVector(lo, newOrigin);
+            newOrigin.add(pos);
             quat.copy(rot).mul(ao);
 
-            origin.setValue(vec3.x, vec3.y, vec3.z);
+            origin.setValue(newOrigin.x, newOrigin.y, newOrigin.z);
             ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
         } else {
             origin.setValue(pos.x, pos.y, pos.z);
