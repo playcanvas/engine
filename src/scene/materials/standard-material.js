@@ -470,7 +470,7 @@ let _params = new Set();
  * @property {number} aoDetailMapRotation Controls the 2D rotation (in degrees) of the detail
  * (secondary) AO map.
  * @property {string} aoDetailMapChannel Color channels of the detail (secondary) AO map
- * to use. Can be "r", "g", "b" or "a".
+ * to use. Can be "r", "g", "b" or "a" (default is "g").
  * @property {string} aoDetailMode Determines how the main (primary) and detail (secondary)
  * AO maps are blended together. Can be:
  *
