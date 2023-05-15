@@ -1225,17 +1225,15 @@ class LitShader {
                     let shadowReadMode = null;
                     let evsmExp;
                     switch (light._shadowType) {
-                        case SHADOW_VSM8: {
+                        case SHADOW_VSM8:
                             shadowReadMode = "VSM8";
                             evsmExp = "0.0";
                             break;
-                        }
-                        case SHADOW_VSM16: {
+                        case SHADOW_VSM16:
                             shadowReadMode = "VSM16";
                             evsmExp = "5.54";
                             break;
-                        }
-                        case SHADOW_VSM32: {
+                        case SHADOW_VSM32:
                             shadowReadMode = "VSM32";
                             if (device.textureFloatHighPrecision) {
                                 evsmExp = "15.0";
@@ -1243,21 +1241,16 @@ class LitShader {
                                 evsmExp = "5.54";
                             }
                             break;
-                        }
-                        case SHADOW_PCF1: {
+                        case SHADOW_PCF1:
                             shadowReadMode = "PCF1x1";
                             break;
-                        }
-                        case SHADOW_PCF5: {
+                        case SHADOW_PCF5:
                             shadowReadMode = "PCF5x5";
                             break;
-                        }
                         case SHADOW_PCF3:
                         default:
-                        {
                             shadowReadMode = "PCF3x3";
                             break;
-                        }
                     }
 
                     if (shadowReadMode !== null) {
