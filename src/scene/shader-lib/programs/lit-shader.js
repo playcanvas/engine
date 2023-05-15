@@ -1224,25 +1224,40 @@ class LitShader {
                 if (light.castShadows && !options.noShadow) {
                     let shadowReadMode = null;
                     let evsmExp;
-                    if (light._shadowType === SHADOW_VSM8) {
-                        shadowReadMode = "VSM8";
-                        evsmExp = "0.0";
-                    } else if (light._shadowType === SHADOW_VSM16) {
-                        shadowReadMode = "VSM16";
-                        evsmExp = "5.54";
-                    } else if (light._shadowType === SHADOW_VSM32) {
-                        shadowReadMode = "VSM32";
-                        if (device.textureFloatHighPrecision) {
-                            evsmExp = "15.0";
-                        } else {
-                            evsmExp = "5.54";
+                    switch (light._shadowType) {
+                        case SHADOW_VSM8: {
+                            shadowReadMode = "VSM8";
+                            evsmExp = "0.0";
+                            break;
                         }
-                    } else if (light._shadowType === SHADOW_PCF5) {
-                        shadowReadMode = "PCF5x5";
-                    } else if (light._shadowType === SHADOW_PCF1) {
-                        shadowReadMode = "PCF1x1";
-                    } else {
-                        shadowReadMode = "PCF3x3";
+                        case SHADOW_VSM16: {
+                            shadowReadMode = "VSM16";
+                            evsmExp = "5.54";
+                            break;
+                        }
+                        case SHADOW_VSM32: {
+                            shadowReadMode = "VSM32";
+                            if (device.textureFloatHighPrecision) {
+                                evsmExp = "15.0";
+                            } else {
+                                evsmExp = "5.54";
+                            }
+                            break;
+                        }
+                        case SHADOW_PCF1: {
+                            shadowReadMode = "PCF1x1";
+                            break;
+                        }
+                        case SHADOW_PCF5: {
+                            shadowReadMode = "PCF5x5";
+                            break;
+                        }
+                        case SHADOW_PCF3:
+                        default:
+                        {
+                            shadowReadMode = "PCF3x3";
+                            break;
+                        }
                     }
 
                     if (shadowReadMode !== null) {
