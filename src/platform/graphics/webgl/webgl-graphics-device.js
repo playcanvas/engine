@@ -2062,7 +2062,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     }
 
-    // read pixels
+    /**
+     * Asynchronously reads a block of pixels from a specified rectangle of the current color framebuffer
+     * into an ArrayBufferView object.
+     *
+     * @param {number} x - The x-coordinate of the rectangle's lower-left corner.
+     * @param {number} y - The y-coordinate of the rectangle's lower-left corner.
+     * @param {number} w - The width of the rectangle, in pixels.
+     * @param {number} h - The height of the rectangle, in pixels.
+     * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
+     * data.
+     * @ignore
+     */
     async readPixelsAsync(x, y, w, h, pixels) {
         const gl = this.gl;
 
@@ -2097,7 +2108,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // create temporary (gpu-side) buffer and copy data into it
         const buf = gl.createBuffer();
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteSize, gl.STREAM_READ);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
         gl.readPixels(x, y, w, h, format, pixelType, 0);
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 

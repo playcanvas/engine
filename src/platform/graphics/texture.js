@@ -939,7 +939,7 @@ class Texture {
             this.device.setRenderTarget(renderTarget);
             this.device.initRenderTarget(renderTarget);
 
-            await this.impl.readPixelsAsync?.(0, 0, this.width, this.height, this.lock({
+            await this.device.readPixelsAsync?.(0, 0, this.width, this.height, this.lock({
                 face: i
             }));
 
