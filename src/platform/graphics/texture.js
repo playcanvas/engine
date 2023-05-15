@@ -6,14 +6,14 @@ import { RenderTarget } from './render-target.js';
 
 import {
     isCompressedPixelFormat,
-    pixelFormatByteSizes,
+    pixelFormatByteSizes, pixelFormatBlockSizes, getPixelFormatArrayType,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_ETC1,
-    PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
+    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
@@ -21,8 +21,6 @@ import {
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
-
-let _blockSizeTable = null;
 
 let id = 0;
 
@@ -645,7 +643,34 @@ class Texture {
         }
     }
 
-    // static functions
+    /**
+     * Calculate the size in bytes of the texture level given its format and dimensions
+     *
+     * @param {number} width - Texture's width.
+     * @param {number} height - Texture's height.
+     * @param {number} format - Texture's pixel format PIXELFORMAT_***.
+     * @returns {number} The number of bytes of GPU memory required for the texture.
+     * @ignore
+     */
+    static calcLevelGpuSize(width, height, format) {
+        const pixelSize = pixelFormatByteSizes[format] ?? 0;
+        const blockSize = pixelFormatBlockSizes.hasOwnProperty(format) ? pixelFormatBlockSizes[format] : 0;
+
+        if (pixelSize > 0) {
+            return width * height * pixelSize;
+        } else {
+            let blockWidth = Math.floor((width + 3) / 4);
+            const blockHeight = Math.floor((height + 3) / 4);
+
+            if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
+                format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
+            }
+
+            return blockWidth * blockHeight * blockSize;
+        }
+    }
+
     /**
      * Calculate the GPU memory required for a texture.
      *
@@ -659,44 +684,11 @@ class Texture {
      * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
-        if (!_blockSizeTable) {
-            _blockSizeTable = [];
-            _blockSizeTable[PIXELFORMAT_ETC1] = 8;
-            _blockSizeTable[PIXELFORMAT_ETC2_RGB] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
-            _blockSizeTable[PIXELFORMAT_DXT1] = 8;
-            _blockSizeTable[PIXELFORMAT_ATC_RGB] = 8;
-            _blockSizeTable[PIXELFORMAT_ETC2_RGBA] = 16;
-            _blockSizeTable[PIXELFORMAT_DXT3] = 16;
-            _blockSizeTable[PIXELFORMAT_DXT5] = 16;
-            _blockSizeTable[PIXELFORMAT_ASTC_4x4] = 16;
-            _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
-        }
-
-        const pixelSize = pixelFormatByteSizes[format] ?? 0;
-        const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
         let result = 0;
 
         while (1) {
-            if (pixelSize > 0) {
-                // handle uncompressed formats
-                result += width * height * depth * pixelSize;
-            } else {
-                // handle block formats
-                let blockWidth = Math.floor((width + 3) / 4);
-                const blockHeight = Math.floor((height + 3) / 4);
-                const blockDepth = Math.floor((depth + 3) / 4);
+            result += Texture.calcLevelGpuSize(width, height, format);
 
-                if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
-                    format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
-                }
-
-                result += blockWidth * blockHeight * blockDepth * blockSize;
-            }
             // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
             if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
                 break;
@@ -749,49 +741,16 @@ class Texture {
 
         this._lockedLevel = options.level;
 
-        if (this._levels[options.level] === null) {
-            switch (this._format) {
-                case PIXELFORMAT_A8:
-                case PIXELFORMAT_L8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
-                    break;
-                case PIXELFORMAT_LA8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height *  this._depth * 2);
-                    break;
-                case PIXELFORMAT_RGB565:
-                case PIXELFORMAT_RGBA5551:
-                case PIXELFORMAT_RGBA4:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth);
-                    break;
-                case PIXELFORMAT_RGB8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGBA8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 4);
-                    break;
-                case PIXELFORMAT_DXT1:
-                    this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 8 * this._depth);
-                    break;
-                case PIXELFORMAT_DXT3:
-                case PIXELFORMAT_DXT5:
-                    this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16 * this._depth);
-                    break;
-                case PIXELFORMAT_RGB16F:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGB32F:
-                    this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGBA16F:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 4);
-                    break;
-                case PIXELFORMAT_RGBA32F:
-                    this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 4);
-                    break;
-            }
+        const levels = this.cubemap ? this._levels[options.face] : this._levels;
+        if (levels[options.level] === null) {
+            // allocate storage for this mip level
+            const width = Math.max(1, this._width >> options.level);
+            const height = Math.max(1, this._height >> options.level);
+            const data = new ArrayBuffer(Texture.calcLevelGpuSize(width, height, this._format))
+            levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 
-        return this._levels[options.level];
+        return levels[options.level];
     }
 
     /**
@@ -928,7 +887,11 @@ class Texture {
         this.impl.uploadImmediate?.(this.device, this);
     }
 
-    async readPixelsAsync() {
+    /**
+     * Download texture's top level data from graphics memory to local memory.
+     * @ignore
+     */
+    async downloadAsync() {
         for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
             const renderTarget = new RenderTarget({
                 colorBuffer: this,
@@ -939,9 +902,16 @@ class Texture {
             this.device.setRenderTarget(renderTarget);
             this.device.initRenderTarget(renderTarget);
 
-            await this.device.readPixelsAsync?.(0, 0, this.width, this.height, this.lock({
-                face: i
-            }));
+            const levels = this.cubemap ? this._levels[i] : this._levels;
+
+            let level = levels[0];
+            if (levels[0] && this.device._isBrowserInterface(levels[0])) {
+                levels[0] = null;
+            }
+
+            level = this.lock({ face: i });
+
+            await this.device.readPixelsAsync?.(0, 0, this.width, this.height, level);
 
             renderTarget.destroy();
         }

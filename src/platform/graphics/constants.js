@@ -618,11 +618,64 @@ export const PIXELFORMAT_ATC_RGBA = 30;
  */
 export const PIXELFORMAT_BGRA8 = 31;
 
+// map of engine PIXELFORMAT_*** enums to the pixel byte size
+export const pixelFormatByteSizes = [];
+pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
+pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
+pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
+pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
+pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
+pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
+pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
+pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
+
+export const pixelFormatBlockSizes = [];
+pixelFormatBlockSizes[PIXELFORMAT_ETC1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_ETC2_RGB] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_DXT1] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_ATC_RGB] = 8;
+pixelFormatBlockSizes[PIXELFORMAT_ETC2_RGBA] = 16;
+pixelFormatBlockSizes[PIXELFORMAT_DXT3] = 16;
+pixelFormatBlockSizes[PIXELFORMAT_DXT5] = 16;
+pixelFormatBlockSizes[PIXELFORMAT_ASTC_4x4] = 16;
+pixelFormatBlockSizes[PIXELFORMAT_ATC_RGBA] = 16;
+
 // update this function when exposing additional compressed pixel formats
-export function isCompressedPixelFormat(format) {
+export const isCompressedPixelFormat = (format) => {
     return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
            (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
 }
+
+// get the pixel format array type
+export const getPixelFormatArrayType = (format) => {
+    switch (format) {
+        case PIXELFORMAT_RGB32F:
+        case PIXELFORMAT_RGBA32F:
+            return Float32Array;
+        case PIXELFORMAT_RGB565:
+        case PIXELFORMAT_RGBA5551:
+        case PIXELFORMAT_RGBA4:
+        case PIXELFORMAT_RGB16F:
+        case PIXELFORMAT_RGBA16F:
+            return Uint16Array;
+        default:
+            return Uint8Array;
+    };
+};
 
 /**
  * List of distinct points.
@@ -1215,27 +1268,6 @@ export const typedArrayToType = {
 // map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
-
-// map of engine PIXELFORMAT_*** enums to the pixel byte size
-export const pixelFormatByteSizes = [];
-pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
-pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
 
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the
