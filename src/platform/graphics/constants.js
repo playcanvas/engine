@@ -639,6 +639,7 @@ pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
 pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
 pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
 
+// map of PIXELFORMAT_*** enums to the compressed pixel block size
 export const pixelFormatBlockSizes = [];
 pixelFormatBlockSizes[PIXELFORMAT_ETC1] = 8;
 pixelFormatBlockSizes[PIXELFORMAT_ETC2_RGB] = 8;
