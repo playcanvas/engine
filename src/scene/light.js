@@ -334,7 +334,7 @@ class Light {
             value = SHADOW_VSM8;
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3 || value === SHADOW_PCF1;
+        this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
 
         this._shadowType = value;
         this._destroyShadowMap();
