@@ -62,24 +62,12 @@ float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 sh
     return _getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
 }
 
-float _getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
-    float z = shadowCoord.z;
-    vec2 uv = shadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
-    float shadowMapSizeInv = 1.0 / shadowParams.x;
-    vec2 base_uv = floor(uv + 0.5);
-    float s = (uv.x + 0.5 - base_uv.x);
-    float t = (uv.y + 0.5 - base_uv.y);
-    base_uv -= vec2(0.5);
-    base_uv *= shadowMapSizeInv;
-    return textureShadow(shadowMap, vec3(base_uv, z));
-}
-
 float getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
-    return _getShadowPCF1x1(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
+    return textureShadow(shadowMap, shadowCoord);
 }
 
 float getShadowSpotPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
-    return _getShadowPCF1x1(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
+    return textureShadow(shadowMap, shadowCoord);
 }
 
 #else // GL1
