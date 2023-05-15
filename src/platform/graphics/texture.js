@@ -2,6 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
 
+import { RenderTarget } from './render-target.js';
+
 import {
     isCompressedPixelFormat,
     pixelFormatByteSizes,
@@ -924,6 +926,20 @@ class Texture {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
+    }
+
+    async readPixelsAsync() {
+
+        const renderTarget = new RenderTarget({
+            colorBuffer: this,
+            depth: false
+        });
+
+        this.device.initRenderTarget(renderTarget);
+
+        await this.impl.readPixelsAsync?.(this.device, this);
+
+        renderTarget.destroy();
     }
 
     /**

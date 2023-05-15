@@ -541,6 +541,9 @@ class Scene extends EventHandler {
                     target: this._internalEnvAtlas
                 });
 
+                // read pixels back incase device is lost
+                this._internalEnvAtlas.readPixelsAsync();
+
                 if (!this._envAtlas) {
                     // user hasn't set an envAtlas already, set it to the internal one
                     this.envAtlas = this._internalEnvAtlas;

@@ -2535,6 +2535,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
         return this._textureHalfFloatUpdatable;
     }
+
+    // debug helper to force lost context
+    debugLoseContext(sleep=100) {
+        const context = this.gl.getExtension('WEBGL_lose_context');
+        context.loseContext();
+        setTimeout(() => context.restoreContext(), sleep);
+    }
 }
 
 export { WebglGraphicsDevice };
