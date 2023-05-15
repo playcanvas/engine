@@ -2086,15 +2086,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     const res = gl.clientWaitSync(sync, flags, 0);
                     if (res === gl.WAIT_FAILED) {
                         gl.deleteSync(sync);
-                        reject();
-                        console.log('failed');
+                        reject(new Error('webgl clientWaitSync sync failed'));
                     } else if (res === gl.TIMEOUT_EXPIRED) {
                         setTimeout(test, interval_ms);
-                        console.log('timeout');
                     } else {
                         gl.deleteSync(sync);
                         resolve();
-                        console.log('resolved');
                     }
                 }
                 test();
@@ -2597,7 +2594,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // debug helper to force lost context
-    debugLoseContext(sleep=100) {
+    debugLoseContext(sleep = 100) {
         const context = this.gl.getExtension('WEBGL_lose_context');
         context.loseContext();
         setTimeout(() => context.restoreContext(), sleep);

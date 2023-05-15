@@ -658,7 +658,7 @@ pixelFormatBlockSizes[PIXELFORMAT_ATC_RGBA] = 16;
 export const isCompressedPixelFormat = (format) => {
     return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
            (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
-}
+};
 
 // get the pixel format array type
 export const getPixelFormatArrayType = (format) => {
@@ -674,7 +674,7 @@ export const getPixelFormatArrayType = (format) => {
             return Uint16Array;
         default:
             return Uint8Array;
-    };
+    }
 };
 
 /**

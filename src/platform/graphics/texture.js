@@ -10,12 +10,9 @@ import {
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
-    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_ETC1,
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
     PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
@@ -658,17 +655,17 @@ class Texture {
 
         if (pixelSize > 0) {
             return width * height * pixelSize;
-        } else {
-            let blockWidth = Math.floor((width + 3) / 4);
-            const blockHeight = Math.floor((height + 3) / 4);
-
-            if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
-                format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
-            }
-
-            return blockWidth * blockHeight * blockSize;
         }
+
+        let blockWidth = Math.floor((width + 3) / 4);
+        const blockHeight = Math.floor((height + 3) / 4);
+
+        if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
+            format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+            blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
+        }
+
+        return blockWidth * blockHeight * blockSize;
     }
 
     /**
@@ -746,7 +743,7 @@ class Texture {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const data = new ArrayBuffer(Texture.calcLevelGpuSize(width, height, this._format))
+            const data = new ArrayBuffer(Texture.calcLevelGpuSize(width, height, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 
@@ -889,9 +886,11 @@ class Texture {
 
     /**
      * Download texture's top level data from graphics memory to local memory.
+     *
      * @ignore
      */
     async downloadAsync() {
+        const promises = [];
         for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
             const renderTarget = new RenderTarget({
                 colorBuffer: this,
@@ -911,10 +910,12 @@ class Texture {
 
             level = this.lock({ face: i });
 
-            await this.device.readPixelsAsync?.(0, 0, this.width, this.height, level);
+            const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
+                .then(() => renderTarget.destroy());
 
-            renderTarget.destroy();
+            promises.push(promise);
         }
+        await Promise.all(promises);
     }
 
     /**
