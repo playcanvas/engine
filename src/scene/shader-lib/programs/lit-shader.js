@@ -521,7 +521,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        if (shadowType === SHADOW_PCF3 && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI)) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI)) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n";
@@ -551,9 +551,9 @@ class LitShader {
         }
 
         const pcfOmniShadows = device.webgl2 || device.isWebGPU;
-        if (shadowType === SHADOW_PCF3 && (!pcfOmniShadows || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!pcfOmniShadows || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
             code += "    gl_FragColor = packFloat(depth);\n";
-        } else if (shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1) {
+        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
@@ -851,7 +851,7 @@ class LitShader {
             if (shadowedDirectionalLightUsed) {
                 func.append(chunks.shadowCascadesPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF3]) {
+            if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
                 func.append(chunks.shadowStandardPS);
             }
             if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.isWebGPU)) {
@@ -1239,6 +1239,8 @@ class LitShader {
                         }
                     } else if (light._shadowType === SHADOW_PCF5) {
                         shadowReadMode = "PCF5x5";
+                    } else if (light._shadowType === SHADOW_PCF1) {
+                        shadowReadMode = "PCF1x1";
                     } else {
                         shadowReadMode = "PCF3x3";
                     }

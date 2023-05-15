@@ -9,7 +9,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
@@ -334,7 +334,7 @@ class Light {
             value = SHADOW_VSM8;
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
+        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3 || value === SHADOW_PCF1;
 
         this._shadowType = value;
         this._destroyShadowMap();
