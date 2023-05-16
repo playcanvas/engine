@@ -10,7 +10,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     LIGHTTYPE_OMNI,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS
 } from '../constants.js';
 
 
@@ -59,7 +59,8 @@ class ShadowMap {
     }
 
     static getShadowFiltering(device, shadowType) {
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && !device.supportsDepthShadow) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && !device.supportsDepthShadow ||
+            shadowType === SHADOW_PCSS) {
             return FILTER_NEAREST;
         } else if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
