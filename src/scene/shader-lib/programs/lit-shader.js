@@ -595,7 +595,6 @@ class LitShader {
         let numShadowLights = 0;
         let shadowedDirectionalLightUsed = false;
         let useVsm = false;
-        let usePerspZbufferShadow = false;
 
         let hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
@@ -675,7 +674,6 @@ class LitShader {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._isPcf && (device.supportsDepthShadow || device.extStandardDerivatives) && lightType === LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -816,7 +814,6 @@ class LitShader {
                 shadowTypeUsed[SHADOW_PCF3] = true;
                 shadowTypeUsed[SHADOW_PCF5] = true;
             }
-            usePerspZbufferShadow = true;
         }
 
         if (numShadowLights > 0 || options.clusteredLightingEnabled) {
