@@ -1,6 +1,26 @@
 export default /* glsl */`
 // Clustered Omni Sampling using atlas
 
+
+void _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
+    vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
+    projPos.xyz /= projPos.w;
+    dShadowCoord = projPos.xyz;
+    // depth bias is already applied on render
+}
+
+void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams, vec3 normal) {
+    vec3 wPos = vPositionW + normal * shadowParams.y;
+    _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, wPos);
+}
+
+void normalOffsetPointShadow(vec4 shadowParams, vec3 lightPos, inout vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
+    float distScale = length(lightDir);
+    vec3 wPos = vPositionW + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale; //0.02
+    vec3 dir = wPos - lightPos;
+    lightDir = dir;
+}
+
 #ifdef GL2
 
     #if defined(CLUSTER_SHADOW_TYPE_PCF1)

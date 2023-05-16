@@ -845,12 +845,6 @@ class LitShader {
             if (!(device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
                 func.append(chunks.biasConstPS);
             }
-
-            // otherwise bias is applied on render
-            func.append(chunks.shadowCoordPS + chunks.shadowCommonPS);
-            if (usePerspZbufferShadow) {
-                func.append(chunks.shadowCoordPerspZbufferPS);
-            }
         }
 
         if (options.enableGGXSpecular) func.append("uniform float material_anisotropy;");
