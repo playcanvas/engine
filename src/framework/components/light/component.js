@@ -560,6 +560,9 @@ function _defineProps() {
             }
         }
     });
+
+    _lightProps.push("lightSize");
+    _lightPropsDefault.push(10);
 }
 
 _defineProps();

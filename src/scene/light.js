@@ -185,6 +185,7 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
+        this._lightSize = 10.0;
         this._isVsm = false;
         this._isPcf = true;
         this._isPcss = false;
