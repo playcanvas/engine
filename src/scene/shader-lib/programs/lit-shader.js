@@ -496,7 +496,8 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI)) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI) ||
+            shadowType === SHADOW_PCSS) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n";
@@ -630,6 +631,9 @@ class LitShader {
             const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
 
             decl.append("uniform vec3 light" + i + "_color;");
+            if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
+                decl.append(`uniform float light${i}_size;`);
+            }
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 decl.append("uniform vec3 light" + i + "_direction;");
             } else {
@@ -813,6 +817,7 @@ class LitShader {
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 shadowTypeUsed[SHADOW_PCF3] = true;
                 shadowTypeUsed[SHADOW_PCF5] = true;
+                shadowTypeUsed[SHADOW_PCSS] = true;
             }
         }
 
@@ -1213,6 +1218,9 @@ class LitShader {
                         case SHADOW_PCF5:
                             shadowReadMode = "PCF5x5";
                             break;
+						case SHADOW_PCSS:
+							shadowReadMode = "PCSS";
+							break;
                         case SHADOW_PCF3:
                         default:
                             shadowReadMode = "PCF3x3";
