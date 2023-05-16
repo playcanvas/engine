@@ -25,7 +25,7 @@ export default /* glsl */`
 
         float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
         vec3 shadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
+        return getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
     }
 
     #endif
@@ -39,7 +39,7 @@ export default /* glsl */`
 
         float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
         vec3 shadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
+        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
     }
 
     #endif
@@ -71,7 +71,7 @@ export default /* glsl */`
         // pcf3
         float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
         vec3 shadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF3x3(shadowMap, shadowCoord, shadowParams.xyz);
+        return getShadowPCF3x3(shadowMap, shadowCoord, shadowParams);
     }
 
     #endif
@@ -87,7 +87,7 @@ export default /* glsl */`
         // pcf3
         float shadowZ = length(lightDir) * shadowParams.w + shadowParams.z;
         vec3 shadowCoord = vec3(uv, shadowZ);
-        return getShadowPCF3x3(shadowMap, shadowCoord, shadowParams.xyz);
+        return getShadowPCF3x3(shadowMap, shadowCoord, shadowParams);
     }
 
     #endif

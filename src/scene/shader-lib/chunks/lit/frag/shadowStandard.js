@@ -54,8 +54,8 @@ float _getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shado
     return sum;
 }
 
-float getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
-    return _getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
+float getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
+    return _getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
 }
 
 float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
@@ -104,8 +104,8 @@ float _getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams)
     return _xgetShadowPCF3x3(depthKernel, shadowCoord, shadowMap, shadowParams);
 }
 
-float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams) {
-    return _getShadowPCF3x3(shadowMap, shadowCoord, shadowParams);
+float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
+    return _getShadowPCF3x3(shadowMap, shadowCoord, shadowParams.xyz);
 }
 
 float getShadowSpotPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
