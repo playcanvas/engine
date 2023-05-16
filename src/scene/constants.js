@@ -288,7 +288,7 @@ export const SHADOW_PCF5 = 4;
 export const SHADOW_PCF1 = 5;
 
 /**
- * Render depth buffer only, shadows are sampled using PCSS.
+ * Render depth as color for PCSS software filtering.
  *
  * @type {number}
  */

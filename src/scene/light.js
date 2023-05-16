@@ -97,7 +97,7 @@ class LightRenderData {
                 return rt.colorBuffer;
             }
 
-            return light._isPcf && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
+            return (light._isPcf || light._isPcss) && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;
@@ -188,7 +188,6 @@ class Light {
         this._lightSize = 10.0;
         this._isVsm = false;
         this._isPcf = true;
-        this._isPcss = false;
 
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
@@ -321,7 +320,7 @@ class Light {
 
         const device = this.device;
 
-        if (this._type === LIGHTTYPE_OMNI)
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
         const supportsDepthShadow = device.supportsDepthShadow;
@@ -337,7 +336,6 @@ class Light {
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
         this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
-        this._isPcss = value === SHADOW_PCSS;
 
         this._shadowType = value;
         this._destroyShadowMap();
