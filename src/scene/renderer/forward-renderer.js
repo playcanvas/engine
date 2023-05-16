@@ -231,6 +231,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
+                this.lightSizeId[cnt].setValue(directional.lightSize);
 
                 const params = directional._shadowRenderParams;
                 params.length = 4;
