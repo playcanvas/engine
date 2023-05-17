@@ -7,11 +7,15 @@ import { WebgpuDebug } from './webgpu-debug.js';
  * @ignore
  */
 class ColorAttachment {
-    /** @type {GPUTextureFormat} */
+    /**
+     * @type {GPUTextureFormat}
+     * @private
+     */
     format;
 
     /**
      * @type {GPUTexture}
+     * @private
      */
     multisampledBuffer;
 
@@ -40,7 +44,10 @@ class WebgpuRenderTarget {
     /** @type {ColorAttachment[]} */
     colorAttachments = [];
 
-    /** @type {GPUTextureFormat} */
+    /**
+     * @type {GPUTextureFormat}
+     * @private
+     */
     depthFormat;
 
     /** @type {boolean} */
@@ -264,6 +271,9 @@ class WebgpuRenderTarget {
         }
     }
 
+    /**
+     * @private
+     */
     initColor(wgpu, renderTarget, index) {
         // Single-sampled color buffer gets passed in:
         // - for normal render target, constructor takes the color buffer as an option
