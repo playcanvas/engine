@@ -150,11 +150,9 @@ import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
-import shadowCommonPS from './lit/frag/shadowCommon.js';
-import shadowCoordPS from './lit/frag/shadowCoord.js';
-import shadowCoordPerspZbufferPS from './lit/frag/shadowCoordPerspZbuffer.js';
 import shadowEVSMPS from './lit/frag/shadowEVSM.js';
 import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
+import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM8PS from './lit/frag/shadowVSM8.js';
@@ -358,11 +356,9 @@ const shaderChunks = {
     reprojectPS,
     screenDepthPS,
     shadowCascadesPS,
-    shadowCommonPS,
-    shadowCoordPS,
-    shadowCoordPerspZbufferPS,
     shadowEVSMPS,
     shadowEVSMnPS,
+    shadowSampleCoordPS,
     shadowStandardPS,
     shadowStandardGL2PS,
     shadowVSM8PS,
