@@ -75,7 +75,8 @@ const builds = [
             }),
             alias({
                 entries: {
-                    'playcanvas': path.resolve('../build/playcanvas.js')
+                    'playcanvas': path.resolve('../build/playcanvas.js'),
+                    '../../../build/playcanvas.js': process.env.ENGINE_PATH ? path.resolve('../', process.env.ENGINE_PATH) : path.resolve('../build/playcanvas.js'),
                 }
             }),
             commonjs(),

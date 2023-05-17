@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom';
 import { Container, Spinner, SelectInput, Panel } from '@playcanvas/pcui/react';
 import { SelectInput as SelectInputClass } from '@playcanvas/pcui';
 import { Observer } from '@playcanvas/observer';
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../../build/playcanvas.mjs';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../../build/playcanvas.js';
 import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
 import ControlPanel from './control-panel';
