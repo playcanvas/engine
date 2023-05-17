@@ -13,8 +13,8 @@
     "serve": "serve dist -l 5000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
-    "watch:debug": "ENGINE_PATH=/build/playcanvas.dbg.js npm run watch",
-    "watch:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch",
+    "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
+    "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
     "develop": "cross-env concurrently --kill-others \"npm run watch:debug\" \"npm run serve\""
   },
   "eslintConfig": {
