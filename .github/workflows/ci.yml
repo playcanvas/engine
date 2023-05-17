@@ -120,6 +120,8 @@ jobs:
       run: npm ci
     - name: Build PlayCanvas (ES5-only)
       run: npm run build:es5
+    - name: Build PlayCanvas Extras
+      run: npm run build:extras
     - name: Build TypeScript declarations
       run: npm run build:types
     - name: Build Examples Browser
