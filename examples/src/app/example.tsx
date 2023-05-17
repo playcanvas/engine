@@ -18,8 +18,8 @@ const deviceTypeNames = {
 const controlsObserver = new Observer();
 
 const Controls = (props: any) => {
-    const controlsFunction = (examples as any).paths[props.path].example.prototype.controls;
-    const controls = controlsFunction ? (examples as any).paths[props.path].example.prototype.controls((window as any).observerData).props.children : null;
+    const controlsFunction = (document.getElementsByTagName('iframe')[0] as any).contentWindow.Example.prototype.controls;
+    const controls = controlsFunction ? controlsFunction((window as any).observerData).props.children : null;
     // on desktop dont show the control panel when no controls are present
     if (!controls && window.top.innerWidth >= MIN_DESKTOP_WIDTH) return null;
     return <ControlPanel controls={controls} files={props.files} />;
@@ -104,6 +104,11 @@ class Example extends Component <ExampleProps, ExampleState> {
         return `/${this.props.match.params.category}/${this.props.match.params.example}`;
     }
 
+    get iframePath() {
+        const example = (examples as any).paths[this.path];
+        return `/iframe/?category=${example.category}&example=${example.name}`;
+    }
+
     get deviceTypeSelectInput() {
         return (this.deviceTypeSelectInputRef.current as { element: SelectInputClass }).element;
     }
@@ -176,7 +181,7 @@ class Example extends Component <ExampleProps, ExampleState> {
     }
 
     render() {
-        const iframePath = `/iframe${this.path}`;
+        const iframePath = this.iframePath;
         return <Container id="canvas-container">
             <Spinner size={50}/>
             <iframe id="exampleIframe" key={iframePath} src={iframePath}></iframe>

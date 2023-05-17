@@ -5,19 +5,17 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run build:example:data && npm run build:directory && npm run build:iframes && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run build:example:data && npm run build:directory && cross-env NODE_ENV=production rollup -c",
     "build:directory": "node --es-module-specifier-resolution=node ./scripts/example-directory/index.mjs",
     "build:example:data": "node --es-module-specifier-resolution=node ./scripts/example-data.mjs",
-    "build:iframes": "node --es-module-specifier-resolution=node ./scripts/iframe/index.mjs",
     "build:thumbnails": "node --es-module-specifier-resolution=node ./scripts/thumbnails.mjs",
     "rollup:watch": "rollup -c -w",
     "serve": "serve dist -l 5000",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npm run build:example:data && npm run build:directory && npm run build:iframes && cross-env concurrently --kill-others \"npm run rollup:watch\"",
-    "watch:iframes": "nodemon -e js,mjs,json,tsx --watch ../build --watch ./src/examples --watch ../scripts --exec npm run build:iframes",
-    "watch:iframes:debug": "ENGINE_PATH=/build/playcanvas.dbg.js npm run watch:iframes",
-    "watch:iframes:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch:iframes",
-    "develop": "cross-env ENGINE_PATH=/build/playcanvas.dbg.js concurrently --kill-others \"npm run watch:iframes:debug\" \"npm run serve\""
+    "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
+    "watch:debug": "ENGINE_PATH=/build/playcanvas.dbg.js npm run watch",
+    "watch:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch",
+    "develop": "cross-env concurrently --kill-others \"npm run watch:debug\" \"npm run serve\""
   },
   "eslintConfig": {
     "root": true,
@@ -85,8 +83,5 @@
     "whatwg-fetch": "^3.6.2"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
-  "license": "MIT",
-  "dependencies": {
-    "rollup-plugin-string": "^3.0.0"
-  }
+  "license": "MIT"
 }
