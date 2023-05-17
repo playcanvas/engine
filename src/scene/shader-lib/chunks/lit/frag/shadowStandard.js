@@ -62,7 +62,7 @@ float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 sh
     return _getShadowPCF3x3(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
 }
 
-float getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
+float getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
     return textureShadow(shadowMap, shadowCoord);
 }
 
@@ -125,7 +125,7 @@ float _getShadowPCF1x1(sampler2D shadowMap, vec3 shadowCoord) {
     return shadowSample > shadowCoord.z ? 1.0 : 0.0;
 }
 
-float getShadowPCF1x1(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams) {
+float getShadowPCF1x1(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
     return _getShadowPCF1x1(shadowMap, shadowCoord);
 }
 
