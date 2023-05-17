@@ -13,7 +13,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH
 } from '../constants.js';
@@ -147,7 +147,7 @@ class ShadowRenderer {
 
         // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
         // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
-        let hwPcf = shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.supportsDepthShadow);
+        let hwPcf = shadowType === SHADOW_PCF5 || ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow);
         if (type === LIGHTTYPE_OMNI && !isClustered) {
             hwPcf = false;
         }
