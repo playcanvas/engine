@@ -4,7 +4,8 @@ void getAO() {
     dAo = 1.0;
 
     #ifdef MAPTEXTURE
-    dAo *= texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    float aoBase = texture2DBias($SAMPLER, $UV, textureBias).$CH;
+    dAo *= addAoDetail(aoBase);
     #endif
 
     #ifdef MAPVERTEX

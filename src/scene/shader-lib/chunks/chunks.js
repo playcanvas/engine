@@ -3,6 +3,7 @@ import ambientConstantPS from './lit/frag/ambientConstant.js';
 import ambientEnvPS from './lit/frag/ambientEnv.js';
 import ambientSHPS from './lit/frag/ambientSH.js';
 import aoPS from './standard/frag/ao.js';
+import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
@@ -209,6 +210,7 @@ const shaderChunks = {
     ambientEnvPS,
     ambientSHPS,
     aoPS,
+    aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
     aoSpecOccConstPS,
