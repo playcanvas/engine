@@ -1225,12 +1225,11 @@ class LitShader {
                         const coordCode = chunks.shadowSampleCoordPS;
                         func.append(coordCode.replace("$LIGHT", i));
 
+                        // Make sure to undefine the shadow sampler defines
                         func.append("#undef SHADOW_SAMPLE_NORMAL_OFFSET");
                         func.append("#undef SHADOW_SAMPLE_ORTHO");
                         func.append("#undef SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         func.append("#undef SHADOW_SAMPLE_POINT");
-
-                        // Make sure to undefine the shadow sampler defines
 
                         let shadowMatrix = `light${i}_shadowMatrix`;
                         let hasCascades = false;
