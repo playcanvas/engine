@@ -1257,7 +1257,7 @@ class LitShader {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
 
-                        var shadowCoordArgs = `light${i}_shadowMap, dShadowCoord, light${i}_shadowParams`;
+                        var shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
 
                         if (light._isVsm) {
                             // VSM
