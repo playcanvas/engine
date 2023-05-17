@@ -2,6 +2,26 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
+ * Private class storing info about color buffer.
+ *
+ * @ignore
+ */
+class ColorAttachment {
+    /** @type {GPUTextureFormat} */
+    format;
+
+    /**
+     * @type {GPUTexture}
+     */
+    multisampledBuffer;
+
+    destroy() {
+        this.multisampledBuffer?.destroy();
+        this.multisampledBuffer = null;
+    }
+}
+
+/**
  * A WebGPU implementation of the RenderTarget.
  *
  * @ignore
@@ -10,9 +30,6 @@ class WebgpuRenderTarget {
     /** @type {boolean} */
     initialized = false;
 
-    /** @type {string} */
-    colorFormat;
-
     /**
      * Unique key used by render pipeline creation
      *
@@ -20,17 +37,14 @@ class WebgpuRenderTarget {
      */
     key;
 
-    /** @type {string} */
+    /** @type {ColorAttachment[]} */
+    colorAttachments = [];
+
+    /** @type {GPUTextureFormat} */
     depthFormat;
 
     /** @type {boolean} */
     hasStencil;
-
-    /**
-     * @type {GPUTexture}
-     * @private
-     */
-    multisampledColorBuffer;
 
     /**
      * @type {GPUTexture}
@@ -69,9 +83,11 @@ class WebgpuRenderTarget {
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
 
-        // color format is based on the texture
-        if (renderTarget.colorBuffer) {
-            this.colorFormat = renderTarget.colorBuffer.impl.format;
+        // color formats are based on the textures
+        if (renderTarget._colorBuffers) {
+            renderTarget._colorBuffers.forEach((colorBuffer, index) => {
+                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
+            });
         }
 
         this.updateKey();
@@ -94,14 +110,21 @@ class WebgpuRenderTarget {
 
         this.assignedColorTexture = null;
 
-        this.multisampledColorBuffer?.destroy();
-        this.multisampledColorBuffer = null;
+        this.colorAttachments.forEach((colorAttachment) => {
+            colorAttachment.destroy();
+        });
+        this.colorAttachments.length = 0;
     }
 
     updateKey() {
-        // key used by render pipeline creation
         const rt = this.renderTarget;
-        this.key = `${this.colorFormat}-${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
+
+        // key used by render pipeline creation
+        this.key = '';
+        this.colorAttachments.forEach((colorAttachment, index) => {
+            this.key += `${index}:${colorAttachment.format}-`;
+        });
+        this.key += `${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
     }
 
     setDepthFormat(depthFormat) {
@@ -134,8 +157,22 @@ class WebgpuRenderTarget {
         }
 
         // for main framebuffer, this is how the format is obtained
-        this.colorFormat = gpuTexture.format;
+        this.setColorAttachment(0, undefined, gpuTexture.format);
         this.updateKey();
+    }
+
+    setColorAttachment(index, multisampledBuffer, format) {
+        if (!this.colorAttachments[index]) {
+            this.colorAttachments[index] = new ColorAttachment();
+        }
+
+        if (multisampledBuffer) {
+            this.colorAttachments[index].multisampledBuffer = multisampledBuffer;
+        }
+
+        if (format) {
+            this.colorAttachments[index].format = format;
+        }
     }
 
     /**
@@ -147,12 +184,37 @@ class WebgpuRenderTarget {
      */
     init(device, renderTarget) {
 
-        Debug.assert(!this.initialized);
-
         const wgpu = device.wgpu;
+        Debug.assert(!this.initialized);
 
         WebgpuDebug.memory(device);
         WebgpuDebug.validate(device);
+
+        // initialize depth/stencil
+        this.initDepthStencil(wgpu, renderTarget);
+
+        // initialize color attachments
+        this.renderPassDescriptor.colorAttachments = [];
+        const count = renderTarget._colorBuffers?.length ?? 1;
+        for (let i = 0; i < count; ++i) {
+            const colorAttachment = this.initColor(wgpu, renderTarget, i);
+
+            // default framebuffer, buffer gets assigned later
+            const isDefaultFramebuffer = i === 0 && this.colorAttachments[0]?.format;
+
+            // if we have a color buffer, or is the default framebuffer
+            if (colorAttachment.view || isDefaultFramebuffer) {
+                this.renderPassDescriptor.colorAttachments.push(colorAttachment);
+            }
+        }
+
+        this.initialized = true;
+
+        WebgpuDebug.end(device, { renderTarget });
+        WebgpuDebug.end(device, { renderTarget });
+    }
+
+    initDepthStencil(wgpu, renderTarget) {
 
         const { samples, width, height, depth, depthBuffer } = renderTarget;
 
@@ -200,16 +262,20 @@ class WebgpuRenderTarget {
                 view: this.depthTexture.createView()
             };
         }
+    }
 
+    initColor(wgpu, renderTarget, index) {
         // Single-sampled color buffer gets passed in:
         // - for normal render target, constructor takes the color buffer as an option
         // - for the main framebuffer, the device supplies the buffer each frame
         // And so we only need to create multi-sampled color buffer if needed here.
         /** @type {GPURenderPassColorAttachment} */
         const colorAttachment = {};
-        this.renderPassDescriptor.colorAttachments = [];
 
-        const colorBuffer = renderTarget.colorBuffer;
+        const { samples, width, height } = renderTarget;
+        const colorBuffer = renderTarget.getColorBuffer(index);
+
+        // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
         if (colorBuffer) {
 
@@ -225,7 +291,6 @@ class WebgpuRenderTarget {
                     mipLevelCount
                 });
             } else {
-
                 colorView = colorBuffer.impl.createView({
                     mipLevelCount
                 });
@@ -240,15 +305,16 @@ class WebgpuRenderTarget {
                 size: [width, height, 1],
                 dimension: '2d',
                 sampleCount: samples,
-                format: this.colorFormat,
+                format: this.colorAttachments[index].format,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             };
 
             // allocate multi-sampled color buffer
-            this.multisampledColorBuffer = wgpu.createTexture(multisampledTextureDesc);
-            DebugHelper.setLabel(this.multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
+            const multisampledColorBuffer = wgpu.createTexture(multisampledTextureDesc);
+            DebugHelper.setLabel(multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
+            this.setColorAttachment(index, multisampledColorBuffer);
 
-            colorAttachment.view = this.multisampledColorBuffer.createView();
+            colorAttachment.view = multisampledColorBuffer.createView();
             DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);
 
             colorAttachment.resolveTarget = colorView;
@@ -258,15 +324,7 @@ class WebgpuRenderTarget {
             colorAttachment.view = colorView;
         }
 
-        // if we have color a buffer, or at least a format (main framebuffer that gets assigned later)
-        if (colorAttachment.view || this.colorFormat) {
-            this.renderPassDescriptor.colorAttachments.push(colorAttachment);
-        }
-
-        this.initialized = true;
-
-        WebgpuDebug.end(device, { renderTarget });
-        WebgpuDebug.end(device, { renderTarget });
+        return colorAttachment;
     }
 
     /**
@@ -278,11 +336,13 @@ class WebgpuRenderTarget {
 
         Debug.assert(this.renderPassDescriptor);
 
-        const colorAttachment = this.renderPassDescriptor.colorAttachments?.[0];
-        if (colorAttachment) {
-            colorAttachment.clearValue = renderPass.colorOps.clearValue;
-            colorAttachment.loadOp = renderPass.colorOps.clear ? 'clear' : 'load';
-            colorAttachment.storeOp = renderPass.colorOps.store ? 'store' : 'discard';
+        const count = this.renderPassDescriptor.colorAttachments?.length ?? 0;
+        for (let i = 0; i < count; ++i) {
+            const colorAttachment = this.renderPassDescriptor.colorAttachments[i];
+            const colorOps = renderPass.colorArrayOps[i];
+            colorAttachment.clearValue = colorOps.clearValue;
+            colorAttachment.loadOp = colorOps.clear ? 'clear' : 'load';
+            colorAttachment.storeOp = colorOps.store ? 'store' : 'discard';
         }
 
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;

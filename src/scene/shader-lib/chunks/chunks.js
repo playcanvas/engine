@@ -89,6 +89,7 @@ import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
+import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
@@ -296,6 +297,7 @@ const shaderChunks = {
     normalXYPS,
     normalXYZPS,
     opacityPS,
+    outputPS,
     outputAlphaPS,
     outputAlphaOpaquePS,
     outputAlphaPremulPS,

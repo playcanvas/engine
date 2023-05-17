@@ -114,6 +114,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
+        this.supportsMrt = true;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -194,7 +195,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         /**
          * @type {GPUDevice}
-         * @private
+         * @ignore
          */
         this.wgpu = await this.gpuAdapter.requestDevice({
             requiredFeatures,
@@ -297,7 +298,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.colorFormat = outColorBuffer.format;
+        wrt.setColorAttachment(0, undefined, outColorBuffer.format);
 
         this.initRenderTarget(rt);
 
@@ -556,8 +557,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         // generate mipmaps
-        if (renderPass.colorOps.mipmaps) {
-            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
+            const colorOps = renderPass.colorArrayOps[i];
+            if (colorOps.mipmaps) {
+                this.mipmapRenderer.generate(renderPass.renderTarget._colorBuffers[i].impl);
+            }
         }
     }
 
