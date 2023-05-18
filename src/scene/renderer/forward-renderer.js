@@ -13,7 +13,8 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
     MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
-    LAYERID_DEPTH
+    LAYERID_DEPTH,
+    PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 
 import { Renderer } from './renderer.js';
@@ -91,6 +92,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
         this.lightSizeId = [];
+        this.lightCameraParamsId = [];
 
         // shadow cascades
         this.shadowMatrixPaletteId = [];
@@ -163,6 +165,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
         this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
         this.lightSizeId[i] = scope.resolve(light + '_size');
+        this.lightCameraParamsId[i] = scope.resolve(light + '_cameraParams');
 
         // shadow cascades
         this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
@@ -233,6 +236,13 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
                 this.lightSizeId[cnt].setValue(directional.lightSize);
 
+                const cameraParams = new Float32Array(4);
+                cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+                cameraParams[1] = lightRenderData.shadowCamera._farClip;
+                cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+                cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+                this.lightCameraParamsId[cnt].setValue(cameraParams);
+
                 const params = directional._shadowRenderParams;
                 params.length = 4;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
@@ -296,6 +306,13 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
             this.lightSizeId[cnt].setValue(omni.lightSize);
+
+            const cameraParams = new Float32Array(4);
+            cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+            cameraParams[1] = lightRenderData.shadowCamera._farClip;
+            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+            cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+            this.lightCameraParamsId[cnt].setValue(cameraParams);
         }
         if (omni._cookie) {
             this.lightCookieId[cnt].setValue(omni._cookie);
@@ -352,6 +369,13 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
             this.lightSizeId[cnt].setValue(spot.lightSize);
+
+            const cameraParams = new Float32Array(4);
+            cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+            cameraParams[1] = lightRenderData.shadowCamera._farClip;
+            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+            cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+            this.lightCameraParamsId[cnt].setValue(cameraParams);
         }
 
         if (spot._cookie) {

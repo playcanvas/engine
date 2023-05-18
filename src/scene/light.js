@@ -97,7 +97,7 @@ class LightRenderData {
                 return rt.colorBuffer;
             }
 
-            return (light._isPcf || light._isPcss) && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
+            return (light._isPcf) && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;

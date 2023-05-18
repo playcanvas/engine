@@ -3,7 +3,8 @@ import {
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
     PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXHINT_SHADOWMAP
+    TEXHINT_SHADOWMAP,
+    PIXELFORMAT_R32F
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -53,14 +54,15 @@ class ShadowMap {
             return PIXELFORMAT_DEPTH;
         } else if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow) {
             return PIXELFORMAT_DEPTH;
+        } else if ((shadowType === SHADOW_PCSS) && (device.webgl2 || device.isWebGPU)) {
+            return PIXELFORMAT_R32F;
         }
 
         return PIXELFORMAT_RGBA8;
     }
 
     static getShadowFiltering(device, shadowType) {
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && !device.supportsDepthShadow ||
-            shadowType === SHADOW_PCSS) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS) && !device.supportsDepthShadow) {
             return FILTER_NEAREST;
         } else if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
@@ -74,7 +76,7 @@ class ShadowMap {
 
         let shadowMap = null;
         if (light._type === LIGHTTYPE_OMNI) {
-            shadowMap = this.createCubemap(device, light._shadowResolution);
+            shadowMap = this.createCubemap(device, light._shadowResolution, light._shadowType);
         } else {
             shadowMap = this.create2dMap(device, light._shadowResolution, light._shadowType);
         }
@@ -143,12 +145,14 @@ class ShadowMap {
         return new ShadowMap(texture, [target]);
     }
 
-    static createCubemap(device, size) {
+    static createCubemap(device, size, shadowType) {
+
+        const format = (shadowType === SHADOW_PCSS && (device.webgl2 || device.isWebGPU)) ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: PIXELFORMAT_RGBA8,
+            format: format,
             width: size,
             height: size,
             cubemap: true,

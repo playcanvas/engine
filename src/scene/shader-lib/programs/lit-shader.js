@@ -15,7 +15,7 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_PICK,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
@@ -496,8 +496,8 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!device.webgl2 || !device.isWebGPU || lightType === LIGHTTYPE_OMNI) ||
-            shadowType === SHADOW_PCSS) {
+        const usePackedDepth = (!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS);
+        if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n";
@@ -508,15 +508,26 @@ class LitShader {
             code += "}\n\n";
         }
 
+        if (shadowType === SHADOW_PCSS) {
+            code += shaderChunks.screenDepthPS;
+        }
+
         code += begin();
 
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
         const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
+        const customDepth = (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL) || lightType === LIGHTTYPE_OMNI;
 
-        if (lightType === LIGHTTYPE_OMNI || (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL)) {
+        if (customDepth) {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+        } else if (shadowType === SHADOW_PCSS) {
+            code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
+            if (usePackedDepth) {
+                // After linearising, make sure to pack the range between [0..1]
+                code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
+            }
         } else {
             code += "    float depth = gl_FragCoord.z;\n";
         }
@@ -526,14 +537,15 @@ class LitShader {
             code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
         }
 
-        const pcfOmniShadows = device.webgl2 || device.isWebGPU;
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && (!pcfOmniShadows || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled))) {
+        if (usePackedDepth) {
             code += "    gl_FragColor = packFloat(depth);\n";
-        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
+        } else if (!isVsm) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && pcfOmniShadows) {
+            if (shadowType === SHADOW_PCSS || (lightType === LIGHTTYPE_OMNI && !options.clusteeredLightingEnabled)) {
+                code += "   gl_FragColor.r = depth;\n";
+            } else if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.supportsDepthShadow) {
                 code += "    gl_FragDepth = depth;\n";
             }
         } else if (shadowType === SHADOW_VSM8) {
@@ -596,6 +608,7 @@ class LitShader {
         let numShadowLights = 0;
         let shadowedDirectionalLightUsed = false;
         let useVsm = false;
+        let usePcss = false;
 
         let hasAreaLights = options.lights.some(function (light) {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
@@ -633,6 +646,7 @@ class LitShader {
             decl.append("uniform vec3 light" + i + "_color;");
             if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_size;`);
+                decl.append(`uniform vec4 light${i}_cameraParams;`);
             }
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 decl.append("uniform vec3 light" + i + "_direction;");
@@ -669,7 +683,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if (light._isPcf && device.supportsDepthShadow) {
+                    if ((light._isPcf) && device.supportsDepthShadow) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");
@@ -678,6 +692,7 @@ class LitShader {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
+                if (light._shadowType === SHADOW_PCSS) usePcss = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -844,6 +859,7 @@ class LitShader {
                 }
             }
             if (usePcss) {
+                func.append(chunks.screenDepthPS);
                 func.append(chunks.shadowPCSSPS);
             }
 
@@ -1193,6 +1209,9 @@ class LitShader {
                 }
 
                 if (light.castShadows && !options.noShadow) {
+                    const pcssShadows = light._shadowType === SHADOW_PCSS;
+                    const vsmShadows = light._shadowType === SHADOW_VSM8 || light._shadowType === SHADOW_VSM16 || light._shadowType === SHADOW_VSM32;
+                    const pcfShadows = light._shadowType === SHADOW_PCF1 || light._shadowType === SHADOW_PCF3 || light._shadowType === SHADOW_PCF5;
                     let shadowReadMode = null;
                     let evsmExp;
                     switch (light._shadowType) {
@@ -1218,9 +1237,9 @@ class LitShader {
                         case SHADOW_PCF5:
                             shadowReadMode = "PCF5x5";
                             break;
-						case SHADOW_PCSS:
-							shadowReadMode = "PCSS";
-							break;
+                        case SHADOW_PCSS:
+                            shadowReadMode = "PCSS";
+                            break;
                         case SHADOW_PCF3:
                         default:
                             shadowReadMode = "PCF3x3";
@@ -1234,7 +1253,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((light._isPcf) &&
+                        if ((pcfShadows || pcssShadows) &&
                             device.webgl2 || device.extStandardDerivatives || device.isWebGPU) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
@@ -1270,14 +1289,18 @@ class LitShader {
 
                         var shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
 
-                        if (light._isVsm) {
+                        if (vsmShadows) {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
+                        } else if (pcssShadows) {
+                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, light${i}_size, dLightDirW`;
                         }
 
                         if (lightType === LIGHTTYPE_OMNI) {
                             shadowReadMode = `Point${shadowReadMode}`;
-                            shadowCoordArgs = `${shadowCoordArgs}, dLightDirW`;
+                            if (!pcssShadows) {
+                                shadowCoordArgs = `${shadowCoordArgs}, dLightDirW`;
+                            }
                         } else if (lightType === LIGHTTYPE_SPOT) {
                             shadowReadMode = `Spot${shadowReadMode}`;
                         }
