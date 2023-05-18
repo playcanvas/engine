@@ -72,9 +72,9 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize) {
-    float linearDepth = linearizeDepth(shadowCoords.z, cameraParams);
+    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
 #ifndef GL2
-    linearDepth *= 1.0 / (cameraParams.y - cameraParams.z);
+    receiverDepth *= 1.0 / (cameraParams.y - cameraParams.z);
 #endif
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
@@ -83,12 +83,14 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
         samplePoints[i] = VogelDisk(float(i), float(PCSS_SAMPLE_COUNT), noise);
     }
 
-    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, oneOverShadowMapSize * lightSize, linearDepth);
+    // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
+    float fovRatioAtDepth = receiverDepth / (cameraParams.x * receiverDepth);
+    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, oneOverShadowMapSize * lightSize * fovRatioAtDepth, receiverDepth);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
 
-        float filterRadius = ((linearDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize;
+        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize * fovRatioAtDepth;
 
         float shadow = 0.0;
         float noise = GradientNoise(gl_FragCoord.xy);
@@ -103,7 +105,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
         #else // GL1
             float depth = unpackFloat(texture2D(shadowMap, sampleUV));
         #endif
-            shadow += step(linearDepth, depth);
+            shadow += step(receiverDepth, depth);
         }
         return shadow / float(PCSS_SAMPLE_COUNT);
     } 
@@ -131,8 +133,8 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
     return -1.0;
 }
 
-float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, float lightSize, vec3 lightDir) {
-
+float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize, vec3 lightDir) {
+    
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = GradientNoise( gl_FragCoord.xy );
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
@@ -140,13 +142,14 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, floa
     }
 
     float receiverDepth = length(lightDir) * shadowParams.w + shadowParams.z;
-    vec3 lightDirNorm = normalize(lightDir) * 10.0;
-    float averageBlocker = PCSSCubeBlockerDistance(shadowMap, lightDirNorm, samplePoints, receiverDepth, lightSize);
+    vec3 lightDirNorm = normalize(lightDir);
+    
+    float averageBlocker = PCSSCubeBlockerDistance(shadowMap, lightDirNorm, samplePoints, receiverDepth, lightSize * oneOverShadowMapSize * 2.0);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
 
-        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize;
+        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize * 2.0;
 
         float shadow = 0.0;
         for (int i = 0; i < PCSS_SAMPLE_COUNT; i++)
@@ -167,7 +170,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, floa
 }
 
 float getShadowPointPCSS(samplerCube shadowMap, vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, float lightSize, vec3 lightDir) {
-    return PCSSCube(shadowMap, shadowParams, shadowCoord, lightSize, lightDir);
+    return PCSSCube(shadowMap, shadowParams, shadowCoord, cameraParams, (1.0 / shadowParams.x), lightSize, lightDir);
 }
 
 float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, float lightSize, vec3 lightDir) {

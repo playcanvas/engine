@@ -237,10 +237,10 @@ class ForwardRenderer extends Renderer {
                 this.lightSizeId[cnt].setValue(directional.lightSize);
 
                 const cameraParams = new Float32Array(4);
-                cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+                cameraParams[0] = 0.5;
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-                cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+                cameraParams[3] = 1;
                 this.lightCameraParamsId[cnt].setValue(cameraParams);
 
                 const params = directional._shadowRenderParams;
@@ -308,10 +308,11 @@ class ForwardRenderer extends Renderer {
             this.lightSizeId[cnt].setValue(omni.lightSize);
 
             const cameraParams = new Float32Array(4);
-            cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            cameraParams[0] = Math.tan(fov / 2.0);
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-            cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+            cameraParams[3] = 0;
             this.lightCameraParamsId[cnt].setValue(cameraParams);
         }
         if (omni._cookie) {
@@ -371,10 +372,11 @@ class ForwardRenderer extends Renderer {
             this.lightSizeId[cnt].setValue(spot.lightSize);
 
             const cameraParams = new Float32Array(4);
-            cameraParams[0] = 1 / lightRenderData.shadowCamera._farClip;
+            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            cameraParams[0] = Math.tan(fov / 2.0);
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-            cameraParams[3] = lightRenderData.shadowCamera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+            cameraParams[3] = 0;
             this.lightCameraParamsId[cnt].setValue(cameraParams);
         }
 

@@ -152,26 +152,24 @@ class ContactHardeningShadowsExample {
                 app.root.addChild(plane2);
 
                 data.set('script', {
-                    rect: {
+                    area: {
                         intensity: 16.0,
-                        size: 30,
+                        size: 8,
+                        shadowType: pc.SHADOW_PCSS
+                    },
+                    point: {
+                        intensity: 4.0,
+                        size: 8,
+                        shadowType: pc.SHADOW_PCSS
+                    },
+                    directional: {
+                        intensity: 2.0,
+                        size: 8,
                         shadowType: pc.SHADOW_PCSS
                     }
                 });
 
                 const occluder = assets.asset.resource.instantiateRenderEntity();
-                /*
-                const occluder = new pc.Entity();
-                occluder.addComponent('render', {
-                        type: 'box',
-                        material: planeMaterial
-                });
-                
-                occluder.setLocalPosition(-2, -0.2, 0);
-
-                //occluder.setEulerAngles(0, 0, 0);
-                occluder.setLocalScale(0.5, 10, 0.5);
-                */
                 app.root.addChild(occluder);
 
                 app.scene.envAtlas = assets.helipad.resource;
@@ -180,14 +178,14 @@ class ContactHardeningShadowsExample {
                 areaLight.addComponent("light", {
                     type: "spot",
                     shape: pc.LIGHTSHAPE_RECT,
-                    color: pc.Color.WHITE,
+                    color: new pc.Color(0.25, 1, 0.25),
                     castShadows: true,
                     range: 150,
                     shadowResolution: 2048,
                     shadowDistance: 100,
-                    lightSize: data.get('script.rect.size'),
-                    shadowType: data.get('script.rect.shadowType'),
-                    intensity: data.get('script.rect.intensity'),
+                    lightSize: data.get('script.area.size'),
+                    shadowType: data.get('script.area.shadowType'),
+                    intensity: data.get('script.area.intensity'),
                     falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
                     innerConeAngle: 45,
                     outerConeAngle: 50,
@@ -199,7 +197,7 @@ class ContactHardeningShadowsExample {
 
                 // emissive material that is the light source color
                 const brightMaterial = new pc.StandardMaterial();
-                brightMaterial.emissive = pc.Color.WHITE;
+                brightMaterial.emissive = areaLight.light.color;
                 brightMaterial.emissiveIntensity = areaLight.light.intensity;
                 brightMaterial.useLighting = false;
                 brightMaterial.cull = pc.CULLFACE_NONE;
@@ -218,7 +216,7 @@ class ContactHardeningShadowsExample {
                 const directionalLight = new pc.Entity();
                 directionalLight.addComponent("light", {
                     type: "directional",
-                    color: pc.Color.WHITE,
+                    color: new pc.Color(1, 1, 1),
                     castShadows: true,
                     numCascades: 1,
                     lightSize: data.get('script.directional.size'),
@@ -229,13 +227,13 @@ class ContactHardeningShadowsExample {
                     normalOffsetBias: 0.1,
                     shadowResolution: 2048
                 });
-                directionalLight.setEulerAngles(45, 35, 0);
+                directionalLight.setEulerAngles(75, 35, 0);
                 app.root.addChild(directionalLight);
 
                 const lightOmni = new pc.Entity("Omni");
                 lightOmni.addComponent("light", {
                     type: "omni",
-                    color: pc.Color.WHITE,
+                    color: new pc.Color(1, 0.25, 0.25),
                     range: 25,
                     lightSize: data.get('script.point.size'),
                     shadowType: data.get('script.point.shadowType'),
@@ -245,7 +243,23 @@ class ContactHardeningShadowsExample {
                     normalOffsetBias: 0.2,
                     shadowResolution: 2048
                 });
-                lightOmni.setLocalPosition(10, 10, 4);
+                lightOmni.setLocalPosition(-4, 7, 0);
+
+                const omniMaterial = new pc.StandardMaterial();
+                omniMaterial.emissive = lightOmni.light.color;
+                omniMaterial.emissiveIntensity = lightOmni.light.intensity;
+                omniMaterial.useLighting = false;
+                omniMaterial.cull = pc.CULLFACE_NONE;
+                omniMaterial.update();
+
+                const omniShape = new pc.Entity();
+                omniShape.addComponent("render", {
+                    type: "sphere",
+                    material: omniMaterial,
+                    castShadows: false
+                });
+                omniShape.setLocalScale(0.2, 0.2, 0.2);
+                lightOmni.addChild(omniShape);
                 app.root.addChild(lightOmni);
 
                 // Create an Entity with a camera component
@@ -271,14 +285,26 @@ class ContactHardeningShadowsExample {
                 app.root.addChild(camera);
 
                 data.on('*:set', (path: string, value: any) => {
-                    if (path === 'script.rect.intensity') {
+                    if (path === 'script.area.intensity') {
                         areaLight.light.intensity = value;
                         brightMaterial.emissiveIntensity = value;
                         brightMaterial.update();
-                    } else if (path === 'script.rect.size') {
+                    } else if (path === 'script.area.size') {
                         areaLight.light.lightSize = value;
-                    } else if (path === 'script.rect.shadowType') {
+                    } else if (path === 'script.area.shadowType') {
                         areaLight.light.shadowType = parseInt(value);
+                    } else if (path === 'script.directional.intensity') {
+                        directionalLight.light.intensity = value;
+                    } else if (path === 'script.directional.size') {
+                        directionalLight.light.lightSize = value;
+                    } else if (path === 'script.directional.shadowType') {
+                        directionalLight.light.shadowType = parseInt(value);
+                    } else if (path === 'script.point.intensity') {
+                        lightOmni.light.intensity = value;
+                    } else if (path === 'script.point.size') {
+                        lightOmni.light.lightSize = value;
+                    } else if (path === 'script.point.shadowType') {
+                        lightOmni.light.shadowType = parseInt(value);
                     } else if (path === 'occluder.height') {
                         //occluder.setLocalPosition(0, 2 + value, 0);
                     } else if (path === 'light.distance') {
@@ -291,8 +317,12 @@ class ContactHardeningShadowsExample {
                 app.on("update", function (dt) {
                     time += dt;
 
-                    //data.set('occluder.height', Math.sin(time * 0.2) * 2);
-                    //data.set('light.distance', Math.sin(time * 0.2) * 10 + 14);
+                    const x = Math.sin(time * 0.2);
+                    const z = Math.cos(time * 0.2);
+
+                    lightOmni.setLocalPosition(x * 4, 5, z * 4);
+                    areaLight.light.outerConeAngle = Math.abs(Math.sin(time * 0.2)) * 25 + 25;
+                    areaLight.light.innerConeAngle = areaLight.light.outerConeAngle - 10;
 
                     // resize control panel to fit the content better
                     if (resizeControlPanel) {
