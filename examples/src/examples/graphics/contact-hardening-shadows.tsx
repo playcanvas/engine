@@ -11,14 +11,32 @@ class ContactHardeningShadowsExample {
     controls(data: Observer) {
         return <>
             <Panel headerText='Lights'>
-                <LabelGroup text='Rect (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.intensity' }} min={0.0} max={32.0}/>
+                <LabelGroup text='Area (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
-                <LabelGroup text='Rect Penumbra Size'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.size' }} min={0.1} max={35.0}/>
+                <LabelGroup text='Area Softness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.1} max={35.0}/>
                 </LabelGroup>
-                <LabelGroup text='Rect Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
+                <LabelGroup text='Area Shadows'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
+                </LabelGroup>
+                <LabelGroup text='Point (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.intensity' }} min={0.0} max={32.0}/>
+                </LabelGroup>
+                <LabelGroup text='Point Softness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.1} max={35.0}/>
+                </LabelGroup>
+                <LabelGroup text='Point Shadows'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
+                </LabelGroup>
+                <LabelGroup text='Directional (lm)'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.intensity' }} min={0.0} max={32.0}/>
+                </LabelGroup>
+                <LabelGroup text='Directional Softness'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.1} max={35.0}/>
+                </LabelGroup>
+                <LabelGroup text='Directional Shadows'>
+                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
                 </LabelGroup>
             </Panel>
         </>;
@@ -164,7 +182,7 @@ class ContactHardeningShadowsExample {
                     shape: pc.LIGHTSHAPE_RECT,
                     color: pc.Color.WHITE,
                     castShadows: true,
-                    range: 50,
+                    range: 150,
                     shadowResolution: 2048,
                     shadowDistance: 100,
                     lightSize: data.get('script.rect.size'),
@@ -202,33 +220,33 @@ class ContactHardeningShadowsExample {
                     type: "directional",
                     color: pc.Color.WHITE,
                     castShadows: true,
-                    shadowType: pc.SHADOW_PCSS,
                     numCascades: 1,
-                    lightSize: 30,
-                    luminance: 4,
+                    lightSize: data.get('script.directional.size'),
+                    shadowType: data.get('script.directional.shadowType'),
+                    intensity: data.get('script.directional.intensity'),
                     shadowBias: 0.5,
                     shadowDistance: 50,
                     normalOffsetBias: 0.1,
                     shadowResolution: 2048
                 });
-                //directionalLight.setEulerAngles(45, 35, 0);
-                //app.root.addChild(directionalLight);
+                directionalLight.setEulerAngles(45, 35, 0);
+                app.root.addChild(directionalLight);
 
                 const lightOmni = new pc.Entity("Omni");
                 lightOmni.addComponent("light", {
                     type: "omni",
                     color: pc.Color.WHITE,
-                    intensity: 6,
                     range: 25,
-                    shadowType: pc.SHADOW_PCSS,
-                    lightSize: 10,
+                    lightSize: data.get('script.point.size'),
+                    shadowType: data.get('script.point.shadowType'),
+                    intensity: data.get('script.point.intensity'),
                     castShadows: true,
                     shadowBias: 0.2,
                     normalOffsetBias: 0.2,
                     shadowResolution: 2048
                 });
-                //lightOmni.setLocalPosition(10, 10, 4);
-                //app.root.addChild(lightOmni);
+                lightOmni.setLocalPosition(10, 10, 4);
+                app.root.addChild(lightOmni);
 
                 // Create an Entity with a camera component
                 const camera = new pc.Entity();
