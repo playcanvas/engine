@@ -13,13 +13,15 @@ layout(location = 6) out highp vec4 pc_fragColor6;
 layout(location = 7) out highp vec4 pc_fragColor7;
 
 #define gl_FragColor pc_fragColor
-#define gl_FragColor1 pc_fragColor1
-#define gl_FragColor2 pc_fragColor2
-#define gl_FragColor3 pc_fragColor3
-#define gl_FragColor4 pc_fragColor4
-#define gl_FragColor5 pc_fragColor5
-#define gl_FragColor6 pc_fragColor6
-#define gl_FragColor7 pc_fragColor7
+
+#define pcFragColor0 pc_fragColor
+#define pcFragColor1 pc_fragColor1
+#define pcFragColor2 pc_fragColor2
+#define pcFragColor3 pc_fragColor3
+#define pcFragColor4 pc_fragColor4
+#define pcFragColor5 pc_fragColor5
+#define pcFragColor6 pc_fragColor6
+#define pcFragColor7 pc_fragColor7
 
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
 #define texture2DBias(res, uv, bias) texture(sampler2D(res, res ## _sampler), uv, bias)
