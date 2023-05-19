@@ -55,7 +55,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(true);
         });
 
-        it(`removes and adds the event subscription when enabled, disabled, destroyed`, function () {
+        it(`removes and adds the event subscription when script instance enabled, disabled, destroyed`, function () {
             scriptInstance.listenCalled = false;
 
             scriptInstance.listen(eventHandler, 'test', function () {
@@ -77,8 +77,29 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
         });
 
+        it(`removes and adds the event subscription when Script component enabled, disabled, destroyed`, function () {
+            scriptInstance.listenCalled = false;
+
+            scriptInstance.listen(eventHandler, 'test', function () {
+                this.listenCalled = true;
+            }, scriptInstance);
+
+            entity.script.enabled = false;
+            eventHandler.fire('test');
+            expect(scriptInstance.listenCalled).to.equal(false);
+
+            scriptInstance.listenCalled = false;
+            entity.script.enabled = true;
+            eventHandler.fire('test');
+            expect(scriptInstance.listenCalled).to.equal(true);
+
+            scriptInstance.listenCalled = false;
+            entity.removeComponent('script');
+            eventHandler.fire('test');
+            expect(scriptInstance.listenCalled).to.equal(false);
+        });
+
         // What happens when listen is called when it is disabled first
-        // What happens when the component is disabled/enabled
         // What happens when the entity is cloned
     });
 });
