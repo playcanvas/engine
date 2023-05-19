@@ -67,11 +67,13 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
 
             scriptInstance.listenCalled = false;
+
             scriptInstance.enabled = true;
             eventHandler.fire('test');
             expect(scriptInstance.listenCalled).to.equal(true);
 
             scriptInstance.listenCalled = false;
+
             entity.script.destroy('testScriptType');
             eventHandler.fire('test');
             expect(scriptInstance.listenCalled).to.equal(false);
@@ -89,11 +91,13 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
 
             scriptInstance.listenCalled = false;
+
             entity.script.enabled = true;
             eventHandler.fire('test');
             expect(scriptInstance.listenCalled).to.equal(true);
 
             scriptInstance.listenCalled = false;
+
             entity.removeComponent('script');
             eventHandler.fire('test');
             expect(scriptInstance.listenCalled).to.equal(false);
