@@ -74,11 +74,12 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize) {
     float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
 #ifndef GL2
+    // If using packed depth on GL1, we need to normalize to get the correct receiver depth
     receiverDepth *= 1.0 / (cameraParams.y - cameraParams.z);
 #endif
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = GradientNoise( gl_FragCoord.xy );
+    float noise = GradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         samplePoints[i] = VogelDisk(float(i), float(PCSS_SAMPLE_COUNT), noise);
     }
@@ -136,7 +137,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
 float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize, vec3 lightDir) {
     
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = GradientNoise( gl_FragCoord.xy );
+    float noise = GradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         samplePoints[i] = VogelSphere(float(i), float(PCSS_SAMPLE_COUNT), noise);
     }
