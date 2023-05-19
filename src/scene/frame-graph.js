@@ -44,8 +44,12 @@ class FrameGraph {
                 if (prevPass) {
 
                     // if we use the RT without clearing, make sure the previous pass stores data
-                    if (!renderPass.colorOps.clear) {
-                        prevPass.colorOps.store = true;
+                    const count = renderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        const colorOps = renderPass.colorArrayOps[j];
+                        if (!colorOps.clear) {
+                            prevPass.colorArrayOps[j].store = true;
+                        }
                     }
                     if (!renderPass.depthStencilOps.clearDepth) {
                         prevPass.depthStencilOps.storeDepth = true;
@@ -77,7 +81,10 @@ class FrameGraph {
 
                 // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
-                    lastCubeRenderPass.colorOps.mipmaps = false;
+                    const count = lastCubeRenderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        lastCubeRenderPass.colorArrayOps[j].mipmaps = false;
+                    }
                 }
 
                 lastCubeTexture = renderTarget.colorBuffer;

@@ -31,6 +31,7 @@ import ModelAssetExample from "./model-asset";
 import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
 import MultiViewExample from "./multi-view";
+import MrtExample from "./mrt";
 import PainterExample from "./painter";
 import PaintMeshExample from "./paint-mesh";
 import ParticlesAnimIndexExample from "./particles-anim-index";
@@ -89,6 +90,7 @@ export {
     ModelOutlineExample,
     ModelTexturedBoxExample,
     MultiViewExample,
+    MrtExample,
     PainterExample,
     PaintMeshExample,
     ParticlesAnimIndexExample,

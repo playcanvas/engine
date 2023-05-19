@@ -1297,7 +1297,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
-        if (colorOps.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+        if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
 
             // the pass always clears full target
             const rt = renderPass.renderTarget;
@@ -1309,7 +1309,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             let clearFlags = 0;
             const clearOptions = {};
 
-            if (colorOps.clear) {
+            if (colorOps?.clear) {
                 clearFlags |= CLEARFLAG_COLOR;
                 clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
             }
@@ -1360,7 +1360,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const gl = this.gl;
 
                 // invalidate color only if we don't need to resolve it
-                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
+                if (!(renderPass.colorOps?.store || renderPass.colorOps?.resolve)) {
                     invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
                 }
                 if (!renderPass.depthStencilOps.storeDepth) {
@@ -1381,14 +1381,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // resolve the color buffer
-            if (renderPass.colorOps.resolve) {
+            if (renderPass.colorOps?.resolve) {
                 if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
                 }
             }
 
             // generate mipmaps
-            if (renderPass.colorOps.mipmaps) {
+            if (renderPass.colorOps?.mipmaps) {
                 const colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
                     this.activeTexture(this.maxCombinedTextures - 1);

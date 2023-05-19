@@ -1433,6 +1433,7 @@ class LitShader {
             backend.append("    gl_FragColor = applyMsdf(gl_FragColor);");
         }
 
+        backend.append(chunks.outputPS);
         backend.append(chunks.debugOutputPS);
 
         if (hasPointLights) {

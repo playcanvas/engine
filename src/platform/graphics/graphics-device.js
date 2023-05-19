@@ -115,6 +115,15 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
+     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
+     * multiple color textures with a single draw call.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsMrt = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget}
