@@ -3,6 +3,7 @@ import { EventHandler } from '../../core/event-handler.js';
 
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 import { ScriptAttributes } from './script-attributes.js';
+import { c } from "sinon/lib/sinon/spy-formatters.js";
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
@@ -58,6 +59,12 @@ class ScriptType extends EventHandler {
 
     /** @private */
     _postInitialized;
+
+    /**
+     * @type {any[]}
+     * @private
+     */
+    _listeners;
 
     /** @private */
     __destroyed;
@@ -207,6 +214,12 @@ class ScriptType extends EventHandler {
         this.fire(this.enabled ? 'enable' : 'disable');
         this.fire('state', this.enabled);
 
+        // Subscribe or unsubscribe events based on enabled
+        const offOrOn = this.enabled ? 'on' : 'off';
+        this._listeners.forEach((l) => {
+            l.eventHandler[offOrOn](l.name, l.callback, l.scope);
+        });
+
         // initialize script if not initialized yet and script is enabled
         if (!this._initialized && this.enabled) {
             this._initialized = true;
@@ -235,6 +248,41 @@ class ScriptType extends EventHandler {
     }
 
     /**
+     * Attach an event handler to an event.
+     *
+     * @param {EventHandler} eventHandler - Name of the event to bind the callback to.
+     * @param {string} name - Name of the event to bind the callback to.
+     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
+     * the callback is limited to 8 arguments.
+     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
+     * current this.
+     * @returns {ScriptType} Self for chaining.
+     * @example
+     * this.listen(eventHandler, 'test', function (a, b) {
+     *     console.log(a + b);
+     * }, this);
+     * eventHandler.fire('test', 1, 2); // prints 3 to the console
+     */
+    listen(eventHandler, name, callback, scope) {
+        this._listeners.push({
+            eventHandler,
+            name,
+            callback,
+            scope
+        });
+
+        if (this.enabled) {
+            eventHandler.on(name, callback, scope);
+        }
+
+        return this;
+    }
+
+    unlisten(eventHandler, name, callback, scope) {
+        return this;
+    }
+
+    /**
      * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
      * The entity and app.
      * @private
@@ -248,6 +296,8 @@ class ScriptType extends EventHandler {
 
         this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
         this._enabledOld = this.enabled;
+
+        this._listeners = [];
 
         this.__destroyed = false;
         this.__attributes = { };
