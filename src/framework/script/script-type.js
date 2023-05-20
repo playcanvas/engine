@@ -8,6 +8,16 @@ import { c } from "sinon/lib/sinon/spy-formatters.js";
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
+ * EventListener object used for storing what events on EventHandlers the ScriptType is listening for.
+ * @typedef {Object} EventListener
+ * @property {EventHandler} eventHandler - EventHandler to listen for events on.
+ * @property {string} name - Name of the event to bind the callback to.
+ * @property {HandleEventCallback} callback - Function that is called when event is fired. Note
+ * the callback is limited to 8 arguments.
+ * @property {object} [scope] - Object to use as 'this' when the event is fired.
+ */
+
+/**
  * Represents the type of a script. It is returned by {@link createScript}. Also referred to as
  * Script Type.
  *
@@ -61,7 +71,7 @@ class ScriptType extends EventHandler {
     _postInitialized;
 
     /**
-     * @type {any[]}
+     * @type {EventListener[]}
      * @private
      */
     _listeners;
@@ -255,15 +265,11 @@ class ScriptType extends EventHandler {
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
-     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
-     * current this.
+     * @param {object} [scope] - Object to use as 'this' when the event is fired.
      * @returns {ScriptType} Self for chaining.
      * @example
-     * this.listen(eventHandler, 'test', function (a, b) {
-     *     console.log(a + b);
-     * }, this);
-     * eventHandler.fire('test', 1, 2); // prints 3 to the console
-     * @see {@link unlisten} to remove listeners to an event on an EventHandler.
+     * this.listen(this.app.mouse, 'mousemove', this.onMouseMove, this);
+     * @see {@link ScriptType#unlisten} to remove listeners to an event on an EventHandler.
      */
     listen(eventHandler, name, callback, scope) {
         this._listeners.push({
@@ -281,7 +287,7 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * Removes a listener for an event on an EventHandler that was added by {@link listen}.
+     * Removes a listener for an event on an EventHandler that was added by {@link ScriptType#listen}.
      *
      * @param {EventHandler} eventHandler - EventHandler that was originally listened to.
      * @param {string} name - Name of the event that was originally listened to.
@@ -290,8 +296,8 @@ class ScriptType extends EventHandler {
      * @param {object} [scope] - Object that was used as the scope when the event was originally listened to
      * @returns {ScriptType} Self for chaining.
      * @example
-     * this.unlisten(eventHandler, 'test', callbackFunction, this);
-     * @see {@link listen} to listen to events on an EventHandler.
+     * this.unlisten(this.app.mouse, 'mousemove', this.onMouseMove, this);
+     * @see {@link ScriptType#listen} to listen to events on an EventHandler.
      */
     unlisten(eventHandler, name, callback, scope) {
         let found = false;
