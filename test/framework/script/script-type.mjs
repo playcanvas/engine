@@ -1,8 +1,7 @@
 import { Application } from '../../../src/framework/application.js';
-import { createScript } from "../../../src/framework/script/script.js";
+import { createScript } from '../../../src/framework/script/script.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { EventHandler } from "../../../src/core/event-handler.js";
-import { ScriptComponent } from '../../../src/framework/components/script/component.js';
+import { EventHandler } from '../../../src/core/event-handler.js';
 
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
@@ -45,7 +44,7 @@ describe('ScriptType', function () {
     });
 
     describe('#listen', function () {
-        it(`adds an event subscription to the Event Handler that's passed to it`, function () {
+        it('adds an event subscription to the Event Handler that\'s passed to it', function () {
             scriptInstance.listen(eventHandler, 'test', function () {
                 this.listenCalled = true;
             }, scriptInstance);
@@ -55,7 +54,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(true);
         });
 
-        it(`removes and adds the event subscription when script instance enabled, disabled, destroyed`, function () {
+        it('removes and adds the event subscription when script instance enabled, disabled, destroyed', function () {
             scriptInstance.listenCalled = false;
 
             scriptInstance.listen(eventHandler, 'test', function () {
@@ -79,7 +78,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
         });
 
-        it(`removes and adds the event subscription when Script component enabled, disabled, destroyed`, function () {
+        it('removes and adds the event subscription when Script component enabled, disabled, destroyed', function () {
             scriptInstance.listenCalled = false;
 
             scriptInstance.listen(eventHandler, 'test', function () {
@@ -103,7 +102,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
         });
 
-        it(`doesn't add subscription if Script component is disabled before listen is called`, function () {
+        it('doesn\'t add subscription if Script component is disabled before listen is called', function () {
             entity.script.enabled = false;
 
             scriptInstance.listenCalled = false;
@@ -118,7 +117,7 @@ describe('ScriptType', function () {
     });
 
     describe('#unlisten', function () {
-        it(`removes an event subscription from the Event Handler`, function () {
+        it('removes an event subscription from the Event Handler', function () {
             const callback = function () {
                 this.listenCalled = true;
             };
@@ -132,7 +131,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
         });
 
-        it(`removes the correct event subscription from the Event Handler when multiple are used`, function () {
+        it('removes the correct event subscription from the Event Handler when multiple are used', function () {
             const callback1 = function () {
                 this.listenCalled1 = true;
             };
@@ -158,7 +157,7 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled3).to.equal(true);
         });
 
-        it(`removes the correct event subscription from the Event Handler without scope object`, function () {
+        it('removes the correct event subscription from the Event Handler without scope object', function () {
             let callback2Flag = false;
 
             const callback1 = function () {

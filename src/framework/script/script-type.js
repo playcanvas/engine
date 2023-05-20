@@ -3,13 +3,13 @@ import { EventHandler } from '../../core/event-handler.js';
 
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 import { ScriptAttributes } from './script-attributes.js';
-import { c } from "sinon/lib/sinon/spy-formatters.js";
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
  * EventListener object used for storing what events on EventHandlers the ScriptType is listening for.
- * @typedef {Object} EventListener
+ *
+ * @typedef {object} EventListener
  * @property {EventHandler} eventHandler - EventHandler to listen for events on.
  * @property {string} name - Name of the event to bind the callback to.
  * @property {HandleEventCallback} callback - Function that is called when event is fired. Note
