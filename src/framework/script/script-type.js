@@ -6,6 +6,8 @@ import { ScriptAttributes } from './script-attributes.js';
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
+/** @typedef {import('../../core/event-handler.js').HandleEventCallback} HandleEventCallback */
+
 /**
  * EventListener object used for storing what events on EventHandlers the ScriptType is listening for.
  *
@@ -15,6 +17,7 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * @property {HandleEventCallback} callback - Function that is called when event is fired. Note
  * the callback is limited to 8 arguments.
  * @property {object} [scope] - Object to use as 'this' when the event is fired.
+ * @private
  */
 
 /**
