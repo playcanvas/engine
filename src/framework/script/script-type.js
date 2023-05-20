@@ -248,9 +248,10 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * Attach an event handler to an event.
+     * Listen for an event on an EventHandler. The ScriptType will add and remove the event listeners on the
+     * EventHandler automatically when the ScriptType is enabled, disabled and destroyed.
      *
-     * @param {EventHandler} eventHandler - Name of the event to bind the callback to.
+     * @param {EventHandler} eventHandler - EventHandler to listen for events on.
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
@@ -262,6 +263,7 @@ class ScriptType extends EventHandler {
      *     console.log(a + b);
      * }, this);
      * eventHandler.fire('test', 1, 2); // prints 3 to the console
+     * @see {@link unlisten} to remove listeners to an event on an EventHandler.
      */
     listen(eventHandler, name, callback, scope) {
         this._listeners.push({
@@ -278,7 +280,35 @@ class ScriptType extends EventHandler {
         return this;
     }
 
+    /**
+     * Removes a listener for an event on an EventHandler that was added by {@link listen}.
+     *
+     * @param {EventHandler} eventHandler - EventHandler that was originally listened to.
+     * @param {string} name - Name of the event that was originally listened to.
+     * @param {HandleEventCallback} callback - Function that was used as the callback when the event was originally
+     * listened to.
+     * @param {object} [scope] - Object that was used as the scope when the event was originally listened to
+     * @returns {ScriptType} Self for chaining.
+     * @example
+     * this.unlisten(eventHandler, 'test', callbackFunction, this);
+     * @see {@link listen} to listen to events on an EventHandler.
+     */
     unlisten(eventHandler, name, callback, scope) {
+        let found = false;
+        for (let i = 0; i < this._listeners.length; ++i) {
+            const l = this._listeners[i];
+            if (l.eventHandler === eventHandler && l.name === name && l.callback === callback && l.scope === scope) {
+                this._listeners.splice(i, 1);
+                eventHandler.off(name, callback, scope);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            Debug.warn(`${this.__name}: Cannot find listener to remove for event ${name}. Please check where you originally listened for the event.`);
+        }
+
         return this;
     }
 

@@ -103,7 +103,59 @@ describe('ScriptType', function () {
             expect(scriptInstance.listenCalled).to.equal(false);
         });
 
-        // What happens when listen is called when it is disabled first
-        // What happens when the entity is cloned
+        it(`doesn't add subscription if Script component is disabled before listen is called`, function () {
+            entity.script.enabled = false;
+
+            scriptInstance.listenCalled = false;
+
+            scriptInstance.listen(eventHandler, 'test', function () {
+                this.listenCalled = true;
+            }, scriptInstance);
+
+            eventHandler.fire('test');
+            expect(scriptInstance.listenCalled).to.equal(false);
+        });
+    });
+
+    describe('#unlisten', function () {
+        it(`removes an event subscription from the Event Handler`, function () {
+            const callback = function () {
+                this.listenCalled = true;
+            };
+
+            scriptInstance.listen(eventHandler, 'test', callback, scriptInstance);
+            scriptInstance.unlisten(eventHandler, 'test', callback, scriptInstance);
+
+            scriptInstance.listenCalled = false;
+            eventHandler.fire('test');
+
+            expect(scriptInstance.listenCalled).to.equal(false);
+        });
+
+        it(`removes the correct event subscription from the Event Handler when multiple are used`, function () {
+            const callback1 = function () {
+                this.listenCalled1 = true;
+            };
+            const callback2 = function () {
+                this.listenCalled2 = true;
+            };
+            const callback3 = function () {
+                this.listenCalled3 = true;
+            };
+
+            scriptInstance.listen(eventHandler, 'test1', callback1, scriptInstance);
+            scriptInstance.listen(eventHandler, 'test2', callback2, scriptInstance);
+            scriptInstance.listen(eventHandler, 'test3', callback3, scriptInstance);
+
+            scriptInstance.unlisten(eventHandler, 'test2', callback2, scriptInstance);
+
+            eventHandler.fire('test1');
+            eventHandler.fire('test2');
+            eventHandler.fire('test3');
+
+            expect(scriptInstance.listenCalled1).to.equal(true);
+            expect(scriptInstance.listenCalled2).not.to.equal(true);
+            expect(scriptInstance.listenCalled3).to.equal(true);
+        });
     });
 });
