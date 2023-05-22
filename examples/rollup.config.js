@@ -2,7 +2,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
-import copy from 'rollup-plugin-copy';
+import copy from 'rollup-plugin-copy-watch';
 import { terser } from 'rollup-plugin-terser';
 import alias from '@rollup/plugin-alias';
 import path from 'path';
@@ -35,6 +35,7 @@ const builds = [
         },
         plugins: [
             copy({
+                watch: '../scripts',
                 targets: [
                     { src: 'src/static/*', dest: 'dist/' },
                     { src: './assets/*', dest: 'dist/static/assets/' },
