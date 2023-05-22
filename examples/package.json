@@ -9,7 +9,7 @@
     "build:directory": "node --es-module-specifier-resolution=node ./scripts/example-directory/index.mjs",
     "build:example:data": "node --es-module-specifier-resolution=node ./scripts/example-data.mjs",
     "build:thumbnails": "node --es-module-specifier-resolution=node ./scripts/thumbnails.mjs",
-    "rollup:watch": "rollup -c -w",
+    "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",

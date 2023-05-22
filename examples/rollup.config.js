@@ -35,7 +35,7 @@ const builds = [
         },
         plugins: [
             copy({
-                watch: '../scripts',
+                watch: process.env.NODE_ENV === 'development' ? '../scripts' : null,
                 targets: [
                     { src: 'src/static/*', dest: 'dist/' },
                     { src: './assets/*', dest: 'dist/static/assets/' },
