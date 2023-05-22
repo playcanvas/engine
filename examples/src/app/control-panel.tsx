@@ -49,7 +49,7 @@ const ControlPanel = (props: any) => {
         }
     });
 
-    const controls = props.controls ? props.controls.bind(this)((window as any).observerData) : null;
+    const controls = props.controls ? props.controls((window as any).observerData) : null;
 
     return <Container id='controls-wrapper' class={props.controls ? 'has-controls' : null}>
         { window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
