@@ -3,6 +3,7 @@ import ambientConstantPS from './lit/frag/ambientConstant.js';
 import ambientEnvPS from './lit/frag/ambientEnv.js';
 import ambientSHPS from './lit/frag/ambientSH.js';
 import aoPS from './standard/frag/ao.js';
+import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
@@ -88,6 +89,7 @@ import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
+import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
@@ -209,6 +211,7 @@ const shaderChunks = {
     ambientEnvPS,
     ambientSHPS,
     aoPS,
+    aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
     aoSpecOccConstPS,
@@ -294,6 +297,7 @@ const shaderChunks = {
     normalXYPS,
     normalXYZPS,
     opacityPS,
+    outputPS,
     outputAlphaPS,
     outputAlphaOpaquePS,
     outputAlphaPremulPS,
