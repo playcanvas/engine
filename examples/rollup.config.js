@@ -104,7 +104,8 @@ const builds = [
             globals: {
                 '@playcanvas/pcui/react': 'pcui',
                 'react': 'React',
-                '@playcanvas/observer': 'observer'
+                '@playcanvas/observer': 'observer',
+                [process.cwd().slice(0, process.cwd().length - 9)]: 'pc'
             }
         },
         plugins: [
