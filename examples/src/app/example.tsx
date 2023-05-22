@@ -18,11 +18,10 @@ const deviceTypeNames = {
 const controlsObserver = new Observer();
 
 const Controls = (props: any) => {
-    const controlsFunction = (document.getElementsByTagName('iframe')[0] as any).contentWindow.Example.prototype.controls;
-    const controls = controlsFunction ? controlsFunction((window as any).observerData).props.children : null;
+    const controlsFunction = (document.getElementsByTagName('iframe')[0] as any).contentWindow.Example.prototype.controls || null;
     // on desktop dont show the control panel when no controls are present
-    if (!controls && window.top.innerWidth >= MIN_DESKTOP_WIDTH) return null;
-    return <ControlPanel controls={controls} files={props.files} />;
+    if (!controlsFunction && window.top.innerWidth >= MIN_DESKTOP_WIDTH) return null;
+    return <ControlPanel controls={controlsFunction} files={props.files} />;
 };
 interface ControlLoaderProps {
     path: string,
