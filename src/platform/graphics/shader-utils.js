@@ -169,7 +169,7 @@ class ShaderUtils {
      * Extract the attributes specified in a vertex shader.
      *
      * @param {string} vsCode - The vertex shader code.
-     * @returns {Object<string, string>} The attribute name to semantic map.
+     * @returns {{[key: string]: string}} The attribute name to semantic map.
      * @ignore
      */
     static collectAttributes(vsCode) {

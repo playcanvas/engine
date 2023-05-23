@@ -38,7 +38,7 @@ class ModelComponent extends Component {
     _model = null;
 
     /**
-     * @type {Object<string, number>}
+     * @type {{[key: string]: number}}
      * @private
      */
     _mapping = {};
@@ -626,7 +626,7 @@ class ModelComponent extends Component {
      * components of type 'asset'. The mapping contains pairs of mesh instance index - material
      * asset id.
      *
-     * @type {Object<string, number>}
+     * @type {{[key: string]: number}}
      */
     set mapping(value) {
         if (this._type !== 'asset')
@@ -828,7 +828,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Asset} materialAsset -The material asset to load.
+     * @param {Asset} materialAsset - The material asset to load.
      * @param {MeshInstance} meshInstance - The mesh instance to assign the material to.
      * @param {number} index - The index of the mesh instance.
      * @private

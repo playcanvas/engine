@@ -35,7 +35,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * @param {string} fsCode - The fragment shader code.
  * @param {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
- * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
+ * @param {{[key: string]: string}} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.

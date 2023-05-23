@@ -190,7 +190,7 @@ class Entity extends GraphNode {
     /**
      * Component storage.
      *
-     * @type {Object<string, import('./components/component.js').Component>}
+     * @type {{[key: string]: import('./components/component.js').Component}}
      * @ignore
      */
     c = {};
@@ -572,7 +572,7 @@ class Entity extends GraphNode {
     }
 
     /**
-     * @param {Object<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
+     * @param {{[key: string]: Entity}} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
      * @returns {this} A new Entity which is a deep copy of the original.
      * @private

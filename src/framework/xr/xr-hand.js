@@ -64,7 +64,7 @@ class XrHand extends EventHandler {
     _joints = [];
 
     /**
-     * @type {Object<string, XrJoint>}
+     * @type {{[key: string]: XrJoint}}
      * @private
      */
     _jointsById = {};

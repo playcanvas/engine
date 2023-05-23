@@ -148,11 +148,11 @@ class CameraComponent extends Component {
      * const shaderPassId = camera.setShaderPass('custom_rendering');
      *
      * material.onUpdateShader = function (options) {
-     *    if (options.pass === shaderPassId) {
-     *        options.litOptions.normalMapEnabled = false;
-     *        options.litOptions.useSpecular = false;
-     *    }
-     *    return options;
+     * if (options.pass === shaderPassId) {
+     * options.litOptions.normalMapEnabled = false;
+     * options.litOptions.useSpecular = false;
+     * }
+     * return options;
      * };
      * ```
      *

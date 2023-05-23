@@ -78,7 +78,7 @@ class SceneRegistry {
      * Add a new item to the scene registry.
      *
      * @param {string} name - The name of the scene.
-     * @param {string} url -  The url of the scene file.
+     * @param {string} url - The url of the scene file.
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
      */
     add(name, url) {

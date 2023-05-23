@@ -121,7 +121,7 @@ class EntityReference extends EventHandler {
      * entity reference.
      * @param {string} entityPropertyName - The name of the component property that contains the
      * entity guid.
-     * @param {Object<string, Function>} [eventConfig] - A map of event listener configurations.
+     * @param {{[key: string]: Function}} [eventConfig] - A map of event listener configurations.
      */
     constructor(parentComponent, entityPropertyName, eventConfig) {
         super();

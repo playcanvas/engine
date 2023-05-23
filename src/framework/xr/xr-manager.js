@@ -43,7 +43,7 @@ class XrManager extends EventHandler {
     _supported = platform.browser && !!navigator.xr;
 
     /**
-     * @type {Object<string, boolean>}
+     * @type {{[key: string]: boolean}}
      * @private
      */
     _available = {};

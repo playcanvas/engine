@@ -13,7 +13,7 @@ class LitOptions {
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
-     * @type {Object<string, string>}
+     * @type {{[key: string]: string}}
      */
     chunks = {};
 

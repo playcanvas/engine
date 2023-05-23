@@ -38,7 +38,7 @@ class Shader {
      * used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
-     * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
+     * @param {{[key: string]: string}} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader. When not specified, rendering without
      * verex buffer is assumed.
