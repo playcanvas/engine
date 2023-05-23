@@ -1250,7 +1250,7 @@ class LitShader {
                             hasCascades = true;
                         }
 
-                        backend.append(`    vec3 dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
+                        backend.append(`    dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
 
                         // If cascades are used, fade between them
                         if (hasCascades) {
