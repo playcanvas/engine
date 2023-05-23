@@ -186,7 +186,6 @@ const lightComponentProps = [
     ['normalOffsetBias', 'number'],
     ['numCascades', 'number'],
     ['outerConeAngle', 'number'],
-    ['lightSize', 'number'],
     ['range', 'number'],
     ['shadowBias', 'number'],
     ['shadowDistance', 'number'],
