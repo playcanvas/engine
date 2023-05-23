@@ -5,7 +5,7 @@ const CompressUtils = {
      * @name CompressUtils#setCompressedPRS
      * @description Set position, rotation and scale of an entity using compressed
      * scene format.
-     * @param {Entity} entity - The entity.
+     * @param {import('../../framework/entity.js').Entity} entity - The entity.
      * @param {object} data - Json entity data from a compressed scene.
      * @param {object} compressed - Compression metadata.
      */

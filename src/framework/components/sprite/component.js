@@ -229,7 +229,7 @@ class SpriteComponent extends Component {
     /**
      * The current sprite.
      *
-     * @type {Sprite}
+     * @type {import('../../../scene/sprite.js').Sprite}
      */
     set sprite(value) {
         this._currentClip.sprite = value;
