@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
 
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU } from './constants.js';
@@ -24,6 +25,8 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
  * {@link DEVICETYPE_WEBGL} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
+ * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
+ * compatible graphics adapter for an immersive XR device.
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
@@ -36,6 +39,11 @@ function createGraphicsDevice(canvas, options = {}) {
     }
     if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
         deviceTypes.push(DEVICETYPE_WEBGL1);
+    }
+
+    // XR compatibility if not specified
+    if (platform.browser && !!navigator.xr) {
+        options.xrCompatible ??= true;
     }
 
     let device;
