@@ -912,7 +912,7 @@ class GraphNode extends EventHandler {
     /**
      * Returns cached value of negative scale of the world transform.
      *
-     * @returns {number} - 1 if world transform has negative scale, 1 otherwise.
+     * @returns {number} Returns -1 if world transform has negative scale, 1 otherwise.
      * @ignore
      */
     get worldScaleSign() {
