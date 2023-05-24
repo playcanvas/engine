@@ -138,7 +138,8 @@ class Mouse extends EventHandler {
      * raw access to mouse movement input without risking the mouse exiting the element. Notes:
      *
      * - In some browsers this will only work when the browser is running in fullscreen mode. See
-     * {@link Application#enableFullscreen}
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API Fullscreen API} for
+     * more details.
      * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for
      * a mouse or keyboard input.
      *

@@ -373,9 +373,9 @@ class GraphicsDevice extends EventHandler {
      * operation is disabled.
      *
      * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      */
     setStencilState(stencilFront, stencilBack) {
         Debug.assert(false);
