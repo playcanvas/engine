@@ -28,7 +28,8 @@ class AnimState {
     /**
      * Create a new AnimState instance.
      *
-     * @param {AnimController} controller - The controller this AnimState is associated with.
+     * @param {import('./anim-controller.js').AnimController} controller - The controller this
+     * AnimState is associated with.
      * @param {string} name - The name of the state. Used to find this state when the controller
      * transitions between states and links animations.
      * @param {number} [speed] - The speed animations in the state should play at. Individual

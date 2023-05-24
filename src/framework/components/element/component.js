@@ -272,7 +272,7 @@ class ElementComponent extends Component {
      * useInput is true.
      *
      * @event ElementComponent#mousedown
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
@@ -280,35 +280,35 @@ class ElementComponent extends Component {
      * useInput is true.
      *
      * @event ElementComponent#mouseup
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor enters the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mouseenter
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor leaves the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mouseleave
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mousemove
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mousewheel
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
@@ -316,21 +316,21 @@ class ElementComponent extends Component {
      * ends on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#click
-     * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch starts on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchstart
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch ends on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchend
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
@@ -338,14 +338,14 @@ class ElementComponent extends Component {
      * is true.
      *
      * @event ElementComponent#touchmove
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch is canceled on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchcancel
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     get _absLeft() {
