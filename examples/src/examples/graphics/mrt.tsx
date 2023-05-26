@@ -104,8 +104,8 @@ class MrtExample {
                         width: width,
                         height: height,
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                        mipmaps: false,
-                        minFilter: pc.FILTER_LINEAR,
+                        mipmaps: true,
+                        minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
                         magFilter: pc.FILTER_LINEAR,
                         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                         addressV: pc.ADDRESS_CLAMP_TO_EDGE
