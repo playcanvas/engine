@@ -844,8 +844,8 @@ class Layer {
     /**
      * @param {import('./mesh-instance.js').MeshInstance[]} drawCalls - Array of mesh instances.
      * @param {number} drawCallsCount - Number of mesh instances.
-     * @param {Vec3} camPos - Camera position.
-     * @param {Vec3} camFwd - Camera forward vector.
+     * @param {import('../core/math/vec3.js').Vec3} camPos - Camera position.
+     * @param {import('../core/math/vec3.js').Vec3} camFwd - Camera forward vector.
      * @private
      */
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {

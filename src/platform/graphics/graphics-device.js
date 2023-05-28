@@ -115,6 +115,15 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
+     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
+     * multiple color textures with a single draw call.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsMrt = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget}
@@ -364,9 +373,9 @@ class GraphicsDevice extends EventHandler {
      * operation is disabled.
      *
      * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      */
     setStencilState(stencilFront, stencilBack) {
         Debug.assert(false);

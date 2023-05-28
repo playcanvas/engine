@@ -16,7 +16,7 @@ float VSM8(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBi
     return calculateVSM8(moments, Z, vsmBias);
 }
 
-float getShadowVSM8(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams, float exponent, vec3 lightDir) {
+float getShadowVSM8(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams, float exponent, vec3 lightDir) {
     return VSM8(shadowMap, shadowCoord.xy, shadowParams.x, shadowCoord.z, shadowParams.y, 0.0);
 }
 

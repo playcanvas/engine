@@ -134,7 +134,8 @@ class SoundSlot extends EventHandler {
      * Fired when the asset assigned to the slot is loaded.
      *
      * @event SoundSlot#load
-     * @param {Sound} sound - The sound resource that was loaded.
+     * @param {import('../../../platform/sound/sound.js').Sound} sound - The sound resource that
+     * was loaded.
      */
 
     /**
