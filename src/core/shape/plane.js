@@ -25,8 +25,8 @@ class Plane {
      * Create a new Plane instance.
      *
      * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter. Defaults
-     * to {@link Vec3#UP}.
-     * @param {Vec3} [distance] - The distance from the plane to the origin, along its normal.
+     * to {@link Vec3.UP}.
+     * @param {number} [distance] - The distance from the plane to the origin, along its normal.
      * Defaults to 0.
      */
     constructor(normal = Vec3.UP, distance = 0) {

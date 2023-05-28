@@ -1297,7 +1297,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
-        if (colorOps.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+        if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
 
             // the pass always clears full target
             const rt = renderPass.renderTarget;
@@ -1309,7 +1309,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             let clearFlags = 0;
             const clearOptions = {};
 
-            if (colorOps.clear) {
+            if (colorOps?.clear) {
                 clearFlags |= CLEARFLAG_COLOR;
                 clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
             }
@@ -1360,7 +1360,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const gl = this.gl;
 
                 // invalidate color only if we don't need to resolve it
-                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
+                if (!(renderPass.colorOps?.store || renderPass.colorOps?.resolve)) {
                     invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
                 }
                 if (!renderPass.depthStencilOps.storeDepth) {
@@ -1381,14 +1381,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // resolve the color buffer
-            if (renderPass.colorOps.resolve) {
+            if (renderPass.colorOps?.resolve) {
                 if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
                 }
             }
 
             // generate mipmaps
-            if (renderPass.colorOps.mipmaps) {
+            if (renderPass.colorOps?.mipmaps) {
                 const colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
                     this.activeTexture(this.maxCombinedTextures - 1);
@@ -2063,6 +2063,68 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Asynchronously reads a block of pixels from a specified rectangle of the current color framebuffer
+     * into an ArrayBufferView object.
+     *
+     * @param {number} x - The x-coordinate of the rectangle's lower-left corner.
+     * @param {number} y - The y-coordinate of the rectangle's lower-left corner.
+     * @param {number} w - The width of the rectangle, in pixels.
+     * @param {number} h - The height of the rectangle, in pixels.
+     * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
+     * data.
+     * @ignore
+     */
+    async readPixelsAsync(x, y, w, h, pixels) {
+        const gl = this.gl;
+
+        if (!this.webgl2) {
+            // async fences aren't supported on webgl1
+            return this.readPixels(x, y, w, h, pixels);
+        }
+
+        const clientWaitAsync = (flags, interval_ms) => {
+            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            gl.flush();
+
+            return new Promise((resolve, reject) => {
+                function test() {
+                    const res = gl.clientWaitSync(sync, flags, 0);
+                    if (res === gl.WAIT_FAILED) {
+                        gl.deleteSync(sync);
+                        reject(new Error('webgl clientWaitSync sync failed'));
+                    } else if (res === gl.TIMEOUT_EXPIRED) {
+                        setTimeout(test, interval_ms);
+                    } else {
+                        gl.deleteSync(sync);
+                        resolve();
+                    }
+                }
+                test();
+            });
+        };
+
+        const impl = this.renderTarget.colorBuffer?.impl;
+        const format = impl?._glFormat ?? gl.RGBA;
+        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
+
+        // create temporary (gpu-side) buffer and copy data into it
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
+        gl.readPixels(x, y, w, h, format, pixelType, 0);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+
+        // async wait for previous read to finish
+        await clientWaitAsync(0, 20);
+
+        // copy the resulting data once it's arrived
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        gl.deleteBuffer(buf);
+    }
+
+    /**
      * Enables or disables alpha to coverage (WebGL2 only).
      *
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
@@ -2535,6 +2597,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
         return this._textureHalfFloatUpdatable;
     }
+
+    // #if _DEBUG
+    // debug helper to force lost context
+    debugLoseContext(sleep = 100) {
+        const context = this.gl.getExtension('WEBGL_lose_context');
+        context.loseContext();
+        setTimeout(() => context.restoreContext(), sleep);
+    }
+    // #endif
 }
 
 export { WebglGraphicsDevice };

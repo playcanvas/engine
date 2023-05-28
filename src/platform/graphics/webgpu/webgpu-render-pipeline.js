@@ -295,21 +295,25 @@ class WebgpuRenderPipeline {
             layout: pipelineLayout
         };
 
-        // provide fragment targets only when render target contains color buffer, otherwise rendering to depth only
-        // TODO: the exclusion of fragment here should be reflected in the key generation (no blend, no frag ..)
-        const colorFormat = renderTarget.impl.colorFormat;
-        if (colorFormat) {
+        const colorAttachments = renderTarget.impl.colorAttachments;
+        if (colorAttachments.length > 0) {
 
+            // the same write mask is used by all color buffers, to match the WebGL behavior
             let writeMask = 0;
             if (blendState.redWrite) writeMask |= GPUColorWrite.RED;
             if (blendState.greenWrite) writeMask |= GPUColorWrite.GREEN;
             if (blendState.blueWrite) writeMask |= GPUColorWrite.BLUE;
             if (blendState.alphaWrite) writeMask |= GPUColorWrite.ALPHA;
 
-            descr.fragment.targets.push({
-                format: colorFormat,
-                writeMask: writeMask,
-                blend: this.getBlend(blendState)
+            // the same blend state is used by all color buffers, to match the WebGL behavior
+            const blend = this.getBlend(blendState);
+
+            colorAttachments.forEach((attachment) => {
+                descr.fragment.targets.push({
+                    format: attachment.format,
+                    writeMask: writeMask,
+                    blend: blend
+                });
             });
         }
 

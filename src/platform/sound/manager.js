@@ -127,8 +127,8 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel} and begin playback of the sound.
      *
-     * @param {Sound} sound - The Sound object to play.
-     * @param {object} options - Optional options object.
+     * @param {import('./sound.js').Sound} sound - The Sound object to play.
+     * @param {object} [options] - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
      * @returns {Channel} The channel playing the sound.
@@ -146,8 +146,8 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
      *
-     * @param {Sound} sound - The Sound object to play.
-     * @param {Vec3} position - The position of the sound in 3D space.
+     * @param {import('./sound.js').Sound} sound - The Sound object to play.
+     * @param {import('../../core/math/vec3.js').Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
