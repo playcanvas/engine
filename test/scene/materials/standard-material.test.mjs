@@ -19,6 +19,17 @@ describe('StandardMaterial', function () {
         expect(material.ambientTint).to.equal(false);
         expect(material.anisotropy).to.equal(0);
 
+        expect(material.aoDetailMap).to.be.null;
+        expect(material.aoDetailMapChannel).to.equal('g');
+        expect(material.aoDetailMapOffset).to.be.an.instanceof(Vec2);
+        expect(material.aoDetailMapOffset.x).to.equal(0);
+        expect(material.aoDetailMapOffset.y).to.equal(0);
+        expect(material.aoDetailMapRotation).to.equal(0);
+        expect(material.aoDetailMapTiling).to.be.an.instanceof(Vec2);
+        expect(material.aoDetailMapTiling.x).to.equal(1);
+        expect(material.aoDetailMapTiling.y).to.equal(1);
+        expect(material.aoDetailMapUv).to.equal(0);
+        expect(material.aoDetailMode).to.equal(DETAILMODE_MUL);
         expect(material.aoMap).to.be.null;
         expect(material.aoMapChannel).to.equal('g');
         expect(material.aoMapOffset).to.be.an.instanceof(Vec2);

@@ -72,8 +72,8 @@ class XrHitTestSource extends EventHandler {
      * @event XrHitTestSource#result
      * @param {Vec3} position - Position of hit test.
      * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will
-     * provide related input source.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
+     * test source, then it will provide related input source.
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);

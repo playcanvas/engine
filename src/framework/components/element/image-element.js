@@ -976,6 +976,19 @@ class ImageElement {
         return this._rect;
     }
 
+    _removeMaterialAssetEvents() {
+        if (this._materialAsset) {
+            const assets = this._system.app.assets;
+            assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+            const asset = assets.get(this._materialAsset);
+            if (asset) {
+                asset.off('load', this._onMaterialLoad, this);
+                asset.off('change', this._onMaterialChange, this);
+                asset.off('remove', this._onMaterialRemove, this);
+            }
+        }
+    }
+
     set material(value) {
         if (this._material === value) return;
 
@@ -994,7 +1007,8 @@ class ImageElement {
         if (this._materialAsset) {
             const asset = this._system.app.assets.get(this._materialAsset);
             if (!asset || asset.resource !== value) {
-                this.materialAsset = null;
+                this._removeMaterialAssetEvents();
+                this._materialAsset = null;
             }
         }
 
@@ -1029,15 +1043,7 @@ class ImageElement {
         }
 
         if (this._materialAsset !== _id) {
-            if (this._materialAsset) {
-                assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
-                const _prev = assets.get(this._materialAsset);
-                if (_prev) {
-                    _prev.off('load', this._onMaterialLoad, this);
-                    _prev.off('change', this._onMaterialChange, this);
-                    _prev.off('remove', this._onMaterialRemove, this);
-                }
-            }
+            this._removeMaterialAssetEvents();
 
             this._materialAsset = _id;
             if (this._materialAsset) {

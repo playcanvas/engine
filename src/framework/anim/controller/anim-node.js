@@ -11,13 +11,14 @@ class AnimNode {
     /**
      * Create a new AnimNode instance.
      *
-     * @param {AnimState} state - The AnimState that this BlendTree belongs to.
-     * @param {BlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode is
-     * stored as part of a {@link BlendTree} hierarchy.
-     * @param {string} name - The name of the AnimNode. Used when assigning a {@link AnimTrack} to
+     * @param {import('./anim-state.js').AnimState} state - The AnimState that this BlendTree
+     * belongs to.
+     * @param {import('./anim-blend-tree.js').AnimBlendTree|null} parent - The parent of the AnimNode.
+     * If not null, the AnimNode is stored as part of an {@link AnimBlendTree} hierarchy.
+     * @param {string} name - The name of the AnimNode. Used when assigning an {@link AnimTrack} to
      * it.
      * @param {number[]|number} point - The coordinate/vector thats used to determine the weight of
-     * this node when it's part of a {@link BlendTree}.
+     * this node when it's part of an {@link AnimBlendTree}.
      * @param {number} [speed] - The speed that its {@link AnimTrack} should play at. Defaults to 1.
      */
     constructor(state, parent, name, point, speed = 1) {

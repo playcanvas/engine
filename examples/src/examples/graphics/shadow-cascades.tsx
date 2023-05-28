@@ -14,6 +14,7 @@ class ShadowCascadesExample {
             <Panel headerText='Shadow Cascade Settings'>
                 {<LabelGroup text='Filtering'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowType' }} type="number" options={[
+                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
                         { v: pc.SHADOW_PCF3, t: 'PCF3' },
                         { v: pc.SHADOW_PCF5, t: 'PCF5' },
                         { v: pc.SHADOW_VSM8, t: 'VSM8' },

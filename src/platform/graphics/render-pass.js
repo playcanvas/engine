@@ -104,8 +104,22 @@ class RenderPass {
      */
     samples = 0;
 
-    /** @type {ColorAttachmentOps} */
-    colorOps;
+    /**
+     * Array of color attachment operations. The first element corresponds to the color attachment
+     * 0, and so on.
+     *
+     * @type {Array<ColorAttachmentOps>}
+     */
+    colorArrayOps = [];
+
+    /**
+     * Color attachment operations for the first color attachment.
+     *
+     * @type {ColorAttachmentOps}
+     */
+    get colorOps() {
+        return this.colorArrayOps[0];
+    }
 
     /** @type {DepthStencilAttachmentOps} */
     depthStencilOps;
@@ -172,22 +186,27 @@ class RenderPass {
         // null represents the default framebuffer
         this.renderTarget = renderTarget || null;
 
-        // allocate ops only when render target is used
-        this.colorOps = new ColorAttachmentOps();
-        this.depthStencilOps = new DepthStencilAttachmentOps();
-
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
 
-        // if rendering to single-sampled buffer, this buffer needs to be stored
-        if (this.samples === 1) {
-            this.colorOps.store = true;
-            this.colorOps.resolve = false;
-        }
+        // allocate ops only when render target is used
+        this.depthStencilOps = new DepthStencilAttachmentOps();
 
-        // if render target needs mipmaps
-        if (this.renderTarget?.colorBuffer?.mipmaps) {
-            this.colorOps.mipmaps = true;
+        const numColorOps = renderTarget ? renderTarget._colorBuffers?.length : 1;
+        for (let i = 0; i < numColorOps; i++) {
+            const colorOps = new ColorAttachmentOps();
+            this.colorArrayOps[i] = colorOps;
+
+            // if rendering to single-sampled buffer, this buffer needs to be stored
+            if (this.samples === 1) {
+                colorOps.store = true;
+                colorOps.resolve = false;
+            }
+
+            // if render target needs mipmaps
+            if (this.renderTarget?._colorBuffers?.[i].mipmaps) {
+                colorOps.mipmaps = true;
+            }
         }
     }
 
@@ -197,8 +216,15 @@ class RenderPass {
      * @param {Color} color - The color to clear to.
      */
     setClearColor(color) {
-        this.colorOps.clearValue.copy(color);
-        this.colorOps.clear = true;
+
+        // in case of MRT, we clear all color buffers.
+        // TODO: expose per color buffer clear parameters on the camera, and copy them here.
+        const count = this.colorArrayOps.length;
+        for (let i = 0; i < count; i++) {
+            const colorOps = this.colorArrayOps[i];
+            colorOps.clearValue.copy(color);
+            colorOps.clear = true;
+        }
     }
 
     /**
@@ -262,11 +288,11 @@ class RenderPass {
             if (rt === null && device.isWebGPU) {
                 rt = device.frameBuffer;
             }
-            const hasColor = rt?.colorBuffer ?? rt?.impl.assignedColorTexture;
+            const numColor = rt?._colorBuffers?.length ?? (rt?.impl.assignedColorTexture ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
             const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
-                `${hasColor ? '[Color]' : ''}` +
+                `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
                 `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
@@ -275,12 +301,13 @@ class RenderPass {
                         `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
                         rtInfo.padEnd(30));
 
-            if (this.colorOps && hasColor) {
-                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
-                            `${this.colorOps.clear ? 'clear' : 'load'}->` +
-                            `${this.colorOps.store ? 'store' : 'discard'} ` +
-                            `${this.colorOps.resolve ? 'resolve ' : ''}` +
-                            `${this.colorOps.mipmaps ? 'mipmaps ' : ''}`);
+            for (let i = 0; i < numColor; i++) {
+                const colorOps = this.colorArrayOps[i];
+                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    color[${i}]: ` +
+                            `${colorOps.clear ? 'clear' : 'load'}->` +
+                            `${colorOps.store ? 'store' : 'discard'} ` +
+                            `${colorOps.resolve ? 'resolve ' : ''}` +
+                            `${colorOps.mipmaps ? 'mipmaps ' : ''}`);
             }
 
             if (this.depthStencilOps) {

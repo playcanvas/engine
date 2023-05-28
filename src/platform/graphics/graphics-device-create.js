@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
 
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU } from './constants.js';
@@ -20,10 +21,12 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * requested to have a depth buffer of at least 16 bits.
  * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
  * requested to have a stencil buffer of at least 8 bits.
- * @param {string} [options.glslangUrl] - An url to glslang script, required if
+ * @param {string} [options.glslangUrl] - The URL to the glslang script. Required if the
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
- * {@link DEVICETYPE_WEBGL} device type creation.
+ * {@link DEVICETYPE_WEBGL1} or {@link DEVICETYPE_WEBGL2} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
+ * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
+ * compatible graphics adapter for an immersive XR device.
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
@@ -36,6 +39,11 @@ function createGraphicsDevice(canvas, options = {}) {
     }
     if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
         deviceTypes.push(DEVICETYPE_WEBGL1);
+    }
+
+    // XR compatibility if not specified
+    if (platform.browser && !!navigator.xr) {
+        options.xrCompatible ??= true;
     }
 
     let device;
