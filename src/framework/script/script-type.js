@@ -269,7 +269,6 @@ class ScriptType extends EventHandler {
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired.
-     * @returns {ScriptType} Self for chaining.
      * @example
      * this.listen(this.app.mouse, 'mousemove', this.onMouseMove, this);
      * @see {@link ScriptType#unlisten} to remove listeners to an event on an EventHandler.
@@ -285,8 +284,6 @@ class ScriptType extends EventHandler {
         if (this.enabled) {
             eventHandler.on(name, callback, scope);
         }
-
-        return this;
     }
 
     /**
@@ -297,7 +294,6 @@ class ScriptType extends EventHandler {
      * @param {HandleEventCallback} callback - Function that was used as the callback when the event was originally
      * listened to.
      * @param {object} [scope] - Object that was used as the scope when the event was originally listened to
-     * @returns {ScriptType} Self for chaining.
      * @example
      * this.unlisten(this.app.mouse, 'mousemove', this.onMouseMove, this);
      * @see {@link ScriptType#listen} to listen to events on an EventHandler.
@@ -317,8 +313,6 @@ class ScriptType extends EventHandler {
         if (!found) {
             Debug.warn(`${this.__name}: Cannot find listener to remove for event ${name}. Please check where you originally listened for the event.`);
         }
-
-        return this;
     }
 
     /**
