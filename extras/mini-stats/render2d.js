@@ -185,13 +185,11 @@ class Render2d {
         device.setIndexBuffer(this.indexBuffer);
         device.setShader(this.shader);
 
-        const pr = Math.min(device.maxPixelRatio, window.devicePixelRatio);
-
         // set shader uniforms
         this.clr.set(clr, 0);
         this.clrId.setValue(this.clr);
-        this.screenTextureSize[0] = device.width / pr;
-        this.screenTextureSize[1] = device.height / pr;
+        this.screenTextureSize[0] = device.canvas.scrollWidth;
+        this.screenTextureSize[1] = device.canvas.scrollHeight;
 
         // colors
         this.col0Id.setValue(this.col0);

@@ -10,6 +10,39 @@ let id = 0;
  * A render target is a rectangular rendering surface.
  */
 class RenderTarget {
+    /** @type {string} */
+    name;
+
+    /** @type {import('./graphics-device.js').GraphicsDevice} */
+    _device;
+
+    /** @type {import('./texture.js').Texture} */
+    _colorBuffer;
+
+    /** @type {import('./texture.js').Texture[]} */
+    _colorBuffers;
+
+    /** @type {import('./texture.js').Texture} */
+    _depthBuffer;
+
+    /** @type {boolean} */
+    _depth;
+
+    /** @type {boolean} */
+    _stencil;
+
+    /** @type {number} */
+    _samples;
+
+    /** @type {boolean} */
+    autoResolve;
+
+    /** @type {number} */
+    _face;
+
+    /** @type {boolean} */
+    flipY;
+
     /**
      * Creates a new RenderTarget instance. A color buffer or a depth buffer must be set.
      *
@@ -18,6 +51,10 @@ class RenderTarget {
      * resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true.
      * @param {import('./texture.js').Texture} [options.colorBuffer] - The texture that this render
      * target will treat as a rendering surface.
+     * @param {import('./texture.js').Texture[]} [options.colorBuffers] - The textures that this
+     * render target will treat as a rendering surfaces. If this option is set, the colorBuffer
+     * option is ignored. This option can be used only when {@link GraphicsDevice#supportsMrt} is
+     * true.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
      * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
@@ -81,9 +118,9 @@ class RenderTarget {
             this._colorBuffer = options.colorBuffer;
         }
 
-        // mark color buffer texture as render target
+        // Use the single colorBuffer in the colorBuffers array. This allows us to always just use the array internally.
         if (this._colorBuffer) {
-            this._colorBuffer._isRenderTarget = true;
+            this._colorBuffers = [this._colorBuffer];
         }
 
         // Process optional arguments
@@ -108,10 +145,33 @@ class RenderTarget {
             this._stencil = options.stencil ?? false;
         }
 
+        // MRT
+        if (options.colorBuffers) {
+            Debug.assert(!this._colorBuffers, 'When constructing RenderTarget and options.colorBuffers is used, options.colorBuffer must not be used.');
+
+            if (!this._colorBuffers) {
+                this._colorBuffers = [...options.colorBuffers];
+
+                // set the main color buffer to point to 0 index
+                this._colorBuffer = options.colorBuffers[0];
+            }
+        }
+
         // device, from one of the buffers
         const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
         Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
+
+        Debug.call(() => {
+            if (this._colorBuffers) {
+                Debug.assert(this._colorBuffers.length <= 1 || device.supportsMrt, 'Multiple render targets are not supported on this device');
+            }
+        });
+
+        // mark color buffer textures as render target
+        this._colorBuffers?.forEach((colorBuffer) => {
+            colorBuffer._isRenderTarget = true;
+        });
 
         const { maxSamples } = this._device;
         this._samples = Math.min(options.samples ?? 1, maxSamples);
@@ -138,10 +198,14 @@ class RenderTarget {
         // render image flipped in Y
         this.flipY = options.flipY ?? false;
 
+        this.validateMrt();
+
         // device specific implementation
         this.impl = device.createRenderTargetImpl(this);
 
-        Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} samples: ${this.samples} ` +
+        Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
+            `[samples: ${this.samples}]` +
+            `${this._colorBuffers?.length ? `[MRT: ${this._colorBuffers.length}]` : ''}` +
             `${this.colorBuffer ? '[Color]' : ''}` +
             `${this.depth ? '[Depth]' : ''}` +
             `${this.stencil ? '[Stencil]' : ''}` +
@@ -190,15 +254,29 @@ class RenderTarget {
      */
     destroyTextureBuffers() {
 
-        if (this._depthBuffer) {
-            this._depthBuffer.destroy();
-            this._depthBuffer = null;
-        }
+        this._depthBuffer?.destroy();
+        this._depthBuffer = null;
 
-        if (this._colorBuffer) {
-            this._colorBuffer.destroy();
-            this._colorBuffer = null;
-        }
+        this._colorBuffers?.forEach((colorBuffer) => {
+            colorBuffer.destroy();
+        });
+        this._colorBuffers = null;
+        this._colorBuffer = null;
+    }
+
+    validateMrt() {
+        Debug.call(() => {
+            if (this._colorBuffers) {
+                const { width, height, cubemap, volume } = this._colorBuffers[0];
+                for (let i = 1; i < this._colorBuffers.length; i++) {
+                    const colorBuffer = this._colorBuffers[i];
+                    Debug.assert(colorBuffer.width === width, 'All render target color buffers must have the same width', this);
+                    Debug.assert(colorBuffer.height === height, 'All render target color buffers must have the same height', this);
+                    Debug.assert(colorBuffer.cubemap === cubemap, 'All render target color buffers must have the same cubemap setting', this);
+                    Debug.assert(colorBuffer.volume === volume, 'All render target color buffers must have the same volume setting', this);
+                }
+            }
+        });
     }
 
     /**
@@ -238,6 +316,9 @@ class RenderTarget {
      * depth buffer.
      */
     resolve(color = true, depth = !!this._depthBuffer) {
+
+        // TODO: consider adding support for MRT to this function.
+
         if (this._device && this._samples > 1) {
             DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
             this.impl.resolve(this._device, this, color, depth);
@@ -255,6 +336,9 @@ class RenderTarget {
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copy(source, color, depth) {
+
+        // TODO: consider adding support for MRT to this function.
+
         if (!this._device) {
             if (source._device) {
                 this._device = source._device;
@@ -305,6 +389,16 @@ class RenderTarget {
      */
     get colorBuffer() {
         return this._colorBuffer;
+    }
+
+    /**
+     * Accessor for multiple render target color buffers.
+     *
+     * @param {*} index - Index of the color buffer to get.
+     * @returns {import('./texture.js').Texture} - Color buffer at the specified index.
+     */
+    getColorBuffer(index) {
+        return this._colorBuffers?.[index];
     }
 
     /**

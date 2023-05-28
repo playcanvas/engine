@@ -349,7 +349,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {GraphNode} parent - The parent node.
+     * @param {import('../../../scene/graph-node.js').GraphNode} parent - The parent node.
      * @private
      */
     _onInsert(parent) {

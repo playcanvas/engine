@@ -40,7 +40,7 @@ class ReflectionPlanarExample {
     example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
-            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/dancing-hall-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/dancing-hall-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/planar-renderer.js' })
         };

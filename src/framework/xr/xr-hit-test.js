@@ -90,9 +90,10 @@ class XrHitTest extends EventHandler {
      *
      * @event XrHitTest#result
      * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
+     * @param {import('../../core/math/vec3.js').Vec3} position - Position of hit test.
+     * @param {import('../../core/math/quat.js').Quat} rotation - Rotation of hit test.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
+     * test source, then it will provide related input source.
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);

@@ -447,6 +447,9 @@ const standard = {
             }
 
             // ao
+            if (options.aoDetail) {
+                code.append(this._addMap("aoDetail", "aoDetailMapPS", options, litShader.chunks, textureMapping));
+            }
             if (options.aoMap || options.aoVertexColor) {
                 decl.append("float dAo;");
                 code.append(this._addMap("ao", "aoPS", options, litShader.chunks, textureMapping));
