@@ -43,6 +43,7 @@
       "TWEEN": "readonly",
       "twgsl": "readonly",
       "webkitAudioContext": "readonly",
+      "WorkerGlobalScope": "readonly",
       "XRRay": "readonly",
       "XRWebGLLayer": "readonly"
     },

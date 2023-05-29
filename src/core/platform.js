@@ -53,7 +53,7 @@ if (typeof navigator !== 'undefined') {
 }
 
 // detect browser/node environment
-const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+const environment = (typeof window !== 'undefined') ? 'browser' : (typeof WorkerGlobalScope !== 'undefined') ? 'webworker' : 'node';
 
 /**
  * Global namespace that stores flags regarding platform environment and features support.
@@ -78,7 +78,7 @@ const platform = {
      *
      * @type {object}
      */
-    global: (environment === 'browser') ? window : global,
+    global: (environment === 'browser') ? window : (environment === 'webworker' ? WorkerGlobalScope : global),
 
     /**
      * Convenience boolean indicating whether we're running in the browser.
@@ -86,6 +86,13 @@ const platform = {
      * @type {boolean}
      */
     browser: environment === 'browser',
+
+    /**
+     * Convenience boolean indicating whether we're running in a Web Worker.
+     *
+     * @type {boolean}
+     */
+    webworker: environment === 'webworker',
 
     /**
      * Is it a desktop or laptop device.

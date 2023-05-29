@@ -2152,7 +2152,10 @@ const makeTick = function (_app) {
         setApplication(application);
 
         if (frameRequest) {
-            window.cancelAnimationFrame(frameRequest);
+            if (platform.browser)
+                window.cancelAnimationFrame(frameRequest);
+            else if (platform.webworker)
+                cancelAnimationFrame(frameRequest);
             frameRequest = null;
         }
 
@@ -2171,7 +2174,12 @@ const makeTick = function (_app) {
         if (application.xr?.session) {
             frameRequest = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            if (platform.browser)
+                frameRequest = platform.global.requestAnimationFrame(application.tick);
+            else if (platform.webworker)
+                frameRequest = requestAnimationFrame(application.tick);
+            else
+                frameRequest = null;
         }
 
         if (application.graphicsDevice.contextLost)

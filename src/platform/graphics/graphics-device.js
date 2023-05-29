@@ -224,6 +224,16 @@ class GraphicsDevice extends EventHandler {
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
 
+    /**
+     * The current client rect.
+     *
+     * @type {{ width: number, height: number }}
+     */
+    clientRect = {
+        width: 0,
+        height: 0
+    };
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -554,7 +564,8 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
+        this.clientRect.width = this.canvas.width;
+        this.clientRect.height = this.canvas.height;
     }
 
     /**
