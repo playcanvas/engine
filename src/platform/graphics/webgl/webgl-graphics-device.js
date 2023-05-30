@@ -865,7 +865,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = this.getExtension('EXT_draw_buffers');
+            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
             this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
@@ -943,8 +943,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.supportsMrt = true;
         } else {
             ext = this.extDrawBuffers;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
+            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
             this.maxVolumeSize = 1;
         }
 
