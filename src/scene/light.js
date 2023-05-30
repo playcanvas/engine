@@ -118,6 +118,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._disableHighlight = false;
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
@@ -471,6 +472,16 @@ class Light {
         return this._intensity;
     }
 
+    set disableHighlight(value) {
+        if (this._type === LIGHTTYPE_DIRECTIONAL) {
+            this._disableHighlight = value;
+        }
+    }
+
+    get disableHighlight() {
+        return this._disableHighlight;
+    }
+
     set luminance(value) {
         if (this._luminance !== value) {
             this._luminance = value;
@@ -640,6 +651,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.disableHighlight = this._disableHighlight;
         clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;

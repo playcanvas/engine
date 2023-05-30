@@ -71,6 +71,7 @@ class ForwardRenderer extends Renderer {
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
         this.lightColorId = [];
+        this.lightDisableHighlightId = [];
         this.lightDir = [];
         this.lightDirId = [];
         this.lightShadowMapId = [];
@@ -142,6 +143,7 @@ class ForwardRenderer extends Renderer {
     _resolveLight(scope, i) {
         const light = 'light' + i;
         this.lightColorId[i] = scope.resolve(light + '_color');
+        this.lightDisableHighlightId[i] = scope.resolve(light + '_specularColorFactor');
         this.lightDir[i] = new Float32Array(3);
         this.lightDirId[i] = scope.resolve(light + '_direction');
         this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
@@ -203,6 +205,7 @@ class ForwardRenderer extends Renderer {
             }
 
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
+            this.lightDisableHighlightId[cnt].setValue(directional.disableHighlight ? 0.0 : 1.0);
 
             // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);

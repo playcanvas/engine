@@ -63,6 +63,8 @@ const _lightPropsDefault = [];
  * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+ * @property {boolean} disableHighlight If enabled and the light type is pc.LIGHTTYPE_DIRECTIONAL, the specular highlight
+ * of this light source will not be visible. Defaults to false.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
@@ -374,6 +376,9 @@ function _defineProps() {
     });
     _defineProperty('shape', LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
+    });
+    _defineProperty('disableHighlight', false, function (newValue, oldValue) {
+        this.light.disableHighlight = newValue;
     });
     _defineProperty('castShadows', false, function (newValue, oldValue) {
         this.light.castShadows = newValue;
