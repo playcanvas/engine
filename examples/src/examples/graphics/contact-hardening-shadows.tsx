@@ -1,8 +1,9 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, BooleanInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
+import { BooleanInput, Label } from '@playcanvas/pcui';
 class ContactHardeningShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Contact Hardening Shadows';
@@ -37,6 +38,9 @@ class ContactHardeningShadowsExample {
                 </LabelGroup>
                 <LabelGroup text='Directional Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
+                </LabelGroup>
+                <LabelGroup>
+                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.cycle' }} />
                 </LabelGroup>
             </Panel>
         </>;
@@ -141,17 +145,8 @@ class ContactHardeningShadowsExample {
                 plane.setLocalPosition(0, -1.0, 0);
                 app.root.addChild(plane);
 
-                const plane2 = new pc.Entity();
-                plane2.addComponent('render', {
-                    type: 'plane',
-                    material: planeMaterial
-                });
-                plane2.setLocalScale(new pc.Vec3(100, 0, 100));
-                plane2.setLocalPosition(-15, 0, 0);
-                plane2.setEulerAngles(90, 90, 0);
-                app.root.addChild(plane2);
-
                 data.set('script', {
+                    cycle: true,
                     area: {
                         intensity: 16.0,
                         size: 8,
@@ -275,8 +270,7 @@ class ContactHardeningShadowsExample {
                     attributes: {
                         inertiaFactor: 0.2,
                         focusEntity: occluder,
-                        distanceMin: 1,
-                        distanceMax: 100,
+                        distanceMax: 500,
                         frameOnStart: false
                     }
                 });
@@ -314,15 +308,49 @@ class ContactHardeningShadowsExample {
 
                 let resizeControlPanel = true;
                 let time = 0;
+                let timeDiff = 0;
+                let index = 0;
                 app.on("update", function (dt) {
-                    time += dt;
 
+                    if (time === 0) {
+                        camera.script.orbitCamera.distance = 25;
+                    }
+                    time += dt;
+                    timeDiff += dt;
+
+                    if (data.get('script.cycle')) {
+                        if ((timeDiff / 5) > 1) {
+                            index = (index + 1) % 3;
+                            timeDiff = 0;
+                        }
+    
+                        areaLight.enabled = false;
+                        directionalLight.enabled = false;
+                        lightOmni.enabled = false;
+                        switch (index) {
+                            case 0:
+                                areaLight.enabled = true;
+                                break;
+                            case 1:
+                                directionalLight.enabled = true;
+                                break;
+                            case 2:
+                                lightOmni.enabled = true;
+                                break;
+                        }
+                    } else {
+                        areaLight.enabled = true;
+                        directionalLight.enabled = true;
+                        lightOmni.enabled = true;
+                    }
+                    
                     const x = Math.sin(time * 0.2);
                     const z = Math.cos(time * 0.2);
 
                     lightOmni.setLocalPosition(x * 4, 5, z * 4);
-                    areaLight.light.outerConeAngle = Math.abs(Math.sin(time * 0.2)) * 25 + 25;
-                    areaLight.light.innerConeAngle = areaLight.light.outerConeAngle - 10;
+                    directionalLight.setEulerAngles(75, 35 + (time * 2), 0);
+                    areaLight.setEulerAngles(45, 180 + time * 0.2 * 180.0 / Math.PI, 0);
+                    areaLight.setLocalPosition(-x * 4, 7, -z * 4);
 
                     // resize control panel to fit the content better
                     if (resizeControlPanel) {
