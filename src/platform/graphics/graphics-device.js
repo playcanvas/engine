@@ -90,6 +90,14 @@ class GraphicsDevice extends EventHandler {
     maxVolumeSize;
 
     /**
+     * The maximum supported number of color buffers attached to a render target.
+     *
+     * @type {number}
+     * @readonly
+     */
+    maxColorAttachments = 1;
+
+    /**
      * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
      * 'lowp'.
      *
