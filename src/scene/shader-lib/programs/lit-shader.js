@@ -525,7 +525,7 @@ class LitShader {
         } else if (shadowType === SHADOW_PCSS) {
             code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
             if (usePackedDepth) {
-                // After linearising, make sure to pack the range between [0..1]
+                // After linearizing, make sure to pack the range between [0..1]
                 code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
             }
         } else {
@@ -683,7 +683,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if ((light._isPcf) && device.supportsDepthShadow) {
+                    if (light._isPcf && device.supportsDepthShadow) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");
