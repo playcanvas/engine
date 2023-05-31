@@ -11,12 +11,13 @@ uniform vec4 uScreenSize;
 uniform mat4 matrix_view;
 #endif
 
-
-
+#ifndef LINEARIZE_DEPTH
 #ifndef CAMERAPLANES
 #define CAMERAPLANES
 uniform vec4 camera_params; // x: 1 / camera_far,      y: camera_far,     z: camera_near,        w: is_ortho
 #endif
+
+#define LINEARIZE_DEPTH
 #ifdef GL2
 float linearizeDepth(float z) {
     if (camera_params.w == 0.0)
@@ -33,13 +34,7 @@ float unpackFloat(vec4 rgbaDepth) {
 }
 #endif
 #endif
-
-float linearizeDepth(float z, vec4 cameraParams) {
-    if (cameraParams.w == 0.0)
-        return (cameraParams.z * cameraParams.y) / (cameraParams.y + z * (cameraParams.z - cameraParams.y));
-    else
-        return cameraParams.z + z * (cameraParams.y - cameraParams.z);
-}
+#endif
 
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {

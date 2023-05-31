@@ -6,7 +6,7 @@ import { Observer } from '@playcanvas/observer';
 class ContactHardeningShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Contact Hardening Shadows';
-    static WEBGPU_ENABLED = true;
+    static WEBGPU_ENABLED = false;
 
     controls(data: Observer) {
         return <>

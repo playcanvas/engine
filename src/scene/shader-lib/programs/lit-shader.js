@@ -509,7 +509,7 @@ class LitShader {
         }
 
         if (shadowType === SHADOW_PCSS) {
-            code += shaderChunks.screenDepthPS;
+            code += shaderChunks.linearizeDepthPS;
         }
 
         code += begin();
@@ -859,7 +859,7 @@ class LitShader {
                 }
             }
             if (usePcss) {
-                func.append(chunks.screenDepthPS);
+                func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
             }
 
