@@ -298,8 +298,6 @@ class ContactHardeningShadowsExample {
                         lightOmni.light.lightSize = value;
                     } else if (path === 'script.point.shadowType') {
                         lightOmni.light.shadowType = parseInt(value);
-                    } else if (path === 'occluder.height') {
-                        //occluder.setLocalPosition(0, 2 + value, 0);
                     } else if (path === 'light.distance') {
                         areaLight.setLocalPosition(0, 4, -value);
                     }
