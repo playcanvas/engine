@@ -3,7 +3,6 @@ import * as pc from '../../../../';
 
 import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, BooleanInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-import { BooleanInput, Label } from '@playcanvas/pcui';
 class ContactHardeningShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Contact Hardening Shadows';
@@ -159,7 +158,7 @@ class ContactHardeningShadowsExample {
                     },
                     directional: {
                         intensity: 2.0,
-                        size: 8,
+                        size: 20,
                         shadowType: pc.SHADOW_PCSS
                     }
                 });
@@ -222,7 +221,7 @@ class ContactHardeningShadowsExample {
                     normalOffsetBias: 0.1,
                     shadowResolution: 2048
                 });
-                directionalLight.setEulerAngles(75, 35, 0);
+                directionalLight.setEulerAngles(65, 35, 0);
                 app.root.addChild(directionalLight);
 
                 const lightOmni = new pc.Entity("Omni");
@@ -348,7 +347,7 @@ class ContactHardeningShadowsExample {
                     const z = Math.cos(time * 0.2);
 
                     lightOmni.setLocalPosition(x * 4, 5, z * 4);
-                    directionalLight.setEulerAngles(75, 35 + (time * 2), 0);
+                    directionalLight.setEulerAngles(65, 35 + (time * 2), 0);
                     areaLight.setEulerAngles(45, 180 + time * 0.2 * 180.0 / Math.PI, 0);
                     areaLight.setLocalPosition(-x * 4, 7, -z * 4);
 
