@@ -525,14 +525,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
                     new Vec3(normal.x(), normal.y(), normal.z()),
                     rayCallback.get_m_closestHitFraction()
                 );
-
-                // keeping for backwards compatibility
-                if (arguments.length > 2) {
-                    Debug.deprecated('pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
-
-                    const callback = arguments[2];
-                    callback(result);
-                }
             }
         }
 
