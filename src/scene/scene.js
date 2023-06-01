@@ -372,7 +372,7 @@ class Scene extends EventHandler {
      * List of all active composition mesh instances. Only for backwards compatibility.
      * TODO: BatchManager is using it - perhaps that could be refactored
      *
-     * @type {MeshInstance[]}
+     * @type {import('./mesh-instance.js').MeshInstance[]}
      * @private
      */
     set drawCalls(value) {

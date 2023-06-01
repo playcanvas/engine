@@ -704,13 +704,6 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
         });
     }
 
-    // sort vertex elements by engine-ideal order
-    vertexDesc.sort((lhs, rhs) => {
-        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
-    });
-
-    const vertexFormat = new VertexFormat(device, vertexDesc);
-
     promises.push(new Promise((resolve, reject) => {
         // decode draco data
         const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
@@ -719,6 +712,19 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 console.log(err);
                 reject(err);
             } else {
+                // worker reports order of attributes as array of attribute unique_id
+                const order = { };
+                for (const [name, index] of Object.entries(dracoExt.attributes)) {
+                    order[gltfToEngineSemanticMap[name]] = decompressedData.attributes.indexOf(index);
+                }
+
+                // order vertexDesc
+                vertexDesc.sort((a, b) => {
+                    return order[a.semantic] - order[b.semantic];
+                });
+
+                const vertexFormat = new VertexFormat(device, vertexDesc);
+
                 // create vertex buffer
                 const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
                 const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
@@ -2165,6 +2171,7 @@ const createTextures = (gltf, images, options) => {
             // resolve image index
             gltfImageIndex = gltfImageIndex ??
                              gltfTexture?.extensions?.KHR_texture_basisu?.source ??
+                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
                              gltfTexture.source;
 
             const cloneAsset = seenImages.has(gltfImageIndex);

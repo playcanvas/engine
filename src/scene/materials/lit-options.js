@@ -148,7 +148,7 @@ class LitOptions {
     fastTbn = false;
 
     /**
-     * The value of {@link Material#twoSidedLighting}.
+     * The value of {@link StandardMaterial#twoSidedLighting}.
      *
      * @type {boolean}
      */
@@ -181,7 +181,7 @@ class LitOptions {
     alphaToCoverage = false;
 
     /**
-     * Enable specular fade. See {@link Material#opacityFadesSpecular}.
+     * Enable specular fade. See {@link StandardMaterial#opacityFadesSpecular}.
      *
      * @type {boolean}
      */
@@ -275,7 +275,8 @@ class LitOptions {
     toneMap = -1;
 
     /**
-     * If cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+     * If cubemaps require seam fixing (see the `fixCubemapSeams` property of the options object
+     * passed to the {@link Texture} constructor).
      *
      * @type {boolean}
      */

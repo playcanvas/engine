@@ -2,6 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
+import { Tracing } from '../../core/tracing.js';
+import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
     BUFFER_STATIC,
@@ -88,6 +90,14 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     maxVolumeSize;
+
+    /**
+     * The maximum supported number of color buffers attached to a render target.
+     *
+     * @type {number}
+     * @readonly
+     */
+    maxColorAttachments = 1;
 
     /**
      * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
@@ -373,9 +383,9 @@ class GraphicsDevice extends EventHandler {
      * operation is disabled.
      *
      * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters#DEFAULT} if not specified.
+     * {@link StencilParameters.DEFAULT} if not specified.
      */
     setStencilState(stencilFront, stencilBack) {
         Debug.assert(false);
@@ -650,6 +660,23 @@ class GraphicsDevice extends EventHandler {
      */
     frameStart() {
         this.renderPassIndex = 0;
+
+        Debug.call(() => {
+
+            // log out all loaded textures, sorted by gpu memory size
+            if (Tracing.get(TRACEID_TEXTURES)) {
+                const textures = this.textures.slice();
+                textures.sort((a, b) => b.gpuSize - a.gpuSize);
+                Debug.log(`Textures: ${textures.length}`);
+                let textureTotal = 0;
+                textures.forEach((texture, index) => {
+                    const textureSize  = texture.gpuSize;
+                    textureTotal += textureSize;
+                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                });
+                Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
+            }
+        });
     }
 }
 
