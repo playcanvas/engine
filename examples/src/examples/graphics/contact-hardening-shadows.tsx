@@ -310,6 +310,7 @@ class ContactHardeningShadowsExample {
                 app.on("update", function (dt) {
 
                     if (time === 0) {
+                        // @ts-ignore engine-tsd
                         camera.script.orbitCamera.distance = 25;
                     }
                     time += dt;
