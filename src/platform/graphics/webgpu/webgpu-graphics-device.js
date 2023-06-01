@@ -110,6 +110,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxPixelRatio = 1;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
+        this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
