@@ -943,6 +943,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
             this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
             this.supportsMrt = true;
+            this.supportsVolumeTextures = true;
         } else {
             ext = this.extDrawBuffers;
             this.supportsMrt = !!ext;

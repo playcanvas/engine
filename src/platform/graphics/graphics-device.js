@@ -134,6 +134,14 @@ class GraphicsDevice extends EventHandler {
     supportsMrt = false;
 
     /**
+     * True if the device supports volume textures.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsVolumeTextures = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget}
