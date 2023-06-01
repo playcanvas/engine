@@ -1,8 +1,6 @@
 import React, { LegacyRef, useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
-// @ts-ignore: library file import
-import playcanvasTypeDefs from '../../dist/build/playcanvas.d.ts';
 import { File } from './helpers/types';
 import formatters from './helpers/formatters.mjs';
 
@@ -31,14 +29,18 @@ const CodeEditor = (props: CodeEditorProps) => {
     const [selectedFile, setSelectedFile] = useState(0);
 
     const beforeMount = (monaco: any) => {
-        monaco.languages.typescript.typescriptDefaults.addExtraLib(
-            playcanvasTypeDefs,
-            '@playcanvas/playcanvas.d.ts'
-        );
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            playcanvasTypeDefs,
-            '@playcanvas/playcanvas.d.ts'
-        );
+        fetch('/playcanvas.d.ts').then((r: any) => {
+            return r.text();
+        }).then((playcanvasDefs: string) => {
+            monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                playcanvasDefs,
+                '@playcanvas/playcanvas.d.ts'
+            );
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                playcanvasDefs,
+                '@playcanvas/playcanvas.d.ts'
+            );
+        });
     };
 
     const editorDidMount = (editor: any) => {
