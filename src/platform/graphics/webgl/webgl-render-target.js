@@ -101,6 +101,7 @@ class WebglRenderTarget {
 
         // --- Init the provided color buffer (optional) ---
         const colorBufferCount = target._colorBuffers?.length ?? 0;
+        const attachmentBaseConstant = device.webgl2 ? gl.COLOR_ATTACHMENT0 : device.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
         const buffers = [];
         for (let i = 0; i < colorBufferCount; ++i) {
             const colorBuffer = target.getColorBuffer(i);
@@ -114,18 +115,18 @@ class WebglRenderTarget {
                 // Attach the color buffer
                 gl.framebufferTexture2D(
                     gl.FRAMEBUFFER,
-                    gl.COLOR_ATTACHMENT0 + i,
+                    attachmentBaseConstant + i,
                     colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                     colorBuffer.impl._glTexture,
                     0
                 );
 
-                buffers.push(gl.COLOR_ATTACHMENT0 + i);
+                buffers.push(attachmentBaseConstant + i);
             }
         }
 
-        if (device.webgl2) {
-            gl.drawBuffers(buffers);
+        if (device.drawBuffers) {
+            device.drawBuffers(buffers);
         }
 
         const depthBuffer = target._depthBuffer;
@@ -218,7 +219,7 @@ class WebglRenderTarget {
 
                 // restore rendering back to the main framebuffer
                 device.setFramebuffer(this._glFrameBuffer);
-                gl.drawBuffers(buffers);
+                device.drawBuffers(buffers);
             }
         }
     }
@@ -240,7 +241,7 @@ class WebglRenderTarget {
             gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, buffer);
 
-            gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+            device.drawBuffers([gl.COLOR_ATTACHMENT0]);
 
             Debug.call(() => this._checkFbo(device, target, `MSAA-MRT-src${i}`));
 
