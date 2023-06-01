@@ -1589,7 +1589,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTextureParameters(texture) {
         const gl = this.gl;
-        const flags = texture._parameterFlags;
+        const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
         if (flags & 1) {
@@ -1654,10 +1654,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTexture(texture, textureUnit) {
 
-        if (!texture.impl._glTexture)
-            texture.impl.initialize(this, texture);
+        const impl = texture.impl;
+        if (!impl._glTexture)
+            impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+        if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
@@ -1665,13 +1666,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
-            if (texture._parameterFlags) {
+            if (impl.dirtyParameterFlags) {
                 this.setTextureParameters(texture);
-                texture._parameterFlags = 0;
+                impl.dirtyParameterFlags = 0;
             }
 
             if (texture._needsUpload || texture._needsMipmapsUpload) {
-                texture.impl.upload(this, texture);
+                impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
             }

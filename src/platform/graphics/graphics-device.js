@@ -142,6 +142,15 @@ class GraphicsDevice extends EventHandler {
     renderTarget = null;
 
     /**
+     * A version number that is incremented every frame. This is used to detect if some object were
+     * invalidated.
+     *
+     * @type {number}
+     * @ignore
+     */
+    renderVersion = 0;
+
+    /**
      * Index of the currently active render pass.
      *
      * @type {number}
@@ -660,6 +669,7 @@ class GraphicsDevice extends EventHandler {
      */
     frameStart() {
         this.renderPassIndex = 0;
+        this.renderVersion++;
 
         Debug.call(() => {
 

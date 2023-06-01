@@ -48,6 +48,8 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    renderVersionDirty = 0;
+
     /**
      * Create a new Texture instance.
      *
@@ -231,9 +233,9 @@ class Texture {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
 
-        this.dirtyAll();
-
         this.impl = graphicsDevice.createTextureImpl(this);
+
+        this.dirtyAll();
 
         // track the texture
         graphicsDevice.textures.push(this);
@@ -305,6 +307,11 @@ class Texture {
         // #endif
     }
 
+    propertyChanged(flag) {
+        this.impl.propertyChanged(flag);
+        this.renderVersionDirty = this.device.renderVersion;
+    }
+
     /**
      * Returns number of required mip levels for the texture based on its dimensions and parameters.
      *
@@ -330,7 +337,7 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             this._minFilter = v;
-            this._parameterFlags |= 1;
+            this.propertyChanged(1);
         }
     }
 
@@ -349,7 +356,7 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             this._magFilter = v;
-            this._parameterFlags |= 2;
+            this.propertyChanged(2);
         }
     }
 
@@ -369,7 +376,7 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this._parameterFlags |= 4;
+            this.propertyChanged(4);
         }
     }
 
@@ -389,7 +396,7 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this._parameterFlags |= 8;
+            this.propertyChanged(8);
         }
     }
 
@@ -414,7 +421,7 @@ class Texture {
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this._parameterFlags |= 16;
+            this.propertyChanged(16);
         }
     }
 
@@ -432,7 +439,7 @@ class Texture {
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this._parameterFlags |= 32;
+            this.propertyChanged(32);
         }
     }
 
@@ -455,7 +462,7 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this._parameterFlags |= 64;
+            this.propertyChanged(64);
         }
     }
 
@@ -472,7 +479,7 @@ class Texture {
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this._parameterFlags |= 128;
+            this.propertyChanged(128);
         }
     }
 
@@ -705,7 +712,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+        this.propertyChanged(255);  // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
     }
 
     /**
