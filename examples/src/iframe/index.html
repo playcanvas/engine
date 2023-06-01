@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="./index.js"></script>
-    <script src="../examples/index.js"></script>
+    <script src="/iframe/index.js"></script>
+    <script src="/examples/index.js"></script>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -30,6 +30,7 @@
         </div>
     </div>
     <script>
+    (function loadIFrame() {
         // polyfill slice on UInt8Array
         if (!Uint8Array.prototype.slice) {
             Object.defineProperty(Uint8Array.prototype, 'slice', {
@@ -50,6 +51,7 @@
         if (urlParams.get('category') && urlParams.get('example')) {
             window.Example = examples[urlParams.get('category')][`${urlParams.get('example')}Example`];
         } else {
+            console.warn('No example specified, displaying a list of all examples instead.')
             const examplesContainer = document.createElement('div');
             Object.keys(examples).forEach(function(category) {
                 const categoryHeader = document.createElement('h2');
@@ -66,8 +68,7 @@
             document.body.prepend(examplesContainer);
             document.body.removeChild(document.getElementById('app'))
             document.body.style = 'background-color: white; padding: 15px; overflow: auto;';
-            window.stop();
-            throw('No example specified, showing a list of all examples instead!');
+            return;
         }
 
         let example = new Example();
@@ -88,8 +89,7 @@
         }
         window.loadFunction = example.load;
         window.files = window.top.editedFiles || example.constructor.FILES;
-    </script>
-    <script>
+
         function loadScript(url, onload) {
             const script = document.createElement('script');
             script.setAttribute('src', url);
@@ -228,8 +228,7 @@
                 }
             }
         }
-    </script>
-    <script>
+
         // create the example observer 
         var data = new observer.Observer({});
         window.top.observerData = data;
@@ -246,6 +245,7 @@
                 });
             }
         });
+    })();
     </script>
 </body>
 </html>
