@@ -21,7 +21,7 @@ class TextureUtils {
     }
 
     /**
-     * Calculate the size in bytes of the texture level given its format and dimensions
+     * Calculate the size in bytes of the texture level given its format and dimensions.
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
