@@ -1,4 +1,5 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
+import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
@@ -1641,7 +1642,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (flags & 128) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
+                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
             }
         }
     }
