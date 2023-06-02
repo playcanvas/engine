@@ -315,7 +315,8 @@ class ContactHardeningShadowsExample {
                             index = (index + 1) % 3;
                             timeDiff = 0;
                         }
-    
+                    }
+
                     areaLight.enabled = index === 0;
                     directionalLight.enabled = index === 1;
                     lightOmni.enabled = index === 2;
