@@ -27,7 +27,6 @@ import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
-import specular from '../chunks/standard/frag/specular.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
