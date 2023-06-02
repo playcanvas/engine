@@ -122,7 +122,8 @@ const builds = [
         output: {
             name: 'bundle',
             format: 'umd',
-            dir: 'dist/iframe'
+            dir: 'dist/iframe',
+            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false,
         },
         plugins: [
             alias({
