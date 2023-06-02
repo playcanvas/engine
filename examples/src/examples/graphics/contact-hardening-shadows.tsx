@@ -112,11 +112,7 @@ class ContactHardeningShadowsExample {
                 app.scene.setSkybox(assets.helipad.resources);
 
                 // enable area lights which are disabled by default for clustered lighting
-                app.scene.lighting.areaLightsEnabled = true;
                 app.scene.clusteredLightingEnabled = false;
-
-                app.scene.lighting.shadowsEnabled = true;
-                app.scene.lighting.shadowAtlasResolution = 2048;
                 app.scene.skyboxIntensity = 0.1;
 
                 // set the loaded area light LUT data
@@ -124,8 +120,6 @@ class ContactHardeningShadowsExample {
                 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
                 const planeMaterial = new pc.StandardMaterial();
-                //planeMaterial.diffuseMap = assets.color.resource;
-                //planeMaterial.normalMap = assets.normal.resource;
                 planeMaterial.gloss = 0.0;
                 planeMaterial.metalness = 0.7;
                 planeMaterial.useMetalness = true;
@@ -322,26 +316,10 @@ class ContactHardeningShadowsExample {
                             timeDiff = 0;
                         }
     
-                        areaLight.enabled = false;
-                        directionalLight.enabled = false;
-                        lightOmni.enabled = false;
-                        switch (index) {
-                            case 0:
-                                areaLight.enabled = true;
-                                break;
-                            case 1:
-                                directionalLight.enabled = true;
-                                break;
-                            case 2:
-                                lightOmni.enabled = true;
-                                break;
-                        }
-                    } else {
-                        areaLight.enabled = true;
-                        directionalLight.enabled = true;
-                        lightOmni.enabled = true;
-                    }
-                    
+                    areaLight.enabled = index === 0;
+                    directionalLight.enabled = index === 1;
+                    lightOmni.enabled = index === 2;
+
                     const x = Math.sin(time * 0.2);
                     const z = Math.cos(time * 0.2);
 

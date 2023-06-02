@@ -88,7 +88,7 @@ const _lightPropsDefault = [];
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
  * @property {number} lightSize Controls the size of the light source. Used only for PCSS shadows to
- * estimate penumra size. Defaults to 0.001.
+ * estimate penumra size. Defaults to 10.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *

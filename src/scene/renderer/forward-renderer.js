@@ -235,11 +235,12 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
                 this.lightSizeId[cnt].setValue(directional.lightSize);
 
-                const cameraParams = new Float32Array(4);
+                const cameraParams = directional._cameraParams;
+                cameraParams.length = 4;
                 cameraParams[0] = 0.5;
-                cameraParams[1] = lightRenderData.shadowCamera._farClip;
-                cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-                cameraParams[3] = 1;
+                cameraParams[1] = lightRenderData.camera_params.y;
+                cameraParams[2] = lightRenderData.camera_params.z;
+                cameraParams[3] = 0;
                 this.lightCameraParamsId[cnt].setValue(cameraParams);
 
                 const params = directional._shadowRenderParams;
@@ -306,11 +307,11 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
             this.lightSizeId[cnt].setValue(omni.lightSize);
 
-            const cameraParams = new Float32Array(4);
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
-            cameraParams[0] = Math.tan(fov / 2.0);
-            cameraParams[1] = lightRenderData.shadowCamera._farClip;
-            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+            const cameraParams = omni._cameraParams;
+            cameraParams.length = 4;
+            cameraParams[0] = lightRenderData.camera_params.x;
+            cameraParams[1] = lightRenderData.camera_params.y;
+            cameraParams[2] = lightRenderData.camera_params.z;
             cameraParams[3] = 0;
             this.lightCameraParamsId[cnt].setValue(cameraParams);
         }
@@ -370,11 +371,11 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
             this.lightSizeId[cnt].setValue(spot.lightSize);
 
-            const cameraParams = new Float32Array(4);
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
-            cameraParams[0] = Math.tan(fov / 2.0);
-            cameraParams[1] = lightRenderData.shadowCamera._farClip;
-            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+            const cameraParams = spot._cameraParams;
+            cameraParams.length = 4;
+            cameraParams[0] = lightRenderData.camera_params.x;
+            cameraParams[1] = lightRenderData.camera_params.y;
+            cameraParams[2] = lightRenderData.camera_params.z;
             cameraParams[3] = 0;
             this.lightCameraParamsId[cnt].setValue(cameraParams);
         }

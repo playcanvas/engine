@@ -9,7 +9,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
@@ -64,6 +64,10 @@ class LightRenderData {
 
         // scissor rectangle for the shadow rendering to the texture (x, y, width, height)
         this.shadowScissor = new Vec4(0, 0, 1, 1);
+
+        // camera parameters used to calculate linear depth from the shadow map
+        const fov = this.shadowCamera._fov * Math.PI / 180.0;
+        this.cameraParams = new Vec4(Math.tan(fov / 2.0), this.shadowCamera._farClip, this.shadowCamera._nearClip, 0);
 
         // face index, value is based on light type:
         // - spot: always 0
@@ -335,7 +339,7 @@ class Light {
             value = SHADOW_VSM8;
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
+        this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF5 || value === SHADOW_PCF3;
 
         this._shadowType = value;
         this._destroyShadowMap();

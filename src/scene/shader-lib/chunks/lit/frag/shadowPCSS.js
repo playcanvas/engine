@@ -3,21 +3,19 @@ export default /* glsl */`
 
 #define PCSS_SAMPLE_COUNT 16
 
-vec2 VogelDisk(float sampleIndex, float count, float phi)
+vec2 vogelDisk(float sampleIndex, float count, float phi)
 {
     const float GoldenAngle = 2.4;
     float r = sqrt(sampleIndex + 0.5) / sqrt(count);
 
     float theta = sampleIndex * GoldenAngle + phi;
 
-    float sine, cosine;
-    sine = sin(theta);
-    cosine = cos(theta);
-
+    float sine = sin(theta);
+    float cosine = cos(theta);
     return vec2(r * cosine, r * sine);
 }
 
-vec3 VogelSphere(float sampleIndex, float count, float phi) {
+vec3 vogelSphere(float sampleIndex, float count, float phi) {
     float weight = sampleIndex / count;
     float radius = sqrt(1.0 - weight * weight);
     const float GoldenAngle = 2.4;
@@ -27,7 +25,7 @@ vec3 VogelSphere(float sampleIndex, float count, float phi) {
     return vec3(cos(theta) * radius, weight, sin(theta) * radius);
 }
 
-float GradientNoise(vec2 screenPos) {
+float gradientNoise(vec2 screenPos) {
     vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
     return fract(magic.z * fract(dot(screenPos, magic.xy)));
 }
@@ -79,13 +77,13 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
 #endif
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = GradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
+    float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = VogelDisk(float(i), float(PCSS_SAMPLE_COUNT), noise);
+        samplePoints[i] = vogelDisk(float(i), float(PCSS_SAMPLE_COUNT), noise);
     }
 
     // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
-    float fovRatioAtDepth = receiverDepth / (cameraParams.x * receiverDepth);
+    float fovRatioAtDepth = 1.0f / cameraParams.x;
     float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, oneOverShadowMapSize * lightSize * fovRatioAtDepth, receiverDepth);
     if (averageBlocker == -1.0) {
         return 1.0;
@@ -94,11 +92,10 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
         float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize * fovRatioAtDepth;
 
         float shadow = 0.0;
-        float noise = GradientNoise(gl_FragCoord.xy);
 
         for (int i = 0; i < PCSS_SAMPLE_COUNT; i ++)
         {
-            vec2 sampleUV = samplePoints[i] * (filterRadius);
+            vec2 sampleUV = samplePoints[i] * filterRadius;
             sampleUV = shadowCoords.xy + sampleUV;
 
         #ifdef GL2
@@ -137,9 +134,9 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
 float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize, vec3 lightDir) {
     
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = GradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
+    float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = VogelSphere(float(i), float(PCSS_SAMPLE_COUNT), noise);
+        samplePoints[i] = vogelSphere(float(i), float(PCSS_SAMPLE_COUNT), noise);
     }
 
     float receiverDepth = length(lightDir) * shadowParams.w + shadowParams.z;

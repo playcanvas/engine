@@ -294,9 +294,6 @@ export const SHADOW_PCF1 = 5;
  */
 export const SHADOW_PCSS = 6;
 
-// non-public: number of supported depth shadow modes
-export const SHADOW_COUNT = 7;
-
 /**
  * map of engine SHADOW__*** to a string representation
  *
