@@ -48,6 +48,8 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    renderVersionDirty = 0;
+
     /**
      * Create a new Texture instance.
      *
@@ -57,7 +59,7 @@ class Texture {
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only).
+     * @param {number} [options.depth] - The number of depth slices in a 3D texture (not supported by WebGl1).
      * Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
@@ -114,7 +116,7 @@ class Texture {
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
-     * (WebGL2 only). Defaults to false.
+     * (not supported by WebGL1). Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
@@ -135,9 +137,9 @@ class Texture {
      * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is
      * {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for
      * this texture, and you can get filtered results of comparison using texture() in your shader
-     * (WebGL2 only). Defaults to false.
+     * (not supported by WebGL1). Defaults to false.
      * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled
-     * (WebGL2 only). Can be:
+     * (not supported by WebGL1). Can be:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -180,7 +182,7 @@ class Texture {
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
 
-        if (graphicsDevice.webgl2) {
+        if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
             this._depth = options.depth ?? 1;
         } else {
@@ -231,9 +233,9 @@ class Texture {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
 
-        this.dirtyAll();
-
         this.impl = graphicsDevice.createTextureImpl(this);
+
+        this.dirtyAll();
 
         // track the texture
         graphicsDevice.textures.push(this);
@@ -305,6 +307,11 @@ class Texture {
         // #endif
     }
 
+    propertyChanged(flag) {
+        this.impl.propertyChanged(flag);
+        this.renderVersionDirty = this.device.renderVersion;
+    }
+
     /**
      * Returns number of required mip levels for the texture based on its dimensions and parameters.
      *
@@ -330,7 +337,7 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             this._minFilter = v;
-            this._parameterFlags |= 1;
+            this.propertyChanged(1);
         }
     }
 
@@ -349,7 +356,7 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             this._magFilter = v;
-            this._parameterFlags |= 2;
+            this.propertyChanged(2);
         }
     }
 
@@ -369,7 +376,7 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this._parameterFlags |= 4;
+            this.propertyChanged(4);
         }
     }
 
@@ -389,7 +396,7 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this._parameterFlags |= 8;
+            this.propertyChanged(8);
         }
     }
 
@@ -398,7 +405,7 @@ class Texture {
     }
 
     /**
-     * The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
+     * The addressing mode to be applied to the 3D texture depth (not supported on WebGL1). Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -407,14 +414,14 @@ class Texture {
      * @type {number}
      */
     set addressW(addressW) {
-        if (!this.device.webgl2) return;
+        if (!this.device.supportsVolumeTextures) return;
         if (!this._volume) {
             Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this._parameterFlags |= 16;
+            this.propertyChanged(16);
         }
     }
 
@@ -425,14 +432,14 @@ class Texture {
     /**
      * When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or
      * {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for this texture, and you can get
-     * filtered results of comparison using texture() in your shader (WebGL2 only).
+     * filtered results of comparison using texture() in your shader (not supported on WebGL1).
      *
      * @type {boolean}
      */
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this._parameterFlags |= 32;
+            this.propertyChanged(32);
         }
     }
 
@@ -441,7 +448,7 @@ class Texture {
     }
 
     /**
-     * Comparison function when compareOnRead is enabled (WebGL2 only). Possible values:
+     * Comparison function when compareOnRead is enabled (not supported on WebGL1). Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -455,7 +462,7 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this._parameterFlags |= 64;
+            this.propertyChanged(64);
         }
     }
 
@@ -472,7 +479,7 @@ class Texture {
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this._parameterFlags |= 128;
+            this.propertyChanged(128);
         }
     }
 
@@ -520,7 +527,7 @@ class Texture {
     }
 
     /**
-     * The number of depth slices in a 3D texture (WebGL2 only).
+     * The number of depth slices in a 3D texture.
      *
      * @type {number}
      */
@@ -697,7 +704,7 @@ class Texture {
         return result * (cubemap ? 6 : 1);
     }
 
-    // Force a full resubmission of the texture to WebGL (used on a context restore event)
+    // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
@@ -705,7 +712,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+        this.propertyChanged(255);  // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
     }
 
     /**

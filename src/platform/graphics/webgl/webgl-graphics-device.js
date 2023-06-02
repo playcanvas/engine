@@ -854,6 +854,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.webgl2) {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
+            this.drawBuffers = gl.drawBuffers.bind(gl);
             this.extInstancing = true;
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
@@ -865,8 +866,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = this.getExtension('EXT_draw_buffers');
+            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
             this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
+            this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
                 const ext = this.extInstancing;
@@ -940,10 +942,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
             this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
             this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            this.supportsMrt = true;
+            this.supportsVolumeTextures = true;
         } else {
             ext = this.extDrawBuffers;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            this.supportsMrt = !!ext;
+            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
+            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
             this.maxVolumeSize = 1;
         }
 
@@ -1352,17 +1357,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unbindVertexArray();
 
         const target = this.renderTarget;
+        const colorBufferCount = renderPass.colorArrayOps.length;
         if (target) {
 
-            // invalidate buffers to stop them being written to on tiled architextures
+            // invalidate buffers to stop them being written to on tiled architectures
             if (this.webgl2) {
                 invalidateAttachments.length = 0;
                 const gl = this.gl;
 
-                // invalidate color only if we don't need to resolve it
-                if (!(renderPass.colorOps?.store || renderPass.colorOps?.resolve)) {
-                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                // color buffers
+                for (let i = 0; i < colorBufferCount; i++) {
+                    const colorOps = renderPass.colorArrayOps[i];
+
+                    // invalidate color only if we don't need to resolve it
+                    if (!(colorOps.store || colorOps.resolve)) {
+                        invalidateAttachments.push(gl.COLOR_ATTACHMENT0 + i);
+                    }
                 }
+
                 if (!renderPass.depthStencilOps.storeDepth) {
                     invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
                 }
@@ -1380,7 +1392,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // resolve the color buffer
+            // resolve the color buffer (this resolves all MRT color buffers at once)
             if (renderPass.colorOps?.resolve) {
                 if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
@@ -1388,12 +1400,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // generate mipmaps
-            if (renderPass.colorOps?.mipmaps) {
-                const colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
-                    this.activeTexture(this.maxCombinedTextures - 1);
-                    this.bindTexture(colorBuffer);
-                    this.gl.generateMipmap(colorBuffer.impl._glTarget);
+            for (let i = 0; i < colorBufferCount; i++) {
+                const colorOps = renderPass.colorArrayOps[i];
+                if (colorOps.mipmaps) {
+                    const colorBuffer = target._colorBuffers[i];
+                    if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+
+                        DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
+
+                        this.activeTexture(this.maxCombinedTextures - 1);
+                        this.bindTexture(colorBuffer);
+                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+
+                        DebugGraphics.popGpuMarker(this);
+                    }
                 }
             }
         }
@@ -1570,7 +1590,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTextureParameters(texture) {
         const gl = this.gl;
-        const flags = texture._parameterFlags;
+        const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
         if (flags & 1) {
@@ -1635,10 +1655,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTexture(texture, textureUnit) {
 
-        if (!texture.impl._glTexture)
-            texture.impl.initialize(this, texture);
+        const impl = texture.impl;
+        if (!impl._glTexture)
+            impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+        if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
@@ -1646,13 +1667,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
-            if (texture._parameterFlags) {
+            if (impl.dirtyParameterFlags) {
                 this.setTextureParameters(texture);
-                texture._parameterFlags = 0;
+                impl.dirtyParameterFlags = 0;
             }
 
             if (texture._needsUpload || texture._needsMipmapsUpload) {
-                texture.impl.upload(this, texture);
+                impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
             }

@@ -9,7 +9,8 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
+    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../constants.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
@@ -53,6 +54,15 @@ const gpuAddressModes = [];
 gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
 gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
 gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
+
+// map of FILTER_*** to GPUFilterMode for level and mip sampling
+const gpuFilterModes = [];
+gpuFilterModes[FILTER_NEAREST] = { level: 'nearest', mip: 'nearest' };
+gpuFilterModes[FILTER_LINEAR] = { level: 'linear', mip: 'nearest' };
+gpuFilterModes[FILTER_NEAREST_MIPMAP_NEAREST] = { level: 'nearest', mip: 'nearest' };
+gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear' };
+gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
+gpuFilterModes[FILTER_LINEAR_MIPMAP_LINEAR] = { level: 'linear', mip: 'linear' };
 
 /**
  * A WebGPU implementation of the Texture.
@@ -156,6 +166,11 @@ class WebgpuTexture {
     destroy(device) {
     }
 
+    propertyChanged(flag) {
+        // samplers need to be recreated
+        this.samplers.length = 0;
+    }
+
     /**
      * @param {any} device - The Graphics Device.
      * @returns {any} - Returns the view.
@@ -198,7 +213,6 @@ class WebgpuTexture {
         return view;
     }
 
-    // TODO: handle the case where those properties get changed
     // TODO: share a global map of samplers. Possibly even use shared samplers for bind group,
     // or maybe even have some attached in view bind group and use globally
 
@@ -254,10 +268,12 @@ class WebgpuTexture {
                     descr.mipmapFilter = 'nearest';
                     label = 'Nearest';
                 } else {
-                    descr.magFilter = 'linear';
-                    descr.minFilter = 'linear';
-                    descr.mipmapFilter = 'linear';
-                    label = 'Linear';
+                    descr.magFilter = gpuFilterModes[texture.magFilter].level;
+                    descr.minFilter = gpuFilterModes[texture.minFilter].level;
+                    descr.mipmapFilter = gpuFilterModes[texture.minFilter].mip;
+                    Debug.call(() => {
+                        label = `Texture:${texture.magFilter}-${texture.minFilter}-${descr.mipmapFilter}`;
+                    });
                 }
             }
 

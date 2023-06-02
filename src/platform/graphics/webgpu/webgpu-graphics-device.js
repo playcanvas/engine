@@ -106,9 +106,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxTextureSize = limits.maxTextureDimension2D;
         this.maxCubeMapSize = limits.maxTextureDimension2D;
         this.maxVolumeSize = limits.maxTextureDimension3D;
+        this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
+        this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
