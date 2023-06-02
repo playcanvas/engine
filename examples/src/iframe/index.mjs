@@ -7,7 +7,7 @@ import '../../lib/objectValuesPolyfill.js';
 import * as observer from '@playcanvas/observer';
 import * as pcui from '@playcanvas/pcui/react';
 import React from 'react';
-import pc from '../../../build/playcanvas.js';
+import * as pc from '../../../build/playcanvas.js';
 import * as pcx from '../../../build/playcanvas-extras.mjs/index.js';
 
 window.observer = observer;
