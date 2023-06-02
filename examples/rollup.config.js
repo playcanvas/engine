@@ -9,7 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import fse from 'fs-extra';
 
-const ENGINE_PATH = process.env.ENGINE_PATH ? path.resolve(process.env.ENGINE_PATH) : path.resolve('../build/playcanvas.js');
+const ENGINE_PATH = process.env.ENGINE_PATH ? path.resolve(process.env.ENGINE_PATH) : path.resolve(`../build/playcanvas${process.env.NODE_ENV === 'development' ? '.dbg' : ''}.js`);
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
