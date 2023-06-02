@@ -475,6 +475,7 @@ class Light {
     set disableHighlight(value) {
         if (this._type === LIGHTTYPE_DIRECTIONAL) {
             this._disableHighlight = value;
+            this.updateKey();
         }
     }
 
@@ -875,6 +876,7 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
+        //  7 : disable specular
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -886,7 +888,8 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8);
+               ((this.numCascades - 1)                    <<  8) |
+               ((this.disableHighlight ? 1 : 0)           <<  7);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
