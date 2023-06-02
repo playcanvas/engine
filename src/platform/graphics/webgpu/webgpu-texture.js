@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
 
 import {
     pixelFormatByteSizes,
@@ -234,7 +235,8 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW]
+                addressModeW: gpuAddressModes[texture.addressW],
+                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
             };
 
             // default for compare sampling of texture
