@@ -3,16 +3,15 @@ import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constant
 import { math } from '../../core/math/math.js';
 
 import { RenderTarget } from './render-target.js';
-
+import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
-    pixelFormatByteSizes, pixelFormatBlockSizes, getPixelFormatArrayType,
+    getPixelFormatArrayType,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
@@ -580,7 +579,7 @@ class Texture {
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
     }
 
     /**
@@ -647,63 +646,6 @@ class Texture {
         }
     }
 
-    /**
-     * Calculate the size in bytes of the texture level given its format and dimensions
-     *
-     * @param {number} width - Texture's width.
-     * @param {number} height - Texture's height.
-     * @param {number} format - Texture's pixel format PIXELFORMAT_***.
-     * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
-     */
-    static calcLevelGpuSize(width, height, format) {
-        const pixelSize = pixelFormatByteSizes.get(format) ?? 0;
-        if (pixelSize > 0) {
-            return width * height * pixelSize;
-        }
-
-        const blockSize = pixelFormatBlockSizes.get(format) ?? 0;
-        let blockWidth = Math.floor((width + 3) / 4);
-        const blockHeight = Math.floor((height + 3) / 4);
-
-        if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
-            format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-            blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
-        }
-
-        return blockWidth * blockHeight * blockSize;
-    }
-
-    /**
-     * Calculate the GPU memory required for a texture.
-     *
-     * @param {number} width - Texture's width.
-     * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
-     * @param {number} format - Texture's pixel format PIXELFORMAT_***.
-     * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
-     * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
-     * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
-     */
-    static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
-        let result = 0;
-
-        while (1) {
-            result += Texture.calcLevelGpuSize(width, height, format);
-
-            // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
-            if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
-                break;
-            }
-            width = Math.max(Math.floor(width / 2), 1);
-            height = Math.max(Math.floor(height / 2), 1);
-            depth = Math.max(Math.floor(depth / 2), 1);
-        }
-
-        return result * (cubemap ? 6 : 1);
-    }
-
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
@@ -749,7 +691,7 @@ class Texture {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const data = new ArrayBuffer(Texture.calcLevelGpuSize(width, height, this._format));
+            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 

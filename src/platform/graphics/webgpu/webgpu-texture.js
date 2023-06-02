@@ -12,6 +12,7 @@ import {
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../constants.js';
+import { TextureUtils } from '../texture-utils.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -24,9 +25,9 @@ gpuTextureFormats[PIXELFORMAT_RGBA5551] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA4] = '';
 gpuTextureFormats[PIXELFORMAT_RGB8] = 'rgba8unorm';
 gpuTextureFormats[PIXELFORMAT_RGBA8] = 'rgba8unorm';
-gpuTextureFormats[PIXELFORMAT_DXT1] = '';
-gpuTextureFormats[PIXELFORMAT_DXT3] = '';
-gpuTextureFormats[PIXELFORMAT_DXT5] = '';
+gpuTextureFormats[PIXELFORMAT_DXT1] = 'bc1-rgba-unorm';
+gpuTextureFormats[PIXELFORMAT_DXT3] = 'bc2-rgba-unorm';
+gpuTextureFormats[PIXELFORMAT_DXT5] = 'bc3-rgba-unorm';
 gpuTextureFormats[PIXELFORMAT_RGB16F] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA16F] = 'rgba16float';
 gpuTextureFormats[PIXELFORMAT_RGB32F] = '';
@@ -38,13 +39,13 @@ gpuTextureFormats[PIXELFORMAT_111110F] = 'rg11b10ufloat';
 gpuTextureFormats[PIXELFORMAT_SRGB] = '';
 gpuTextureFormats[PIXELFORMAT_SRGBA] = '';
 gpuTextureFormats[PIXELFORMAT_ETC1] = '';
-gpuTextureFormats[PIXELFORMAT_ETC2_RGB] = '';
-gpuTextureFormats[PIXELFORMAT_ETC2_RGBA] = '';
+gpuTextureFormats[PIXELFORMAT_ETC2_RGB] = 'etc2-rgb8unorm';
+gpuTextureFormats[PIXELFORMAT_ETC2_RGBA] = 'etc2-rgba8unorm';
 gpuTextureFormats[PIXELFORMAT_PVRTC_2BPP_RGB_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGB_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = '';
-gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = '';
+gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = 'astc-4x4-unorm';
 gpuTextureFormats[PIXELFORMAT_ATC_RGB] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
 gpuTextureFormats[PIXELFORMAT_BGRA8] = 'bgra8unorm';
@@ -332,6 +333,11 @@ class WebgpuTexture {
                                     this.uploadExternalImage(device, faceSource, mipLevel, face);
                                     anyUploads = true;
 
+                                } else if (ArrayBuffer.isView(faceSource)) { // typed array
+
+                                    this.uploadTypedArrayData(wgpu, faceSource, mipLevel, face);
+                                    anyUploads = true;
+
                                 } else {
 
                                     Debug.error('Unsupported texture source data for cubemap face', faceSource);
@@ -352,7 +358,7 @@ class WebgpuTexture {
 
                         } else if (ArrayBuffer.isView(mipObject)) { // typed array
 
-                            this.uploadTypedArrayData(wgpu, mipObject);
+                            this.uploadTypedArrayData(wgpu, mipObject, mipLevel, 0);
                             anyUploads = true;
 
                         } else {
@@ -403,35 +409,40 @@ class WebgpuTexture {
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
-    uploadTypedArrayData(wgpu, data) {
+    uploadTypedArrayData(wgpu, data, mipLevel, face) {
 
         const texture = this.texture;
 
         /** @type {GPUImageCopyTexture} */
         const dest = {
             texture: this.gpuTexture,
-            mipLevel: 0
+            origin: [0, 0, face],
+            mipLevel: mipLevel
         };
 
-        // TODO: handle update to mipmap levels other than 0
-        const pixelSize = pixelFormatByteSizes.get(texture.format) ?? 0;
-        Debug.assert(pixelSize);
-        const bytesPerRow = texture.width * pixelSize;
-        const byteSize = bytesPerRow * texture.height;
+        // texture dimensions at the specified mip level
+        const width = TextureUtils.calcLevelDimension(texture.width, mipLevel);
+        const height = TextureUtils.calcLevelDimension(texture.height, mipLevel);
 
+        // data sizes
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, texture.format);
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
+
+        const pixelSize = pixelFormatByteSizes.get(texture.format) ?? 0;
+        Debug.assert(pixelSize);    // this does not handle compressed formats
+        const bytesPerRow = pixelSize * width;
 
         /** @type {GPUImageDataLayout} */
         const dataLayout = {
             offset: 0,
             bytesPerRow: bytesPerRow,
-            rowsPerImage: texture.height
+            rowsPerImage: height
         };
 
         const size = {
-            width: texture.width,
-            height: texture.height,
+            width: width,
+            height: height,
             depthOrArrayLayers: 1
         };
 
