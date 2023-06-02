@@ -205,7 +205,6 @@ class ForwardRenderer extends Renderer {
             }
 
             this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
-            this.lightDisableHighlightId[cnt].setValue(directional.disableHighlight ? 0.0 : 1.0);
 
             // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);

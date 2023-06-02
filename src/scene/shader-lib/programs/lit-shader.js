@@ -631,7 +631,6 @@ class LitShader {
             const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
 
             decl.append("uniform vec3 light" + i + "_color;");
-            decl.append("uniform float light" + i + "_specularColorFactor;");
 
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 decl.append("uniform vec3 light" + i + "_direction;");
@@ -1302,7 +1301,7 @@ class LitShader {
                 }
 
                 // specular / clear coat
-                if (!light.disableHighlight) {
+                if (!light.affectSpecularity) {
                     if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                         // area light

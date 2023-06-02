@@ -118,7 +118,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
-        this._disableHighlight = false;
+        this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
@@ -472,15 +472,15 @@ class Light {
         return this._intensity;
     }
 
-    set disableHighlight(value) {
+    set affectSpecularity(value) {
         if (this._type === LIGHTTYPE_DIRECTIONAL) {
-            this._disableHighlight = value;
+            this._affectSpecularity = value;
             this.updateKey();
         }
     }
 
-    get disableHighlight() {
-        return this._disableHighlight;
+    get affectSpecularity() {
+        return this._affectSpecularity;
     }
 
     set luminance(value) {
@@ -652,7 +652,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
-        clone.disableHighlight = this._disableHighlight;
+        clone.affectSpecularity = this._affectSpecularity;
         clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
@@ -889,7 +889,7 @@ class Light {
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
                ((this.numCascades - 1)                    <<  8) |
-               ((this.disableHighlight ? 1 : 0)           <<  7);
+               ((this.affectSpecularity ? 1 : 0)           <<  7);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
