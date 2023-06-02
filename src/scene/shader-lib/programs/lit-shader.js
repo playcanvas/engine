@@ -1300,7 +1300,7 @@ class LitShader {
                 }
 
                 // specular / clear coat
-                if (!light.affectSpecularity) {
+                if (light.affectSpecularity) {
                     if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                         // area light
