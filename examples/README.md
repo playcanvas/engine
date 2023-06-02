@@ -13,15 +13,17 @@ Ensure you have Node.js installed. Then, install all of the required Node.js dep
 ```
 npm install
 ```
-Now run the following two commands in two separate terminals:
+Now run the following command:
 ```
-npm run watch
+npm run develop
 ```
-and
+Visit the url mentioned in your terminal to view the examples browser.
+
+You can also run the examples browser with a specific version of the engine by running the following command:
 ```
-npm run serve
+ENGINE_PATH=../build/playcanvas.mjs/index.js npm run develop
 ```
-Visit [http://localhost:5000]() to view the examples browser.
+Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the engine.
 
 To create the side bar thumbnails run the following script:
 ```
