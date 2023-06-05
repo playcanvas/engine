@@ -509,6 +509,11 @@ class Lightmapper {
     bake(nodes, mode = BAKE_COLORDIR) {
 
         const device = this.device;
+        if (device.isWebGPU) {
+            Debug.warnOnce('Lightmapper is not supported on WebGPU, skipping.');
+            return;
+        }
+
         const startTime = now();
 
         // update skybox
@@ -556,6 +561,8 @@ class Lightmapper {
 
         // bake nodes
         if (bakeNodes.length > 0) {
+
+            this.renderer.shadowRenderer.frameUpdate();
 
             // disable lightmapping
             const passCount = mode === BAKE_COLORDIR ? 2 : 1;
