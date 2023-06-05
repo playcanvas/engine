@@ -80,7 +80,7 @@ class WebgpuMipmapRenderer {
         DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
         // cannot run this inside render pass
-        Debug.assert(!device.insideRenderPass);
+        Debug.assert(!device.insideRenderPass, 'Mipmap generation cannot be run inside a render pass.', webgpuTexture.texture);
 
         const wgpu = device.wgpu;
 
