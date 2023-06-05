@@ -1,5 +1,6 @@
+import { Debug } from '../../core/debug.js';
 import {
-    pixelFormatByteSizes, pixelFormatBlockSizes,
+    pixelFormatInfo,
     PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1
 } from './constants.js';
 
@@ -31,12 +32,15 @@ class TextureUtils {
      */
     static calcLevelGpuSize(width, height, format) {
 
-        const pixelSize = pixelFormatByteSizes.get(format) ?? 0;
+        const formatInfo = pixelFormatInfo.get(format);
+        Debug.assert(formatInfo !== undefined, `Invalid pixel format ${format}`);
+
+        const pixelSize = pixelFormatInfo.get(format)?.size ?? 0;
         if (pixelSize > 0) {
             return width * height * pixelSize;
         }
 
-        const blockSize = pixelFormatBlockSizes.get(format) ?? 0;
+        const blockSize = formatInfo.blockSize ?? 0;
         let blockWidth = Math.floor((width + 3) / 4);
         const blockHeight = Math.floor((height + 3) / 4);
 

@@ -223,18 +223,20 @@ class Texture {
             this.projection = options.projection;
         }
 
+        this.impl = graphicsDevice.createTextureImpl(this);
+
         // #if _PROFILER
         this.profilerHint = options.profilerHint ?? 0;
         // #endif
 
+        this.dirtyAll();
+
         this._levels = options.levels;
-        if (!this._levels) {
+        if (this._levels) {
+            this.upload();
+        } else {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
-
-        this.impl = graphicsDevice.createTextureImpl(this);
-
-        this.dirtyAll();
 
         // track the texture
         graphicsDevice.textures.push(this);
