@@ -370,6 +370,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const isChrome = platform.browser && !!window.chrome;
         const isSafari = platform.browser && !!window.safari;
+        const isSafariOnIos = platform.browser && platform.safariOnIos;
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
@@ -392,7 +393,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // only enable ImageBitmap on chrome
-        this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
+        // Need to double check about safari
+        this.supportsImageBitmap = !isSafari && !isSafariOnIos && typeof ImageBitmap !== 'undefined';
 
         this.glAddress = [
             gl.REPEAT,

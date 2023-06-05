@@ -8,6 +8,7 @@ let touch = false;
 let gamepads = false;
 let workers = false;
 let passiveEvents = false;
+let safariOnIos = false;
 
 if (typeof navigator !== 'undefined') {
     const ua = navigator.userAgent;
@@ -30,6 +31,9 @@ if (typeof navigator !== 'undefined') {
         desktop = false;
         mobile = true;
         ios = true;
+        if (/safari/i.test(ua)) {
+            safariOnIos = true;
+        }
     }
 
     if (typeof window !== 'undefined') {
@@ -157,7 +161,14 @@ const platform = {
      * @type {boolean}
      * @ignore
      */
-    passiveEvents: passiveEvents
+    passiveEvents: passiveEvents,
+
+    /**
+     * if it's safari on iOS.
+     *
+     * @type {boolean}
+     */
+    safariOnIos: safariOnIos
 };
 
 export { platform };
