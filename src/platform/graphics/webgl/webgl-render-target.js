@@ -1,4 +1,35 @@
 import { Debug } from "../../../core/debug.js";
+import { DebugGraphics } from "../debug-graphics.js";
+
+/**
+ * A private class representing a pair of framebuffers, when MSAA is used.
+ *
+ * @ignore
+ */
+class FramebufferPair {
+    /** Multi-sampled rendering framebuffer */
+    msaaFB;
+
+    /** Single-sampled resolve framebuffer */
+    resolveFB;
+
+    constructor(msaaFB, resolveFB) {
+        this.msaaFB = msaaFB;
+        this.resolveFB = resolveFB;
+    }
+
+    destroy(gl) {
+        if (this.msaaFB) {
+            gl.deleteRenderbuffer(this.msaaFB);
+            this.msaaFB = null;
+        }
+
+        if (this.resolveFB) {
+            gl.deleteRenderbuffer(this.resolveFB);
+            this.resolveFB = null;
+        }
+    }
+}
 
 /**
  * A WebGL implementation of the RenderTarget.
@@ -12,7 +43,15 @@ class WebglRenderTarget {
 
     _glResolveFrameBuffer = null;
 
-    _glMsaaColorBuffer = null;
+    /**
+     * A list of framebuffers created When MSAA and MRT are used together, one for each color buffer.
+     * This allows color buffers to be resolved separately.
+     *
+     * @type {FramebufferPair[]}
+     */
+    colorMrtFramebuffers = null;
+
+    _glMsaaColorBuffers = [];
 
     _glMsaaDepthBuffer = null;
 
@@ -33,10 +72,15 @@ class WebglRenderTarget {
             this._glResolveFrameBuffer = null;
         }
 
-        if (this._glMsaaColorBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaColorBuffer);
-            this._glMsaaColorBuffer = null;
-        }
+        this._glMsaaColorBuffers.forEach((buffer) => {
+            gl.deleteRenderbuffer(buffer);
+        });
+        this._glMsaaColorBuffers.length = 0;
+
+        this.colorMrtFramebuffers?.forEach((framebuffer) => {
+            framebuffer.destroy(gl);
+        });
+        this.colorMrtFramebuffers = null;
 
         if (this._glMsaaDepthBuffer) {
             gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
@@ -56,22 +100,33 @@ class WebglRenderTarget {
         device.setFramebuffer(this._glFrameBuffer);
 
         // --- Init the provided color buffer (optional) ---
-        const colorBuffer = target._colorBuffer;
-        if (colorBuffer) {
-            if (!colorBuffer.impl._glTexture) {
-                // Clamp the render buffer size to the maximum supported by the device
-                colorBuffer._width = Math.min(colorBuffer.width, device.maxRenderBufferSize);
-                colorBuffer._height = Math.min(colorBuffer.height, device.maxRenderBufferSize);
-                device.setTexture(colorBuffer, 0);
+        const colorBufferCount = target._colorBuffers?.length ?? 0;
+        const attachmentBaseConstant = device.webgl2 ? gl.COLOR_ATTACHMENT0 : device.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
+        const buffers = [];
+        for (let i = 0; i < colorBufferCount; ++i) {
+            const colorBuffer = target.getColorBuffer(i);
+            if (colorBuffer) {
+                if (!colorBuffer.impl._glTexture) {
+                    // Clamp the render buffer size to the maximum supported by the device
+                    colorBuffer._width = Math.min(colorBuffer.width, device.maxRenderBufferSize);
+                    colorBuffer._height = Math.min(colorBuffer.height, device.maxRenderBufferSize);
+                    device.setTexture(colorBuffer, 0);
+                }
+                // Attach the color buffer
+                gl.framebufferTexture2D(
+                    gl.FRAMEBUFFER,
+                    attachmentBaseConstant + i,
+                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                    colorBuffer.impl._glTexture,
+                    0
+                );
+
+                buffers.push(attachmentBaseConstant + i);
             }
-            // Attach the color buffer
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                gl.COLOR_ATTACHMENT0,
-                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                colorBuffer.impl._glTexture,
-                0
-            );
+        }
+
+        if (device.drawBuffers) {
+            device.drawBuffers(buffers);
         }
 
         const depthBuffer = target._depthBuffer;
@@ -126,14 +181,19 @@ class WebglRenderTarget {
             this._glFrameBuffer = gl.createFramebuffer();
             device.setFramebuffer(this._glFrameBuffer);
 
-            // Create an optional MSAA color buffer
-            if (colorBuffer) {
-                if (!this._glMsaaColorBuffer) {
-                    this._glMsaaColorBuffer = gl.createRenderbuffer();
+            // Create an optional MSAA color buffers
+
+            const colorBufferCount = target._colorBuffers?.length ?? 0;
+            for (let i = 0; i < colorBufferCount; ++i) {
+                const colorBuffer = target.getColorBuffer(i);
+                if (colorBuffer) {
+                    const buffer = gl.createRenderbuffer();
+                    this._glMsaaColorBuffers.push(buffer);
+
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
+                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.RENDERBUFFER, buffer);
                 }
-                gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaColorBuffer);
-                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
-                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this._glMsaaColorBuffer);
             }
 
             // Optionally add a MSAA depth/stencil buffer
@@ -152,6 +212,51 @@ class WebglRenderTarget {
             }
 
             Debug.call(() => this._checkFbo(device, target, 'MSAA'));
+
+            if (colorBufferCount > 1) {
+                // create framebuffers allowing us to individually resolve each color buffer
+                this._createMsaaMrtFramebuffers(device, target, colorBufferCount);
+
+                // restore rendering back to the main framebuffer
+                device.setFramebuffer(this._glFrameBuffer);
+                device.drawBuffers(buffers);
+            }
+        }
+    }
+
+    _createMsaaMrtFramebuffers(device, target, colorBufferCount) {
+
+        const gl = device.gl;
+        this.colorMrtFramebuffers = [];
+
+        for (let i = 0; i < colorBufferCount; ++i) {
+            const colorBuffer = target.getColorBuffer(i);
+
+            // src
+            const srcFramebuffer = gl.createFramebuffer();
+            device.setFramebuffer(srcFramebuffer);
+            const buffer = this._glMsaaColorBuffers[i];
+
+            gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
+            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, buffer);
+
+            device.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+            Debug.call(() => this._checkFbo(device, target, `MSAA-MRT-src${i}`));
+
+            // dst
+            const dstFramebuffer = gl.createFramebuffer();
+            device.setFramebuffer(dstFramebuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                    colorBuffer.impl._glTexture,
+                                    0
+            );
+
+            this.colorMrtFramebuffers[i] = new FramebufferPair(srcFramebuffer, dstFramebuffer);
+
+            Debug.call(() => this._checkFbo(device, target, `MSAA-MRT-dst${i}`));
         }
     }
 
@@ -186,19 +291,55 @@ class WebglRenderTarget {
         this._glFrameBuffer = null;
         this._glDepthBuffer = null;
         this._glResolveFrameBuffer = null;
-        this._glMsaaColorBuffer = null;
+        this._glMsaaColorBuffers.length = 0;
         this._glMsaaDepthBuffer = null;
+        this.colorMrtFramebuffers = null;
+    }
+
+    internalResolve(device, src, dst, target, mask) {
+
+        const gl = device.gl;
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
+        gl.blitFramebuffer(0, 0, target.width, target.height,
+                           0, 0, target.width, target.height,
+                           mask,
+                           gl.NEAREST);
     }
 
     resolve(device, target, color, depth) {
         if (device.webgl2) {
+
             const gl = device.gl;
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
-            gl.blitFramebuffer(0, 0, target.width, target.height,
-                               0, 0, target.width, target.height,
-                               (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                               gl.NEAREST);
+
+            // if MRT is used, we need to resolve each buffer individually
+            if (this.colorMrtFramebuffers) {
+
+                // color
+                if (color) {
+                    for (let i = 0; i < this.colorMrtFramebuffers.length; i++) {
+                        const fbPair = this.colorMrtFramebuffers[i];
+
+                        DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT${i}`);
+                        this.internalResolve(device, fbPair.msaaFB, fbPair.resolveFB, target, gl.COLOR_BUFFER_BIT);
+                        DebugGraphics.popGpuMarker(device);
+                    }
+                }
+
+                // depth
+                if (depth) {
+                    DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT-DEPTH`);
+                    this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, gl.DEPTH_BUFFER_BIT);
+                    DebugGraphics.popGpuMarker(device);
+                }
+
+            } else {
+                DebugGraphics.pushGpuMarker(device, `RESOLVE`);
+                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
+                                     (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
+                DebugGraphics.popGpuMarker(device);
+            }
+
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
         }
     }

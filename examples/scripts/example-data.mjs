@@ -1,6 +1,6 @@
 import fs from 'fs';
 import BabelParser from '@babel/parser';
-import Prettier from 'prettier/standalone';
+import Prettier from 'prettier/standalone.js';
 import Babel from '@babel/standalone';
 import formatters from '../src/app/helpers/formatters.mjs';
 import readDirectoryNames from '../src/app/helpers/read-dir-names.mjs';

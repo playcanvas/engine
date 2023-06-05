@@ -102,7 +102,8 @@ class ShaderPass {
     /**
      * Get access to the shader pass instance for the specified device.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
      * @returns { ShaderPass } The shader pass instance for the specified device.
      */
     static get(device) {

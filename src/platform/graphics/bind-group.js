@@ -13,6 +13,14 @@ let id = 0;
  */
 class BindGroup {
     /**
+     * A render version the bind group was last updated on.
+     *
+     * @type {number}
+     * @ignore
+     */
+    renderVersionUpdated = -1;
+
+    /**
      * Create a new Bind Group.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
@@ -79,6 +87,9 @@ class BindGroup {
         if (this.textures[index] !== texture) {
             this.textures[index] = texture;
             this.dirty = true;
+        } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
+            // if the texture properties have changed
+            this.dirty = true;
         }
     }
 
@@ -86,6 +97,8 @@ class BindGroup {
      * Applies any changes made to the bind group's properties.
      */
     update() {
+
+        // TODO: implement faster version of this, which does not call SetTexture, which does a map lookup
 
         const textureFormats = this.format.textureFormats;
         for (let i = 0; i < textureFormats.length; i++) {
@@ -97,6 +110,7 @@ class BindGroup {
 
         if (this.dirty) {
             this.dirty = false;
+            this.renderVersionUpdated = this.device.renderVersion;
             this.impl.update(this);
         }
     }
