@@ -711,13 +711,6 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
         });
     }
 
-    // sort vertex elements by engine-ideal order
-    vertexDesc.sort((lhs, rhs) => {
-        return attributeOrder[lhs.semantic] - attributeOrder[rhs.semantic];
-    });
-
-    const vertexFormat = new VertexFormat(device, vertexDesc);
-
     promises.push(new Promise((resolve, reject) => {
         // decode draco data
         const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
@@ -726,14 +719,34 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 console.log(err);
                 reject(err);
             } else {
+                // worker reports order of attributes as array of attribute unique_id
+                const order = { };
+                for (const [name, index] of Object.entries(dracoExt.attributes)) {
+                    order[gltfToEngineSemanticMap[name]] = decompressedData.attributes.indexOf(index);
+                }
+
+                // order vertexDesc
+                vertexDesc.sort((a, b) => {
+                    return order[a.semantic] - order[b.semantic];
+                });
+
+                const vertexFormat = new VertexFormat(device, vertexDesc);
+
                 // create vertex buffer
                 const numVertices = decompressedData.vertices.byteLength / vertexFormat.size;
-                Debug.assert(numVertices === accessors[primitive.attributes.POSITION].count, 'mesh has invalid draco sizes');
-                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
-
-                // create index buffer
-                const numIndices = accessors[primitive.indices].count;
                 const indexFormat = numVertices <= 65535 ? INDEXFORMAT_UINT16 : INDEXFORMAT_UINT32;
+                const numIndices = decompressedData.indices.byteLength / (numVertices <= 65535 ? 2 : 4);
+
+                Debug.call(() => {
+                    if (numVertices !== accessors[primitive.attributes.POSITION].count) {
+                        Debug.warn('mesh has invalid vertex count');
+                    }
+                    if (numIndices !== accessors[primitive.indices].count) {
+                        Debug.warn('mesh has invalid index count');
+                    }
+                });
+
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
                 const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
 
                 result.vertexBuffer = vertexBuffer;
@@ -1021,6 +1034,10 @@ const extensionUnlit = (data, material, textures) => {
     material.emissiveMapChannel = material.diffuseMapChannel;
     material.emissiveVertexColor = material.diffuseVertexColor;
     material.emissiveVertexColorChannel = material.diffuseVertexColorChannel;
+
+    // disable lighting and skybox
+    material.useLighting = false;
+    material.useSkybox = false;
 
     // blank diffuse
     material.diffuse.set(0, 0, 0);

@@ -158,6 +158,9 @@ function DracoWorker(jsUrl, wasmUrl) {
             return (attributeOrder[a.attribute_type()] ?? attributeOrder.length) - (attributeOrder[b.attribute_type()] ?? attributeOrder.length);
         });
 
+        // store attribute order by unique_id
+        result.attributes = attributes.map(a => a.unique_id());
+
         // calculate total vertex size and attribute offsets
         let totalVertexSize = 0;
         const offsets = attributes.map((a) => {
@@ -226,7 +229,8 @@ function DracoWorker(jsUrl, wasmUrl) {
             jobId: data.jobId,
             error: result.error,
             indices: result.indices,
-            vertices: result.vertices
+            vertices: result.vertices,
+            attributes: result.attributes
         }, [result.indices, result.vertices].filter(t => t != null));
     };
 

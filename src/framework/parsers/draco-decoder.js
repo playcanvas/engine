@@ -1,5 +1,4 @@
 import { WasmModule } from "../../core/wasm-module.js";
-import { ABSOLUTE_URL } from "../asset/constants.js";
 import { DracoWorker } from "./draco-worker.js";
 import { Debug } from "../../core/debug.js";
 import { http } from '../../platform/net/http.js';
@@ -35,7 +34,8 @@ class JobQueue {
                 if (callback) {
                     callback(data.error, {
                         indices: data.indices,
-                        vertices: data.vertices
+                        vertices: data.vertices,
+                        attributes: data.attributes
                     });
                 }
                 this.jobCallbacks.delete(data.jobId);
@@ -162,8 +162,8 @@ const initializeWorkers = (config) => {
                 };
             } else {
                 config = {
-                    jsUrl: '/draco.wasm.js',
-                    wasmUrl: '/draco.wasm.wasm',
+                    jsUrl: 'draco.wasm.js',
+                    wasmUrl: 'draco.wasm.wasm',
                     numWorkers: defaultNumWorkers
                 };
             }
@@ -178,12 +178,7 @@ const initializeWorkers = (config) => {
     jobQueue = new JobQueue();
 
     // worker urls must be absolute
-    const absoluteUrl = (url) => {
-        return ABSOLUTE_URL.test(url) ? url : new URL(window.location.href).origin + url;
-    };
-    const jsUrl = absoluteUrl(config.jsUrl);
-    const wasmUrl = absoluteUrl(config.wasmUrl);
-    Promise.all([downloadScript(jsUrl), compileModule(wasmUrl)])
+    Promise.all([downloadScript(config.jsUrl), compileModule(config.wasmUrl)])
         .then(([dracoSource, dracoModule]) => {
             // build worker source
             const code = [
