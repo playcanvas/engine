@@ -2,27 +2,28 @@ export default /* glsl */`
 
 
 #define PCSS_SAMPLE_COUNT 16
+uniform float vogelDiskSamples[PCSS_SAMPLE_COUNT];
+uniform float vogelSphereSamples[PCSS_SAMPLE_COUNT];
 
-vec2 vogelDisk(float sampleIndex, float count, float phi)
-{
+vec2 vogelDisk(int sampleIndex, float count, float phi) {
     const float GoldenAngle = 2.4;
-    float r = sqrt(sampleIndex + 0.5) / sqrt(count);
+    float r = vogelDiskSamples[sampleIndex];
 
-    float theta = sampleIndex * GoldenAngle + phi;
+    float theta = float(sampleIndex) * GoldenAngle + phi;
 
     float sine = sin(theta);
     float cosine = cos(theta);
     return vec2(r * cosine, r * sine);
 }
 
-vec3 vogelSphere(float sampleIndex, float count, float phi) {
-    float weight = sampleIndex / count;
-    float radius = sqrt(1.0 - weight * weight);
+vec3 vogelSphere(int sampleIndex, float count, float phi) {
     const float GoldenAngle = 2.4;
+    float r = vogelSphereSamples[sampleIndex];
 
-    float theta = GoldenAngle * sampleIndex + phi;
+    float theta = float(sampleIndex) * GoldenAngle + phi;
 
-    return vec3(cos(theta) * radius, weight, sin(theta) * radius);
+    float weight = float(sampleIndex) / count;
+    return vec3(cos(theta) * r, weight, sin(theta) * r);
 }
 
 float gradientNoise(vec2 screenPos) {
@@ -79,7 +80,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = vogelDisk(float(i), float(PCSS_SAMPLE_COUNT), noise);
+        samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise);
     }
 
     // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
@@ -136,7 +137,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = vogelSphere(float(i), float(PCSS_SAMPLE_COUNT), noise);
+        samplePoints[i] = vogelSphere(i, float(PCSS_SAMPLE_COUNT), noise);
     }
 
     float receiverDepth = length(lightDir) * shadowParams.w + shadowParams.z;

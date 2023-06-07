@@ -36,6 +36,25 @@ const _drawCallList = {
     }
 };
 
+function vogelDiskPrecalculationSamples(numSamples) {
+    const samples = [];
+    for (let i = 0; i < numSamples; ++i) {
+        const r = Math.sqrt(i + 0.5) / Math.sqrt(numSamples);
+        samples.push(r);
+    }
+    return samples;
+}
+
+function vogelSpherePrecalculationSamples(numSamples) {
+    const samples = [];
+    for (let i = 0; i < numSamples; i++) {
+        const weight = i / numSamples;
+        const radius = Math.sqrt(1.0 - weight * weight);
+        samples.push(radius);
+    }
+    return samples;
+}
+
 /**
  * The forward renderer renders {@link Scene}s.
  *
@@ -70,6 +89,8 @@ class ForwardRenderer extends Renderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
+        this.vogelDiskSamplesId = scope.resolve('vogelDiskSamples[0]');
+        this.vogelSphereSamplesId = scope.resolve('vogelSphereSamples[0]');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -103,6 +124,9 @@ class ForwardRenderer extends Renderer {
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
+
+        this.vogelDiskSamples = vogelDiskPrecalculationSamples(16);
+        this.vogelSphereSamples = vogelSpherePrecalculationSamples(16);
     }
 
     destroy() {
@@ -751,6 +775,9 @@ class ForwardRenderer extends Renderer {
         this._screenSize[2] = 1 / device.width;
         this._screenSize[3] = 1 / device.height;
         this.screenSizeId.setValue(this._screenSize);
+
+        this.vogelDiskSamplesId.setValue(this.vogelDiskSamples);
+        this.vogelSphereSamplesId.setValue(this.vogelSphereSamples);
     }
 
     /**
