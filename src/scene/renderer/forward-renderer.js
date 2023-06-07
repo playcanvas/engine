@@ -257,7 +257,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-                this.lightSizeId[cnt].setValue([directional.lightSize, directional.lightSize]);
+                this.lightSizeId[cnt].setValue(directional.lightSize);
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
@@ -329,7 +329,7 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
-            this.lightSizeId[cnt].setValue([omni.lightSize, omni.lightSize]);
+            this.lightSizeId[cnt].setValue(omni.lightSize);
 
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const cameraParams = omni._shadowCameraParams;
@@ -394,12 +394,7 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
-            if (spot.shape !== LIGHTSHAPE_PUNCTUAL) {
-                const scale = wtm.getScale();
-                this.lightSizeId[cnt].setValue([spot.lightSize * scale.x, spot.lightSize * scale.z]);
-            } else {
-                this.lightSizeId[cnt].setValue([spot.lightSize, spot.lightSize]);
-            }
+            this.lightSizeId[cnt].setValue(spot.lightSize);
 
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const cameraParams = spot._shadowCameraParams;
