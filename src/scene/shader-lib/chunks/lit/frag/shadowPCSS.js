@@ -1,5 +1,12 @@
 export default /* glsl */`
 
+/**
+ * PCSS is a shadow sampling method that provides contact hardening soft shadows. 
+ * Based on: 
+ * - https://www.gamedev.net/tutorials/programming/graphics/effect-area-light-shadows-part-1-pcss-r4971/
+ * - https://github.com/pboechat/PCSS 
+ */
+
 
 #define PCSS_SAMPLE_COUNT 16
 uniform float vogelDiskSamples[PCSS_SAMPLE_COUNT];
