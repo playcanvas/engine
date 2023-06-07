@@ -54,7 +54,7 @@ float viewSpaceDepth(float depth, mat4 invProjection) {
 }
 
 
-float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, float searchSize, float z) {
+float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z) {
 
     float blockers = 0.0;
     float averageBlocker = 0.0;
@@ -77,7 +77,7 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
     return -1.0;
 }
 
-float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, float lightSize) {
+float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, float oneOverShadowMapSize, vec2 lightSize) {
     float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
 #ifndef GL2
     // If using packed depth on GL1, we need to normalize to get the correct receiver depth
@@ -97,7 +97,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
         return 1.0;
     } else {
 
-        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize * fovRatioAtDepth;
+        vec2 filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * oneOverShadowMapSize * fovRatioAtDepth;
 
         float shadow = 0.0;
 
@@ -175,15 +175,15 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
     }
 }
 
-float getShadowPointPCSS(samplerCube shadowMap, vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, float lightSize, vec3 lightDir) {
-    return PCSSCube(shadowMap, shadowParams, shadowCoord, cameraParams, (1.0 / shadowParams.x), lightSize, lightDir);
+float getShadowPointPCSS(samplerCube shadowMap, vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 lightSize, vec3 lightDir) {
+    return PCSSCube(shadowMap, shadowParams, shadowCoord, cameraParams, (1.0 / shadowParams.x), lightSize.x, lightDir);
 }
 
-float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, float lightSize, vec3 lightDir) {
+float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 lightSize, vec3 lightDir) {
     return PCSS(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, (1.0 / shadowParams.x), lightSize);
 }
 
-float getShadowPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, float lightSize, vec3 lightDir) {
+float getShadowPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 lightSize, vec3 lightDir) {
     return PCSS(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, (1.0 / shadowParams.x), lightSize);
 }
 
