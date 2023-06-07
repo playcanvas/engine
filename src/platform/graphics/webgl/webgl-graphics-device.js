@@ -922,6 +922,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         let ext;
 
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
+
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
@@ -960,7 +962,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Mali-G52 has rendering issues with GPU particles including
         // SM-A225M, M2003J15SC and KFRAWI (Amazon Fire HD 8 2022)
         const maliRendererRegex = /\bMali-G52+/;
-        this.supportsGpuParticles = !(this.unmaskedRenderer.match(maliRendererRegex));
+
+        // Samsung devices with Exynos (ARM) either crash or render incorrectly when using GPU for particles. See:
+        // https://github.com/playcanvas/engine/issues/3967
+        // https://github.com/playcanvas/engine/issues/3415
+        // https://github.com/playcanvas/engine/issues/4514
+        // Example UA matches: Starting 'SM' and any combination of letters or numbers:
+        // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
+        const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
+        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex)) &&
+            !(this.unmaskedRenderer.match(maliRendererRegex));
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
