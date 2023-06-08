@@ -91,7 +91,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
     }
 
     // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
-    float fovRatioAtDepth = 1.0f;//cameraParams.x;
+    float fovRatioAtDepth = cameraParams.x;
     float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, oneOverShadowMapSize * lightSize * fovRatioAtDepth, receiverDepth);
     if (averageBlocker == -1.0) {
         return 1.0;
