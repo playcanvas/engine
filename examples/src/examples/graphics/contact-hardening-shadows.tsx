@@ -62,9 +62,6 @@ class ContactHardeningShadowsExample {
                 orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
                 helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
                 cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
-                color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
-                normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-                gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
                 luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
                 asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/old_tree.glb' })
             };
@@ -134,10 +131,6 @@ class ContactHardeningShadowsExample {
                     planeMaterial.gloss = 0.0;
                     planeMaterial.metalness = 0.7;
                     planeMaterial.useMetalness = true;
-
-                    planeMaterial.diffuseMapTiling.set(17, 17);
-                    planeMaterial.normalMapTiling.set(17, 17);
-                    planeMaterial.glossMapTiling.set(17, 17);
                     planeMaterial.update();
 
                     const plane = new pc.Entity();
