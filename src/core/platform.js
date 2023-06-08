@@ -1,10 +1,11 @@
+// detect whether passive events are supported by the browser
 const detectPassiveEvents = () => {
-    let passiveEvents = false;
+    let result = false;
 
     try {
         const opts = Object.defineProperty({}, 'passive', {
             get: function () {
-                passiveEvents = true;
+                result = true;
                 return false;
             }
         });
@@ -12,7 +13,7 @@ const detectPassiveEvents = () => {
         window.removeEventListener('testpassive', null, opts);
     } catch (e) {}
 
-    return passiveEvents;
+    return result;
 };
 
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
@@ -47,7 +48,7 @@ const platform = {
     /**
      * String identifying the current runtime environment. Either 'browser' or 'node'.
      *
-     * @type {string}
+     * @type {'browser' | 'node'}
      */
     environment: environment,
 
@@ -67,70 +68,70 @@ const platform = {
     browser: environment === 'browser',
 
     /**
-     * Is it a desktop or laptop device.
+     * True if running on a desktop or laptop device.
      *
      * @type {boolean}
      */
     desktop: desktop,
 
     /**
-     * Is it a mobile or tablet device.
+     * True if running on a mobile or tablet device.
      *
      * @type {boolean}
      */
     mobile: mobile,
 
     /**
-     * If it is iOS.
+     * True if running on an iOS device.
      *
      * @type {boolean}
      */
     ios: ios,
 
     /**
-     * If it is Android.
+     * True if running on an Android device.
      *
      * @type {boolean}
      */
     android: android,
 
     /**
-     * If it is Windows mobile.
+     * True if running on a Windows mobile device.
      *
      * @type {boolean}
      */
     windows: windows,
 
     /**
-     * If it is Xbox.
+     * True if running on an Xbox device.
      *
      * @type {boolean}
      */
     xbox: xbox,
 
     /**
-     * If platform supports gamepads.
+     * True if the platform supports gamepads.
      *
      * @type {boolean}
      */
     gamepads: gamepads,
 
     /**
-     * If platform supports touch input.
+     * True if the supports touch input.
      *
      * @type {boolean}
      */
     touch: touch,
 
     /**
-     * If the platform supports Web Workers.
+     * True if the platform supports Web Workers.
      *
      * @type {boolean}
      */
     workers: workers,
 
     /**
-     * If the platform supports an options object as the third parameter to
+     * True if the platform supports an options object as the third parameter to
      * `EventTarget.addEventListener()` and the passive property is supported.
      *
      * @type {boolean}
