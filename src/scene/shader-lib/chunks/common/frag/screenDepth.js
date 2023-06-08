@@ -25,7 +25,7 @@ float linearizeDepth(float z) {
     else
         return camera_params.z + z * (camera_params.y - camera_params.z);
 }
-#else
+#else // GL2
 #ifndef UNPACKFLOAT
 #define UNPACKFLOAT
 float unpackFloat(vec4 rgbaDepth) {
@@ -34,7 +34,7 @@ float unpackFloat(vec4 rgbaDepth) {
 }
 #endif
 #endif
-#endif
+#endif // LINEARIZE_DEPTH
 
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {

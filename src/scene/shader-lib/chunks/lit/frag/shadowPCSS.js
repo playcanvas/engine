@@ -9,8 +9,8 @@ export default /* glsl */`
 
 
 #define PCSS_SAMPLE_COUNT 16
-uniform float vogelDiskSamples[PCSS_SAMPLE_COUNT];
-uniform float vogelSphereSamples[PCSS_SAMPLE_COUNT];
+uniform float pcssDiskSamples[PCSS_SAMPLE_COUNT];
+uniform float pcssSphereSamples[PCSS_SAMPLE_COUNT];
 
 vec2 vogelDisk(int sampleIndex, float count, float phi) {
     const float GoldenAngle = 2.4;

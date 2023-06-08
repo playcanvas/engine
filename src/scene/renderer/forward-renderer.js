@@ -89,8 +89,8 @@ class ForwardRenderer extends Renderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
-        this.vogelDiskSamplesId = scope.resolve('vogelDiskSamples[0]');
-        this.vogelSphereSamplesId = scope.resolve('vogelSphereSamples[0]');
+        this.pcssDiskSamplesId = scope.resolve('pcssDiskSamples[0]');
+        this.pcssSphereSamplesId = scope.resolve('pcssSphereSamples[0]');
         this.lightColorId = [];
         this.lightDir = [];
         this.lightDirId = [];
@@ -125,8 +125,8 @@ class ForwardRenderer extends Renderer {
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
 
-        this.vogelDiskSamples = vogelDiskPrecalculationSamples(16);
-        this.vogelSphereSamples = vogelSpherePrecalculationSamples(16);
+        this.pcssDiskSamples = vogelDiskPrecalculationSamples(16);
+        this.pcssSphereSamples = vogelSpherePrecalculationSamples(16);
     }
 
     destroy() {
@@ -776,8 +776,8 @@ class ForwardRenderer extends Renderer {
         this._screenSize[3] = 1 / device.height;
         this.screenSizeId.setValue(this._screenSize);
 
-        this.vogelDiskSamplesId.setValue(this.vogelDiskSamples);
-        this.vogelSphereSamplesId.setValue(this.vogelSphereSamples);
+        this.pcssDiskSamplesId.setValue(this.pcssDiskSamples);
+        this.pcssSphereSamplesId.setValue(this.pcssSphereSamples);
     }
 
     /**
