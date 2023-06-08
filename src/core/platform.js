@@ -1,44 +1,5 @@
-let desktop = false;
-let mobile = false;
-let windows = false;
-let xbox = false;
-let android = false;
-let ios = false;
-let touch = false;
-let gamepads = false;
-let workers = false;
-let passiveEvents = false;
-
-if (typeof navigator !== 'undefined') {
-    const ua = navigator.userAgent;
-
-    if (/(windows|mac os|linux|cros)/i.test(ua))
-        desktop = true;
-
-    if (/xbox/i.test(ua))
-        xbox = true;
-
-    if (/(windows phone|iemobile|wpdesktop)/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        windows = true;
-    } else if (/android/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        android = true;
-    } else if (/ip([ao]d|hone)/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        ios = true;
-    }
-
-    if (typeof window !== 'undefined') {
-        touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
-    }
-
-    gamepads = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
-
-    workers = (typeof Worker !== 'undefined');
+const detectPassiveEvents = () => {
+    let passiveEvents = false;
 
     try {
         const opts = Object.defineProperty({}, 'passive', {
@@ -50,10 +11,28 @@ if (typeof navigator !== 'undefined') {
         window.addEventListener('testpassive', null, opts);
         window.removeEventListener('testpassive', null, opts);
     } catch (e) {}
-}
 
-// detect browser/node environment
+    return passiveEvents;
+};
+
+const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
 const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+const xbox = /xbox/i.test(ua);
+const windows = /(windows phone|iemobile|wpdesktop)/i.test(ua);
+const android = /android/i.test(ua);
+const ios = /ip([ao]d|hone)/i.test(ua);
+const desktop = /(windows|mac os|linux|cros)/i.test(ua) && !windows && !android && !ios;
+const mobile = windows || android || ios;
+const touch = environment === 'browser' && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
+const gamepads = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
+const workers = (typeof Worker !== 'undefined');
+const passiveEvents = detectPassiveEvents();
+
+// browser detection
+const chrome = /(Chrome\/|Chromium\/|Edg.*\/)/.test(ua);        // chrome, chromium, edge
+const safari = !chrome && /Safari\//.test(ua);                  // safari, chrome on ios
+const firefox = !chrome && !safari && /Firefox\//.test(ua);
+const browserName = (environment === 'browser') ? ((chrome && 'chrome') || (safari && 'safari') || (firefox && 'firefox') || 'other') : null;
 
 /**
  * Global namespace that stores flags regarding platform environment and features support.
@@ -116,7 +95,7 @@ const platform = {
     android: android,
 
     /**
-     * If it is Windows.
+     * If it is Windows mobile.
      *
      * @type {boolean}
      */
@@ -157,7 +136,14 @@ const platform = {
      * @type {boolean}
      * @ignore
      */
-    passiveEvents: passiveEvents
+    passiveEvents: passiveEvents,
+
+    /**
+     * Get the browser name.
+     * @type {'chrome' | 'safari' | 'firefox' | 'other' | null}
+     * @ignore
+     */
+    browserName: browserName
 };
 
 export { platform };

@@ -368,8 +368,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
-        const isChrome = platform.browser && !!window.chrome;
-        const isSafari = platform.browser && !!window.safari;
+        const isChrome = platform.browserName === 'chrome';
+        const isSafari = platform.browserName === 'safari';
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
