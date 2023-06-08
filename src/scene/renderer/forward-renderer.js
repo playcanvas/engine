@@ -261,7 +261,7 @@ class ForwardRenderer extends Renderer {
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 0.5;
+                cameraParams[0] = 2.0;
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -334,7 +334,7 @@ class ForwardRenderer extends Renderer {
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const cameraParams = omni._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = Math.tan(fov / 2.0);
+            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -399,7 +399,7 @@ class ForwardRenderer extends Renderer {
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = Math.tan(fov / 2.0);
+            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;

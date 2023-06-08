@@ -14,7 +14,7 @@ uniform float pcssSphereSamples[PCSS_SAMPLE_COUNT];
 
 vec2 vogelDisk(int sampleIndex, float count, float phi) {
     const float GoldenAngle = 2.4;
-    float r = vogelDiskSamples[sampleIndex];
+    float r = pcssDiskSamples[sampleIndex];
 
     float theta = float(sampleIndex) * GoldenAngle + phi;
 
@@ -25,7 +25,7 @@ vec2 vogelDisk(int sampleIndex, float count, float phi) {
 
 vec3 vogelSphere(int sampleIndex, float count, float phi) {
     const float GoldenAngle = 2.4;
-    float r = vogelSphereSamples[sampleIndex];
+    float r = pcssSphereSamples[sampleIndex];
 
     float theta = float(sampleIndex) * GoldenAngle + phi;
 
@@ -91,7 +91,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
     }
 
     // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
-    float fovRatioAtDepth = 1.0 / cameraParams.x;
+    float fovRatioAtDepth = 1.0f;//cameraParams.x;
     float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, oneOverShadowMapSize * lightSize * fovRatioAtDepth, receiverDepth);
     if (averageBlocker == -1.0) {
         return 1.0;
