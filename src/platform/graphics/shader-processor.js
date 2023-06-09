@@ -382,11 +382,12 @@ class ShaderProcessor {
                 // to
                 //      attribute ivec4 _private_vertex_position;
                 //      vec4 vertex_position = vec4(_private_vertex_position);
+                // Note that we skip normalized elements, as shader receives them as floats already.
                 let copyCode;
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
-                    if (dataType !== TYPE_FLOAT32) {
+                    if (dataType !== TYPE_FLOAT32 && !element.normalize) {
 
                         const attribNumElements = ShaderProcessor.getTypeCount(type);
                         const newName = `_private_${name}`;

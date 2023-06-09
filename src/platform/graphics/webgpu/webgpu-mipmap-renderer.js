@@ -71,8 +71,8 @@ class WebgpuMipmapRenderer {
         }
 
         // not all types are currently supported
-        if (webgpuTexture.texture.cubemap || webgpuTexture.texture.volume) {
-            Debug.warnOnce('WebGPU mipmap generation is not supported for cubemaps or volume texture.', webgpuTexture.texture);
+        if (webgpuTexture.texture.volume) {
+            Debug.warnOnce('WebGPU mipmap generation is not supported volume texture.', webgpuTexture.texture);
             return;
         }
 
@@ -80,7 +80,7 @@ class WebgpuMipmapRenderer {
         DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
         // cannot run this inside render pass
-        Debug.assert(!device.insideRenderPass);
+        Debug.assert(!device.insideRenderPass, 'Mipmap generation cannot be run inside a render pass.', webgpuTexture.texture);
 
         const wgpu = device.wgpu;
 
@@ -104,48 +104,61 @@ class WebgpuMipmapRenderer {
                 topology: 'triangle-strip'
             }
         });
+        DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
 
-        let srcView = webgpuTexture.createView({
-            baseMipLevel: 0,
-            mipLevelCount: 1
-        });
+        const numFaces = webgpuTexture.texture.cubemap ? 6 : 1;
+
+        const srcViews = [];
+        for (let face = 0; face < numFaces; face++) {
+            srcViews.push(webgpuTexture.createView({
+                dimension: '2d',
+                baseMipLevel: 0,
+                mipLevelCount: 1,
+                baseArrayLayer: face
+            }));
+        }
 
         // loop through each mip level and render the previous level's contents into it.
         const commandEncoder = wgpu.createCommandEncoder();
         for (let i = 1; i < textureDescr.mipLevelCount; i++) {
 
-            const dstView = webgpuTexture.createView({
-                baseMipLevel: i,
-                mipLevelCount: 1
-            });
+            for (let face = 0; face < numFaces; face++) {
 
-            const passEncoder = commandEncoder.beginRenderPass({
-                colorAttachments: [{
-                    view: dstView,
-                    loadOp: 'clear',
-                    storeOp: 'store'
-                }]
-            });
-            DebugHelper.setLabel(passEncoder, `MipmapRenderer-PassEncoder_${i}`);
+                const dstView = webgpuTexture.createView({
+                    dimension: '2d',
+                    baseMipLevel: i,
+                    mipLevelCount: 1,
+                    baseArrayLayer: face
+                });
 
-            const bindGroup = wgpu.createBindGroup({
-                layout: pipeline.getBindGroupLayout(0),
-                entries: [{
-                    binding: 0,
-                    resource: this.minSampler
-                }, {
-                    binding: 1,
-                    resource: srcView
-                }]
-            });
+                const passEncoder = commandEncoder.beginRenderPass({
+                    colorAttachments: [{
+                        view: dstView,
+                        loadOp: 'clear',
+                        storeOp: 'store'
+                    }]
+                });
+                DebugHelper.setLabel(passEncoder, `MipmapRenderer-PassEncoder_${i}`);
 
-            passEncoder.setPipeline(pipeline);
-            passEncoder.setBindGroup(0, bindGroup);
-            passEncoder.draw(4);
-            passEncoder.end();
+                const bindGroup = wgpu.createBindGroup({
+                    layout: pipeline.getBindGroupLayout(0),
+                    entries: [{
+                        binding: 0,
+                        resource: this.minSampler
+                    }, {
+                        binding: 1,
+                        resource: srcViews[face]
+                    }]
+                });
 
-            // next iteration
-            srcView = dstView;
+                passEncoder.setPipeline(pipeline);
+                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.draw(4);
+                passEncoder.end();
+
+                // next iteration
+                srcViews[face] = dstView;
+            }
         }
 
         wgpu.queue.submit([commandEncoder.finish()]);

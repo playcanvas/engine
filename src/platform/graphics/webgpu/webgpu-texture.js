@@ -1,7 +1,8 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
 
 import {
-    pixelFormatByteSizes,
+    pixelFormatInfo,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -9,8 +10,10 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
+    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR
 } from '../constants.js';
+import { TextureUtils } from '../texture-utils.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 // map of PIXELFORMAT_*** to GPUTextureFormat
@@ -23,9 +26,9 @@ gpuTextureFormats[PIXELFORMAT_RGBA5551] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA4] = '';
 gpuTextureFormats[PIXELFORMAT_RGB8] = 'rgba8unorm';
 gpuTextureFormats[PIXELFORMAT_RGBA8] = 'rgba8unorm';
-gpuTextureFormats[PIXELFORMAT_DXT1] = '';
-gpuTextureFormats[PIXELFORMAT_DXT3] = '';
-gpuTextureFormats[PIXELFORMAT_DXT5] = '';
+gpuTextureFormats[PIXELFORMAT_DXT1] = 'bc1-rgba-unorm';
+gpuTextureFormats[PIXELFORMAT_DXT3] = 'bc2-rgba-unorm';
+gpuTextureFormats[PIXELFORMAT_DXT5] = 'bc3-rgba-unorm';
 gpuTextureFormats[PIXELFORMAT_RGB16F] = '';
 gpuTextureFormats[PIXELFORMAT_RGBA16F] = 'rgba16float';
 gpuTextureFormats[PIXELFORMAT_RGB32F] = '';
@@ -37,13 +40,13 @@ gpuTextureFormats[PIXELFORMAT_111110F] = 'rg11b10ufloat';
 gpuTextureFormats[PIXELFORMAT_SRGB] = '';
 gpuTextureFormats[PIXELFORMAT_SRGBA] = '';
 gpuTextureFormats[PIXELFORMAT_ETC1] = '';
-gpuTextureFormats[PIXELFORMAT_ETC2_RGB] = '';
-gpuTextureFormats[PIXELFORMAT_ETC2_RGBA] = '';
+gpuTextureFormats[PIXELFORMAT_ETC2_RGB] = 'etc2-rgb8unorm';
+gpuTextureFormats[PIXELFORMAT_ETC2_RGBA] = 'etc2-rgba8unorm';
 gpuTextureFormats[PIXELFORMAT_PVRTC_2BPP_RGB_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGB_1] = '';
 gpuTextureFormats[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = '';
-gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = '';
+gpuTextureFormats[PIXELFORMAT_ASTC_4x4] = 'astc-4x4-unorm';
 gpuTextureFormats[PIXELFORMAT_ATC_RGB] = '';
 gpuTextureFormats[PIXELFORMAT_ATC_RGBA] = '';
 gpuTextureFormats[PIXELFORMAT_BGRA8] = 'bgra8unorm';
@@ -53,6 +56,15 @@ const gpuAddressModes = [];
 gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
 gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
 gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
+
+// map of FILTER_*** to GPUFilterMode for level and mip sampling
+const gpuFilterModes = [];
+gpuFilterModes[FILTER_NEAREST] = { level: 'nearest', mip: 'nearest' };
+gpuFilterModes[FILTER_LINEAR] = { level: 'linear', mip: 'nearest' };
+gpuFilterModes[FILTER_NEAREST_MIPMAP_NEAREST] = { level: 'nearest', mip: 'nearest' };
+gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear' };
+gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
+gpuFilterModes[FILTER_LINEAR_MIPMAP_LINEAR] = { level: 'linear', mip: 'linear' };
 
 /**
  * A WebGPU implementation of the Texture.
@@ -156,6 +168,11 @@ class WebgpuTexture {
     destroy(device) {
     }
 
+    propertyChanged(flag) {
+        // samplers need to be recreated
+        this.samplers.length = 0;
+    }
+
     /**
      * @param {any} device - The Graphics Device.
      * @returns {any} - Returns the view.
@@ -198,7 +215,6 @@ class WebgpuTexture {
         return view;
     }
 
-    // TODO: handle the case where those properties get changed
     // TODO: share a global map of samplers. Possibly even use shared samplers for bind group,
     // or maybe even have some attached in view bind group and use globally
 
@@ -219,7 +235,8 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW]
+                addressModeW: gpuAddressModes[texture.addressW],
+                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
             };
 
             // default for compare sampling of texture
@@ -254,10 +271,12 @@ class WebgpuTexture {
                     descr.mipmapFilter = 'nearest';
                     label = 'Nearest';
                 } else {
-                    descr.magFilter = 'linear';
-                    descr.minFilter = 'linear';
-                    descr.mipmapFilter = 'linear';
-                    label = 'Linear';
+                    descr.magFilter = gpuFilterModes[texture.magFilter].level;
+                    descr.minFilter = gpuFilterModes[texture.minFilter].level;
+                    descr.mipmapFilter = gpuFilterModes[texture.minFilter].mip;
+                    Debug.call(() => {
+                        label = `Texture:${texture.magFilter}-${texture.minFilter}-${descr.mipmapFilter}`;
+                    });
                 }
             }
 
@@ -316,6 +335,11 @@ class WebgpuTexture {
                                     this.uploadExternalImage(device, faceSource, mipLevel, face);
                                     anyUploads = true;
 
+                                } else if (ArrayBuffer.isView(faceSource)) { // typed array
+
+                                    this.uploadTypedArrayData(wgpu, faceSource, mipLevel, face);
+                                    anyUploads = true;
+
                                 } else {
 
                                     Debug.error('Unsupported texture source data for cubemap face', faceSource);
@@ -336,7 +360,7 @@ class WebgpuTexture {
 
                         } else if (ArrayBuffer.isView(mipObject)) { // typed array
 
-                            this.uploadTypedArrayData(wgpu, mipObject);
+                            this.uploadTypedArrayData(wgpu, mipObject, mipLevel, 0);
                             anyUploads = true;
 
                         } else {
@@ -387,35 +411,44 @@ class WebgpuTexture {
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
-    uploadTypedArrayData(wgpu, data) {
+    uploadTypedArrayData(wgpu, data, mipLevel, face) {
 
         const texture = this.texture;
 
         /** @type {GPUImageCopyTexture} */
         const dest = {
             texture: this.gpuTexture,
-            mipLevel: 0
+            origin: [0, 0, face],
+            mipLevel: mipLevel
         };
 
-        // TODO: handle update to mipmap levels other than 0
-        const pixelSize = pixelFormatByteSizes[texture.format] ?? 0;
-        Debug.assert(pixelSize);
-        const bytesPerRow = texture.width * pixelSize;
-        const byteSize = bytesPerRow * texture.height;
+        // texture dimensions at the specified mip level
+        const width = TextureUtils.calcLevelDimension(texture.width, mipLevel);
+        const height = TextureUtils.calcLevelDimension(texture.height, mipLevel);
 
+        // data sizes
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, texture.format);
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
+
+        // this does not handle compressed formats
+        const formatInfo = pixelFormatInfo.get(texture.format);
+        Debug.assert(formatInfo);
+
+        const pixelSize = formatInfo.size ?? 0;
+        Debug.assert(pixelSize, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
+        const bytesPerRow = pixelSize * width;
 
         /** @type {GPUImageDataLayout} */
         const dataLayout = {
             offset: 0,
             bytesPerRow: bytesPerRow,
-            rowsPerImage: texture.height
+            rowsPerImage: height
         };
 
         const size = {
-            width: texture.width,
-            height: texture.height,
+            width: width,
+            height: height,
             depthOrArrayLayers: 1
         };
 

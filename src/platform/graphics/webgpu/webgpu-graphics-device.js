@@ -106,14 +106,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxTextureSize = limits.maxTextureDimension2D;
         this.maxCubeMapSize = limits.maxTextureDimension2D;
         this.maxVolumeSize = limits.maxTextureDimension3D;
+        this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
+        this.maxAnisotropy = 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
+        this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
+        this.supportsMrt = true;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -170,9 +174,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // optional features:
         //      "depth-clip-control",
         //      "depth32float-stencil8",
-        //      "texture-compression-bc",
-        //      "texture-compression-etc2",
-        //      "texture-compression-astc",
         //      "timestamp-query",
         //      "indirect-first-instance",
         //      "shader-f16",
@@ -191,6 +192,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return false;
         };
         this.floatFilterable = requireFeature('float32-filterable');
+        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
+        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
 
         /**
          * @type {GPUDevice}
@@ -297,7 +301,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.colorFormat = outColorBuffer.format;
+        wrt.setColorAttachment(0, undefined, outColorBuffer.format);
 
         this.initRenderTarget(rt);
 
@@ -359,12 +363,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const format = vertexBuffer.format;
-        const elementCount = format.elements.length;
+        const elements = vertexBuffer.format.elements;
+        const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
         for (let i = 0; i < elementCount; i++) {
-            const element = format.elements[i];
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, element.offset);
+            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
@@ -557,8 +560,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         // generate mipmaps
-        if (renderPass.colorOps.mipmaps) {
-            this.mipmapRenderer.generate(renderPass.renderTarget.colorBuffer.impl);
+        for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
+            const colorOps = renderPass.colorArrayOps[i];
+            if (colorOps.mipmaps) {
+                this.mipmapRenderer.generate(renderPass.renderTarget._colorBuffers[i].impl);
+            }
         }
     }
 

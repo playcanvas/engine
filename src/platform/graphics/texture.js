@@ -2,25 +2,21 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
 
+import { RenderTarget } from './render-target.js';
+import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
-    pixelFormatByteSizes,
+    getPixelFormatArrayType,
     ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
-    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_ETC1,
-    PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA,
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from './constants.js';
-
-let _blockSizeTable = null;
 
 let id = 0;
 
@@ -51,6 +47,8 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    renderVersionDirty = 0;
+
     /**
      * Create a new Texture instance.
      *
@@ -60,7 +58,7 @@ class Texture {
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only).
+     * @param {number} [options.depth] - The number of depth slices in a 3D texture (not supported by WebGl1).
      * Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
@@ -117,7 +115,7 @@ class Texture {
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
-     * (WebGL2 only). Defaults to false.
+     * (not supported by WebGL1). Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
@@ -138,9 +136,9 @@ class Texture {
      * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is
      * {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for
      * this texture, and you can get filtered results of comparison using texture() in your shader
-     * (WebGL2 only). Defaults to false.
+     * (not supported by WebGL1). Defaults to false.
      * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled
-     * (WebGL2 only). Can be:
+     * (not supported by WebGL1). Can be:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -183,7 +181,7 @@ class Texture {
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
 
-        if (graphicsDevice.webgl2) {
+        if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
             this._depth = options.depth ?? 1;
         } else {
@@ -225,18 +223,20 @@ class Texture {
             this.projection = options.projection;
         }
 
+        this.impl = graphicsDevice.createTextureImpl(this);
+
         // #if _PROFILER
         this.profilerHint = options.profilerHint ?? 0;
         // #endif
 
-        this._levels = options.levels;
-        if (!this._levels) {
-            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
-        }
-
         this.dirtyAll();
 
-        this.impl = graphicsDevice.createTextureImpl(this);
+        this._levels = options.levels;
+        if (this._levels) {
+            this.upload();
+        } else {
+            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+        }
 
         // track the texture
         graphicsDevice.textures.push(this);
@@ -308,6 +308,11 @@ class Texture {
         // #endif
     }
 
+    propertyChanged(flag) {
+        this.impl.propertyChanged(flag);
+        this.renderVersionDirty = this.device.renderVersion;
+    }
+
     /**
      * Returns number of required mip levels for the texture based on its dimensions and parameters.
      *
@@ -333,7 +338,7 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             this._minFilter = v;
-            this._parameterFlags |= 1;
+            this.propertyChanged(1);
         }
     }
 
@@ -352,7 +357,7 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             this._magFilter = v;
-            this._parameterFlags |= 2;
+            this.propertyChanged(2);
         }
     }
 
@@ -372,7 +377,7 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this._parameterFlags |= 4;
+            this.propertyChanged(4);
         }
     }
 
@@ -392,7 +397,7 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this._parameterFlags |= 8;
+            this.propertyChanged(8);
         }
     }
 
@@ -401,7 +406,7 @@ class Texture {
     }
 
     /**
-     * The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
+     * The addressing mode to be applied to the 3D texture depth (not supported on WebGL1). Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -410,14 +415,14 @@ class Texture {
      * @type {number}
      */
     set addressW(addressW) {
-        if (!this.device.webgl2) return;
+        if (!this.device.supportsVolumeTextures) return;
         if (!this._volume) {
             Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this._parameterFlags |= 16;
+            this.propertyChanged(16);
         }
     }
 
@@ -428,14 +433,14 @@ class Texture {
     /**
      * When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or
      * {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for this texture, and you can get
-     * filtered results of comparison using texture() in your shader (WebGL2 only).
+     * filtered results of comparison using texture() in your shader (not supported on WebGL1).
      *
      * @type {boolean}
      */
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this._parameterFlags |= 32;
+            this.propertyChanged(32);
         }
     }
 
@@ -444,7 +449,7 @@ class Texture {
     }
 
     /**
-     * Comparison function when compareOnRead is enabled (WebGL2 only). Possible values:
+     * Comparison function when compareOnRead is enabled (not supported on WebGL1). Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -458,7 +463,7 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this._parameterFlags |= 64;
+            this.propertyChanged(64);
         }
     }
 
@@ -475,7 +480,7 @@ class Texture {
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this._parameterFlags |= 128;
+            this.propertyChanged(128);
         }
     }
 
@@ -523,7 +528,7 @@ class Texture {
     }
 
     /**
-     * The number of depth slices in a 3D texture (WebGL2 only).
+     * The number of depth slices in a 3D texture.
      *
      * @type {number}
      */
@@ -576,7 +581,7 @@ class Texture {
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
     }
 
     /**
@@ -643,71 +648,7 @@ class Texture {
         }
     }
 
-    // static functions
-    /**
-     * Calculate the GPU memory required for a texture.
-     *
-     * @param {number} width - Texture's width.
-     * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
-     * @param {number} format - Texture's pixel format PIXELFORMAT_***.
-     * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
-     * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
-     * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
-     */
-    static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
-        if (!_blockSizeTable) {
-            _blockSizeTable = [];
-            _blockSizeTable[PIXELFORMAT_ETC1] = 8;
-            _blockSizeTable[PIXELFORMAT_ETC2_RGB] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
-            _blockSizeTable[PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
-            _blockSizeTable[PIXELFORMAT_DXT1] = 8;
-            _blockSizeTable[PIXELFORMAT_ATC_RGB] = 8;
-            _blockSizeTable[PIXELFORMAT_ETC2_RGBA] = 16;
-            _blockSizeTable[PIXELFORMAT_DXT3] = 16;
-            _blockSizeTable[PIXELFORMAT_DXT5] = 16;
-            _blockSizeTable[PIXELFORMAT_ASTC_4x4] = 16;
-            _blockSizeTable[PIXELFORMAT_ATC_RGBA] = 16;
-        }
-
-        const pixelSize = pixelFormatByteSizes[format] ?? 0;
-        const blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
-        let result = 0;
-
-        while (1) {
-            if (pixelSize > 0) {
-                // handle uncompressed formats
-                result += width * height * depth * pixelSize;
-            } else {
-                // handle block formats
-                let blockWidth = Math.floor((width + 3) / 4);
-                const blockHeight = Math.floor((height + 3) / 4);
-                const blockDepth = Math.floor((depth + 3) / 4);
-
-                if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
-                    format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
-                }
-
-                result += blockWidth * blockHeight * blockDepth * blockSize;
-            }
-            // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
-            if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
-                break;
-            }
-            width = Math.max(Math.floor(width / 2), 1);
-            height = Math.max(Math.floor(height / 2), 1);
-            depth = Math.max(Math.floor(depth / 2), 1);
-        }
-
-        return result * (cubemap ? 6 : 1);
-    }
-
-    // Force a full resubmission of the texture to WebGL (used on a context restore event)
+    // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
         this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
@@ -715,7 +656,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+        this.propertyChanged(255);  // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
     }
 
     /**
@@ -747,49 +688,16 @@ class Texture {
 
         this._lockedLevel = options.level;
 
-        if (this._levels[options.level] === null) {
-            switch (this._format) {
-                case PIXELFORMAT_A8:
-                case PIXELFORMAT_L8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
-                    break;
-                case PIXELFORMAT_LA8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height *  this._depth * 2);
-                    break;
-                case PIXELFORMAT_RGB565:
-                case PIXELFORMAT_RGBA5551:
-                case PIXELFORMAT_RGBA4:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth);
-                    break;
-                case PIXELFORMAT_RGB8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGBA8:
-                    this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 4);
-                    break;
-                case PIXELFORMAT_DXT1:
-                    this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 8 * this._depth);
-                    break;
-                case PIXELFORMAT_DXT3:
-                case PIXELFORMAT_DXT5:
-                    this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16 * this._depth);
-                    break;
-                case PIXELFORMAT_RGB16F:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGB32F:
-                    this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 3);
-                    break;
-                case PIXELFORMAT_RGBA16F:
-                    this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 4);
-                    break;
-                case PIXELFORMAT_RGBA32F:
-                    this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 4);
-                    break;
-            }
+        const levels = this.cubemap ? this._levels[options.face] : this._levels;
+        if (levels[options.level] === null) {
+            // allocate storage for this mip level
+            const width = Math.max(1, this._width >> options.level);
+            const height = Math.max(1, this._height >> options.level);
+            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, this._format));
+            levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 
-        return this._levels[options.level];
+        return levels[options.level];
     }
 
     /**
@@ -924,6 +832,40 @@ class Texture {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
+    }
+
+    /**
+     * Download texture's top level data from graphics memory to local memory.
+     *
+     * @ignore
+     */
+    async downloadAsync() {
+        const promises = [];
+        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
+            const renderTarget = new RenderTarget({
+                colorBuffer: this,
+                depth: false,
+                face: i
+            });
+
+            this.device.setRenderTarget(renderTarget);
+            this.device.initRenderTarget(renderTarget);
+
+            const levels = this.cubemap ? this._levels[i] : this._levels;
+
+            let level = levels[0];
+            if (levels[0] && this.device._isBrowserInterface(levels[0])) {
+                levels[0] = null;
+            }
+
+            level = this.lock({ face: i });
+
+            const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
+                .then(() => renderTarget.destroy());
+
+            promises.push(promise);
+        }
+        await Promise.all(promises);
     }
 
     /**

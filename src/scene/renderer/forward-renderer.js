@@ -231,10 +231,11 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const params = directional._shadowRenderParams;
-                params.length = 3;
+                params.length = 4;
                 params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
                 params[1] = biases.normalBias;
                 params[2] = biases.bias;
+                params[3] = 0;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
             cnt++;

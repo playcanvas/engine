@@ -3,6 +3,7 @@ import ambientConstantPS from './lit/frag/ambientConstant.js';
 import ambientEnvPS from './lit/frag/ambientEnv.js';
 import ambientSHPS from './lit/frag/ambientSH.js';
 import aoPS from './standard/frag/ao.js';
+import aoDetailMapPS from './standard/frag/aoDetailMap.js';
 import aoDiffuseOccPS from './lit/frag/aoDiffuseOcc.js';
 import aoSpecOccPS from './lit/frag/aoSpecOcc.js';
 import aoSpecOccConstPS from './lit/frag/aoSpecOccConst.js';
@@ -88,6 +89,7 @@ import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
+import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
@@ -150,11 +152,9 @@ import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
-import shadowCommonPS from './lit/frag/shadowCommon.js';
-import shadowCoordPS from './lit/frag/shadowCoord.js';
-import shadowCoordPerspZbufferPS from './lit/frag/shadowCoordPerspZbuffer.js';
 import shadowEVSMPS from './lit/frag/shadowEVSM.js';
 import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
+import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM8PS from './lit/frag/shadowVSM8.js';
@@ -214,6 +214,7 @@ const shaderChunks = {
     ambientEnvPS,
     ambientSHPS,
     aoPS,
+    aoDetailMapPS,
     aoDiffuseOccPS,
     aoSpecOccPS,
     aoSpecOccConstPS,
@@ -299,6 +300,7 @@ const shaderChunks = {
     normalXYPS,
     normalXYZPS,
     opacityPS,
+    outputPS,
     outputAlphaPS,
     outputAlphaOpaquePS,
     outputAlphaPremulPS,
@@ -361,11 +363,9 @@ const shaderChunks = {
     reprojectPS,
     screenDepthPS,
     shadowCascadesPS,
-    shadowCommonPS,
-    shadowCoordPS,
-    shadowCoordPerspZbufferPS,
     shadowEVSMPS,
     shadowEVSMnPS,
+    shadowSampleCoordPS,
     shadowStandardPS,
     shadowStandardGL2PS,
     shadowVSM8PS,

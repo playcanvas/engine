@@ -618,11 +618,67 @@ export const PIXELFORMAT_ATC_RGBA = 30;
  */
 export const PIXELFORMAT_BGRA8 = 31;
 
+// map of engine PIXELFORMAT_*** enums to information about the format
+export const pixelFormatInfo = new Map([
+
+    // uncompressed formats
+    [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
+    [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
+    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
+    [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2 }],
+    [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2 }],
+    [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
+    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4 }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4 }],
+    [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
+    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
+    [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
+    [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
+    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
+    [PIXELFORMAT_SRGB,          { name: 'SRGB', size: 4 }],
+    [PIXELFORMAT_SRGBA,         { name: 'SRGBA', size: 4 }],
+    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4 }],
+
+    // compressed formats
+    [PIXELFORMAT_DXT1, { name: 'DXT1', blockSize: 8 }],
+    [PIXELFORMAT_DXT3, { name: 'DXT3', blockSize: 16 }],
+    [PIXELFORMAT_DXT5, { name: 'DXT5', blockSize: 16 }],
+    [PIXELFORMAT_ETC1, { name: 'ETC1', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGB, { name: 'ETC2_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGBA, { name: 'ETC2_RGBA', blockSize: 16 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1, { name: 'PVRTC_2BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1, { name: 'PVRTC_4BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_ASTC_4x4, { name: 'ASTC_4x4', blockSize: 16 }],
+    [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }]
+]);
+
 // update this function when exposing additional compressed pixel formats
-export function isCompressedPixelFormat(format) {
-    return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
-           (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
-}
+export const isCompressedPixelFormat = (format) => {
+    return pixelFormatInfo.get(format).blockSize !== undefined;
+};
+
+// get the pixel format array type
+export const getPixelFormatArrayType = (format) => {
+    switch (format) {
+        case PIXELFORMAT_RGB32F:
+        case PIXELFORMAT_RGBA32F:
+            return Float32Array;
+        case PIXELFORMAT_RGB565:
+        case PIXELFORMAT_RGBA5551:
+        case PIXELFORMAT_RGBA4:
+        case PIXELFORMAT_RGB16F:
+        case PIXELFORMAT_RGBA16F:
+            return Uint16Array;
+        default:
+            return Uint8Array;
+    }
+};
 
 /**
  * List of distinct points.
@@ -1215,27 +1271,6 @@ export const typedArrayToType = {
 // map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
 export const typedArrayIndexFormats = [Uint8Array, Uint16Array, Uint32Array];
 export const typedArrayIndexFormatsByteSize = [1, 2, 4];
-
-// map of engine PIXELFORMAT_*** enums to the pixel byte size
-export const pixelFormatByteSizes = [];
-pixelFormatByteSizes[PIXELFORMAT_A8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_L8] = 1;
-pixelFormatByteSizes[PIXELFORMAT_LA8] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB565] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA5551] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGBA4] = 2;
-pixelFormatByteSizes[PIXELFORMAT_RGB8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGBA8] = 4;
-pixelFormatByteSizes[PIXELFORMAT_RGB16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGBA16F] = 8;
-pixelFormatByteSizes[PIXELFORMAT_RGB32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_RGBA32F] = 16;
-pixelFormatByteSizes[PIXELFORMAT_R32F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-pixelFormatByteSizes[PIXELFORMAT_DEPTHSTENCIL] = 4;
-pixelFormatByteSizes[PIXELFORMAT_111110F] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGB] = 4;
-pixelFormatByteSizes[PIXELFORMAT_SRGBA] = 4;
 
 /**
  * Map of engine semantics into location on device in range 0..15 (note - semantics mapping to the

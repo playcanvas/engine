@@ -239,9 +239,11 @@ class StandardMaterialOptionsBuilder {
         options.specularEncoding = stdMat.specularEncoding || 'linear';
         options.sheenEncoding = stdMat.sheenEncoding || 'linear';
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
+        options.aoDetail = !!stdMat.aoMap;
         options.diffuseDetail = !!stdMat.diffuseMap;
         options.normalDetail = !!stdMat.normalMap;
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
+        options.aoDetailMode = stdMat.aoDetailMode;
         options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0) ? 1 : 0;
@@ -264,7 +266,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useDiffuseMap = !!stdMat.diffuseMap;
         options.litOptions.useAoMap = !!stdMat.aoMap;
 
-        options.litOptions.detailModes = !!options.diffuseDetail;
+        options.litOptions.detailModes = !!options.diffuseDetail || !!options.aoDetail;
         options.litOptions.shadingModel = stdMat.shadingModel;
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.fastTbn = stdMat.fastTbn;

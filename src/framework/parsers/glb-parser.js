@@ -2181,6 +2181,7 @@ const createTextures = (gltf, images, options) => {
             // resolve image index
             gltfImageIndex = gltfImageIndex ??
                              gltfTexture?.extensions?.KHR_texture_basisu?.source ??
+                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
                              gltfTexture.source;
 
             const cloneAsset = seenImages.has(gltfImageIndex);

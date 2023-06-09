@@ -21,9 +21,9 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * requested to have a depth buffer of at least 16 bits.
  * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
  * requested to have a stencil buffer of at least 8 bits.
- * @param {string} [options.glslangUrl] - An url to glslang script, required if
+ * @param {string} [options.glslangUrl] - The URL to the glslang script. Required if the
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
- * {@link DEVICETYPE_WEBGL} device type creation.
+ * {@link DEVICETYPE_WEBGL1} or {@link DEVICETYPE_WEBGL2} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
  * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
  * compatible graphics adapter for an immersive XR device.
