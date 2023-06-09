@@ -38,7 +38,7 @@ const browserName =
 
 const xbox = /xbox/i.test(ua);
 const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
-const gamepads = (typeof navigator !== 'undefined') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
+const gamepads = (environment === 'browser') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
 const workers = (typeof Worker !== 'undefined');
 const passiveEvents = detectPassiveEvents();
 
