@@ -30,10 +30,12 @@ const workers = (typeof Worker !== 'undefined');
 const passiveEvents = detectPassiveEvents();
 
 // browser detection
-const chrome = /(Chrome\/|Chromium\/|Edg.*\/)/.test(ua);        // chrome, chromium, edge
-const safari = !chrome && /Safari\//.test(ua);                  // safari, chrome on ios
-const firefox = !chrome && !safari && /Firefox\//.test(ua);
-const browserName = (environment === 'browser') ? ((chrome && 'chrome') || (safari && 'safari') || (firefox && 'firefox') || 'other') : null;
+const browserName =
+    (environment !== 'browser') ? null :
+        (/(Chrome\/|Chromium\/|Edg.*\/)/.test(ua) ? 'chrome' :  // chrome, chromium, edge
+            (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
+                (/Firefox\//.test(ua) ? 'firefox' :
+                    'other')));
 
 /**
  * Global namespace that stores flags regarding platform environment and features support.
@@ -141,6 +143,7 @@ const platform = {
 
     /**
      * Get the browser name.
+     *
      * @type {'chrome' | 'safari' | 'firefox' | 'other' | null}
      * @ignore
      */
