@@ -79,14 +79,14 @@ const platform = {
      *
      * @type {boolean}
      */
-    desktop: ['windows', 'osx', 'linux', 'cros'].indexOf(platformName) !== -1,
+    desktop: ['windows', 'osx', 'linux', 'cros'].includes(platformName),
 
     /**
      * True if running on a mobile or tablet device.
      *
      * @type {boolean}
      */
-    mobile: ['android', 'ios'].indexOf(platformName) !== -1,
+    mobile: ['android', 'ios'].includes(platformName),
 
     /**
      * True if running on an iOS device.
