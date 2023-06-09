@@ -19,19 +19,14 @@ const detectPassiveEvents = () => {
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
 const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
 
-// detect mobile platform
-const mobilePlatformName =
-    /(windows phone|iemobile|wpdesktop)/i.test(ua) ? 'windows' :
-        (/android/i.test(ua) ? 'android' :
-            (/ip([ao]d|hone)/i.test(ua) ? 'ios' : null));
-
-// detect desktop platform
-const desktopPlatformName =
-    (mobilePlatformName !== null) ? null :
-        (/windows/i.test(ua) ? 'windows' :
-            (/mac os/i.test(ua) ? 'osx' :
-                (/linux/i.test(ua) ? 'linux' :
-                    (/cros/i.test(ua) ? 'cros' : null))));
+// detect platform
+const platformName =
+    (/android/i.test(ua) ? 'android' :
+        (/ip([ao]d|hone)/i.test(ua) ? 'ios' :
+            (/windows/i.test(ua) ? 'windows' :
+                (/mac os/i.test(ua) ? 'osx' :
+                    (/linux/i.test(ua) ? 'linux' :
+                        (/cros/i.test(ua) ? 'cros' : null))))));
 
 // detect browser
 const browserName =
@@ -84,35 +79,28 @@ const platform = {
      *
      * @type {boolean}
      */
-    desktop: desktopPlatformName !== null,
+    desktop: ['windows', 'osx', 'linux', 'cros'].indexOf(platformName) !== -1,
 
     /**
      * True if running on a mobile or tablet device.
      *
      * @type {boolean}
      */
-    mobile: mobilePlatformName !== null,
+    mobile: ['android', 'ios'].indexOf(platformName) !== -1,
 
     /**
      * True if running on an iOS device.
      *
      * @type {boolean}
      */
-    ios: mobilePlatformName === 'ios',
+    ios: platformName === 'ios',
 
     /**
      * True if running on an Android device.
      *
      * @type {boolean}
      */
-    android: mobilePlatformName === 'android',
-
-    /**
-     * True if running on a Windows mobile device.
-     *
-     * @type {boolean}
-     */
-    windows: mobilePlatformName === 'windows',
+    android: platformName === 'android',
 
     /**
      * True if running on an Xbox device.
