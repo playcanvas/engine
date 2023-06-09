@@ -25,7 +25,7 @@ const ios = /ip([ao]d|hone)/i.test(ua);
 const mobile = windows || android || ios;
 const desktop = /(windows|mac os|linux|cros)/i.test(ua) && !mobile;
 const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
-const gamepads = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
+const gamepads = (typeof navigator !== 'undefined') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
 const workers = (typeof Worker !== 'undefined');
 const passiveEvents = detectPassiveEvents();
 
