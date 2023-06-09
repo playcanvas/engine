@@ -18,24 +18,34 @@ const detectPassiveEvents = () => {
 
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
 const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
-const xbox = /xbox/i.test(ua);
-const windows = /(windows phone|iemobile|wpdesktop)/i.test(ua);
-const android = /android/i.test(ua);
-const ios = /ip([ao]d|hone)/i.test(ua);
-const mobile = windows || android || ios;
-const desktop = /(windows|mac os|linux|cros)/i.test(ua) && !mobile;
-const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
-const gamepads = (typeof navigator !== 'undefined') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
-const workers = (typeof Worker !== 'undefined');
-const passiveEvents = detectPassiveEvents();
 
-// browser detection
+// detect mobile platform
+const mobilePlatformName =
+    /(windows phone|iemobile|wpdesktop)/i.test(ua) ? 'windows' :
+        (/android/i.test(ua) ? 'android' :
+            (/ip([ao]d|hone)/i.test(ua) ? 'ios' : null));
+
+// detect desktop platform
+const desktopPlatformName =
+    (mobilePlatformName !== null) ? null :
+        (/windows/i.test(ua) ? 'windows' :
+            (/mac os/i.test(ua) ? 'osx' :
+                (/linux/i.test(ua) ? 'linux' :
+                    (/cros/i.test(ua) ? 'cros' : null))));
+
+// detect browser
 const browserName =
     (environment !== 'browser') ? null :
         (/(Chrome\/|Chromium\/|Edg.*\/)/.test(ua) ? 'chrome' :  // chrome, chromium, edge
             (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
                 (/Firefox\//.test(ua) ? 'firefox' :
                     'other')));
+
+const xbox = /xbox/i.test(ua);
+const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
+const gamepads = (typeof navigator !== 'undefined') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
+const workers = (typeof Worker !== 'undefined');
+const passiveEvents = detectPassiveEvents();
 
 /**
  * Global namespace that stores flags regarding platform environment and features support.
@@ -74,35 +84,35 @@ const platform = {
      *
      * @type {boolean}
      */
-    desktop: desktop,
+    desktop: desktopPlatformName !== null,
 
     /**
      * True if running on a mobile or tablet device.
      *
      * @type {boolean}
      */
-    mobile: mobile,
+    mobile: mobilePlatformName !== null,
 
     /**
      * True if running on an iOS device.
      *
      * @type {boolean}
      */
-    ios: ios,
+    ios: mobilePlatformName === 'ios',
 
     /**
      * True if running on an Android device.
      *
      * @type {boolean}
      */
-    android: android,
+    android: mobilePlatformName === 'android',
 
     /**
      * True if running on a Windows mobile device.
      *
      * @type {boolean}
      */
-    windows: windows,
+    windows: mobilePlatformName === 'windows',
 
     /**
      * True if running on an Xbox device.
