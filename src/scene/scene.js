@@ -405,7 +405,7 @@ class Scene extends EventHandler {
                 value.mipmaps = false;
             }
 
-            this.updateShaders = true;
+            this._resetSky();
         }
     }
 
