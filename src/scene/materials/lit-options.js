@@ -288,8 +288,8 @@ class LitOptions {
      * @type {string}
      */
     reflectionSource = null;
-
     reflectionEncoding = null;
+    reflectionCubemapEncoding = null;
 
     /**
      * One of "ambientSH", "envAtlas", "constant".
