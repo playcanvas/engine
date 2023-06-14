@@ -87,6 +87,9 @@ const _lightPropsDefault = [];
  * angle is specified in degrees. Affects spot lights only. Defaults to 40.
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
+ * @property {number} lightSize Size of the light used for contact hardening shadows. For area lights
+ * acts as a size multiplier with the area light dimensions. For punctual and directional lights
+ * acts as the actual size of the light. Defaults to 1.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *
@@ -127,6 +130,7 @@ const _lightPropsDefault = [];
  * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
  * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
  * sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+ * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps. Can be:
  *
  * - {@link BLUR_BOX}: Box filter.
@@ -329,6 +333,14 @@ class LightComponent extends Component {
 
     get shadowUpdateOverrides() {
         return this.light.shadowUpdateOverrides;
+    }
+
+    set lightSize(value) {
+        this.light.lightSize = value;
+    }
+
+    get lightSize() {
+        return this.light.lightSize;
     }
 }
 
@@ -549,6 +561,9 @@ function _defineProps() {
             }
         }
     });
+
+    _lightProps.push("lightSize");
+    _lightPropsDefault.push(10);
 }
 
 _defineProps();

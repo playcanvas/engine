@@ -76,8 +76,8 @@ class ShaderUtils {
         const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
-            ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
+            ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             (options.fragmentCode || ShaderUtils.dummyFragmentCode());
