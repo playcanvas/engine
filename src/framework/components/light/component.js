@@ -89,7 +89,7 @@ const _lightPropsDefault = [];
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
  * @property {number} lightSize Size of the light used for contact hardening shadows. For area lights
  * acts as a size multiplier with the area light dimensions. For punctual and directional lights
- * acts as the actual size of the light. Defaults to 10.0.
+ * acts as the actual size of the light. Defaults to 1.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *
