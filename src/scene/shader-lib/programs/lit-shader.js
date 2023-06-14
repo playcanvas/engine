@@ -768,7 +768,10 @@ class LitShader {
         if (options.reflectionSource === 'envAtlasHQ') {
             func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.envAtlasPS);
-            func.append(chunks.reflectionEnvHQPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
+            func.append(chunks.reflectionEnvHQPS
+                .replace(/\$DECODE_CUBEMAP/g, ChunkUtils.decodeFunc(options.reflectionCubemapEncoding))
+                .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding))
+            );
         } else if (options.reflectionSource === 'envAtlas') {
             func.append(chunks.envAtlasPS);
             func.append(chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
