@@ -1,7 +1,8 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
 
 import {
-    pixelFormatByteSizes,
+    pixelFormatInfo,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -234,7 +235,8 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW]
+                addressModeW: gpuAddressModes[texture.addressW],
+                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
             };
 
             // default for compare sampling of texture
@@ -429,8 +431,12 @@ class WebgpuTexture {
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
-        const pixelSize = pixelFormatByteSizes.get(texture.format) ?? 0;
-        Debug.assert(pixelSize);    // this does not handle compressed formats
+        // this does not handle compressed formats
+        const formatInfo = pixelFormatInfo.get(texture.format);
+        Debug.assert(formatInfo);
+
+        const pixelSize = formatInfo.size ?? 0;
+        Debug.assert(pixelSize, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
         const bytesPerRow = pixelSize * width;
 
         /** @type {GPUImageDataLayout} */

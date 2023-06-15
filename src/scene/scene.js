@@ -405,7 +405,7 @@ class Scene extends EventHandler {
                 value.mipmaps = false;
             }
 
-            this.updateShaders = true;
+            this._resetSky();
         }
     }
 
@@ -786,10 +786,19 @@ class Scene extends EventHandler {
     setSkybox(cubemaps) {
         if (!cubemaps) {
             this.skybox = null;
+            this.envAtlas = null;
             this.prefilteredCubemaps = [null, null, null, null, null, null];
         } else {
             this.skybox = cubemaps[0] || null;
-            this.prefilteredCubemaps = cubemaps.slice(1);
+            if (cubemaps[1] && !cubemaps[1].cubemap) {
+                // prefiltered data is an env atlas
+                this.envAtlas = cubemaps[1];
+                this.prefilteredCubemaps = [null, null, null, null, null, null];
+            } else {
+                // prefiltered data is a set of cubemaps
+                this.envAtlas = null;
+                this.prefilteredCubemaps = cubemaps.slice(1);
+            }
         }
     }
 

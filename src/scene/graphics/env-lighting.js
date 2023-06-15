@@ -2,7 +2,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { reprojectTexture } from './reproject-texture.js';
 import {
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBP as RGBA8_TYPE,
     TEXTUREPROJECTION_EQUIRECT,
     ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
@@ -10,7 +10,6 @@ import {
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 const fixCubemapSeams = true;
-const RGBA8_TYPE = TEXTURETYPE_RGBM;
 
 // calculate the number of mipmap levels given texture dimensions
 const calcLevels = (width, height = 0) => {
