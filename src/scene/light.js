@@ -118,6 +118,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
@@ -481,6 +482,17 @@ class Light {
         return this._intensity;
     }
 
+    set affectSpecularity(value) {
+        if (this._type === LIGHTTYPE_DIRECTIONAL) {
+            this._affectSpecularity = value;
+            this.updateKey();
+        }
+    }
+
+    get affectSpecularity() {
+        return this._affectSpecularity;
+    }
+
     set luminance(value) {
         if (this._luminance !== value) {
             this._luminance = value;
@@ -650,6 +662,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.affectSpecularity = this._affectSpecularity;
         clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
@@ -874,6 +887,7 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
+        //  7 : disable specular
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -885,7 +899,8 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8);
+               ((this.numCascades - 1)                    <<  8) |
+               ((this.affectSpecularity ? 1 : 0)           <<  7);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);

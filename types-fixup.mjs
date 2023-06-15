@@ -194,6 +194,7 @@ const lightComponentProps = [
     ['shadowType', 'number'],
     ['shadowUpdateMode', 'number'],
     ['shape', 'number'],
+    ['affectSpecularity', 'boolean'],
     ['type', 'string'],
     ['vsmBlurMode', 'number'],
     ['vsmBlurSize', 'number']
