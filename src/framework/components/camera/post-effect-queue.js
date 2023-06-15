@@ -70,8 +70,8 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * (this.camera.renderTarget.width ?? this.app.graphicsDevice.width));
-        const height = Math.floor(rect.w * (this.camera.renderTarget.height ?? this.app.graphicsDevice.height));
+        const width = Math.floor(rect.z * (this.camera.renderTarget?.width ?? this.app.graphicsDevice.width));
+        const height = Math.floor(rect.w * (this.camera.renderTarget?.height ?? this.app.graphicsDevice.height));
 
         const colorBuffer = new Texture(this.app.graphicsDevice, {
             name: name,
