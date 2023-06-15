@@ -583,9 +583,9 @@ class AnimController {
         this._animEvaluator.update(dt, this.activeState.hasAnimations);
     }
 
-    findParameter(name) {
+    findParameter = (name) => {
         return this._findParameter(name);
-    }
+    };
 }
 
 export { AnimController };
