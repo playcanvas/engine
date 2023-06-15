@@ -292,8 +292,8 @@ class AnimComponent extends Component {
             transitions,
             this._activate,
             this,
-            this.findParameter.bind(this),
-            this.consumeTrigger.bind(this)
+            this.findParameter,
+            this.consumeTrigger
         );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = layerIndex;
@@ -631,13 +631,13 @@ class AnimComponent extends Component {
         Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
-    findParameter(name) {
+    findParameter = (name) => {
         return this._parameters[name];
-    }
+    };
 
-    consumeTrigger(name) {
+    consumeTrigger = (name) => {
         this._consumedTriggers.add(name);
-    }
+    };
 
     /**
      * Returns a float parameter value by name.
