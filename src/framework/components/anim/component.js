@@ -631,10 +631,25 @@ class AnimComponent extends Component {
         Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
+    /**
+     * Returns the parameter object for the specified parameter name. This function is anonymous so that it can be passed to the AnimController
+     * while still being called in the scope of the AnimComponent.
+     *
+     * @param {string} name - The name of the parameter to return the value of.
+     * @returns {object} The parameter object.
+     * @private
+     */
     findParameter = (name) => {
         return this._parameters[name];
     };
 
+    /**
+     * Sets a trigger parameter as having been used by a transition. This function is anonymous so that it can be passed to the AnimController
+     * while still being called in the scope of the AnimComponent.
+     *
+     * @param {string} name - The name of the trigger to set as consumed.
+     * @private
+     */
     consumeTrigger = (name) => {
         this._consumedTriggers.add(name);
     };
