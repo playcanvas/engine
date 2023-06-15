@@ -58,8 +58,17 @@ class ShaderUtils {
         Debug.assert(options);
 
         const getDefines = (gpu, gl2, gl1, isVertex) => {
-            return device.isWebGPU ? gpu :
+
+            const deviceIntro = device.isWebGPU ? gpu :
                 (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+
+            // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
+            let attachmentsDefine = '';
+            for (let i = 0; i < device.maxColorAttachments; i++) {
+                attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+            }
+
+            return attachmentsDefine + deviceIntro;
         };
 
         const name = options.name ?? 'Untitled';
