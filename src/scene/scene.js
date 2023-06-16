@@ -792,11 +792,10 @@ class Scene extends EventHandler {
             this.skybox = cubemaps[0] || null;
             if (cubemaps[1] && !cubemaps[1].cubemap) {
                 // prefiltered data is an env atlas
-                this.envAtlas = cubemaps[1];
                 this.prefilteredCubemaps = [null, null, null, null, null, null];
+                this.envAtlas = cubemaps[1];
             } else {
                 // prefiltered data is a set of cubemaps
-                this.envAtlas = null;
                 this.prefilteredCubemaps = cubemaps.slice(1);
             }
         }
