@@ -1,8 +1,6 @@
 export default /* glsl */`
 
-#if COLOR_ATTACHMENT_0
 #define pcFragColor0 gl_FragData[0]
-#endif
 
 #if COLOR_ATTACHMENT_1
 #define pcFragColor1 gl_FragData[1]
