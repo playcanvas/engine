@@ -1,7 +1,5 @@
 export default /* glsl */`
-#if COLOR_ATTACHMENT_0
 layout(location = 0) out highp vec4 pc_fragColor;
-#endif
 
 #if COLOR_ATTACHMENT_1
 layout(location = 1) out highp vec4 pc_fragColor1;
