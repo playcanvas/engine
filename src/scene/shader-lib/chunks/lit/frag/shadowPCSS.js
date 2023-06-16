@@ -12,10 +12,8 @@ export default /* glsl */`
 uniform float pcssDiskSamples[PCSS_SAMPLE_COUNT];
 uniform float pcssSphereSamples[PCSS_SAMPLE_COUNT];
 
-vec2 vogelDisk(int sampleIndex, float count, float phi) {
+vec2 vogelDisk(int sampleIndex, float count, float phi, float r) {
     const float GoldenAngle = 2.4;
-    float r = pcssDiskSamples[sampleIndex];
-
     float theta = float(sampleIndex) * GoldenAngle + phi;
 
     float sine = sin(theta);
@@ -23,10 +21,8 @@ vec2 vogelDisk(int sampleIndex, float count, float phi) {
     return vec2(r * cosine, r * sine);
 }
 
-vec3 vogelSphere(int sampleIndex, float count, float phi) {
+vec3 vogelSphere(int sampleIndex, float count, float phi, float r) {
     const float GoldenAngle = 2.4;
-    float r = pcssSphereSamples[sampleIndex];
-
     float theta = float(sampleIndex) * GoldenAngle + phi;
 
     float weight = float(sampleIndex) / count;
@@ -87,7 +83,8 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, floa
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise);
+        float pcssPresample = pcssDiskSamples[i];
+        samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
     }
 
     // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
@@ -144,7 +141,8 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
-        samplePoints[i] = vogelSphere(i, float(PCSS_SAMPLE_COUNT), noise);
+        float r = pcssSphereSamples[i];
+        samplePoints[i] = vogelSphere(i, float(PCSS_SAMPLE_COUNT), noise, r);
     }
 
     float receiverDepth = length(lightDir) * shadowParams.w + shadowParams.z;
