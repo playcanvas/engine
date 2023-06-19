@@ -456,6 +456,8 @@ void evaluateLight(
                             float shadow = getShadowSpotClusteredPCF3(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF5)
                             float shadow = getShadowSpotClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
+                        #elif defined(CLUSTER_SHADOW_TYPE_PCSS)
+                            float shadow = getShadowSpotClusteredPCSS(SHADOWMAP_PASS(shadowAtlasTexture), dShadowCoord, shadowParams);
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
 

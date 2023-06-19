@@ -75,6 +75,7 @@ import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
 import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
+import linearizeDepthPS from './common/frag/linearizeDepth.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
 import ltcPS from './lit/frag/ltc.js';
 import metalnessPS from './standard/frag/metalness.js';
@@ -154,6 +155,7 @@ import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
 import shadowEVSMPS from './lit/frag/shadowEVSM.js';
 import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
+import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
@@ -286,6 +288,7 @@ const shaderChunks = {
     lightSpecularBlinnPS,
     lightSpecularPhongPS,
     lightSheenPS,
+    linearizeDepthPS,
     litShaderArgsPS,
     ltcPS,
     metalnessPS,
@@ -365,6 +368,7 @@ const shaderChunks = {
     shadowCascadesPS,
     shadowEVSMPS,
     shadowEVSMnPS,
+    shadowPCSSPS,
     shadowSampleCoordPS,
     shadowStandardPS,
     shadowStandardGL2PS,

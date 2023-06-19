@@ -1,14 +1,36 @@
 export default /* glsl */`
-#define texture2DBias texture2D
 
 #define pcFragColor0 gl_FragData[0]
+
+#if COLOR_ATTACHMENT_1
 #define pcFragColor1 gl_FragData[1]
+#endif
+
+#if COLOR_ATTACHMENT_2
 #define pcFragColor2 gl_FragData[2]
+#endif
+
+#if COLOR_ATTACHMENT_3
 #define pcFragColor3 gl_FragData[3]
+#endif
+
+#if COLOR_ATTACHMENT_4
 #define pcFragColor4 gl_FragData[4]
+#endif
+
+#if COLOR_ATTACHMENT_5
 #define pcFragColor5 gl_FragData[5]
+#endif
+
+#if COLOR_ATTACHMENT_6
 #define pcFragColor6 gl_FragData[6]
+#endif
+
+#if COLOR_ATTACHMENT_7
 #define pcFragColor7 gl_FragData[7]
+#endif
+
+#define texture2DBias texture2D
 
 // pass / accept shadow map or texture as a function parameter, on webgl this is simply passed as is
 // but this is needed for WebGPU

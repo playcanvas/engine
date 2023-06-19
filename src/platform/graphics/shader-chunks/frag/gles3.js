@@ -1,14 +1,33 @@
 export default /* glsl */`
-#define varying in
-
 layout(location = 0) out highp vec4 pc_fragColor;
+
+#if COLOR_ATTACHMENT_1
 layout(location = 1) out highp vec4 pc_fragColor1;
+#endif
+
+#if COLOR_ATTACHMENT_2
 layout(location = 2) out highp vec4 pc_fragColor2;
+#endif
+
+#if COLOR_ATTACHMENT_3
 layout(location = 3) out highp vec4 pc_fragColor3;
+#endif
+
+#if COLOR_ATTACHMENT_4
 layout(location = 4) out highp vec4 pc_fragColor4;
+#endif
+
+#if COLOR_ATTACHMENT_5
 layout(location = 5) out highp vec4 pc_fragColor5;
+#endif
+
+#if COLOR_ATTACHMENT_6
 layout(location = 6) out highp vec4 pc_fragColor6;
+#endif
+
+#if COLOR_ATTACHMENT_7
 layout(location = 7) out highp vec4 pc_fragColor7;
+#endif
 
 #define gl_FragColor pc_fragColor
 
@@ -20,6 +39,8 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 #define pcFragColor5 pc_fragColor5
 #define pcFragColor6 pc_fragColor6
 #define pcFragColor7 pc_fragColor7
+
+#define varying in
 
 #define texture2D texture
 #define texture2DBias texture

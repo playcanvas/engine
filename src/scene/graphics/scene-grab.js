@@ -145,6 +145,7 @@ class SceneGrab {
                 renderTarget._depthBuffer = buffer;
             } else {
                 renderTarget._colorBuffer = buffer;
+                renderTarget._colorBuffers = [buffer];
             }
         } else {
 

@@ -291,6 +291,8 @@ class LitOptions {
 
     reflectionEncoding = null;
 
+    reflectionCubemapEncoding = null;
+
     /**
      * One of "ambientSH", "envAtlas", "constant".
      *
