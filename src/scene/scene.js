@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8, ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
