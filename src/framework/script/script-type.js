@@ -299,20 +299,16 @@ class ScriptType extends EventHandler {
      * @see {@link ScriptType#listen} to listen to events on an EventHandler.
      */
     unlisten(eventHandler, name, callback, scope) {
-        let found = false;
         for (let i = 0; i < this._listeners.length; ++i) {
             const l = this._listeners[i];
             if (l.eventHandler === eventHandler && l.name === name && l.callback === callback && l.scope === scope) {
                 this._listeners.splice(i, 1);
                 eventHandler.off(name, callback, scope);
-                found = true;
-                break;
+                return;
             }
         }
 
-        if (!found) {
-            Debug.warn(`${this.__name}: Cannot find listener to remove for event ${name}. Please check where you originally listened for the event.`);
-        }
+        Debug.warn(`${this.__name}: Cannot find listener to remove for event ${name}. Please check where you originally listened for the event.`);
     }
 
     /**
